@@ -57,18 +57,32 @@ void ScriptWrappableGlobalObject::initScriptWrappableWindow(Window* window)
                     instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
                 if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
                     Window* wnd = (Window*)ScriptWrappableGlobalObject::fetch();
-                    wnd->setTimeout([](Window* wnd, void* data) {
-                        escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
-                        escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(),
-                                fn, escargot::ESValue(), NULL, 0, false);
-                    }, instance->currentExecutionContext()->readArgument(1).toUint32(),
-                    instance->currentExecutionContext()->readArgument(0).asESPointer());
+                    return  escargot::ESValue(wnd->setTimeout([](Window* wnd, void* data) {
+                                escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+                                escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(),
+                                        fn, escargot::ESValue(), NULL, 0, false);
+                            }, instance->currentExecutionContext()->readArgument(1).toUint32(),
+                            instance->currentExecutionContext()->readArgument(0).asESPointer()));
                 }
             }
         }
         return escargot::ESValue();
     }, escargot::ESString::create("setTimeout"), 2, false);
     ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("setTimeout"), false, false, false, setTimeoutFunction);
+
+    // [clearTimeout]
+    // https://www.w3.org/TR/html5/webappapis.html
+    escargot::ESFunctionObject* clearTimeoutFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            if (instance->currentExecutionContext()->readArgument(0).isNumber()) {
+                Window* wnd = (Window*)ScriptWrappableGlobalObject::fetch();
+                wnd->clearTimeout(instance->currentExecutionContext()->readArgument(0).toUint32());
+            }
+        }
+        return escargot::ESValue(1000);
+    }, escargot::ESString::create("clearTimeout"), 1, false);
+    ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), false, false, false, clearTimeoutFunction);
 
 }
 

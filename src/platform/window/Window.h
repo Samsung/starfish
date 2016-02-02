@@ -40,6 +40,7 @@ public:
 
     void loadXMLDocument(String* filePath);
     uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
+    void clearTimeout(uint32_t id);
 
     enum TouchEventKind {
         TouchEventDown,

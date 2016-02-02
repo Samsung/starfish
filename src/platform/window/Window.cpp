@@ -473,13 +473,19 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
     ecore_timer_add(delay/1000.0,[](void *data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
         auto a = td->m_window->m_timeoutHandler.find(td->m_id);
-        a->second.first(td->m_window, a->second.second);
+        if (a->second.second != nullptr) a->second.first(td->m_window, a->second.second);
         td->m_window->m_timeoutHandler.erase(td->m_window->m_timeoutHandler.find(td->m_id));
         delete td;
         return ECORE_CALLBACK_DONE;
     }, td);
 
     return id;
+}
+
+void Window::clearTimeout(uint32_t id) {
+    // TODO : Use ecore_timer_del(Ecore_Timer *timer)
+    auto handlerData = m_timeoutHandler.find(id);
+    if (handlerData != m_timeoutHandler.end()) handlerData->second.second = nullptr;
 }
 
 Node* Window::hitTest(float x, float y)
