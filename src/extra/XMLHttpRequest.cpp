@@ -7,13 +7,17 @@
 
 namespace StarFish {
 
-void XMLHttpRequest::send()
+void XMLHttpRequest::send(String* body)
 {
       escargot::ESObject* obj = (escargot::ESObject*)this;
       const char* url = m_url->utf8Data();
 
-      auto task  = [](escargot::ESObject* obj,const char* url)->bool{
-      //Buffer header;
+      auto task  = [](escargot::ESObject* obj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body)->bool{
+
+      Buffer header;
+      header.memory=NULL;
+      header.size=0;
+
       Buffer buffer;
       buffer.memory=NULL;
       buffer.size=0;
@@ -22,12 +26,22 @@ void XMLHttpRequest::send()
       CURLcode res;
 
       if (!curl) return false;
+
       curl_easy_setopt(curl, CURLOPT_URL,url );
-      curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-      //curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*) &header);
+      //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+      curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*) &header);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &buffer);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-      curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+
+      if(methodType==POST_METHOD){
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+      }else if(methodType==GET_METHOD){
+
+      }else{
+        printf("XMLHttpRequest UnSupportted method!!  \n");
+        return false;
+      }
+      //curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
 
       res = curl_easy_perform(curl);
 
@@ -45,10 +59,13 @@ void XMLHttpRequest::send()
       struct Pass {
           escargot::ESObject* obj;
           char* buf;
+          char* header;
+
       };
 
       Pass* pass = new Pass;
       pass->buf = buffer.memory;
+      pass->header = header.memory;
       pass->obj = obj;
 
       ecore_thread_main_loop_begin();
@@ -56,6 +73,8 @@ void XMLHttpRequest::send()
           Pass* pass = (Pass*)data;
 
           escargot::ESObject* this_obj = pass->obj;
+
+          printf("HEADER : %s\n",pass->header);
 
           this_obj->set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(pass->buf)));
           escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->getHandler(String::fromUTF8("load"));
@@ -76,7 +95,8 @@ void XMLHttpRequest::send()
   };
 
   //std::future<bool> runTask = std::async(std::launch::async, task);
-  std::thread(task,obj,url).detach();
+
+  std::thread(task,obj,url,m_method,body->utf8Data()).detach();
 }
 
 

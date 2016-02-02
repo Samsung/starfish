@@ -1556,7 +1556,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
                 XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();;
-                xhr->setOpen(String::createASCIIString(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()),String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()));
+                xhr->setOpen(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(),String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()));
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
@@ -1568,7 +1568,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
                 XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();;
-                xhr->send();
+
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                if (argValue.isESString()) {
+                    escargot::ESString* argStr = argValue.asESString();
+                    xhr->send(String::fromUTF8(argStr->utf8Data()));
+                }else{
+                    xhr->send(String::emptyString);
+                }
+
+
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);

@@ -1,0 +1,38 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+  </style>
+</head>
+
+<body>
+  <div id="idText">
+    div1
+  </div>
+  <div class="classText">
+    div2
+    </div>
+</body>
+
+<script type="text/javascript">
+  function run() {
+
+    print("*********** XHR Simple POST TEST *****************");
+
+    function handler () {
+      document.getElementById("idText").text = this.responseText;
+      print(this.responseText);
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", handler);
+    xhr.open("POST", "https://httpbin.org/post");
+    xhr.send("test string");
+
+    print("************* Done *******************");
+  }
+  run();
+</script>
+
+</html>

@@ -64,6 +64,12 @@ private:
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget{
 public:
+    enum METHOD_TYPE{
+        POST_METHOD,
+        GET_METHOD,
+        UNKNOWN_METHOD
+    };
+
     struct Buffer {
         char *memory;
         size_t size;
@@ -76,17 +82,27 @@ public:
 
         //init
         initScriptWrappable(this);
-        m_method = nullptr;
+        m_method = UNKNOWN_METHOD;
         m_url = nullptr;
     }
 
-    void setOpen(String* method,String* url)
+    void setOpen(const char* method,String* url)
     {
-        m_method = method;
+        if(method){
+            std::string data = method;
+            std::transform(data.begin(), data.end(), data.begin(), ::tolower);
+            String* lowerName = String::fromUTF8(data.c_str());
+
+            if(lowerName->equals("get")){
+                m_method = GET_METHOD;
+            }else if(lowerName->equals("post")){
+                m_method = POST_METHOD;
+            }
+        }
         m_url = url;
     }
 
-    void send();
+    void send(String* body);
 
     // String* getResponse()
     //     return m_response;
@@ -120,8 +136,7 @@ public:
 
 protected:
     String* m_url;
-    String* m_method;
-    // String* m_response;
+    METHOD_TYPE m_method;
 
 
 };

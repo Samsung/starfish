@@ -59,9 +59,8 @@
             <text><![CDATA[
   function run() {
 
-    print("XHR basic TEST");
+    print("*********** XHR Simple Get TEST 1 *****************");
     function handler () {
-      print("Recevie DATA!");
       document.getElementById("idText").text = this.responseText;
       print(this.responseText);
     }
@@ -70,7 +69,16 @@
     xhr.open("GET", "https://httpbin.org/get");
     xhr.send();
 
-    print("done");
+    xhr.open("get", "https://httpbin.org/get");
+    xhr.send();
+
+    xhr.open("Get", "https://httpbin.org/get");
+    xhr.send();
+
+    xhr.open("NOT_Get", "https://httpbin.org/get");
+    xhr.send();
+
+    print("************* Done *******************");
   }
   run();
 ]]></text>
