@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HTMLDocument>
+	<node nodeType="9" localName="document">
+		<node nodeType="10" localName="documentType">
+		</node>
+		<node nodeType="1" localName="html">
+			<node nodeType="1" localName="head">
+				<node nodeType="1" localName="style">
+					<style selectorText="body" margin-top="0px" margin-right="0px" margin-bottom="0px" margin-left="0px" padding-top="0px" padding-right="0px" padding-bottom="0px" padding-left="0px"/>
+					<style selectorText="#viewport" background-image="url(file:///home/ryanc/projects/2016/WEARABLE/starfish/test/demo/20160115/f10/images/background.jpg)" color="white" width="360px" height="360px" font-size="24px" background-color="black" border-top-width="3px" border-right-width="3px" border-bottom-width="3px" border-left-width="3px" border-top-style="solid" border-right-style="solid" border-bottom-style="solid" border-left-style="solid" border-top-color="red" border-right-color="red" border-bottom-color="red" border-left-color="red" background-size="100% 100%" background-repeat-x="no-repeat" background-repeat-y="no-repeat" text-align="center"/>
+					<style selectorText="#t1" margin-top="5%" width="100%" height="10%" font-weight="bold"/>
+					<style selectorText="#b1" margin-top="5%" height="30%"/>
+					<style selectorText="#b1_i1" display="inline-block" margin-left="20%"/>
+					<style selectorText="#i1" width="100px"/>
+					<style selectorText="#b2" display="inline-block" margin-left="5%" height="30%" font-size="26pt"/>
+					<style selectorText="#t3" margin-top="10%" left="0%" width="100%" height="20%" font-size="26pt"/>
+					<style selectorText="#t4" left="0%" width="100%" height="20%" font-size="26pt"/>
+					<style selectorText="#d1" font-size="20pt" text-align="left"/>
+					<style selectorText="#d2" font-size="60pt" text-align="left" font-weight="bold"/>
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+body {
+    margin: 0;
+    padding: 0;
+}
+#viewport {
+    background-image: url("images/background.jpg");
+    color: white;
+    width: 360px;
+    height: 360px;
+    font-size: 24px;
+    background-color: black;
+    border: 3px solid red;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    text-align: center;
+}
+#t1 {
+    margin-top: 5%;
+    width: 100%;
+    height: 10%;
+    font-weight: bold;
+}
+#b1 {
+    margin-top: 5%;
+    height: 30%;
+}
+#b1_i1 {
+    display: inline-block;
+    margin-left: 20%;
+}
+#i1 {
+    width: 100px;
+}
+#b2 {
+    display: inline-block;
+    margin-left: 5%;
+    height: 30%;
+    font-size: 26pt;
+}
+#t3 {
+    margin-top: 10%;
+    left: 0%;
+    width: 100%;
+    height: 20%;
+    font-size: 26pt;
+}
+#t4 {
+    left: 0%;
+    width: 100%;
+    height: 20%;
+    font-size: 26pt;
+}
+#d1 {
+  font-size: 20pt;
+  text-align: left;
+}
+#d2 {
+  font-size: 60pt;
+  text-align: left;
+  font-weight: bold;
+}
+
+]]></text>
+					</node>
+				</node>
+				<node nodeType="3" localName="text">
+					<text><![CDATA[
+
+]]></text>
+				</node>
+				<node nodeType="1" localName="script">
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+function clicked(node) {
+  console.log("clicked");
+  console.log(node);
+}
+]]></text>
+					</node>
+				</node>
+				<node nodeType="3" localName="text">
+					<text><![CDATA[
+
+]]></text>
+				</node>
+			</node>
+			<node nodeType="1" localName="body">
+				<node nodeType="3" localName="text">
+					<text><![CDATA[
+
+]]></text>
+				</node>
+				<node nodeType="1" localName="div" id="viewport" onclick="clicked(this)">
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+
+  ]]></text>
+					</node>
+					<node nodeType="1" localName="div" id="t1">
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+    ]]></text>
+						</node>
+						<node nodeType="1" localName="div">
+							<node nodeType="3" localName="text">
+								<text><![CDATA[SUNNY]]></text>
+							</node>
+						</node>
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+  ]]></text>
+						</node>
+					</node>
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+
+  ]]></text>
+					</node>
+					<node nodeType="1" localName="div" id="b1">
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+    ]]></text>
+						</node>
+						<node nodeType="1" localName="div" id="b1_i1">
+							<node nodeType="3" localName="text">
+								<text><![CDATA[
+      ]]></text>
+							</node>
+							<node nodeType="1" localName="img" id="i1" src="images/sun.jpg">
+							</node>
+							<node nodeType="3" localName="text">
+								<text><![CDATA[
+    ]]></text>
+							</node>
+						</node>
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+    ]]></text>
+						</node>
+						<node nodeType="1" localName="div" id="b2">
+							<node nodeType="3" localName="text">
+								<text><![CDATA[
+      ]]></text>
+							</node>
+							<node nodeType="1" localName="div" id="d1">
+								<node nodeType="3" localName="text">
+									<text><![CDATA[21°/30°]]></text>
+								</node>
+							</node>
+							<node nodeType="3" localName="text">
+								<text><![CDATA[
+      ]]></text>
+							</node>
+							<node nodeType="1" localName="div" id="d2">
+								<node nodeType="3" localName="text">
+									<text><![CDATA[29°]]></text>
+								</node>
+							</node>
+							<node nodeType="3" localName="text">
+								<text><![CDATA[
+    ]]></text>
+							</node>
+						</node>
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+  ]]></text>
+						</node>
+					</node>
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+
+  ]]></text>
+					</node>
+					<node nodeType="1" localName="div" id="t3">
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+    ]]></text>
+						</node>
+						<node nodeType="1" localName="div">
+							<node nodeType="3" localName="text">
+								<text><![CDATA[San Francisco, CA]]></text>
+							</node>
+						</node>
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+  ]]></text>
+						</node>
+					</node>
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+
+  ]]></text>
+					</node>
+					<node nodeType="1" localName="div" id="t4">
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+    ]]></text>
+						</node>
+						<node nodeType="1" localName="div">
+							<node nodeType="3" localName="text">
+								<text><![CDATA[1:10 PM]]></text>
+							</node>
+							<node nodeType="1" localName="div">
+								<node nodeType="3" localName="text">
+									<text><![CDATA[
+  ]]></text>
+								</node>
+							</node>
+							<node nodeType="3" localName="text">
+								<text><![CDATA[
+
+]]></text>
+							</node>
+						</node>
+						<node nodeType="3" localName="text">
+							<text><![CDATA[
+
+
+
+]]></text>
+						</node>
+					</node>
+				</node>
+			</node>
+		</node>
+	</node>
+</HTMLDocument>
