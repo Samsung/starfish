@@ -51,6 +51,11 @@ var pathToTest = basePath + "/" + testPath + "/";
 console.log("     * The captured images will be saved in " + pathToSave);
 
 var page = require('webpage').create();
+
+page.viewportSize = {
+    width: 360,
+    height: 360
+};
 if (filelist.length == 0) {
     var list = fs.list(pathToTest);
     for (var i = 0; i < list.length; i++) {
@@ -65,15 +70,17 @@ var processing = false;
 
 page.onLoadStarted = function() {
     processing = true;
-    page.evaluate(function() {
-        document.body.bgColor = 'white';
-//        document.body.style.color = 'd';
-        document.body.style.fontFamily = 'Ahem';
-    });
     console.log(' [' + filelist[idx] + '] Loading Started...');
 };
 
 page.onLoadFinished = function() {
+    page.evaluate(function() {
+        var style = document.createElement('style'),
+            text = document.createTextNode('html { background-color: white; fontFamily: Ahem; }');
+        style.setAttribute('type', 'text/css');
+        style.appendChild(text);
+        document.head.insertBefore(style, document.head.firstChild);
+    });
     var renderFileName = pathToSave + filelist[idx] + '.png';
     page.render(renderFileName);
     console.log('    ... Captured in '+ renderFileName);
