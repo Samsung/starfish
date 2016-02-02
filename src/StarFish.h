@@ -51,6 +51,7 @@ enum StarFishStartUpFlag {
     enableComputedStyleDump = 1 << 1,
     enableFrameTreeDump = 1 << 2,
     enableHitTestDump = 1 << 3,
+    enablePixelTest = 1 << 4,
 };
 
 class StarFish : public gc {

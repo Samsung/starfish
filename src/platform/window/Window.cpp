@@ -105,7 +105,8 @@ Window* Window::create(StarFish* sf, size_t w, size_t h)
     g_internalCanvas = e;
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
     Ecore_Window ew = ecore_evas_window_get(ee);
-    STARFISH_RELEASE_ASSERT(ew);
+    if (wnd->m_starFish->startUpFlag() & !StarFishStartUpFlag::enablePixelTest)
+        STARFISH_RELEASE_ASSERT(ew);
     wnd->m_handle = (uintptr_t)ew;
 
     elm_win_autodel_set(wnd->m_window, EINA_TRUE);

@@ -358,4 +358,7 @@ install_runner_dep:
 	sudo apt-get install nodejs phantomjs npm
 	npm install fs path phantom
 
+pixel_test:
+	./tool/pixel_test/pixel_test.sh
+
 .PHONY: clean
