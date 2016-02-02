@@ -2,23 +2,33 @@
 #include "UnitHelper.h"
 
 namespace StarFish {
-    float convertFromCmToPx(float value) {
-        return value * unitPxPerCm;
-    }
+float convertFromCmToPx(float value)
+{
+    return value * unitPxPerCm;
+}
 
-    float convertFromMmToPx(float value) {
-        return value * unitPxPerMm;
-    }
+float convertFromMmToPx(float value)
+{
+    return value * unitPxPerMm;
+}
 
-    float convertFromInToPx(float value) {
-        return value * unitPxPerIn;
-    }
+float convertFromInToPx(float value)
+{
+    return value * unitPxPerIn;
+}
 
-    float convertFromPcToPx(float value) {
-        return value * unitPxPerPc;
-    }
+float convertFromPcToPx(float value)
+{
+    return value * unitPxPerPc;
+}
 
-    float convertFromPtToPx(float value) {
-        return value * unitPxPerPt;
-    }
+float convertFromPtToPx(float value)
+{
+    return value * unitPxPerPt;
+}
+
+float convertFromPxToPt(float value)
+{
+    return value / unitPxPerPt;
+}
 }

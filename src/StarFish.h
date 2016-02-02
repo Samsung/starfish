@@ -104,10 +104,10 @@ public:
     void evaluate(String* s);
 
     ImageData* fetchImage(String* str);
-    Font* fetchFont(String* familyName, float size, int style)
+    Font* fetchFont(String* familyName, float size, char style = FontStyle::FontStyleNormal, char weight = FontWeight::FontWeightNormal)
     {
         Font* f = nullptr;
-        f = m_fontSelector.loadFont(familyName, size, style);
+        f = m_fontSelector.loadFont(familyName, size, style, weight);
         return f;
     }
 

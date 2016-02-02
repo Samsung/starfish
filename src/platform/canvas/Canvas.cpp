@@ -2,6 +2,7 @@
 #include "Canvas.h"
 #include "platform/canvas/font/Font.h"
 #include "platform/canvas/image/ImageData.h"
+#include "style/UnitHelper.h"
 
 #include <Evas.h>
 #include <Evas_Engine_Buffer.h>
@@ -399,67 +400,98 @@ public:
 
     virtual void drawText(const float x,const float y,String* text)
     {
-        /*
-        Evas_Object* eo = evas_object_textblock_add(m_canvas);
-        if(m_objList) m_objList->push_back(eo);
-        Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
-        Rect rt(x,y,sz.width(),sz.height());
-        SkRect sss = SkRect::MakeXYWH(
-        SkFloatToScalar((float)rt.x()),
-        SkFloatToScalar((float)rt.y()),
-        SkFloatToScalar((float)rt.width()),
-        SkFloatToScalar((float)rt.height())
-        );
-        if(!shouldApplyEvasMap())
-            lastState().m_matrix.mapRect(&sss);
+        if (lastState().m_font->weight() == FontWeightNormal && lastState().m_font->style() == FontStyleNormal) {
+            Evas_Object* eo = evas_object_text_add(m_canvas);
+            if(m_objList) m_objList->push_back(eo);
+            Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
+            Rect rt(x,y,sz.width(),sz.height());
+            SkRect sss = SkRect::MakeXYWH(
+            SkFloatToScalar((float)rt.x()),
+            SkFloatToScalar((float)rt.y()),
+            SkFloatToScalar((float)rt.width()),
+            SkFloatToScalar((float)rt.height())
+            );
+            if(!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
 
-        Evas_Textblock_Style* st = evas_textblock_style_new();
-        char buf[256];
-        // FIXME pt->px is right?
-        float ptSize = lastState().m_font->size() * 12.f / 16.f;
-        snprintf(buf, 256, "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x valign=middle'",lastState().m_font->familyName()->utf8Data(), ptSize,
-                (int)lastState().m_color.r(), (int)lastState().m_color.g(), (int)lastState().m_color.b(), (int)lastState().m_color.a());
-        evas_textblock_style_set(st, buf);
-        evas_object_textblock_style_set(eo, st);
-        evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
-        evas_object_textblock_text_markup_set(eo, text->utf8Data());
+            evas_object_text_font_set(eo,lastState().m_font->familyName()->utf8Data(),convertFromPxToPt(lastState().m_font->size()));
+            evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
+            evas_object_text_text_set(eo, text->utf8Data());
 
-        evas_object_resize(eo, sss.width(), sss.height());
-        evas_object_move(eo,sss.x(),sss.y());
+            evas_object_move(eo,sss.x(),sss.y());
+            applyClippers(eo);
 
-        applyClippers(eo);
+            if(shouldApplyEvasMap()) {
+               applyEvasMapIfNeeded(eo, rt);
+            }
+            evas_object_show(eo);
+        } else {
 
-        if(shouldApplyEvasMap()) {
-           applyEvasMapIfNeeded(eo, rt);
+
+            Evas_Object* eo = evas_object_textblock_add(m_canvas);
+            if(m_objList) m_objList->push_back(eo);
+            Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
+            Rect rt(x,y,sz.width(),sz.height());
+            SkRect sss = SkRect::MakeXYWH(
+            SkFloatToScalar((float)rt.x()),
+            SkFloatToScalar((float)rt.y()),
+            SkFloatToScalar((float)rt.width()),
+            SkFloatToScalar((float)rt.height())
+            );
+            if(!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+
+            Evas_Textblock_Style* st = evas_textblock_style_new();
+            char buf[256];
+            float ptSize = convertFromPxToPt(lastState().m_font->size());
+            const char* weight;
+            switch (lastState().m_font->weight()) {
+            case 1:
+                weight = "thin";
+                break;
+            case 2:
+                weight = "ultralight";
+                break;
+            case 3:
+                weight = "light";
+                break;
+            case 4:
+                weight = "medium";
+                break;
+            case 5:
+                weight = "semibold";
+                break;
+            case 6:
+                weight = "bold";
+                break;
+            case 7:
+                weight = "ultrabold";
+                break;
+            case 8:
+                weight = "black";
+                break;
+            case 9:
+                weight = "extrablack";
+                break;
+            }
+            snprintf(buf, 256, "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x valign=middle font_weight=%s'",lastState().m_font->familyName()->utf8Data(), ptSize,
+                    (int)lastState().m_color.r(), (int)lastState().m_color.g(), (int)lastState().m_color.b(), (int)lastState().m_color.a(), weight);
+            evas_textblock_style_set(st, buf);
+            evas_object_textblock_style_set(eo, st);
+            evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
+            evas_object_textblock_text_markup_set(eo, text->utf8Data());
+
+            evas_object_resize(eo, sss.width(), sss.height());
+            evas_object_move(eo,sss.x(),sss.y());
+
+            applyClippers(eo);
+
+            if(shouldApplyEvasMap()) {
+               applyEvasMapIfNeeded(eo, rt);
+            }
+            evas_object_show(eo);
+            evas_textblock_style_free(st);
         }
-        evas_object_show(eo);
-        evas_textblock_style_free(st);
-        */
-        Evas_Object* eo = evas_object_text_add(m_canvas);
-        if(m_objList) m_objList->push_back(eo);
-        Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
-        Rect rt(x,y,sz.width(),sz.height());
-        SkRect sss = SkRect::MakeXYWH(
-        SkFloatToScalar((float)rt.x()),
-        SkFloatToScalar((float)rt.y()),
-        SkFloatToScalar((float)rt.width()),
-        SkFloatToScalar((float)rt.height())
-        );
-        if(!shouldApplyEvasMap())
-            lastState().m_matrix.mapRect(&sss);
-
-        float ptSize = lastState().m_font->size() * 12.f / 16.f;
-        evas_object_text_font_set(eo,lastState().m_font->familyName()->utf8Data(),ptSize);
-        evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
-        evas_object_text_text_set(eo, text->utf8Data());
-
-        evas_object_move(eo,sss.x(),sss.y());
-        applyClippers(eo);
-
-        if(shouldApplyEvasMap()) {
-           applyEvasMapIfNeeded(eo, rt);
-        }
-        evas_object_show(eo);
     }
 
     Evas_Object* findPrevDrawnData(ImageData* data)

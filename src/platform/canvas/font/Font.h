@@ -3,13 +3,17 @@
 
 namespace StarFish {
 
-
-
 enum FontStyle {
     FontStyleNormal = 1,
     FontStyleBold = 1 << 1,
     FontStyleItalic = 1 << 2,
     FontStyleUnderline = 1 << 3,
+};
+
+enum FontWeight {
+    FontWeightStart = 1,
+    FontWeightNormal = 4,
+    FontWeightEnd = 9,
 };
 
 class Font : public gc {
@@ -26,8 +30,26 @@ public:
 
     virtual float measureText(String*) = 0;
     virtual void* unwrap() = 0;
-    virtual float size() = 0;
-    virtual String* familyName() = 0;
+
+    char weight()
+    {
+        return m_weight;
+    }
+
+    float size()
+    {
+        return m_size;
+    }
+
+    char style()
+    {
+        return m_style;
+    }
+
+    String* familyName()
+    {
+        return m_fontFamily;
+    }
 
     struct FontMetrics {
         float m_ascender;
@@ -35,12 +57,18 @@ public:
         float m_fontHeight;
         float m_lineGap;
     };
+
     const FontMetrics& metrics()
     {
         return m_metrics;
     }
+
 protected:
     FontMetrics m_metrics;
+    float m_size;
+    char m_weight;
+    char m_style;
+    String* m_fontFamily;
 };
 
 class FontSelector {
@@ -54,14 +82,14 @@ protected:
     {
 
     }
-    Font* loadFont(String* familyName,float size, int style);
+    Font* loadFont(String* familyName, float size, char style = 1, char weight = 4);
     void clearCache()
     {
         m_fontCache.clear();
         m_fontCache.shrink_to_fit();
     }
 public:
-    std::vector<std::tuple<Font*, String*, float, int>, gc_allocator<std::tuple<Font*, String*, float, int>>> m_fontCache;
+    std::vector<std::tuple<Font*, String*, float, char, char>, gc_allocator<std::tuple<Font*, String*, float, char, char>>> m_fontCache;
 };
 
 };

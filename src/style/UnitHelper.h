@@ -17,6 +17,7 @@ float convertFromMmToPx(float value);
 float convertFromInToPx(float value);
 float convertFromPcToPx(float value);
 float convertFromPtToPx(float value);
+float convertFromPxToPt(float value);
 
 }
 

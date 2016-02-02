@@ -8,7 +8,46 @@ namespace StarFish {
 
 void ComputedStyle::loadResources(StarFish* sf)
 {
-    m_font = sf->fetchFont(String::emptyString, m_inheritedStyles.m_fontSize.fixed(), 0);
+    float fontSize = m_inheritedStyles.m_fontSize.fixed();
+    char style = 1;
+    char fontWeight = 4;
+
+    switch (m_inheritedStyles.m_fontWeight) {
+    case OneHundredFontWeightValue:
+        fontWeight = 1;
+        break;
+    case TwoHundredsFontWeightValue:
+        fontWeight = 2;
+        break;
+    case ThreeHundredsFontWeightValue:
+        fontWeight = 3;
+        break;
+    case NormalFontWeightValue:
+    case FourHundredsFontWeightValue:
+        fontWeight = 4;
+        break;
+    case FiveHundredsFontWeightValue:
+        fontWeight = 5;
+        break;
+    case SixHundredsFontWeightValue:
+        fontWeight = 6;
+        break;
+    case BoldFontWeightValue:
+    case SevenHundredsFontWeightValue:
+        fontWeight = 7;
+        break;
+    case EightHundredsFontWeightValue:
+        fontWeight = 8;
+        break;
+    case NineHundredsFontWeightValue:
+        fontWeight = 9;
+        break;
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+
+    m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
     if (!bgImage()->equals(String::emptyString)) {
         setBgImageData(sf->fetchImage(sf->makeResourcePath(bgImage())));
     }
