@@ -359,6 +359,6 @@ install_runner_dep:
 	npm install fs path phantom
 
 pixel_test:
-	./tool/pixel_test/pixel_test.sh
+	./tool/pixel_test/pixel_test.sh $(tc)
 
 .PHONY: clean

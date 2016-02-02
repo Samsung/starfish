@@ -9,14 +9,22 @@ RESET='\033[0m'
 
 # Variables
 EXPECTED_IMAGE_PATH="test/platform/linux"
-OUTDIR="out/x64/exe/debug/test"
+# FIXME
+OUTDIR="out/x64/exe/debug/reftest"
+mkdir -p $OUTDIR
 PASS=0
 FAIL=0
 
+if [ "$1" = "" ]; then
+    tc=$(find test -name "*.xml")
+else
+    tc=$1
+fi
+
 echo "${BOLD}###### CSS Regression Test ######${RESET}\n"
-tc=$(find test -name "*.xml")
 for i in $tc ; do
     dir=${i%.xml}
+    html=$dir".html"
     file=${dir##*/}
     dir=${dir#*/}
     dir=${dir%/*}
@@ -25,7 +33,14 @@ for i in $tc ; do
     ELM_ENGINE="shot:" ./StarFish $i > /dev/null 2>&1
 
     # Compare
-    diff=`tool/pixel_test/bin/image_diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png out.png` > /dev/null 2>&1
+    compare="tool/pixel_test/bin/image_diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png out.png"
+    diff=`eval $compare` > /dev/null 2>&1
+    if [ "$diff" = "" ]; then
+        cd tool/pixel_test
+        phantomjs capture.js -f ../../$html > /dev/null 2>&1
+        cd - > /dev/null 2>&1
+        diff=`eval $compare` > /dev/null 2>&1
+    fi
     result=${diff##* }
 
     # Print the result
@@ -38,7 +53,7 @@ for i in $tc ; do
         echo "${GREEN}[PASS]${RESET}" $i
     else
         FAIL=`expr $FAIL + 1`
-        echo "${RED}[FAIL]${RESET}" $i "(Unable to open expected image file)"
+        echo "${RED}[FAIL]${RESET}" $i "${YELLOW}(Unable to open html file)${RESET}"
     fi
 done
 
