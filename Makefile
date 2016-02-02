@@ -207,6 +207,7 @@ CXXFLAGS += -Ithird_party/skia_matrix/
 SRC=
 SRC += $(foreach dir, src , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/extra , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/builder , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/binding , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/layout , $(wildcard $(dir)/*.cpp))

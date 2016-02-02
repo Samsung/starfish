@@ -1,21 +1,64 @@
 #ifndef __StarFishXHRElement__
 #define __StarFishXHRElement__
 
-#include <curl/curl.h>
 #include "dom/binding/ScriptWrappable.h"
+#include "dom/EventTarget.h"
+#include "platform/canvas/Canvas.h"
 
 namespace StarFish {
 
 class XMLHttpRequestEventTarget : public EventTarget<ScriptWrappable>{
 
+public:
+    bool addEventListener(String* eventName,escargot::ESValue handler){
+        if(eventName->equals("loadstart")){
+            m_onloadstart = handler;
+        }else if(eventName->equals("progress")){
+            m_onprogress = handler;
+        }else if(eventName->equals("error")){
+            m_onerror = handler;
+        }else if(eventName->equals("abort")){
+            m_onabort = handler;
+        }else if(eventName->equals("timeout")){
+            m_ontimeout = handler;
+        }else if(eventName->equals("load")){
+            m_onload = handler;
+        }else if(eventName->equals("loadend")){
+            m_onloadend = handler;
+        }else{
+            return false;
+        }
+        return true;
+    }
+
+    escargot::ESValue getHandler(String* eventName){
+
+        if(eventName->equals("loadstart")){
+            return m_onloadstart;
+        }else if(eventName->equals("progress")){
+            return m_onprogress;
+        }else if(eventName->equals("error")){
+            return m_onerror;
+        }else if(eventName->equals("abort")){
+            return m_onabort;
+        }else if(eventName->equals("timeout")){
+            return m_ontimeout;
+        }else if(eventName->equals("load")){
+            return m_onload;
+        }else if(eventName->equals("loadend")){
+            return m_onloadend;
+        }
+        return escargot::ESValue::ESNull;
+    }
+
 private:
-    // std::function<void (ProgressEvent*)>  m_onloadstart;
-    // std::function<void (ProgressEvent*)> m_onprogress;
-    // std::function<void (ProgressEvent*)> m_onabort;
-    // std::function<void (ProgressEvent*)> m_onerror;
-    // std::function<void (ProgressEvent*)> m_onload;
-    // std::function<void (ProgressEvent*)> m_ontimeout;
-    // std::function<void (ProgressEvent*)> m_onloadend;
+    escargot::ESValue  m_onloadstart;
+    escargot::ESValue m_onprogress;
+    escargot::ESValue m_onabort;
+    escargot::ESValue m_onerror;
+    escargot::ESValue m_onload;
+    escargot::ESValue m_ontimeout;
+    escargot::ESValue m_onloadend;
 };
 
 
@@ -30,8 +73,9 @@ public:
     {
         //FIXME: temp soluation
         set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESValue::ESNull));
-        initScriptWrappable(this);
 
+        //init
+        initScriptWrappable(this);
         m_method = nullptr;
         m_url = nullptr;
     }
@@ -42,56 +86,7 @@ public:
         m_url = url;
     }
 
-    void send(){
-
-        //Buffer header;
-        Buffer buffer;
-        buffer.memory=NULL;
-        buffer.size=0;
-
-        CURL* curl = curl_easy_init();
-        CURLcode res;
-
-        if (!curl) return ;
-        curl_easy_setopt(curl, CURLOPT_URL, m_url->utf8Data());
-        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-        //curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*) &header);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &buffer);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
-
-        res = curl_easy_perform(curl);
-
-        long res_code = 0;
-        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
-        if (!((res_code == 200 || res_code == 201) && res != CURLE_ABORTED_BY_CALLBACK))
-        {
-            printf("!!! Response code: %ld\n", res_code);
-        }
-
-        set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(buffer.memory)));
-        curl_easy_cleanup(curl);
-
-        //fire load event
-        escargot::ESObject* obj = (escargot::ESObject*)this;
-        escargot::ESValue fn = load_eventhandler;
-        escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-
-        std::jmp_buf tryPosition;
-        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-            escargot::ESFunctionObject::call(instance, fn, obj, NULL, 0, false);
-            instance->unregisterTryPos(&tryPosition);
-        } else {
-            escargot::ESValue err = instance->getCatchedError();
-            printf("Uncaught %s\n", err.toString()->utf8Data());
-        }
-
-    }
-    void addEventListener(String* eventName,escargot::ESValue handler){
-        if(eventName->equals("load")){
-            load_eventhandler = handler;
-        }
-    }
+    void send();
 
     // String* getResponse()
     //     return m_response;
@@ -127,7 +122,7 @@ protected:
     String* m_url;
     String* m_method;
     // String* m_response;
-    escargot::ESValue load_eventhandler;
+
 
 };
 
