@@ -44,34 +44,66 @@ img {
     font-weight: bold;
     font-size: 30pt;
 }
+#start:active, #reset:active {
+  background-color: gray;
+}
 </style>
 
-<script>
-function clicked(node) {
-  console.log("clicked");
-  console.log(node);
-}
-</script>
 </head>
 <body>
 
 
 <div id="viewport">
   <div id="t1">
-    <p>00:08</p>
+    <p id="time">00:00</p>
   </div>
 
   <div id="b">
-    <div id="a1" onclick="clicked(this)">
-      <img src="images/start.png"/>
+    <div id="a1">
+      <img id="start" src="images/start.png"/>
     </div>
 
-    <div id="a2" onclick="clicked(this)">
-      <img src="images/reset.png"/>
+    <div id="a2">
+      <img id="reset" src="images/reset.png"/>
     </div>
   </div>
 
 </div>
+
+<script>
+document.getElementById("start").onclick = startTick;
+var timer;
+
+function startTick() {
+  ticking = true;
+  timer = setTimeout(tick, 1000);
+}
+
+function tick() {
+  var t = document.getElementById("time").textContent;
+  var m = parseInt(t.substring(0,2));
+  var s = parseInt(t.substr(3,5));
+
+  s = s+1;
+  if(s == 60) {
+    s = 0;
+    m = m + 1;
+  }
+  if(m <= 9) {
+    m = "0" + m;
+  }
+  if(s <= 9) {
+    s = "0" + s;
+  }
+  document.getElementById("time").textContent = m+":"+s;
+  startTick();
+}
+
+document.getElementById("reset").onclick = function() {
+  clearTimeout(timer);
+  document.getElementById("time").textContent = "00:00";
+}
+</script>
 
 </body>
 </html>
