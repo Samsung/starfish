@@ -20,22 +20,22 @@ public:
       m_onloadend(escargot::ESValue::ESNull),
       m_onreadystatechange(escargot::ESValue::ESNull)
     {}
-    bool addEventListener(String* eventName,escargot::ESValue handler){
-        if(eventName->equals("loadstart")){
+    bool setHandler(String* keyName,escargot::ESValue handler){
+        if(keyName->equals("loadstart")||keyName->equals("onloadstart")){
             m_onloadstart = handler;
-        }else if(eventName->equals("progress")){
+        }else if(keyName->equals("progress")||keyName->equals("onprogress")){
             m_onprogress = handler;
-        }else if(eventName->equals("error")){
+        }else if(keyName->equals("error")||keyName->equals("onerror")){
             m_onerror = handler;
-        }else if(eventName->equals("abort")){
+        }else if(keyName->equals("abort")||keyName->equals("onabort")){
             m_onabort = handler;
-        }else if(eventName->equals("timeout")){
+        }else if(keyName->equals("timeout")||keyName->equals("ontimeout")){
             m_ontimeout = handler;
-        }else if(eventName->equals("load")){
+        }else if(keyName->equals("load")||keyName->equals("onload")){
             m_onload = handler;
-        }else if(eventName->equals("loadend")){
+        }else if(keyName->equals("loadend")||keyName->equals("onloadend")){
             m_onloadend = handler;
-        }else if(eventName->equals("readystatechange")){
+        }else if(keyName->equals("readystatechange")||keyName->equals("onreadystatechange")){
             m_onreadystatechange = handler;
         }else{
             return false;
@@ -43,30 +43,30 @@ public:
         return true;
     }
 
-    escargot::ESValue getHandler(String* eventName){
+    escargot::ESValue getHandler(String* keyName){
 
-        if(eventName->equals("loadstart")){
+        if(keyName->equals("loadstart")||keyName->equals("onloadstart")){
             if(m_onloadstart!=escargot::ESValue::ESNull)
                 return m_onloadstart;
-        }else if(eventName->equals("progress")){
+        }else if(keyName->equals("progress")||keyName->equals("onprogress")){
             if(m_onprogress!=escargot::ESValue::ESNull)
                 return m_onprogress;
-        }else if(eventName->equals("error")){
+        }else if(keyName->equals("error")||keyName->equals("onerror")){
             if(m_onerror!=escargot::ESValue::ESNull)
                 return m_onerror;
-        }else if(eventName->equals("abort")){
+        }else if(keyName->equals("abort")||keyName->equals("onabort")){
             if(m_onabort!=escargot::ESValue::ESNull)
                 return m_onabort;
-        }else if(eventName->equals("timeout")){
+        }else if(keyName->equals("timeout")||keyName->equals("ontimeout")){
             if(m_ontimeout!=escargot::ESValue::ESNull)
                 return m_ontimeout;
-        }else if(eventName->equals("load")){
+        }else if(keyName->equals("load")||keyName->equals("onload")){
             if(m_onload!=escargot::ESValue::ESNull)
                 return m_onload;
-        }else if(eventName->equals("loadend")){
+        }else if(keyName->equals("loadend")||keyName->equals("onloadend")){
             if(m_onloadend!=escargot::ESValue::ESNull)
                 return m_onloadend;
-        }else if(eventName->equals("readystatechange")){
+        }else if(keyName->equals("readystatechange")||keyName->equals("onreadystatechange")){
             if(m_onreadystatechange!=escargot::ESValue::ESNull)
                 return m_onreadystatechange;
         }

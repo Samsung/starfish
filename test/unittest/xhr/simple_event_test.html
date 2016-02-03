@@ -19,39 +19,51 @@
 <script type="text/javascript">
   function run() {
 
-      print("*********** XHR Simple Event TEST 1 *****************");
+    print("*********** XHR Simple Event TEST 1 *****************");
 
-      function onLoadHandler() {
+    function onLoadHandler() {
       print("*** load event ***")
-        print(this.response);
-      }
-      function onLoadStartHandler() {
-        print("*** loadstart event ***");
-      }
-      function onErrorHandler() {
-        print("*** error event ***")
-      }
-      function onLoadendHandler() {
-        print("*** loadend event ***")
-      }
-
-
-      var xhr = new XMLHttpRequest();
-      xhr.addEventListener("load", onLoadHandler);
-      xhr.addEventListener("loadstart", onLoadStartHandler);
-      xhr.addEventListener("loadend", onLoadendHandler);
-      xhr.addEventListener("error", onErrorHandler);
-
-      xhr.open("GET", "https://httpbin.org/get");
-      xhr.send();
-
-      xhr.open("GET", "https://nothing");
-      xhr.send();
-
-
-      print("************* Done *******************");
+      print(this.response);
     }
-    run();
+    function onLoadStartHandler() {
+      print("*** loadstart event ***");
+    }
+    function onErrorHandler() {
+      print("*** error event ***")
+    }
+    function onLoadendHandler() {
+      print("*** loadend event ***")
+    }
+
+
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", onLoadHandler);
+    xhr.addEventListener("loadstart", onLoadStartHandler);
+    xhr.addEventListener("loadend", onLoadendHandler);
+    xhr.addEventListener("error", onErrorHandler);
+
+    xhr.open("GET", "https://httpbin.org/get");
+    xhr.send();
+
+    xhr.open("GET", "http://nothing");
+    xhr.send();
+
+    print("*********** XHR Simple Event TEST 2 *****************");
+
+    var xhr2 = new XMLHttpRequest();
+    xhr2.open("GET", "https://httpbin.org/get");
+    xhr2.onloadstart=onLoadStartHandler;
+    xhr2.onload=onLoadHandler;
+    xhr2.onerror=onErrorHandler;
+    xhr2.onloadend=onLoadendHandler;
+
+    xhr2.open("GET", "https://httpbin.org/get");
+    xhr2.send();
+
+    xhr2.open("GET", "http://nothing");
+    xhr2.send();
+
+    print("************* Done *******************");
   }
   run();
 </script>

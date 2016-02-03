@@ -88,6 +88,20 @@
     xhr.open("GET", "http://nothing");
     xhr.send();
 
+    print("*********** XHR Simple Event TEST 2 *****************");
+
+    var xhr2 = new XMLHttpRequest();
+    xhr2.open("GET", "https://httpbin.org/get");
+    xhr2.onloadstart=onLoadStartHandler;
+    xhr2.onload=onLoadHandler;
+    xhr2.onerror=onErrorHandler;
+    xhr2.onloadend=onLoadendHandler;
+
+    xhr2.open("GET", "https://httpbin.org/get");
+    xhr2.send();
+
+    xhr2.open("GET", "http://nothing");
+    xhr2.send();
 
     print("************* Done *******************");
   }

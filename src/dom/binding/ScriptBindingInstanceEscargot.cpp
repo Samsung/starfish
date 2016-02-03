@@ -1617,6 +1617,126 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
     }, false, false, false);
 
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onloadstart"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onloadstart"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onloadstart"),v);
+        }
+    }, false, false, false);
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onprogress"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onprogress"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onprogress"),v);
+        }
+    }, false, false, false);
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onabort"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onabort"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onabort"),v);
+        }
+    }, false, false, false);
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onerror"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onerror"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onerror"),v);
+        }
+    }, false, false, false);
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onload"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onload"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onload"),v);
+        }
+    }, false, false, false);
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ontimeout"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("ontimeout"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("ontimeout"),v);
+        }
+    }, false, false, false);
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onloadend"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onloadend"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onloadend"),v);
+        }
+    }, false, false, false);
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onreadystatechange"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onreadystatechange"));
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isObject()){
+            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onreadystatechange"),v);
+        }
+    }, false, false, false);
+
     escargot::ESFunctionObject* xhrOpenFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
@@ -1655,7 +1775,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
                 XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();;
-                xhr->addEventListener(String::createASCIIString(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()),instance->currentExecutionContext()->readArgument(1));
+                xhr->setHandler(String::createASCIIString(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()),instance->currentExecutionContext()->readArgument(1));
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
