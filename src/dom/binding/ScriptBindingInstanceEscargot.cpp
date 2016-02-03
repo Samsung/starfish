@@ -64,6 +64,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 {
     escargot::ESValue v;
 
+    escargot::ESObject* console = escargot::ESObject::create();
+    console->set(escargot::ESString::create("log"), fetchData(this)->m_instance->globalObject()->get(escargot::ESString::create("print")));
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
+
     DEFINE_FUNCTION(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
     DEFINE_FUNCTION(Window, EventTargetFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("window"), false, false, false, fetchData(this)->m_instance->globalObject());

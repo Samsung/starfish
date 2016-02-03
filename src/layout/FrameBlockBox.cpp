@@ -929,21 +929,30 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         }
 
         // TODO the child stacking contexts with positive stack levels (least positive first).
-    } else if(isPositionedElement()) {
-        if (stage == PaintingPositionedElements) {
-            paintBackgroundAndBorders(canvas);
-            PaintingStage s = PaintingStage::PaintingStackingContext;
-            while (s != PaintingStageEnd) {
-                paintChildrenWith(this, canvas, s);
-                s = (PaintingStage)(s + 1);
+    } else {
+        if (style()->overflow() == OverflowValue::HiddenOverflow) {
+            canvas->save();
+            canvas->clip(Rect(0, 0, width(), height()));
+        }
+        if(isPositionedElement()) {
+            if (stage == PaintingPositionedElements) {
+                paintBackgroundAndBorders(canvas);
+                PaintingStage s = PaintingStage::PaintingStackingContext;
+                while (s != PaintingStageEnd) {
+                    paintChildrenWith(this, canvas, s);
+                    s = (PaintingStage)(s + 1);
+                }
+            }
+        } else {
+            if (stage == PaintingNormalFlowBlock) {
+                paintBackgroundAndBorders(canvas);
+                paintChildrenWith(this, canvas, stage);
+            } else {
+                paintChildrenWith(this, canvas, stage);
             }
         }
-    } else {
-        if (stage == PaintingNormalFlowBlock) {
-            paintBackgroundAndBorders(canvas);
-            paintChildrenWith(this, canvas, stage);
-        } else {
-            paintChildrenWith(this, canvas, stage);
+        if (style()->overflow() == OverflowValue::HiddenOverflow) {
+            canvas->restore();
         }
     }
 }
