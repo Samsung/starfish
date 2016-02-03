@@ -13,13 +13,12 @@
 			width:360px;
 			height:360px;
 			font-size: 2.125rem;
-			font-family: Tizen,Samsung Sans,Helvetica;
 			color: white;
-			background-color: black;
 		}
             p {
-                  color: white;
-                  font-size: 14pt;
+                  color: white;                  
+                  font-size: 20pt;
+                  font-weight: bold;
             }
             #container {
                   width: 100%;
@@ -66,17 +65,49 @@
    </head>
    <body>
       <div id="container">
-         <img id="img_title" src="img/food.png"/>
-         <p id="text_title">TODAY'S FOOD INTAKE</p>
+         <img id="img_title" src="images/food0.png"/>
+         <p id="text_title">TODAY'S RECOMMENDATION FOOD</p>
          <div id="div_progress"><div id="div_progress_bar"></div></div>
-         <p id="text_value">1700</p>
-         <p>kcal left</p>
-         <div id="div_btn"><p id="text_btn">ADD FOOD</p></div>
+         <p id="text_value">700</p>
+         <p>kcal</p>
+         <div id="div_btn"><p id="text_btn">NEXT FOOD</p></div>
       </div>
    </body>
    <script>
+      var num = 0;
       document.getElementById("div_btn").onclick = function() {
-         print("clicked!");
+         var img = document.getElementById('img_title');
+         var txt = document.getElementById('text_value');
+         var pgb = document.getElementById('div_progress_bar');
+         
+         num = (++num)%4;
+         switch(num){
+            case 0:
+               img.src = "images/food0.png";
+               txt.textContent = "700";
+               pgb.style.width = "70%"
+               break;
+            case 1:
+               img.src = "images/food1.png";
+               txt.textContent = "500";
+               pgb.style.width = "50%"
+               break;
+            case 2:
+               img.src = "images/food2.jpg";
+               txt.textContent = "400";
+               pgb.style.width = "40%"
+               break;
+            case 3:
+               img.src = "images/food3.png";
+               txt.textContent = "800";
+               pgb.style.width = "80%"
+               break;
+         }
+         
+         
+         
+         
+         //var text = document.getElementById('');
       };
    </script>
 </html>
