@@ -1598,9 +1598,24 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             return new XMLHttpRequest();
         }, escargot::ESString::create("XMLHttpRequest"), 0, true);
     xhrElementFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
-    xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(xhrElementFunction->protoType());
+    xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(EventTargetFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
     fetchData(this)->m_xhrElement = xhrElementFunction;
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("responseType"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+
+        String* c = ((XMLHttpRequest*) originalObj)->getResponseTypeStr();
+        if (c != nullptr)
+            return escargot::ESString::create(c->utf8Data());
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isESString()){
+            ((XMLHttpRequest*)originalObj)->setResponseType(v.asESString()->utf8Data());
+        }
+    }, false, false, false);
 
     escargot::ESFunctionObject* xhrOpenFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();

@@ -73,13 +73,35 @@ void XMLHttpRequest::send(String* body)
           Pass* pass = (Pass*)data;
 
           escargot::ESObject* this_obj = pass->obj;
-
+          escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
           printf("HEADER : %s\n",pass->header);
 
-          this_obj->set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(pass->buf)));
-          escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->getHandler(String::fromUTF8("load"));
-          escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+          switch(((XMLHttpRequest*)this_obj)->getResponseType()){
+            case JSON_RESPONSE:
+              {
+                escargot::ESValue json_obj;
+                escargot::ESValue json_arg[1] = {escargot::ESValue(escargot::ESString::create(pass->buf))};
+                escargot::ESValue json_parse_fn = instance->globalObject()->json()->get(escargot::ESValue(escargot::ESString::create("parse")));
 
+                std::jmp_buf tryPosition;
+                if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
+                    escargot::ESValue ret = escargot::ESFunctionObject::call(instance, json_parse_fn, instance->globalObject()->json(), json_arg, 1, false);
+                    this_obj->set(escargot::ESString::create("response"),ret);
+                    instance->unregisterTryPos(&tryPosition);
+                } else {
+                    escargot::ESValue err = instance->getCatchedError();
+                    printf("Uncaught %s\n", err.toString()->utf8Data());
+                }
+                              }
+              break;
+
+            case TEXT_RESPONSE:
+            default:
+              this_obj->set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(pass->buf)));
+
+          }
+
+          escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->getHandler(String::fromUTF8("load"));
           std::jmp_buf tryPosition;
           if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
               escargot::ESFunctionObject::call(instance, fn, this_obj, NULL, 0, false);

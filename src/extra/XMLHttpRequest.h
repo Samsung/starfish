@@ -70,6 +70,15 @@ public:
         UNKNOWN_METHOD
     };
 
+    enum RESPONSE_TYPE{
+        TEXT_RESPONSE,
+        ARRAY_BUFFER_RESPONSE,
+        BLOB_RESPONSE,
+        DOCUMENT_RESPONSE,
+        JSON_RESPONSE,
+        DEFAULT_RESPONSE
+    };
+
     struct Buffer {
         char *memory;
         size_t size;
@@ -79,12 +88,64 @@ public:
     {
         //FIXME: temp soluation
         set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESValue::ESNull));
+        set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESValue::ESNull));
 
         //init
         initScriptWrappable(this);
         m_method = UNKNOWN_METHOD;
+        m_response_type = DEFAULT_RESPONSE;
         m_url = nullptr;
     }
+
+    String* getResponseTypeStr(){
+        switch(m_response_type){
+            case TEXT_RESPONSE:
+                return String::fromUTF8("text");
+
+            case ARRAY_BUFFER_RESPONSE:
+                return String::fromUTF8("arraybuffer");
+
+            case BLOB_RESPONSE:
+                return String::fromUTF8("blob");
+
+            case DOCUMENT_RESPONSE:
+                return String::fromUTF8("document");
+
+            case JSON_RESPONSE:
+                return String::fromUTF8("json");
+
+            case DEFAULT_RESPONSE:
+                return String::emptyString;
+
+        }
+        return String::emptyString;
+    }
+
+    RESPONSE_TYPE getResponseType(){
+        return m_response_type;
+    }
+
+    void setResponseType(const char* responseType)
+    {
+        if(responseType){
+            std::string data = responseType;
+            std::transform(data.begin(), data.end(), data.begin(), ::tolower);
+            String* lowerName = String::fromUTF8(data.c_str());
+
+            if(lowerName->equals("text")){
+                m_response_type = TEXT_RESPONSE;
+            }else if(lowerName->equals("arraybuffer")){
+                m_response_type = ARRAY_BUFFER_RESPONSE;
+            }else if(lowerName->equals("blob")){
+                m_response_type = BLOB_RESPONSE;
+            }else if(lowerName->equals("document")){
+                m_response_type = DOCUMENT_RESPONSE;
+            }else if(lowerName->equals("json")){
+                m_response_type = JSON_RESPONSE;
+            }
+        }
+    }
+
 
     void setOpen(const char* method,String* url)
     {
@@ -137,7 +198,7 @@ public:
 protected:
     String* m_url;
     METHOD_TYPE m_method;
-
+    RESPONSE_TYPE m_response_type;
 
 };
 
