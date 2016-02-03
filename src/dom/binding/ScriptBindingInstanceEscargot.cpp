@@ -1003,6 +1003,56 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(HTMLBRElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBrElement = HTMLBRElementFunction;
 
+    DEFINE_FUNCTION(HTMLAudioElement, HTMLElementFunction->protoType());
+    fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
+
+    escargot::ESFunctionObject* audioPlayFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* nd = (Node*)thisValue.asESPointer()->asESObject();
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
+                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->play();
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, escargot::ESString::create("play"), 1, false);
+    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("play"), false, false, false, audioPlayFunction);
+
+    escargot::ESFunctionObject* audioPauseFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* nd = (Node*)thisValue.asESPointer()->asESObject();
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
+                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->pause();
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, escargot::ESString::create("pause"), 1, false);
+    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pause"), false, false, false, audioPauseFunction);
+
+    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("paused"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)originalObj);
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
+                    return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLAudioElement()->paused());
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+        RELEASE_ASSERT_NOT_REACHED();
+    }, NULL , true, true, false);
+
     DEFINE_FUNCTION(HTMLCollection, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_htmlCollection = HTMLCollectionFunction;
 

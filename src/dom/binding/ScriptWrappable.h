@@ -24,6 +24,7 @@ class HTMLScriptElement;
 class HTMLDivElement;
 class HTMLImageElement;
 class HTMLBRElement;
+class HTMLAudioElement;
 class HTMLUnknownElement;
 class Event;
 class UIEvent;
@@ -89,6 +90,7 @@ public:
     void initScriptWrappable(HTMLBRElement* ptr);
     void initScriptWrappable(HTMLDivElement* ptr);
     void initScriptWrappable(HTMLUnknownElement* ptr);
+    void initScriptWrappable(HTMLAudioElement* ptr);
 
     void initScriptWrappable(Event* ptr, ScriptBindingInstance*);
     void initScriptWrappable(UIEvent* ptr, ScriptBindingInstance*);

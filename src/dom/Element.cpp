@@ -13,6 +13,7 @@
 #include "HTMLImageElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLStyleElement.h"
+#include "HTMLAudioElement.h"
 
 
 namespace StarFish {

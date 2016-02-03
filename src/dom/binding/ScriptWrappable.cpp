@@ -225,6 +225,13 @@ void ScriptWrappable::initScriptWrappable(HTMLBRElement* ptr)
     ((escargot::ESObject *)this)->set__proto__(data->m_htmlBrElement->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    ((escargot::ESObject *)this)->set__proto__(data->m_htmlAudioElement->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(HTMLUnknownElement* ptr)
 {
     Node* node = (Node*)this;

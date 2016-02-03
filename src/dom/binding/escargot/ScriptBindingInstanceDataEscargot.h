@@ -25,6 +25,7 @@ public:
     escargot::ESFunctionObject* m_htmlDivElement;
     escargot::ESFunctionObject* m_htmlImageElement;
     escargot::ESFunctionObject* m_htmlBrElement;
+    escargot::ESFunctionObject* m_htmlAudioElement;
     escargot::ESFunctionObject* m_htmlCollection;
     escargot::ESFunctionObject* m_htmlUnknownElement;
     escargot::ESFunctionObject* m_event;

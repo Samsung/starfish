@@ -23,6 +23,7 @@
 #include "dom/HTMLImageElement.h"
 #include "dom/HTMLSpanElement.h"
 #include "dom/HTMLBRElement.h"
+#include "dom/HTMLAudioElement.h"
 #include "dom/HTMLCollection.h"
 #include "dom/HTMLUnknownElement.h"
 #include "dom/DOMTokenList.h"

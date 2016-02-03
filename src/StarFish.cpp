@@ -91,6 +91,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_imageLocalName = QualifiedName::fromString(sf, "img");
     m_spanLocalName = QualifiedName::fromString(sf, "span");
     m_brLocalName = QualifiedName::fromString(sf, "br");
+    m_audioLocalName = QualifiedName::fromString(sf, "audio");
 
     m_id = QualifiedName::fromString(sf, "id");
     m_class = QualifiedName::fromString(sf, "class");

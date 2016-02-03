@@ -30,6 +30,7 @@ public:
     QualifiedName m_imageLocalName;
     QualifiedName m_spanLocalName;
     QualifiedName m_brLocalName;
+    QualifiedName m_audioLocalName;
 
     // Attribute Names
     QualifiedName m_id;

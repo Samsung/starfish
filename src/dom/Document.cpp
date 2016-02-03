@@ -109,6 +109,8 @@ Element* Document::createElement(QualifiedName localName)
         return new HTMLSpanElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_imageLocalName) {
         return new HTMLImageElement(this);
+    } else if (localName == window()->starFish()->staticStrings()->m_audioLocalName) {
+        return new HTMLAudioElement(this);
     }
 
     STARFISH_LOG_INFO("got unknown element - %s\n", localName.string()->utf8Data());
