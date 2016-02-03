@@ -1,0 +1,45 @@
+background
+background-color
+background-image
+background-repeat, background-repeat-x, background-repeat-y
+background-size
+border, border-top, border-right, border-bottom, border-left
+border-color, border-top-color, border-right-color, border-bottom-color, border-left-color
+border-image-repeat
+border-image-slice
+border-image-source
+border-image-width
+border-style, border-top-style, border-right-style, border-bottom-style, border-left-style
+border-width, border-top-width, border-right-width, border-bottom-width, border-left-width
+bottom
+color
+direction
+display
+font-size
+font-style
+font-weight
+height
+left
+letter-spacing
+line-height
+margin
+margin-bottom
+margin-left
+margin-right
+margin-top
+opacity
+overflow, overflow-x, overflow-y
+padding
+padding-bottom
+padding-left
+padding-right
+padding-top
+position
+right
+text-align
+text-decoration
+top
+vertical-align
+visibility
+width
+z-index
