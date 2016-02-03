@@ -30,16 +30,25 @@
 	</div>
 </body>
 <script>
-    var cup = 0;
-    function addWater() {
-        cup++;
-        for (var i=1; i<=cup; i++) {
-            var img = document.getElementById("smallimg"+i);
-            img.src = "images/fillCup.JPG";
-        }
-        var txt = document.getElementById("txt");
-        txt.textContent = "" + cup + " of 8";
-    }
-    document.getElementById("add_water").onclick = addWater;
+(function() {
+	var MAX_CUP = 8;
+	var eImgCups = [];
+	var eText = document.getElementById("txt");
+	var status = 0;
+	for (var i = 1; i <= MAX_CUP; i++) eImgCups[i] = document.getElementById("smallimg" + i);
+
+    document.getElementById("add_water").onclick = function() {
+        status++;
+        if (status > MAX_CUP) {
+            for (var i = 1; i <= MAX_CUP; i++) eImgCups[i].src = "images/emptyCup.JPG";
+            status = 0;
+            eText.textContent = "" + status + " of 8";
+        } else {
+	        eImgCups[status].src = "images/fillCup.JPG";
+	        eText.textContent = "" + status + " of 8";
+	    }
+    };
+})();
+
 </script>
 </html>
