@@ -54,9 +54,12 @@ public:
             break;
         }
         m_fontFamily = familyName;
+        m_spaceWidth = measureText(String::spaceString);
+        loadFont();
     }
     ~FontImplEFL()
     {
+        // TODO unref evas_text_object
     }
 
     void loadFont()
@@ -72,11 +75,9 @@ public:
 
     virtual float measureText(String* str)
     {
-        loadFont();
         evas_object_text_text_set(m_text,str->utf8Data());
         Evas_Coord minw, minh;
         evas_object_geometry_get(m_text,0,0,&minw,&minh);
-        unloadFont();
         return minw;
     }
     virtual void* unwrap()

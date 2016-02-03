@@ -21,15 +21,20 @@ class Font : public gc {
 protected:
     Font()
     {
-
     }
 public:
-    virtual ~Font() {
+    virtual ~Font()
+    {
 
     }
 
     virtual float measureText(String*) = 0;
     virtual void* unwrap() = 0;
+
+    float spaceWidth()
+    {
+        return m_spaceWidth;
+    }
 
     char weight()
     {
@@ -66,6 +71,7 @@ public:
 protected:
     FontMetrics m_metrics;
     float m_size;
+    float m_spaceWidth;
     char m_weight;
     char m_style;
     String* m_fontFamily;

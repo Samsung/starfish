@@ -494,7 +494,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
                 String* resultString;
                 if(isWhiteSpace) {
                     resultString = String::spaceString;
-                    textWidth = f->style()->font()->measureText(String::spaceString);
+                    textWidth = f->style()->font()->spaceWidth();
                 }
                 else {
                     String* ss = txt->substring(offset,nextOffset - offset);
@@ -589,12 +589,10 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
         // text align
         if (style()->textAlign() == TextAlignValue::LeftTextAlignValue) {
         } else if (style()->textAlign() == TextAlignValue::RightTextAlignValue) {
-            float xx = 0;
+            float diff = (inlineContentWidth - x);
             for (size_t j = 0; j < b.m_boxes.size(); j ++) {
-                FrameBox* box = b.m_boxes[b.m_boxes.size() -1 - j];
-                box->setX(x - xx);
-                if (box->isNormalFlow())
-                    xx += box->width() + box->marginWidth();
+                FrameBox* box = b.m_boxes[j];
+                box->moveX(diff);
             }
         } else {
             STARFISH_ASSERT(style()->textAlign() == TextAlignValue::CenterTextAlignValue);
@@ -793,7 +791,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
                     float w = 0;
                     if (isWhiteSpace) {
-                        w = f->style()->font()->measureText(String::spaceString);
+                        w = f->style()->font()->spaceWidth();
                     } else {
                         w = f->style()->font()->measureText(s->substring(offset, nextOffset - offset));
                     }

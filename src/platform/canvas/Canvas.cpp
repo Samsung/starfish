@@ -196,7 +196,7 @@ public:
     {
         restore();
         if(m_directDraw) {
-            evas_damage_rectangle_add(m_canvas, 0, 0, m_width, m_height);
+            // evas_damage_rectangle_add(m_canvas, 0, 0, m_width, m_height);
         } else {
             evas_render(m_canvas);
             evas_free(m_canvas);
@@ -214,6 +214,7 @@ public:
                 for(unsigned i = 0 ; i < vec.size() ; ) {
                     if(!vec[i].second) {
                         evas_object_hide(vec[i].first);
+                        // evas_object_resize(vec[i].first, 0, 0);
                     }
                     i++;
                     /*
