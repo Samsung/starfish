@@ -85,10 +85,13 @@
                 s = "0" + s;
             }
             document.getElementById("time").textContent = m+":"+s;
-            startTick();
+            if(ticking) {
+                startTick();
+            }
         }
 
         document.getElementById("reset").onclick = function() {
+            ticking = false;
             clearTimeout(timer);
             document.getElementById("time").textContent = "00:00";
         }
