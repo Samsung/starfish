@@ -38,9 +38,16 @@ body {
 	font-size: 26px;
 	background-color: #39addb;
 }
+
+.addButton:active {
+	background-color: #2F8AAF;
+}
+
 #blue {
 	color: #39addb;;
 }
+
+
 .cup {
 	width: 29px;
 	height: 39px;

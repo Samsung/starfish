@@ -1048,7 +1048,7 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
 
                 return FrameBox::hitTest(x, y, stage);
             } else {
-                return node() ? nullptr : FrameBox::hitTest(x, y, stage);
+                return node() ? FrameBox::hitTest(x, y, stage) : nullptr;
             }
         } else {
             if (!hasBlockFlow()) {
