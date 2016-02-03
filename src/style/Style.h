@@ -9,6 +9,7 @@
 #include "style/UnitHelper.h"
 #include "dom/EventTarget.h"
 #include "dom/DOMTokenList.h"
+
 #include <sstream>
 
 
@@ -785,10 +786,11 @@ protected:
 class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
 public:
-    CSSStyleDeclaration(Document* document)
+    CSSStyleDeclaration(Document* document, Element* element = NULL)
         : m_document(document)
     {
         initScriptWrappable(this);
+        m_element = element;
     }
 
     void addValuePair(CSSStyleValuePair p)
@@ -807,6 +809,8 @@ public:
     {
         return m_document;
     }
+
+    void notifyNeedsStyleRecalc();
 
 #define CHECK_INPUT_ERROR(name) \
     bool checkInputError##name(std::vector<String*, gc_allocator<String*>>* tokens);
@@ -851,13 +855,16 @@ public:
             for (unsigned i = 0; i < m_cssValues.size(); i++) { \
                 if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
                     m_cssValues.at(i).setValue##name(&tokens); \
+                    notifyNeedsStyleRecalc(); \
                     return; \
                 } \
             } \
             CSSStyleValuePair ret; \
             ret.setKeyKind(CSSStyleValuePair::KeyKind::name); \
             ret.setValue##name(&tokens); \
+            notifyNeedsStyleRecalc(); \
             m_cssValues.push_back(ret); \
+            printf("aaaa\n");printf("aaaa\n");printf("aaaa\n");printf("aaaa\n");printf("aaaa\n"); \
         } \
     }
 
@@ -903,6 +910,7 @@ public:
 protected:
     std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair>> m_cssValues;
     Document* m_document;
+    Element* m_element;
 };
 
 // FIXME implement CSSRule

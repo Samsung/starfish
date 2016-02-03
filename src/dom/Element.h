@@ -18,7 +18,7 @@ public:
         m_id = String::emptyString;
         m_namespace = String::emptyString;
         m_namespacePrefix = String::emptyString;
-        m_style = new CSSStyleDeclaration(document);
+        m_style = new CSSStyleDeclaration(document, this);
     }
 
     Element(Document* document)
@@ -26,7 +26,7 @@ public:
     {
         initScriptWrappable(this);
         m_id = String::emptyString;
-        m_style = new CSSStyleDeclaration(document);
+        m_style = new CSSStyleDeclaration(document, this);
     }
 
     /* 4.4 Interface Node */

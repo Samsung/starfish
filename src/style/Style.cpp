@@ -3317,6 +3317,12 @@ bool CSSStyleDeclaration::checkInputErrorVerticalAlign(std::vector<String*, gc_a
     return false;
 }
 
+void CSSStyleDeclaration::notifyNeedsStyleRecalc()
+{
+    if (m_element)
+        m_element->setNeedsStyleRecalc();
+}
+
 ComputedStyle* StyleResolver::resolveDocumentStyle(StarFish* sf)
 {
     ComputedStyle* ret = new ComputedStyle();
