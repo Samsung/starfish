@@ -265,8 +265,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     auto textContentGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         String* s = ((Node *)originalObj)->textContent();
-        if (s == nullptr)
+        if (s == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
+        }
         return toJSString(s);
     };
     auto textContentSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
