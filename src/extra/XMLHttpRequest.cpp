@@ -79,7 +79,6 @@ void XMLHttpRequest::send(String* body)
           switch(((XMLHttpRequest*)this_obj)->getResponseType()){
             case JSON_RESPONSE:
               {
-                escargot::ESValue json_obj;
                 escargot::ESValue json_arg[1] = {escargot::ESValue(escargot::ESString::create(pass->buf))};
                 escargot::ESValue json_parse_fn = instance->globalObject()->json()->get(escargot::ESValue(escargot::ESString::create("parse")));
 
@@ -92,11 +91,12 @@ void XMLHttpRequest::send(String* body)
                     escargot::ESValue err = instance->getCatchedError();
                     printf("Uncaught %s\n", err.toString()->utf8Data());
                 }
-                              }
+              }
               break;
 
             case TEXT_RESPONSE:
             default:
+              this_obj->set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESString::create(pass->buf)));
               this_obj->set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(pass->buf)));
 
           }

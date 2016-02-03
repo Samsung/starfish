@@ -22,6 +22,7 @@
     print("*********** XHR Simple Get TEST 1 *****************");
     function handler () {
       document.getElementById("idText").text = this.responseText;
+      print(this.response);
       print(this.responseText);
     }
     var xhr = new XMLHttpRequest();
