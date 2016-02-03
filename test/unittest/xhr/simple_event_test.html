@@ -1,0 +1,59 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+  </style>
+</head>
+
+<body>
+  <div id="idText">
+    div1
+  </div>
+  <div class="classText">
+    div2
+    </div>
+</body>
+
+<script type="text/javascript">
+  function run() {
+
+      print("*********** XHR Simple Event TEST 1 *****************");
+
+      function onLoadHandler() {
+      print("*** load event ***")
+        print(this.response);
+      }
+      function onLoadStartHandler() {
+        print("*** loadstart event ***");
+      }
+      function onErrorHandler() {
+        print("*** error event ***")
+      }
+      function onLoadendHandler() {
+        print("*** loadend event ***")
+      }
+
+
+      var xhr = new XMLHttpRequest();
+      xhr.addEventListener("load", onLoadHandler);
+      xhr.addEventListener("loadstart", onLoadStartHandler);
+      xhr.addEventListener("loadend", onLoadendHandler);
+      xhr.addEventListener("error", onErrorHandler);
+
+      xhr.open("GET", "https://httpbin.org/get");
+      xhr.send();
+
+      xhr.open("GET", "https://nothing");
+      xhr.send();
+
+
+      print("************* Done *******************");
+    }
+    run();
+  }
+  run();
+</script>
+
+</html>

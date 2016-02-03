@@ -10,6 +10,16 @@ namespace StarFish {
 class XMLHttpRequestEventTarget : public EventTarget<ScriptWrappable>{
 
 public:
+    XMLHttpRequestEventTarget()
+    : m_onloadstart(escargot::ESValue::ESNull),
+      m_onprogress(escargot::ESValue::ESNull),
+      m_onabort(escargot::ESValue::ESNull),
+      m_onerror(escargot::ESValue::ESNull),
+      m_onload(escargot::ESValue::ESNull),
+      m_ontimeout(escargot::ESValue::ESNull),
+      m_onloadend(escargot::ESValue::ESNull),
+      m_onreadystatechange(escargot::ESValue::ESNull)
+    {}
     bool addEventListener(String* eventName,escargot::ESValue handler){
         if(eventName->equals("loadstart")){
             m_onloadstart = handler;
@@ -25,6 +35,8 @@ public:
             m_onload = handler;
         }else if(eventName->equals("loadend")){
             m_onloadend = handler;
+        }else if(eventName->equals("readystatechange")){
+            m_onreadystatechange = handler;
         }else{
             return false;
         }
@@ -34,31 +46,45 @@ public:
     escargot::ESValue getHandler(String* eventName){
 
         if(eventName->equals("loadstart")){
-            return m_onloadstart;
+            if(m_onloadstart!=escargot::ESValue::ESNull)
+                return m_onloadstart;
         }else if(eventName->equals("progress")){
-            return m_onprogress;
+            if(m_onprogress!=escargot::ESValue::ESNull)
+                return m_onprogress;
         }else if(eventName->equals("error")){
-            return m_onerror;
+            if(m_onerror!=escargot::ESValue::ESNull)
+                return m_onerror;
         }else if(eventName->equals("abort")){
-            return m_onabort;
+            if(m_onabort!=escargot::ESValue::ESNull)
+                return m_onabort;
         }else if(eventName->equals("timeout")){
-            return m_ontimeout;
+            if(m_ontimeout!=escargot::ESValue::ESNull)
+                return m_ontimeout;
         }else if(eventName->equals("load")){
-            return m_onload;
+            if(m_onload!=escargot::ESValue::ESNull)
+                return m_onload;
         }else if(eventName->equals("loadend")){
-            return m_onloadend;
+            if(m_onloadend!=escargot::ESValue::ESNull)
+                return m_onloadend;
+        }else if(eventName->equals("readystatechange")){
+            if(m_onreadystatechange!=escargot::ESValue::ESNull)
+                return m_onreadystatechange;
         }
         return escargot::ESValue::ESNull;
     }
 
 private:
-    escargot::ESValue  m_onloadstart;
+    escargot::ESValue m_onloadstart;
     escargot::ESValue m_onprogress;
     escargot::ESValue m_onabort;
     escargot::ESValue m_onerror;
     escargot::ESValue m_onload;
     escargot::ESValue m_ontimeout;
     escargot::ESValue m_onloadend;
+
+    //FIXME: mh.byun
+    escargot::ESValue m_onreadystatechange;
+
 };
 
 
@@ -83,91 +109,33 @@ public:
         char *memory;
         size_t size;
     };
-
-    XMLHttpRequest()
-    {
-        //FIXME: temp soluation
-        set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESValue::ESNull));
-        set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESValue::ESNull));
-
-        //init
-        initScriptWrappable(this);
-        m_method = UNKNOWN_METHOD;
-        m_response_type = DEFAULT_RESPONSE;
-        m_url = nullptr;
-    }
-
-    String* getResponseTypeStr(){
-        switch(m_response_type){
-            case TEXT_RESPONSE:
-                return String::fromUTF8("text");
-
-            case ARRAY_BUFFER_RESPONSE:
-                return String::fromUTF8("arraybuffer");
-
-            case BLOB_RESPONSE:
-                return String::fromUTF8("blob");
-
-            case DOCUMENT_RESPONSE:
-                return String::fromUTF8("document");
-
-            case JSON_RESPONSE:
-                return String::fromUTF8("json");
-
-            case DEFAULT_RESPONSE:
-                return String::emptyString;
-
-        }
-        return String::emptyString;
-    }
+    XMLHttpRequest();
 
     RESPONSE_TYPE getResponseType(){
         return m_response_type;
     }
 
-    void setResponseType(const char* responseType)
-    {
-        if(responseType){
-            std::string data = responseType;
-            std::transform(data.begin(), data.end(), data.begin(), ::tolower);
-            String* lowerName = String::fromUTF8(data.c_str());
-
-            if(lowerName->equals("text")){
-                m_response_type = TEXT_RESPONSE;
-            }else if(lowerName->equals("arraybuffer")){
-                m_response_type = ARRAY_BUFFER_RESPONSE;
-            }else if(lowerName->equals("blob")){
-                m_response_type = BLOB_RESPONSE;
-            }else if(lowerName->equals("document")){
-                m_response_type = DOCUMENT_RESPONSE;
-            }else if(lowerName->equals("json")){
-                m_response_type = JSON_RESPONSE;
-            }
-        }
-    }
-
-
-    void setOpen(const char* method,String* url)
-    {
-        if(method){
-            std::string data = method;
-            std::transform(data.begin(), data.end(), data.begin(), ::tolower);
-            String* lowerName = String::fromUTF8(data.c_str());
-
-            if(lowerName->equals("get")){
-                m_method = GET_METHOD;
-            }else if(lowerName->equals("post")){
-                m_method = POST_METHOD;
-            }
-        }
-        m_url = url;
-    }
-
+    String* getResponseTypeStr();
+    void setResponseType(const char* responseType);
+    void setOpen(const char* method,String* url);
     void send(String* body);
+    void callEventHandler(String* eventName,bool isMainThread);
+    //void callReadystatechangeHandler(escargot::ESVMInstance* instance);
 
-    // String* getResponse()
-    //     return m_response;
-    // }
+    static escargot::ESValue callJSFunction(escargot::ESVMInstance* instance, const escargot::ESValue& callee, const escargot::ESValue& receiver, escargot::ESValue arguments[], const size_t& argumentCount){
+        escargot::ESValue result;
+        std::jmp_buf tryPosition;
+        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
+            result = escargot::ESFunctionObject::call(instance, callee, receiver, arguments, argumentCount, false);
+            instance->unregisterTryPos(&tryPosition);
+        } else {
+            result = instance->getCatchedError();
+            printf("Uncaught %s\n", result.toString()->utf8Data());
+        }
+        return result;
+    }
+
+
     static void* CURL_realloc(void *ptr, size_t size)
     {
         /* There might be a realloc() out there that doesn't like reallocing
