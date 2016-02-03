@@ -1,127 +1,124 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8"/>
-    <style> 
-	body {
-	    position: absolute;
-		top: 0px;
-		left: 0px;
-		width: 360px;
-		height: 360px;
-	    font-size: 2.125rem;
-	    font-family: Tizen,Samsung Sans,Helvetica;
-	    color: white;
-		background-color: black;
-	}
+	<head>
+		<meta charset="utf-8"/>
+		<style>
+		* {
+			margin: 0;
+			padding: 0;
+		}
 
-	.center {
-		display: block;
-		margin-top: 70px;
-		padding-left: 30px;
-		padding-right: 30px;
-	}
+		body {
+		    position: absolute;
+			width: 360px;
+			height: 360px;
+		    font-size: 2.125rem;
+		    font-family: Tizen,Samsung Sans,Helvetica;
+		    color: white;
+			background-color: black;
+		}
 
-	.wrapper_inlineBlock {
-		display: inline-block;
-		width: 48%;
-		text-align: center;
-	}
+		#box {
+			display: block;
+			margin-top: 40px;
+			padding-left: 30px;
+			padding-right: 30px;
+		}
 
-	.img_text {
-		display: block;
-		text-align: center;
-		font-size: 80px;
-		font-weight: 700;
-		margin-top: 30px;
-	}
+		.wrapper_inlineBlock {
+			display: inline-block;
+			width: 48%;
+			text-align: center;
+		}
 
-	#img_water {
-		width: 80%;
-	}
+		.img_text {
+			text-align: center;
+		    font-size: 50px;
+		    font-weight: bold;
+		    margin-top: -96px;
+		}
 
-	#img_coffee {
-		width: 90%;
-	}
+		.plus_text {
+			display: block;
+			text-align: center;
+			font-size: 90px;
+			font-weight: 700;
+			margin-top: 20px;
+		}
 
-	#img_water_tag {
-	    text-align: center;
-	    font-size: 50px;
-	    font-weight: bold;
-	    margin-top: -96px;
-	}
+		.plus_text:active {
+			color: gray;
+		}
 
-	#img_coffee_tag {
-	    text-align: center;
-	    font-size: 50px;
-	    font-weight: bold;
-	    margin-top: -80px;
-		margin-left:-10px;
-	}
-    </style>
-</head>
-<body>
-    <div class="center"> 
-        <div class="wrapper_inlineBlock">
-    		<img id="img_water" src="images/watercup.png">
-    		<div id="img_water_tag">1</div>
-    		<div class="img_text" id="plus_water"> + </div>
-    	</div>
-    	<div class="wrapper_inlineBlock">
-    		<img id="img_coffee" src="images/coffeecup.png">
-    		<div id="img_coffee_tag">2</div>
-    		<div class="img_text" id="plus_coffee" onclick="plus_coffee_click()"> + </div>
-    	</div>
-    </div>
-</body>
-<script>
-var wTime, cTime;
-function plus_water_click(event) {
-	print("plus_water_click");
-	wTime = setTimeout(changeColor("water", 0, true), 100);
-	window.setTimeout(function() {
-		clearTimeout(wTime);
-		document.getElementById("img_water").src = "images/watercup.png";
-	}, 900);
-	var water_tag = document.getElementById("img_water_tag");
-	water_tag.innerText = parseInt(water_tag.innerText)+1;
-};
+		img {
+			width: 100%;
 
-function changeColor(str, num, up) {
-	if (num < 0) {
-		return function() {
-			var img_water = document.getElementById("img_"+str);
-			img_water.src = "images/"+str+"cup.png";
+		}
+
+		#img_coffee {
+			margin-left: 10px;
+		}
+
+		#img_coffee_tag {
+			margin-left:-6px;
+		}
+		</style>
+	</head>
+	<body>
+	    <div id="box"> 
+	        <div id="water_area" class="wrapper_inlineBlock">
+	    		<img id="img_water" src="images/water0.png">
+	    		<div class="img_text" id="img_water_tag">1</div>
+	    		<div class="plus_text" id="plus_water"> + </div>
+	    	</div>
+	    	<div id="coffee_area" class="wrapper_inlineBlock">
+	    		<img id="img_coffee" src="images/coffee0.png">
+	    		<div class="img_text" id="img_coffee_tag">2</div>
+	    		<div class="plus_text" id="plus_coffee"> + </div>
+	    	</div>
+	    </div>
+	</body>
+	<script>
+	var anim = function(kind, max_scene) {
+		this.INTERVAL = 50;
+		this.IMG_MAX = max_scene;
+		this.imgElement = document.getElementById("img_" + kind);
+		this.textElement = document.getElementById("img_" + kind + "_tag");
+		this.currentIndex = 0;
+		this.animing = false;
+		this.forceStop = false;
+		this.goAnim = function() {
+			if (this.animing) {
+				if (this.currentIndex > (this.IMG_MAX / 2)) this.currentIndex = 0;
+			} else {
+				this.animing = true;
+				var that = this;
+				var nextscene = setTimeout.bind(undefined, function() {
+					if (that.forceStop || that.currentIndex == that.IMG_MAX) {
+						that.forceStop = false;
+						that.animing = false;
+						that.currentIndex = 0;
+						that.imgElement.src = "images/" + kind + "0.png";
+						return;
+					}
+					that.currentIndex++;
+					that.imgElement.src = "images/" + kind + that.currentIndex + ".png";
+					nextscene();
+					// console.log("hello");
+				}, this.INTERVAL);
+				nextscene();
+			}
 		};
-	}
-	if (num >= 4) {
-		up = !up;
-	}
-	if (up == true) {
-		setTimeout(changeColor(str, num+1, up), 100*num);
-	}
-	else if (num >= 0) {
-		setTimeout(changeColor(str, num-1, up), 100*(8-num));
-	}
-	return function() {
-		print("changeColor!");
-		// var img_water = document.getElementById("img_"+str);
-		// img_water.src = "images/"+str+"cup"+num+".png";
+		this.stopAnim = function() {
+			this.forceStop = true;
+		};
+		document.getElementById(kind + "_area").onclick = function(event) {
+			this.goAnim();
+			this.textElement.innerText = parseInt(this.textElement.innerText) + 1;
+		}.bind(this);
 	};
-}
 
-function plus_coffee_click(event) {
-	print("plus_coffee_click");
-	cTime = setTimeout(changeColor("coffee", 1, true), 100);
-	window.setTimeout(function() {
-		clearTimeout(cTime);
-		document.getElementById("img_coffee").src = "images/coffeecup.png";
-	}, 900);
-	var coffee_tag = document.getElementById("img_coffee_tag");
-	coffee_tag.innerText = parseInt(coffee_tag.innerText)+1;
-};
-
-document.getElementById("plus_water").onclick = plus_water_click;
-document.getElementById("plus_coffee").onclick = plus_coffee_click;
-</script>
+	var water = new anim("water", 11);
+	var coffee = new anim("coffee", 11);
+	</script>
 </html>
