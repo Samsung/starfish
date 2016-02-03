@@ -19,10 +19,14 @@ XMLHttpRequest::XMLHttpRequest()
     m_response_type = DEFAULT_RESPONSE;
     m_ready_state = UNSENT;
     m_url = nullptr;
+    m_response_header = nullptr;
 }
 
 void XMLHttpRequest::send(String* body)
 {
+      if(m_ready_state!=OPENED)
+        return;
+
       escargot::ESObject* obj = (escargot::ESObject*)this;
       const char* url = m_url->utf8Data();
 
@@ -68,7 +72,7 @@ void XMLHttpRequest::send(String* body)
       curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
       if (!((res_code == 200 || res_code == 201) && res != CURLE_ABORTED_BY_CALLBACK))
       {
-          printf("!!! Response code: %ld\n", res_code);
+          //printf("!!! Response code: %ld\n", res_code);
 
           //invoke error event
           ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("error"),false);
@@ -100,7 +104,7 @@ void XMLHttpRequest::send(String* body)
 
           escargot::ESObject* this_obj = pass->obj;
           escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-          printf("HEADER : %s\n",pass->header);
+          ((XMLHttpRequest*)this_obj)->setResponseHeader(String::fromUTF8(pass->header));
 
           switch(((XMLHttpRequest*)this_obj)->getResponseType()){
             case JSON_RESPONSE:

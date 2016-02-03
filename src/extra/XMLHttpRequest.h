@@ -132,7 +132,17 @@ public:
     void setOpen(const char* method,String* url);
     void send(String* body);
     void callEventHandler(String* eventName,bool isMainThread);
-    //void callReadystatechangeHandler(escargot::ESVMInstance* instance);
+
+    void setResponseHeader(String* responseHeader){
+        m_response_header = responseHeader;
+    }
+
+    String* getAllResponseHeadersStr(){
+        if(m_response_header!=nullptr)
+            return m_response_header;
+        return String::emptyString;
+    }
+
 
     static escargot::ESValue callJSFunction(escargot::ESVMInstance* instance, const escargot::ESValue& callee, const escargot::ESValue& receiver, escargot::ESValue arguments[], const size_t& argumentCount){
         escargot::ESValue result;
@@ -177,6 +187,7 @@ public:
 
 protected:
     String* m_url;
+    String* m_response_header;
     METHOD_TYPE m_method;
     RESPONSE_TYPE m_response_type;
     READY_STATE m_ready_state;

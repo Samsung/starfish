@@ -64,6 +64,7 @@
     function onLoadHandler() {
       print("*** load event ***"+" ReadyState:"+this.readyState)
       print(this.response);
+      print(this.getAllResponseHeaders());
     }
     function onLoadStartHandler() {
       print("*** loadstart event ***"+" ReadyState:"+this.readyState);
