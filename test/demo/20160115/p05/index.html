@@ -1,109 +1,107 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<style>
-body {
-    margin: 0;
-    padding: 0;
-}
-p {
-    margin: 0;
-    padding: 0;
-    text-align: center;
-}
-img {
-    width: 110px;
-}
-#viewport {
-    width: 360px;
-    height: 360px;
-    color: white;
-    font-size: 20pt;
-    border: 3px solid red;
-    background:url('images/face.png');
-    background-size: 100% 100%;
-    background-color: black;
-}
-#t1 {
-    margin-top: 30%;
-    left: 0%;
-    font-size: 60pt;
-}
-#b {
-    margin-top: 2%;
-}
-#a1 {
-    display: inline-block;
-    margin-left: 19%;
-    height: 10%;
-}
-#a2 {
-    display: inline-block;
-    height: 15%;
-    font-weight: bold;
-    font-size: 30pt;
-}
-#start:active, #reset:active {
-  background-color: gray;
-}
-</style>
-
+    <title></title>
+    <style>
+        body, p {
+            margin: 0px;
+            padding: 0px;
+        }
+        p {
+            text-align: center;
+        }
+        #viewport {
+            width: 360px;
+            height: 360px;
+            color: white;
+            font-size: 20pt;
+            background:url('images/face.png');
+            background-size: 100%;
+            background-color: black;
+        }
+        #time {
+            padding-top: 30%;
+            left: 0%;
+            font-size: 60pt;
+            top: 50px;
+            text-align: center;
+        }
+        #b {
+            margin-top: 2%;
+        }
+        #start {
+            margin-left: 19%;
+            background:url('images/start.png');
+        }
+        #reset {
+            background:url('images/reset.png');
+        }
+        #start, #reset {
+            display: inline-block;
+            width: 110px;
+            height: 32px;
+            background-size: 100%;
+        }
+        #start:active {
+            background:url('images/start-active.png');
+        }
+        #reset:active {
+            background:url('images/reset-active.png');
+        }
+        #start:active, #reset:active {
+            display: inline-block;
+            width: 110px;
+            height: 32px;
+            background-size: 100%;
+        }
+    </style>
 </head>
+
 <body>
+    <div id="viewport">
 
+        <div id="time">00:00</div>
 
-<div id="viewport">
-  <div id="t1">
-    <p id="time">00:00</p>
-  </div>
-
-  <div id="b">
-    <div id="a1">
-      <img id="start" src="images/start.png"/>
+        <div id="b">
+            <div id="start"></div>
+            <div id="reset"></div>
+        </div>
     </div>
 
-    <div id="a2">
-      <img id="reset" src="images/reset.png"/>
-    </div>
-  </div>
+    <script>
+        document.getElementById("start").onclick = startTick;
+        var timer;
 
-</div>
+        function startTick() {
+            ticking = true;
+            timer = setTimeout(tick, 1000);
+        }
 
-<script>
-document.getElementById("start").onclick = startTick;
-var timer;
+        function tick() {
+            //var t = "00:08";
+            var t = document.getElementById("time").textContent;
+            var m = parseInt(t.substring(0,2));
+            var s = parseInt(t.substr(3,5));
 
-function startTick() {
-  ticking = true;
-  timer = setTimeout(tick, 1000);
-}
+            s = s+1;
+            if(s == 60) {
+                s = 0;
+                m = m + 1;
+            }
+            if(m <= 9) {
+                m = "0" + m;
+            }
+            if(s <= 9) {
+                s = "0" + s;
+            }
+            document.getElementById("time").textContent = m+":"+s;
+            startTick();
+        }
 
-function tick() {
-  var t = document.getElementById("time").textContent;
-  var m = parseInt(t.substring(0,2));
-  var s = parseInt(t.substr(3,5));
-
-  s = s+1;
-  if(s == 60) {
-    s = 0;
-    m = m + 1;
-  }
-  if(m <= 9) {
-    m = "0" + m;
-  }
-  if(s <= 9) {
-    s = "0" + s;
-  }
-  document.getElementById("time").textContent = m+":"+s;
-  startTick();
-}
-
-document.getElementById("reset").onclick = function() {
-  clearTimeout(timer);
-  document.getElementById("time").textContent = "00:00";
-}
-</script>
-
+        document.getElementById("reset").onclick = function() {
+            clearTimeout(timer);
+            document.getElementById("time").textContent = "00:00";
+        }
+    </script>
 </body>
 </html>
