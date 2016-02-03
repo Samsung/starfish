@@ -14,6 +14,7 @@ OUTDIR="out/x64/exe/debug/reftest"
 mkdir -p $OUTDIR
 PASS=0
 FAIL=0
+CURDIR=`pwd`
 
 if [ "$1" = "" ]; then
     tc=$(find test -name "*.xml")
@@ -37,7 +38,7 @@ for i in $tc ; do
     diff=`eval $compare` > /dev/null 2>&1
     if [ "$diff" = "" ]; then
         cd tool/pixel_test
-        phantomjs capture.js -f ../../$html > /dev/null 2>&1
+        phantomjs capture.js -f $CURDIR/$html > /dev/null 2>&1
         cd - > /dev/null 2>&1
         diff=`eval $compare` > /dev/null 2>&1
     fi
