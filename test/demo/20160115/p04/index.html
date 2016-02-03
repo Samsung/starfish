@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+	<img src="images/water.JPG" class="titleImg"/>
+	<div class="title" id="blue">
+		TODAY'S WATER INTAKE
+	</div>
+	<div class="mainImg">
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg1" />
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg2" />
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg3" />
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg4" />
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg5" />
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg6" />
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg7" />
+		<img src="images/emptyCup.JPG" class="cup" id="smallimg8" />
+	</div>
+	<div class="bigTxt" id="txt">
+		0 of 8
+	</div>
+	<div class="smallTxt">
+		glasses
+	</div>
+	<div id="add_water" class="addButton">
+		ADD WATER
+	</div>
+</body>
+<script>
+    var cup = 0;
+    function addWater() {
+        cup++;
+        for (var i=1; i<=cup; i++) {
+            var img = document.getElementById("smallimg"+i);
+            img.src = "images/fillCup.JPG";
+        }
+        var txt = document.getElementById("txt");
+        txt.textContent = "" + cup + " of 8";
+    }
+    document.getElementById("add_water").onclick = addWater;
+</script>
+</html>
