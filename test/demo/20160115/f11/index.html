@@ -2,70 +2,48 @@
 <html>
    <head>
       <!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-      <link rel="stylesheet" type="text/css" href="style.css"/-->
-      <style>
-         * {
-            margin: 0;
-            padding: 0;
-         }
-         body {
-            width: 360px;
-            height: 360px;
-         }
-         #container {
-            width: 100%;
-            height: 100%;
-            background-color: #0D0D0D;
-            text-align: center;
-         }
-         #text_title {
-            color: white;
-            font-size: 24pt;
-            padding-top: 12%;
-         }
-         #text_current {
-            color: #EE913A;
-            font-size: 52pt;
-            display: inline;
-         }
-         #text_percent {
-            color: #EE913A;
-            font-size: 22pt;
-            text-align: left;
-         }
-         #text_time {
-            color: #CCCCCC;
-            font-size: 16pt;
-         }
-         #img_battery {
-            width: 52%;
-            margin-right: -2%;
-         }
-         #div_current {
-            margin: 4% 0 1% 0;
-         }
-         #div_desc {
-            display: inline-block;
-            margin-left: 3%;
-         }
-      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/-->
+      <link rel="stylesheet" type="text/css" href="style.css"/>
    </head>
    <body>
       <div id="container">
          <p id="text_title">BATTERY</p>
          <div id="div_current">
-            <p id="text_current">62</p><div id="div_desc">
+            <p id="text_current">95</p><div id="div_desc">
                <p id="text_percent">%</p>
-               <p id="text_time">10H30M</p>
+               <p id="text_time">20H01M</p>
             </div>
          </div>
-         <img id="img_battery" src="img/battery.png"/>
+         <div id="box_battery">
+            <div id="box_battery_full">
+               <div id="box_hide_bar"></div>
+            </div>
+         </div>
       </div>
    </body>
    <script>
-      document.getElementsByTagName("body").item(0).onclick = function() {
-         print("clicked!");
+   (function() {
+      var DECREASE_BATTERY_UNIT = 5;
+      var HIDE_BAR_WIDTH = 8.7;
+      var HIDE_BAR_TOTAL_COUNT = 20;
+      var status = 0;
+      eImgHideBar = document.getElementById("box_hide_bar");
+      eTextRemainPercent = document.getElementById("text_current");
+      eTextRemainTime = document.getElementById("text_time");
+      document.body.onclick = function() {
+         status++;
+         if (status == HIDE_BAR_TOTAL_COUNT) {
+            status = 0;
+            eImgHideBar.style.width = "0";
+            eTextRemainPercent.textContent = 95;
+            eTextRemainTime.textContent = HIDE_BAR_TOTAL_COUNT - 1 + "H01M";
+         } else {
+            eImgHideBar.style.width = ((status) * HIDE_BAR_WIDTH) + "px";
+            eTextRemainPercent.textContent = parseInt(eTextRemainPercent.textContent) - DECREASE_BATTERY_UNIT;
+            eTextRemainTime.textContent = HIDE_BAR_TOTAL_COUNT - 1 - status + "H01M";
+         }
       };
+   })();
+   
    </script>
 </html>
