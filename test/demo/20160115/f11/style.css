@@ -33,24 +33,24 @@ body {
 }
 #box_battery {
    display: inline-block;
-   width: 220px;
-   height: 110px;
+   width: 206px;
+   height: 102px;
    background-image: url("img/battery.png");
    background-size: 100%;
 }
 #box_battery_full {
-   width: 165.3px;
-   height: 83.2px;
+   width: 152px;
+   height: 80px;
    text-align: right;
-   margin: 15.2px 0 0 19px;
+   margin: 15px 0 0 18px;
    background-image: url("img/battery_full.png");
-   background-size: 100%;
+   background-size: 100% 100%;
 }
 #box_hide_bar {
    display: inline-block;
    height: 100%;
    background-image: url("img/battery_hide.png");
-   background-size: 8.7px 100%;
+   background-size: 8px 100%;
 }
 #div_current {
    margin: 4% 26% 1% 0;
