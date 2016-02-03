@@ -3,12 +3,9 @@
 <head>
     <title></title>
     <style>
-        body, p {
+        body {
             margin: 0px;
             padding: 0px;
-        }
-        p {
-            text-align: center;
         }
         #viewport {
             width: 360px;
@@ -28,19 +25,13 @@
         }
         #b {
             margin-top: 2%;
+            text-align: center;
         }
         #start {
-            margin-left: 19%;
             background:url('images/start.png');
         }
         #reset {
             background:url('images/reset.png');
-        }
-        #start, #reset {
-            display: inline-block;
-            width: 110px;
-            height: 32px;
-            background-size: 100%;
         }
         #start:active {
             background:url('images/start-active.png');
@@ -48,10 +39,10 @@
         #reset:active {
             background:url('images/reset-active.png');
         }
-        #start:active, #reset:active {
+        #start, #reset, #start:active, #reset:active {
             display: inline-block;
-            width: 110px;
-            height: 32px;
+            width: 145px;
+            height: 43px;
             background-size: 100%;
         }
     </style>
@@ -78,7 +69,6 @@
         }
 
         function tick() {
-            //var t = "00:08";
             var t = document.getElementById("time").textContent;
             var m = parseInt(t.substring(0,2));
             var s = parseInt(t.substr(3,5));
