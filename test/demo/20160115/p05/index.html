@@ -60,39 +60,48 @@
     </div>
 
     <script>
-        document.getElementById("start").onclick = startTick;
+        var ticking = false;
         var timer;
+        var timers = [];
 
-        function startTick() {
-            ticking = true;
-            timer = setTimeout(tick, 1000);
+        function startTicking() {
+            var timer = setTimeout(function() {
+                if(!ticking) return;
+                var t = document.getElementById("time").textContent;
+                var m = parseInt(t.substring(0,2));
+                var s = parseInt(t.substr(3,5));
+
+                s = s+1;
+                if(s == 60) {
+                    s = 0;
+                    m = m + 1;
+                }
+                if(m <= 9) {
+                    m = "0" + m;
+                }
+                if(s <= 9) {
+                    s = "0" + s;
+                }
+                document.getElementById("time").textContent = m+":"+s;
+                startTicking();
+            }, 1000);
+            timers.push(timer);
         }
 
-        function tick() {
-            var t = document.getElementById("time").textContent;
-            var m = parseInt(t.substring(0,2));
-            var s = parseInt(t.substr(3,5));
-
-            s = s+1;
-            if(s == 60) {
-                s = 0;
-                m = m + 1;
-            }
-            if(m <= 9) {
-                m = "0" + m;
-            }
-            if(s <= 9) {
-                s = "0" + s;
-            }
-            document.getElementById("time").textContent = m+":"+s;
-            if(ticking) {
-                startTick();
+        document.getElementById("start").onclick = function() {
+            if(!ticking) {
+                ticking = true;
+                startTicking();
             }
         }
 
         document.getElementById("reset").onclick = function() {
             ticking = false;
-            clearTimeout(timer);
+            var i;
+            for(i=0; i < timers.length; i++) {
+                clearTimeout(timers[i]);
+            }
+            timers = [];
             document.getElementById("time").textContent = "00:00";
         }
     </script>
