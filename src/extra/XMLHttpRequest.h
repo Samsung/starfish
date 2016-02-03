@@ -105,6 +105,14 @@ public:
         DEFAULT_RESPONSE
     };
 
+    enum READY_STATE{
+        UNSENT,
+        OPENED,
+        HEADERS_RECEIVED,
+        LOADING,
+        DONE
+    };
+
     struct Buffer {
         char *memory;
         size_t size;
@@ -116,6 +124,10 @@ public:
     }
 
     String* getResponseTypeStr();
+    int getReadyState(){
+        return m_ready_state;
+    }
+
     void setResponseType(const char* responseType);
     void setOpen(const char* method,String* url);
     void send(String* body);
@@ -167,7 +179,7 @@ protected:
     String* m_url;
     METHOD_TYPE m_method;
     RESPONSE_TYPE m_response_type;
-
+    READY_STATE m_ready_state;
 };
 
 

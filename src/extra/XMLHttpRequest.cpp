@@ -17,6 +17,7 @@ XMLHttpRequest::XMLHttpRequest()
     initScriptWrappable(this);
     m_method = UNKNOWN_METHOD;
     m_response_type = DEFAULT_RESPONSE;
+    m_ready_state = UNSENT;
     m_url = nullptr;
 }
 
@@ -123,6 +124,8 @@ void XMLHttpRequest::send(String* body)
 
           //invoke loadend event
           ((XMLHttpRequest*)this_obj)->callEventHandler(String::fromUTF8("loadend"),true);
+
+          delete pass;
           return ECORE_CALLBACK_CANCEL;
       }, pass);
       ecore_thread_main_loop_end();
@@ -169,6 +172,7 @@ void XMLHttpRequest::setOpen(const char* method,String* url)
             m_method = POST_METHOD;
         }
     }
+    m_ready_state = OPENED;
     m_url = url;
 }
 
@@ -197,6 +201,13 @@ String* XMLHttpRequest::getResponseTypeStr(){
 }
 
 void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread){
+
+    if(eventName->equals("loadstart")||eventName->equals("progress")){
+      m_ready_state = LOADING;
+    }else if(eventName->equals("error")||eventName->equals("abort")||eventName->equals("timeout")||eventName->equals("load")||eventName->equals("loadend")){
+      m_ready_state = DONE;
+    }
+
     if(isMainThread){
       escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
       escargot::ESValue fn = getHandler(eventName);
@@ -221,6 +232,8 @@ void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread){
           escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->getHandler(pass->buf);
           if(fn!=escargot::ESValue::ESNull)
             callJSFunction(instance, fn, this_obj, NULL, 0);
+
+          delete pass;
           return ECORE_CALLBACK_CANCEL;
       }, pass);
       ecore_thread_main_loop_end();

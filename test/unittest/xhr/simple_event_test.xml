@@ -62,27 +62,29 @@
     print("*********** XHR Simple Event TEST 1 *****************");
 
     function onLoadHandler() {
-      print("*** load event ***")
+      print("*** load event ***"+" ReadyState:"+this.readyState)
       print(this.response);
     }
     function onLoadStartHandler() {
-      print("*** loadstart event ***");
+      print("*** loadstart event ***"+" ReadyState:"+this.readyState);
     }
     function onErrorHandler() {
-      print("*** error event ***")
+      print("*** error event ***"+" ReadyState:"+this.readyState)
     }
     function onLoadendHandler() {
-      print("*** loadend event ***")
+      print("*** loadend event ***"+" ReadyState:"+this.readyState)
     }
 
 
     var xhr = new XMLHttpRequest();
+    print(" ReadyState:"+xhr.readyState)
     xhr.addEventListener("load", onLoadHandler);
     xhr.addEventListener("loadstart", onLoadStartHandler);
     xhr.addEventListener("loadend", onLoadendHandler);
     xhr.addEventListener("error", onErrorHandler);
 
     xhr.open("GET", "https://httpbin.org/get");
+    print(" ReadyState:"+xhr.readyState)
     xhr.send();
 
     xhr.open("GET", "http://nothing");
