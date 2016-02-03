@@ -31,7 +31,7 @@ for i in $tc ; do
     dir=${dir%/*}
 
     # Capture the screenshot
-    ELM_ENGINE="shot:" ./StarFish $i > /dev/null 2>&1
+    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
 
     # Compare
     compare="tool/pixel_test/bin/image_diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png out.png"
@@ -57,6 +57,9 @@ for i in $tc ; do
         echo "${RED}[FAIL]${RESET}" $i "${YELLOW}(Unable to open html file)${RESET}"
     fi
 done
+
+# Remove unnecessary file
+rm out.png
 
 # Print the summary
 echo "\n${BOLD}###### Summary ######${RESET}\n"

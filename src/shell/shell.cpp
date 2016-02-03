@@ -26,8 +26,6 @@ int main(int argc, char *argv[])
             path = argv[i] + strlen("--working-directory=");
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
             flag |= StarFish::enablePixelTest;
-            // This is needed for capturing of screenshot
-            setenv( "ELM_ENGINE", "shot:", 1 );
         }
     }
 

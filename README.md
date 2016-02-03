@@ -18,7 +18,7 @@ e.g. $ make x64.exe.debug -j
 
 ### Capture StarFish screenshot
 
-    ./StarFish [filepath=*.xml] --pixel-test
+    ELM_ENGINE="shot:" ./StarFish [filepath=*.xml] --pixel-test
 
 ### Capture Webkit screenshot
 
