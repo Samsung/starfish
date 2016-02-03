@@ -34,7 +34,8 @@ public:
         setData(d);
     }
 
-    virtual void setTextContent(String* val) {
+    virtual void setTextContent(String* val)
+    {
         setNodeValue(val);
     }
 

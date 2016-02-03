@@ -9,6 +9,10 @@ using namespace StarFish;
 
 int main(int argc, char *argv[])
 {
+#ifndef NDEBUG
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
+#endif
     // GC_disable();
     int flag = 0;
 

@@ -4291,13 +4291,14 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
         if (child->isElement()) {
             resolveDOMStyleInner(resolver, child->asElement(), element->style(), force);
         } else {
-            if (force) {
+            if (force || child->needsStyleRecalc()) {
                 if (childStyle == nullptr) {
                     childStyle = new ComputedStyle(element->style());
                     childStyle->loadResources(element->document()->window()->starFish());
                     childStyle->arrangeStyleValues(element->style());
                 }
                 child->setStyle(childStyle);
+                child->clearNeedsStyleRecalc();
             }
         }
         child = child->nextSibling();

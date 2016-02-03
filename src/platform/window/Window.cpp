@@ -483,7 +483,8 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
     return id;
 }
 
-void Window::clearTimeout(uint32_t id) {
+void Window::clearTimeout(uint32_t id)
+{
     // TODO : Use ecore_timer_del(Ecore_Timer *timer)
     auto handlerData = m_timeoutHandler.find(id);
     if (handlerData != m_timeoutHandler.end()) handlerData->second.second = nullptr;

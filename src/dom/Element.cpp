@@ -69,9 +69,6 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
 
 void Element::setTextContent(String* text)
 {
-    if(text == nullptr) {
-        text = String::emptyString;
-    }
     Text* newNode = new Text(document(), text);
     std::vector<Node*> children;
     for(Node* child=firstChild(); child; child = child->nextSibling()) {
