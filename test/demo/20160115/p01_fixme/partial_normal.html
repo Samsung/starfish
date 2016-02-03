@@ -93,7 +93,7 @@
 			} else {
 				this.animing = true;
 				var that = this;
-				var nextscene = setTimeout.bind(undefined, function() {
+				var nextscene = requestAnimationFrame.bind(undefined, function() {
 					if (that.forceStop || that.currentIndex == that.IMG_MAX) {
 						that.forceStop = false;
 						that.animing = false;
@@ -105,7 +105,7 @@
 					that.imgElement.src = "images/" + kind + that.currentIndex + ".png";
 					nextscene();
 					// console.log("hello");
-				}, this.INTERVAL);
+				});
 				nextscene();
 			}
 		};

@@ -42,6 +42,9 @@ public:
     uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
     void clearTimeout(uint32_t id);
 
+    uint32_t requestAnimationFrame(WindowSetTimeoutHandler handler, void* data);
+    void cancelAnimationFrame(uint32_t reqID);
+
     enum TouchEventKind {
         TouchEventDown,
         TouchEventMove,
@@ -88,6 +91,10 @@ protected:
     uint32_t m_timeoutCounter;
     std::unordered_map<uint32_t, std::pair<WindowSetTimeoutHandler, void*>, std::hash<uint32_t>, std::equal_to<uint32_t>,
         gc_allocator<std::pair<uint32_t, std::pair<WindowSetTimeoutHandler, void*> > > > m_timeoutHandler;
+
+    uint32_t m_requestAnimationFrameCounter;
+    std::unordered_map<uint32_t, std::pair<WindowSetTimeoutHandler, void*>, std::hash<uint32_t>, std::equal_to<uint32_t>,
+        gc_allocator<std::pair<uint32_t, std::pair<WindowSetTimeoutHandler, void*> > > > m_requestAnimationFrameHandler;
 };
 
 }

@@ -80,10 +80,45 @@ void ScriptWrappableGlobalObject::initScriptWrappableWindow(Window* window)
                 wnd->clearTimeout(instance->currentExecutionContext()->readArgument(0).toUint32());
             }
         }
+        // FIXME what return value should return?
         return escargot::ESValue(1000);
     }, escargot::ESString::create("clearTimeout"), 1, false);
     ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), false, false, false, clearTimeoutFunction);
 
+
+    // TODO : Pass "any... arguments" if exist
+    // TODO : First argument can be function or script source (currently allow function only)
+    escargot::ESFunctionObject* requestAnimationFrameFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            if (instance->currentExecutionContext()->readArgument(0).isESPointer() &&
+                    instance->currentExecutionContext()->readArgument(0).asESPointer() &&
+                    instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
+                    Window* wnd = (Window*)ScriptWrappableGlobalObject::fetch();
+                    return  escargot::ESValue(wnd->requestAnimationFrame([](Window* wnd, void* data) {
+                                escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+                                escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(),
+                                        fn, escargot::ESValue(), NULL, 0, false);
+                            }, instance->currentExecutionContext()->readArgument(0).asESPointer()));
+            }
+        }
+        return escargot::ESValue();
+    }, escargot::ESString::create("requestAnimationFrame"), 2, false);
+    ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("requestAnimationFrame"), false, false, false, requestAnimationFrameFunction);
+
+    // https://www.w3.org/TR/html5/webappapis.html
+    escargot::ESFunctionObject* cancelAnimationFrameFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            if (instance->currentExecutionContext()->readArgument(0).isNumber()) {
+                Window* wnd = (Window*)ScriptWrappableGlobalObject::fetch();
+                wnd->cancelAnimationFrame(instance->currentExecutionContext()->readArgument(0).toUint32());
+            }
+        }
+        // FIXME what return value should return?
+        return escargot::ESValue(1000);
+    }, escargot::ESString::create("cancelAnimationFrame"), 1, false);
+    ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("cancelAnimationFrame"), false, false, false, cancelAnimationFrameFunction);
 }
 
 void ScriptWrappableGlobalObject::callFunction(String* name)

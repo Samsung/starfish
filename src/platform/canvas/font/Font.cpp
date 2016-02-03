@@ -54,8 +54,8 @@ public:
             break;
         }
         m_fontFamily = familyName;
-        m_spaceWidth = measureText(String::spaceString);
         loadFont();
+        m_spaceWidth = measureText(String::spaceString);
     }
     ~FontImplEFL()
     {

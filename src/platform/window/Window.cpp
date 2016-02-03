@@ -483,7 +483,10 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
     ecore_timer_add(delay/1000.0,[](void *data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
         auto a = td->m_window->m_timeoutHandler.find(td->m_id);
-        if (a->second.second != nullptr) a->second.first(td->m_window, a->second.second);
+
+        if (a->second.second != nullptr)
+            a->second.first(td->m_window, a->second.second);
+
         td->m_window->m_timeoutHandler.erase(td->m_window->m_timeoutHandler.find(td->m_id));
         delete td;
         return ECORE_CALLBACK_DONE;
@@ -497,6 +500,38 @@ void Window::clearTimeout(uint32_t id)
     // TODO : Use ecore_timer_del(Ecore_Timer *timer)
     auto handlerData = m_timeoutHandler.find(id);
     if (handlerData != m_timeoutHandler.end()) handlerData->second.second = nullptr;
+}
+
+
+uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* data)
+{
+    TimeoutData* td = new TimeoutData;
+    td->m_window = this;
+    uint32_t id = m_requestAnimationFrameCounter++;
+    td->m_id = id;
+    m_requestAnimationFrameHandler.insert(std::make_pair(id, std::make_pair(handler, data)));
+
+    ecore_animator_add([](void *data) -> Eina_Bool {
+        TimeoutData* td = (TimeoutData*)data;
+        auto a = td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
+
+        if (a->second.second != nullptr)
+            a->second.first(td->m_window, a->second.second);
+
+        td->m_window->m_requestAnimationFrameHandler.erase(td->m_window->m_requestAnimationFrameHandler.find(td->m_id));
+        delete td;
+        return ECORE_CALLBACK_DONE;
+    }, td);
+
+    return id;
+}
+
+void Window::cancelAnimationFrame(uint32_t reqID)
+{
+    auto handlerData = m_requestAnimationFrameHandler.find(reqID);
+
+    if (handlerData != m_requestAnimationFrameHandler.end())
+        handlerData->second.second = nullptr;
 }
 
 Node* Window::hitTest(float x, float y)
