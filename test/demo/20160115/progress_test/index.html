@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+   <head>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      body {
+        width: 380px;
+        height: 380px;
+      }
+      img {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+   </head>
+   <body>
+      <img id="main" src="progress/1.png">
+   </body>
+   <script>
+   (function() {
+    var count = 0;
+    var eImg = document.getElementById("main");
+    var stop = false;
+    var go = requestAnimationFrame.bind(null, function() {
+      count++;
+      if (stop) {
+        clearInterval(key);
+        return;
+      }
+      if (count > 60) {
+        count = 1;
+      }
+      eImg.src = "progress/" + count + ".png";
+      key = go();
+    }, 20);
+    var key = go();
+    
+    document.body.onclick = function() {
+      if (stop) {
+        stop = false;
+        key = go();
+      } else stop = true;
+    };  
+   })();
+   </script>
+</html>
