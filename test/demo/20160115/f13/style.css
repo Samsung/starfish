@@ -1,5 +1,7 @@
 body {
     position:absolute;
+    padding: 0px;
+    margin: 0px;
 	top:0px;
 	left:0px;
 	width:360px;
@@ -8,7 +10,7 @@ body {
     font-family: Tizen,Samsung Sans,Helvetica;
     color: white;
 	background-color: black;
-	border: 2px solid red;
+	//border: 2px solid red;
 }
 head {
 	display: none;
