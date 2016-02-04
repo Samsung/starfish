@@ -1,17 +1,17 @@
 Version     , Chapter       , Interface                 , Attribute/Method
 #4          , 3.2           , Event                     , type
-#           ,               , Event                     , target
-#           ,               , Event                     , currentTarget
-#           ,               , Event                     , eventPhase
-#           ,               , Event                     , stopPropagation
-#           ,               , Event                     , stopImmediatePropagation
-#           ,               , Event                     , bubbles
-#           ,               , Event                     , cancelable
-#           ,               , Event                     , preventDefault
-#           ,               , Event                     , defaultPrevented
-#           ,               , Event                     , isTrusted
-#           ,               , Event                     , timeStamp
-#           ,               , Event                     , initEvent
+#           ,               ,                           , target
+#           ,               ,                           , currentTarget
+#           ,               ,                           , eventPhase
+#           ,               ,                           , stopPropagation
+#           ,               ,                           , stopImmediatePropagation
+#           ,               ,                           , bubbles
+#           ,               ,                           , cancelable
+#           ,               ,                           , preventDefault
+#           ,               ,                           , defaultPrevented
+#           ,               ,                           , isTrusted
+#           ,               ,                           , timeStamp
+#           ,               ,                           , initEvent
 #           , 3.6           , EventTarget               , addEventListener
 #           ,               ,                           , removeEventListener
 #           ,               ,                           , dispatchEvent
