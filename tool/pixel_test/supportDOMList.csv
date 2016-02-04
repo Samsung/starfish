@@ -1,0 +1,111 @@
+Version     , Chapter       , Interface                 , Attribute/Method
+#4          , 3.2           , Event                     , type
+#           ,               , Event                     , target
+#           ,               , Event                     , currentTarget
+#           ,               , Event                     , eventPhase
+#           ,               , Event                     , stopPropagation
+#           ,               , Event                     , stopImmediatePropagation
+#           ,               , Event                     , bubbles
+#           ,               , Event                     , cancelable
+#           ,               , Event                     , preventDefault
+#           ,               , Event                     , defaultPrevented
+#           ,               , Event                     , isTrusted
+#           ,               , Event                     , timeStamp
+#           ,               , Event                     , initEvent
+#           , 3.6           , EventTarget               , addEventListener
+#           ,               ,                           , removeEventListener
+#           ,               ,                           , dispatchEvent
+#           ,               , EventListener             , handleEvent
+            , 4.2           , NonElementParentNode      , getElementById
+            ,               , ParentNode                , children
+            ,               ,                           , firstElementChild
+            ,               ,                           , lastElementChild
+            ,               ,                           , childElementCount
+#           ,               ,                           , querySelector
+#           ,               ,                           , querySelectorAll
+            ,               , NonDocumentTypeChildNode  , previousElementSibling
+            ,               ,                           , nextElementSibling
+            ,               , ChildNode                 , remove
+            ,               , NodeList                  , item
+            ,               ,                           , length
+            ,               , HTMLCollection            , length
+            ,               ,                           , item
+            ,               ,                           , namedItem
+            , 4.4           , Node                      , nodeType
+            ,               ,                           , nodeName
+            ,               ,                           , ownerDocument
+            ,               ,                           , parentNode
+            ,               ,                           , hasChildNodes
+            ,               ,                           , childNodes
+            ,               ,                           , firstChild
+            ,               ,                           , lastChild
+            ,               ,                           , previousSibling
+            ,               ,                           , nextSibling
+            ,               ,                           , nodeValue
+            ,               ,                           , textContent
+#           ,               ,                           , cloneNode
+#           ,               ,                           , isEqualNode
+            ,               ,                           , compareDocumentPosition
+            ,               ,                           , contains
+            ,               ,                           , insertBefore
+            ,               ,                           , appendChild
+            ,               ,                           , replaceChild
+            ,               ,                           , removeChild
+            , 4.5           , Document                  , URL
+            ,               ,                           , documentURI
+            ,               ,                           , origin
+            ,               ,                           , compatMode
+            ,               ,                           , characterSet
+            ,               ,                           , contentType
+            ,               ,                           , doctype
+            ,               ,                           , documentElement
+            ,               ,                           , getElementsByTagName
+            ,               ,                           , getElementsByClassName
+            ,               ,                           , createElement
+            ,               ,                           , createTextNode
+            ,               ,                           , createComment
+#           ,               ,                           , createEvent
+#           ,               ,                           , createNodeIterator
+            , 4.7           , DocumentType              , name
+            ,               ,                           , publicId
+            ,               ,                           , systemId
+            , 4.8           , Element                   , tagName
+            ,               ,                           , id
+            ,               ,                           , className
+            ,               ,                           , classList
+            ,               ,                           , attributes
+#           ,               ,                           , getAttribute
+#           ,               ,                           , setAttribute
+#           ,               ,                           , removeAttribute
+#           ,               ,                           , hasAttribute
+#           ,               ,                           , getElementsByTagName
+#           ,               ,                           , getElementsByClassName
+            ,               , Attr                      , name
+            ,               ,                           , value
+            ,               ,                           , specified
+            , 4.9           , CharacterData             , data
+            ,               ,                           , length
+            ,               ,                           , substringData
+            ,               ,                           , appendData
+            ,               ,                           , insertData
+            ,               ,                           , deleteData
+            ,               ,                           , replaceData
+#           , 4.10          , Text                      , splitText
+            ,               ,                           , wholeText
+            , 4.12          , Comment                   , 
+#           , 6.1           , NodeIterator              , root
+#           ,               ,                           , referenceNode
+#           ,               ,                           , pointerBeforeReferenceNode
+#           ,               ,                           , whatToShow
+#           ,               ,                           , filter
+#           ,               ,                           , nextNode
+#           ,               ,                           , previousNode
+#           ,               ,                           , detach
+            , 7.1           , DOMTokenList              , length
+            ,               ,                           , item
+            ,               ,                           , contains
+            ,               ,                           , add
+            ,               ,                           , remove
+            ,               ,                           , toggle
+#           , A.2           , DOMError                  , name
+#           ,               ,                           , message
