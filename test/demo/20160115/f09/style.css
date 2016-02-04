@@ -1,0 +1,39 @@
+body {
+    position:absolute;
+	top:0px;
+	left:0px;
+	width:360px;
+	height:360px;
+    font-size: 2.125rem;
+    font-family: Tizen,Samsung Sans,Helvetica;
+    color: white;
+	background-color: white;
+	border: 2px solid red;
+}
+.circleWrapper {
+	background-color: black;
+	width:360px;
+	height:360px;
+	-webkit-clip-path: circle(180px at 180px 180px);
+}
+head {
+	display: none;
+}
+* {
+	display: block;
+}
+.top {
+	padding-top: 32px;
+	font-size: 30px;
+	text-align: center;
+}
+.mainimg {
+	margin-top: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom: 10px;
+}
+.imgname {
+	font-size: 30px;
+	text-align: center;
+}
