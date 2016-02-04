@@ -955,6 +955,31 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(HTMLElement, ElementFunction->protoType());
     fetchData(this)->m_htmlElement = HTMLElementFunction;
 
+    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onclick"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)originalObj);
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->onclick();
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)originalObj);
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+                element->setOnclick(v);
+            } else {
+                element->setOnclick(escargot::ESValue(escargot::ESValue::ESNull));
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, true, true, true);
+
     DEFINE_FUNCTION(HTMLHtmlElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlHtmlElement = HTMLHtmlElementFunction;
 

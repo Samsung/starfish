@@ -589,9 +589,17 @@ void Window::dispatchTouchEvent(float x, float y,TouchEventKind kind)
 
         Node* t = m_activeNodeWithTouchDown;
         while (t) {
-            // TODO read return value of onclick
-            // implmement stop propagation
-            t->callFunction(m_document->window()->starFish()->staticStrings()->m_onclick);
+            if (t->isElement() && t->asElement()->isHTMLElement()) {
+                if (t->asElement()->asHTMLElement()->onclick() != ScriptValueNull) {
+                    // TODO read return value of onclick
+                    // implmement stop propagation
+                    // implmement event argument
+                    // void callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue)
+                    callScriptFunction(t->asElement()->asHTMLElement()->onclick(),
+                            NULL, 0, t->scriptValue());
+                }
+            }
+
             t->setState(Node::NodeStateNormal);
             t = t->parentNode();
         }

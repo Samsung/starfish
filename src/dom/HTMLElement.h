@@ -39,6 +39,7 @@ public:
         initScriptWrappable(this);
         m_id = String::emptyString;
         m_className = String::emptyString;
+        m_onclick = ScriptValueNull;
     }
 
     /* 4.4 Interface Node */
@@ -48,7 +49,8 @@ public:
         return localName()->toUpper();
     }
 
-    virtual void setTextContent(String* val) {
+    virtual void setTextContent(String* val)
+    {
         Text* node = new Text(m_document, String::emptyString);
         node->setTextContent(val);
         while(firstChild()) {
@@ -68,9 +70,22 @@ public:
 
     FOR_EACH_HTML_ELEMENT_OP(IS_KIND_ELEMENT);
 
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
+
+    ScriptValue onclick()
+    {
+        return m_onclick;
+    }
+
+    void setOnclick(ScriptValue f)
+    {
+        m_onclick = f;
+    }
 protected:
     String* m_id;
     String* m_className;
+
+    ScriptValue m_onclick;
 };
 
 }

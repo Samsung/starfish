@@ -41,6 +41,11 @@ class XMLHttpRequest;
 
 class ScriptBindingInstance;
 
+typedef escargot::ESValue ScriptValue;
+typedef escargot::ESFunctionObject* ScriptFunction;
+#define ScriptValueUndefined escargot::ESValue()
+#define ScriptValueNull escargot::ESValue(escargot::ESValue::ESNull)
+
 class ScriptWrappable : public escargot::ESObject {
 public:
     enum Type {
@@ -69,6 +74,11 @@ public:
     inline void operator delete(void* obj)
     {
         GC_free(obj);
+    }
+
+    ScriptValue scriptValue()
+    {
+        return this;
     }
 
     void initScriptWrappable(Node* ptr);
@@ -107,7 +117,6 @@ public:
 
     bool hasProperty(String* name);
 
-    void callFunction(String* name);
 protected:
 };
 
@@ -117,10 +126,15 @@ public:
     void initScriptWrappableWindow(Window* window);
     static ScriptWrappableGlobalObject* fetch();
 
+    // deprecated
     void callFunction(String* name);
 protected:
     void* m_object;
 };
+
+ScriptValue createScriptString(String* str);
+ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody);
+void callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue);
 
 }
 
