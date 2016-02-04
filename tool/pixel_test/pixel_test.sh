@@ -17,7 +17,7 @@ FAIL=0
 CURDIR=`pwd`
 
 if [ "$1" = "" ]; then
-    tc=$(find test -name "*.xml")
+    tc=$(find test -name "*.xml" | sort)
 else
     tc=$1
 fi

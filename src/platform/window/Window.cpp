@@ -273,6 +273,16 @@ Window::Window(StarFish* starFish)
     }
 
     {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("body"), CSSStyleRule::PseudoClass::None, document());
+        bool result;
+        rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("margin-top", "8px", result));
+        rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("margin-bottom", "8px", result));
+        rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("margin-left", "8px", result));
+        rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("margin-right", "8px", result));
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
         CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("div"), CSSStyleRule::PseudoClass::None, document());
         bool result;
         rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("display", "block", result));

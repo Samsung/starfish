@@ -46,8 +46,8 @@ if (!initialize()) {
     phantom.exit();
 }
 
-var pathToSave = basePath + "/platform/" + platformName + "/" + testPath + "/";
-var pathToTest = basePath + "/" + testPath + "/";
+var pathToSave = basePath + "reftest/" + testPath + "/";
+var pathToTest = basePath + testPath + "/";
 console.log("     * The captured images will be saved in " + pathToSave);
 
 var page = require('webpage').create();

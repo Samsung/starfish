@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<HTMLDocument>
+	<node nodeType="9" localName="document">
+		<node nodeType="10" localName="documentType">
+		</node>
+		<node nodeType="1" localName="html">
+			<node nodeType="1" localName="head">
+				<node nodeType="3" localName="text">
+					<text><![CDATA[
+        ]]></text>
+				</node>
+				<node nodeType="1" localName="style" type="text/css">
+					<style selectorText="#id1" background-color="blue" width="100px" height="100px"/>
+					<style selectorText="div" display="block"/>
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+            #id1 {
+				background-color: blue;
+                width: 100px;
+                height:100px;
+            }
+            div {
+                display: block;
+            }
+        ]]></text>
+					</node>
+				</node>
+				<node nodeType="3" localName="text">
+					<text><![CDATA[
+    ]]></text>
+				</node>
+			</node>
+			<node nodeType="3" localName="text">
+				<text><![CDATA[
+    ]]></text>
+			</node>
+			<node nodeType="1" localName="body">
+				<node nodeType="3" localName="text">
+					<text><![CDATA[
+        ]]></text>
+				</node>
+				<node nodeType="1" localName="div" class="class1" id="id1">
+					<node nodeType="3" localName="text">
+						<text><![CDATA[
+        ]]></text>
+					</node>
+				</node>
+				<node nodeType="3" localName="text">
+					<text><![CDATA[
+    
+
+            
+]]></text>
+				</node>
+			</node>
+		</node>
+	</node>
+</HTMLDocument>
