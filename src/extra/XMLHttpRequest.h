@@ -6,6 +6,8 @@
 #include "platform/canvas/Canvas.h"
 #include <curl/curl.h>
 
+#define MINIMAL_PROGRESS_INTERVAL     0.1
+
 namespace StarFish {
 
 class XMLHttpRequestEventTarget : public EventTarget<ScriptWrappable>{
@@ -121,6 +123,7 @@ public:
     struct ProgressData {
       double lastruntime;
       CURL *curl;
+      XMLHttpRequest* obj;
     };
 
     XMLHttpRequest();
@@ -196,21 +199,24 @@ public:
     }
     static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
     {
-        ProgressData* myp = (ProgressData *)clientp;
-        CURL *curl = myp->curl;
+        ProgressData* p_data = (ProgressData *)clientp;
+        CURL *curl = p_data->curl;
+        XMLHttpRequest* this_obj = p_data->obj;
         double curtime = 0;
 
         curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &curtime);
 
-        if((curtime - myp->lastruntime) >= 10) {
-          myp->lastruntime = curtime;
-          printf("TOTAL TIME: %f \r\n", curtime);
-        }
+        if((curtime - p_data->lastruntime) >= MINIMAL_PROGRESS_INTERVAL) {
+          p_data->lastruntime = curtime;
 
-        printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
-                "  DOWN: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
-                "\r\n",
-                ulnow, ultotal, dlnow, dltotal);
+          this_obj->callEventHandler(String::fromUTF8("progress"),false);
+
+          // printf("TOTAL TIME: %f \r\n", curtime);
+          // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
+          //         "  DOWN: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
+          //         "\r\n",
+          //         ulnow, ultotal, dlnow, dltotal);
+        }
 
         // if(dlnow > 100)
         //   return 1;

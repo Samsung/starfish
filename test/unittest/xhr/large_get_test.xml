@@ -59,14 +59,18 @@
             <text><![CDATA[
   function run() {
 
-    print("*********** XHR Simple Get TEST 1 *****************");
-    function handler () {
-      //print(this.responseText);
-      print(this.response);
+    print("*********** XHR LARGE Get TEST 1 *****************");
+    function onTimeoutHandler() {
+      print("*** timeout event ***"+" ReadyState:"+this.readyState)
     }
+    function onProgressHandler() {
+      print("*** progress event ***"+" ReadyState:"+this.readyState)
+    }
+
     var xhr = new XMLHttpRequest();
-    xhr.timeout=10000;
-    xhr.addEventListener("load", handler);
+    xhr.timeout=5000;
+    xhr.ontimeout=onTimeoutHandler;
+    xhr.onprogress=onProgressHandler;
     xhr.open("GET", "http://releases.ubuntu.com/14.04.3/ubuntu-14.04.3-desktop-amd64.iso?_ga=1.160886395.714603943.1454563877");
     xhr.send();
 

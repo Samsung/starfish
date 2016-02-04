@@ -48,6 +48,7 @@ void XMLHttpRequest::send(String* body)
 
       ProgressData progressData;
       progressData.curl = curl;
+      progressData.obj = (XMLHttpRequest*)obj;
       progressData.lastruntime = 0;
 
       if (!curl) return false;
