@@ -124,6 +124,8 @@ public:
       double lastruntime;
       CURL *curl;
       XMLHttpRequest* obj;
+      int32_t loaded;
+      int32_t total;
     };
 
     XMLHttpRequest();
@@ -146,7 +148,7 @@ public:
     void setResponseType(const char* responseType);
     void setOpen(const char* method,String* url);
     void send(String* body);
-    void callEventHandler(String* eventName,bool isMainThread);
+    void callEventHandler(String* eventName,bool isMainThread,uint32_t loaded,uint32_t total);
 
     void setResponseHeader(String* responseHeader){
         m_response_header = responseHeader;
@@ -170,6 +172,13 @@ public:
         return false;
     }
 
+    void setScriptBindingInstance(ScriptBindingInstance* instance){
+        m_bindingInstance = instance;
+    }
+
+    ScriptBindingInstance* striptBindingInstance(){
+        return m_bindingInstance;
+    }
 
     static escargot::ESValue callJSFunction(escargot::ESVMInstance* instance, const escargot::ESValue& callee, const escargot::ESValue& receiver, escargot::ESValue arguments[], const size_t& argumentCount){
         escargot::ESValue result;
@@ -221,7 +230,9 @@ public:
         if((curtime - p_data->lastruntime) >= MINIMAL_PROGRESS_INTERVAL) {
           p_data->lastruntime = curtime;
 
-          this_obj->callEventHandler(String::fromUTF8("progress"),false);
+          p_data->loaded = static_cast<uint32_t>(dlnow);
+          p_data->total = static_cast<uint32_t>(dltotal);
+          this_obj->callEventHandler(String::fromUTF8("progress"),false,p_data->loaded,p_data->total);
 
           // printf("TOTAL TIME: %f \r\n", curtime);
           // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
@@ -260,6 +271,7 @@ protected:
     READY_STATE m_ready_state;
     uint32_t m_timeout;
     bool m_abort_flag;
+    ScriptBindingInstance* m_bindingInstance;
 };
 
 

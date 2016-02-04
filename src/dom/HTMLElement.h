@@ -70,7 +70,7 @@ public:
 
     FOR_EACH_HTML_ELEMENT_OP(IS_KIND_ELEMENT);
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
+    //virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
 
     ScriptValue onclick()
     {

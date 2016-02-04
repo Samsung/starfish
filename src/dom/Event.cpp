@@ -20,6 +20,10 @@ MouseEvent::MouseEvent(ScriptBindingInstance* instance)
     initScriptWrappable(this, instance);
 }
 
-
+ProgressEvent::ProgressEvent(ScriptBindingInstance* instance,uint32_t loaded,uint32_t total)
+    : Event(instance)
+{
+    initScriptWrappable(this, instance,loaded,total);
+}
 
 }

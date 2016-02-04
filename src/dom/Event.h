@@ -24,9 +24,8 @@ public:
 };
 
 class ProgressEvent : public Event {
-protected:
-    ProgressEvent(ScriptBindingInstance* instance);
 public:
+    ProgressEvent(ScriptBindingInstance* instance,uint32_t loaded,uint32_t total);
 };
 
 }

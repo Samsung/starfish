@@ -29,6 +29,7 @@ class HTMLUnknownElement;
 class Event;
 class UIEvent;
 class MouseEvent;
+class ProgressEvent;
 class HTMLCollection;
 class NodeList;
 class DOMTokenList;
@@ -105,6 +106,7 @@ public:
     void initScriptWrappable(Event* ptr, ScriptBindingInstance*);
     void initScriptWrappable(UIEvent* ptr, ScriptBindingInstance*);
     void initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance*);
+    void initScriptWrappable(ProgressEvent* ptr, ScriptBindingInstance* instance,uint32_t loaded,uint32_t total);
     void initScriptWrappable(HTMLCollection* ptr, ScriptBindingInstance*);
     void initScriptWrappable(NodeList* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstance*);

@@ -60,29 +60,53 @@
   function run() {
 
     print("*********** XHR LARGE Get TEST 1 *****************");
-    function onTimeoutHandler() {
+    function onTimeoutHandler(pe) {
       print("*** timeout event ***"+" ReadyState:"+this.readyState)
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onProgressHandler() {
+    function onProgressHandler(pe) {
       print("*** progress event ***"+" ReadyState:"+this.readyState)
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onLoadStartHandler() {
+    function onLoadStartHandler(pe) {
       print("*** loadstart event ***"+" ReadyState:"+this.readyState);
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onErrorHandler() {
+    function onErrorHandler(pe) {
       print("*** error event ***"+" ReadyState:"+this.readyState)
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onLoadendHandler() {
+    function onLoadendHandler(pe) {
       print("*** loadend event ***"+" ReadyState:"+this.readyState)
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onTimeoutHandler() {
+    function onTimeoutHandler(pe) {
       print("*** timeout event ***"+" ReadyState:"+this.readyState)
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onAbortHandler() {
+    function onAbortHandler(pe) {
       print("*** abort event ***"+" ReadyState:"+this.readyState)
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onLoadHandler() {
+    function onLoadHandler(pe) {
       print("*** load event ***"+" ReadyState:"+this.readyState)
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
 
     var xhr = new XMLHttpRequest();

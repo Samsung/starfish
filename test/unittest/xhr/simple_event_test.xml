@@ -67,17 +67,33 @@
       print(this.getAllResponseHeaders());
       print(this.timeout);
     }
-    function onLoadStartHandler() {
+    function onLoadStartHandler(pe) {
       print("*** loadstart event ***"+" ReadyState:"+this.readyState);
+      print(pe);
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onErrorHandler() {
-      print("*** error event ***"+" ReadyState:"+this.readyState)
+    function onErrorHandler(pe) {
+      print("*** error event ***"+" ReadyState:"+this.readyState);
+      print(pe);
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onLoadendHandler() {
-      print("*** loadend event ***"+" ReadyState:"+this.readyState)
+    function onLoadendHandler(pe) {
+      print("*** loadend event ***"+" ReadyState:"+this.readyState);
+      print(pe);
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
-    function onTimeoutHandler() {
+    function onTimeoutHandler(pe) {
       print("*** timeout event ***"+" ReadyState:"+this.readyState)
+      print(pe);
+      print("lengthComputable:"+pe.lengthComputable);
+      print("loaded:"+pe.loaded);
+      print("total:"+pe.total);
     }
 
 

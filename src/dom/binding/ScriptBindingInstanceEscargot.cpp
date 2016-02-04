@@ -1512,6 +1512,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(MouseEvent, UIEventFunction->protoType());
     fetchData(this)->m_mouseEvent = MouseEventFunction;
 
+    DEFINE_FUNCTION(ProgressEvent, EventFunction->protoType());
+    fetchData(this)->m_progressEvent = ProgressEventFunction;
+
     /* style-related getter/setter start here */
 
     DEFINE_FUNCTION(CSSStyleDeclaration, CSSStyleDeclarationFunction->protoType());

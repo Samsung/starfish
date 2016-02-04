@@ -1,5 +1,6 @@
 #include "StarFishConfig.h"
 #include "XMLHttpRequest.h"
+#include "dom/Event.h"
 
 #include <future>
 #include <Elementary.h>
@@ -8,12 +9,6 @@ namespace StarFish {
 
 XMLHttpRequest::XMLHttpRequest()
 {
-    //FIXME: temp soluation
-    set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESValue::ESNull));
-    set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESValue::ESNull));
-
-    //init
-    initScriptWrappable(this);
     m_method = UNKNOWN_METHOD;
     m_response_type = DEFAULT_RESPONSE;
     m_ready_state = UNSENT;
@@ -21,6 +16,15 @@ XMLHttpRequest::XMLHttpRequest()
     m_response_header = nullptr;
     m_timeout = 0;
     m_abort_flag = false;
+    m_bindingInstance = nullptr;
+
+    //FIXME: temp soluation
+    set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESValue::ESNull));
+    set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESValue::ESNull));
+
+    //init
+    initScriptWrappable(this);
+
 }
 
 void XMLHttpRequest::send(String* body)
@@ -32,7 +36,7 @@ void XMLHttpRequest::send(String* body)
       const char* url = m_url->utf8Data();
 
       // invoke loadstart Event.
-      callEventHandler(String::fromUTF8("loadstart"),true);
+      callEventHandler(String::fromUTF8("loadstart"),true,0,0);
 
       auto task  = [](escargot::ESObject* obj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body,uint32_t timeout)->bool{
 
@@ -86,7 +90,7 @@ void XMLHttpRequest::send(String* body)
         printf("XMLHttpRequest UnSupportted method!!  \n");
 
         //invoke loadend event
-        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false);
+        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,progressData.loaded,progressData.total);
         return false;
       }
 
@@ -108,13 +112,16 @@ void XMLHttpRequest::send(String* body)
               escargot::ESObject* obj;
               char* buf;
               char* header;
-
+              uint32_t loaded;
+              uint32_t total;
           };
 
           Pass* pass = new Pass;
           pass->buf = buffer.memory;
           pass->header = header.memory;
           pass->obj = obj;
+          pass->loaded = progressData.loaded;
+          pass->total = progressData.total;
 
           ecore_thread_main_loop_begin();
           ecore_idler_add([](void *data)->Eina_Bool{
@@ -141,10 +148,10 @@ void XMLHttpRequest::send(String* body)
 
               }
               //invoke load event
-              ((XMLHttpRequest*)this_obj)->callEventHandler(String::fromUTF8("load"),true);
+              ((XMLHttpRequest*)this_obj)->callEventHandler(String::fromUTF8("load"),true,pass->loaded,pass->total);
 
               //invoke loadend event
-              ((XMLHttpRequest*)this_obj)->callEventHandler(String::fromUTF8("loadend"),true);
+              ((XMLHttpRequest*)this_obj)->callEventHandler(String::fromUTF8("loadend"),true,pass->loaded,pass->total);
 
               delete pass;
               return ECORE_CALLBACK_CANCEL;
@@ -161,11 +168,11 @@ void XMLHttpRequest::send(String* body)
         switch(res){
           case CURLE_OPERATION_TIMEDOUT:
               //invoke timeout event
-              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("timeout"),false);
+              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("timeout"),false,0,0);
               break;
 
           case CURLE_ABORTED_BY_CALLBACK:
-              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("abort"),false);
+              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("abort"),false,0,0);
               break;
 
           default:
@@ -173,10 +180,10 @@ void XMLHttpRequest::send(String* body)
         }
 
         //invoke error event
-        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("error"),false);
+        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("error"),false,0,0);
 
         //invoke loadend event
-        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false);
+        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,0,0);
       }
       return false;
 
@@ -250,7 +257,7 @@ String* XMLHttpRequest::getResponseTypeStr(){
     return String::emptyString;
 }
 
-void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread){
+void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread,uint32_t loaded,uint32_t total){
 
     if(eventName->equals("loadstart")||eventName->equals("progress")){
       m_ready_state = LOADING;
@@ -259,20 +266,26 @@ void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread){
     }
 
     if(isMainThread){
+
       escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+      escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(this->striptBindingInstance(),loaded,total))};
       escargot::ESValue fn = getHandler(eventName);
       if(fn!=escargot::ESValue::ESNull)
-        callJSFunction(instance, fn, this, NULL, 0);
+        callJSFunction(instance, fn, this, json_arg, 1);
     }else{
 
       struct Pass {
           escargot::ESObject* obj;
           String* buf;
+          uint32_t loaded;
+          uint32_t total;
       };
 
       Pass* pass = new Pass;
       pass->buf = eventName;
       pass->obj = this;
+      pass->loaded = loaded;
+      pass->total = total;
 
       ecore_thread_main_loop_begin();
       ecore_idler_add([](void *data)->Eina_Bool{
@@ -280,8 +293,9 @@ void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread){
           escargot::ESObject* this_obj = pass->obj;
           escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
           escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->getHandler(pass->buf);
+          escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(((XMLHttpRequest*)this_obj)->striptBindingInstance(),pass->loaded,pass->total))};
           if(fn!=escargot::ESValue::ESNull)
-            callJSFunction(instance, fn, this_obj, NULL, 0);
+            callJSFunction(instance, fn, this_obj, json_arg, 1);
 
           delete pass;
           return ECORE_CALLBACK_CANCEL;

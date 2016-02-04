@@ -289,8 +289,10 @@ void ScriptWrappable::initScriptWrappable(HTMLUnknownElement* ptr)
 
 void ScriptWrappable::initScriptWrappable(XMLHttpRequest* xhr)
 {
-    Window* window = (Window*)ScriptWrappableGlobalObject::fetch();;
-    auto data = fetchData(window->starFish()->scriptBindingInstance());
+    Window* window = (Window*)ScriptWrappableGlobalObject::fetch();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
+    auto data = fetchData(instance);
+    xhr->setScriptBindingInstance(instance);
     ((escargot::ESObject *)this)->set__proto__(data->m_xhrElement->protoType());
     ((escargot::ESObject *)this)->setExtraData(XMLHttpRequestObject);
 }
@@ -317,6 +319,20 @@ void ScriptWrappable::initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance
 {
     auto data = fetchData(instance);
     ((escargot::ESObject *)this)->set__proto__(data->m_mouseEvent->protoType());
+}
+
+void ScriptWrappable::initScriptWrappable(ProgressEvent* ptr, ScriptBindingInstance* instance,uint32_t loaded,uint32_t total)
+{
+    auto data = fetchData(instance);
+    ((escargot::ESObject *)this)->set__proto__(data->m_progressEvent->protoType());
+
+    bool lengthComputable=false;
+    if(total>0)
+        lengthComputable=true;
+
+    ((escargot::ESObject *)this)->defineDataProperty(escargot::ESString::create("lengthComputable"), false, false, false, escargot::ESValue(lengthComputable));
+    ((escargot::ESObject *)this)->defineDataProperty(escargot::ESString::create("loaded"), false, false, false, escargot::ESValue(loaded));
+    ((escargot::ESObject *)this)->defineDataProperty(escargot::ESString::create("total"), false, false, false, escargot::ESValue(total));
 }
 
 void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInstance* instance)
