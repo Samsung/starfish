@@ -431,7 +431,6 @@ public:
         m_block.m_lineBoxes.push_back(LineBox(&m_block));
         m_currentLine = 0;
         m_currentLineWidth = 0;
-        m_layoutContext.setLastLineBox(&m_block.m_lineBoxes.back());
     }
 
 
@@ -440,6 +439,10 @@ public:
         m_block.m_lineBoxes.push_back(LineBox(&m_block));
         m_currentLine++;
         m_currentLineWidth = 0;
+    }
+
+    void registerInlineContent()
+    {
         m_layoutContext.setLastLineBox(&m_block.m_lineBoxes.back());
     }
 
@@ -515,6 +518,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
                 m_lineBoxes[lineFormattingContext.m_currentLine].m_boxes.push_back(new InlineTextBox(f->node(), f->style(), &m_lineBoxes[lineFormattingContext.m_currentLine], resultString));
                 m_lineBoxes[lineFormattingContext.m_currentLine].m_boxes.back()->setWidth(textWidth);
                 m_lineBoxes[lineFormattingContext.m_currentLine].m_boxes.back()->setHeight(f->style()->font()->metrics().m_fontHeight);
+                lineFormattingContext.registerInlineContent();
             });
 
         } else if (f->isFrameReplaced()) {
@@ -531,6 +535,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
                 m_lineBoxes[lineFormattingContext.m_currentLine].m_boxes.back()->setWidth(r->width());
                 m_lineBoxes[lineFormattingContext.m_currentLine].m_boxes.back()->setHeight(r->height());
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
+                lineFormattingContext.registerInlineContent();
             } else {
                 lineFormattingContext.breakLine();
                 goto insertReplacedBox;
@@ -542,7 +547,6 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
 
             float ascender = 0;
             if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox())) {
-                // TODO consider margin
                 float topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
                 ascender = topToLineBox + ctx.lastLineBox()->m_ascender;
             } else {
@@ -559,6 +563,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
                 m_lineBoxes[lineFormattingContext.m_currentLine].m_boxes.back()->setWidth(r->width());
                 m_lineBoxes[lineFormattingContext.m_currentLine].m_boxes.back()->setHeight(r->height());
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
+                lineFormattingContext.registerInlineContent();
             } else {
                 lineFormattingContext.breakLine();
                 goto insertBlockBox;
