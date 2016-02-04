@@ -1,0 +1,38 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+  </style>
+</head>
+
+<body>
+  <div id="idText">
+    div1
+  </div>
+  <div class="classText">
+    div2
+    </div>
+</body>
+
+<script type="text/javascript">
+  function run() {
+
+    print("*********** XHR Simple Get TEST 1 *****************");
+    function handler () {
+      //print(this.responseText);
+      print(this.response);
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.timeout=10000;
+    xhr.addEventListener("load", handler);
+    xhr.open("GET", "http://releases.ubuntu.com/14.04.3/ubuntu-14.04.3-desktop-amd64.iso?_ga=1.160886395.714603943.1454563877");
+    xhr.send();
+
+    print("************* Done *******************");
+  }
+  run();
+</script>
+
+</html>

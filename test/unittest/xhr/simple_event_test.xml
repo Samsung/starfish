@@ -76,6 +76,9 @@
     function onLoadendHandler() {
       print("*** loadend event ***"+" ReadyState:"+this.readyState)
     }
+    function onTimeoutHandler() {
+      print("*** timeout event ***"+" ReadyState:"+this.readyState)
+    }
 
 
     var xhr = new XMLHttpRequest();
@@ -115,9 +118,8 @@
     xhr3.onload=onLoadHandler;
     xhr3.onerror=onErrorHandler;
     xhr3.onloadend=onLoadendHandler;
+    xhr3.ontimeout=onTimeoutHandler;
     xhr3.timeout=10;
-
-    xhr3.open("GET", "https://httpbin.org/get");
     xhr3.send();
 
     print("************* Done *******************");

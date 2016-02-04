@@ -24,6 +24,8 @@
     function onLoadHandler() {
       print("*** load event ***"+" ReadyState:"+this.readyState)
       print(this.response);
+      print(this.getAllResponseHeaders());
+      print(this.timeout);
     }
     function onLoadStartHandler() {
       print("*** loadstart event ***"+" ReadyState:"+this.readyState);
@@ -64,6 +66,19 @@
 
     xhr2.open("GET", "http://nothing");
     xhr2.send();
+
+    print("*********** XHR Simple Event TEST 3 *****************");
+
+    var xhr3 = new XMLHttpRequest();
+    xhr3.open("GET", "https://httpbin.org/get");
+    xhr3.onloadstart=onLoadStartHandler;
+    xhr3.onload=onLoadHandler;
+    xhr3.onerror=onErrorHandler;
+    xhr3.onloadend=onLoadendHandler;
+    xhr3.timeout=10;
+
+    xhr3.open("GET", "https://httpbin.org/get");
+    xhr3.send();
 
     print("************* Done *******************");
   }

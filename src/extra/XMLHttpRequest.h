@@ -4,6 +4,7 @@
 #include "dom/binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 #include "platform/canvas/Canvas.h"
+#include <curl/curl.h>
 
 namespace StarFish {
 
@@ -117,6 +118,11 @@ public:
         char *memory;
         size_t size;
     };
+    struct ProgressData {
+      double lastruntime;
+      CURL *curl;
+    };
+
     XMLHttpRequest();
 
     RESPONSE_TYPE getResponseType(){
@@ -188,6 +194,41 @@ public:
         }
         return realsize;
     }
+    static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+    {
+        ProgressData* myp = (ProgressData *)clientp;
+        CURL *curl = myp->curl;
+        double curtime = 0;
+
+        curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &curtime);
+
+        if((curtime - myp->lastruntime) >= 10) {
+          myp->lastruntime = curtime;
+          printf("TOTAL TIME: %f \r\n", curtime);
+        }
+
+        printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
+                "  DOWN: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
+                "\r\n",
+                ulnow, ultotal, dlnow, dltotal);
+
+        // if(dlnow > 100)
+        //   return 1;
+        return 0;
+
+    }
+
+    // static int progress_callback_old(void *p,
+    //                           double dltotal, double dlnow,
+    //                           double ultotal, double ulnow)
+    // {
+    //     printf("test??\n");
+    //   return progress_callback(p,
+    //                   (curl_off_t)dltotal,
+    //                   (curl_off_t)dlnow,
+    //                   (curl_off_t)ultotal,
+    //                   (curl_off_t)ulnow);
+    // }
 
     virtual void paint(Canvas* canvas){}
 

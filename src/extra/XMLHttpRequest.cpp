@@ -1,7 +1,6 @@
 #include "StarFishConfig.h"
 #include "XMLHttpRequest.h"
 
-#include <curl/curl.h>
 #include <future>
 #include <Elementary.h>
 
@@ -36,6 +35,9 @@ void XMLHttpRequest::send(String* body)
 
       auto task  = [](escargot::ESObject* obj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body,uint32_t timeout)->bool{
 
+      CURL* curl = curl_easy_init();
+      CURLcode res;
+
       Buffer header;
       header.memory=NULL;
       header.size=0;
@@ -44,8 +46,9 @@ void XMLHttpRequest::send(String* body)
       buffer.memory=NULL;
       buffer.size=0;
 
-      CURL* curl = curl_easy_init();
-      CURLcode res;
+      ProgressData progressData;
+      progressData.curl = curl;
+      progressData.lastruntime = 0;
 
       if (!curl) return false;
 
@@ -59,8 +62,15 @@ void XMLHttpRequest::send(String* body)
 
       //for SEC
       //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
+
       //for MSEC
       curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(timeout));
+
+      // curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback_old);
+      // curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progressData);
+      curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+      curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progressData);
+      curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
       curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*) &header);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &buffer);
@@ -148,8 +158,8 @@ void XMLHttpRequest::send(String* body)
 
         switch(res){
           case CURLE_OPERATION_TIMEDOUT:
-              //timeout!!
-              printf("TIMEOUT!! \n");
+              //invoke timeout event
+              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("timeout"),false);
               break;
           default:
               break;
