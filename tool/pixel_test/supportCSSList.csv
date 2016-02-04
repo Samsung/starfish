@@ -1,45 +1,81 @@
-background
-background-color
-background-image
-background-repeat, background-repeat-x, background-repeat-y
-background-size
-border, border-top, border-right, border-bottom, border-left
-border-color, border-top-color, border-right-color, border-bottom-color, border-left-color
-border-image-repeat
-border-image-slice
-border-image-source
-border-image-width
-border-style, border-top-style, border-right-style, border-bottom-style, border-left-style
-border-width, border-top-width, border-right-width, border-bottom-width, border-left-width
-bottom
-color
-direction
-display
-font-size
-font-style
-font-weight
-height
-left
-letter-spacing
-line-height
-margin
-margin-bottom
-margin-left
-margin-right
-margin-top
-opacity
-overflow, overflow-x, overflow-y
-padding
-padding-bottom
-padding-left
-padding-right
-padding-top
-position
-right
-text-align
-text-decoration
-top
-vertical-align
-visibility
-width
-z-index
+CSS Version      , Chapter   , Property              , Limited Values
+CSS 2.1          , 8.3       , margin
+                 ,           , margin-bottom
+                 ,           , margin-left
+                 ,           , margin-right
+                 ,           , margin-top
+                 , 8.4       , padding
+                 ,           , padding-bottom
+                 ,           , padding-left
+                 ,           , padding-right
+                 ,           , padding-top
+                 , 8.5       , border
+                 ,           , border-top
+                 ,           , border-right
+                 ,           , border-bottom
+                 ,           , border-left
+                 ,           , border-color
+                 ,           , border-top-color
+                 ,           , border-right-color
+                 ,           , border-bottom-color
+                 ,           , border-left-color
+                 ,           , border-style
+                 ,           , border-top-style      , none
+                 ,           ,                       , solid
+                 ,           , border-right-style    , none
+                 ,           ,                       , solid
+                 ,           , border-bottom-style   , none
+                 ,           ,                       , solid
+                 ,           , border-left-style     , none
+                 ,           ,                       , solid
+                 ,           , border-width
+                 ,           , border-top-width
+                 ,           , border-right-width
+                 ,           , border-bottom-width
+                 ,           , border-left-width
+                 , 9.2       , display               , block
+                 ,           ,                       , inline
+                 ,           ,                       , inline-block
+                 , 9.3       , position              , static
+                 ,           ,                       , absolute
+                 ,           ,                       , relative
+                 ,           , top
+                 ,           , right
+                 ,           , bottom
+                 ,           , left
+                 , 9.9       , z-index
+                 , 9.10      , direction
+                 , 10.2      , width
+                 , 10.5      , height
+                 , 10.8      , line-height
+                 ,           , vertical-align        , baseline
+                 ,           ,                       , sub
+                 ,           ,                       , super
+                 ,           ,                       , top
+                 ,           ,                       , text-top
+                 ,           ,                       , middle
+                 ,           ,                       , bottom
+                 ,           ,                       , text-bottom
+                 ,           ,                       , <percentage>
+                 ,           ,                       , <length>
+                 , 11.1      , overflow              , visible
+                 ,           ,                       , hidden
+                 , 11.2      , visibility            , visible
+                 ,           ,                       , hidden
+                 , 14.1      , color
+                 , 14.2      , background
+                 ,           , background-color
+                 ,           , background-image
+                 ,           , background-repeat
+                 , 15.4      , font-style
+                 , 15.6      , font-weight
+                 , 15.7      , font-size
+                 , 16.2      , text-align
+                 , 16.3      , text-decoration
+                 , 16.4      , letter-spacing
+CSS3-COLOR       , 3.2       , opacity
+CSS3-BACKGROUND  , 3.9       , background-size
+                 , 6.1       , border-image-source
+                 , 6.2       , border-image-slice
+                 , 6.3       , border-image-width
+                 , 6.5       , border-image-repeat

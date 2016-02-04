@@ -8,7 +8,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 # Variables
-EXPECTED_IMAGE_PATH="test/platform/linux"
+EXPECTED_IMAGE_PATH="test/reftest"
 # FIXME
 OUTDIR="out/x64/exe/debug/reftest"
 mkdir -p $OUTDIR
@@ -17,21 +17,22 @@ FAIL=0
 CURDIR=`pwd`
 
 if [ "$1" = "" ]; then
-    tc=$(find test -name "*.xml" | sort)
+    tc=$(find test -name "*.html" | sort)
 else
     tc=$1
 fi
 
 echo "${BOLD}###### CSS Regression Test ######${RESET}\n"
 for i in $tc ; do
-    dir=${i%.xml}
+    dir=${i%.html}
     html=$dir".html"
     file=${dir##*/}
     dir=${dir#*/}
     dir=${dir%/*}
 
     # Capture the screenshot
-    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
+#    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
+    ELM_ENGINE="shot:" nodejs runner.js $i --pixel-test > /dev/null 2>&1
 
     # Compare
     compare="tool/pixel_test/bin/image_diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png out.png"

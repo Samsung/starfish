@@ -5,6 +5,12 @@ if (typeof String.prototype.endsWith !== 'function') {
         return this.indexOf(suffix, this.length - suffix.length) !== -1;
     };
 }
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function(searchString, position){
+      position = position || 0;
+      return this.substr(position, searchString.length) === searchString;
+  };
+}
 if (!Array.prototype.includes) {
   Array.prototype.includes = function(searchElement /*, fromIndex*/ ) {
     'use strict';
@@ -41,23 +47,44 @@ var basePath = "../../test/";
 var filelist = [];
 var acceptCSSList = [];
 var acceptTagList = [];
+var acceptValues = {};
 
 function initialize() {
     console.log("#!/bin/sh");
     var stream = fs.open('supportCSSList.csv', 'r');
+    var preprop;
+    stream.readLine();      // Title
     while (!stream.atEnd()) {
         var line = stream.readLine();
-        var token = line.split(",").map( function(s) {return s.trim();} );
-        acceptCSSList = acceptCSSList.concat(token);
+        if (line.startsWith("#")) continue;
+        var tokens = line.split(",");
+        var prop = tokens[2].trim();
+        if (prop != "") {           // property column exists
+            acceptCSSList = acceptCSSList.concat(prop);
+            preprop = prop;
+        }
+        if (tokens[3] && tokens[3].trim() != "") {  // value column exists
+            if (!acceptValues[preprop])
+                acceptValues[preprop] = [];
+            acceptValues[preprop].push(tokens[3].trim());
+        }
     }
     console.log( " ## Supported CSS Properties : " + acceptCSSList);
+    console.log( " ## Supported CSS Prop-Value Pairs : " + JSON.stringify(acceptValues));
     stream.close();
 
     var stream2 = fs.open('supportHTMLList.csv', 'r');
-    while (!stream2.atEnd()) {
-        var line = stream2.readLine();
-        var token = line.split(",").map( function(s) {return s.trim();} );
-        acceptTagList = acceptTagList.concat(token);
+    var line = "";
+    do {
+        line = stream2.readLine();
+    } while (!line.startsWith("Element"));
+    while (true) {
+        var token = line.split(",")[2].trim();
+        if (token != "")
+            acceptTagList = acceptTagList.concat(token);
+        if (stream2.atEnd()) break;
+        line = stream2.readLine();
+        if (line.startsWith("#")) continue;
     }
     console.log( " ## Supported HTML Tags : " + acceptTagList);
     stream2.close();
