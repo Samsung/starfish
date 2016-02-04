@@ -79,12 +79,13 @@ function initialize() {
         line = stream2.readLine();
     } while (!line.startsWith("Element"));
     while (true) {
-        var token = line.split(",")[2].trim();
-        if (token != "")
-            acceptTagList = acceptTagList.concat(token);
+        if (!line.startsWith("#")) {
+            var token = line.split(",")[2].trim();
+            if (token != "")
+                acceptTagList = acceptTagList.concat(token);
+        }
         if (stream2.atEnd()) break;
         line = stream2.readLine();
-        if (line.startsWith("#")) continue;
     }
     console.log( " ## Supported HTML Tags : " + acceptTagList);
     stream2.close();
@@ -153,40 +154,68 @@ page.onLoadFinished = function() {
         var usedCSSList = {};
         var usedTagList = {};
         var styleTags = document.getElementsByTagName("style");
+        var changePropName = function(prop, nextprop) {
+            if (!nextprop) return prop;
+            if (prop == "overflow-x" && nextprop.trim() == "overflow-y")
+                prop = "overflow";
+            else if (prop == "background-repeat-x" && nextprop == "background-repeat-y")
+                prop = "background-repeat";
+            return prop;
+        }
         for (var i = 0; i < styleTags.length; i++) {
             var rules = styleTags[i].sheet.cssRules;
             for (var j = 0; j < rules.length; j++) {
                 for (var k = 0; k < rules[j].style.length; k++) {
-                    usedCSSList[rules[j].style[k].trim()] = 1;
+                    var prop = rules[j].style[k].trim();
+                    if ((prop == "background-attachment") || (prop == "background-clip")
+                            || (prop == "background-origin") || (prop == "background-position")
+                       ) {
+                        if (rules[j].style[prop].trim() == "initial")
+                            continue;
+                    }
+                    var newprop = changePropName(prop, rules[j].style[k+1]);
+                    if (prop != newprop) k++;
+                    usedCSSList[newprop] = 1;
                 }
             }
         }
         var allTags = document.getElementsByTagName("*");
         for (var i = 0; i < allTags.length; i++) {
             if (allTags[i].hasAttribute("style")) {
-                var inlineStyleList = allTags[i].getAttribute("style").split(';').map(function(a) { return a.split(':')[0]; });
+                var inlineStyleList = allTags[i].getAttribute("style").split(';').map(function(a) { return a.split(':'); });
                 for (var j = 0; j < inlineStyleList.length; j++) {
-                    if (inlineStyleList[j].trim() != "")
-                        usedCSSList[inlineStyleList[j].trim()] = 1;
+                    if (inlineStyleList[j][0].trim() != "") {
+                        var prop = inlineStyleList[j][0].trim();
+                        if ((prop == "background-attachment") || (prop == "background-clip")
+                                || (prop == "background-origin") || (prop == "background-position")
+                           ) {
+                            if (inlineStyleList[j][1].trim() == "initial"
+                                    || inlineStyleList[j][1].trim() == "initial initial")
+                                continue;
+                        }
+                        var newprop = changePropName(prop, inlineStyleList[j+1][0]);
+                        if (prop != newprop) j++;
+                        usedCSSList[newprop] = 1;
+                    }
                 }
             }
             usedTagList[allTags[i].localName] = 1;
         }
         return [usedCSSList, usedTagList];
     });
-    //console.log(JSON.stringify(result));
+//    console.log(JSON.stringify(result));
     var check = function(res) {
         if (res == false) {
             console.log("result is false");
             return false;
         }
-        for (var css in res[0]) {
+        for (var css in res[0]) {   // usedCSSList
             if (!acceptCSSList.includes(css)) {
                 console.log("## [CSS] " + css + " is not Supported");
                 return false;
             }
         }
-        for (var tag in res[1]) {
+        for (var tag in res[1]) {   // usedHTMLList
             if (!(acceptTagList.includes(tag))) {
                 console.log("## [HTML] " + tag + " is not Supported");
                 return false;
