@@ -158,6 +158,18 @@ public:
         return String::emptyString;
     }
 
+    void abort(){
+        m_abort_flag=true;
+    }
+
+    bool checkAbort(){
+        if(m_abort_flag){
+            m_abort_flag=false;
+            return true;
+        }
+        return false;
+    }
+
 
     static escargot::ESValue callJSFunction(escargot::ESVMInstance* instance, const escargot::ESValue& callee, const escargot::ESValue& receiver, escargot::ESValue arguments[], const size_t& argumentCount){
         escargot::ESValue result;
@@ -218,8 +230,10 @@ public:
           //         ulnow, ultotal, dlnow, dltotal);
         }
 
-        // if(dlnow > 100)
-        //   return 1;
+        //check abort
+        if(this_obj->checkAbort())
+            return 1;
+
         return 0;
 
     }
@@ -245,6 +259,7 @@ protected:
     RESPONSE_TYPE m_response_type;
     READY_STATE m_ready_state;
     uint32_t m_timeout;
+    bool m_abort_flag;
 };
 
 

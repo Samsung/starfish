@@ -66,11 +66,42 @@
     function onProgressHandler() {
       print("*** progress event ***"+" ReadyState:"+this.readyState)
     }
+    function onLoadStartHandler() {
+      print("*** loadstart event ***"+" ReadyState:"+this.readyState);
+    }
+    function onErrorHandler() {
+      print("*** error event ***"+" ReadyState:"+this.readyState)
+    }
+    function onLoadendHandler() {
+      print("*** loadend event ***"+" ReadyState:"+this.readyState)
+    }
+    function onTimeoutHandler() {
+      print("*** timeout event ***"+" ReadyState:"+this.readyState)
+    }
+    function onAbortHandler() {
+      print("*** abort event ***"+" ReadyState:"+this.readyState)
+    }
+    function onLoadHandler() {
+      print("*** load event ***"+" ReadyState:"+this.readyState)
+    }
 
     var xhr = new XMLHttpRequest();
     xhr.timeout=5000;
+
     xhr.ontimeout=onTimeoutHandler;
     xhr.onprogress=onProgressHandler;
+    xhr.onabort=onAbortHandler;
+    xhr.addEventListener("load", onLoadHandler);
+    xhr.addEventListener("loadstart", onLoadStartHandler);
+    xhr.addEventListener("loadend", onLoadendHandler);
+    xhr.addEventListener("error", onErrorHandler);
+
+    xhr.open("GET", "http://releases.ubuntu.com/14.04.3/ubuntu-14.04.3-desktop-amd64.iso?_ga=1.160886395.714603943.1454563877");
+    xhr.send();
+    xhr.abort();
+
+    xhr.send();
+
     xhr.open("GET", "http://releases.ubuntu.com/14.04.3/ubuntu-14.04.3-desktop-amd64.iso?_ga=1.160886395.714603943.1454563877");
     xhr.send();
 

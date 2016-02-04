@@ -20,6 +20,7 @@ XMLHttpRequest::XMLHttpRequest()
     m_url = nullptr;
     m_response_header = nullptr;
     m_timeout = 0;
+    m_abort_flag = false;
 }
 
 void XMLHttpRequest::send(String* body)
@@ -162,6 +163,11 @@ void XMLHttpRequest::send(String* body)
               //invoke timeout event
               ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("timeout"),false);
               break;
+
+          case CURLE_ABORTED_BY_CALLBACK:
+              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("abort"),false);
+              break;
+
           default:
               break;
         }
