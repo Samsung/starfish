@@ -128,6 +128,12 @@ public:
         return m_ready_state;
     }
 
+    void setTimeout(uint32_t timeout){
+        m_timeout = timeout;
+    }
+    uint32_t getTimeout(){
+        return m_timeout;
+    }
     void setResponseType(const char* responseType);
     void setOpen(const char* method,String* url);
     void send(String* body);
@@ -191,6 +197,7 @@ protected:
     METHOD_TYPE m_method;
     RESPONSE_TYPE m_response_type;
     READY_STATE m_ready_state;
+    uint32_t m_timeout;
 };
 
 

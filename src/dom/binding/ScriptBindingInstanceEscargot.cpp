@@ -1741,6 +1741,19 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
     }, false, false, false);
 
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("timeout"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        uint32_t c = ((XMLHttpRequest*) originalObj)->getTimeout();
+            return escargot::ESValue(c);;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+        if(v.isNumber()){
+            ((XMLHttpRequest*)originalObj)->setTimeout(v.toInt32());
+        }
+    }, false, false, false);
+
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("readyState"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
