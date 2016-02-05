@@ -39,8 +39,8 @@
             padding-top: 8%;
          }
          #img_weather {
-            width: 166.7px;
-            height: 122.4px;
+            width: 100px;
+            height: 100px;
          }
       </style>
    </head>
@@ -71,12 +71,21 @@
            var mixmax_temp_text = document.getElementById("mixmax_temp_text");
            var date = new Date(weather_json['dt']);
            var icon_name = weather_json['weather'][0]['icon'];
+           var time_str = '';
+
+           if(date.getHours()<10)
+            time_str+='0'
+           time_str+=date.getHours();
+           time_str+=":";
+           if(date.getMinutes()<10)
+            time_str+='0'
+           time_str+=date.getMinutes();
 
            img_weather.src = "img/"+icon_name+".png";
-           clock_text.textContent = date.toString();
+           clock_text.textContent = time_str;
            city_text.textContent = weather_json['name'];
-           current_temp_text.textContent = weather_json['main']['temp'];
-           mixmax_temp_text.textContent = weather_json['main']['temp_min'] + "/" +weather_json['main']['temp_max'];
+           current_temp_text.textContent = weather_json['main']['temp']+"°C";
+           mixmax_temp_text.textContent = weather_json['main']['temp_min'] +"°C"+ " / " +weather_json['main']['temp_max']+"°C";
          }
          var xhr = new XMLHttpRequest();
          xhr.addEventListener("load", onLoadHandler);
