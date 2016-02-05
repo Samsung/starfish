@@ -11,6 +11,9 @@
 
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#ifdef TIZEN_DEVICE_API
+#include "TizenDeviceAPILoaderForEscargot.h"
+#endif
 
 namespace StarFish {
 
@@ -65,7 +68,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESValue v;
 
     escargot::ESObject* console = escargot::ESObject::create();
+#ifndef STARFISH_TIZEN_WEARABLE
     console->set(escargot::ESString::create("log"), fetchData(this)->m_instance->globalObject()->get(escargot::ESString::create("print")));
+#else
+    console->set(escargot::ESString::create("log"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESString* msg = instance->currentExecutionContext()->readArgument(0).toString();
+        STARFISH_LOG_INFO("console.log: %s\n", msg->utf8Data());
+        return escargot::ESValue();
+    }, escargot::ESString::create("log"), 1, false));
+#endif
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
     DEFINE_FUNCTION(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
@@ -1868,6 +1879,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         return (escargot::ESObject *)((Window *)ScriptWrappableGlobalObject::fetch())->url();
     }, NULL, false, false, false);
+
+#ifdef TIZEN_DEVICE_API
+    fetchData(this)->m_deviceAPIObject = new DeviceAPI::NativePluginManager(fetchData(this)->m_instance);
+#endif
 }
 
 void ScriptBindingInstance::evaluate(String* str)

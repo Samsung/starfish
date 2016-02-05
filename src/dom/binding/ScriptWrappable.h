@@ -68,6 +68,9 @@ public:
         XMLHttpRequestObject,
         BlobObject,
         URLObject,
+#ifdef TIZEN_DEVICE_API
+        NativePluginManagerObject,
+#endif
     };
     ScriptWrappable();
 

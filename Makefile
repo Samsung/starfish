@@ -17,6 +17,7 @@ NPROCS:=1
 OS:=$(shell uname -s)
 SHELL:=/bin/bash
 OUTPUT:=bin
+TIZEN_DEVICE_API=
 ifeq ($(OS),Linux)
   NPROCS:=$(shell grep -c ^processor /proc/cpuinfo)
   SHELL:=/bin/bash
@@ -177,6 +178,10 @@ CXXFLAGS += -Ithird_party/escargot/third_party/rapidjson/include/
 CXXFLAGS += -Ithird_party/escargot/third_party/yarr/
 CXXFLAGS_DEBUG += -DGC_DEBUG
 
+ifeq ($(TIZEN_DEVICE_API), true)
+	include third_party/deviceapi/build/Include.mk
+endif
+
 LDFLAGS += -lescargot
 
 ifeq ($(MODE), debug)
@@ -232,6 +237,10 @@ SRC += third_party/skia_matrix/SkPoint.cpp
 SRC += third_party/skia_matrix/SkRect.cpp
 SRC += third_party/skia_matrix/SkMatrix.cpp
 SRC += third_party/skia_matrix/SkDebug.cpp
+
+ifeq ($(TIZEN_DEVICE_API), true)
+	SRC += third_party/deviceapi/src/TizenDeviceAPILoaderForEscargot.cpp
+endif
 
 SRC_CC =
 
