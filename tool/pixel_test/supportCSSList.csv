@@ -71,7 +71,10 @@ CSS 2.1          , 8.3       , margin
                  , 15.6      , font-weight
                  , 15.7      , font-size
                  , 16.2      , text-align
-                 , 16.3      , text-decoration
+                 , 16.3      , text-decoration       , none
+                 ,           ,                       , underline
+                 ,           ,                       , overline
+                 ,           ,                       , line-through
                  , 16.4      , letter-spacing
 CSS3-COLOR       , 3.2       , opacity
 CSS3-BACKGROUND  , 3.9       , background-size
