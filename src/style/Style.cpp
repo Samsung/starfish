@@ -107,7 +107,7 @@ void parseLength(CSSStyleValuePair& ret, const char* value)
         sscanf(value, "%fpc", &f);
         ret.m_valueKind = CSSStyleValuePair::ValueKind::Length;
         ret.m_value.m_length = CSSLength(CSSLength::Kind::PC, f);
-    } else if (strcmp(value, "0")) {
+    } else if (strcmp(value, "0") == 0) {
         ret.m_valueKind = CSSStyleValuePair::ValueKind::Length;
         ret.m_value.m_length = CSSLength(0.0);
     } else {
