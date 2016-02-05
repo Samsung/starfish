@@ -10,12 +10,18 @@
 
 namespace StarFish {
 
+extern int g_screenDpi;
 Evas* internalCanvas();
+
+static bool g_fontSizeAdjuesterInited = false;
+static float g_fontSizeAdjuester;
 
 class FontImplEFL : public Font {
 public:
-    FontImplEFL(String* familyName,float size, char style, char weight)
+    FontImplEFL(String* familyName,float size, char style, char weight, FontMetrics met)
     {
+        m_text = nullptr;
+        m_metrics = met;
         m_size = size;
         m_weight = weight;
         m_style = style;
@@ -54,7 +60,33 @@ public:
             break;
         }
         m_fontFamily = familyName;
-        loadFont();
+
+        if (!g_fontSizeAdjuesterInited) {
+            float prevDiff = 100000000000.f;
+            int best = 0;
+            loadFont(convertFromPxToPt(m_size) - 1);
+            for (int i = convertFromPxToPt(m_size); ; i++) {
+                STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
+                evas_object_text_font_set(m_text,m_fontFamily->utf8Data(), i);
+                evas_object_text_text_set(m_text,"gWAPpqf");
+                Evas_Coord minw, minh;
+                evas_object_geometry_get(m_text,0,0,&minw,&minh);
+                float curDiff = std::abs(m_metrics.m_ascender - m_metrics.m_descender - minh);
+                if (prevDiff < curDiff) {
+                    break;
+                } else {
+                    best = i;
+                    prevDiff = curDiff;
+                }
+            }
+            evas_font_cache_flush(evas_object_evas_get(m_text));
+            STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
+            g_fontSizeAdjuesterInited = true;
+            g_fontSizeAdjuester = best / size;
+            STARFISH_LOG_INFO("fontSizeAdjuester %f\n", (float)g_fontSizeAdjuester);
+        }
+
+        loadFont(m_size * g_fontSizeAdjuester);
         m_spaceWidth = measureText(String::spaceString);
     }
     ~FontImplEFL()
@@ -62,15 +94,18 @@ public:
         // TODO unref evas_text_object
     }
 
-    void loadFont()
+    void loadFont(int size)
     {
+        if (m_text)
+            unloadFont();
         m_text = evas_object_text_add(internalCanvas());
-        evas_object_text_font_set(m_text,m_fontFamily->utf8Data(), convertFromPxToPt(m_size));
+        evas_object_text_font_set(m_text,m_fontFamily->utf8Data(), size);
     }
 
     void unloadFont()
     {
         evas_object_del(m_text);
+        m_text = nullptr;
     }
 
     virtual float measureText(String* str)
@@ -82,7 +117,6 @@ public:
     }
     virtual void* unwrap()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return m_text;
     }
 
@@ -155,8 +189,7 @@ Font* FontSelector::loadFont(String* familyName, float size, char style, char we
         }
     }
 
-    f = new FontImplEFL(familyName, size, style, weight);
-    f->m_metrics = loadFontMetrics(familyName, size);
+    f = new FontImplEFL(familyName, size, style, weight, loadFontMetrics(familyName, size));
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }

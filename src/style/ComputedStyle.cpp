@@ -51,6 +51,7 @@ void ComputedStyle::loadResources(StarFish* sf)
         m_font = sf->fetchFont(String::fromUTF8("Ahem"), fontSize, style, fontWeight);
     else
         m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
+
     if (!bgImage()->equals(String::emptyString)) {
         setBgImageData(sf->fetchImage(sf->makeResourcePath(bgImage())));
     }

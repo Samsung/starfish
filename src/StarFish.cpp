@@ -6,8 +6,11 @@
 #include "dom/binding/ScriptBindingInstance.h"
 
 #include <Elementary.h>
+#include <Ecore_X.h>
 
 namespace StarFish {
+
+int g_screenDpi;
 
 #ifndef STARFISH_TIZEN_WEARABLE
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
@@ -19,6 +22,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     elm_init(0,0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+    STARFISH_LOG_INFO("dpi... %d\n",ecore_x_dpi_get());
+    g_screenDpi = ecore_x_dpi_get();
     m_messageLoop = new MessageLoop();
     m_scriptBindingInstance = new ScriptBindingInstance();
     m_scriptBindingInstance->initBinding(this);
@@ -28,6 +33,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win)
     : m_staticStrings(this)
 {
+    STARFISH_LOG_INFO("dpi... %d\n",ecore_x_dpi_get());
+    g_screenDpi = ecore_x_dpi_get();
     m_startUpFlag = flag;
     m_currentPath = currentPath;
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));

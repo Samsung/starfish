@@ -7,13 +7,15 @@
 #include <Evas.h>
 #include <Evas_Engine_Buffer.h>
 #include <Elementary.h>
+#include <Ecore_X.h>
 
 #include <vector>
 #include <SkMatrix.h>
 
 Evas* g_internalCanvas;
-
 namespace StarFish {
+
+extern int g_screenDpi;
 
 /*
 static void initInternalCanvas()
@@ -109,7 +111,9 @@ public:
 
 
 class CanvasEFL : public Canvas {
-    void initFromBuffer(void* buffer,int width,int height,int stride) {
+    void initFromBuffer(void* buffer,int width,int height,int stride)
+    {
+        g_screenDpi = ecore_x_dpi_get();
         Evas *canvas;
         int method;
         method = evas_render_method_lookup("buffer");
@@ -164,6 +168,7 @@ class CanvasEFL : public Canvas {
 public:
     CanvasEFL(void* data)
     {
+        g_screenDpi = ecore_x_dpi_get();
         m_image = NULL;
         m_buffer = NULL;
         m_directDraw = true;
@@ -415,7 +420,10 @@ public:
             if(!shouldApplyEvasMap())
                 lastState().m_matrix.mapRect(&sss);
 
-            evas_object_text_font_set(eo,lastState().m_font->familyName()->utf8Data(),convertFromPxToPt(lastState().m_font->size()));
+            int siz;
+            evas_object_text_font_get((Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
+            float ptSize = siz;
+            evas_object_text_font_set(eo,lastState().m_font->familyName()->utf8Data(),ptSize);
             evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
             evas_object_text_text_set(eo, text->utf8Data());
 
@@ -427,8 +435,6 @@ public:
             }
             evas_object_show(eo);
         } else {
-
-
             Evas_Object* eo = evas_object_textblock_add(m_canvas);
             if(m_objList) m_objList->push_back(eo);
             Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
@@ -444,7 +450,10 @@ public:
 
             Evas_Textblock_Style* st = evas_textblock_style_new();
             char buf[256];
-            float ptSize = convertFromPxToPt(lastState().m_font->size());
+            // float ptSize = convertFromPxToPt(lastState().m_font->size());
+            int siz;
+            evas_object_text_font_get((Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
+            float ptSize = siz;
             const char* weight;
             switch (lastState().m_font->weight()) {
             case 1:

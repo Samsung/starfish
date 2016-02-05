@@ -2,6 +2,9 @@
 #include "UnitHelper.h"
 
 namespace StarFish {
+
+extern int g_screenDpi;
+
 float convertFromCmToPx(float value)
 {
     return value * unitPxPerCm;
