@@ -82,6 +82,11 @@ public:
         return "InlineTextBox";
     }
 
+    String* text()
+    {
+        return m_text;
+    }
+
 protected:
     String* m_text;
 };

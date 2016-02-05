@@ -434,11 +434,18 @@ public:
     }
 
 
-    void breakLine()
+    void breakLine(bool dueToBr = false)
     {
+        if (dueToBr == false)
+            m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1);
         m_block.m_lineBoxes.push_back(LineBox(&m_block));
         m_currentLine++;
         m_currentLineWidth = 0;
+    }
+
+    bool isBreakedLineWithoutBR(size_t idx)
+    {
+        return m_breakedLinesSet.find(idx) != m_breakedLinesSet.end();
     }
 
     void registerInlineContent()
@@ -446,6 +453,7 @@ public:
         m_layoutContext.setLastLineBox(&m_block.m_lineBoxes.back());
     }
 
+    std::set<size_t> m_breakedLinesSet;
     float m_currentLineWidth;
     size_t m_currentLine;
     FrameBlockBox& m_block;
@@ -569,7 +577,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
                 goto insertBlockBox;
             }
         } else if (f->isFrameLineBreak()) {
-            lineFormattingContext.breakLine();
+            lineFormattingContext.breakLine(true);
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -598,6 +606,41 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
             for (size_t j = 0; j < b.m_boxes.size(); j ++) {
                 FrameBox* box = b.m_boxes[j];
                 box->moveX(diff);
+            }
+        } else if (style()->textAlign() == TextAlignValue::JustifyTextAlignValue) {
+            if (lineFormattingContext.isBreakedLineWithoutBR(i)) {
+                float remainSpace = (inlineContentWidth - x);
+                if (remainSpace > 0) {
+                    size_t spaceBoxCnt = 0;
+                    for (size_t j = 0; j < b.m_boxes.size(); j ++) {
+                        FrameBox* box = b.m_boxes[j];
+                        if (box->isInlineBox()) {
+                            if (box->asInlineBox()->isInlineTextBox()) {
+                                String* str = box->asInlineBox()->asInlineTextBox()->text();
+                                if (str->equals(str)) {
+                                    spaceBoxCnt++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (spaceBoxCnt) {
+                        float moreWidthForSpace = remainSpace / spaceBoxCnt;
+                        float diff = 0;
+                        for (size_t j = 0; j < b.m_boxes.size(); j ++) {
+                            FrameBox* box = b.m_boxes[j];
+                            box->moveX(diff);
+                            if (box->isInlineBox()) {
+                                if (box->asInlineBox()->isInlineTextBox()) {
+                                    String* str = box->asInlineBox()->asInlineTextBox()->text();
+                                    if (str->equals(str)) {
+                                        diff += moreWidthForSpace;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         } else {
             STARFISH_ASSERT(style()->textAlign() == TextAlignValue::CenterTextAlignValue);
