@@ -1,0 +1,39 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <style type="text/css">
+  </style>
+</head>
+
+<body>
+  <div id="idText">
+    div1
+  </div>
+  <div class="classText">
+    div2
+    </div>
+    <img src="./test/unittest/xhr/sun.png" id="testimg" >
+</body>
+
+<script type="text/javascript">
+function run() {
+
+  print("*********** XHR Simple Blob TEST 1 *****************");
+  function handler () {
+    print(this.response);
+  }
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener("load", handler);
+  xhr.open("GET", "http://rs10.pbsrc.com/albums/a115/kimik000/Avatars/Guu.png~c200");
+  xhr.responseType = "blob";
+  xhr.send();
+  //print(xhr.reponse);
+
+  print("************* Done *******************");
+}
+run();
+</script>
+
+</html>

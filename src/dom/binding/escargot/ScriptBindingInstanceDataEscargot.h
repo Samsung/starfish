@@ -40,6 +40,7 @@ public:
     escargot::ESFunctionObject* m_cssStyleDeclaration;
     escargot::ESFunctionObject* m_cssStyleRule;
     escargot::ESFunctionObject* m_xhrElement;
+    escargot::ESFunctionObject* m_blobElement;
 };
 
 }

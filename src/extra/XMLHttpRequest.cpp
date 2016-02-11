@@ -1,7 +1,7 @@
 #include "StarFishConfig.h"
 #include "XMLHttpRequest.h"
 #include "dom/Event.h"
-
+#include "extra/Blob.h"
 #include <future>
 #include <Elementary.h>
 
@@ -138,6 +138,11 @@ void XMLHttpRequest::send(String* body)
                     escargot::ESValue json_parse_fn = instance->globalObject()->json()->get(escargot::ESValue(escargot::ESString::create("parse")));
                     ret = ((XMLHttpRequest*)this_obj)->callJSFunction(instance, json_parse_fn, instance->globalObject()->json(), json_arg, 1);
                     this_obj->set(escargot::ESString::create("response"),ret);
+                  }
+                  break;
+                case BLOB_RESPONSE:
+                  {
+                    this_obj->set(escargot::ESString::create("response"),new Blob(pass->total,String::fromUTF8("image/jpeg"),pass->buf));
                   }
                   break;
 

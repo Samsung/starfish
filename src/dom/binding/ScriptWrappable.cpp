@@ -297,6 +297,15 @@ void ScriptWrappable::initScriptWrappable(XMLHttpRequest* xhr)
     ((escargot::ESObject *)this)->setExtraData(XMLHttpRequestObject);
 }
 
+void ScriptWrappable::initScriptWrappable(Blob* blob)
+{
+    Window* window = (Window*)ScriptWrappableGlobalObject::fetch();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
+    auto data = fetchData(instance);
+    ((escargot::ESObject *)this)->set__proto__(data->m_blobElement->protoType());
+    ((escargot::ESObject *)this)->setExtraData(BlobObject);
+}
+
 bool ScriptWrappable::hasProperty(String* name)
 {
     return escargot::ESObject::hasProperty(escargot::ESString::create(name->utf8Data()));

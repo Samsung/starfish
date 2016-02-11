@@ -1858,6 +1858,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("abort"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("abort"), false, false, false, xhrAbortFunction);
 
+    /* Blob */
+    DEFINE_FUNCTION(Blob, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    fetchData(this)->m_blobElement = BlobFunction;
 }
 
 void ScriptBindingInstance::evaluate(String* str)

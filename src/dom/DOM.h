@@ -31,5 +31,6 @@
 #include "dom/NamedNodeMap.h"
 #include "dom/Attr.h"
 #include "extra/XMLHttpRequest.h"
+#include "extra/Blob.h"
 
 #endif
