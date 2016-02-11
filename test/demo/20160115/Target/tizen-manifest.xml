@@ -2,8 +2,13 @@
 <manifest xmlns="http://tizen.org/ns/packages" api-version="2.3.1" package="com.sec.starfish.f12" version="1.0.0">
     <profile name="wearable"/>
     <widget-application appid="com.sec.starfish.f12" exec="f12" main="true" update-period="0">
-        <label>f12</label>
+        <label>WebWidget</label>
         <icon>icon.png</icon>
         <support-size preview="preview.png">2x2</support-size>
     </widget-application>
+    <privileges>
+        <privilege>http://tizen.org/privilege/mediastorage</privilege>
+        <privilege>http://tizen.org/privilege/externalstorage</privilege>
+        <privilege>http://tizen.org/privilege/content.write</privilege>
+    </privileges>
 </manifest>
