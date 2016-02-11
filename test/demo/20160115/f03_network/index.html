@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <style>
+    .top {
+        background: url("images/bg.jpg");
+    }
+    .subtitle {
+        font-weight: bold;
+        color: #3d89a1;
+    }
+    </style>
+</head>
+<body>
+  <div class="circleWrapper">
+    <div class="top">
+        <div id="section" class="subtitle">
+            YAWN, STRETCH, DRINK
+        </div>
+    </div>
+    <div id="title" class="contents">
+        Your body loses water while you sleep. Have a glass or two to start the day.
+    </div>
+  </div>
+</body>
+<script>
+   var index=0;
+   var news_json;
+   var newsAPI = "http://api.nytimes.com/svc/topstories/v1/world.json?api-key=27a5c7578126917ce802fb341ab508c9:4:74367408";
+   document.getElementsByTagName("body").item(0).onclick = function() {
+      updateContent();
+   };
+
+   function updateContent(){
+        var title_text = document.getElementById("title");
+        var section_text = document.getElementById("section");
+        var section_str = news_json['results'][index]['subsection'];
+        var title_str = news_json['results'][index]['title'];
+
+        title_text.textContent = title_str;
+        section_text.textContent = section_str;
+
+        index++;
+        if(index>9)
+            index=0;
+   }
+   function fetch(){
+      function onLoadHandler() {
+        news_json = this.response;
+        updateContent();
+      }
+      var xhr = new XMLHttpRequest();
+      xhr.addEventListener("load", onLoadHandler);
+      xhr.open("GET",newsAPI);
+      xhr.responseType='json';
+      xhr.send();
+   }
+   fetch();
+
+</script>
+</html>
