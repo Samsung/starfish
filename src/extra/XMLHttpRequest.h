@@ -124,6 +124,7 @@ public:
     struct HeaderBuffer {
         char *memory;
         char *contentType;
+        size_t contentLength;
         size_t size;
     };
 
@@ -240,6 +241,8 @@ public:
         if (strncmp((char *)(ptr), "Content-Type:", 13) == 0) {
             mem->contentType = (char *)CURL_realloc(mem->contentType, realsize + 1 - 13);
             sscanf ((char *)(ptr), "Content-Type: %s",mem->contentType);
+        }else if (strncmp((char *)(ptr), "Content-Length:", 15) == 0) {
+            sscanf ((char *)(ptr), "Content-Length: %zu",&(mem->contentLength));
         }
         return realsize;
     }

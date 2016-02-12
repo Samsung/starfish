@@ -117,12 +117,14 @@ void XMLHttpRequest::send(String* body)
               char* header_contentType;
               uint32_t loaded;
               uint32_t total;
+              uint32_t contentSize;
           };
 
           Pass* pass = new Pass;
           pass->buf = buffer.memory;
           pass->header = header.memory;
           pass->header_contentType = header.contentType;
+          pass->contentSize = header.contentLength;
           pass->obj = obj;
           pass->loaded = progressData.loaded;
           pass->total = progressData.total;
@@ -146,7 +148,7 @@ void XMLHttpRequest::send(String* body)
                   break;
                 case BLOB_RESPONSE:
                   {
-                    this_obj->set(escargot::ESString::create("response"),new Blob(pass->total,String::fromUTF8(pass->header_contentType),pass->buf));
+                    this_obj->set(escargot::ESString::create("response"),new Blob(pass->contentSize,String::fromUTF8(pass->header_contentType),pass->buf));
                   }
                   break;
 

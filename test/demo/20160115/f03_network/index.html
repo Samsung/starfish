@@ -15,10 +15,11 @@
 </head>
 <body>
   <div class="circleWrapper">
-    <div class="top">
+    <div class="top" id="top">
         <div id="section" class="subtitle">
             YAWN, STRETCH, DRINK
         </div>
+        <img id="testimg" class="icon" src="images/icon.png" />
     </div>
     <div id="title" class="contents">
         Your body loses water while you sleep. Have a glass or two to start the day.
@@ -42,6 +43,15 @@
         title_text.textContent = title_str;
         section_text.textContent = section_str;
 
+        if(news_json['results'][index]['multimedia']!=undefined){
+          print(news_json['results'][index]['multimedia']);
+
+          var imgUrl = news_json['results'][index]['multimedia'][0]['url'];
+          print("Image URL : "+imgUrl);
+          //fetchImage("http://rs10.pbsrc.com/albums/a115/kimik000/Avatars/Guu.png~c200",index);
+          fetchImage(imgUrl,index);
+        }
+
         index++;
         if(index>9)
             index=0;
@@ -55,6 +65,20 @@
       xhr.addEventListener("load", onLoadHandler);
       xhr.open("GET",newsAPI);
       xhr.responseType='json';
+      xhr.send();
+   }
+   function fetchImage(url,idx){
+      function onLoadHandler() {
+        print("Image Size: "+this.response.size);
+        print("ContentType: "+this.response.type);
+        var objURL = URL.createObjectURL(this.response);
+        var imgElement = document.getElementById("testimg");
+        imgElement.src = objURL;
+      }
+      var xhr = new XMLHttpRequest();
+      xhr.addEventListener("load", onLoadHandler);
+      xhr.open("GET",url);
+      xhr.responseType='blob';
       xhr.send();
    }
    fetch();

@@ -67,9 +67,9 @@ function run() {
 
   print("*********** XHR Simple Blob TEST 1 *****************");
   function handler () {
-    print(this.response);
-    print(this.response.size);
-    print(this.response.type);
+    print("Size: "+this.response.size);
+    print("ContentType: "+ this.response.type);
+    print("Response Header:"+this.getAllResponseHeaders());
     var objURL = URL.createObjectURL(this.response);
     var imgElement = document.getElementById("testimg");
     print(objURL);
@@ -77,7 +77,8 @@ function run() {
   }
   var xhr = new XMLHttpRequest();
   xhr.addEventListener("load", handler);
-  xhr.open("GET", "http://rs10.pbsrc.com/albums/a115/kimik000/Avatars/Guu.png~c200");
+  //xhr.open("GET", "http://rs10.pbsrc.com/albums/a115/kimik000/Avatars/Guu.png~c200");
+  xhr.open("GET", "http://static01.nyt.com/images/2016/02/11/world/11SYRIA/11SYRIA-thumbStandard-v2.jpg");
   xhr.responseType = "blob";
   xhr.send();
   //print(xhr.reponse);

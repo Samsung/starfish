@@ -240,7 +240,7 @@ OBJS += $(SRC_CC:%.cc= $(OUTDIR)/%.o)
 OBJS += $(SRC_C:%.c= $(OUTDIR)/%.o)
 
 
-LDFLAGS += -lpthread -lcurl
+LDFLAGS += -lpthread -lcurl -luuid
 THIRD_PARTY_LIBS= $(GCLIBS)
 
 ifeq ($(HOST), linux)
