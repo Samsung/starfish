@@ -43,17 +43,14 @@
         title_text.textContent = title_str;
         section_text.textContent = section_str;
 
-        if(news_json['results'][index]['multimedia']!=undefined){
-          print(news_json['results'][index]['multimedia']);
-
+        if(news_json['results'][index]['multimedia'].length!=0){
           var imgUrl = news_json['results'][index]['multimedia'][0]['url'];
           print("Image URL : "+imgUrl);
-          //fetchImage("http://rs10.pbsrc.com/albums/a115/kimik000/Avatars/Guu.png~c200",index);
           fetchImage(imgUrl,index);
         }
 
         index++;
-        if(index>9)
+        if(index>5)
             index=0;
    }
    function fetch(){
