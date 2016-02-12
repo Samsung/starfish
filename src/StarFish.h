@@ -106,6 +106,8 @@ public:
     void evaluate(String* s);
 
     ImageData* fetchImage(String* str);
+    ImageData* fetchImage(String* str,uint32_t size,void* data);
+
     Font* fetchFont(String* familyName, float size, char style = FontStyle::FontStyleNormal, char weight = FontWeight::FontWeightNormal)
     {
         Font* f = nullptr;

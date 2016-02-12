@@ -40,6 +40,7 @@ class CSSStyleDeclaration;
 class CSSStyleRule;
 class XMLHttpRequest;
 class Blob;
+class URL;
 
 class ScriptBindingInstance;
 
@@ -66,6 +67,7 @@ public:
         CSSStyleRuleObject,
         XMLHttpRequestObject,
         BlobObject,
+        URLObject,
     };
     ScriptWrappable();
 
@@ -119,6 +121,7 @@ public:
     void initScriptWrappable(CSSStyleRule* ptr);
     void initScriptWrappable(XMLHttpRequest* ptr);
     void initScriptWrappable(Blob* ptr);
+    void initScriptWrappable(URL* ptr,ScriptBindingInstance*);
 
     bool hasProperty(String* name);
 

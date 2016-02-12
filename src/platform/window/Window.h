@@ -9,6 +9,7 @@ namespace StarFish {
 class StarFish;
 class Document;
 class Window;
+class URL;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -36,6 +37,11 @@ public:
     StarFish* starFish()
     {
         return m_starFish;
+    }
+
+    URL* url()
+    {
+        return m_url;
     }
 
     void loadXMLDocument(String* filePath);
@@ -85,6 +91,7 @@ protected:
     bool m_isRunning;
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
+    URL* m_url;
 
     StarFish* m_starFish;
 

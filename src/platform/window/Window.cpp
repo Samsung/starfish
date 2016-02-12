@@ -227,6 +227,7 @@ Window::Window(StarFish* starFish)
     m_needsRendering = false;
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
+    m_url = new URL(m_starFish->scriptBindingInstance(),starFish);
 
     CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet;
 

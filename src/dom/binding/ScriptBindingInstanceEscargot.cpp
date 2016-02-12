@@ -1861,6 +1861,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     /* Blob */
     DEFINE_FUNCTION(Blob, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_blobElement = BlobFunction;
+
+    /* URL */
+
+    fetchData(this)->m_instance->globalObject()->defineAccessorProperty(escargot::ESString::create("URL"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        return (escargot::ESObject *)((Window *)ScriptWrappableGlobalObject::fetch())->url();
+    }, NULL, false, false, false);
 }
 
 void ScriptBindingInstance::evaluate(String* str)

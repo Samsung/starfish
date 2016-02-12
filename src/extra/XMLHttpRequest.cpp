@@ -43,8 +43,9 @@ void XMLHttpRequest::send(String* body)
       CURL* curl = curl_easy_init();
       CURLcode res;
 
-      Buffer header;
+      HeaderBuffer header;
       header.memory=NULL;
+      header.contentType=NULL;
       header.size=0;
 
       Buffer buffer;
@@ -81,6 +82,7 @@ void XMLHttpRequest::send(String* body)
       curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*) &header);
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &buffer);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+      curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, WriteHeaderCallback);
 
       if(methodType==POST_METHOD){
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
@@ -112,6 +114,7 @@ void XMLHttpRequest::send(String* body)
               escargot::ESObject* obj;
               char* buf;
               char* header;
+              char* header_contentType;
               uint32_t loaded;
               uint32_t total;
           };
@@ -119,6 +122,7 @@ void XMLHttpRequest::send(String* body)
           Pass* pass = new Pass;
           pass->buf = buffer.memory;
           pass->header = header.memory;
+          pass->header_contentType = header.contentType;
           pass->obj = obj;
           pass->loaded = progressData.loaded;
           pass->total = progressData.total;
@@ -142,7 +146,7 @@ void XMLHttpRequest::send(String* body)
                   break;
                 case BLOB_RESPONSE:
                   {
-                    this_obj->set(escargot::ESString::create("response"),new Blob(pass->total,String::fromUTF8("image/jpeg"),pass->buf));
+                    this_obj->set(escargot::ESString::create("response"),new Blob(pass->total,String::fromUTF8(pass->header_contentType),pass->buf));
                   }
                   break;
 

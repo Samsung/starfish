@@ -68,6 +68,12 @@ function run() {
   print("*********** XHR Simple Blob TEST 1 *****************");
   function handler () {
     print(this.response);
+    print(this.response.size);
+    print(this.response.type);
+    var objURL = URL.createObjectURL(this.response);
+    var imgElement = document.getElementById("testimg");
+    print(objURL);
+    imgElement.src = objURL;
   }
   var xhr = new XMLHttpRequest();
   xhr.addEventListener("load", handler);

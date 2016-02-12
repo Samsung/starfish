@@ -11,6 +11,7 @@ protected:
     }
 public:
     static ImageData* create(String* imageSrc);
+    static ImageData* create(uint32_t size,void* data);
     virtual void* unwrap() = 0;
     virtual int width() = 0;
     virtual int height() = 0;

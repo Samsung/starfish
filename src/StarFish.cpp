@@ -82,6 +82,17 @@ ImageData* StarFish::fetchImage(String* str)
     return iter->second;
 }
 
+ImageData* StarFish::fetchImage(String* str,uint32_t size,void* data)
+{
+    auto iter = m_imageCache.find(str->utf8Data());
+    if (iter == m_imageCache.end()) {
+        ImageData* id = ImageData::create(size,data);
+        m_imageCache.insert(std::make_pair(std::string(str->utf8Data()), id));
+        return id;
+    }
+    return iter->second;
+}
+
 StaticStrings::StaticStrings(StarFish* sf)
 {
     m_documentLocalName = QualifiedName::fromString(sf, "#document");

@@ -22,6 +22,16 @@ public:
         //init
         initScriptWrappable(this);
     }
+
+    void* data(){
+        return m_data;
+    }
+
+    uint32_t size()
+    {
+        return m_size;
+    }
+
 protected:
     uint32_t m_size;
     String* m_type;

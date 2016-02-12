@@ -120,6 +120,13 @@ public:
         char *memory;
         size_t size;
     };
+
+    struct HeaderBuffer {
+        char *memory;
+        char *contentType;
+        size_t size;
+    };
+
     struct ProgressData {
       double lastruntime;
       CURL *curl;
@@ -213,6 +220,26 @@ public:
             memcpy(&(mem->memory[mem->size]), ptr, realsize);
             mem->size += realsize;
             mem->memory[mem->size] = 0;
+        }
+        return realsize;
+    }
+
+    static size_t WriteHeaderCallback(void *ptr, size_t size, size_t nmemb, void *data)
+    {
+        size_t realsize = size * nmemb;
+        struct HeaderBuffer *mem = (struct HeaderBuffer *)data;
+
+        mem->memory = (char *)
+            CURL_realloc(mem->memory, mem->size + realsize + 1);
+        if (mem->memory) {
+            memcpy(&(mem->memory[mem->size]), ptr, realsize);
+            mem->size += realsize;
+            mem->memory[mem->size] = 0;
+        }
+
+        if (strncmp((char *)(ptr), "Content-Type:", 13) == 0) {
+            mem->contentType = (char *)CURL_realloc(mem->contentType, realsize + 1 - 13);
+            sscanf ((char *)(ptr), "Content-Type: %s",mem->contentType);
         }
         return realsize;
     }
