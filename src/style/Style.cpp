@@ -1176,8 +1176,7 @@ void CSSStyleValuePair::setValueBorderTopColor(std::vector<String*, gc_allocator
     } else if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = String::fromUTF8(value);
+        setValueColor(tokens);
     }
 }
 
@@ -1192,8 +1191,7 @@ void CSSStyleValuePair::setValueBorderRightColor(std::vector<String*, gc_allocat
     } else if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = String::fromUTF8(value);
+        setValueColor(tokens);
     }
 }
 
@@ -1208,8 +1206,7 @@ void CSSStyleValuePair::setValueBorderBottomColor(std::vector<String*, gc_alloca
     } else if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = String::fromUTF8(value);
+        setValueColor(tokens);
     }
 }
 
@@ -1224,8 +1221,7 @@ void CSSStyleValuePair::setValueBorderLeftColor(std::vector<String*, gc_allocato
     } else if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = String::fromUTF8(value);
+        setValueColor(tokens);
     }
 }
 
