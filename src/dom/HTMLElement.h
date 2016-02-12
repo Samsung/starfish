@@ -39,7 +39,6 @@ public:
         initScriptWrappable(this);
         m_id = String::emptyString;
         m_className = String::emptyString;
-        m_onclick = ScriptValueNull;
     }
 
     /* 4.4 Interface Node */
@@ -74,18 +73,27 @@ public:
 
     ScriptValue onclick()
     {
-        return m_onclick;
+        auto eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
+        EventListener* l = getAttributeEventListener(eventType);
+        if (!l) return ScriptValueNull;
+        return l->scriptValue();
     }
 
     void setOnclick(ScriptValue f)
     {
-        m_onclick = f;
+        auto eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
+        EventListener* l = new EventListener(f, true);
+        setAttributeEventListener(eventType, l);
+    }
+
+    void clearOnClick()
+    {
+        auto eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
+        clearAttributeEventListener(eventType);
     }
 protected:
     String* m_id;
     String* m_className;
-
-    ScriptValue m_onclick;
 };
 
 }

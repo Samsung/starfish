@@ -10,7 +10,7 @@ class Node;
 
 class EventListener : public gc {
 public:
-    EventListener(ScriptFunction fn, bool isAttribute = false)
+    EventListener(ScriptValue fn, bool isAttribute = false)
         : m_listener(fn)
         , m_isAttribute(isAttribute)
     {
@@ -23,13 +23,13 @@ public:
     {
         return (m_isAttribute == other->m_isAttribute) && (m_listener == other->m_listener);
     }
-    ScriptFunction scriptFunction()
+    ScriptValue scriptValue()
     {
         return m_listener;
     }
 
 protected:
-    ScriptFunction m_listener;
+    ScriptValue m_listener;
     bool m_isAttribute;
 };
 
@@ -128,7 +128,7 @@ bool EventTarget<T>::removeEventListener(QualifiedName& eventType, EventListener
     EventListenerVector* v = pair->second;
     for (auto i = v->begin(); i != v->end(); i++) {
         if (listener->compare(*i)) {
-            STARFISH_LOG_INFO("EventTarget::addEventListener - Removed \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
+            STARFISH_LOG_INFO("EventTarget::removeEventListener - Removed \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
             v->erase(i);
             return true;
         }
@@ -155,7 +155,7 @@ EventListener* EventTarget<T>::getAttributeEventListener(QualifiedName& eventTyp
     EventListenerVector* v = pair->second;
     for (auto i = v->begin(); i != v->end(); i++) {
         if ((*i)->isAttribute()) {
-            return i;
+            return (*i);
         }
     }
     return nullptr;

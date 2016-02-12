@@ -99,7 +99,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESString* argStr = firstArg.asESString();
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
-            auto listener = new EventListener(secondArg.asESPointer()->asESFunctionObject());
+            auto listener = new EventListener(secondArg);
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // Fixme : Node, Window, WHR
             //         cast to EventTarget
@@ -135,7 +135,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESString* argStr = firstArg.asESString();
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
-            auto listener = new EventListener(secondArg.asESPointer()->asESFunctionObject());
+            auto listener = new EventListener(secondArg);
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             // Fixme : Node, Window, WHR
             //         cast to EventTarget
@@ -1060,7 +1060,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
                 element->setOnclick(v);
             } else {
-                element->setOnclick(escargot::ESValue(escargot::ESValue::ESNull));
+                element->clearOnClick();
             }
         } else {
             THROW_ILLEGAL_INVOCATION();

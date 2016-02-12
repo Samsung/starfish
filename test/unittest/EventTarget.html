@@ -63,6 +63,9 @@
          var f2 = function() {
             console.log("hello f2");
          };
+         var f3 = function() {
+            console.log("hello f3");
+         };
          console.log("===========");
          eBox.addEventListener("click", f1);
          console.log("===========");
@@ -78,6 +81,18 @@
          console.log("===========");
          eBox.addEventListener("click", f2);
          console.log("===========");
+         console.log(eBox.onclick);
+         console.log("===========");
+         eBox.onclick = f1;
+         console.log("===========");
+         console.log(eBox.onclick);
+         eBox.onclick = 13;
+         console.log("===========");
+         console.log(eBox.onclick);
+         console.log("===========");
+         eBox.addEventListener("click", f3);
+         console.log("===========");
+
       })();
    </script>
 </html>
