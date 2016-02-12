@@ -19,7 +19,7 @@
         <div id="section" class="subtitle">
             YAWN, STRETCH, DRINK
         </div>
-        <img id="testimg" class="icon" src="images/icon.png" />
+<!--         <img id="testimg" class="icon" src="images/icon.png" /> -->
     </div>
     <div id="title" class="contents">
         Your body loses water while you sleep. Have a glass or two to start the day.
@@ -69,8 +69,11 @@
         print("Image Size: "+this.response.size);
         print("ContentType: "+this.response.type);
         var objURL = URL.createObjectURL(this.response);
-        var imgElement = document.getElementById("testimg");
-        imgElement.src = objURL;
+        // var imgElement = document.getElementById("testimg");
+        // imgElement.src = objURL;
+
+        var b = document.getElementById("top");
+        b.style.backgroundImage="url("+objURL+")" ;
       }
       var xhr = new XMLHttpRequest();
       xhr.addEventListener("load", onLoadHandler);
