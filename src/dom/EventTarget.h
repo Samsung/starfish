@@ -80,6 +80,8 @@ public:
         return (Node*)this;
     }
 
+    EventListenerVector* getEventListeners(QualifiedName& eventType);
+
     bool addEventListener(QualifiedName& eventType, EventListener* listener, bool useCapture = false);
     bool removeEventListener(QualifiedName& eventType, EventListener* listener, bool useCapture = false);
     // bool dispatchEvent(PassRefPtrWillBeRawPtr<Event>);
@@ -92,6 +94,14 @@ protected:
     std::unordered_map<QualifiedName, EventListenerVector*, std::hash<QualifiedName>, std::equal_to<QualifiedName>,
         gc_allocator<std::pair<QualifiedName, EventListenerVector*>>> m_eventListeners;
 };
+
+template<typename T>
+EventListenerVector* EventTarget<T>::getEventListeners(QualifiedName& eventType)
+{
+    auto pair = m_eventListeners.find(eventType);
+    if (pair == m_eventListeners.end()) return nullptr;
+    return pair->second;
+}
 
 template<typename T>
 bool EventTarget<T>::addEventListener(QualifiedName& eventType, EventListener* listener, bool useCapture)
