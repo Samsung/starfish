@@ -2,7 +2,7 @@
 #define __StarFishURLObject__
 
 #include "dom/binding/ScriptWrappable.h"
-#include <uuid/uuid.h>
+//#include <uuid/uuid.h>
 
 //"blob:http%3A//ohgyun.com/a9f2fd30-adf0-43dd-a413-9ee8423bec6e"
 
@@ -32,16 +32,16 @@ public:
 
     String* createObjectURL(escargot::ESValue RawObject){
 
-        uuid_t uuid;
-        uuid_generate_time_safe(uuid);
-        char uuid_str[37];
-        uuid_unparse_lower(uuid, uuid_str);
+        // uuid_t uuid;
+        // uuid_generate_time_safe(uuid);
+        // char uuid_str[37];
+        // uuid_unparse_lower(uuid, uuid_str);
 
         String* objectURL = String::fromUTF8("blob:Non-Origin/");
-        objectURL = objectURL->concat(String::fromUTF8(uuid_str));
+        // objectURL = objectURL->concat(String::fromUTF8(uuid_str));
 
-        Blob* blob = (Blob*)RawObject.asESPointer()->asESObject();
-        m_starfish->fetchImage(objectURL,blob->size(),blob->data());
+        // Blob* blob = (Blob*)RawObject.asESPointer()->asESObject();
+        // m_starfish->fetchImage(objectURL,blob->size(),blob->data());
         return objectURL;
     }
 protected:
