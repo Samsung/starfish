@@ -80,6 +80,82 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
     DEFINE_FUNCTION(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
+
+    auto fnAddEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        // TODO: Efficient Type check
+        // CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+        auto ext = thisValue.asESPointer()->asESObject()->extraData();
+        if (!(thisValue.isObject()
+            && (ext == ScriptWrappable::Type::WindowObject
+                || ext == ScriptWrappable::Type::NodeObject
+                || ext == ScriptWrappable::Type::XMLHttpRequestObject))) {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+        if (firstArg.isESString() && secondArg.asESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
+            // TODO: Verify valid event types (e.g. click)
+            escargot::ESString* argStr = firstArg.asESString();
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
+            auto listener = new EventListener(secondArg.asESPointer()->asESFunctionObject());
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // Fixme : Node, Window, WHR
+            //         cast to EventTarget
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::NodeObject) {
+                ((Node *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
+            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::WindowObject) {
+                ((Window *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
+            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::XMLHttpRequestObject) {
+                ((XMLHttpRequest *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }
+        return escargot::ESValue();
+    }, escargot::ESString::create("addEventListener"), 2, false);
+
+    auto fnRemoveEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        // TODO: Efficient Type check
+        // CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+        auto ext = thisValue.asESPointer()->asESObject()->extraData();
+        if (!(thisValue.isObject()
+            && (ext == ScriptWrappable::Type::WindowObject
+                || ext == ScriptWrappable::Type::NodeObject
+                || ext == ScriptWrappable::Type::XMLHttpRequestObject))) {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+        if (firstArg.isESString() && secondArg.asESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
+            // TODO: Verify valid event type. (e.g. click)
+            escargot::ESString* argStr = firstArg.asESString();
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
+            auto listener = new EventListener(secondArg.asESPointer()->asESFunctionObject());
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // Fixme : Node, Window, WHR
+            //         cast to EventTarget
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::NodeObject) {
+                ((Node *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
+            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::WindowObject) {
+                ((Window *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
+            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::XMLHttpRequestObject) {
+                ((XMLHttpRequest *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }
+        return escargot::ESValue();
+    }, escargot::ESString::create("removeEventListener"), 2, false);
+
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), true, true, true, fnAddEventListener);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeEventListener"), true, true, true, fnRemoveEventListener);
+
     DEFINE_FUNCTION(Window, EventTargetFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("window"), false, false, false, fetchData(this)->m_instance->globalObject());
     fetchData(this)->m_instance->globalObject()->set__proto__(WindowFunction->protoType());

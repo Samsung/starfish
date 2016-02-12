@@ -36,6 +36,11 @@ public:
         return m_string;
     }
 
+    String* stringConst() const
+    {
+        return m_string;
+    }
+
     operator String*()
     {
         return m_string;
@@ -46,5 +51,26 @@ protected:
     // TODO add namespace..
 };
 
+}
+
+namespace std
+{
+    template <>
+    struct hash<StarFish::QualifiedName>
+    {
+        size_t operator() (const StarFish::QualifiedName& qn) const
+        {
+            return hash<StarFish::String*>()(qn.stringConst());
+        }
+    };
+
+    template <>
+    struct equal_to<StarFish::QualifiedName>
+    {
+        size_t operator() (const StarFish::QualifiedName& lqn, const StarFish::QualifiedName& rqn) const
+        {
+            return lqn.stringConst() == rqn.stringConst();
+        }
+    };
 }
 #endif
