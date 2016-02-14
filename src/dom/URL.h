@@ -11,6 +11,34 @@ namespace StarFish {
 class URL : public ScriptWrappable{
 public:
 
+    static String* makeUUID(){
+
+        String* result;
+
+        // uuid_t uuid;
+        // uuid_generate_time_safe(uuid);
+        // char uuid_str[37];
+        // uuid_unparse_lower(uuid, uuid_str);
+        // result = String::fromUTF8(uuid_str);
+
+        // FIXME: mh.byun Fake Path(Temp Soluation!!)
+        result = String::fromUTF8("a9f2fd30-adf0-43dd-a413-9ee8423b");
+        srand(time(NULL));
+        std::string tmp = std::to_string(rand()%10);
+        result = result->concat(String::fromUTF8(tmp.c_str()));
+
+        tmp = std::to_string(rand()%10);
+        result = result->concat(String::fromUTF8(tmp.c_str()));
+
+        tmp = std::to_string(rand()%10);
+        result = result->concat(String::fromUTF8(tmp.c_str()));
+
+        tmp = std::to_string(rand()%10);
+        result = result->concat(String::fromUTF8(tmp.c_str()));
+
+        return result;
+    }
+
     URL(ScriptBindingInstance* instance,StarFish* starfish)
     {
         m_starfish = starfish;
@@ -32,17 +60,12 @@ public:
 
     String* createObjectURL(escargot::ESValue RawObject){
 
-        // uuid_t uuid;
-        // uuid_generate_time_safe(uuid);
-        // char uuid_str[37];
-        // uuid_unparse_lower(uuid, uuid_str);
-
         String* objectURL = String::fromUTF8("blob:non-origin/");
-        // objectURL = objectURL->concat(String::fromUTF8(uuid_str));
-
-        // Blob* blob = (Blob*)RawObject.asESPointer()->asESObject();
-        // m_starfish->fetchImage(objectURL,blob->size(),blob->data());
+        objectURL = objectURL->concat(makeUUID());
+        Blob* blob = (Blob*)RawObject.asESPointer()->asESObject();
+        m_starfish->fetchImage(objectURL,blob->size(),blob->data());
         return objectURL;
+
     }
 protected:
     StarFish* m_starfish;

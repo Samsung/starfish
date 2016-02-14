@@ -33,12 +33,11 @@ head {
 }
 .subtitle {
 	position: relative;
-	top: 100px;
+	top: 150px;
 	height: 15px;
 	background-color: rgba(0, 0, 0, 0.8);
 	font-size: 17px;
 	text-align: center;
-	padding-top: 45px;
 	padding-bottom: 10px;
 }
 .contents {

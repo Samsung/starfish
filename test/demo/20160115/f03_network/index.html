@@ -27,8 +27,11 @@
   </div>
 </body>
 <script>
+   var MAX_NEWS_CNT = 5;
+
    var index=0;
    var news_json;
+   var news_image = new Array(MAX_NEWS_CNT);
    var newsAPI = "http://api.nytimes.com/svc/topstories/v1/world.json?api-key=27a5c7578126917ce802fb341ab508c9:4:74367408";
    document.getElementsByTagName("body").item(0).onclick = function() {
       updateContent();
@@ -45,12 +48,24 @@
 
         if(news_json['results'][index]['multimedia'].length!=0){
           var imgUrl = news_json['results'][index]['multimedia'][0]['url'];
-          print("Image URL : "+imgUrl);
-          fetchImage(imgUrl,index);
+          if(news_image[index]==undefined){
+            fetchImage(imgUrl,index);
+          }else{
+            updateImage(news_image[index]);
+          }
+        }else{
+          print("NO Image!");
+
+          var b = document.getElementById("top");
+          b.style.backgroundImage="url(images/bg.jpg)";
+          b.style.backgroundRepeat="no-repeat" ;
+          b.style.backgroundSize="100%" ;
+
+          news_image[index]=="";
         }
 
         index++;
-        if(index>5)
+        if(index>MAX_NEWS_CNT)
             index=0;
    }
    function fetch(){
@@ -69,17 +84,25 @@
         print("Image Size: "+this.response.size);
         print("ContentType: "+this.response.type);
         var objURL = URL.createObjectURL(this.response);
-        // var imgElement = document.getElementById("testimg");
-        // imgElement.src = objURL;
 
-        var b = document.getElementById("top");
-        b.style.backgroundImage="url("+objURL+")" ;
+        news_image[idx] = objURL;
+        updateImage(objURL);
+
       }
       var xhr = new XMLHttpRequest();
       xhr.addEventListener("load", onLoadHandler);
       xhr.open("GET",url);
       xhr.responseType='blob';
       xhr.send();
+   }
+   function updateImage(objURL){
+      // var imgElement = document.getElementById("testimg");
+      // imgElement.src = objURL;
+
+      var b = document.getElementById("top");
+      b.style.backgroundImage="url("+objURL+")";
+      b.style.backgroundRepeat="no-repeat" ;
+      b.style.backgroundSize="100%" ;
    }
    fetch();
 
