@@ -16,7 +16,7 @@
 			color: white;
 		}
             p {
-                  color: white;                  
+                  color: white;
                   font-size: 20pt;
                   font-weight: bold;
             }
@@ -52,6 +52,7 @@
             #text_title {
                   color: #41CD8B;
                   margin-bottom: 4%;
+                  font-size: 16pt;
             }
             #text_value {
                   font-size: 40pt;
@@ -66,7 +67,7 @@
    <body>
       <div id="container">
          <img id="img_title" src="images/food0.png"/>
-         <p id="text_title">TODAY'S RECOMMENDATION FOOD</p>
+         <p id="text_title">TODAY'S RECOMMENDED FOOD</p>
          <div id="div_progress"><div id="div_progress_bar"></div></div>
          <p id="text_value">700</p>
          <p>kcal</p>
@@ -79,7 +80,7 @@
          var img = document.getElementById('img_title');
          var txt = document.getElementById('text_value');
          var pgb = document.getElementById('div_progress_bar');
-         
+
          num = (++num)%4;
          switch(num){
             case 0:
@@ -103,10 +104,10 @@
                pgb.style.width = "80%"
                break;
          }
-         
-         
-         
-         
+
+
+
+
          //var text = document.getElementById('');
       };
    </script>
