@@ -7,9 +7,11 @@
 namespace StarFish {
 
 class FrameBlockBox;
-class InlineTextBox;
-class InlineBlockBox;
-class InlineReplacedBox;
+class LineFormattingContext;
+class InlineTextBox; // TextNode
+class InlineBlockBox; // display-inline:block
+class InlineReplacedBox; // replaced element, display: inline
+class InlineNonReplacedBox; // non-replaced element, display: inline
 
 class InlineBox : public FrameBox {
 public:
@@ -32,6 +34,7 @@ public:
     virtual bool isInlineTextBox() const { return false; }
     virtual bool isInlineReplacedBox() const { return false; }
     virtual bool isInlineBlockBox() const { return false; }
+    virtual bool isInlineNonReplacedBox() const { return false; }
 
     InlineTextBox* asInlineTextBox()
     {
@@ -49,6 +52,12 @@ public:
     {
         STARFISH_ASSERT(isInlineReplacedBox());
         return (InlineReplacedBox*)this;
+    }
+
+    InlineNonReplacedBox* asInlineNonReplacedBox()
+    {
+        STARFISH_ASSERT(isInlineNonReplacedBox());
+        return (InlineNonReplacedBox*)this;
     }
 };
 
@@ -140,19 +149,70 @@ public:
         return "InlineBlockBox";
     }
 
+    float ascender()
+    {
+        return m_ascender;
+    }
+
 protected:
     float m_ascender;
     FrameBlockBox* m_frameBlockBox;
 };
 
+
+class InlineNonReplacedBox : public InlineBox {
+    friend FrameBlockBox;
+public:
+    InlineNonReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameInline* origin)
+        : InlineBox(node, style, parent)
+    {
+        m_origin = origin;
+        m_descender= m_ascender = 0;
+
+    }
+
+    virtual bool isInlineNonReplacedBox() const { return true; }
+    virtual const char* name()
+    {
+        return "InlineNonReplacedBox";
+    }
+    static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx, FrameBlockBox* blockBox,
+            LineFormattingContext* lineFormattingContext, FrameBox* layoutParentBox, bool freshStart);
+    virtual void paint(Canvas* canvas, PaintingStage stage);
+    virtual Frame* hitTest(float x, float y, HitTestStage stage);
+    virtual void dump(int depth);
+
+    float ascender()
+    {
+        return m_ascender;
+    }
+
+    float decender()
+    {
+        return m_descender;
+    }
+protected:
+    float m_ascender;
+    float m_descender;
+    FrameInline* m_origin;
+    BoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+};
+
+
 class LineBox : public FrameBox {
     friend class FrameBlockBox;
+    friend class InlineNonReplacedBox;
 public:
     LineBox(Frame* parent)
         : FrameBox(nullptr, nullptr)
     {
         setParent(parent);
-        m_decender = m_ascender = 0;
+        m_descender= m_ascender = 0;
+    }
+
+    virtual bool isLineBox()
+    {
+        return true;
     }
 
     float ascender()
@@ -162,7 +222,7 @@ public:
 
     float decender()
     {
-        return m_decender;
+        return m_descender;
     }
 
 protected:
@@ -171,12 +231,13 @@ protected:
     // in layout, we use only 'ascender'
     // should we delete m_decender?
     float m_ascender;
-    float m_decender;
+    float m_descender;
     std::vector<FrameBox*, gc_allocator<FrameBox*>> m_boxes;
 };
 
 class FrameBlockBox : public FrameBox {
     friend class LineFormattingContext;
+    friend class InlineNonReplacedBox;
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
@@ -221,9 +282,54 @@ protected:
     float layoutBlock(LayoutContext& ctx);
     float layoutInline(LayoutContext& ctx);
 
-    std::vector<LineBox, gc_allocator<LineBox>> m_lineBoxes;
+    std::vector<LineBox*, gc_allocator<LineBox*>> m_lineBoxes;
 
     static void paintChildrenWith(FrameBlockBox* block, Canvas* canvas, PaintingStage stage);
+};
+
+class LineFormattingContext {
+public:
+    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx)
+        : m_block(block)
+        , m_layoutContext(ctx)
+    {
+        m_block.m_lineBoxes.clear();
+        // m_block.m_lineBoxes.shrink_to_fit();
+        m_block.m_lineBoxes.push_back(new LineBox(&m_block));
+        m_currentLine = 0;
+        m_currentLineWidth = 0;
+    }
+
+
+    void breakLine(bool dueToBr = false)
+    {
+        if (dueToBr == false)
+            m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1);
+        m_block.m_lineBoxes.push_back(new LineBox(&m_block));
+        m_currentLine++;
+        m_currentLineWidth = 0;
+    }
+
+    bool isBreakedLineWithoutBR(size_t idx)
+    {
+        return m_breakedLinesSet.find(idx) != m_breakedLinesSet.end();
+    }
+
+    void registerInlineContent()
+    {
+        m_layoutContext.setLastLineBox(m_block.m_lineBoxes.back());
+    }
+
+    LineBox* currentLine()
+    {
+        return m_block.m_lineBoxes.back();
+    }
+
+    std::set<size_t> m_breakedLinesSet;
+    float m_currentLineWidth;
+    size_t m_currentLine;
+    FrameBlockBox& m_block;
+    LayoutContext& m_layoutContext;
 };
 
 }

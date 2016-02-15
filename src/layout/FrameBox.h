@@ -6,6 +6,7 @@
 namespace StarFish {
 
 class InlineBox;
+class LineBox;
 
 class FrameBox : public Frame {
 public:
@@ -13,7 +14,6 @@ public:
         : Frame(node, style)
         , m_frameRect(0, 0, 0, 0)
     {
-
     }
 
     virtual bool isFrameBox()
@@ -21,9 +21,20 @@ public:
         return true;
     }
 
+    virtual bool isLineBox()
+    {
+        return false;
+    }
+
     virtual bool isInlineBox()
     {
         return false;
+    }
+
+    LineBox* asLineBox()
+    {
+        STARFISH_ASSERT(isLineBox());
+        return (LineBox*)this;
     }
 
     InlineBox* asInlineBox()
@@ -127,13 +138,14 @@ public:
 
     void paintBackgroundAndBorders(Canvas* canvas)
     {
+        Rect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
         if (!style()->bgColor().isTransparent()) {
             canvas->save();
             canvas->setColor(style()->bgColor());
-            Rect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
             canvas->drawRect(bgRect);
             canvas->restore();
         }
+
         if (style()->bgImageData()) {
             ImageData* id = style()->bgImageData();
             if (!id->width() || !id->height())
@@ -141,10 +153,10 @@ public:
 
             // TODO background-position
             canvas->save();
-            canvas->translate(borderLeft(), borderTop());
-            float bw = m_frameRect.width() - borderWidth();
-            float bh = m_frameRect.height() - borderHeight();
-            canvas->clip(Rect(0, 0, bw, bh));
+            canvas->translate(bgRect.x(), bgRect.y());
+            float bw = bgRect.width();
+            float bh = bgRect.height();
+            canvas->clip(Rect(0, 0, bgRect.width(), bgRect.height()));
 
             if (style()->bgSizeType() == BackgroundSizeType::Cover) {
                 canvas->drawImage(id, Rect(0, 0, bw, bh));
@@ -305,6 +317,7 @@ public:
     }
 
 protected:
+
     // content + padding + border
     Rect m_frameRect;
     BoxSurroundData m_padding, m_border, m_margin;

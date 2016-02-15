@@ -6,6 +6,8 @@
 #include "style/Unit.h"
 #include "style/ComputedStyle.h"
 
+#include "layout/StackingContext.h"
+
 namespace StarFish
 {
 
@@ -14,6 +16,7 @@ class FrameText;
 class FrameBox;
 class FrameBlockBox;
 class FrameReplaced;
+class FrameInline;
 
 enum PaintingStage
 {
@@ -230,6 +233,7 @@ public:
             m_flags.m_isNormalFlow = true;
         }
 
+        m_stackingContext = nullptr;
     }
 
     virtual ~Frame()
@@ -296,6 +300,12 @@ public:
         return (FrameBlockBox*) this;
     }
 
+    FrameInline* asFrameInline()
+    {
+        STARFISH_ASSERT(isFrameInline());
+        return (FrameInline*) this;
+    }
+
     ComputedStyle* style()
     {
         return m_style;
@@ -353,7 +363,7 @@ public:
 
     void appendChild(Frame* newChild)
     {
-        STARFISH_ASSERT(newChild->parent() == nullptr);
+        STARFISH_ASSERT(newChild->parent() == nullptr || newChild->parent() == this);
 
         newChild->setParent(this);
         Frame* lChild = lastChild();
@@ -481,6 +491,8 @@ protected:
 
     Frame* m_firstChild;
     Frame* m_lastChild;
+
+    StackingContext* m_stackingContext;
 };
 
 }
