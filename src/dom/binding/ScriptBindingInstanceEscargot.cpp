@@ -1980,6 +1980,31 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return (escargot::ESObject *)((Window *)ScriptWrappableGlobalObject::fetch())->url();
     }, NULL, false, false, false);
 
+    /* DOM Exception */
+    DEFINE_FUNCTION(DOMException, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    fetchData(this)->m_domException = DOMExceptionFunction;
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(this)->m_instance->globalObject()->errorPrototype());
+
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(fetchData(this)->m_instance->strings().name,
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
+            DOMException* exception = (DOMException*)originalObj;
+            return escargot::ESString::create(exception->name());
+        } else {
+            return escargot::ESValue();
+        }
+    }, NULL, false, false, false);
+
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(fetchData(this)->m_instance->strings().message,
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
+            DOMException* exception = (DOMException*)originalObj;
+            return toJSString(exception->message());
+        } else {
+            return escargot::ESValue();
+        }
+    }, NULL, false, false, false);
+
 #ifdef TIZEN_DEVICE_API
     fetchData(this)->m_deviceAPIObject = new DeviceAPI::NativePluginManager(fetchData(this)->m_instance);
 #endif

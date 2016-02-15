@@ -11,6 +11,7 @@
 #include "dom/HTMLCollection.h"
 #include "dom/DOMTokenList.h"
 #include "dom/NamedNodeMap.h"
+#include "dom/DOMException.h"
 
 namespace StarFish {
 

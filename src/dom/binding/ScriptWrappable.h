@@ -41,6 +41,7 @@ class CSSStyleRule;
 class XMLHttpRequest;
 class Blob;
 class URL;
+class DOMException;
 
 class ScriptBindingInstance;
 
@@ -68,6 +69,7 @@ public:
         XMLHttpRequestObject,
         BlobObject,
         URLObject,
+        DOMExceptionObject,
 #ifdef TIZEN_DEVICE_API
         NativePluginManagerObject,
 #endif
@@ -125,6 +127,7 @@ public:
     void initScriptWrappable(XMLHttpRequest* ptr);
     void initScriptWrappable(Blob* ptr);
     void initScriptWrappable(URL* ptr,ScriptBindingInstance*);
+    void initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance);
 
     bool hasProperty(String* name);
 

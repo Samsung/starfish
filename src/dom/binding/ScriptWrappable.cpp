@@ -314,6 +314,13 @@ void ScriptWrappable::initScriptWrappable(URL* url,ScriptBindingInstance* instan
     // ((escargot::ESObject *)this)->setExtraData(URLObject);
 }
 
+void ScriptWrappable::initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance)
+{
+    auto data = fetchData(instance);
+    ((escargot::ESObject *)this)->set__proto__(data->m_domException->protoType());
+    ((escargot::ESObject *)this)->setExtraData(DOMExceptionObject);
+}
+
 bool ScriptWrappable::hasProperty(String* name)
 {
     return escargot::ESObject::hasProperty(escargot::ESString::create(name->utf8Data()));
