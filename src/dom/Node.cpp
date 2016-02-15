@@ -323,7 +323,8 @@ Node* Node::insertBefore(Node* child, Node* childRef)
         appendChild(child);
     }
 
-    STARFISH_ASSERT(childRef->parentNode() == this);
+    if (childRef->parentNode() != this)
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "The node before which the new node is to be inserted is not a child of this node.");
     STARFISH_ASSERT(child->parentNode() == nullptr);
     STARFISH_ASSERT(child->nextSibling() == nullptr);
     STARFISH_ASSERT(child->previousSibling() == nullptr);

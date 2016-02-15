@@ -535,14 +535,19 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("insertBefore"), false, false, false,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
-            Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject();
-            Node* n = obj->insertBefore(node, child);
-            return escargot::ESValue((escargot::ESObject *)n);
+            try {
+                escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
+                Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+                Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+                Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject();
+                Node* n = obj->insertBefore(node, child);
+                return escargot::ESValue((escargot::ESObject *)n);
+            } catch (escargot::ESObject* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(e));
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }, escargot::ESString::create("insertBefore"), 1, false)
     );
 
