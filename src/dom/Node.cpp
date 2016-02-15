@@ -315,6 +315,38 @@ NamedNodeMap* Node::attributes()
     return nullptr;
 }
 
+Node* Node::insertBefore(Node* child, Node* childRef)
+{
+    STARFISH_ASSERT(child);
+
+    if(!childRef) {
+        appendChild(child);
+    }
+
+    STARFISH_ASSERT(childRef->parentNode() == this);
+    STARFISH_ASSERT(child->parentNode() == nullptr);
+    STARFISH_ASSERT(child->nextSibling() == nullptr);
+    STARFISH_ASSERT(child->previousSibling() == nullptr);
+
+    Node* prev = childRef->previousSibling();
+    childRef->setPreviousSibling(child);
+    STARFISH_ASSERT(m_lastChild != prev);
+    if(prev) {
+        STARFISH_ASSERT(m_firstChild != childRef);
+        prev->setNextSibling(child);
+    } else {
+        STARFISH_ASSERT(m_firstChild == childRef);
+        m_firstChild = child;
+    }
+
+    child->setParentNode(this);
+    child->setPreviousSibling(prev);
+    child->setNextSibling(childRef);
+    setNeedsStyleRecalc();
+    return child;
+}
+
+
 void Node::dumpStyle()
 {
     dump();
