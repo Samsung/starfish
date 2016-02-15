@@ -1,5 +1,7 @@
 body {
     position:absolute;
+    margin: 0px;
+    padding: 0px;
 	top:0px;
 	left:0px;
 	width:360px;
