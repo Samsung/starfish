@@ -14,80 +14,36 @@ class XMLHttpRequestEventTarget : public EventTarget<ScriptWrappable>{
 
 public:
     XMLHttpRequestEventTarget()
-    : m_onloadstart(escargot::ESValue::ESNull),
-      m_onprogress(escargot::ESValue::ESNull),
-      m_onabort(escargot::ESValue::ESNull),
-      m_onerror(escargot::ESValue::ESNull),
-      m_onload(escargot::ESValue::ESNull),
-      m_ontimeout(escargot::ESValue::ESNull),
-      m_onloadend(escargot::ESValue::ESNull),
-      m_onreadystatechange(escargot::ESValue::ESNull)
     {}
-    bool setHandler(String* keyName,escargot::ESValue handler){
-        if(keyName->equals("loadstart")||keyName->equals("onloadstart")){
-            m_onloadstart = handler;
-        }else if(keyName->equals("progress")||keyName->equals("onprogress")){
-            m_onprogress = handler;
-        }else if(keyName->equals("error")||keyName->equals("onerror")){
-            m_onerror = handler;
-        }else if(keyName->equals("abort")||keyName->equals("onabort")){
-            m_onabort = handler;
-        }else if(keyName->equals("timeout")||keyName->equals("ontimeout")){
-            m_ontimeout = handler;
-        }else if(keyName->equals("load")||keyName->equals("onload")){
-            m_onload = handler;
-        }else if(keyName->equals("loadend")||keyName->equals("onloadend")){
-            m_onloadend = handler;
-        }else if(keyName->equals("readystatechange")||keyName->equals("onreadystatechange")){
-            m_onreadystatechange = handler;
-        }else{
-            return false;
-        }
-        return true;
-    }
+    escargot::ESValue getHandler(String* keyName,StarFish* starfish){
 
-    escargot::ESValue getHandler(String* keyName){
-
-        if(keyName->equals("loadstart")||keyName->equals("onloadstart")){
-            if(m_onloadstart!=escargot::ESValue::ESNull)
-                return m_onloadstart;
-        }else if(keyName->equals("progress")||keyName->equals("onprogress")){
-            if(m_onprogress!=escargot::ESValue::ESNull)
-                return m_onprogress;
-        }else if(keyName->equals("error")||keyName->equals("onerror")){
-            if(m_onerror!=escargot::ESValue::ESNull)
-                return m_onerror;
-        }else if(keyName->equals("abort")||keyName->equals("onabort")){
-            if(m_onabort!=escargot::ESValue::ESNull)
-                return m_onabort;
-        }else if(keyName->equals("timeout")||keyName->equals("ontimeout")){
-            if(m_ontimeout!=escargot::ESValue::ESNull)
-                return m_ontimeout;
-        }else if(keyName->equals("load")||keyName->equals("onload")){
-            if(m_onload!=escargot::ESValue::ESNull)
-                return m_onload;
-        }else if(keyName->equals("loadend")||keyName->equals("onloadend")){
-            if(m_onloadend!=escargot::ESValue::ESNull)
-                return m_onloadend;
-        }else if(keyName->equals("readystatechange")||keyName->equals("onreadystatechange")){
-            if(m_onreadystatechange!=escargot::ESValue::ESNull)
-                return m_onreadystatechange;
+        QualifiedName eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
+        auto clickListeners = getEventListeners(eventType);
+        if (clickListeners) {
+            for (unsigned i = 0; i < clickListeners->size(); i++) {
+                STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                return clickListeners->at(i)->scriptValue();
+            }
         }
         return escargot::ESValue::ESNull;
     }
 
+    escargot::ESValue executeHandler(String* keyName,StarFish* starfish,ProgressEvent* pe){
+
+        QualifiedName eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
+        auto clickListeners = getEventListeners(eventType);
+        if (clickListeners) {
+            for (unsigned i = 0; i < clickListeners->size(); i++) {
+                STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                escargot::ESValue json_arg[1] = {escargot::ESValue(pe)};
+                callScriptFunction(clickListeners->at(i)->scriptValue(), json_arg, 1, this);
+            }
+        }
+
+        return escargot::ESValue::ESNull;
+    }
+
 private:
-    escargot::ESValue m_onloadstart;
-    escargot::ESValue m_onprogress;
-    escargot::ESValue m_onabort;
-    escargot::ESValue m_onerror;
-    escargot::ESValue m_onload;
-    escargot::ESValue m_ontimeout;
-    escargot::ESValue m_onloadend;
-
-    //FIXME: mh.byun
-    escargot::ESValue m_onreadystatechange;
-
 };
 
 
@@ -178,6 +134,14 @@ public:
             return true;
         }
         return false;
+    }
+
+    void setStarfishInstance(StarFish* instance){
+        m_starfish = instance;
+    }
+
+    StarFish* starfishInstance(){
+        return m_starfish;
     }
 
     void setScriptBindingInstance(ScriptBindingInstance* instance){
@@ -300,6 +264,7 @@ protected:
     uint32_t m_timeout;
     bool m_abort_flag;
     ScriptBindingInstance* m_bindingInstance;
+    StarFish* m_starfish;
 };
 
 

@@ -104,11 +104,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             // Fixme : Node, Window, WHR
             //         cast to EventTarget
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::NodeObject) {
+            if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::NodeObject) {
                 ((Node *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::WindowObject) {
+            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::WindowObject) {
                 ((Window *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::XMLHttpRequestObject) {
+            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::XMLHttpRequestObject) {
                 ((XMLHttpRequest *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -140,11 +140,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             // Fixme : Node, Window, WHR
             //         cast to EventTarget
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::NodeObject) {
+            if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::NodeObject) {
                 ((Node *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::WindowObject) {
+            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::WindowObject) {
                 ((Window *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::XMLHttpRequestObject) {
+            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::XMLHttpRequestObject) {
                 ((XMLHttpRequest *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1740,14 +1740,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onloadstart"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("loadstart"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onloadstart"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1755,14 +1758,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onprogress"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("progress"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onprogress"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "progress");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1770,14 +1776,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onabort"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("abort"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onabort"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "abort");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1785,14 +1794,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onerror"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("error"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onerror"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "error");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1800,14 +1812,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onload"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("load"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onload"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "load");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1815,14 +1830,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("ontimeout"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("timeout"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("ontimeout"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "timeout");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1830,14 +1848,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onloadend"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("loadend"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onloadend"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "loadend");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1845,14 +1866,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("onreadystatechange"));
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("readystatechange"),((XMLHttpRequest*)originalObj)->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            ((XMLHttpRequest*)originalObj)->setHandler(String::fromUTF8("onreadystatechange"),v);
+            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "readystatechange");
+            auto listener = new EventListener(v);
+            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
         }
     }, false, false, false);
 
@@ -1922,17 +1946,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("send"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("send"), false, false, false, xhrSendFunction);
 
-    escargot::ESFunctionObject* xhrAddEventListenerFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-        if (v.isObject()) {
-            if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();;
-                xhr->setHandler(String::createASCIIString(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()),instance->currentExecutionContext()->readArgument(1));
-            }
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("addEventListener"), 1, false);
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), false, false, false, xhrAddEventListenerFunction);
+    // escargot::ESFunctionObject* xhrAddEventListenerFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+    //     escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+    //     if (v.isObject()) {
+    //         if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
+    //             XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();;
+    //             xhr->setHandler(String::createASCIIString(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()),instance->currentExecutionContext()->readArgument(1));
+    //         }
+    //     }
+    //     return escargot::ESValue(escargot::ESValue::ESNull);
+    // }, escargot::ESString::create("addEventListener"), 1, false);
+    // xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), false, false, false, xhrAddEventListenerFunction);
 
     escargot::ESFunctionObject* xhrAbortFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();

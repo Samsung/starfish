@@ -293,6 +293,7 @@ void ScriptWrappable::initScriptWrappable(XMLHttpRequest* xhr)
     ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
     auto data = fetchData(instance);
     xhr->setScriptBindingInstance(instance);
+    xhr->setStarfishInstance(window->starFish());
     ((escargot::ESObject *)this)->set__proto__(data->m_xhrElement->protoType());
     ((escargot::ESObject *)this)->setExtraData(XMLHttpRequestObject);
 }

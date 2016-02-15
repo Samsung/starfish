@@ -277,12 +277,7 @@ void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread,uint32
     }
 
     if(isMainThread){
-
-      escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-      escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(this->striptBindingInstance(),loaded,total))};
-      escargot::ESValue fn = getHandler(eventName);
-      if(fn!=escargot::ESValue::ESNull)
-        callJSFunction(instance, fn, this, json_arg, 1);
+      escargot::ESValue fn = executeHandler(eventName,starfishInstance(),new ProgressEvent(this->striptBindingInstance(),loaded,total));
     }else{
 
       struct Pass {
@@ -302,12 +297,7 @@ void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread,uint32
       ecore_idler_add([](void *data)->Eina_Bool{
           Pass* pass = (Pass*)data;
           escargot::ESObject* this_obj = pass->obj;
-          escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-          escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->getHandler(pass->buf);
-          escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(((XMLHttpRequest*)this_obj)->striptBindingInstance(),pass->loaded,pass->total))};
-          if(fn!=escargot::ESValue::ESNull)
-            callJSFunction(instance, fn, this_obj, json_arg, 1);
-
+          escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->executeHandler(pass->buf,((XMLHttpRequest*)this_obj)->starfishInstance(),new ProgressEvent(((XMLHttpRequest*)this_obj)->striptBindingInstance(),pass->loaded,pass->total));
           delete pass;
           return ECORE_CALLBACK_CANCEL;
       }, pass);
