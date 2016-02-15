@@ -61,6 +61,14 @@ public:
         m_left = left;
     }
 
+    void checkComputed(Length fontSize, Font* font)
+    {
+        m_left.changeToFixedIfNeeded(fontSize, font);
+        m_right.changeToFixedIfNeeded(fontSize, font);
+        m_top.changeToFixedIfNeeded(fontSize, font);
+        m_bottom.changeToFixedIfNeeded(fontSize, font);
+    }
+
 private:
     Length m_top;
     Length m_right;

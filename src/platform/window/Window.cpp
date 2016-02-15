@@ -294,6 +294,8 @@ Window::Window(StarFish* starFish)
         CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("p"), CSSStyleRule::PseudoClass::None, document());
         bool result;
         rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("display", "block", result));
+        rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("margin-top", "1em", result));
+        rule->styleDeclaration()->addValuePair(CSSStyleValuePair::fromString("margin-bottom", "1em", result));
         userAgentStyleSheet->addRule(rule);
     }
 

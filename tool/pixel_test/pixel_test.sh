@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Colors
 RED='\033[0;31m'
@@ -22,7 +22,11 @@ else
     tc=$1
 fi
 
-echo "${BOLD}###### CSS Regression Test ######${RESET}\n"
+if [[ "$tc" == *"/" ]]; then
+    tc=$(find $tc -name "*.html" | sort);
+fi
+
+echo -e "${BOLD}###### CSS Regression Test ######${RESET}\n"
 for i in $tc ; do
     dir=${i%.html}
     html=$dir".html"
@@ -35,33 +39,39 @@ for i in $tc ; do
     ELM_ENGINE="shot:" nodejs runner.js $i --pixel-test > /dev/null 2>&1
 
     # Compare
-    compare="tool/pixel_test/bin/image_diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png out.png"
+    WEBKIT_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png"
+    compare="tool/pixel_test/bin/image_diff ${WEBKIT_PNG} out.png"
     diff=`eval $compare` > /dev/null 2>&1
     if [ "$diff" = "" ]; then
-        cd tool/pixel_test
-        phantomjs capture.js -f $CURDIR/$html > /dev/null 2>&1
-        cd - > /dev/null 2>&1
+        #echo $CURDIR/$html
+        phantomjs tool/pixel_test/capture.js -f $CURDIR/$html ${WEBKIT_PNG%/*} > /dev/null 2>&1
         diff=`eval $compare` > /dev/null 2>&1
     fi
     result=${diff##* }
+    ratio=${diff#* }
 
     # Print the result
     if [ "${result}" = "failed" ]; then
         diff=`tool/pixel_test/bin/image_diff --diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png out.png $OUTDIR/${file}_diff.png`
-        FAIL=`expr $FAIL + 1`
-        echo "${RED}[FAIL]${RESET}" $i
+        if [[ "${ratio}" == "0."* ]]; then
+            CHECK=`expr $CHECK + 1`
+            echo -e "${YELLOW}[CHECK]${RESET}" $i "("$ratio")"
+        else
+            FAIL=`expr $FAIL + 1`
+            echo -e "${RED}[FAIL]${RESET}" $i
+        fi
     elif [ "${result}" = "passed" ]; then
         PASS=`expr $PASS + 1`
-        echo "${GREEN}[PASS]${RESET}" $i
+        echo -e "${GREEN}[PASS]${RESET}" $i
     else
         FAIL=`expr $FAIL + 1`
-        echo "${RED}[FAIL]${RESET}" $i "${YELLOW}(Unable to open html file)${RESET}"
+        echo -e "${RED}[FAIL]${RESET}" $i "${YELLOW}(Unable to open html file)${RESET}"
     fi
 done
 
 # Remove unnecessary file
-rm out.png
+#rm out.png
 
 # Print the summary
-echo "\n${BOLD}###### Summary ######${RESET}\n"
-echo "${YELLOW}Run" `expr $PASS + $FAIL` "test cases:" $PASS "passed," $FAIL "failed.${RESET}\n"
+echo -e "\n${BOLD}###### Summary ######${RESET}\n"
+echo -e "${YELLOW}Run" `expr $PASS + $CHECK + $FAIL` "test cases:" $PASS "passed," $FAIL "failed," $CHECK "need to check.${RESET}\n"

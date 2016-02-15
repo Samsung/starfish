@@ -367,6 +367,11 @@ install_runner_dep:
 	sudo apt-get install nodejs phantomjs npm
 	npm install fs path phantom
 
+install_pixel_test_dep:
+	mkdir -p ~/.fonts
+	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
+	fc-cache -fv
+
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc)
 

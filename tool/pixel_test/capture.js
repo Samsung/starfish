@@ -11,6 +11,7 @@ var platformName = "linux";
 var testPath = "";
 var basePath = "../../test/";
 var filelist = [];
+var pathToSave = "";
 
 function initialize() {
     if (args.length == 1) {
@@ -23,16 +24,18 @@ function initialize() {
             return true;
         }
     }
-    else if (args.length == 3) {
+    else if (args.length >= 3) {
         if (args[1] == "-f" && fs.isFile(args[2]) && args[2].endsWith(".html")) {
             var last = args[2].lastIndexOf('/');
             filelist[0] = args[2].substring(last);
 
             var index = args[2].indexOf("test/");
-            if (index >= 0)
+            if (index >= 0) {
                 testPath = args[2].substring(index+5, last);
-            else
+                basePath = args[2].substring(0, index+5);
+            } else
                 testPath = filelist[0];
+            pathToSave = args[3];
             return true;
         }
     }
@@ -46,7 +49,9 @@ if (!initialize()) {
     phantom.exit();
 }
 
-var pathToSave = basePath + "reftest/" + testPath + "/";
+if (!pathToSave) {
+    pathToSave = basePath + "reftest/" + testPath + "/";
+}
 var pathToTest = basePath + testPath + "/";
 console.log("     * The captured images will be saved in " + pathToSave);
 
@@ -76,7 +81,7 @@ page.onLoadStarted = function() {
 page.onLoadFinished = function() {
     page.evaluate(function() {
         var style = document.createElement('style'),
-            text = document.createTextNode('html { background-color: white; fontFamily: Ahem; }');
+            text = document.createTextNode('html { background-color: white; font-family: Ahem; }');
         style.setAttribute('type', 'text/css');
         style.appendChild(text);
         document.head.insertBefore(style, document.head.firstChild);

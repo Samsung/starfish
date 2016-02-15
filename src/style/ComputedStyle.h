@@ -773,20 +773,11 @@ protected:
         m_verticalAlignLength.changeToFixedIfNeeded(baseFontSize, font());
 
         if (m_surround) {
-            m_surround->margin.top().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->margin.right().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->margin.bottom().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->margin.left().changeToFixedIfNeeded(baseFontSize, font());
+            m_surround->margin.checkComputed(baseFontSize, font());
 
-            m_surround->padding.top().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->padding.right().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->padding.bottom().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->padding.left().changeToFixedIfNeeded(baseFontSize, font());
+            m_surround->padding.checkComputed(baseFontSize, font());
 
-            m_surround->offset.top().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->offset.right().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->offset.bottom().changeToFixedIfNeeded(baseFontSize, font());
-            m_surround->offset.left().changeToFixedIfNeeded(baseFontSize, font());
+            m_surround->offset.checkComputed(baseFontSize, font());
 
             m_surround->border.checkComputed(baseFontSize, font());
 

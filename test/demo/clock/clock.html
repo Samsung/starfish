@@ -23,8 +23,8 @@ color: rgb(255,0,0);
 	<img src="" id="topSpacer">
 	<div id="time">5:19 PM</div>
 	<div id="place" >
-		<img src="./test/demo/clock/spot.png" id="spot">Seoul, Korea</div>       
-	<img src="./test/demo/clock/cloud.png" id="w" >
+		<img src="spot.png" id="spot">Seoul, Korea</div>       
+	<img src="cloud.png" id="w" >
 	<div id="tem1">18°c</div>
 	<div id="tem2">24°c/16°c</div>
 <script>
@@ -67,12 +67,12 @@ setTime();
 
 
 document.getElementById("w").onclick = function() {
-	if (this.src == "./test/demo/clock/cloud.png") {
-		this.src = "./test/demo/clock/sun.png"
+	if (this.src == "cloud.png") {
+		this.src = "sun.png"
 			document.getElementById("place").className = "red"
 	}
 	else {
-		this.src = "./test/demo/clock/cloud.png"
+		this.src = "cloud.png"
 			document.getElementById("place").className = ""
 	}
 
