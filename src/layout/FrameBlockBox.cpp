@@ -1625,7 +1625,9 @@ Frame* InlineNonReplacedBox::hitTest(float x, float y, HitTestStage stage)
         while (s != HitTestStageEnd) {
             Frame* f = lastChild();
             while (f) {
-                result = f->hitTest(x, y, s);
+                float cx = x - f->asFrameBox()->x();
+                float cy = y - f->asFrameBox()->y();
+                result = f->hitTest(cx, cy, s);
                 if (result)
                     return result;
                 f = f->previous();
