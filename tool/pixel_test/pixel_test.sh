@@ -26,7 +26,7 @@ if [[ "$tc" == *"/" ]]; then
     tc=$(find $tc -name "*.html" | sort);
 fi
 
-echo -e "${BOLD}###### CSS Regression Test ######${RESET}\n"
+echo -e "${BOLD}###### CSS Pixel Test ######${RESET}\n"
 for i in $tc ; do
     dir=${i%.html}
     html=$dir".html"

@@ -375,4 +375,7 @@ install_pixel_test_dep:
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc)
 
+regression_test:
+	./tool/pixel_test/regression_test.sh $(tc)
+
 .PHONY: clean

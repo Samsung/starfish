@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
             path = argv[i] + strlen("--working-directory=");
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
             flag |= StarFish::enablePixelTest;
+        } else if (strcmp(argv[i], "--regression-test") == 0) {
+            flag |= StarFish::enableRegressionTest;
         }
     }
 
