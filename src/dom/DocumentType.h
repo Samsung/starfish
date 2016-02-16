@@ -56,7 +56,7 @@ public:
     }
 
     /* Other methods (not in DOM API) */
-    virtual bool isDocumentType()
+    virtual bool isDocumentType() const
     {
         return true;
     }

@@ -206,25 +206,7 @@ public:
         return false;
     }
 
-    Node* appendChild(Node* child)
-    {
-        STARFISH_ASSERT(child);
-        STARFISH_ASSERT(child->parentNode() == nullptr);
-        STARFISH_ASSERT(child->nextSibling() == nullptr);
-        STARFISH_ASSERT(child->previousSibling() == nullptr);
-
-        if(m_lastChild) {
-            child->setPreviousSibling(m_lastChild);
-            m_lastChild->setNextSibling(child);
-        } else {
-            m_firstChild = child;
-        }
-        m_lastChild = child;
-        child->setParentNode(this);
-        setNeedsStyleRecalc();
-        return child;
-    }
-
+    Node* appendChild(Node* child);
     Node* insertBefore(Node* child, Node* childRef = nullptr);
 
     Node* removeChild(Node* child)
@@ -304,7 +286,7 @@ public:
         return false;
     }
 
-    virtual bool isText()
+    virtual bool isText() const
     {
         return false;
     }
@@ -463,6 +445,8 @@ private:
         // For nodes other than elements and attributes, the prefix is always null
         return nullptr;
     }
+
+    void validatePreinsert(Node* child, Node* childRef);
 
 protected:
     bool m_needsStyleRecalc;

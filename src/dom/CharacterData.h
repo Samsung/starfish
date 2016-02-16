@@ -65,11 +65,6 @@ public:
         return true;
     }
 
-    virtual bool isText() const
-    {
-        return false;
-    }
-
     Text* asText()
     {
         STARFISH_ASSERT(isText());
