@@ -866,24 +866,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("doctype"), false, false, false, getDoctypeFunction);
 
     escargot::ESFunctionObject* createElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        try{
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
 
-        if (obj->isDocument()) {
-            Document* doc = obj->asDocument();
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            if (argValue.isESString()) {
-                escargot::ESString* argStr = argValue.asESString();
-                QualifiedName name = QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data());
-                Element* elem = doc->createElement(name);
-                if (elem != nullptr)
-                    return escargot::ESValue((escargot::ESObject *)elem);
+            if (obj->isDocument()) {
+                Document* doc = obj->asDocument();
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                if (argValue.isESString()) {
+                    escargot::ESString* argStr = argValue.asESString();
+                    QualifiedName name = QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data());
+                    Element* elem = doc->createElement(name);
+                    if (elem != nullptr)
+                        return escargot::ESValue((escargot::ESObject *)elem);
+                }
+            } else {
+                THROW_ILLEGAL_INVOCATION()
             }
-        } else {
-            THROW_ILLEGAL_INVOCATION()
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }catch(escargot::ESObject* e){
+            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(e));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("createElement"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createElement"), false, false, false, createElementFunction);
 
@@ -972,23 +977,28 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByClassName"), false, false, false, getElementsByClassNameFunction);
 
     escargot::ESFunctionObject*   createAttributeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        try{
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
 
-        if (obj->isDocument()) {
-            Document* doc = obj->asDocument();
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            if (argValue.isESString()) {
-                escargot::ESString* argStr = argValue.asESString();
-                Attr* result = doc->createAttribute(QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data()));
-                if (result != nullptr)
-                    return escargot::ESValue((escargot::ESObject *)result);
+            if (obj->isDocument()) {
+                Document* doc = obj->asDocument();
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                if (argValue.isESString()) {
+                    escargot::ESString* argStr = argValue.asESString();
+                    Attr* result = doc->createAttribute(QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data()));
+                    if (result != nullptr)
+                        return escargot::ESValue((escargot::ESObject *)result);
+                }
+            } else {
+                THROW_ILLEGAL_INVOCATION()
             }
-        } else {
-            THROW_ILLEGAL_INVOCATION()
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }catch(escargot::ESObject* e){
+            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(e));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("createAttribute"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createAttribute"), false, false, false, createAttributeFunction);
 

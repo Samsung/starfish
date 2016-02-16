@@ -89,6 +89,9 @@ HTMLCollection* Document::getElementsByClassName(String* classNames)
 
 Element* Document::createElement(QualifiedName localName)
 {
+    if(!QualifiedName::checkNameProductionRule(localName.string()->utf8Data(),localName.string()->length()))
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+
     if (localName == window()->starFish()->staticStrings()->m_htmlLocalName) {
         return new HTMLHtmlElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_headLocalName) {
@@ -129,6 +132,9 @@ Comment* Document::createComment(String* data)
 
 Attr* Document::createAttribute(QualifiedName localName)
 {
+    if(!QualifiedName::checkNameProductionRule(localName.string()->utf8Data(),localName.string()->length()))
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+
     return new Attr(scriptBindingInstance(),localName);
 }
 

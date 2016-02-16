@@ -28,5 +28,40 @@ QualifiedName QualifiedName::fromString(StarFish* sf, const char* str)
     return name;
 }
 
+bool QualifiedName::checkNameProductionRule(const char* str,unsigned length)
+{
+    if (!checkNameProductionRuleStart_internal(str[0]))
+        return false;
+
+    for (unsigned i=1;i<length;++i) {
+        if (!checkNameProductionRule_internal(str[i]))
+            return false;
+    }
+
+    return true;
+}
+bool QualifiedName::checkNameProductionRuleStart_internal(char c)
+{
+    if (c==':'||c=='_')
+        return true;
+
+    if(isalpha(c))
+        return true;
+
+    return false;
+}
+bool QualifiedName::checkNameProductionRule_internal(char c)
+{
+    if (checkNameProductionRuleStart_internal(c))
+        return true;
+
+    if (isdigit(c))
+        return true;
+
+    if (c=='-'||c=='.')
+        return true;
+
+    return false;
+}
 
 }
