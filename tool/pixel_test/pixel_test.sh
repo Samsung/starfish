@@ -28,6 +28,10 @@ fi
 
 echo -e "${BOLD}###### CSS Pixel Test ######${RESET}\n"
 for i in $tc ; do
+    if [[ $i == *"demo/poc"* ]]
+    then
+        continue;
+    fi
     dir=${i%.html}
     html=$dir".html"
     file=${dir##*/}
@@ -52,7 +56,7 @@ for i in $tc ; do
 
     # Print the result
     if [ "${result}" = "failed" ]; then
-        diff=`tool/pixel_test/bin/image_diff --diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png out.png $OUTDIR/${file}_diff.png`
+        diff=`tool/pixel_test/bin/image_diff --diff ${WEBKIT_PNG} out.png $OUTDIR/${file}_diff.png`
         if [[ "${ratio}" == "0."* ]]; then
             CHECK=`expr $CHECK + 1`
             echo -e "${YELLOW}[CHECK]${RESET}" $i "("$ratio")"

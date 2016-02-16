@@ -73,12 +73,9 @@ CSS 2.1          , 8.3       , margin
                  , 16.2      , text-align
                  , 16.3      , text-decoration       , none
                  ,           ,                       , underline
-                 ,           ,                       , overline
                  ,           ,                       , line-through
-                 , 16.4      , letter-spacing
 CSS3-COLOR       , 3.2       , opacity
 CSS3-BACKGROUND  , 3.9       , background-size
                  , 6.1       , border-image-source
                  , 6.2       , border-image-slice
                  , 6.3       , border-image-width
-                 , 6.5       , border-image-repeat

@@ -30,6 +30,10 @@ fi
 
 echo -e "${BOLD}###### CSS Regression Test ######${RESET}\n"
 for i in $tc ; do
+    if [[ $i == *"network"* ]]
+    then
+        continue;
+    fi
     dir=${i%.html}
     html=$dir".html"
     file=${dir##*/}
