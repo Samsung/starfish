@@ -37,6 +37,20 @@ public:
         }
     }
 
+    void roundBorderWidth() {
+        // NOTE: Border Widths are rounded to the nearest integer number of pixels,
+        // but values between zero and one pixels are always rounded up to one device pixel.
+        if (m_data > 0.0 && m_data < 1.0)
+            m_data = 1.0;
+        else {
+            if (m_data < 0)
+                m_data -= 0.01;
+            else
+                m_data += 0.01;
+            m_data = ((m_data > std::numeric_limits<unsigned>::max()) || (m_data < std::numeric_limits<unsigned>::min())) ? 0 : static_cast<unsigned>(m_data);
+        }
+    }
+
     bool isSpecified() const { return isFixed() || isPercent(); }
     bool isAuto() const { return m_type == Auto; }
     bool isFixed() const { return m_type == Fixed; }

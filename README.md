@@ -11,7 +11,12 @@ e.g. $ make x64.exe.debug -j
 
 # Test
 
-## Run pixeltest
+## Run regressiontest (compare with pre-version)
+
+    make regression_test                         // all xml file within test/demo/20160115
+    make regression_test [tc=unittest.xml]       // only one file
+
+## Run pixeltest (compare with webkit)
 
     make pixel_test                         // all xml file within test/
     make pixel_test [tc=unittest.xml]       // only one file
