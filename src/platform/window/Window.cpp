@@ -221,7 +221,7 @@ Window::Window(StarFish* starFish)
     STARFISH_ASSERT(m_starFish->scriptBindingInstance());
 
     m_document = new HTMLDocument(this, m_starFish->scriptBindingInstance(), m_styleResolver.resolveDocumentStyle(m_starFish));
-    initScriptWrappableWindow(this);
+    initScriptWrappable(this);
     m_document->initScriptWrappable(m_document);
     m_timeoutCounter = 0;
     m_needsRendering = false;
@@ -630,14 +630,12 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 void Window::pause()
 {
     STARFISH_LOG_INFO("onPause");
-    callFunction(String::createASCIIString("onpause"));
     m_isRunning = false;
 }
 
 void Window::resume()
 {
     STARFISH_LOG_INFO("onResume");
-    callFunction(String::createASCIIString("onresume"));
     m_isRunning = true;
     setNeedsRendering();
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;

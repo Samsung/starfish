@@ -10,7 +10,8 @@ class Attr;
 class NamedNodeMap : public ScriptWrappable {
 public:
     NamedNodeMap(ScriptBindingInstance* instance, Element* element)
-    : m_element(element), m_instance(instance) {
+        : ScriptWrappable(this), m_element(element), m_instance(instance)
+    {
         initScriptWrappable(this, instance);
     }
     unsigned long length();

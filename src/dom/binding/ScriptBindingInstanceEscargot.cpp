@@ -5,6 +5,7 @@
 
 #include "platform/window/Window.h"
 #include "dom/DOM.h"
+#include "dom/NodeList.h"
 
 #include "Escargot.h"
 #include "vm/ESVMInstance.h"
@@ -47,10 +48,11 @@ ScriptBindingInstance::ScriptBindingInstance()
 #define CHECK_TYPEOF(thisValue, type) \
     {\
         escargot::ESValue v = thisValue;\
-        if (!(v.isObject() && v.asESPointer()->asESObject()->extraData() == type)) { \
+        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) { \
             THROW_ILLEGAL_INVOCATION()\
         }\
     }\
+
 
 String* toBrowserString(const escargot::ESValue& v)
 {
@@ -60,7 +62,7 @@ String* toBrowserString(const escargot::ESValue& v)
 
 escargot::ESValue toJSString(String* v)
 {
-    return escargot::ESString::create(v->utf8Data());
+    return createScriptString(v);
 }
 
 void ScriptBindingInstance::initBinding(StarFish* sf)
@@ -83,72 +85,33 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     auto fnAddEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        // TODO: Efficient Type check
-        // CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
-        auto ext = thisValue.asESPointer()->asESObject()->extraData();
-        if (!(thisValue.isObject()
-            && (ext == ScriptWrappable::Type::WindowObject
-                || ext == ScriptWrappable::Type::NodeObject
-                || ext == ScriptWrappable::Type::XMLHttpRequestObject))) {
-            THROW_ILLEGAL_INVOCATION()
-        }
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
         if (firstArg.isESString() && secondArg.asESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
             // TODO: Verify valid event types (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
             auto listener = new EventListener(secondArg);
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // Fixme : Node, Window, WHR
-            //         cast to EventTarget
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::NodeObject) {
-                ((Node *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::WindowObject) {
-                ((Window *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::XMLHttpRequestObject) {
-                ((XMLHttpRequest *)thisValue.asESPointer()->asESObject())->addEventListener(eventTypeName, listener);
-            } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
+            ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->addEventListener(eventTypeName, listener);
         }
         return escargot::ESValue();
     }, escargot::ESString::create("addEventListener"), 2, false);
 
     auto fnRemoveEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        // TODO: Efficient Type check
-        // CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
-        auto ext = thisValue.asESPointer()->asESObject()->extraData();
-        if (!(thisValue.isObject()
-            && (ext == ScriptWrappable::Type::WindowObject
-                || ext == ScriptWrappable::Type::NodeObject
-                || ext == ScriptWrappable::Type::XMLHttpRequestObject))) {
-            THROW_ILLEGAL_INVOCATION()
-        }
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
         if (firstArg.isESString() && secondArg.asESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
             // TODO: Verify valid event type. (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
             auto listener = new EventListener(secondArg);
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // Fixme : Node, Window, WHR
-            //         cast to EventTarget
-            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::NodeObject) {
-                ((Node *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::WindowObject) {
-                ((Window *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
-            } else if (thisValue.asESPointer()->asESObject()->extraData() == ScriptWrappable::Type::XMLHttpRequestObject) {
-                ((XMLHttpRequest *)thisValue.asESPointer()->asESObject())->removeEventListener(eventTypeName, listener);
-            } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
+            ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->removeEventListener(eventTypeName, listener);
         }
         return escargot::ESValue();
     }, escargot::ESString::create("removeEventListener"), 2, false);
@@ -163,7 +126,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     fetchData(this)->m_instance->globalObject()->defineAccessorProperty(escargot::ESString::create("document"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return (escargot::ESObject *)((Window *)ScriptWrappableGlobalObject::fetch())->document();
+        return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptObject();
     }, NULL, false, false, false);
 
     DEFINE_FUNCTION(Node, EventTargetFunction->protoType());
@@ -246,116 +209,116 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeType"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        unsigned short nodeType = ((Node *)originalObj)->nodeType();
+        unsigned short nodeType = ((Node *)originalObj->extraPointerData())->nodeType();
         return escargot::ESValue(nodeType);
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeName"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* nodeName = ((Node *)originalObj)->nodeName();
+        String* nodeName = ((Node *)originalObj->extraPointerData())->nodeName();
         return toJSString(nodeName);
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("baseURI"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* uri = ((Node *)originalObj)->baseURI();
+        String* uri = ((Node *)originalObj->extraPointerData())->baseURI();
         return toJSString(uri);
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ownerDocument"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Document* doc = ((Node *)originalObj)->ownerDocument();
+        Document* doc = ((Node *)originalObj->extraPointerData())->ownerDocument();
         if(doc == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
-        return escargot::ESValue((escargot::ESObject*)doc);
+        return doc->scriptValue();
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("parentNode"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* p = ((Node *)originalObj)->parentNode();
+        Node* p = ((Node *)originalObj->extraPointerData())->parentNode();
         if(p == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
-        return escargot::ESValue((escargot::ESObject*)p);
+        return p->scriptValue();
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("parentElement"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Element* p = ((Node *)originalObj)->parentElement();
+        Element* p = ((Node *)originalObj->extraPointerData())->parentElement();
         if(p == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
-        return escargot::ESValue((escargot::ESObject*)p);
+        return p->scriptValue();
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("childNodes"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        NodeList* list = ((Node *)originalObj)->childNodes();
+        NodeList* list = ((Node *)originalObj->extraPointerData())->childNodes();
         STARFISH_ASSERT(list);
-        return escargot::ESValue((escargot::ESObject*)list);
+        return list->scriptValue();
     }, NULL, false, false, false);
 
     escargot::ESString* nextSiblingString = escargot::ESString::create("nextSibling");
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(nextSiblingString,
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->nextSibling();
+        Node* nd = ((Node *)originalObj->extraPointerData())->nextSibling();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     }, NULL, false, false, false);
 
     escargot::ESString* prevSiblingString = escargot::ESString::create("previousSibling");
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(prevSiblingString,
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->previousSibling();
+        Node* nd = ((Node *)originalObj->extraPointerData())->previousSibling();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();;
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("firstChild"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->firstChild();
+        Node* nd = ((Node *)originalObj->extraPointerData())->firstChild();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     }, NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("lastChild"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->lastChild();
+        Node* nd = ((Node *)originalObj->extraPointerData())->lastChild();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     }, NULL, false, false, false);
 
     auto nodeValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((Node *)originalObj)->nodeValue();
+        String* s = ((Node *)originalObj->extraPointerData())->nodeValue();
         if (s == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
         return toJSString(s);
     };
     auto nodeValueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        ((Node*)originalObj)->setNodeValue(toBrowserString(v));
+        ((Node*)originalObj->extraPointerData())->setNodeValue(toBrowserString(v));
     };
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeValue"), nodeValueGetter, nodeValueSetter, false, false, false);
 
     auto textContentGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((Node *)originalObj)->textContent();
+        String* s = ((Node *)originalObj->extraPointerData())->textContent();
         if (s == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
@@ -363,7 +326,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     };
     auto textContentSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        ((Node *)originalObj)->setTextContent(toBrowserString(v));
+        ((Node *)originalObj->extraPointerData())->setTextContent(toBrowserString(v));
     };
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("textContent"), textContentGetter, textContentSetter, false, false, false);
 
@@ -371,14 +334,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
     CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
             escargot::ESValue arg = instance->currentExecutionContext()->readArgument(0);
             bool deepClone = false;
             if(arg.isBoolean()) {
                 deepClone = arg.asBoolean();
             }
             Node* node = obj->cloneNode(deepClone);
-            return escargot::ESValue((escargot::ESObject*)node);
+            return node->scriptValue();
         }, escargot::ESString::create("cloneNode"), 1, false)
     );
 
@@ -387,8 +350,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
             bool found = obj->isEqualNode(node);
             return escargot::ESValue(found);
         }, escargot::ESString::create("isEqualNode"), 1, false)
@@ -435,8 +398,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            Node* nodeRef = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            Node* nodeRef = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
             unsigned short pos = obj->compareDocumentPosition(nodeRef);
             return escargot::ESValue(pos);
         }, escargot::ESString::create("compareDocumentPosition"), 1, false)
@@ -447,8 +410,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            Node* nodeRef = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            Node* nodeRef = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
             bool found = obj->contains(nodeRef);
             return escargot::ESValue(found);
         }, escargot::ESString::create("contains"), 1, false)
@@ -458,9 +421,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            String* namespaceUri = (String*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            String* namespaceUri = toBrowserString(instance->currentExecutionContext()->readArgument(0).toString());
             String* ns = obj->lookupPrefix(namespaceUri);
             if (ns == nullptr) {
                 return escargot::ESValue(escargot::ESValue::ESNull);
@@ -473,9 +435,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            String* prefix = (String*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            String* prefix = toBrowserString(instance->currentExecutionContext()->readArgument(0).toString());
             String* ns = obj->lookupNamespaceURI(prefix);
             if (ns == nullptr) {
                 return escargot::ESValue(escargot::ESValue::ESNull);
@@ -488,9 +449,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            String* namespaceUri = (String*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            String* namespaceUri = toBrowserString(instance->currentExecutionContext()->readArgument(0).toString());
             bool ns = obj->isDefaultNamespace(namespaceUri);
             return escargot::ESValue(ns);
         }, escargot::ESString::create("isDefaultNamespace"), 1, false)
@@ -501,9 +461,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
         Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-        Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+        Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
         obj->appendChild(child);
-        return escargot::ESValue((escargot::ESObject *)child);
+        return child->scriptValue();
     }, escargot::ESString::create("appendChild"), 1, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("appendChild"), false, false, false, appendChildFunction);
@@ -514,9 +474,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
             Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
+            Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
             Node* n = obj->removeChild(child);
-            return escargot::ESValue((escargot::ESObject *)n);
+            return n->scriptValue();
         }, escargot::ESString::create("removeChild"), 1, false)
     );
 
@@ -525,12 +485,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
-            Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject();
+            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(1), ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+            Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject()->extraPointerData();
             Node* n = obj->replaceChild(node, child);
-            return escargot::ESValue((escargot::ESObject *)n);
-        }, escargot::ESString::create("replaceChild"), 1, false)
+            return n->scriptValue();
+        }, escargot::ESString::create("replaceChild"), 2, false)
     );
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("insertBefore"), false, false, false,
@@ -539,16 +500,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
                 CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
                 CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-                Node* obj = (Node*)thisValue.asESPointer()->asESObject();
-                Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject();
-                Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject();
+                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(1), ScriptWrappable::Type::NodeObject);
+                Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+                Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+                Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject()->extraPointerData();
                 Node* n = obj->insertBefore(node, child);
-                return escargot::ESValue((escargot::ESObject *)n);
-            } catch (escargot::ESObject* e) {
-                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(e));
+                return n->scriptValue();
+            } catch (DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
-        }, escargot::ESString::create("insertBefore"), 1, false)
+        }, escargot::ESString::create("insertBefore"), 2, false)
     );
 
     DEFINE_FUNCTION(Element, NodeFunction->protoType());
@@ -558,39 +520,39 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     auto firstElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->firstElementChild();
+        Node* nd = ((Node *)originalObj->extraPointerData())->firstElementChild();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     };
 
     auto lastElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->lastElementChild();
+        Node* nd = ((Node *)originalObj->extraPointerData())->lastElementChild();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     };
 
     auto nextElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->nextElementSibling();
+        Node* nd = ((Node *)originalObj->extraPointerData())->nextElementSibling();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     };
 
     auto previousElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj)->previousElementSibling();
+        Node* nd = ((Node *)originalObj->extraPointerData())->previousElementSibling();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     };
 
     auto childElementCountGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESValue(((Node *)originalObj)->childElementCount());
+        return escargot::ESValue(((Node *)originalObj->extraPointerData())->childElementCount());
     };
 
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("firstElementChild"),
@@ -607,9 +569,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("localName"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)originalObj->extraPointerData());
         if (nd->isElement()) {
-            return escargot::ESString::create(nd->asElement()->localName()->utf8Data());
+            return toJSString(nd->asElement()->localName());
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
@@ -618,10 +580,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("tagName"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)originalObj->extraPointerData());
         if (nd->isElement()) {
             // FIXME(JMP): We have to fix this to follow DOM spec after implementing Namespace
-            return escargot::ESString::create(nd->asElement()->localName()->toUpper()->utf8Data());
+            return toJSString(nd->asElement()->localName());
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
@@ -630,15 +592,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("id"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)originalObj->extraPointerData());
         if (nd->isElement()) {
-            return escargot::ESString::create(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_id)->utf8Data());
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_id));
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)originalObj->extraPointerData());
         if (nd->isElement()) {
             nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_id, toBrowserString(v));
         } else {
@@ -649,15 +611,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("className"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)originalObj->extraPointerData());
         if (nd->isElement()) {
-            return escargot::ESString::create(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_class)->utf8Data());
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_class));
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)originalObj->extraPointerData());
         if (nd->isElement()) {
             nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_class, toBrowserString(v));
         } else {
@@ -667,35 +629,35 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     auto childrenGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        HTMLCollection* nd = ((Node *)originalObj)->children();
+        HTMLCollection* nd = ((Node *)originalObj->extraPointerData())->children();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESUndefined);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     };
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("children"), childrenGetter, NULL, false, false, false);
 
     auto classListGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        DOMTokenList* nd = ((Node *)originalObj)->classList();
+        DOMTokenList* nd = ((Node *)originalObj->extraPointerData())->classList();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESUndefined);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     };
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("classList"), classListGetter, NULL, false, false, false);
 
     auto attributesGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        NamedNodeMap* nd = ((Node *)originalObj)->attributes();
+        NamedNodeMap* nd = ((Node *)originalObj->extraPointerData())->attributes();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESUndefined);
-        return escargot::ESValue((escargot::ESObject *)nd);
+        return nd->scriptValue();
     };
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("attributes"), attributesGetter, NULL, false, false, false);
 
     escargot::ESFunctionObject* removeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
         obj->remove();
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("remove"), 0, false);
@@ -703,14 +665,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     auto styleGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        if(!((Node*)originalObj)->isElement()) {
+        if(!((Node*)originalObj->extraPointerData())->isElement()) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
         CSSStyleDeclaration* s = ((Element *)originalObj)->inlineStyle();
         if(s == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         } else {
-            return escargot::ESValue((escargot::ESObject *)s);
+            return s->scriptValue();
         }
     };
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("style"), styleGetter, NULL, false, false, false);
@@ -726,21 +688,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("name"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((DocumentType *)originalObj)->nodeName();
+        String* s = ((Node *)originalObj->extraPointerData())->nodeName();
         return toJSString(s);
     }, NULL, false, false, false);
 
     DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("publicId"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((DocumentType *)originalObj)->publicId();
+        Node* nd = ((Node *)originalObj->extraPointerData());
+        if(!nd->isDocumentType()) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        String* s = nd->asDocumentType()->publicId();
         return toJSString(s);
     }, NULL, false, false, false);
 
     DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("systemId"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((DocumentType *)originalObj)->systemId();
+        Node* nd = ((Node *)originalObj->extraPointerData());
+        if(!nd->isDocumentType()) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        String* s = nd->asDocumentType()->publicId();
         return toJSString(s);
     }, NULL, false, false, false);
 
@@ -752,7 +722,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("body"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isDocument()) {
             Document* document = nd->asDocument();
             Node* body = document->childMatchedBy(document, [](Node* nd) -> bool {
@@ -764,7 +734,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (body) {
                 // NOTE. this casting is not necessary. only needed for check its type for debug.
                 HTMLBodyElement* e = body->asElement()->asHTMLElement()->asHTMLBodyElement();
-                return escargot::ESValue((escargot::ESObject *)e);
+                return e->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION();
@@ -830,16 +800,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* getElementByIdFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
-                Element* elem = doc->getElementById(String::fromUTF8(argStr->utf8Data()));
+                Element* elem = doc->getElementById(toBrowserString(argStr));
                 if (elem != nullptr)
-                    return escargot::ESValue((escargot::ESObject *)elem);
+                    return elem->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -851,12 +821,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* getDoctypeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         if (obj->isDocument()) {
             Node* docTypeNode = obj->firstChild();
             if(docTypeNode->isDocumentType()){
-                return escargot::ESValue((escargot::ESObject *)docTypeNode);
+                return docTypeNode->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -869,7 +839,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         try{
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
             if (obj->isDocument()) {
                 Document* doc = obj->asDocument();
@@ -879,14 +849,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                     QualifiedName name = QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data());
                     Element* elem = doc->createElement(name);
                     if (elem != nullptr)
-                        return escargot::ESValue((escargot::ESObject *)elem);
+                        return elem->scriptValue();
                 }
             } else {
                 THROW_ILLEGAL_INVOCATION()
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
-        }catch(escargot::ESObject* e){
-            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(e));
+        } catch(DOMException* e){
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }, escargot::ESString::create("createElement"), 1, false);
@@ -895,16 +865,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* createTextNodeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
-                Text* elem = doc->createTextNode(String::fromUTF8(argStr->utf8Data()));
+                Text* elem = doc->createTextNode(toBrowserString(argStr));
                 if (elem != nullptr)
-                    return escargot::ESValue((escargot::ESObject *)elem);
+                    return elem->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -916,16 +886,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* createCommentNodeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
-                Comment* elem = doc->createComment(String::fromUTF8(argStr->utf8Data()));
+                Comment* elem = doc->createComment(toBrowserString(argStr));
                 if (elem != nullptr)
-                    return escargot::ESValue((escargot::ESObject *)elem);
+                    return elem->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -937,16 +907,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* getElementsByTagNameFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
-                HTMLCollection* result = doc->getElementsByTagName(String::fromUTF8(argStr->utf8Data()));
+                HTMLCollection* result = doc->getElementsByTagName(toBrowserString(argStr));
                 if (result != nullptr)
-                    return escargot::ESValue((escargot::ESObject *)result);
+                    return result->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -958,16 +928,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject*  getElementsByClassNameFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
-                HTMLCollection* result = doc->getElementsByClassName(String::fromUTF8(argStr->utf8Data()));
+                HTMLCollection* result = doc->getElementsByClassName(toBrowserString(argStr));
                 if (result != nullptr)
-                    return escargot::ESValue((escargot::ESObject *)result);
+                    return result->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -977,10 +947,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByClassName"), false, false, false, getElementsByClassNameFunction);
 
     escargot::ESFunctionObject*   createAttributeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        try{
+        try {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
             if (obj->isDocument()) {
                 Document* doc = obj->asDocument();
@@ -989,14 +959,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                     escargot::ESString* argStr = argValue.asESString();
                     Attr* result = doc->createAttribute(QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data()));
                     if (result != nullptr)
-                        return escargot::ESValue((escargot::ESObject *)result);
+                        return result->scriptValue();
                 }
             } else {
                 THROW_ILLEGAL_INVOCATION()
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
-        }catch(escargot::ESObject* e){
-            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(e));
+        } catch(DOMException* e){
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }, escargot::ESString::create("createAttribute"), 1, false);
@@ -1016,7 +986,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     CharacterDataFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("data"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isCharacterData()) {
             return toJSString(nd->asCharacterData()->data());
         }
@@ -1024,7 +994,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         RELEASE_ASSERT_NOT_REACHED();
     }, [] (::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isCharacterData()) {
             nd->asCharacterData()->setData(toBrowserString(value));
             return;
@@ -1047,7 +1017,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     TextFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("wholeText"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* text = ((Text *)originalObj)->wholeText();
+        Node* nd = ((Node *)originalObj->extraPointerData());
+        if (!nd->isText()) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        String* text = (nd->asText())->wholeText();
         return toJSString(text);
     }, NULL, false, false, false);
 
@@ -1060,7 +1034,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     HTMLElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onclick"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
             return element->onclick();
@@ -1069,7 +1043,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
             if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
@@ -1107,7 +1081,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     HTMLImageElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(srcString,
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
@@ -1119,7 +1093,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         RELEASE_ASSERT_NOT_REACHED();
     }, [] (::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
@@ -1140,7 +1114,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* audioPlayFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* nd = (Node*)thisValue.asESPointer()->asESObject();
+        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
@@ -1156,7 +1130,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* audioPauseFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* nd = (Node*)thisValue.asESPointer()->asESObject();
+        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
@@ -1172,7 +1146,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("paused"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
@@ -1193,7 +1167,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::HTMLCollectionObject);
 
-        uint32_t len = ((HTMLCollection *)originalObj)->length();
+        uint32_t len = ((HTMLCollection *)originalObj->extraPointerData())->length();
         return escargot::ESValue(len);
     }, NULL, false, false, false);
 
@@ -1203,9 +1177,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isUInt32()) {
-            Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject())->item(argValue.asUInt32());
+            Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
             if (elem != nullptr)
-                return escargot::ESValue((escargot::ESObject *)elem);
+                return elem->scriptValue();
         } else {
             THROW_ILLEGAL_INVOCATION()
         }
@@ -1219,9 +1193,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
-            Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject())->namedItem(String::fromUTF8(argValue.asESString()->utf8Data()));
+            Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject()->extraPointerData())->namedItem(toBrowserString(argValue.asESString()));
             if (elem != nullptr)
-                return escargot::ESValue((escargot::ESObject *)elem);
+                return elem->scriptValue();
         } else {
             THROW_ILLEGAL_INVOCATION()
         }
@@ -1241,7 +1215,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMTokenListObject);
 
-        uint32_t len = ((DOMTokenList *)originalObj)->length();
+        uint32_t len = ((DOMTokenList *)originalObj->extraPointerData())->length();
         return escargot::ESValue(len);
     }, NULL, false, false, false);
 
@@ -1251,9 +1225,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isUInt32()) {
-            String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->item(argValue.asUInt32());
+            String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
             if (elem != nullptr)
-                return escargot::ESString::create(elem->utf8Data());
+                return toJSString(elem);
         } else {
             THROW_ILLEGAL_INVOCATION()
         }
@@ -1267,7 +1241,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
-            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->contains(String::fromUTF8(argValue.asESString()->utf8Data()));
+            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argValue.asESString()));
             return escargot::ESValue(res);
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -1284,14 +1258,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         for (int i = 0; i < argCount; i++) {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
             if (argValue.isESString()) {
-                String* aa = String::fromUTF8(argValue.asESString()->utf8Data());
+                String* aa = toBrowserString(argValue.asESString());
                 tokens.push_back(aa);
             } else {
                 THROW_ILLEGAL_INVOCATION()
             }
         }
         if (argCount > 0)
-            ((DOMTokenList*) thisValue.asESPointer()->asESObject())->add(&tokens);
+            ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->add(&tokens);
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("add"), 1, false);
     DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("add"), false, false, false, domTokenListAddFunction);
@@ -1305,14 +1279,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         for (int i = 0; i < argCount; i++) {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
             if (argValue.isESString()) {
-                String* aa = String::fromUTF8(argValue.asESString()->utf8Data());
+                String* aa = toBrowserString(argValue.asESString());
                 tokens.push_back(aa);
             } else {
                 THROW_ILLEGAL_INVOCATION()
             }
         }
         if (argCount > 0)
-            ((DOMTokenList*) thisValue.asESPointer()->asESObject())->remove(&tokens);
+            ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("remove"), 1, false);
     DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, domTokenListRemoveFunction);
@@ -1329,10 +1303,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (argCount > 0 && argValue.isESString()) {
             bool didAdd;
             if (argCount == 1) {
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->toggle(String::fromUTF8(argValue.asESString()->utf8Data()), false, false);
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), false, false);
             } else {
                 ASSERT(forceValue.isBoolean());
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->toggle(String::fromUTF8(argValue.asESString()->utf8Data()), true, forceValue.asBoolean());
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), true, forceValue.asBoolean());
               }
             return escargot::ESValue(didAdd);
         } else {
@@ -1351,7 +1325,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
 
-        uint32_t len = ((DOMTokenList *)originalObj)->length();
+        uint32_t len = ((DOMTokenList *)originalObj->extraPointerData())->length();
         return escargot::ESValue(len);
     }, NULL, false, false, false);
 
@@ -1361,9 +1335,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isUInt32()) {
-            String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->item(argValue.asUInt32());
+            String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
             if (elem != nullptr)
-                return escargot::ESString::create(elem->utf8Data());
+                return toJSString(elem);
         } else {
             THROW_ILLEGAL_INVOCATION()
         }
@@ -1377,7 +1351,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
-            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->contains(String::fromUTF8(argValue.asESString()->utf8Data()));
+            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argValue.asESString()));
             return escargot::ESValue(res);
         } else {
             THROW_ILLEGAL_INVOCATION()
@@ -1394,7 +1368,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         for (int i = 0; i < argCount; i++) {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
             if (argValue.isESString()) {
-                String* aa = String::fromUTF8(argValue.asESString()->utf8Data());
+                String* aa = toBrowserString(argValue.asESString());
                 tokens.push_back(aa);
             } else {
                 THROW_ILLEGAL_INVOCATION()
@@ -1415,14 +1389,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         for (int i = 0; i < argCount; i++) {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
             if (argValue.isESString()) {
-                String* aa = String::fromUTF8(argValue.asESString()->utf8Data());
+                String* aa = toBrowserString(argValue.asESString());
                 tokens.push_back(aa);
             } else {
                 THROW_ILLEGAL_INVOCATION()
             }
         }
         if (argCount > 0)
-            ((DOMTokenList*) thisValue.asESPointer()->asESObject())->remove(&tokens);
+            ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("remove"), 1, false);
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, domSettableTokenListRemoveFunction);
@@ -1439,10 +1413,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (argCount > 0 && argValue.isESString()) {
             bool didAdd;
             if (argCount == 1) {
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->toggle(String::fromUTF8(argValue.asESString()->utf8Data()), false, false);
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), false, false);
             } else {
                 ASSERT(forceValue.isBoolean());
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject())->toggle(String::fromUTF8(argValue.asESString()->utf8Data()), true, forceValue.asBoolean());
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), true, forceValue.asBoolean());
               }
             return escargot::ESValue(didAdd);
         } else {
@@ -1455,16 +1429,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     auto DOMSettableTokenListValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
 
-        String* value = ((DOMSettableTokenList*) originalObj)->value();
+        String* value = ((DOMSettableTokenList*) originalObj->extraPointerData())->value();
         if (value != nullptr)
-            return escargot::ESString::create(value->utf8Data());
+            return toJSString(value);
         return escargot::ESValue(escargot::ESValue::ESNull);
     };
 
     auto DOMSettableTokenListValueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
 
-        ((DOMSettableTokenList*) originalObj)->setValue(toBrowserString(v));
+        ((DOMSettableTokenList*) originalObj->extraPointerData())->setValue(toBrowserString(v));
     };
 
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("value"), DOMSettableTokenListValueGetter, DOMSettableTokenListValueSetter, false, false, false);
@@ -1478,7 +1452,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NamedNodeMapObject);
 
-        uint32_t len = ((NamedNodeMap *)originalObj)->length();
+        uint32_t len = ((NamedNodeMap *)originalObj->extraPointerData())->length();
         return escargot::ESValue(len);
     }, NULL, false, false, false);
 
@@ -1488,9 +1462,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
        if (argValue.isUInt32()) {
-           Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject())->item(argValue.asUInt32());
+           Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
            if (elem != nullptr)
-               return escargot::ESValue((escargot::ESObject *)elem);
+               return elem->scriptValue();
        } else {
            THROW_ILLEGAL_INVOCATION()
        }
@@ -1504,10 +1478,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
        if (argValue.isESString()) {
-           Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject())->getNamedItem(
+           Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(
                    QualifiedName::fromString(((NamedNodeMap*) thisValue.asESPointer()->asESObject())->element()->document()->window()->starFish(), argValue.asESString()->utf8Data()));
            if (elem != nullptr)
-               return escargot::ESValue((escargot::ESObject *)elem);
+               return elem->scriptValue();
        } else {
            THROW_ILLEGAL_INVOCATION()
        }
@@ -1522,11 +1496,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
        CHECK_TYPEOF(argValue, ScriptWrappable::Type::AttrObject);
 
-       Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject())->getNamedItem(((Attr*) argValue.asESPointer()->asESObject())->name());
-       Attr* toReturn = new Attr(((NamedNodeMap*) thisValue.asESPointer()->asESObject())->striptBindingInstance(), old->name(), old->value());
-       ((NamedNodeMap*) thisValue.asESPointer()->asESObject())->setNamedItem((Attr*) argValue.asESPointer()->asESObject());
+       Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(((Attr*) argValue.asESPointer()->asESObject())->name());
+       Attr* toReturn = new Attr(((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), old->name(), old->value());
+       ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->setNamedItem((Attr*) argValue.asESPointer()->asESObject());
        if (toReturn != nullptr)
-           return escargot::ESValue((escargot::ESObject *)toReturn);
+           return toReturn->scriptValue();
        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("setNamedItem"), 1, false);
     NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setNamedItem"), false, false, false, NamedNodeMapSetNamedItemFunction);
@@ -1539,45 +1513,45 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
        if (argValue.isESString()) {
            QualifiedName name = QualifiedName::fromString(((NamedNodeMap*) thisValue.asESPointer()->asESObject())->element()->document()->window()->starFish(),
                    argValue.asESString()->utf8Data());
-           Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject())->getNamedItem(name);
-           Attr* toReturn = new Attr(((NamedNodeMap*) thisValue.asESPointer()->asESObject())->striptBindingInstance(), name, old->value());
-           ((NamedNodeMap*) thisValue.asESPointer()->asESObject())->removeNamedItem(name);
+           Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(name);
+           Attr* toReturn = new Attr(((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), name, old->value());
+           ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->removeNamedItem(name);
            if (toReturn != nullptr)
-               return escargot::ESValue((escargot::ESObject *)toReturn);
+               return toReturn->scriptValue();
        } else
            THROW_ILLEGAL_INVOCATION()
        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("removeNamedItem"), 1, false);
     NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeNamedItem"), false, false, false, NamedNodeMapRemoveNamedItemFunction);
 
+    /* 4.8.2 Interface Attr */
+    // FIXME Attr should inherit interface Node
     DEFINE_FUNCTION(Attr, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_attr = AttrFunction;
-
-    /* 4.8.2 Interface Attr */
 
     AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("name"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
 
-        String* n = ((Attr*) originalObj)->name();
+        String* n = ((Attr*) originalObj->extraPointerData())->name();
         if (n != nullptr)
-            return escargot::ESString::create(n->utf8Data());
+            return toJSString(n);
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, NULL, false, false, false);
 
     auto valueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
 
-        String* value = ((Attr*) originalObj)->value();
+        String* value = ((Attr*) originalObj->extraPointerData())->value();
         if (value != nullptr)
-            return escargot::ESString::create(value->utf8Data());
+            return toJSString(value);
         return escargot::ESValue(escargot::ESValue::ESNull);
     };
 
     auto valueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
 
-        ((Attr*) originalObj)->setValue(toBrowserString(v));
+        ((Attr*) originalObj->extraPointerData())->setValue(toBrowserString(v));
         // FIXME(JMP): Actually this function have to return old Attr's value but we have to modify 'typedef void (*ESNativeSetter)(...)' in escargot/src/runtime/ESValue.h
         // Because this need to many changes, we do the modification latter
     };
@@ -1590,9 +1564,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
 
-        Element* elem = ((Attr*) originalObj)->ownerElement();
+        Element* elem = ((Attr*) originalObj->extraPointerData())->ownerElement();
         if (elem != nullptr)
-            return escargot::ESValue((escargot::ESObject *)elem);
+            return elem->scriptValue();
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, NULL, false, false, false);
 
@@ -1689,15 +1663,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue { \
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject); \
  \
-        String* c = ((CSSStyleDeclaration*) originalObj)->name(); \
+        String* c = ((CSSStyleDeclaration*) originalObj->extraPointerData())->name(); \
         STARFISH_ASSERT(c); \
-        return escargot::ESString::create(c->utf8Data()); \
+        return toJSString(c); \
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) { \
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject); \
         if (v.isESString()) { \
-            ((CSSStyleDeclaration*) originalObj)->set##name(v.asESString()->utf8Data()); \
+            ((CSSStyleDeclaration*) originalObj->extraPointerData())->set##name(v.asESString()->utf8Data()); \
         } else if (v.isNumber()) { \
-            ((CSSStyleDeclaration*) originalObj)->set##name(std::to_string(v.toNumber()).c_str()); \
+            ((CSSStyleDeclaration*) originalObj->extraPointerData())->set##name(std::to_string(v.toNumber()).c_str()); \
         } \
     }, false, false, false);
 
@@ -1710,16 +1684,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject);
 
-        String* c = ((CSSStyleDeclaration*) originalObj)->Opacity();
+        String* c = ((CSSStyleDeclaration*) originalObj->extraPointerData())->Opacity();
         if (c != nullptr)
-            return escargot::ESString::create(c->utf8Data());
+            return toJSString(c);
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject);
         if (v.isNumber()) {
-            ((CSSStyleDeclaration*)originalObj)->setOpacity(std::to_string(v.toNumber()).c_str());
+            ((CSSStyleDeclaration*)originalObj->extraPointerData())->setOpacity(std::to_string(v.toNumber()).c_str());
         }else if(v.isESString()){
-            ((CSSStyleDeclaration*)originalObj)->setOpacity(v.asESString()->utf8Data());
+            ((CSSStyleDeclaration*)originalObj->extraPointerData())->setOpacity(v.asESString()->utf8Data());
         }
     }, false, false, false);
 
@@ -1728,9 +1702,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* XMLHttpRequest */
     escargot::ESFunctionObject* xhrElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
-        {
-            return new XMLHttpRequest();
-        }, escargot::ESString::create("XMLHttpRequest"), 0, true);
+    {
+        auto xhr = new XMLHttpRequest();
+        xhr->initScriptWrappable(xhr);
+        return xhr->scriptValue();
+    }, escargot::ESString::create("XMLHttpRequest"), 0, true);
     xhrElementFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(EventTargetFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
@@ -1740,14 +1716,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        String* c = ((XMLHttpRequest*) originalObj)->getResponseTypeStr();
+        String* c = ((XMLHttpRequest*) originalObj->extraPointerData())->getResponseTypeStr();
         if (c != nullptr)
-            return escargot::ESString::create(c->utf8Data());
+            return toJSString(c);
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isESString()){
-            ((XMLHttpRequest*)originalObj)->setResponseType(v.asESString()->utf8Data());
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setResponseType(v.asESString()->utf8Data());
         }
     }, false, false, false);
 
@@ -1755,16 +1731,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("loadstart"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("loadstart"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1772,16 +1748,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("progress"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("progress"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "progress");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1789,16 +1765,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("abort"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("abort"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "abort");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1806,16 +1782,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("error"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("error"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "error");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1823,16 +1799,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("load"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("load"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "load");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1840,16 +1816,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("timeout"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("timeout"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "timeout");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1857,16 +1833,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("loadend"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("loadend"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadend");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1874,36 +1850,36 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
 
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj)->getHandler(String::fromUTF8("readystatechange"),((XMLHttpRequest*)originalObj)->starfishInstance());
+        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("readystatechange"),((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isObject()){
-            auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "readystatechange");
-            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("timeout"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        uint32_t c = ((XMLHttpRequest*) originalObj)->getTimeout();
+        uint32_t c = ((XMLHttpRequest*) originalObj->extraPointerData())->getTimeout();
             return escargot::ESValue(c);;
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
         if(v.isNumber()){
-            ((XMLHttpRequest*)originalObj)->setTimeout(v.toInt32());
+            ((XMLHttpRequest*)originalObj->extraPointerData())->setTimeout(v.toInt32());
         }
     }, false, false, false);
 
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("readyState"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        int c = ((XMLHttpRequest*) originalObj)->getReadyState();
+        int c = ((XMLHttpRequest*) originalObj->extraPointerData())->getReadyState();
             return escargot::ESValue(c);
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, NULL, false, false, false);
@@ -1912,8 +1888,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();
-                return escargot::ESString::create(xhr->getAllResponseHeadersStr()->utf8Data());
+                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
+                return toJSString(xhr->getAllResponseHeadersStr());
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
@@ -1924,7 +1900,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();
+                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
                 xhr->setOpen(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(),String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()));
             }
         }
@@ -1936,12 +1912,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();
+                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
 
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
                 if (argValue.isESString()) {
                     escargot::ESString* argStr = argValue.asESString();
-                    xhr->send(String::fromUTF8(argStr->utf8Data()));
+                    xhr->send(toBrowserString(argStr));
                 }else{
                     xhr->send(String::emptyString);
                 }
@@ -1957,7 +1933,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                ((XMLHttpRequest*)v.asESPointer()->asESObject())->abort();
+                ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->abort();
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
@@ -1972,7 +1948,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     fetchData(this)->m_instance->globalObject()->defineAccessorProperty(escargot::ESString::create("URL"),
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return (escargot::ESObject *)((Window *)ScriptWrappableGlobalObject::fetch())->url();
+        return ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->url()->scriptValue();
     }, NULL, false, false, false);
 
     /* DOM Exception */
@@ -1983,7 +1959,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(fetchData(this)->m_instance->strings().name,
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
-            DOMException* exception = (DOMException*)originalObj;
+            DOMException* exception = (DOMException*)originalObj->extraPointerData();
             return escargot::ESString::create(exception->name());
         } else {
             return escargot::ESValue();
@@ -1993,7 +1969,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(fetchData(this)->m_instance->strings().message,
             [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
-            DOMException* exception = (DOMException*)originalObj;
+            DOMException* exception = (DOMException*)originalObj->extraPointerData();
             return toJSString(exception->message());
         } else {
             return escargot::ESValue();
@@ -2009,7 +1985,7 @@ void ScriptBindingInstance::evaluate(String* str)
 {
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) == 0) {
-        escargot::ESValue ret = fetchData(this)->m_instance->evaluate(escargot::ESString::create(str->utf8Data()));
+        escargot::ESValue ret = fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
         fetchData(this)->m_instance->printValue(ret);
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
     } else {

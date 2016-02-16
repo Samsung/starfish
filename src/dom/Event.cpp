@@ -4,6 +4,7 @@
 namespace StarFish {
 
 Event::Event(ScriptBindingInstance* instance)
+    : ScriptWrappable(this)
 {
     initScriptWrappable(this, instance);
 }

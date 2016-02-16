@@ -10,7 +10,8 @@ class Element;
 class HTMLCollection : public ScriptWrappable {
 public:
     HTMLCollection(ScriptBindingInstance* instance, Node* root, std::function<bool (Node*)> filter)
-    : m_root(root), m_filter(filter) {
+        : ScriptWrappable(this), m_root(root), m_filter(filter)
+    {
         initScriptWrappable(this, instance);
     }
     unsigned long length() const;

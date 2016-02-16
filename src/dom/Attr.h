@@ -9,19 +9,19 @@ class Element;
 class Attr : public ScriptWrappable {
 public:
     Attr(ScriptBindingInstance* instance, Element* element, QualifiedName name)
-        : m_element(element), m_name(name), m_standAloneValue(nullptr)
+        : ScriptWrappable(this), m_element(element), m_name(name), m_standAloneValue(nullptr)
     {
         initScriptWrappable(this, instance);
     }
 
     Attr(ScriptBindingInstance* instance, QualifiedName name)
-        : m_element(nullptr), m_name(name), m_standAloneValue(nullptr)
+        : ScriptWrappable(this), m_element(nullptr), m_name(name), m_standAloneValue(nullptr)
     {
         initScriptWrappable(this, instance);
     }
 
     Attr(ScriptBindingInstance* instance, QualifiedName name, String* value)
-        : m_element(nullptr), m_name(name), m_standAloneValue(value)
+        : ScriptWrappable(this), m_element(nullptr), m_name(name), m_standAloneValue(value)
     {
         initScriptWrappable(this, instance);
     }

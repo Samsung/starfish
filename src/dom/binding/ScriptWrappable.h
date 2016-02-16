@@ -5,7 +5,6 @@
 
 namespace StarFish {
 
-template <typename T>
 class EventTarget;
 class Window;
 class Node;
@@ -46,51 +45,48 @@ class DOMException;
 class ScriptBindingInstance;
 
 typedef escargot::ESValue ScriptValue;
+typedef escargot::ESObject* ScriptObject;
 typedef escargot::ESFunctionObject* ScriptFunction;
 #define ScriptValueUndefined escargot::ESValue()
 #define ScriptValueNull escargot::ESValue(escargot::ESValue::ESNull)
 
-class ScriptWrappable : public escargot::ESObject {
+class ScriptWrappable : public gc {
 public:
     enum Type {
-        None,
-        WindowObject,
-        NodeObject,
-        EventObject,
-        ElementObject,
-        HTMLCollectionObject,
-        NodeListObject,
-        DOMTokenListObject,
-        DOMSettableTokenListObject,
-        NamedNodeMapObject,
-        AttrObject,
-        CSSStyleDeclarationObject,
-        CSSStyleRuleObject,
-        XMLHttpRequestObject,
-        BlobObject,
-        URLObject,
-        DOMExceptionObject,
+        None = 0,
+        EventTargetObject = 1 << 0,
+        WindowObject = 1 << 1 | EventTargetObject,
+        NodeObject = 1 << 2 | EventTargetObject,
+        EventObject = 1 << 3,
+        HTMLCollectionObject = 1 << 4,
+        NodeListObject = 1 << 5,
+        DOMTokenListObject = 1 << 6,
+        DOMSettableTokenListObject = 1 << 7,
+        NamedNodeMapObject = 1 << 8,
+        AttrObject = 1 << 9,
+        CSSStyleDeclarationObject = 1 << 10,
+        CSSStyleRuleObject = 1 << 11,
+        XMLHttpRequestObject = 1 << 12 | EventTargetObject,
+        BlobObject = 1 << 13,
+        URLObject = 1 << 14,
+        DOMExceptionObject = 1 << 15,
 #ifdef TIZEN_DEVICE_API
-        NativePluginManagerObject,
+        NativePluginManagerObject = 1 << 16,
 #endif
     };
-    ScriptWrappable();
-
-    inline void* operator new(size_t size)
-    {
-        return GC_MALLOC(size);
-    }
-
-    inline void operator delete(void* obj)
-    {
-        GC_free(obj);
-    }
+    ScriptWrappable(void* extraPointerData);
 
     ScriptValue scriptValue()
     {
-        return this;
+        return m_object;
     }
 
+    ScriptObject scriptObject()
+    {
+        return m_object;
+    }
+
+    void initScriptWrappable(Window* ptr);
     void initScriptWrappable(Node* ptr);
     void initScriptWrappable(Node* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DocumentType* ptr);
@@ -132,18 +128,7 @@ public:
     bool hasProperty(String* name);
 
 protected:
-};
-
-class ScriptWrappableGlobalObject {
-public:
-    ScriptWrappableGlobalObject();
-    void initScriptWrappableWindow(Window* window);
-    static ScriptWrappableGlobalObject* fetch();
-
-    // deprecated
-    void callFunction(String* name);
-protected:
-    void* m_object;
+    escargot::ESObject* m_object;
 };
 
 ScriptValue createScriptString(String* str);

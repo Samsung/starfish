@@ -10,20 +10,23 @@
 
 namespace StarFish {
 
-class XMLHttpRequestEventTarget : public EventTarget<ScriptWrappable>{
+class XMLHttpRequestEventTarget : public EventTarget {
 
 public:
     XMLHttpRequestEventTarget()
-    {}
+        : EventTarget()
+    { }
 
-    bool setHandler(QualifiedName& eventType,const escargot::ESValue& f){
+    bool setHandler(QualifiedName& eventType,const escargot::ESValue& f)
+    {
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
         return false;
     }
 
 
-    escargot::ESValue getHandler(String* keyName,StarFish* starfish){
+    escargot::ESValue getHandler(String* keyName,StarFish* starfish)
+    {
         auto eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
         EventListener* l = getAttributeEventListener(eventType);
         if (!l) return escargot::ESValue::ESNull;
@@ -32,7 +35,7 @@ public:
 };
 
 
-class XMLHttpRequest : public XMLHttpRequestEventTarget{
+class XMLHttpRequest : public XMLHttpRequestEventTarget {
 public:
     enum METHOD_TYPE{
         POST_METHOD,
@@ -79,41 +82,49 @@ public:
 
     XMLHttpRequest();
 
-    RESPONSE_TYPE getResponseType(){
+    RESPONSE_TYPE getResponseType()
+    {
         return m_response_type;
     }
 
     String* getResponseTypeStr();
-    int getReadyState(){
+    int getReadyState()
+    {
         return m_ready_state;
     }
 
-    void setTimeout(uint32_t timeout){
+    void setTimeout(uint32_t timeout)
+    {
         m_timeout = timeout;
     }
-    uint32_t getTimeout(){
+    uint32_t getTimeout()
+    {
         return m_timeout;
     }
     void setResponseType(const char* responseType);
     void setOpen(const char* method,String* url);
     void send(String* body);
-    void callEventHandler(String* eventName,bool isMainThread,uint32_t loaded,uint32_t total);
+    void callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total);
 
-    void setResponseHeader(String* responseHeader){
+    void setResponseHeader(String* responseHeader)
+    {
         m_response_header = responseHeader;
     }
 
-    String* getAllResponseHeadersStr(){
+    String* getAllResponseHeadersStr()
+    {
         if(m_response_header!=nullptr)
             return m_response_header;
         return String::emptyString;
     }
 
-    void abort(){
+    void abort()
+    {
         m_abort_flag=true;
     }
 
-    bool checkAbort(){
+    bool checkAbort()
+    {
         if(m_abort_flag){
             m_abort_flag=false;
             return true;
@@ -121,19 +132,23 @@ public:
         return false;
     }
 
-    void setStarfishInstance(StarFish* instance){
+    void setStarfishInstance(StarFish* instance)
+    {
         m_starfish = instance;
     }
 
-    StarFish* starfishInstance(){
+    StarFish* starfishInstance()
+    {
         return m_starfish;
     }
 
-    void setScriptBindingInstance(ScriptBindingInstance* instance){
+    void setScriptBindingInstance(ScriptBindingInstance* instance)
+    {
         m_bindingInstance = instance;
     }
 
-    ScriptBindingInstance* striptBindingInstance(){
+    ScriptBindingInstance* striptBindingInstance()
+    {
         return m_bindingInstance;
     }
 

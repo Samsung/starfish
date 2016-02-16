@@ -33,29 +33,20 @@ public:
     NamedNodeMap* m_namedNodeMap;
 };
 
-class Node : public EventTarget<ScriptWrappable> {
+class Node : public EventTarget {
 protected:
     Node(Document* document, ScriptBindingInstance* instance)
+        : EventTarget()
     {
         m_document = document;
         initScriptWrappable(this, instance);
-        m_nextSibling = nullptr;
-        m_previousSibling = nullptr;
-        m_parentNode = nullptr;
-        m_firstChild = nullptr;
-        m_lastChild = nullptr;
-        m_state = NodeStateNormal;
-        m_needsStyleRecalc = true;
-        m_style = nullptr;
-        m_frame = nullptr;
-        m_baseUri = String::emptyString; // need to set by the parser
-        m_rareNodeMembers = nullptr;
+        initNode();
     }
 
-    Node(Document* document)
+    Node(Document* document);
+
+    void initNode()
     {
-        m_document = document;
-        initScriptWrappable(this);
         m_nextSibling = nullptr;
         m_previousSibling = nullptr;
         m_parentNode = nullptr;
@@ -243,10 +234,8 @@ public:
         STARFISH_ASSERT(childToRemove);
         STARFISH_ASSERT(childToRemove->parentNode() == this);
 
-        setNeedsStyleRecalc();
         insertBefore(child, childToRemove);
         Node* n = removeChild(childToRemove);
-        setNeedsStyleRecalc();
         return n;
     }
 

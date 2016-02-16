@@ -5,7 +5,8 @@
 #include <future>
 #include <Elementary.h>
 
-namespace StarFish {
+namespace StarFish
+{
 
 XMLHttpRequest::XMLHttpRequest()
 {
@@ -19,8 +20,8 @@ XMLHttpRequest::XMLHttpRequest()
     m_bindingInstance = nullptr;
 
     //FIXME: temp soluation
-    set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESValue::ESNull));
-    set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESValue::ESNull));
+    m_object->set(escargot::ESString::create("responseText"), escargot::ESValue(escargot::ESValue::ESNull));
+    m_object->set(escargot::ESString::create("response"), escargot::ESValue(escargot::ESValue::ESNull));
 
     //init
     initScriptWrappable(this);
@@ -29,214 +30,211 @@ XMLHttpRequest::XMLHttpRequest()
 
 void XMLHttpRequest::send(String* body)
 {
-      if(m_ready_state!=OPENED)
+    if (m_ready_state != OPENED)
         return;
 
-      escargot::ESObject* obj = (escargot::ESObject*)this;
-      const char* url = m_url->utf8Data();
+    escargot::ESObject* obj = (escargot::ESObject*) this;
+    const char* url = m_url->utf8Data();
 
-      // invoke loadstart Event.
-      callEventHandler(String::fromUTF8("loadstart"),true,0,0);
+    // invoke loadstart Event.
+    callEventHandler(String::fromUTF8("loadstart"), true, 0, 0);
 
-      auto task  = [](escargot::ESObject* obj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body,uint32_t timeout)->bool{
+    auto task = [](escargot::ESObject* obj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body,uint32_t timeout) -> bool {
+        CURL* curl = curl_easy_init();
+        CURLcode res;
 
-      CURL* curl = curl_easy_init();
-      CURLcode res;
+        HeaderBuffer header;
+        header.memory=NULL;
+        header.contentType=NULL;
+        header.size=0;
 
-      HeaderBuffer header;
-      header.memory=NULL;
-      header.contentType=NULL;
-      header.size=0;
+        Buffer buffer;
+        buffer.memory=NULL;
+        buffer.size=0;
 
-      Buffer buffer;
-      buffer.memory=NULL;
-      buffer.size=0;
+        ProgressData progressData;
+        progressData.curl = curl;
+        progressData.obj = (XMLHttpRequest*)obj;
+        progressData.lastruntime = 0;
 
-      ProgressData progressData;
-      progressData.curl = curl;
-      progressData.obj = (XMLHttpRequest*)obj;
-      progressData.lastruntime = 0;
+        if (!curl) return false;
 
-      if (!curl) return false;
+        // for error handle
+        // char errbuf[1024];
+        // curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
+        // errbuf[0] = 0;
 
-      // for error handle
-      // char errbuf[1024];
-      // curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
-      // errbuf[0] = 0;
+            curl_easy_setopt(curl, CURLOPT_URL,url );
+        //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 
-      curl_easy_setopt(curl, CURLOPT_URL,url );
-      //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+        //for SEC
+        //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
 
-      //for SEC
-      //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
+        //for MSEC
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(timeout));
 
-      //for MSEC
-      curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(timeout));
+        // curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback_old);
+        // curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progressData);
+            curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
+            curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progressData);
+            curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
-      // curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback_old);
-      // curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progressData);
-      curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
-      curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progressData);
-      curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+            curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*) &header);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &buffer);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, WriteHeaderCallback);
 
-      curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*) &header);
-      curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &buffer);
-      curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-      curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, WriteHeaderCallback);
+            if(methodType==POST_METHOD) {
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+            } else if(methodType==GET_METHOD) {
 
-      if(methodType==POST_METHOD){
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
-      }else if(methodType==GET_METHOD){
+            } else {
+                printf("XMLHttpRequest UnSupportted method!!  \n");
 
-      }else{
-        printf("XMLHttpRequest UnSupportted method!!  \n");
+                //invoke loadend event
+                ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,progressData.loaded,progressData.total);
+                return false;
+            }
 
-        //invoke loadend event
-        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,progressData.loaded,progressData.total);
-        return false;
-      }
+            res = curl_easy_perform(curl);
 
-      res = curl_easy_perform(curl);
+            long res_code = 0;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
 
-      long res_code = 0;
-      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
+            if (((res_code == 200 || res_code == 201) && res == CURLE_OK )) {
+                ((XMLHttpRequest*)obj)->setResponseHeader(String::fromUTF8(header.memory));
 
-      if (((res_code == 200 || res_code == 201) && res == CURLE_OK )){
+                curl_easy_cleanup(curl);
 
-          ((XMLHttpRequest*)obj)->setResponseHeader(String::fromUTF8(header.memory));
+                if(buffer.size==0)
+                return false;
 
-          curl_easy_cleanup(curl);
+                struct Pass {
+                    escargot::ESObject* obj;
+                    char* buf;
+                    char* header;
+                    char* header_contentType;
+                    uint32_t loaded;
+                    uint32_t total;
+                    uint32_t contentSize;
+                };
 
-          if(buffer.size==0)
-              return false;
+                Pass* pass = new Pass;
+                pass->buf = buffer.memory;
+                pass->header = header.memory;
+                pass->header_contentType = header.contentType;
+                pass->contentSize = header.contentLength;
+                pass->obj = obj;
+                pass->loaded = progressData.loaded;
+                pass->total = progressData.total;
 
-          struct Pass {
-              escargot::ESObject* obj;
-              char* buf;
-              char* header;
-              char* header_contentType;
-              uint32_t loaded;
-              uint32_t total;
-              uint32_t contentSize;
-          };
+                ecore_thread_main_loop_begin();
+                ecore_idler_add([](void *data)->Eina_Bool {
+                            Pass* pass = (Pass*)data;
 
-          Pass* pass = new Pass;
-          pass->buf = buffer.memory;
-          pass->header = header.memory;
-          pass->header_contentType = header.contentType;
-          pass->contentSize = header.contentLength;
-          pass->obj = obj;
-          pass->loaded = progressData.loaded;
-          pass->total = progressData.total;
+                            escargot::ESObject* this_obj = pass->obj;
+                            escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
 
-          ecore_thread_main_loop_begin();
-          ecore_idler_add([](void *data)->Eina_Bool{
-              Pass* pass = (Pass*)data;
+                            switch(((XMLHttpRequest*)this_obj->extraPointerData())->getResponseType()) {
+                                case JSON_RESPONSE:
+                                {
+                                    escargot::ESValue ret;
+                                    escargot::ESValue json_arg[1] = {escargot::ESValue(escargot::ESString::create(pass->buf))};
+                                    escargot::ESValue json_parse_fn = instance->globalObject()->json()->get(escargot::ESValue(escargot::ESString::create("parse")));
+                                    ret = ((XMLHttpRequest*)this_obj->extraPointerData())->callJSFunction(instance, json_parse_fn, instance->globalObject()->json(), json_arg, 1);
+                                    this_obj->set(escargot::ESString::create("response"),ret);
+                                }
+                                break;
+                                case BLOB_RESPONSE:
+                                {
+                                    auto blob = new Blob(pass->contentSize,String::fromUTF8(pass->header_contentType),pass->buf);
+                                    this_obj->set(escargot::ESString::create("response"),blob->scriptValue());
+                                }
+                                break;
 
-              escargot::ESObject* this_obj = pass->obj;
-              escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+                                case TEXT_RESPONSE:
+                                default:
+                                this_obj->set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESString::create(pass->buf)));
+                                this_obj->set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(pass->buf)));
 
-              switch(((XMLHttpRequest*)this_obj)->getResponseType()){
-                case JSON_RESPONSE:
-                  {
-                    escargot::ESValue ret;
-                    escargot::ESValue json_arg[1] = {escargot::ESValue(escargot::ESString::create(pass->buf))};
-                    escargot::ESValue json_parse_fn = instance->globalObject()->json()->get(escargot::ESValue(escargot::ESString::create("parse")));
-                    ret = ((XMLHttpRequest*)this_obj)->callJSFunction(instance, json_parse_fn, instance->globalObject()->json(), json_arg, 1);
-                    this_obj->set(escargot::ESString::create("response"),ret);
-                  }
-                  break;
-                case BLOB_RESPONSE:
-                  {
-                    this_obj->set(escargot::ESString::create("response"),new Blob(pass->contentSize,String::fromUTF8(pass->header_contentType),pass->buf));
-                  }
-                  break;
+                            }
+                            //invoke load event
+                            ((XMLHttpRequest*)this_obj->extraPointerData())->callEventHandler(String::fromUTF8("load"),true,pass->loaded,pass->total);
 
-                case TEXT_RESPONSE:
-                default:
-                  this_obj->set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESString::create(pass->buf)));
-                  this_obj->set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(pass->buf)));
+                            //invoke loadend event
+                            ((XMLHttpRequest*)this_obj->extraPointerData())->callEventHandler(String::fromUTF8("loadend"),true,pass->loaded,pass->total);
 
-              }
-              //invoke load event
-              ((XMLHttpRequest*)this_obj)->callEventHandler(String::fromUTF8("load"),true,pass->loaded,pass->total);
+                            delete pass;
+                            return ECORE_CALLBACK_CANCEL;
+                        }, pass);
+                ecore_thread_main_loop_end();
+                return true;
 
-              //invoke loadend event
-              ((XMLHttpRequest*)this_obj)->callEventHandler(String::fromUTF8("loadend"),true,pass->loaded,pass->total);
+            } else {
+                // printf("!!! Response code: %ld\n", res_code);
+                // printf("!!! CURLcode code: %d\n", res);
+                // printf("ERROR buffer : %s\n",errbuf);
 
-              delete pass;
-              return ECORE_CALLBACK_CANCEL;
-          }, pass);
-          ecore_thread_main_loop_end();
-          return true;
+                switch(res) {
+                    case CURLE_OPERATION_TIMEDOUT:
+                    //invoke timeout event
+                    ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("timeout"),false,0,0);
+                    break;
 
-      }else{
+                    case CURLE_ABORTED_BY_CALLBACK:
+                    ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("abort"),false,0,0);
+                    break;
 
-        // printf("!!! Response code: %ld\n", res_code);
-        // printf("!!! CURLcode code: %d\n", res);
-        // printf("ERROR buffer : %s\n",errbuf);
+                    default:
+                    break;
+                }
 
-        switch(res){
-          case CURLE_OPERATION_TIMEDOUT:
-              //invoke timeout event
-              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("timeout"),false,0,0);
-              break;
+                //invoke error event
+                ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("error"),false,0,0);
 
-          case CURLE_ABORTED_BY_CALLBACK:
-              ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("abort"),false,0,0);
-              break;
+                //invoke loadend event
+                ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,0,0);
+            }
+            return false;
 
-          default:
-              break;
-        }
+        };
 
-        //invoke error event
-        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("error"),false,0,0);
+    //std::future<bool> runTask = std::async(std::launch::async, task);
 
-        //invoke loadend event
-        ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,0,0);
-      }
-      return false;
-
-  };
-
-  //std::future<bool> runTask = std::async(std::launch::async, task);
-
-  std::thread(task,obj,url,m_method,body->utf8Data(),m_timeout).detach();
+    std::thread(task, obj, url, m_method, body->utf8Data(), m_timeout).detach();
 }
 
 void XMLHttpRequest::setResponseType(const char* responseType)
 {
-    if(responseType){
+    if (responseType) {
         std::string data = responseType;
         std::transform(data.begin(), data.end(), data.begin(), ::tolower);
         String* lowerName = String::fromUTF8(data.c_str());
 
-        if(lowerName->equals("text")){
+        if (lowerName->equals("text")) {
             m_response_type = TEXT_RESPONSE;
-        }else if(lowerName->equals("arraybuffer")){
+        } else if (lowerName->equals("arraybuffer")) {
             m_response_type = ARRAY_BUFFER_RESPONSE;
-        }else if(lowerName->equals("blob")){
+        } else if (lowerName->equals("blob")) {
             m_response_type = BLOB_RESPONSE;
-        }else if(lowerName->equals("document")){
+        } else if (lowerName->equals("document")) {
             m_response_type = DOCUMENT_RESPONSE;
-        }else if(lowerName->equals("json")){
+        } else if (lowerName->equals("json")) {
             m_response_type = JSON_RESPONSE;
         }
     }
 }
 
-
-void XMLHttpRequest::setOpen(const char* method,String* url)
+void XMLHttpRequest::setOpen(const char* method, String* url)
 {
-    if(method){
+    if (method) {
         std::string data = method;
         std::transform(data.begin(), data.end(), data.begin(), ::tolower);
         String* lowerName = String::fromUTF8(data.c_str());
 
-        if(lowerName->equals("get")){
+        if (lowerName->equals("get")) {
             m_method = GET_METHOD;
-        }else if(lowerName->equals("post")){
+        } else if (lowerName->equals("post")) {
             m_method = POST_METHOD;
         }
     }
@@ -244,90 +242,90 @@ void XMLHttpRequest::setOpen(const char* method,String* url)
     m_url = url;
 }
 
-String* XMLHttpRequest::getResponseTypeStr(){
-    switch(m_response_type){
-        case TEXT_RESPONSE:
-            return String::fromUTF8("text");
-
-        case ARRAY_BUFFER_RESPONSE:
-            return String::fromUTF8("arraybuffer");
-
-        case BLOB_RESPONSE:
-            return String::fromUTF8("blob");
-
-        case DOCUMENT_RESPONSE:
-            return String::fromUTF8("document");
-
-        case JSON_RESPONSE:
-            return String::fromUTF8("json");
-
-        case DEFAULT_RESPONSE:
-            return String::emptyString;
-
+String* XMLHttpRequest::getResponseTypeStr()
+{
+    switch (m_response_type)
+    {
+    case TEXT_RESPONSE:
+        return String::fromUTF8("text");
+    case ARRAY_BUFFER_RESPONSE:
+        return String::fromUTF8("arraybuffer");
+    case BLOB_RESPONSE:
+        return String::fromUTF8("blob");
+    case DOCUMENT_RESPONSE:
+        return String::fromUTF8("document");
+    case JSON_RESPONSE:
+        return String::fromUTF8("json");
+    case DEFAULT_RESPONSE:
+        return String::emptyString;
     }
     return String::emptyString;
 }
 
-void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread,uint32_t loaded,uint32_t total){
+void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total)
+{
 
-    if(eventName->equals("loadstart")||eventName->equals("progress")){
-      m_ready_state = LOADING;
-    }else if(eventName->equals("error")||eventName->equals("abort")||eventName->equals("timeout")||eventName->equals("load")||eventName->equals("loadend")){
-      m_ready_state = DONE;
+    if (eventName->equals("loadstart") || eventName->equals("progress")) {
+        m_ready_state = LOADING;
+    } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load")
+            || eventName->equals("loadend")) {
+        m_ready_state = DONE;
     }
 
-    if(isMainThread){
+    if (isMainThread) {
+        escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+        QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
+        auto clickListeners = getEventListeners(eventType);
+        if (clickListeners) {
+            for (unsigned i = 0; i < clickListeners->size(); i++) {
+                STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                escargot::ESValue json_arg[1] =
+                { escargot::ESValue(new ProgressEvent(striptBindingInstance(), loaded, total)) };
+                escargot::ESValue fn = clickListeners->at(i)->scriptValue();
+                if (fn != escargot::ESValue::ESNull)
+                    callJSFunction(instance, fn, scriptValue(), json_arg, 1);
+            }
+        }
+    } else {
 
-      escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-      QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
-      auto clickListeners = getEventListeners(eventType);
-      if (clickListeners) {
-          for (unsigned i = 0; i < clickListeners->size(); i++) {
-              STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-              escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(striptBindingInstance(),loaded,total))};
-              escargot::ESValue fn = clickListeners->at(i)->scriptValue();
-              if(fn!=escargot::ESValue::ESNull)
-                callJSFunction(instance, fn, this, json_arg, 1);
-          }
-      }
-    }else{
+        struct Pass
+        {
+            escargot::ESObject* obj;
+            String* buf;
+            uint32_t loaded;
+            uint32_t total;
+        };
 
-      struct Pass {
-          escargot::ESObject* obj;
-          String* buf;
-          uint32_t loaded;
-          uint32_t total;
-      };
+        Pass* pass = new Pass;
+        pass->buf = eventName;
+        pass->obj = this->scriptObject();
+        pass->loaded = loaded;
+        pass->total = total;
 
-      Pass* pass = new Pass;
-      pass->buf = eventName;
-      pass->obj = this;
-      pass->loaded = loaded;
-      pass->total = total;
+        ecore_thread_main_loop_begin();
+        ecore_idler_add(
+                [](void *data)->Eina_Bool {
+                    Pass* pass = (Pass*)data;
+                    escargot::ESObject* this_obj = pass->obj;
 
-      ecore_thread_main_loop_begin();
-      ecore_idler_add([](void *data)->Eina_Bool{
-          Pass* pass = (Pass*)data;
-          escargot::ESObject* this_obj = pass->obj;
+                    escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+                    QualifiedName eventType = QualifiedName::fromString(((XMLHttpRequest*)this_obj->extraPointerData())->starfishInstance(), pass->buf);
+                    auto clickListeners = ((XMLHttpRequest*)this_obj->extraPointerData())->getEventListeners(eventType);
+                    if (clickListeners) {
+                        for (unsigned i = 0; i < clickListeners->size(); i++) {
+                            STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                            escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(((XMLHttpRequest*)this_obj->extraPointerData())->striptBindingInstance(),pass->loaded,pass->total))};
+                            escargot::ESValue fn = clickListeners->at(i)->scriptValue();
+                            if(fn!=escargot::ESValue::ESNull)
+                            callJSFunction(instance, fn, this_obj, json_arg, 1);
 
-          escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-          QualifiedName eventType = QualifiedName::fromString(((XMLHttpRequest*)this_obj)->starfishInstance(), pass->buf);
-          auto clickListeners = ((XMLHttpRequest*)this_obj)->getEventListeners(eventType);
-          if (clickListeners) {
-              for (unsigned i = 0; i < clickListeners->size(); i++) {
-                  STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                  escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(((XMLHttpRequest*)this_obj)->striptBindingInstance(),pass->loaded,pass->total))};
-                  escargot::ESValue fn = clickListeners->at(i)->scriptValue();
-                  if(fn!=escargot::ESValue::ESNull)
-                    callJSFunction(instance, fn, this_obj, json_arg, 1);
+                        }
+                    }
 
-              }
-          }
-
-          delete pass;
-          return ECORE_CALLBACK_CANCEL;
-      }, pass);
-      ecore_thread_main_loop_end();
+                    delete pass;
+                    return ECORE_CALLBACK_CANCEL;
+                }, pass);
+        ecore_thread_main_loop_end();
     }
 
 }

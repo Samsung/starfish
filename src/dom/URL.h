@@ -8,9 +8,12 @@
 
 namespace StarFish {
 
-class URL : public ScriptWrappable{
+class URL : public ScriptWrappable {
 public:
-
+    URL()
+        : ScriptWrappable(this)
+    {
+    }
     static String* makeUUID(){
 
         String* result;
@@ -40,6 +43,7 @@ public:
     }
 
     URL(ScriptBindingInstance* instance,StarFish* starfish)
+        : ScriptWrappable(this)
     {
         m_starfish = starfish;
 
@@ -55,7 +59,7 @@ public:
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
         }, escargot::ESString::create("createObjectURL"), 1, false);
-        defineDataProperty(escargot::ESString::create("createObjectURL"), false, false, false, urlCreateObjectURLFunction);
+        m_object->defineDataProperty(escargot::ESString::create("createObjectURL"), false, false, false, urlCreateObjectURLFunction);
     }
 
     String* createObjectURL(escargot::ESValue RawObject){

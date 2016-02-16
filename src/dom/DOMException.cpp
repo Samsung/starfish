@@ -62,7 +62,8 @@ const char* DOMException::s_descriptions[] = {
 };
 
 DOMException::DOMException(ScriptBindingInstance* instance, Code code, const char* message)
-    : m_instance(instance)
+    : ScriptWrappable(this)
+    , m_instance(instance)
     , m_code(code)
 {
     if (!message)

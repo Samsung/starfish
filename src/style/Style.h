@@ -787,7 +787,7 @@ class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
 public:
     CSSStyleDeclaration(Document* document, Element* element = NULL)
-        : m_document(document)
+        : ScriptWrappable(this), m_document(document)
     {
         initScriptWrappable(this);
         m_element = element;
@@ -930,7 +930,7 @@ public:
     };
 
     CSSStyleRule(Kind kind, String* ruleText, PseudoClass pc, Document* document)
-        : m_document(document)
+        : ScriptWrappable(this),  m_document(document)
     {
         m_kind = kind;
         m_ruleText = ruleText;

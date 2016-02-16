@@ -32,7 +32,7 @@ public:
         return m_string == src.m_string;
     }
 
-    String* string()
+    String* string() const
     {
         return m_string;
     }
