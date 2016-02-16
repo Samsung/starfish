@@ -460,7 +460,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
         CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
         Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
         obj->appendChild(child);
         return child->scriptValue();
@@ -473,7 +473,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject();
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
             Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
             Node* n = obj->removeChild(child);
             return n->scriptValue();
@@ -668,7 +668,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(!((Node*)originalObj->extraPointerData())->isElement()) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
-        CSSStyleDeclaration* s = ((Element *)originalObj)->inlineStyle();
+        CSSStyleDeclaration* s = ((Element *)originalObj->extraPointerData())->inlineStyle();
         if(s == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         } else {
