@@ -15,35 +15,20 @@ class XMLHttpRequestEventTarget : public EventTarget<ScriptWrappable>{
 public:
     XMLHttpRequestEventTarget()
     {}
+
+    bool setHandler(QualifiedName& eventType,const escargot::ESValue& f){
+        EventListener* l = new EventListener(f, true);
+        setAttributeEventListener(eventType, l);
+        return false;
+    }
+
+
     escargot::ESValue getHandler(String* keyName,StarFish* starfish){
-
-        QualifiedName eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
-        auto clickListeners = getEventListeners(eventType);
-        if (clickListeners) {
-            for (unsigned i = 0; i < clickListeners->size(); i++) {
-                STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                return clickListeners->at(i)->scriptValue();
-            }
-        }
-        return escargot::ESValue::ESNull;
+        auto eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
+        EventListener* l = getAttributeEventListener(eventType);
+        if (!l) return escargot::ESValue::ESNull;
+        return l->scriptValue();
     }
-
-    escargot::ESValue executeHandler(String* keyName,StarFish* starfish,ProgressEvent* pe){
-
-        QualifiedName eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
-        auto clickListeners = getEventListeners(eventType);
-        if (clickListeners) {
-            for (unsigned i = 0; i < clickListeners->size(); i++) {
-                STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                escargot::ESValue json_arg[1] = {escargot::ESValue(pe)};
-                callScriptFunction(clickListeners->at(i)->scriptValue(), json_arg, 1, this);
-            }
-        }
-
-        return escargot::ESValue::ESNull;
-    }
-
-private:
 };
 
 

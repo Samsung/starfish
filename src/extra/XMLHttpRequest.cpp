@@ -277,7 +277,19 @@ void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread,uint32
     }
 
     if(isMainThread){
-      escargot::ESValue fn = executeHandler(eventName,starfishInstance(),new ProgressEvent(this->striptBindingInstance(),loaded,total));
+
+      escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+      QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
+      auto clickListeners = getEventListeners(eventType);
+      if (clickListeners) {
+          for (unsigned i = 0; i < clickListeners->size(); i++) {
+              STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+              escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(striptBindingInstance(),loaded,total))};
+              escargot::ESValue fn = clickListeners->at(i)->scriptValue();
+              if(fn!=escargot::ESValue::ESNull)
+                callJSFunction(instance, fn, this, json_arg, 1);
+          }
+      }
     }else{
 
       struct Pass {
@@ -297,7 +309,21 @@ void XMLHttpRequest::callEventHandler(String* eventName,bool isMainThread,uint32
       ecore_idler_add([](void *data)->Eina_Bool{
           Pass* pass = (Pass*)data;
           escargot::ESObject* this_obj = pass->obj;
-          escargot::ESValue fn = ((XMLHttpRequest*)this_obj)->executeHandler(pass->buf,((XMLHttpRequest*)this_obj)->starfishInstance(),new ProgressEvent(((XMLHttpRequest*)this_obj)->striptBindingInstance(),pass->loaded,pass->total));
+
+          escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+          QualifiedName eventType = QualifiedName::fromString(((XMLHttpRequest*)this_obj)->starfishInstance(), pass->buf);
+          auto clickListeners = ((XMLHttpRequest*)this_obj)->getEventListeners(eventType);
+          if (clickListeners) {
+              for (unsigned i = 0; i < clickListeners->size(); i++) {
+                  STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                  escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(((XMLHttpRequest*)this_obj)->striptBindingInstance(),pass->loaded,pass->total))};
+                  escargot::ESValue fn = clickListeners->at(i)->scriptValue();
+                  if(fn!=escargot::ESValue::ESNull)
+                    callJSFunction(instance, fn, this_obj, json_arg, 1);
+
+              }
+          }
+
           delete pass;
           return ECORE_CALLBACK_CANCEL;
       }, pass);

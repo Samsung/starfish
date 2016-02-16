@@ -1754,8 +1754,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1772,8 +1771,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "progress");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1790,8 +1788,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "abort");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1808,8 +1805,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "error");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1826,8 +1822,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "load");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1844,8 +1839,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "timeout");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1862,8 +1856,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadend");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1880,8 +1873,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if(v.isObject()){
             auto sf = ((Window *)ScriptWrappableGlobalObject::fetch())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "readystatechange");
-            auto listener = new EventListener(v);
-            ((XMLHttpRequest*)originalObj)->addEventListener(eventTypeName,listener);
+            ((XMLHttpRequest*)originalObj)->setHandler(eventTypeName,v);
         }
     }, false, false, false);
 
@@ -1950,18 +1942,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("send"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("send"), false, false, false, xhrSendFunction);
-
-    // escargot::ESFunctionObject* xhrAddEventListenerFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-    //     escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-    //     if (v.isObject()) {
-    //         if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-    //             XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject();;
-    //             xhr->setHandler(String::createASCIIString(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()),instance->currentExecutionContext()->readArgument(1));
-    //         }
-    //     }
-    //     return escargot::ESValue(escargot::ESValue::ESNull);
-    // }, escargot::ESString::create("addEventListener"), 1, false);
-    // xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), false, false, false, xhrAddEventListenerFunction);
 
     escargot::ESFunctionObject* xhrAbortFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
