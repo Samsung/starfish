@@ -549,7 +549,7 @@ void FrameBlockBox::dump(int depth)
 {
     FrameBox::dump(depth);
     if (!hasBlockFlow()) {
-        if (m_lineBoxes.size() && m_lineBoxes[0]->firstChild()) {
+        if (m_lineBoxes.size() && m_lineBoxes[0]->m_boxes.size()) {
             for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
                 puts("");
                 for(int k = 0; k < depth + 1; k ++)
@@ -564,7 +564,7 @@ void FrameBlockBox::dump(int depth)
                         printf("  ");
                     printf("%s", childBox->name());
                     childBox->dump(depth + 3);
-                    if (k == lb.m_boxes.size() - 1)
+                    if (k != lb.m_boxes.size() - 1)
                         puts("");
                 }
             }

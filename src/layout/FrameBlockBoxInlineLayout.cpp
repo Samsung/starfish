@@ -382,11 +382,9 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
         if (style()->textAlign() == TextAlignValue::LeftTextAlignValue) {
         } else if (style()->textAlign() == TextAlignValue::RightTextAlignValue) {
             float diff = (inlineContentWidth - x);
-            Frame* child = b.firstChild();
-            while(child) {
-                FrameBox* childBox = child->asFrameBox();
+            for (size_t k = 0; k < b.m_boxes.size(); k ++) {
+                FrameBox* childBox = b.m_boxes[k];
                 childBox->moveX(diff);
-                child = child->next();
             }
         } else if (style()->textAlign() == TextAlignValue::JustifyTextAlignValue) {
             // issue #145
@@ -430,11 +428,9 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
         } else {
             STARFISH_ASSERT(style()->textAlign() == TextAlignValue::CenterTextAlignValue);
             float diff = (inlineContentWidth - x) / 2;
-            Frame* child = b.firstChild();
-            while(child) {
-                FrameBox* childBox = child->asFrameBox();
+            for (size_t k = 0; k < b.m_boxes.size(); k ++) {
+                FrameBox* childBox = b.m_boxes[k];
                 childBox->moveX(diff);
-                child = child->next();
             }
         }
 
