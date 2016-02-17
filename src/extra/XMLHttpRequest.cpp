@@ -20,8 +20,8 @@ XMLHttpRequest::XMLHttpRequest()
     m_bindingInstance = nullptr;
 
     //FIXME: temp soluation
-    m_object->set(escargot::ESString::create("responseText"), ScriptValue(ScriptValue::ESNull));
-    m_object->set(escargot::ESString::create("response"), ScriptValue(ScriptValue::ESNull));
+    m_object->set(createScriptString(String::fromUTF8("responseText")), ScriptValue(ScriptValue::ESNull));
+    m_object->set(createScriptString(String::fromUTF8("response")), ScriptValue(ScriptValue::ESNull));
 
     //init
     initScriptWrappable(this);
@@ -133,29 +133,24 @@ void XMLHttpRequest::send(String* body)
                             Pass* pass = (Pass*)data;
 
                             ScriptObject this_obj = pass->obj;
-                            escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-
                             switch(((XMLHttpRequest*)this_obj->extraPointerData())->getResponseType()) {
                                 case JSON_RESPONSE:
                                 {
-                                    ScriptValue ret;
-                                    ScriptValue json_arg[1] = {ScriptValue(escargot::ESString::create(pass->buf))};
-                                    ScriptValue json_parse_fn = instance->globalObject()->json()->get(ScriptValue(escargot::ESString::create("parse")));
-                                    ret = callScriptFunction(json_parse_fn,json_arg,1,instance->globalObject()->json());
-                                    this_obj->set(escargot::ESString::create("response"),ret);
+                                    ScriptValue ret = parseJSON(String::fromUTF8(pass->buf));
+                                    this_obj->set(createScriptString(String::fromUTF8("response")),ret);
                                 }
                                 break;
                                 case BLOB_RESPONSE:
                                 {
                                     auto blob = new Blob(pass->contentSize,String::fromUTF8(pass->header_contentType),pass->buf);
-                                    this_obj->set(escargot::ESString::create("response"),blob->scriptValue());
+                                    this_obj->set(createScriptString(String::fromUTF8("response")),blob->scriptValue());
                                 }
                                 break;
 
                                 case TEXT_RESPONSE:
                                 default:
-                                this_obj->set(escargot::ESString::create("response"),ScriptValue(escargot::ESString::create(pass->buf)));
-                                this_obj->set(escargot::ESString::create("responseText"),ScriptValue(escargot::ESString::create(pass->buf)));
+                                this_obj->set(createScriptString(String::fromUTF8("response")),ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
+                                this_obj->set(createScriptString(String::fromUTF8("responseText")),ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
 
                             }
                             //invoke load event
@@ -328,11 +323,5 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
     }
 
 }
-
-// void XMLHttpRequest::callReadystatechangeHandler(escargot::ESVMInstance* instance){
-//     ScriptValue fn = getHandler(String::fromUTF8("readystatechange"));
-//     if(fn!=ScriptValue::ESNull)
-//       callJSFunction(instance, fn, this, NULL, 0);
-// }
 
 }

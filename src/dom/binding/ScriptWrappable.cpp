@@ -436,4 +436,14 @@ ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, S
     }
     return result;
 }
+
+ScriptValue parseJSON(String* jsonData)
+{
+    ScriptValue ret;
+    escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+    ScriptValue json_arg[1] = {ScriptValue(createScriptString(jsonData))};
+    ScriptValue json_parse_fn = instance->globalObject()->json()->get(ScriptValue(createScriptString(String::fromUTF8("parse"))));
+    return callScriptFunction(json_parse_fn,json_arg,1,instance->globalObject()->json());
+}
+
 }
