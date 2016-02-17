@@ -39,11 +39,6 @@ public:
         return m_starFish;
     }
 
-    URL* url()
-    {
-        return m_url;
-    }
-
     void loadXMLDocument(String* filePath);
     uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
     void clearTimeout(uint32_t id);
@@ -91,7 +86,6 @@ protected:
     bool m_isRunning;
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
-    URL* m_url;
 
     StarFish* m_starFish;
 
