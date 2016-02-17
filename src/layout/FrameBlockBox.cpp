@@ -492,6 +492,9 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
             if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox())) {
                 float topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
                 ascender = topToLineBox + ctx.lastLineBox()->m_ascender;
+                if (ascender > f->asFrameBox()->height()) {
+                    ascender = f->asFrameBox()->height();
+                }
             } else {
                 ascender = f->asFrameBox()->height();
             }
@@ -1530,6 +1533,9 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox())) {
                 float topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
                 ascender = topToLineBox + ctx.lastLineBox()->ascender();
+                if (ascender > f->asFrameBox()->height()) {
+                    ascender = f->asFrameBox()->height();
+                }
             } else {
                 ascender = f->asFrameBox()->height();
             }

@@ -433,7 +433,7 @@ public:
         while (f) {
             if (f == this)
                 return true;
-            f = f->parent();
+            f = f->layoutParent();
         }
         return false;
     }
