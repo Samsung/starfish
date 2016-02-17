@@ -133,7 +133,7 @@ protected:
 
 ScriptValue createScriptString(String* str);
 ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody);
-void callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue);
+ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue);
 
 }
 

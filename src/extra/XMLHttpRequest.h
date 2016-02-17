@@ -17,7 +17,7 @@ public:
         : EventTarget()
     { }
 
-    bool setHandler(QualifiedName& eventType,const escargot::ESValue& f)
+    bool setHandler(QualifiedName& eventType,const ScriptValue& f)
     {
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
@@ -25,11 +25,11 @@ public:
     }
 
 
-    escargot::ESValue getHandler(String* keyName,StarFish* starfish)
+    ScriptValue getHandler(String* keyName,StarFish* starfish)
     {
         auto eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
         EventListener* l = getAttributeEventListener(eventType);
-        if (!l) return escargot::ESValue::ESNull;
+        if (!l) return ScriptValue::ESNull;
         return l->scriptValue();
     }
 };
@@ -150,19 +150,6 @@ public:
     ScriptBindingInstance* striptBindingInstance()
     {
         return m_bindingInstance;
-    }
-
-    static escargot::ESValue callJSFunction(escargot::ESVMInstance* instance, const escargot::ESValue& callee, const escargot::ESValue& receiver, escargot::ESValue arguments[], const size_t& argumentCount){
-        escargot::ESValue result;
-        std::jmp_buf tryPosition;
-        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-            result = escargot::ESFunctionObject::call(instance, callee, receiver, arguments, argumentCount, false);
-            instance->unregisterTryPos(&tryPosition);
-        } else {
-            result = instance->getCatchedError();
-            printf("Uncaught %s\n", result.toString()->utf8Data());
-        }
-        return result;
     }
 
     // FIXME:mh.byun (FIX!!! memory leak)

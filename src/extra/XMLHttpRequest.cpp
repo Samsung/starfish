@@ -20,8 +20,8 @@ XMLHttpRequest::XMLHttpRequest()
     m_bindingInstance = nullptr;
 
     //FIXME: temp soluation
-    m_object->set(escargot::ESString::create("responseText"), escargot::ESValue(escargot::ESValue::ESNull));
-    m_object->set(escargot::ESString::create("response"), escargot::ESValue(escargot::ESValue::ESNull));
+    m_object->set(escargot::ESString::create("responseText"), ScriptValue(ScriptValue::ESNull));
+    m_object->set(escargot::ESString::create("response"), ScriptValue(ScriptValue::ESNull));
 
     //init
     initScriptWrappable(this);
@@ -33,13 +33,13 @@ void XMLHttpRequest::send(String* body)
     if (m_ready_state != OPENED)
         return;
 
-    escargot::ESObject* obj = (escargot::ESObject*)scriptObject();
+    ScriptObject obj = (ScriptObject)scriptObject();
     const char* url = m_url->utf8Data();
 
     // invoke loadstart Event.
     callEventHandler(String::fromUTF8("loadstart"), true, 0, 0);
 
-    auto task = [](escargot::ESObject* obj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body,uint32_t timeout) -> bool {
+    auto task = [](ScriptObject obj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body,uint32_t timeout) -> bool {
         CURL* curl = curl_easy_init();
         CURLcode res;
 
@@ -110,7 +110,7 @@ void XMLHttpRequest::send(String* body)
                 return false;
 
                 struct Pass {
-                    escargot::ESObject* obj;
+                    ScriptObject obj;
                     char* buf;
                     char* header;
                     char* header_contentType;
@@ -132,16 +132,16 @@ void XMLHttpRequest::send(String* body)
                 ecore_idler_add([](void *data)->Eina_Bool {
                             Pass* pass = (Pass*)data;
 
-                            escargot::ESObject* this_obj = pass->obj;
+                            ScriptObject this_obj = pass->obj;
                             escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
 
                             switch(((XMLHttpRequest*)this_obj->extraPointerData())->getResponseType()) {
                                 case JSON_RESPONSE:
                                 {
-                                    escargot::ESValue ret;
-                                    escargot::ESValue json_arg[1] = {escargot::ESValue(escargot::ESString::create(pass->buf))};
-                                    escargot::ESValue json_parse_fn = instance->globalObject()->json()->get(escargot::ESValue(escargot::ESString::create("parse")));
-                                    ret = ((XMLHttpRequest*)this_obj->extraPointerData())->callJSFunction(instance, json_parse_fn, instance->globalObject()->json(), json_arg, 1);
+                                    ScriptValue ret;
+                                    ScriptValue json_arg[1] = {ScriptValue(escargot::ESString::create(pass->buf))};
+                                    ScriptValue json_parse_fn = instance->globalObject()->json()->get(ScriptValue(escargot::ESString::create("parse")));
+                                    ret = callScriptFunction(json_parse_fn,json_arg,1,instance->globalObject()->json());
                                     this_obj->set(escargot::ESString::create("response"),ret);
                                 }
                                 break;
@@ -154,8 +154,8 @@ void XMLHttpRequest::send(String* body)
 
                                 case TEXT_RESPONSE:
                                 default:
-                                this_obj->set(escargot::ESString::create("response"),escargot::ESValue(escargot::ESString::create(pass->buf)));
-                                this_obj->set(escargot::ESString::create("responseText"),escargot::ESValue(escargot::ESString::create(pass->buf)));
+                                this_obj->set(escargot::ESString::create("response"),ScriptValue(escargot::ESString::create(pass->buf)));
+                                this_obj->set(escargot::ESString::create("responseText"),ScriptValue(escargot::ESString::create(pass->buf)));
 
                             }
                             //invoke load event
@@ -273,25 +273,24 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
     }
 
     if (isMainThread) {
-        escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
         QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
         auto clickListeners = getEventListeners(eventType);
         if (clickListeners) {
             for (unsigned i = 0; i < clickListeners->size(); i++) {
                 STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
                 ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
-                escargot::ESValue json_arg[1] =
-                { escargot::ESValue(pe->scriptObject()) };
-                escargot::ESValue fn = clickListeners->at(i)->scriptValue();
-                if (fn != escargot::ESValue::ESNull)
-                    callJSFunction(instance, fn, scriptValue(), json_arg, 1);
+                ScriptValue json_arg[1] =
+                { ScriptValue(pe->scriptObject()) };
+                ScriptValue fn = clickListeners->at(i)->scriptValue();
+                if (fn != ScriptValue::ESNull)
+                    callScriptFunction(fn, json_arg, 1,scriptValue());
             }
         }
     } else {
 
         struct Pass
         {
-            escargot::ESObject* obj;
+            ScriptObject obj;
             String* buf;
             uint32_t loaded;
             uint32_t total;
@@ -307,20 +306,18 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
         ecore_idler_add(
                 [](void *data)->Eina_Bool {
                     Pass* pass = (Pass*)data;
-                    escargot::ESObject* this_obj = pass->obj;
+                    ScriptObject this_obj = pass->obj;
 
-                    escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
                     QualifiedName eventType = QualifiedName::fromString(((XMLHttpRequest*)this_obj->extraPointerData())->starfishInstance(), pass->buf);
                     auto clickListeners = ((XMLHttpRequest*)this_obj->extraPointerData())->getEventListeners(eventType);
                     if (clickListeners) {
                         for (unsigned i = 0; i < clickListeners->size(); i++) {
                             STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
                             ProgressEvent* pe = new ProgressEvent(((XMLHttpRequest*)this_obj->extraPointerData())->striptBindingInstance(),pass->loaded,pass->total);
-                            escargot::ESValue json_arg[1] = {escargot::ESValue(pe->scriptObject())};
-                            escargot::ESValue fn = clickListeners->at(i)->scriptValue();
-                            if(fn!=escargot::ESValue::ESNull)
-                            callJSFunction(instance, fn, this_obj, json_arg, 1);
-
+                            ScriptValue json_arg[1] = {ScriptValue(pe->scriptObject())};
+                            ScriptValue fn = clickListeners->at(i)->scriptValue();
+                            if(fn!=ScriptValue::ESNull)
+                            callScriptFunction(fn, json_arg, 1,this_obj);
                         }
                     }
 
@@ -333,8 +330,8 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
 }
 
 // void XMLHttpRequest::callReadystatechangeHandler(escargot::ESVMInstance* instance){
-//     escargot::ESValue fn = getHandler(String::fromUTF8("readystatechange"));
-//     if(fn!=escargot::ESValue::ESNull)
+//     ScriptValue fn = getHandler(String::fromUTF8("readystatechange"));
+//     if(fn!=ScriptValue::ESNull)
 //       callJSFunction(instance, fn, this, NULL, 0);
 // }
 

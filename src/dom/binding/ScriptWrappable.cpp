@@ -422,17 +422,18 @@ ScriptValue createScriptFunction(String** argNames, size_t argc, String* functio
     return value;
 }
 
-void callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue)
+ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue)
 {
+    ScriptValue result;
     escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
     std::jmp_buf tryPosition;
     if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-        escargot::ESFunctionObject::call(instance, fn, thisValue, argv, argc, false);
+        result = escargot::ESFunctionObject::call(instance, fn, thisValue, argv, argc, false);
         instance->unregisterTryPos(&tryPosition);
     } else {
-        escargot::ESValue err = instance->getCatchedError();
-        printf("Uncaught %s\n", err.toString()->utf8Data());
+        result = instance->getCatchedError();
+        printf("Uncaught %s\n", result.toString()->utf8Data());
     }
+    return result;
 }
-
 }
