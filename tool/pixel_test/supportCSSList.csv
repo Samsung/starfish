@@ -79,3 +79,5 @@ CSS3-BACKGROUND  , 3.9       , background-size
                  , 6.1       , border-image-source
                  , 6.2       , border-image-slice
                  , 6.3       , border-image-width
+CSS3-TRANSFORM   , 7         , transform             ,
+                 , 8         , transform-origin

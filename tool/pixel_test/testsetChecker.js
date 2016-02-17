@@ -91,17 +91,21 @@ function initialize() {
     stream2.close();
 
     if (args.length == 1) {
-        testPath = "/unittest/css";
+        testPath = "/LayoutTests/css2.1";
+//testPath = "/unittest/css";
         basePath = "../../test/";
     }
     else if (args.length == 2) {
         if (args[1] != "-f") {
-            testPath = "/unittest/" + args[1];
+            testPath = "/LayoutTests/w3c/" + args[1];
+            //testPath = "/unittest/" + args[1];
             return true;
         }
     }
     else if (args.length == 3) {
-        if (args[1] == "-f" && fs.isFile(args[2]) && args[2].endsWith(".html")) {
+        if (args[1] == "-f" && fs.isFile(args[2]) &&
+            (args[2].endsWith(".html") || args[2].endsWith(".htm")) &&
+            !(args[2].endsWith("-expected.html"))) {
             var last = args[2].lastIndexOf('/');
             filelist[0] = args[2].substring(last);
 
@@ -131,18 +135,35 @@ page.viewportSize = {
     width: 360,
     height: 360
 };
-if (filelist.length == 0) {
-    var list = fs.list(pathToTest);
+
+var makeFileList = function(path) {
+//    console.log(path);
+    var list = fs.list(path);
+//    console.log(list);
     for (var i = 0; i < list.length; i++) {
-        if (fs.isFile(pathToTest + list[i]) && list[i].endsWith(".html")) {
-            filelist.push(list[i]);
+        if (list[i] == "." || list[i] == "..")
+            continue;
+        if (fs.isDirectory(path + list[i])) {
+            makeFileList(path + list[i] + "/");
+        }
+        if (fs.isFile(path + list[i]) &&
+            (list[i].endsWith(".html") || list[i].endsWith(".htm")) &&
+            !(list[i].endsWith("-expected.html") || list[i].endsWith("-expected.htm")) &&
+            !(list[i].endsWith("-ref.html") || list[i].endsWith("-ref.htm"))
+           ) {
+            filelist.push(path + list[i]);
         }
     }
+};
+
+if (filelist.length == 0) {
+    makeFileList(pathToTest);
 }
 
 var idx = 0;
 var processing = false;
-var cnt = 0;
+var passcnt = 0;
+var failcnt = 0;
 
 page.onLoadStarted = function() {
     processing = true;
@@ -163,8 +184,10 @@ page.onLoadFinished = function() {
             return prop;
         }
         for (var i = 0; i < styleTags.length; i++) {
+            if (!styleTags[i] || !styleTags[i].sheet) continue;
             var rules = styleTags[i].sheet.cssRules;
             for (var j = 0; j < rules.length; j++) {
+                if (rules[j].constructor != CSSStyleRule) return false;
                 for (var k = 0; k < rules[j].style.length; k++) {
                     var prop = rules[j].style[k].trim();
                     if ((prop == "background-attachment") || (prop == "background-clip")
@@ -193,7 +216,7 @@ page.onLoadFinished = function() {
                                     || inlineStyleList[j][1].trim() == "initial initial")
                                 continue;
                         }
-                        var newprop = changePropName(prop, inlineStyleList[j+1][0]);
+                        var newprop = changePropName(prop, inlineStyleList[j+1]? inlineStyleList[j+1][0] : undefined );
                         if (prop != newprop) j++;
                         usedCSSList[newprop] = 1;
                     }
@@ -203,15 +226,15 @@ page.onLoadFinished = function() {
         }
         return [usedCSSList, usedTagList];
     });
-//    console.log(JSON.stringify(result));
+    //console.log(JSON.stringify(result));
     var check = function(res) {
         if (res == false) {
-            console.log("result is false");
+            console.log("## [ETC] rule is NOT Supported");
             return false;
         }
         for (var css in res[0]) {   // usedCSSList
             if (!acceptCSSList.includes(css)) {
-                console.log("## [CSS] " + css + " is not Supported");
+                console.log("## [CSS] " + css + " is NOT Supported");
                 return false;
             }
         }
@@ -224,10 +247,11 @@ page.onLoadFinished = function() {
         return true;
     };
     if (check(result)) {
-        console.log("# " + filelist[idx] + " Passed..");
+        passcnt++;
+        console.log(filelist[idx]);
     } else {
-        cnt++;
-        console.log("rm "+pathToTest + filelist[idx]);
+        failcnt++;
+        console.log("# " + filelist[idx] + " Not Passed..");
     }
     idx++;
     processing = false;
@@ -235,10 +259,13 @@ page.onLoadFinished = function() {
 
 setInterval(function() {
   if (!processing && idx < filelist.length) {
-    var file = pathToTest + filelist[idx];
+    var file = filelist[idx];
+//    console.log(file);
     page.open(file);
   } else if (idx == filelist.length) {
-    console.log(" ## " + cnt + " tests are NOT passed");
+    console.log(" ## Fail: " + failcnt + " tests");
+    console.log(" ## Pass: " + passcnt + " tests");
+    console.log(" ## TOTAL: " + (passcnt + failcnt) + " tests");
     phantom.exit();
   }
 }, 250);

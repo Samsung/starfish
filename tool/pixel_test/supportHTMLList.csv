@@ -17,13 +17,13 @@ Element         , 4.1.1     , html
                 , 4.5.28    , span
                 , 4.5.29    , br
                 , 4.7.1     , img                   , src
-#                ,           ,                       , width
-#                ,           ,                       , height
+                ,           ,                       , width
+                ,           ,                       , height
                 , 4.11.1    , script
-#                , 4.2.5     , meta                 , charset
-#                , 4.7.7     , audio                , src
-#                , 4.7.8     , source               , src
-#                ,           ,                      , type
+                , 4.2.5     , meta                 , charset
+                , 4.7.7     , audio                , src
+                , 4.7.8     , source               , src
+                ,           ,                      , type
 ##                , 4.10.5    , input                , type*
 ##                , 4.10.14   , progress             , value
 ##                ,           ,                      , max
