@@ -232,7 +232,6 @@ protected:
     // should we delete m_decender?
     float m_ascender;
     float m_descender;
-    std::vector<FrameBox*, gc_allocator<FrameBox*>> m_boxes;
 };
 
 class FrameBlockBox : public FrameBox {
