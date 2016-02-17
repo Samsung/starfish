@@ -25,7 +25,7 @@ function initialize() {
         }
     }
     else if (args.length >= 3) {
-        if (args[1] == "-f" && fs.isFile(args[2]) && args[2].endsWith(".html")) {
+        if (args[1] == "-f" && fs.isFile(args[2]) && (args[2].endsWith(".html") || args[2].endsWith(".htm"))) {
             var last = args[2].lastIndexOf('/');
             filelist[0] = args[2].substring(last);
 
@@ -64,7 +64,7 @@ page.viewportSize = {
 if (filelist.length == 0) {
     var list = fs.list(pathToTest);
     for (var i = 0; i < list.length; i++) {
-        if (fs.isFile(pathToTest + list[i]) && list[i].endsWith(".html")) {
+        if (fs.isFile(pathToTest + list[i]) && (list[i].endsWith(".html") || list[i].endsWith(".htm"))) {
             filelist.push(list[i]);
         }
     }
@@ -86,7 +86,8 @@ page.onLoadFinished = function() {
         style.appendChild(text);
         document.head.insertBefore(style, document.head.firstChild);
     });
-    var renderFileName = pathToSave + filelist[idx] + '.png';
+    var filename = filelist[idx].substr(0, filelist[idx].lastIndexOf("."));
+    var renderFileName = pathToSave + filename + '_expected.png';
     page.render(renderFileName);
     console.log('    ... Captured in '+ renderFileName);
     idx++;

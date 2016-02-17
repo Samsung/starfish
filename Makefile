@@ -374,6 +374,29 @@ install_pixel_test_dep:
 
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc)
+pixel_test_css1:
+	make pixel_test tc=tool/pixel_test/css1.res
+pixel_test_css21:
+	make pixel_test tc=tool/pixel_test/css21.res
+pixel_test_css3_color:
+	make pixel_test tc=tool/pixel_test/css-color-3.res
+pixel_test_css3_backgrounds:
+	make pixel_test tc=tool/pixel_test/css-backgrounds-3.res
+pixel_test_css3_transforms:
+	make pixel_test tc=tool/pixel_test/css-transforms-1.res
+
+wpt_syntax_checker:
+	./tool/pixel_test/syntaxChecker.sh css1
+	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css1.res"
+	./tool/pixel_test/syntaxChecker.sh css21
+	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css21.res"
+	./tool/pixel_test/syntaxChecker.sh css-backgrounds-3
+	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-backgrounds-3.res"
+	./tool/pixel_test/syntaxChecker.sh css-color-3
+	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-color-3.res"
+	./tool/pixel_test/syntaxChecker.sh css-transforms-1
+	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-transforms-1.res"
+	@echo "[wpt_syntax_checker] COMPLETE.."
 
 regression_test:
 	./tool/pixel_test/regression_test.sh $(tc)

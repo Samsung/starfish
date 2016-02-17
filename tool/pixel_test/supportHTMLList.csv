@@ -10,6 +10,7 @@ Element         , 4.1.1     , html
 **              , 4.2.4     , link                  , rel
                 ,           ,                       , type
                 ,           ,                       , href
+                , 4.2.5     , meta                  , charset
 **              , 4.2.6     , style                 , type
                 , 4.3.1     , body
                 , 4.4.1     , p
@@ -20,7 +21,6 @@ Element         , 4.1.1     , html
                 ,           ,                       , width
                 ,           ,                       , height
                 , 4.11.1    , script
-                , 4.2.5     , meta                 , charset
                 , 4.7.7     , audio                , src
                 , 4.7.8     , source               , src
                 ,           ,                      , type

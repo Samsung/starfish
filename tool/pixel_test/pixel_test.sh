@@ -8,22 +8,31 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 # Variables
-EXPECTED_IMAGE_PATH="test/reftest"
+EXPECTED_IMAGE_PATH="out/x64/exe/debug/reftest/pixel_test"
 # FIXME
 OUTDIR="out/x64/exe/debug/reftest"
 mkdir -p $OUTDIR
+mkdir -p $EXPECTED_IMAGE_PATH
 PASS=0
 FAIL=0
-CURDIR=`pwd`
 
 if [ "$1" = "" ]; then
-    tc=$(find test -name "*.html" | sort)
+    tc=$(find test -name "*.html" | grep -v "csswg-test" | sort)
 else
     tc=$1
 fi
 
+if [[ "$tc" == *"reftest"* ]]; then
+    echo "[ERROR] Use make pixel_test_css*"
+    exit 1;
+fi
+
 if [[ "$tc" == *"/" ]]; then
-    tc=$(find $tc -name "*.html" | sort);
+    tc=$(find $tc -name "*.html" | grep -v "csswg-test" | sort);
+fi
+
+if [[ "$tc" == *".res" ]]; then
+    tc=$(cat $tc | sort);
 fi
 
 echo -e "${BOLD}###### CSS Pixel Test ######${RESET}\n"
@@ -32,31 +41,40 @@ for i in $tc ; do
     then
         continue;
     fi
-    dir=${i%.html}
-    html=$dir".html"
+    dir=${i%.htm*}
     file=${dir##*/}
     dir=${dir#*/}
     dir=${dir%/*}
 
     # Capture the screenshot
 #    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
-    ELM_ENGINE="shot:" nodejs runner.js $i --pixel-test > /dev/null 2>&1
+    ELM_ENGINE="shot:" nodejs runner.js ${i} --pixel-test > /dev/null 2>&1
 
     # Compare
-    WEBKIT_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png"
-    compare="tool/pixel_test/bin/image_diff ${WEBKIT_PNG} out.png"
-    diff=`eval $compare` > /dev/null 2>&1
-    if [ "$diff" = "" ]; then
-        #echo $CURDIR/$html
-        phantomjs tool/pixel_test/capture.js -f $CURDIR/$html ${WEBKIT_PNG%/*} > /dev/null 2>&1
-        diff=`eval $compare` > /dev/null 2>&1
+    mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}
+    WEBKIT_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}_expected.png"
+    STARFISH_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}_result.png"
+    DIFF_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}_diff.png"
+    #echo $WEBKIT_PNG
+    #echo $STARFISH_PNG
+    #echo $DIFF_PNG
+    if [ ! -f ${WEBKIT_PNG} ]; then
+        phantomjs tool/pixel_test/capture.js -f ${i} . > /dev/null 2>&1
+        mv ${file}_expected.png ${WEBKIT_PNG}
     fi
-    result=${diff##* }
-    ratio=${diff#* }
+
+    if [ ! -f out.png ]; then
+        result="error"
+    else
+        mv out.png "${STARFISH_PNG}"
+        diff=`tool/pixel_test/bin/image_diff ${WEBKIT_PNG} ${STARFISH_PNG}`
+        result=${diff##* }
+        ratio=${diff#* }
+    fi
 
     # Print the result
     if [ "${result}" = "failed" ]; then
-        diff=`tool/pixel_test/bin/image_diff --diff ${WEBKIT_PNG} out.png $OUTDIR/${file}_diff.png`
+        diff=`tool/pixel_test/bin/image_diff --diff ${WEBKIT_PNG} ${STARFISH_PNG} ${DIFF_PNG}`
         if [[ "${ratio}" == "0."* ]]; then
             CHECK=`expr $CHECK + 1`
             echo -e "${YELLOW}[CHECK]${RESET}" $i "("$ratio")"

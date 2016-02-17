@@ -36,6 +36,7 @@ CSS 2.1          , 8.3       , margin
                  , 9.2       , display               , block
                  ,           ,                       , inline
                  ,           ,                       , inline-block
+                 ,           ,                       , none
                  , 9.3       , position              , static
                  ,           ,                       , absolute
                  ,           ,                       , relative
@@ -44,7 +45,7 @@ CSS 2.1          , 8.3       , margin
                  ,           , bottom
                  ,           , left
                  , 9.9       , z-index
-                 , 9.10      , direction
+                 , 9.10      , direction             , ltr
                  , 10.2      , width
                  , 10.5      , height
                  , 10.8      , line-height
