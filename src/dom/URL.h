@@ -38,11 +38,10 @@ public:
         return result;
     }
 
-    static String* createObjectURL(ScriptObject RawObject,StarFish* starfish){
+    static String* createObjectURL(Blob* blob,StarFish* starfish){
 
         String* objectURL = String::fromUTF8("blob:non-origin/");
         objectURL = objectURL->concat(makeUUID());
-        Blob* blob = (Blob*)RawObject->extraPointerData();
         starfish->fetchImage(objectURL,blob->size(),blob->data());
         return objectURL;
 

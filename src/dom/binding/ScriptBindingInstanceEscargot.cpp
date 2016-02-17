@@ -1968,7 +1968,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            String* result = URL::createObjectURL(instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject(),sf);
+            String* result = URL::createObjectURL((Blob*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData(),sf);
             return escargot::ESValue(escargot::ESString::create(result->utf8Data()));
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
