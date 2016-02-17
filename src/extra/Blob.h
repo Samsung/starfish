@@ -12,10 +12,6 @@ public:
     Blob(uint32_t size,String* type,void* data)
         : ScriptWrappable(this)
     {
-        //FIXME: temp soluation
-        m_object->set(escargot::ESString::create("size"),escargot::ESValue(escargot::ESValue(size)));
-        m_object->set(escargot::ESString::create("type"),escargot::ESValue(escargot::ESString::create(type->utf8Data())));
-
         m_size = size;
         m_type = type;
         m_data = data;

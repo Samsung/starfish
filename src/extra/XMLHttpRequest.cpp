@@ -19,10 +19,6 @@ XMLHttpRequest::XMLHttpRequest()
     m_abort_flag = false;
     m_bindingInstance = nullptr;
 
-    //FIXME: temp soluation
-    m_object->set(createScriptString(String::fromUTF8("responseText")), ScriptValue(ScriptValue::ESNull));
-    m_object->set(createScriptString(String::fromUTF8("response")), ScriptValue(ScriptValue::ESNull));
-
     //init
     initScriptWrappable(this);
 
