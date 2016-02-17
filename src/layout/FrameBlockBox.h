@@ -207,7 +207,7 @@ public:
         : FrameBox(nullptr, nullptr)
     {
         setParent(parent);
-        m_descender= m_ascender = 0;
+        m_descender = m_ascender = 0;
     }
 
     virtual bool isLineBox()
@@ -225,7 +225,12 @@ public:
         return m_descender;
     }
 
+    std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes()
+    {
+        return m_boxes;
+    }
 protected:
+    std::vector<FrameBox*, gc_allocator<FrameBox*>> m_boxes;
     // FIXME
     // we use these value only for vertical-align of inline-block
     // in layout, we use only 'ascender'

@@ -356,14 +356,9 @@ public:
         return m_lastChild;
     }
 
-    void setNext(Frame* f)
-    {
-        m_next = f;
-    }
-
     void appendChild(Frame* newChild)
     {
-        STARFISH_ASSERT(newChild->parent() == nullptr || newChild->parent() == this);
+        STARFISH_ASSERT(newChild->parent() == nullptr);
 
         newChild->setParent(this);
         Frame* lChild = lastChild();
@@ -482,7 +477,8 @@ protected:
 
     Node* m_node;
     ComputedStyle* m_style;
-
+    StackingContext* m_stackingContext;
+private:
     Frame* m_parent;
     Frame* m_layoutParent;
 
@@ -491,8 +487,6 @@ protected:
 
     Frame* m_firstChild;
     Frame* m_lastChild;
-
-    StackingContext* m_stackingContext;
 };
 
 }

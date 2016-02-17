@@ -55,7 +55,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
 
         STARFISH_ASSERT(node() != nullptr);
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
-        FrameBox* parent = m_parent->asFrameBox();
+        FrameBox* parent = Frame::parent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
         float absX = absLoc.x() - cb->borderLeft();
         auto setAbsX = [&](float x) {
@@ -189,7 +189,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         }
     } else {
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
-        FrameBox* parent = m_parent->asFrameBox();
+        FrameBox* parent = Frame::parent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
         float absY = absLoc.y() - cb->borderTop();
         auto setAbsY = [&](float y) {
@@ -391,10 +391,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
                     float cx = x - b.m_frameRect.x();
                     float cy = y - b.m_frameRect.y();
 
-                    Frame* child = b.firstChild();
-                    while(child) {
-                        FrameBox* childBox = child->asFrameBox();
-                        child = child->next();
+                    for (size_t k = 0; k < b.m_boxes.size(); k ++) {
+                        FrameBox* childBox = b.m_boxes[k];
                         float cx2 = cx - childBox->x();
                         float cy2 = cy - childBox->y();
                         result = childBox->hitTest(cx2, cy2, s);
@@ -433,10 +431,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
                     float cx = x - b.m_frameRect.x();
                     float cy = y - b.m_frameRect.y();
 
-                    Frame* child = b.firstChild();
-                    while(child) {
-                        FrameBox* childBox = child->asFrameBox();
-                        child = child->next();
+                    for (size_t k = 0; k < b.m_boxes.size(); k ++) {
+                        FrameBox* childBox = b.m_boxes[k];
                         float cx2 = cx - childBox->x();
                         float cy2 = cy - childBox->y();
                         result = childBox->hitTest(cx2, cy2, stage);
@@ -562,15 +558,13 @@ void FrameBlockBox::dump(int depth)
                     , m_lineBoxes[i]->m_frameRect.width(), m_lineBoxes[i]->m_frameRect.height());
 
                 LineBox& lb = *m_lineBoxes[i];
-                Frame* child = lb.firstChild();
-                while(child) {
-                    FrameBox* childBox = child->asFrameBox();
-                    child = child->next();
+                for (size_t k = 0; k < lb.m_boxes.size(); k ++) {
+                    FrameBox* childBox = lb.m_boxes[k];
                     for(int k = 0; k < depth + 2; k ++)
                         printf("  ");
                     printf("%s", childBox->name());
                     childBox->dump(depth + 3);
-                    if (!child)
+                    if (k == lb.m_boxes.size() - 1)
                         puts("");
                 }
             }
