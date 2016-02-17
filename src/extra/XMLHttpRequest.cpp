@@ -33,7 +33,7 @@ void XMLHttpRequest::send(String* body)
     if (m_ready_state != OPENED)
         return;
 
-    escargot::ESObject* obj = (escargot::ESObject*) this;
+    escargot::ESObject* obj = (escargot::ESObject*)scriptObject();
     const char* url = m_url->utf8Data();
 
     // invoke loadstart Event.
@@ -54,7 +54,7 @@ void XMLHttpRequest::send(String* body)
 
         ProgressData progressData;
         progressData.curl = curl;
-        progressData.obj = (XMLHttpRequest*)obj;
+        progressData.obj = (XMLHttpRequest*)obj->extraPointerData();
         progressData.lastruntime = 0;
 
         if (!curl) return false;
@@ -92,7 +92,7 @@ void XMLHttpRequest::send(String* body)
                 printf("XMLHttpRequest UnSupportted method!!  \n");
 
                 //invoke loadend event
-                ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,progressData.loaded,progressData.total);
+                ((XMLHttpRequest*)obj->extraPointerData())->callEventHandler(String::fromUTF8("loadend"),false,progressData.loaded,progressData.total);
                 return false;
             }
 
@@ -102,7 +102,7 @@ void XMLHttpRequest::send(String* body)
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
 
             if (((res_code == 200 || res_code == 201) && res == CURLE_OK )) {
-                ((XMLHttpRequest*)obj)->setResponseHeader(String::fromUTF8(header.memory));
+                ((XMLHttpRequest*)obj->extraPointerData())->setResponseHeader(String::fromUTF8(header.memory));
 
                 curl_easy_cleanup(curl);
 
@@ -178,11 +178,11 @@ void XMLHttpRequest::send(String* body)
                 switch(res) {
                     case CURLE_OPERATION_TIMEDOUT:
                     //invoke timeout event
-                    ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("timeout"),false,0,0);
+                    ((XMLHttpRequest*)obj->extraPointerData())->callEventHandler(String::fromUTF8("timeout"),false,0,0);
                     break;
 
                     case CURLE_ABORTED_BY_CALLBACK:
-                    ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("abort"),false,0,0);
+                    ((XMLHttpRequest*)obj->extraPointerData())->callEventHandler(String::fromUTF8("abort"),false,0,0);
                     break;
 
                     default:
@@ -190,10 +190,10 @@ void XMLHttpRequest::send(String* body)
                 }
 
                 //invoke error event
-                ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("error"),false,0,0);
+                ((XMLHttpRequest*)obj->extraPointerData())->callEventHandler(String::fromUTF8("error"),false,0,0);
 
                 //invoke loadend event
-                ((XMLHttpRequest*)obj)->callEventHandler(String::fromUTF8("loadend"),false,0,0);
+                ((XMLHttpRequest*)obj->extraPointerData())->callEventHandler(String::fromUTF8("loadend"),false,0,0);
             }
             return false;
 
@@ -279,8 +279,9 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
         if (clickListeners) {
             for (unsigned i = 0; i < clickListeners->size(); i++) {
                 STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
                 escargot::ESValue json_arg[1] =
-                { escargot::ESValue(new ProgressEvent(striptBindingInstance(), loaded, total)) };
+                { escargot::ESValue(pe->scriptObject()) };
                 escargot::ESValue fn = clickListeners->at(i)->scriptValue();
                 if (fn != escargot::ESValue::ESNull)
                     callJSFunction(instance, fn, scriptValue(), json_arg, 1);
@@ -314,7 +315,8 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
                     if (clickListeners) {
                         for (unsigned i = 0; i < clickListeners->size(); i++) {
                             STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                            escargot::ESValue json_arg[1] = {escargot::ESValue(new ProgressEvent(((XMLHttpRequest*)this_obj->extraPointerData())->striptBindingInstance(),pass->loaded,pass->total))};
+                            ProgressEvent* pe = new ProgressEvent(((XMLHttpRequest*)this_obj->extraPointerData())->striptBindingInstance(),pass->loaded,pass->total);
+                            escargot::ESValue json_arg[1] = {escargot::ESValue(pe->scriptObject())};
                             escargot::ESValue fn = clickListeners->at(i)->scriptValue();
                             if(fn!=escargot::ESValue::ESNull)
                             callJSFunction(instance, fn, this_obj, json_arg, 1);

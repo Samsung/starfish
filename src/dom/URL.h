@@ -53,7 +53,7 @@ public:
         escargot::ESFunctionObject* urlCreateObjectURLFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
             if (v.isObject()) {
-                URL* url = (URL*)v.asESPointer()->asESObject();
+                URL* url = (URL*)v.asESPointer()->asESObject()->extraPointerData();
                 String* result = url->createObjectURL(instance->currentExecutionContext()->readArgument(0));
                 return escargot::ESValue(escargot::ESString::create(result->utf8Data()));
             }
@@ -66,7 +66,7 @@ public:
 
         String* objectURL = String::fromUTF8("blob:non-origin/");
         objectURL = objectURL->concat(makeUUID());
-        Blob* blob = (Blob*)RawObject.asESPointer()->asESObject();
+        Blob* blob = (Blob*)RawObject.asESPointer()->asESObject()->extraPointerData();
         m_starfish->fetchImage(objectURL,blob->size(),blob->data());
         return objectURL;
 
