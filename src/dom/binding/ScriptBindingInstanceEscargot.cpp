@@ -457,40 +457,55 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     );
 
     escargot::ESFunctionObject* appendChildFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
-        obj->appendChild(child);
-        return child->scriptValue();
+        try {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+            obj->appendChild(child);
+            return child->scriptValue();
+        } catch (DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     }, escargot::ESString::create("appendChild"), 1, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("appendChild"), false, false, false, appendChildFunction);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeChild"), false, false, false,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-            Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
-            Node* n = obj->removeChild(child);
-            return n->scriptValue();
+            try {
+                escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
+                Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+                Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+                Node* n = obj->removeChild(child);
+                return n->scriptValue();
+            } catch (DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }, escargot::ESString::create("removeChild"), 1, false)
     );
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("replaceChild"), false, false, false,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(1), ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
-            Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject()->extraPointerData();
-            Node* n = obj->replaceChild(node, child);
-            return n->scriptValue();
+            try {
+                escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
+                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(1), ScriptWrappable::Type::NodeObject);
+                Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+                Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+                Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject()->extraPointerData();
+                Node* n = obj->replaceChild(node, child);
+                return n->scriptValue();
+            } catch (DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }, escargot::ESString::create("replaceChild"), 2, false)
     );
 

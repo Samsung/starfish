@@ -199,45 +199,8 @@ public:
 
     Node* appendChild(Node* child);
     Node* insertBefore(Node* child, Node* childRef = nullptr);
-
-    Node* removeChild(Node* child)
-    {
-        STARFISH_ASSERT(child);
-        STARFISH_ASSERT(child->parentNode() == this);
-
-        Node* prevChild = child->previousSibling();
-        Node* nextChild = child->nextSibling();
-
-        if(nextChild) {
-            nextChild->setPreviousSibling(prevChild);
-        }
-        if(prevChild) {
-            prevChild->setNextSibling(nextChild);
-        }
-        if(m_firstChild == child) {
-            m_firstChild = nextChild;
-        }
-        if(m_lastChild == child) {
-            m_lastChild = prevChild;
-        }
-
-        child->setPreviousSibling(nullptr);
-        child->setNextSibling(nullptr);
-        child->setParentNode(nullptr);
-        setNeedsStyleRecalc();
-        return child;
-    }
-
-    Node* replaceChild(Node* child, Node* childToRemove)
-    {
-        STARFISH_ASSERT(child);
-        STARFISH_ASSERT(childToRemove);
-        STARFISH_ASSERT(childToRemove->parentNode() == this);
-
-        insertBefore(child, childToRemove);
-        Node* n = removeChild(childToRemove);
-        return n;
-    }
+    Node* replaceChild(Node* child, Node* childToRemove);
+    Node* removeChild(Node* child);
 
     /* Other methods (not in Node Interface) */
     enum NodeState {
@@ -436,6 +399,8 @@ private:
     }
 
     void validatePreinsert(Node* child, Node* childRef);
+    void validateReplace(Node* child, Node* childToRemove);
+    Node* getDocTypeChild();
 
 protected:
     bool m_needsStyleRecalc;

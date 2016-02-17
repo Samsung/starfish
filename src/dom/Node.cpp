@@ -323,7 +323,17 @@ NamedNodeMap* Node::attributes()
     return nullptr;
 }
 
-void Node::validatePreinsert(Node* child, Node* childRef)
+Node* Node::getDocTypeChild()
+{
+    for(Node* c=firstChild(); c != nullptr; c=c->nextSibling()) {
+        if(c->isDocumentType()) {
+            return c;
+        }
+    }
+    return nullptr;
+}
+
+void Node::validatePreinsert(Node* child, Node* childRef) // (node, child)
 {
     // 4.2.1 pre-insertion validity
     if(!(isDocument() || isElement())) {
@@ -343,13 +353,18 @@ void Node::validatePreinsert(Node* child, Node* childRef)
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Either node is a Text node and parent is a document, or node is a doctype and parent is not a document.");
     }
     if(isDocument()) {
-        if(childRef != nullptr && childRef->isElement() &&
-           (childRef->isDocumentType() ||
-           (childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType()))) {
-            throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child, child is a doctype, or child is not null and a doctype is following child.");
-        } else if((childRef != nullptr && childRef->isDocumentType() && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement()) ||
-                  (childRef == nullptr && firstChild() != nullptr && firstChild()->isElement())) {
-            throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child, child is non-null and an element is preceding child, or child is null and parent has an element child.");
+        if(child->isElement()) {
+            if((firstElementChild() != nullptr) ||
+               (childRef != nullptr && childRef->isElement()) ||
+               (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
+                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child, child is a doctype, or child is not null and a doctype is following child.");
+            }
+        } else if(child->isDocumentType()) {
+            if(getDocTypeChild() ||
+               (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement()) ||
+               (childRef == nullptr && firstElementChild() != nullptr)) {
+                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child, child is non-null and an element is preceding child, or child is null and parent has an element child.");
+            }
         }
     }
 }
@@ -410,6 +425,86 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     return child;
 }
 
+void Node::validateReplace(Node* child, Node* childToRemove) // node, child
+{
+    Node* childRef = childToRemove;
+    // 4.2.1 replace validity
+    if(!(isDocument() || isElement())) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
+    }
+    if(this == child) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+    }
+    if(childRef != nullptr && childRef->parentNode() != this) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
+    }
+    if(!(child->isDocumentType() || child->isElement() || child->isText() || child->isComment())) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is not a DocumentFragment, DocumentType, Element, Text, ProcessingInstruction, or Comment.");
+    }
+    if((child->isText() && isDocument()) ||
+        (child->isDocumentType() && !isDocument())) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Either node is a Text node and parent is a document, or node is a doctype and parent is not a document.");
+    }
+    if(isDocument()) {
+        if(child->isElement()) {
+            if((firstElementChild() != nullptr) ||
+               (childRef != nullptr && childRef->isElement()) ||
+               (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
+                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child that is not child or a doctype is following child.");
+            }
+        } else if(child->isDocumentType()) {
+            if((getDocTypeChild() != nullptr && getDocTypeChild() != childRef) ||
+               (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement())) {
+                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child that is not child, or an element is preceding child.");
+            }
+        }
+    }
+}
+
+Node* Node::replaceChild(Node* child, Node* childToRemove)
+{
+    STARFISH_ASSERT(child);
+
+    validateReplace(child, childToRemove);
+
+    STARFISH_ASSERT(childToRemove);
+    STARFISH_ASSERT(childToRemove->parentNode() == this);
+
+    insertBefore(child, childToRemove);
+    Node* n = removeChild(childToRemove);
+    return n;
+}
+
+Node* Node::removeChild(Node* child)
+{
+    STARFISH_ASSERT(child);
+
+    if(child->parentNode() != this) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::NOT_FOUND_ERR, "Child's parent is not parent.");
+    }
+
+    Node* prevChild = child->previousSibling();
+    Node* nextChild = child->nextSibling();
+
+    if(nextChild) {
+        nextChild->setPreviousSibling(prevChild);
+    }
+    if(prevChild) {
+        prevChild->setNextSibling(nextChild);
+    }
+    if(m_firstChild == child) {
+        m_firstChild = nextChild;
+    }
+    if(m_lastChild == child) {
+        m_lastChild = prevChild;
+    }
+
+    child->setPreviousSibling(nullptr);
+    child->setNextSibling(nullptr);
+    child->setParentNode(nullptr);
+    setNeedsStyleRecalc();
+    return child;
+}
 
 void Node::dumpStyle()
 {
