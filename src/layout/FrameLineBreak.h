@@ -36,7 +36,7 @@ public:
     {
     }
 
-    virtual Frame* hitTest(float x, float y, HitTestStage stage = HitTestStackingContext)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage = HitTestStackingContext)
     {
         return nullptr;
     }

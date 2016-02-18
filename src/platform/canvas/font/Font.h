@@ -1,6 +1,8 @@
 #ifndef __Font__
 #define __Font__
 
+#include "layout/LayoutUtil.h"
+
 namespace StarFish {
 
 enum FontStyle {
@@ -57,10 +59,9 @@ public:
     }
 
     struct FontMetrics {
-        float m_ascender;
-        float m_descender;
-        float m_fontHeight;
-        float m_lineGap;
+        LayoutUnit m_ascender;
+        LayoutUnit m_descender;
+        LayoutUnit m_fontHeight;
     };
 
     const FontMetrics& metrics()

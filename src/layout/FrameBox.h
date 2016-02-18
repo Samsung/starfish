@@ -46,92 +46,92 @@ public:
     virtual void dump(int depth)
     {
         Frame::dump(depth);
-        printf(" frameRect(%g,%g,%g,%g) ", x(), y(), width(), height());
+        printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(), (float)width(), (float)height());
     }
 
-    const Rect& frameRect() { return m_frameRect; }
+    const LayoutRect& frameRect() { return m_frameRect; }
 
-    float x() const { return m_frameRect.x(); }
-    float y() const { return m_frameRect.y(); }
-    float width() const { return m_frameRect.width(); }
-    float height() const { return m_frameRect.height(); }
+    LayoutUnit x() const { return m_frameRect.x(); }
+    LayoutUnit y() const { return m_frameRect.y(); }
+    LayoutUnit width() const { return m_frameRect.width(); }
+    LayoutUnit height() const { return m_frameRect.height(); }
 
-    void setX(float x) { m_frameRect.setX(x); }
-    void setY(float y) { m_frameRect.setY(y); }
-    void moveX(float t) { setX(x() + t); }
-    void moveY(float t) { setY(y() + t); }
-    void setWidth(float width) { m_frameRect.setWidth(width); }
-    void setHeight(float height) { m_frameRect.setHeight(height); }
+    void setX(LayoutUnit x) { m_frameRect.setX(x); }
+    void setY(LayoutUnit y) { m_frameRect.setY(y); }
+    void moveX(LayoutUnit t) { setX(x() + t); }
+    void moveY(LayoutUnit t) { setY(y() + t); }
+    void setWidth(LayoutUnit width) { m_frameRect.setWidth(width); }
+    void setHeight(LayoutUnit height) { m_frameRect.setHeight(height); }
 
-    void setContentWidth(float width) { m_frameRect.setWidth(width + paddingWidth() + borderWidth()); }
-    void setContentHeight(float height) { m_frameRect.setHeight(height + paddingHeight() + borderHeight()); }
+    void setContentWidth(LayoutUnit width) { m_frameRect.setWidth(width + paddingWidth() + borderWidth()); }
+    void setContentHeight(LayoutUnit height) { m_frameRect.setHeight(height + paddingHeight() + borderHeight()); }
 
-    void setPaddingTop(float t) { m_padding.setTop(t); }
-    void setPaddingRight(float t) { m_padding.setRight(t); }
-    void setPaddingBottom(float t) { m_padding.setBottom(t); }
-    void setPaddingLeft(float t) { m_padding.setLeft(t); }
+    void setPaddingTop(LayoutUnit t) { m_padding.setTop(t); }
+    void setPaddingRight(LayoutUnit t) { m_padding.setRight(t); }
+    void setPaddingBottom(LayoutUnit t) { m_padding.setBottom(t); }
+    void setPaddingLeft(LayoutUnit t) { m_padding.setLeft(t); }
 
-    float paddingTop() { return m_padding.top(); }
-    float paddingRight() { return m_padding.right(); }
-    float paddingBottom() { return m_padding.bottom(); }
-    float paddingLeft() { return m_padding.left(); }
+    LayoutUnit paddingTop() { return m_padding.top(); }
+    LayoutUnit paddingRight() { return m_padding.right(); }
+    LayoutUnit paddingBottom() { return m_padding.bottom(); }
+    LayoutUnit paddingLeft() { return m_padding.left(); }
 
-    void setBorderTop(float t) { m_border.setTop(t); }
-    void setBorderRight(float t) { m_border.setRight(t); }
-    void setBorderBottom(float t) { m_border.setBottom(t); }
-    void setBorderLeft(float t) { m_border.setLeft(t); }
+    void setBorderTop(LayoutUnit t) { m_border.setTop(t); }
+    void setBorderRight(LayoutUnit t) { m_border.setRight(t); }
+    void setBorderBottom(LayoutUnit t) { m_border.setBottom(t); }
+    void setBorderLeft(LayoutUnit t) { m_border.setLeft(t); }
 
-    float borderTop() { return m_border.top(); }
-    float borderRight() { return m_border.right(); }
-    float borderBottom() { return m_border.bottom(); }
-    float borderLeft() { return m_border.left(); }
+    LayoutUnit borderTop() { return m_border.top(); }
+    LayoutUnit borderRight() { return m_border.right(); }
+    LayoutUnit borderBottom() { return m_border.bottom(); }
+    LayoutUnit borderLeft() { return m_border.left(); }
 
-    void setMarginTop(float t) { m_margin.setTop(t); }
-    void setMarginRight(float t) { m_margin.setRight(t); }
-    void setMarginBottom(float t) { m_margin.setBottom(t); }
-    void setMarginLeft(float t) { m_margin.setLeft(t); }
+    void setMarginTop(LayoutUnit t) { m_margin.setTop(t); }
+    void setMarginRight(LayoutUnit t) { m_margin.setRight(t); }
+    void setMarginBottom(LayoutUnit t) { m_margin.setBottom(t); }
+    void setMarginLeft(LayoutUnit t) { m_margin.setLeft(t); }
 
-    float marginTop() { return m_margin.top(); }
-    float marginRight() { return m_margin.right(); }
-    float marginBottom() { return m_margin.bottom(); }
-    float marginLeft() { return m_margin.left(); }
+    LayoutUnit marginTop() { return m_margin.top(); }
+    LayoutUnit marginRight() { return m_margin.right(); }
+    LayoutUnit marginBottom() { return m_margin.bottom(); }
+    LayoutUnit marginLeft() { return m_margin.left(); }
 
-    float paddingWidth()
+    LayoutUnit paddingWidth()
     {
         return m_padding.left() + m_padding.right();
     }
 
-    float paddingHeight()
+    LayoutUnit paddingHeight()
     {
         return m_padding.top() + m_padding.bottom();
     }
 
-    float borderWidth()
+    LayoutUnit borderWidth()
     {
         return m_border.left() + m_border.right();
     }
 
-    float borderHeight()
+    LayoutUnit borderHeight()
     {
         return m_border.top() + m_border.bottom();
     }
 
-    float marginWidth()
+    LayoutUnit marginWidth()
     {
         return m_margin.left() + m_margin.right();
     }
 
-    float marginHeight()
+    LayoutUnit marginHeight()
     {
         return m_margin.top() + m_margin.bottom();
     }
 
-    float contentWidth()
+    LayoutUnit contentWidth()
     {
         return m_frameRect.width() - paddingWidth() - borderWidth();
     }
 
-    float contentHeight()
+    LayoutUnit contentHeight()
     {
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
@@ -249,7 +249,7 @@ public:
         }
     }
 
-    virtual Frame* hitTest(float x, float y,HitTestStage stage)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
     {
         if (x >= 0 && x < m_frameRect.width() && y >= 0 && y < m_frameRect.height()) {
             return this;
@@ -269,7 +269,7 @@ public:
         return l;
     }
 
-    void computeBorderMarginPadding(float parentContentWidth)
+    void computeBorderMarginPadding(LayoutUnit parentContentWidth)
     {
         // padding
         if (style()->paddingLeft().isSpecified()) {
@@ -319,8 +319,8 @@ public:
 protected:
 
     // content + padding + border
-    Rect m_frameRect;
-    BoxSurroundData m_padding, m_border, m_margin;
+    LayoutRect m_frameRect;
+    LayoutBoxSurroundData m_padding, m_border, m_margin;
 };
 
 }

@@ -32,7 +32,7 @@ public:
             return;
         firstChild()->paint(canvas, stage);
     }
-    virtual Frame* hitTest(float x, float y, HitTestStage stage)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
         STARFISH_ASSERT(stage == HitTestStackingContext);
         STARFISH_ASSERT(firstChild() == lastChild());

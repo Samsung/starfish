@@ -5,13 +5,13 @@
 
 namespace StarFish {
 
-void computeVerticalProperties(FrameBox* parentBox, float& ascenderInOut,float& descenderInOut, LayoutContext& ctx)
+void computeVerticalProperties(FrameBox* parentBox, LayoutUnit& ascenderInOut,LayoutUnit& descenderInOut, LayoutContext& ctx)
 {
     // TODO vertical align(length, text-top.., etc)
     bool hasSpecialCase = false;
-    float maxAscender = ascenderInOut;
-    float maxDescender = descenderInOut;
-    float mostBiggestBoxHeight = 0;
+    LayoutUnit maxAscender = ascenderInOut;
+    LayoutUnit maxDescender = descenderInOut;
+    LayoutUnit mostBiggestBoxHeight = 0;
 
     size_t k = 0;
     Frame* f = parentBox->firstChild();
@@ -53,21 +53,21 @@ void computeVerticalProperties(FrameBox* parentBox, float& ascenderInOut,float& 
                     if (ib->isInlineReplacedBox()) {
                         // TODO use this code for when replaced content does not have content
                         /*
-                        float asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
+                        LayoutUnit asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
                                 + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
-                        float dec = -(ib->asInlineReplacedBox()->replacedBox()->paddingBottom() + ib->asInlineReplacedBox()->replacedBox()->borderBottom()
+                        LayoutUnit dec = -(ib->asInlineReplacedBox()->replacedBox()->paddingBottom() + ib->asInlineReplacedBox()->replacedBox()->borderBottom()
                                 + ib->marginBottom());
                         maxAscender = std::max(asc, maxAscender);
                         maxDescender = std::min(dec, maxDescender);
                         */
-                        float asc = ib->height() + ib->marginHeight();
+                        LayoutUnit asc = ib->height() + ib->marginHeight();
                         maxAscender = std::max(asc, maxAscender);
                     } else if (ib->isInlineBlockBox()) {
                         if (ib->asInlineBlockBox()->ascender() == ib->height()) {
                             maxAscender = std::max(ib->asInlineBlockBox()->ascender() + ib->marginHeight(), maxAscender);
-                            maxDescender = std::min(0.f, maxDescender);
+                            maxDescender = std::min(LayoutUnit(0), maxDescender);
                         } else {
-                            float dec = -(ib->height() - ib->asInlineBlockBox()->ascender()) - ib->marginBottom();
+                            LayoutUnit dec = -(ib->height() - ib->asInlineBlockBox()->ascender()) - ib->marginBottom();
                             maxAscender = std::max(ib->asInlineBlockBox()->ascender() + ib->marginTop(), maxAscender);
                             maxDescender = std::min(dec, maxDescender);
                         }
@@ -76,12 +76,12 @@ void computeVerticalProperties(FrameBox* parentBox, float& ascenderInOut,float& 
                         maxDescender = std::min(ib->asInlineNonReplacedBox()->decender(), maxDescender);
                     }
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                    float height = ib->height();
+                    LayoutUnit height = ib->height();
                     maxAscender = std::max(height/2 + ib->marginTop(), maxAscender);
                     maxDescender = std::min(-height/2 - ib->marginBottom(), maxDescender);
                 } else if (va == VerticalAlignValue::TopVAlignValue || va == VerticalAlignValue::BottomVAlignValue) {
                     hasSpecialCase = true;
-                    float height = ib->height() + ib->marginHeight();
+                    LayoutUnit height = ib->height() + ib->marginHeight();
                     mostBiggestBoxHeight = std::max(mostBiggestBoxHeight, height);
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -113,13 +113,13 @@ void computeVerticalProperties(FrameBox* parentBox, float& ascenderInOut,float& 
                 }
                 InlineBox* ib = f->asFrameBox()->asInlineBox();
                 VerticalAlignValue va = ib->style()->verticalAlign();
-                float height = ib->height() + ib->marginHeight();
+                LayoutUnit height = ib->height() + ib->marginHeight();
                 if (height > maxAscender - maxDescender) {
                     if (va == VerticalAlignValue::TopVAlignValue) {
-                        float dec = -height + maxAscender;
+                        LayoutUnit dec = -height + maxAscender;
                         maxDescender = std::min(maxDescender, dec);
                     } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                        float asc = height + maxDescender;
+                        LayoutUnit asc = height + maxDescender;
                         maxAscender = std::max(maxAscender, asc);
                     }
                 }
@@ -132,7 +132,7 @@ void computeVerticalProperties(FrameBox* parentBox, float& ascenderInOut,float& 
     ascenderInOut = maxAscender;
     descenderInOut = maxDescender;
 
-    float height = maxAscender - maxDescender;
+    LayoutUnit height = maxAscender - maxDescender;
     f = parentBox->firstChild();
     k = 0;
     while (true) {
@@ -156,18 +156,18 @@ void computeVerticalProperties(FrameBox* parentBox, float& ascenderInOut,float& 
                     if (ib->isInlineReplacedBox()) {
                         // TODO use this code for when replaced content does not have content
                         /*
-                        float asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
+                        LayoutUnit asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
                                     + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
                         ib->setY(height + maxDescender - asc + ib->marginTop());
                         */
-                        float asc = ib->height() + ib->marginHeight();
+                        LayoutUnit asc = ib->height() + ib->marginHeight();
                         ib->setY(height + maxDescender - asc + ib->marginTop());
                     } else if (ib->isInlineBlockBox()) {
                         if (ib->asInlineBlockBox()->ascender() == ib->height()) {
-                            float dec = 0;
+                            LayoutUnit dec = 0;
                             ib->setY(height + maxDescender - ib->height() - dec - ib->marginTop());
                         } else {
-                            float dec = -(ib->height() - ib->asInlineBlockBox()->ascender()) - ib->marginBottom();
+                            LayoutUnit dec = -(ib->height() - ib->asInlineBlockBox()->ascender()) - ib->marginBottom();
                             ib->setY(height + maxDescender - ib->height() - dec - ib->marginTop());
                         }
                     } else {
@@ -175,7 +175,7 @@ void computeVerticalProperties(FrameBox* parentBox, float& ascenderInOut,float& 
                         ib->setY(height + maxDescender - ib->height() - ib->asInlineNonReplacedBox()->decender());
                     }
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                    float dec = -(ib->height() / 2);
+                    LayoutUnit dec = -(ib->height() / 2);
                     ib->setY(height + maxDescender - ib->height() - dec - ib->marginTop());
                 } else if (va == VerticalAlignValue::TopVAlignValue) {
                     ib->setY(ib->marginTop());
@@ -227,7 +227,7 @@ void textDividerForLayout(String* txt, fn f)
 }
 
 
-void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, float inlineContentWidth,
+void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit inlineContentWidth,
         std::function<void (InlineBox*)> gotInlineBoxCallback, std::function<void (bool)> lineBreakCallback, std::function<void (FrameInline*)> frameInlineCallback)
 {
     Frame* f = origin->firstChild();
@@ -252,7 +252,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     }
                 }
 
-                float textWidth;
+                LayoutUnit textWidth;
                 String* resultString;
                 if(isWhiteSpace) {
                     resultString = String::spaceString;
@@ -304,9 +304,9 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             FrameBlockBox* r = f->asFrameBlockBox();
             f->layout(ctx);
 
-            float ascender = 0;
+            LayoutUnit ascender = 0;
             if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox())) {
-                float topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
+                LayoutUnit topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
                 ascender = topToLineBox + ctx.lastLineBox()->ascender();
                 if (ascender > f->asFrameBox()->height()) {
                     ascender = f->asFrameBox()->height();
@@ -341,11 +341,11 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
     }
 }
 
-float FrameBlockBox::layoutInline(LayoutContext& ctx)
+LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 {
-    float lineBoxX = paddingLeft() + borderLeft();
-    float lineBoxY = paddingTop() + borderTop();
-    float inlineContentWidth = contentWidth();
+    LayoutUnit lineBoxX = paddingLeft() + borderLeft();
+    LayoutUnit lineBoxY = paddingTop() + borderTop();
+    LayoutUnit inlineContentWidth = contentWidth();
     LineFormattingContext lineFormattingContext(*this, ctx);
 
     inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, [&](InlineBox* ib) {
@@ -361,7 +361,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
     });
 
     // position each line
-    float contentHeight = 0;
+    LayoutUnit contentHeight = 0;
     for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
         LineBox& b = *m_lineBoxes[i];
         STARFISH_ASSERT(b.isLineBox());
@@ -370,7 +370,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
         b.m_frameRect.setY(contentHeight + lineBoxY);
 
         // align boxes
-        float x = 0;
+        LayoutUnit x = 0;
         for (size_t k = 0; k < b.m_boxes.size(); k ++) {
             FrameBox* childBox = b.m_boxes[k];
             childBox->setX(x + childBox->marginLeft());
@@ -381,7 +381,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
         // text align
         if (style()->textAlign() == TextAlignValue::LeftTextAlignValue) {
         } else if (style()->textAlign() == TextAlignValue::RightTextAlignValue) {
-            float diff = (inlineContentWidth - x);
+            LayoutUnit diff = (inlineContentWidth - x);
             for (size_t k = 0; k < b.m_boxes.size(); k ++) {
                 FrameBox* childBox = b.m_boxes[k];
                 childBox->moveX(diff);
@@ -391,7 +391,7 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
             /*
             if (lineFormattingContext.isBreakedLineWithoutBR(i)) {
-                float remainSpace = (inlineContentWidth - x);
+                LayoutUnit remainSpace = (inlineContentWidth - x);
                 if (remainSpace > 0) {
                     size_t spaceBoxCnt = 0;
                     for (size_t j = 0; j < b.m_boxes.size(); j ++) {
@@ -407,8 +407,8 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
                     }
 
                     if (spaceBoxCnt) {
-                        float moreWidthForSpace = remainSpace / spaceBoxCnt;
-                        float diff = 0;
+                        LayoutUnit moreWidthForSpace = remainSpace / spaceBoxCnt;
+                        LayoutUnit diff = 0;
                         for (size_t j = 0; j < b.m_boxes.size(); j ++) {
                             FrameBox* box = b.m_boxes[j];
                             box->moveX(diff);
@@ -427,15 +427,15 @@ float FrameBlockBox::layoutInline(LayoutContext& ctx)
             */
         } else {
             STARFISH_ASSERT(style()->textAlign() == TextAlignValue::CenterTextAlignValue);
-            float diff = (inlineContentWidth - x) / 2;
+            LayoutUnit diff = (inlineContentWidth - x) / 2;
             for (size_t k = 0; k < b.m_boxes.size(); k ++) {
                 FrameBox* childBox = b.m_boxes[k];
                 childBox->moveX(diff);
             }
         }
 
-        float ascender = 0;
-        float descender = 0;
+        LayoutUnit ascender = 0;
+        LayoutUnit descender = 0;
         computeVerticalProperties(&b, ascender, descender, ctx);
         b.m_ascender = ascender;
         b.m_descender = descender;
@@ -452,11 +452,11 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 {
     LineFormattingContext& lineFormattingContext = *lfc;
     // just lay out children are horizontally.
-    float inlineContentWidth = blockBox->contentWidth();
+    LayoutUnit inlineContentWidth = blockBox->contentWidth();
 
     if (freshStart)
         self->computeBorderMarginPadding(inlineContentWidth);
-    float w = self->marginLeft() + self->borderLeft() + self->paddingLeft();
+    LayoutUnit w = self->marginLeft() + self->borderLeft() + self->paddingLeft();
     if (freshStart) {
         self->m_orgBorder = self->m_border;
         self->m_orgPadding = self->m_padding;
@@ -555,7 +555,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
     auto finishLayout = [&](bool lastNode = false) {
         InlineNonReplacedBox* selfForFinishLayout = self;
         while (selfForFinishLayout) {
-            float end = lineFormattingContext.m_currentLineWidth;
+            LayoutUnit end = lineFormattingContext.m_currentLineWidth;
             if (end + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight() > inlineContentWidth) {
                 selfForFinishLayout->m_margin.setRight(0);
                 selfForFinishLayout->m_border.setRight(0);
@@ -574,8 +574,8 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
                 selfForFinishLayout->setWidth(0);
             }
 
-            float ascender = selfForFinishLayout->style()->font()->metrics().m_ascender;
-            float descender = selfForFinishLayout->style()->font()->metrics().m_descender;
+            LayoutUnit ascender = selfForFinishLayout->style()->font()->metrics().m_ascender;
+            LayoutUnit descender = selfForFinishLayout->style()->font()->metrics().m_descender;
 
             computeVerticalProperties(selfForFinishLayout, ascender, descender, ctx);
             selfForFinishLayout->m_ascender = ascender;
@@ -626,8 +626,8 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
 void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 {
-    float remainWidth = ctx.lastKnownWidth();
-    float minWidth = 0;
+    LayoutUnit remainWidth = ctx.lastKnownWidth();
+    LayoutUnit minWidth = 0;
 
     if (style()->marginLeft().isFixed())
         minWidth += style()->marginLeft().fixed();
@@ -661,7 +661,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
     } else {
 
-        float currentLineWidth = 0;
+        LayoutUnit currentLineWidth = 0;
         std::function<void(Frame*)> computeInlineLayout = [&](Frame* f) {
 
             // current
@@ -680,7 +680,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                         }
                     }
 
-                    float w = 0;
+                    LayoutUnit w = 0;
                     if (isWhiteSpace) {
                         w = f->style()->font()->spaceWidth();
                     } else {
@@ -732,7 +732,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
             } else {
                 STARFISH_ASSERT(f->isFrameReplaced());
-                float w = f->asFrameReplaced()->intrinsicSize().width();
+                LayoutUnit w = f->asFrameReplaced()->intrinsicSize().width();
 
                 if (f->style()->width().isFixed()) {
                     w = f->style()->width().fixed();
@@ -811,7 +811,7 @@ void InlineBlockBox::paint(Canvas* canvas, PaintingStage stage)
     }
 }
 
-Frame* InlineBlockBox::hitTest(float x, float y, HitTestStage stage)
+Frame* InlineBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
     if (stage == HitTestStage::HitTestNormalFlowInline) {
         Frame* result = nullptr;
@@ -830,8 +830,8 @@ void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
 {
     // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
     if (stage == PaintingNormalFlowInline) {
-        Rect frameRectBack = m_frameRect;
-        BoxSurroundData paddingBack = m_padding, borderBack = m_border, marginBack = m_margin;
+        LayoutRect frameRectBack = m_frameRect;
+        LayoutBoxSurroundData paddingBack = m_padding, borderBack = m_border, marginBack = m_margin;
 
         m_padding = m_orgPadding;
         m_margin = m_orgMargin;
@@ -863,7 +863,7 @@ void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
     }
 }
 
-Frame* InlineNonReplacedBox::hitTest(float x, float y, HitTestStage stage)
+Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
     if (stage == HitTestStage::HitTestNormalFlowInline) {
         Frame* result = nullptr;
@@ -872,8 +872,8 @@ Frame* InlineNonReplacedBox::hitTest(float x, float y, HitTestStage stage)
         while (s != HitTestStageEnd) {
             Frame* f = lastChild();
             while (f) {
-                float cx = x - f->asFrameBox()->x();
-                float cy = y - f->asFrameBox()->y();
+                LayoutUnit cx = x - f->asFrameBox()->x();
+                LayoutUnit cy = y - f->asFrameBox()->y();
                 result = f->hitTest(cx, cy, s);
                 if (result)
                     return result;

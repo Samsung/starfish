@@ -38,7 +38,7 @@ public:
     virtual void layout(LayoutContext& ctx)
     {
         Size s = intrinsicSize();
-        float parentContentWidth = ctx.blockContainer(this)->asFrameBox()->contentWidth();
+        LayoutUnit parentContentWidth = ctx.blockContainer(this)->asFrameBox()->contentWidth();
         computeBorderMarginPadding(parentContentWidth);
 
         if (isNormalFlow()) {
@@ -49,14 +49,14 @@ public:
                 setContentWidth(s.width());
                 setContentHeight(s.height());
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
-                float w = style()->width().specifiedValue(ctx.parentContentWidth(this));
-                float h = w * (s.height() / s.width());
+                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
+                LayoutUnit h = w * (s.height() / s.width());
                 setContentWidth(w);
                 setContentHeight(h);
             } else if (style()->width().isAuto() && style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
-                    float h = style()->height().fixed();
-                    float w = h * (s.width() / s.height());
+                    LayoutUnit h = style()->height().fixed();
+                    LayoutUnit w = h * (s.width() / s.height());
                     setContentWidth(w);
                     setContentHeight(h);
                 } else {
@@ -78,7 +78,7 @@ public:
             }
 
             if (style()->display() == BlockDisplayValue && style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
-                float remain = parentContentWidth;
+                LayoutUnit remain = parentContentWidth;
                 remain -= contentWidth();
                 remain -= borderWidth();
                 remain -= paddingWidth();
@@ -96,14 +96,14 @@ public:
                 setContentWidth(s.width());
                 setContentHeight(s.height());
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
-                float w = style()->width().specifiedValue(ctx.parentContentWidth(this));
-                float h = w * (s.height() / s.width());
+                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
+                LayoutUnit h = w * (s.height() / s.width());
                 setContentWidth(w);
                 setContentHeight(h);
             } else if (style()->width().isAuto() && style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
-                    float h = style()->height().fixed();
-                    float w = h * (s.width() / s.height());
+                    LayoutUnit h = style()->height().fixed();
+                    LayoutUnit w = h * (s.width() / s.height());
                     setContentWidth(w);
                     setContentHeight(h);
                 } else {
@@ -126,17 +126,17 @@ public:
 
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             auto absLoc = layoutParent()->asFrameBox()->absolutePoint(cb);
-            float absX = absLoc.x() - cb->borderLeft();
-            auto setAbsX = [&](float x) {
+            LayoutUnit absX = absLoc.x() - cb->borderLeft();
+            auto setAbsX = [&](LayoutUnit x) {
                 setX(x - absX);
             };
 
-            float absY = absLoc.y() - cb->borderTop();
-            auto setAbsY = [&](float y) {
+            LayoutUnit absY = absLoc.y() - cb->borderTop();
+            auto setAbsY = [&](LayoutUnit y) {
                 setY(y - absY);
             };
 
-            float parentWidth = cb->contentWidth() + cb->paddingWidth();
+            LayoutUnit parentWidth = cb->contentWidth() + cb->paddingWidth();
 
             Length marginLeft = style()->marginLeft();
             Length marginRight = style()->marginRight();
@@ -150,7 +150,7 @@ public:
             } else if (!style()->left().isAuto() && style()->right().isAuto()) {
                 setAbsX(style()->left().specifiedValue(parentWidth));
             } else if (style()->left().isAuto() && !style()->right().isAuto()) {
-                float r = style()->right().specifiedValue(parentWidth);
+                LayoutUnit r = style()->right().specifiedValue(parentWidth);
                 setAbsX(parentWidth - r - width());
             } else {
                 if (style()->direction() == LtrDirectionValue) {
@@ -174,7 +174,7 @@ public:
 
             }
 
-            float parentHeight = cb->contentHeight() + cb->paddingHeight();
+            LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
             Length marginTop = style()->marginTop();
             Length marginBottom = style()->marginBottom();
 
@@ -183,7 +183,7 @@ public:
             } else if (!style()->top().isAuto() && style()->bottom().isAuto()) {
                 setAbsY(style()->top().specifiedValue(parentHeight));
             } else if (style()->top().isAuto() && !style()->bottom().isAuto()) {
-                float b = style()->bottom().specifiedValue(parentHeight);
+                LayoutUnit b = style()->bottom().specifiedValue(parentHeight);
                 setAbsY(parentHeight - b - height());
             } else {
                 setAbsY(style()->top().specifiedValue(parentHeight));

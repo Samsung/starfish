@@ -22,7 +22,7 @@ public:
     }
 
 
-    Frame* hitTest(float x, float y, HitTestStage stage)
+    Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
         if (stage == HitTestStage::HitTestNormalFlowInline) {
             return FrameBox::hitTest(x, y, stage);
@@ -132,7 +132,7 @@ protected:
 class InlineBlockBox : public InlineBox {
     friend FrameBlockBox;
 public:
-    InlineBlockBox(Node* node, ComputedStyle* style, Frame* parent, FrameBlockBox* f, float ascender)
+    InlineBlockBox(Node* node, ComputedStyle* style, Frame* parent, FrameBlockBox* f, LayoutUnit ascender)
         : InlineBox(node, style, parent)
     {
         m_frameBlockBox = f;
@@ -143,19 +143,19 @@ public:
     virtual bool isInlineBlockBox() const { return true; }
 
     virtual void paint(Canvas* canvas, PaintingStage stage);
-    virtual Frame* hitTest(float x, float y, HitTestStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual const char* name()
     {
         return "InlineBlockBox";
     }
 
-    float ascender()
+    LayoutUnit ascender()
     {
         return m_ascender;
     }
 
 protected:
-    float m_ascender;
+    LayoutUnit m_ascender;
     FrameBlockBox* m_frameBlockBox;
 };
 
@@ -179,23 +179,23 @@ public:
     static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx, FrameBlockBox* blockBox,
             LineFormattingContext* lineFormattingContext, FrameBox* layoutParentBox, bool freshStart);
     virtual void paint(Canvas* canvas, PaintingStage stage);
-    virtual Frame* hitTest(float x, float y, HitTestStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual void dump(int depth);
 
-    float ascender()
+    LayoutUnit ascender()
     {
         return m_ascender;
     }
 
-    float decender()
+    LayoutUnit decender()
     {
         return m_descender;
     }
 protected:
-    float m_ascender;
-    float m_descender;
+    LayoutUnit m_ascender;
+    LayoutUnit m_descender;
     FrameInline* m_origin;
-    BoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+    LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
 };
 
 
@@ -215,12 +215,12 @@ public:
         return true;
     }
 
-    float ascender()
+    LayoutUnit ascender()
     {
         return m_ascender;
     }
 
-    float decender()
+    LayoutUnit decender()
     {
         return m_descender;
     }
@@ -235,8 +235,8 @@ protected:
     // we use these value only for vertical-align of inline-block
     // in layout, we use only 'ascender'
     // should we delete m_decender?
-    float m_ascender;
-    float m_descender;
+    LayoutUnit m_ascender;
+    LayoutUnit m_descender;
 };
 
 class FrameBlockBox : public FrameBox {
@@ -264,7 +264,7 @@ public:
 
     virtual void dump(int depth);
     virtual void paint(Canvas* canvas, PaintingStage stage);
-    virtual Frame* hitTest(float x, float y,HitTestStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage);
 
     bool hasBlockFlow()
     {
@@ -283,8 +283,8 @@ public:
         return child->style()->display() == BlockDisplayValue;
     }
 protected:
-    float layoutBlock(LayoutContext& ctx);
-    float layoutInline(LayoutContext& ctx);
+    LayoutUnit layoutBlock(LayoutContext& ctx);
+    LayoutUnit layoutInline(LayoutContext& ctx);
 
     std::vector<LineBox*, gc_allocator<LineBox*>> m_lineBoxes;
 
@@ -330,7 +330,7 @@ public:
     }
 
     std::set<size_t> m_breakedLinesSet;
-    float m_currentLineWidth;
+    LayoutUnit m_currentLineWidth;
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;

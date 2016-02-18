@@ -6,6 +6,7 @@
 #include "style/Unit.h"
 #include "style/ComputedStyle.h"
 
+#include "layout/LayoutUtil.h"
 #include "layout/StackingContext.h"
 
 namespace StarFish
@@ -55,9 +56,9 @@ public:
         STARFISH_ASSERT(m_relativePositionedFrames.size() == 0);
     }
 
-    float parentContentWidth(Frame* currentFrame);
+    LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
-    float parentFixedHeight(Frame* currentFrame);
+    LayoutUnit parentFixedHeight(Frame* currentFrame);
     Frame* blockContainer(Frame* currentFrame);
     Frame* containingBlock(Frame* currentFrame);
 
@@ -157,7 +158,7 @@ private:
 class ComputePreferredWidthContext
 {
 public:
-    ComputePreferredWidthContext(LayoutContext& lc, float lastKnownWidth)
+    ComputePreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth)
         : m_layoutContext(lc)
     {
         m_result = 0;
@@ -169,24 +170,24 @@ public:
         return m_layoutContext;
     }
 
-    void setResult(float r)
+    void setResult(LayoutUnit r)
     {
         m_result = std::min(std::max(m_result, r), m_lastKnownWidth);
     }
 
-    float result()
+    LayoutUnit result()
     {
         return m_result;
     }
 
-    float lastKnownWidth()
+    LayoutUnit lastKnownWidth()
     {
         return m_lastKnownWidth;
     }
 private:
     LayoutContext& m_layoutContext;
-    float m_result;
-    float m_lastKnownWidth;
+    LayoutUnit m_result;
+    LayoutUnit m_lastKnownWidth;
 };
 
 class Frame: public gc
@@ -418,7 +419,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual Frame* hitTest(float x, float y, HitTestStage stage = HitTestStackingContext)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage = HitTestStackingContext)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

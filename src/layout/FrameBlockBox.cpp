@@ -14,7 +14,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
         // Determine horizontal margins and width of this object.
 
-        float parentContentWidth = ctx.parentContentWidth(this);
+        LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
         computeBorderMarginPadding(parentContentWidth);
 
         // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
@@ -24,7 +24,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
                 computePreferredWidth(p);
                 setContentWidth(p.result());
             } else {
-                float remainWidth = parentContentWidth;
+                LayoutUnit remainWidth = parentContentWidth;
                 remainWidth -= marginWidth();
                 remainWidth -= borderWidth();
                 remainWidth -= paddingWidth();
@@ -39,7 +39,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             }
 
             if (style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
-                float remain = parentContentWidth;
+                LayoutUnit remain = parentContentWidth;
                 remain -= contentWidth();
                 remain -= borderWidth();
                 remain -= paddingWidth();
@@ -50,19 +50,19 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             }
         }
     } else {
-        float parentContentWidth = ctx.parentContentWidth(this);
+        LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
         computeBorderMarginPadding(parentContentWidth);
 
         STARFISH_ASSERT(node() != nullptr);
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
         FrameBox* parent = Frame::parent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
-        float absX = absLoc.x() - cb->borderLeft();
-        auto setAbsX = [&](float x) {
+        LayoutUnit absX = absLoc.x() - cb->borderLeft();
+        auto setAbsX = [&](LayoutUnit x) {
             setX(x - absX);
         };
 
-        auto getPreferredWidth = [&](float parentWidth) -> float {
+        auto getPreferredWidth = [&](LayoutUnit parentWidth) -> LayoutUnit {
             STARFISH_ASSERT(style()->width().isAuto());
             ComputePreferredWidthContext p(ctx, parentWidth);
             computePreferredWidth(p);
@@ -82,7 +82,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         Length right = style()->right();
         Length width = style()->width();
 
-        float parentWidth = cb->contentWidth() + cb->paddingWidth();
+        LayoutUnit parentWidth = cb->contentWidth() + cb->paddingWidth();
 
         if (left.isAuto() && width.isAuto() && right.isAuto()) {
             // If all three of 'left', 'width', and 'right' are 'auto':
@@ -96,7 +96,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             // If the values are over-constrained, ignore the value for 'left'
             // (in case the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
             if (style()->direction() == DirectionValue::LtrDirectionValue) {
-                float computedLeft = left.specifiedValue(parentWidth);
+                LayoutUnit computedLeft = left.specifiedValue(parentWidth);
                 setAbsX(computedLeft);
             } else {
                 // TODO direction == rtl
@@ -106,7 +106,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
             if (left.isAuto() && width.isAuto() && !right.isAuto()) {
                 // 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
-                float w = getPreferredWidth(parentWidth);
+                LayoutUnit w = getPreferredWidth(parentWidth);
                 width = Length(Length::Fixed, w);
                 setAbsX(parentWidth - right.specifiedValue(parentWidth) - w - paddingWidth() - borderWidth());
             } else if(left.isAuto() && right.isAuto() && !width.isAuto()) {
@@ -115,18 +115,18 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
                 // otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
             } else if(width.isAuto() && right.isAuto() && !left.isAuto()) {
                 // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
-                float w = getPreferredWidth(parentWidth);
+                LayoutUnit w = getPreferredWidth(parentWidth);
                 width = Length(Length::Fixed, w);
                 setAbsX(left.specifiedValue(parentWidth));
             } else if(left.isAuto() && !width.isAuto() && !right.isAuto()) {
                 // 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
-                float w = width.specifiedValue(parentWidth);
+                LayoutUnit w = width.specifiedValue(parentWidth);
                 setAbsX(parentWidth - right.specifiedValue(parentWidth) - w - paddingWidth() - borderWidth());
             } else if(width.isAuto() && !left.isAuto() && !right.isAuto()) {
                 // 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
-                float l = left.specifiedValue(parentWidth);
-                float r = right.specifiedValue(parentWidth);
-                float w = l - r + parentWidth;
+                LayoutUnit l = left.specifiedValue(parentWidth);
+                LayoutUnit r = right.specifiedValue(parentWidth);
+                LayoutUnit w = l - r + parentWidth;
                 w = w - paddingWidth() - borderWidth();
                 width = Length(Length::Fixed, w);
             } else {
@@ -165,7 +165,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         }
     }
 
-    float contentHeight;
+    LayoutUnit contentHeight;
     if (hasBlockFlow()) {
         contentHeight = layoutBlock(ctx);
     } else {
@@ -191,11 +191,11 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
         FrameBox* parent = Frame::parent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
-        float absY = absLoc.y() - cb->borderTop();
-        auto setAbsY = [&](float y) {
+        LayoutUnit absY = absLoc.y() - cb->borderTop();
+        auto setAbsY = [&](LayoutUnit y) {
             setY(y - absY);
         };
-        float parentHeight = cb->contentHeight() + cb->paddingHeight();
+        LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
 
         Length marginTop = style()->marginTop();
         Length marginBottom = style()->marginBottom();
@@ -236,9 +236,9 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             setAbsY(parentHeight - height.specifiedValue(parentHeight) - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
         } else if(height.isAuto() && !top.isAuto() && !bottom.isAuto()) {
             // 'height' is 'auto', 'top' and 'bottom' are not 'auto', then 'auto' values for 'margin-top' and 'margin-bottom' are set to 0 and solve for 'height'
-            float t = top.specifiedValue(parentHeight);
-            float b = bottom.specifiedValue(parentHeight);
-            float h = t - b + parentHeight;
+            LayoutUnit t = top.specifiedValue(parentHeight);
+            LayoutUnit b = bottom.specifiedValue(parentHeight);
+            LayoutUnit h = t - b + parentHeight;
             h = h - paddingHeight() - borderHeight();
             height = Length(Length::Fixed, h);
             setAbsY(t);
@@ -286,10 +286,10 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             Length top = f->style()->top();
             Length bottom = f->style()->bottom();
             Frame* cb = ctx.containingBlock(f);
-            float parentWidth = cb->asFrameBox()->contentWidth();
-            float parentHeight = cb->asFrameBox()->contentHeight();
-            float mX = 0;
-            float mY = 0;
+            LayoutUnit parentWidth = cb->asFrameBox()->contentWidth();
+            LayoutUnit parentHeight = cb->asFrameBox()->contentHeight();
+            LayoutUnit mX = 0;
+            LayoutUnit mY = 0;
 
             // left, right
             if (!left.isAuto() && !right.isAuto()) {
@@ -320,7 +320,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
     }
 }
 
-Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
+Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
 {
     if (isEstablishesStackingContext()) {
         ASSERT(stage == HitTestStackingContext);
@@ -331,8 +331,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
         // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
         child = lastChild();
         while (child) {
-            float cx = x - child->asFrameBox()->x();
-            float cy = y - child->asFrameBox()->y();
+            LayoutUnit cx = x - child->asFrameBox()->x();
+            LayoutUnit cy = y - child->asFrameBox()->y();
             result = child->hitTest(cx ,cy , HitTestPositionedElements);
             if (result)
                 return result;
@@ -342,8 +342,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
         // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
         child = lastChild();
         while (child) {
-            float cx = x - child->asFrameBox()->x();
-            float cy = y - child->asFrameBox()->y();
+            LayoutUnit cx = x - child->asFrameBox()->x();
+            LayoutUnit cy = y - child->asFrameBox()->y();
             result = child->hitTest(cx ,cy , HitTestNormalFlowInline);
             if (result)
                 return result;
@@ -356,8 +356,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
         ASSERT(hasBlockFlow());
         child = lastChild();
         while (child) {
-            float cx = x - child->asFrameBox()->x();
-            float cy = y - child->asFrameBox()->y();
+            LayoutUnit cx = x - child->asFrameBox()->x();
+            LayoutUnit cy = y - child->asFrameBox()->y();
             result = child->hitTest(cx, cy, HitTestNormalFlowBlock);
             if (result)
                 return result;
@@ -378,8 +378,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
             if (hasBlockFlow()) {
                 Frame* child = lastChild();
                 while (child) {
-                    float cx = x - child->asFrameBox()->x();
-                    float cy = y - child->asFrameBox()->y();
+                    LayoutUnit cx = x - child->asFrameBox()->x();
+                    LayoutUnit cy = y - child->asFrameBox()->y();
                     result = child->hitTest(cx ,cy , s);
                     if (result)
                         return result;
@@ -388,13 +388,13 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
             } else {
                 for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
                     LineBox& b = *m_lineBoxes[i];
-                    float cx = x - b.m_frameRect.x();
-                    float cy = y - b.m_frameRect.y();
+                    LayoutUnit cx = x - b.m_frameRect.x();
+                    LayoutUnit cy = y - b.m_frameRect.y();
 
                     for (size_t k = 0; k < b.m_boxes.size(); k ++) {
                         FrameBox* childBox = b.m_boxes[k];
-                        float cx2 = cx - childBox->x();
-                        float cy2 = cy - childBox->y();
+                        LayoutUnit cx2 = cx - childBox->x();
+                        LayoutUnit cy2 = cy - childBox->y();
                         result = childBox->hitTest(cx2, cy2, s);
                         if (result)
                             return result;
@@ -411,8 +411,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
                 Frame* result = nullptr;
                 Frame* child = lastChild();
                 while (child) {
-                    float cx = x - child->asFrameBox()->x();
-                    float cy = y - child->asFrameBox()->y();
+                    LayoutUnit cx = x - child->asFrameBox()->x();
+                    LayoutUnit cy = y - child->asFrameBox()->y();
                     result = child->hitTest(cx ,cy , stage);
                     if (result)
                         return result;
@@ -428,13 +428,13 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
                 Frame* result = nullptr;
                 for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
                     LineBox& b = *m_lineBoxes[i];
-                    float cx = x - b.m_frameRect.x();
-                    float cy = y - b.m_frameRect.y();
+                    LayoutUnit cx = x - b.m_frameRect.x();
+                    LayoutUnit cy = y - b.m_frameRect.y();
 
                     for (size_t k = 0; k < b.m_boxes.size(); k ++) {
                         FrameBox* childBox = b.m_boxes[k];
-                        float cx2 = cx - childBox->x();
-                        float cy2 = cy - childBox->y();
+                        LayoutUnit cx2 = cx - childBox->x();
+                        LayoutUnit cy2 = cy - childBox->y();
                         result = childBox->hitTest(cx2, cy2, stage);
                         if (result)
                             return result;
@@ -446,8 +446,8 @@ Frame* FrameBlockBox::hitTest(float x, float y,HitTestStage stage)
                 Frame* result = nullptr;
                 Frame* child = lastChild();
                 while (child) {
-                    float cx = x - child->asFrameBox()->x();
-                    float cy = y - child->asFrameBox()->y();
+                    LayoutUnit cx = x - child->asFrameBox()->x();
+                    LayoutUnit cy = y - child->asFrameBox()->y();
                     result = child->hitTest(cx ,cy , stage);
                     if (result)
                         return result;
@@ -554,8 +554,8 @@ void FrameBlockBox::dump(int depth)
                 puts("");
                 for(int k = 0; k < depth + 1; k ++)
                     printf("  ");
-                printf("LineBox(%g,%g,%g,%g)\n", m_lineBoxes[i]->m_frameRect.x(), m_lineBoxes[i]->m_frameRect.y()
-                    , m_lineBoxes[i]->m_frameRect.width(), m_lineBoxes[i]->m_frameRect.height());
+                printf("LineBox(%g,%g,%g,%g)\n", (float)m_lineBoxes[i]->m_frameRect.x(), (float)m_lineBoxes[i]->m_frameRect.y()
+                    , (float)m_lineBoxes[i]->m_frameRect.width(), (float)m_lineBoxes[i]->m_frameRect.height());
 
                 LineBox& lb = *m_lineBoxes[i];
                 for (size_t k = 0; k < lb.m_boxes.size(); k ++) {

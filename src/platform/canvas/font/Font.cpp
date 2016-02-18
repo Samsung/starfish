@@ -25,11 +25,7 @@ public:
         m_size = size;
         m_weight = weight;
         m_style = style;
-        /*
-        if(textStyle & EireneTextStyleBold) {
-            WTF::CString cs = m_fontFamily.utf8();
-            familyName.append(":style=Bold");
-        }*/
+
         switch (weight) {
         case 1:
             familyName = familyName->concat(String::createASCIIString(":style=thin"));
@@ -68,10 +64,10 @@ public:
             for (int i = convertFromPxToPt(m_size); ; i++) {
                 STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
                 evas_object_text_font_set(m_text,m_fontFamily->utf8Data(), i);
-                evas_object_text_text_set(m_text,"gWAPpqf");
+                evas_object_text_text_set(m_text,"gWAPpqfX");
                 Evas_Coord minw, minh;
                 evas_object_geometry_get(m_text,0,0,&minw,&minh);
-                float curDiff = std::abs(m_metrics.m_ascender - m_metrics.m_descender - minh);
+                float curDiff = std::abs((float)m_metrics.m_fontHeight - minh);
                 if (prevDiff < curDiff) {
                     break;
                 } else {
@@ -167,10 +163,9 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     CHECK_ERROR;
 
     Font::FontMetrics met;
-    met.m_ascender = ((float)face->ascender / (float)face->units_per_EM) * size;
-    met.m_descender = ((float)face->descender / (float)face->units_per_EM) * size;
-    met.m_fontHeight = ((float)face->height / (float)face->units_per_EM) * size;
-
+    met.m_ascender = ((LayoutUnit)face->ascender / (LayoutUnit)face->units_per_EM) * size;
+    met.m_descender = ((LayoutUnit)face->descender / (LayoutUnit)face->units_per_EM) * size;
+    met.m_fontHeight = met.m_ascender - met.m_descender;
     FT_Done_Face(face);
     FT_Done_FreeType(library);
     return met;

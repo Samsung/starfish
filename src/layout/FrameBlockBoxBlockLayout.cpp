@@ -5,10 +5,10 @@
 
 namespace StarFish {
 
-float FrameBlockBox::layoutBlock(LayoutContext& ctx)
+LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 {
-    float top = paddingTop() + borderTop();
-    float normalFlowHeight = 0;
+    LayoutUnit top = paddingTop() + borderTop();
+    LayoutUnit normalFlowHeight = 0;
     Frame* child = firstChild();
     while (child) {
         // Place the child.
@@ -20,7 +20,7 @@ float FrameBlockBox::layoutBlock(LayoutContext& ctx)
             child->layout(ctx);
             Length marginLeft = child->style()->marginLeft();
             Length marginRight = child->style()->marginRight();
-            float mX = 0;
+            LayoutUnit mX = 0;
             if (!marginLeft.isAuto() && !marginRight.isAuto()) {
                 // FIXME what "direction value" should we watch? self? child?
                 if (style()->direction() == LtrDirectionValue) {

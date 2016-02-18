@@ -33,7 +33,7 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
     }
 }
 
-float LayoutContext::parentContentWidth(Frame* currentFrame)
+LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
 {
     return blockContainer(currentFrame)->asFrameBox()->contentWidth();
 }
@@ -54,7 +54,7 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
     return false;
 }
 
-float LayoutContext::parentFixedHeight(Frame* currentFrame)
+LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
 {
     Frame* container = blockContainer(currentFrame);
     std::vector<Length> reverse;
@@ -69,7 +69,7 @@ float LayoutContext::parentFixedHeight(Frame* currentFrame)
             container = blockContainer(container);
         }
     }
-    float result = reverse.back().fixed();
+    LayoutUnit result = reverse.back().fixed();
     reverse.pop_back();
     while (reverse.size()) {
         result = result * reverse.back().percent();
