@@ -98,6 +98,8 @@ public:
     SkRect m_clipRect;
     float m_opacity;
     Font* m_font;
+    LayoutUnit m_baseX;
+    LayoutUnit m_baseY;
 
     CanvasState()
     {
@@ -162,6 +164,7 @@ class CanvasEFL : public Canvas {
         m_height = height;
         m_canvas = canvas;
         m_buffer = buffer;
+        m_mapMode = false;
 
         save();
     }
@@ -172,6 +175,7 @@ public:
         m_image = NULL;
         m_buffer = NULL;
         m_directDraw = true;
+        m_mapMode = false;
         struct dummy {
             void* a;
             void* b;
@@ -261,6 +265,8 @@ public:
             state.m_clipper = lastState().m_clipper;
             state.m_color = lastState().m_color;
             state.m_opacity = lastState().m_opacity;
+            state.m_baseX = lastState().m_baseX;
+            state.m_baseY = lastState().m_baseY;
         } else {
             state.m_matrix.reset();
             state.m_clipRect.setLTRB(0,0,SkFloatToScalar((float)m_width),SkFloatToScalar((float)m_height));
@@ -275,30 +281,51 @@ public:
         m_state.erase(m_state.end()-1);
     }
 
+    virtual void assureMapMode()
+    {
+        if (m_mapMode) return;
+        lastState().m_matrix.preTranslate(lastState().m_baseX, lastState().m_baseY);
+        m_mapMode = false;
+    }
+
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y)
     {
+        assureMapMode();
         lastState().m_matrix.preScale(SkDoubleToScalar(x),SkDoubleToScalar(y));
     }
 
     virtual void scale(double x, double y,double ox,double oy)
     {
+        assureMapMode();
         lastState().m_matrix.preScale(SkDoubleToScalar(x),SkDoubleToScalar(y),SkDoubleToScalar(ox),SkDoubleToScalar(oy));
     }
 
     virtual void rotate(double angle)
     {
+        assureMapMode();
         lastState().m_matrix.preRotate(SkDoubleToScalar(angle));
     }
 
     virtual void rotate(double angle,double ox,double oy)
     {
+        assureMapMode();
         lastState().m_matrix.preRotate(SkDoubleToScalar(angle),SkDoubleToScalar(ox),SkDoubleToScalar(oy));
     }
 
     virtual void translate(double x, double y)
     {
-        lastState().m_matrix.preTranslate(x,y);
+        if (m_mapMode)
+            lastState().m_matrix.preTranslate(x, y);
+        else {
+            lastState().m_baseX = lastState().m_baseX.toDouble() + x;
+            lastState().m_baseY = lastState().m_baseY.toDouble() + y;
+        }
+    }
+
+    virtual void translate(LayoutUnit x, LayoutUnit y)
+    {
+        translate(x.toDouble(), y.toDouble());
     }
 
     virtual void beginOpacityLayer(float c)
@@ -326,6 +353,8 @@ public:
                 SkFloatToScalar((float)rt.width()),
                 SkFloatToScalar((float)rt.height())
                 );
+
+        assureMapMode();
         lastState().m_matrix.mapRect(&sss);
 
         if(sss.isEmpty() || !lastState().m_clipRect.intersect(sss)) {
@@ -382,20 +411,31 @@ public:
 
     virtual void drawRect(const Rect& rt)
     {
-        SkRect sss = SkRect::MakeXYWH(
-                SkFloatToScalar((float)rt.x()),
-                SkFloatToScalar((float)rt.y()),
-                SkFloatToScalar((float)rt.width()),
-                SkFloatToScalar((float)rt.height())
-                );
-        if(!shouldApplyEvasMap())
-            lastState().m_matrix.mapRect(&sss);
-
+        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+        if (m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(
+                    SkFloatToScalar((float)rt.x()),
+                    SkFloatToScalar((float)rt.y()),
+                    SkFloatToScalar((float)rt.width()),
+                    SkFloatToScalar((float)rt.height())
+                    );
+            if(!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            xx = lastState().m_baseX + rt.x();
+            yy = lastState().m_baseY + rt.y();
+            ww = rt.width();
+            hh = rt.height();
+        }
         Evas_Object* eo = evas_object_rectangle_add(m_canvas);
         if(m_objList) m_objList->push_back(eo);
         evas_object_color_set(eo,lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
-        evas_object_move(eo,sss.x(),sss.y());
-        evas_object_resize(eo, sss.width(), sss.height());
+        evas_object_move(eo, xx, yy);
+        evas_object_resize(eo, ww, hh);
         applyClippers(eo);
 
         if(shouldApplyEvasMap()) {
@@ -411,14 +451,23 @@ public:
             if(m_objList) m_objList->push_back(eo);
             Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
             Rect rt(x,y,sz.width(),sz.height());
-            SkRect sss = SkRect::MakeXYWH(
-            SkFloatToScalar((float)rt.x()),
-            SkFloatToScalar((float)rt.y()),
-            SkFloatToScalar((float)rt.width()),
-            SkFloatToScalar((float)rt.height())
-            );
-            if(!shouldApplyEvasMap())
-                lastState().m_matrix.mapRect(&sss);
+
+            float xx = 0.0, yy = 0.0;
+            if (m_mapMode) {
+                SkRect sss = SkRect::MakeXYWH(
+                        SkFloatToScalar((float)rt.x()),
+                        SkFloatToScalar((float)rt.y()),
+                        SkFloatToScalar((float)rt.width()),
+                        SkFloatToScalar((float)rt.height())
+                        );
+                if(!shouldApplyEvasMap())
+                    lastState().m_matrix.mapRect(&sss);
+                xx = sss.x();
+                yy = sss.y();
+            } else {
+                xx = lastState().m_baseX + rt.x();
+                yy = lastState().m_baseY + rt.y();
+            }
 
             int siz;
             evas_object_text_font_get((Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
@@ -427,7 +476,7 @@ public:
             evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
             evas_object_text_text_set(eo, text->utf8Data());
 
-            evas_object_move(eo,sss.x(),sss.y());
+            evas_object_move(eo, xx, yy);
             applyClippers(eo);
 
             if(shouldApplyEvasMap()) {
@@ -439,14 +488,27 @@ public:
             if(m_objList) m_objList->push_back(eo);
             Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
             Rect rt(x,y,sz.width(),sz.height());
-            SkRect sss = SkRect::MakeXYWH(
-            SkFloatToScalar((float)rt.x()),
-            SkFloatToScalar((float)rt.y()),
-            SkFloatToScalar((float)rt.width()),
-            SkFloatToScalar((float)rt.height())
-            );
-            if(!shouldApplyEvasMap())
-                lastState().m_matrix.mapRect(&sss);
+
+            float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+            if (m_mapMode) {
+                SkRect sss = SkRect::MakeXYWH(
+                        SkFloatToScalar((float)rt.x()),
+                        SkFloatToScalar((float)rt.y()),
+                        SkFloatToScalar((float)rt.width()),
+                        SkFloatToScalar((float)rt.height())
+                        );
+                if(!shouldApplyEvasMap())
+                    lastState().m_matrix.mapRect(&sss);
+                xx = sss.x();
+                yy = sss.y();
+                ww = sss.width();
+                hh = sss.height();
+            } else {
+                xx = lastState().m_baseX + rt.x();
+                yy = lastState().m_baseY + rt.y();
+                ww = rt.width();
+                hh = rt.height();
+            }
 
             Evas_Textblock_Style* st = evas_textblock_style_new();
             char buf[256];
@@ -491,8 +553,8 @@ public:
             evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
             evas_object_textblock_text_markup_set(eo, text->utf8Data());
 
-            evas_object_resize(eo, sss.width(), sss.height());
-            evas_object_move(eo,sss.x(),sss.y());
+            evas_object_resize(eo, ww, hh);
+            evas_object_move(eo, xx, yy);
 
             applyClippers(eo);
 
@@ -533,15 +595,26 @@ public:
     }
     virtual void drawImage(ImageData* data, const Rect& dst)
     {
-        SkRect sss = SkRect::MakeXYWH(
-                SkFloatToScalar((float)dst.x()),
-                SkFloatToScalar((float)dst.y()),
-                SkFloatToScalar((float)dst.width()),
-                SkFloatToScalar((float)dst.height())
-                );
-        if(!shouldApplyEvasMap())
-            lastState().m_matrix.mapRect(&sss);
-
+        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+        if (m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(
+                    SkFloatToScalar((float)dst.x()),
+                    SkFloatToScalar((float)dst.y()),
+                    SkFloatToScalar((float)dst.width()),
+                    SkFloatToScalar((float)dst.height())
+                    );
+            if(!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            xx = lastState().m_baseX + dst.x();
+            yy = lastState().m_baseY + dst.y();
+            ww = dst.width();
+            hh = dst.height();
+        }
         Evas_Object* eo = findPrevDrawnData(data);
 
         if(!eo) {
@@ -563,8 +636,8 @@ public:
             pushPrevDrawnData(data, eo);
         }
 
-        evas_object_move(eo,sss.x(),sss.y());
-        evas_object_resize(eo, sss.width(), sss.height());
+        evas_object_move(eo, xx, yy);
+        evas_object_resize(eo, ww, hh);
 
         applyClippers(eo);
         if(shouldApplyEvasMap()) {
@@ -580,6 +653,7 @@ public:
 
     virtual SkMatrix matrix()
     {
+        assureMapMode();
         return lastState().m_matrix;
     }
 
@@ -675,6 +749,7 @@ protected:
     unsigned m_height;
     std::vector<Evas_Object*>* m_objList;
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool>>>* m_prevDrawnImageMap;
+    bool m_mapMode;
 };
 
 Canvas* Canvas::createDirect(void* data)

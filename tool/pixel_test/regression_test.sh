@@ -28,12 +28,14 @@ if [[ "$tc" == *"/" ]]; then
     tc=$(find $tc -name "*.html" | sort);
 fi
 
+cnt=0
 echo -e "${BOLD}###### CSS Regression Test ######${RESET}\n"
 for i in $tc ; do
     if [[ $i == *"network"* ]]
     then
         continue;
     fi
+    cnt=`expr $cnt + 1`
     dir=${i%.html}
     html=$dir".html"
     file=${dir##*/}
@@ -53,7 +55,7 @@ for i in $tc ; do
         ratio=${diff#* }
         # Print the result
         if [ "${result}" = "failed" ]; then
-            diff=`tool/pixel_test/bin/image_diff --diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png result.png $OUTDIR/${file}_diff.png`
+            diff=`tool/pixel_test/bin/image_diff --diff ${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png result.png $OUTDIR/${cnt}_${file}_diff.png`
             FAIL=`expr $FAIL + 1`
             mv result.png ${WEBKIT_PNG}_
             echo -e "${RED}[FAIL]${RESET}" $i "${RED}(${ratio})${RESET}"

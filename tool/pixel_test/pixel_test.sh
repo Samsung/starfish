@@ -32,7 +32,7 @@ if [[ "$tc" == *"/" ]]; then
 fi
 
 if [[ "$tc" == *".res" ]]; then
-    tc=$(cat $tc | sort);
+    tc=$(cat $tc | grep -v "file:///" | grep -v "Error" | sort);
 fi
 
 echo -e "${BOLD}###### CSS Pixel Test ######${RESET}\n"
@@ -59,8 +59,8 @@ for i in $tc ; do
     #echo $STARFISH_PNG
     #echo $DIFF_PNG
     if [ ! -f ${WEBKIT_PNG} ]; then
-        phantomjs tool/pixel_test/capture.js -f ${i} . > /dev/null 2>&1
-        mv ${file}_expected.png ${WEBKIT_PNG}
+        phantomjs tool/pixel_test/capture.js -f ${i} out/ > /dev/null 2>&1
+        mv out/${file}_expected.png ${WEBKIT_PNG}
     fi
 
     if [ ! -f out.png ]; then
@@ -80,7 +80,7 @@ for i in $tc ; do
             echo -e "${YELLOW}[CHECK]${RESET}" $i "("$ratio")"
         else
             FAIL=`expr $FAIL + 1`
-            echo -e "${RED}[FAIL]${RESET}" $i
+            echo -e "${RED}[FAIL]${RESET}" $i "${RED}("$ratio")${RESET}"
         fi
     elif [ "${result}" = "passed" ]; then
         PASS=`expr $PASS + 1`

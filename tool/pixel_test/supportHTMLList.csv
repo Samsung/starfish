@@ -2,7 +2,9 @@ Category        , Chapter   , Item                  , Limited Values
 # ** These tags do NOT support read/write in dom.
 Global Attr     , 3.2.5     , id
                 ,           , class
-#               ,           , onclick
+                ,           , onclick
+                ,           , onload
+Scripting       , 6.1       , onunload
 Doctype         , 8.1.1     , !DOCTYPE              , <!DOCTYPE html>
 Element         , 4.1.1     , html
                 , 4.2.1     , head
