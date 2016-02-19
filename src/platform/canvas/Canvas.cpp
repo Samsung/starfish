@@ -100,12 +100,13 @@ public:
     Font* m_font;
     LayoutUnit m_baseX;
     LayoutUnit m_baseY;
-
+    bool m_mapMode;
     CanvasState()
     {
         m_clipper = NULL;
         m_opacity = 1;
         m_font = nullptr;
+        m_mapMode = false;
     }
 };
 
@@ -164,7 +165,6 @@ class CanvasEFL : public Canvas {
         m_height = height;
         m_canvas = canvas;
         m_buffer = buffer;
-        m_mapMode = false;
 
         save();
     }
@@ -175,7 +175,6 @@ public:
         m_image = NULL;
         m_buffer = NULL;
         m_directDraw = true;
-        m_mapMode = false;
         struct dummy {
             void* a;
             void* b;
@@ -268,6 +267,7 @@ public:
             state.m_baseX = lastState().m_baseX;
             state.m_baseY = lastState().m_baseY;
             state.m_font = lastState().m_font;
+            state.m_mapMode = lastState().m_mapMode;
         } else {
             state.m_matrix.reset();
             state.m_clipRect.setLTRB(0,0,SkFloatToScalar((float)m_width),SkFloatToScalar((float)m_height));
@@ -284,9 +284,10 @@ public:
 
     virtual void assureMapMode()
     {
-        if (m_mapMode) return;
+        if (lastState().m_mapMode)
+            return;
         lastState().m_matrix.preTranslate(lastState().m_baseX, lastState().m_baseY);
-        m_mapMode = false;
+        lastState().m_mapMode = true;
     }
 
     // transformations (default transform is the identity matrix)
@@ -316,7 +317,7 @@ public:
 
     virtual void translate(double x, double y)
     {
-        if (m_mapMode)
+        if (lastState().m_mapMode)
             lastState().m_matrix.preTranslate(x, y);
         else {
             lastState().m_baseX = lastState().m_baseX.toDouble() + x;
@@ -343,11 +344,9 @@ public:
 
     virtual void clip(const Rect& rt)
     {
-        /*
         if(hasMatrixAffine()) {
-            EireneLog::logError("clip with angle not supported yet");
+            STARFISH_ASSERT_NOT_REACHED();
         }
-        */
         SkRect sss = SkRect::MakeXYWH(
                 SkFloatToScalar((float)rt.x()),
                 SkFloatToScalar((float)rt.y()),
@@ -358,7 +357,7 @@ public:
         assureMapMode();
         lastState().m_matrix.mapRect(&sss);
 
-        if(sss.isEmpty() || !lastState().m_clipRect.intersect(sss)) {
+        if(!SkRect::Intersects(lastState().m_clipRect, sss)) {
             lastState().m_clipRect.setEmpty();
             lastState().m_clipper = NULL;
         } else {
@@ -413,7 +412,7 @@ public:
     virtual void drawRect(const Rect& rt)
     {
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        if (m_mapMode) {
+        if (lastState().m_mapMode) {
             SkRect sss = SkRect::MakeXYWH(
                     SkFloatToScalar((float)rt.x()),
                     SkFloatToScalar((float)rt.y()),
@@ -485,7 +484,7 @@ public:
             Rect rt(x,y,sz.width(),sz.height());
 
             float xx = 0.0, yy = 0.0;
-            if (m_mapMode) {
+            if (lastState().m_mapMode) {
                 SkRect sss = SkRect::MakeXYWH(
                         SkFloatToScalar((float)rt.x()),
                         SkFloatToScalar((float)rt.y()),
@@ -522,7 +521,7 @@ public:
             Rect rt(x,y,sz.width(),sz.height());
 
             float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-            if (m_mapMode) {
+            if (lastState().m_mapMode) {
                 SkRect sss = SkRect::MakeXYWH(
                         SkFloatToScalar((float)rt.x()),
                         SkFloatToScalar((float)rt.y()),
@@ -628,7 +627,7 @@ public:
     virtual void drawImage(ImageData* data, const Rect& dst)
     {
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        if (m_mapMode) {
+        if (lastState().m_mapMode) {
             SkRect sss = SkRect::MakeXYWH(
                     SkFloatToScalar((float)dst.x()),
                     SkFloatToScalar((float)dst.y()),
@@ -781,7 +780,6 @@ protected:
     unsigned m_height;
     std::vector<Evas_Object*>* m_objList;
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool>>>* m_prevDrawnImageMap;
-    bool m_mapMode;
 };
 
 Canvas* Canvas::createDirect(void* data)
