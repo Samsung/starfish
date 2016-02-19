@@ -282,6 +282,7 @@ public:
 
         return child->style()->display() == BlockDisplayValue;
     }
+
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);

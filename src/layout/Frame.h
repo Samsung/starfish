@@ -454,6 +454,11 @@ public:
         return m_flags.m_isNormalFlow;
     }
 
+    bool shouldComputePreferredWidth()
+    {
+        return m_flags.m_shouldComputePreferredWidth;
+    }
+
 protected:
     struct
     {

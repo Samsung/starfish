@@ -233,6 +233,18 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
     Frame* f = origin->firstChild();
     while(f) {
         if (!f->isNormalFlow()) {
+            LayoutUnit preferredWidth;
+            if (f->asFrameBox()->shouldComputePreferredWidth()) {
+                ComputePreferredWidthContext p(ctx, inlineContentWidth);
+                f->asFrameBox()->computePreferredWidth(p);
+                preferredWidth = p.result();
+            } else {
+                preferredWidth = f->style()->width().specifiedValue(inlineContentWidth);
+            }
+
+            if ((preferredWidth) > (inlineContentWidth - lineFormattingContext.m_currentLineWidth)) {
+                lineBreakCallback(false);
+            }
             f->asFrameBox()->setLayoutParent(lineFormattingContext.currentLine());
             lineFormattingContext.currentLine()->boxes().push_back(f->asFrameBox());
             ctx.registerAbsolutePositionedFrames(f->asFrameBox());
@@ -247,7 +259,9 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                 if (isWhiteSpace) {
                     if (offset == 0 && f == origin->firstChild()) {
                         return;
-                    } else if(nextOffset == txt->length() && f == origin->lastChild()) {
+                    } else if (nextOffset == txt->length() && f == origin->lastChild()) {
+                        return;
+                    } else if (lineFormattingContext.m_currentLineWidth == 0) {
                         return;
                     }
                 }

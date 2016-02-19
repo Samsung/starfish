@@ -78,13 +78,13 @@ public:
         m_type = Fixed;
     }
 
-    float specifiedValue(float parentLength) const
+    float specifiedValue(LayoutUnit parentLength) const
     {
         STARFISH_ASSERT(isSpecified());
         if (isFixed())
             return fixed();
         else
-            return percent() * parentLength;
+            return parentLength * percent();
     }
 
     bool operator == (const Length& src)
