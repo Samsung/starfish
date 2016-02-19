@@ -61,6 +61,14 @@ page.viewportSize = {
     width: 360,
     height: 360
 };
+
+page.clipRect = {
+    left: 0,
+    top: 0,
+    width: page.viewportSize.width,
+    height: page.viewportSize.height
+};
+
 if (filelist.length == 0) {
     var list = fs.list(pathToTest);
     for (var i = 0; i < list.length; i++) {

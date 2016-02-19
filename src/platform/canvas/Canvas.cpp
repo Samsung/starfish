@@ -267,6 +267,7 @@ public:
             state.m_opacity = lastState().m_opacity;
             state.m_baseX = lastState().m_baseX;
             state.m_baseY = lastState().m_baseY;
+            state.m_font = lastState().m_font;
         } else {
             state.m_matrix.reset();
             state.m_clipRect.setLTRB(0,0,SkFloatToScalar((float)m_width),SkFloatToScalar((float)m_height));
@@ -451,12 +452,32 @@ public:
             if (!text->equals(String::spaceString)) {
                 float w = lastState().m_font->size() * text->length();
                 float h = lastState().m_font->size();
-                Rect rt(x, y, w, h);
-                drawRect(rt);
+                if (text->indexOf('p') == SIZE_MAX) {
+                    Rect rt(x, y, w, h);
+                    drawRect(rt);
+                } else {
+                    float xx = x;
+                    for (size_t i = 0; i < text->length(); i ++) {
+                        char32_t ch = text->charAt(i);
+                        if (ch != 'p') {
+                            Rect rt(xx, y, h, h);
+                            drawRect(rt);
+                        } else {
+                            save();
+                            clip(Rect(xx, y, h, h));
+                            g_enablePixelTest = false;
+                            drawText(xx, y, String::createASCIIString("p"));
+                            g_enablePixelTest = true;
+                            restore();
+                        }
+                        xx += h;
+                    }
+                }
             }
             return;
         }
 #endif
+
         if (lastState().m_font->weight() == FontWeightNormal && lastState().m_font->style() == FontStyleNormal) {
             Evas_Object* eo = evas_object_text_add(m_canvas);
             if(m_objList) m_objList->push_back(eo);
