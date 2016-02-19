@@ -78,6 +78,15 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
 
         Length marginLeft = style()->marginLeft();
         Length marginRight = style()->marginRight();
+        if (!marginLeft.isAuto() && !marginRight.isAuto()) {
+            if (style()->direction() == LtrDirectionValue) {
+                setMarginRight(0);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }
+
+        LayoutUnit parentWidthForComputePreferredWidth = parentContentWidth - paddingWidth() - borderWidth() - marginWidth();
         Length left = style()->left();
         Length right = style()->right();
         Length width = style()->width();
@@ -106,7 +115,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
             if (left.isAuto() && width.isAuto() && !right.isAuto()) {
                 // 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
-                LayoutUnit w = getPreferredWidth(parentWidth);
+                LayoutUnit w = getPreferredWidth(parentWidthForComputePreferredWidth);
                 width = Length(Length::Fixed, w);
                 setAbsX(parentWidth - right.specifiedValue(parentWidth) - w - paddingWidth() - borderWidth());
             } else if(left.isAuto() && right.isAuto() && !width.isAuto()) {
@@ -115,7 +124,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
                 // otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
             } else if(width.isAuto() && right.isAuto() && !left.isAuto()) {
                 // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
-                LayoutUnit w = getPreferredWidth(parentWidth);
+                LayoutUnit w = getPreferredWidth(parentWidthForComputePreferredWidth);
                 width = Length(Length::Fixed, w);
                 setAbsX(left.specifiedValue(parentWidth));
             } else if(left.isAuto() && !width.isAuto() && !right.isAuto()) {
@@ -152,7 +161,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
 
         if (width.isAuto()) {
             if (m_flags.m_shouldComputePreferredWidth) {
-                ComputePreferredWidthContext p(ctx, parentWidth);
+                ComputePreferredWidthContext p(ctx, parentWidthForComputePreferredWidth);
                 computePreferredWidth(p);
                 setContentWidth(p.result());
             } else {
