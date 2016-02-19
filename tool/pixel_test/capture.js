@@ -89,10 +89,10 @@ page.onLoadStarted = function() {
 page.onLoadFinished = function() {
     page.evaluate(function() {
         var style = document.createElement('style'),
-            text = document.createTextNode('html { background-color: white; font-family: Ahem; }');
+            text = document.createTextNode('* { font-family: Ahem !important; }');
         style.setAttribute('type', 'text/css');
         style.appendChild(text);
-        document.head.insertBefore(style, document.head.firstChild);
+        document.body.appendChild(style, document.head.firstChild);
     });
     var filename = filelist[idx].substr(0, filelist[idx].lastIndexOf("."));
     var renderFileName = pathToSave + filename + '_expected.png';

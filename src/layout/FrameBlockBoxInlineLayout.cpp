@@ -217,7 +217,13 @@ void textDividerForLayout(String* txt, fn f)
             }
         } else {
             while(nextOffset < txt->length() && !String::isSpaceOrNewline((*txt)[nextOffset])) {
+                // https://www.w3.org/TR/css-text-3/#soft-wrap-opportunity
+                // TODO use icu for other language (or can we implement these things?)
+                bool willBreak = (*txt)[nextOffset] == '-';
                 nextOffset++;
+                if (willBreak) {
+                    break;
+                }
             }
         }
 
@@ -367,6 +373,23 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         ib->setParent(lineFormattingContext.currentLine());
         lineFormattingContext.registerInlineContent();
     }, [&](bool dueToBr) {
+        std::vector<FrameBox*, gc_allocator<FrameBox*>>& vector = lineFormattingContext.currentLine()->boxes();
+        auto iter = vector.rbegin();
+        size_t i = vector.size();
+        while (vector.rend() != iter) {
+            i--;
+            if ((*iter)->isInlineBox()) {
+                InlineBox* ib = (*iter)->asInlineBox();
+                if (ib->isInlineTextBox()) {
+                    if (ib->asInlineTextBox()->text()->equals(String::spaceString)) {
+                        vector.erase(i + vector.begin());
+                    }
+                }
+                break;
+            }
+            iter ++;
+        }
+
         lineFormattingContext.breakLine(dueToBr);
     }, [&](FrameInline* f) {
         lineFormattingContext.registerInlineContent();

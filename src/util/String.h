@@ -25,7 +25,7 @@ public:
         return (ASCIIString*)((size_t)this + sizeof(size_t));
     }
 
-    UTF32String* asUTF32String()
+    UTF32String* asUTF32String() const
     {
         STARFISH_ASSERT(!m_isASCIIString);
         return (UTF32String*)((size_t)this + sizeof(size_t));
@@ -35,8 +35,20 @@ public:
 
     bool equals(const String* str) const
     {
-        if (*asASCIIString() == *str->asASCIIString()) {
-            return true;
+        size_t lenA = length();
+        size_t lenB = str->length();
+        if (lenA == lenB) {
+            bool aa = isASCIIString();
+            bool bb = str->isASCIIString();
+            if (aa && bb) {
+                return stringEqual(asASCIIString()->data(), str->asASCIIString()->data(), lenA);
+            } else if (aa && !bb) {
+                return stringEqual(str->asUTF32String()->data(), asASCIIString()->data(), lenA);
+            } else if (!aa && bb) {
+                return stringEqual(asUTF32String()->data(), str->asASCIIString()->data(), lenA);
+            } else {
+                return stringEqual(asUTF32String()->data(), str->asUTF32String()->data(), lenA);
+            }
         }
         return false;
     }
@@ -49,7 +61,7 @@ public:
         return false;
     }
 
-    size_t length()
+    size_t length() const
     {
         if (m_isASCIIString) {
             return asASCIIString()->length();
@@ -106,12 +118,31 @@ public:
 
     String* toUpper();
     String* toLower();
-    bool isASCIIString() { return m_isASCIIString; }
+    bool isASCIIString() const
+    {
+        return m_isASCIIString;
+    }
     String* concat(String* str);
     void split(char delim, Vector& tokens);
     String* trim();
 
 protected:
+    template <typename T>
+    static bool stringEqual(const T* s, const T* s1, const size_t& len)
+    {
+        return memcmp(s, s1, sizeof(T) * len) == 0;
+    }
+
+    static bool stringEqual(const char32_t* s, const char* s1, const size_t& len)
+    {
+        for (size_t i = 0; i < len ; i ++) {
+            if (s[i] != (unsigned char)s1[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     const char* utf8DataSlowCase();
     String()
     {
