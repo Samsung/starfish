@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         } else if (strstr(argv[i], "--working-directory=") == argv[i]) {
             path = argv[i] + strlen("--working-directory=");
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
-            flag |= StarFish::enablePixelTest;
+            g_enablePixelTest = true;
         } else if (strcmp(argv[i], "--regression-test") == 0) {
             flag |= StarFish::enableRegressionTest;
         }

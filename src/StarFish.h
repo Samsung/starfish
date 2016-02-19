@@ -52,8 +52,7 @@ enum StarFishStartUpFlag {
     enableComputedStyleDump = 1 << 1,
     enableFrameTreeDump = 1 << 2,
     enableHitTestDump = 1 << 3,
-    enablePixelTest = 1 << 4,
-    enableRegressionTest = 1 << 5,
+    enableRegressionTest = 1 << 4,
 };
 
 class StarFish : public gc {
@@ -137,6 +136,8 @@ protected:
     FontSelector m_fontSelector;
     StaticStrings m_staticStrings;
 };
+
+extern bool g_enablePixelTest;
 
 }
 #endif

@@ -444,8 +444,19 @@ public:
         evas_object_show(eo);
     }
 
-    virtual void drawText(const float x,const float y,String* text)
+    virtual void drawText(const float x, const float y, String* text)
     {
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+        if (g_enablePixelTest) {
+            if (!text->equals(String::spaceString)) {
+                float w = lastState().m_font->size() * text->length();
+                float h = lastState().m_font->size();
+                Rect rt(x, y, w, h);
+                drawRect(rt);
+            }
+            return;
+        }
+#endif
         if (lastState().m_font->weight() == FontWeightNormal && lastState().m_font->style() == FontStyleNormal) {
             Evas_Object* eo = evas_object_text_add(m_canvas);
             if(m_objList) m_objList->push_back(eo);

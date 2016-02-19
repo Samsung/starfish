@@ -141,6 +141,8 @@ CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof
 
+CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
+
 ifeq ($(HOST), tizen)
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
 endif

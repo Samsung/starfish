@@ -12,6 +12,10 @@ namespace StarFish {
 
 int g_screenDpi;
 
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+bool g_enablePixelTest = false;
+#endif
+
 #ifndef STARFISH_TIZEN_WEARABLE
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
     : m_staticStrings(this)

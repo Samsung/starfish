@@ -18,7 +18,7 @@ static float g_fontSizeAdjuester;
 
 class FontImplEFL : public Font {
 public:
-    FontImplEFL(String* familyName,float size, char style, char weight, FontMetrics met)
+    FontImplEFL(String* familyName, float size, char style, char weight, FontMetrics met)
     {
         m_text = nullptr;
         m_metrics = met;
@@ -106,6 +106,11 @@ public:
 
     virtual float measureText(String* str)
     {
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+        if (g_enablePixelTest) {
+            return str->length() * m_size;
+        }
+#endif
         evas_object_text_text_set(m_text,str->utf8Data());
         Evas_Coord minw, minh;
         evas_object_geometry_get(m_text,0,0,&minw,&minh);
@@ -120,7 +125,9 @@ protected:
     Evas_Object* m_text;
 };
 
-#define CHECK_ERROR if (error) STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#define CHECK_ERROR if (error) { \
+    STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+}
 
 Font::FontMetrics loadFontMetrics(String* familyName, double size)
 {
@@ -163,9 +170,17 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     CHECK_ERROR;
 
     Font::FontMetrics met;
-    met.m_ascender = ((LayoutUnit)face->ascender / (LayoutUnit)face->units_per_EM) * size;
-    met.m_descender = ((LayoutUnit)face->descender / (LayoutUnit)face->units_per_EM) * size;
-    met.m_fontHeight = met.m_ascender - met.m_descender;
+    met.m_fontHeight = ((face->ascender - face->descender) * size) / face->units_per_EM;
+    met.m_ascender = ((face->ascender * size) / (face->units_per_EM));
+    met.m_descender = met.m_ascender - met.m_fontHeight;
+
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+    if (g_enablePixelTest) {
+        met.m_descender -= 1;
+        met.m_fontHeight += 1;
+    }
+#endif
+
     FT_Done_Face(face);
     FT_Done_FreeType(library);
     return met;

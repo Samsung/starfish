@@ -110,6 +110,8 @@ Element* Document::createElement(QualifiedName localName)
         return new HTMLParagraphElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_spanLocalName) {
         return new HTMLSpanElement(this);
+    } else if (localName == window()->starFish()->staticStrings()->m_brLocalName) {
+        return new HTMLBRElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_imageLocalName) {
         return new HTMLImageElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_audioLocalName) {
