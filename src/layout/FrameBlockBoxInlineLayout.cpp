@@ -5,7 +5,7 @@
 
 namespace StarFish {
 
-void computeVerticalProperties(FrameBox* parentBox, LayoutUnit& ascenderInOut,LayoutUnit& descenderInOut, LayoutContext& ctx)
+void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut,LayoutUnit& descenderInOut, LayoutContext& ctx)
 {
     // TODO vertical align(length, text-top.., etc)
     bool hasSpecialCase = false;
@@ -25,6 +25,7 @@ void computeVerticalProperties(FrameBox* parentBox, LayoutUnit& ascenderInOut,La
         f = f->next(); \
     } \
 
+    bool hasBoxOtherThanText = false;
     while (true) {
         if (parentBox->isLineBox()) {
             if (parentBox->asLineBox()->boxes().size() == k) {
@@ -45,9 +46,10 @@ void computeVerticalProperties(FrameBox* parentBox, LayoutUnit& ascenderInOut,La
                     maxDescender = std::min(ib->asInlineTextBox()->style()->font()->metrics().m_descender, maxDescender);
 
                     NEXT_STOP_COMPUTE_VERTICAL();
-
                     continue;
                 }
+
+                hasBoxOtherThanText = true;
                 VerticalAlignValue va = ib->style()->verticalAlign();
                 if (va == VerticalAlignValue::BaselineVAlignValue) {
                     if (ib->isInlineReplacedBox()) {
@@ -129,6 +131,36 @@ void computeVerticalProperties(FrameBox* parentBox, LayoutUnit& ascenderInOut,La
         }
     }
 
+    if (!parentStyle->hasNormalLineHeight()) {
+        LayoutUnit lineHeight = parentStyle->lineHeight().fixed();
+        LayoutUnit ascenderShouldBe;
+        LayoutUnit descenderShouldBe;
+
+        if (lineHeight > parentStyle->font()->metrics().m_fontHeight) {
+            LayoutUnit diff = (lineHeight - parentStyle->font()->metrics().m_fontHeight) / 2;
+            ascenderShouldBe = parentStyle->font()->metrics().m_ascender + diff;
+            descenderShouldBe = parentStyle->font()->metrics().m_descender - diff;
+        } else {
+            LayoutUnit diff = (lineHeight - parentStyle->font()->metrics().m_fontHeight) / 2;
+            ascenderShouldBe = parentStyle->font()->metrics().m_ascender + diff;
+            descenderShouldBe = parentStyle->font()->metrics().m_descender - diff;
+            if (descenderShouldBe > 0) {
+                ascenderShouldBe -= descenderShouldBe;
+                descenderShouldBe = 0;
+            }
+            if (ascenderShouldBe < 0) {
+                ascenderShouldBe = 0;
+            }
+        }
+
+        if (maxAscender < ascenderShouldBe) {
+            maxAscender = ascenderShouldBe;
+        } else if (!hasBoxOtherThanText) {
+            maxAscender = ascenderShouldBe;
+        }
+        maxDescender = descenderShouldBe;
+    }
+
     ascenderInOut = maxAscender;
     descenderInOut = maxDescender;
 
@@ -149,7 +181,14 @@ void computeVerticalProperties(FrameBox* parentBox, LayoutUnit& ascenderInOut,La
         if (f->asFrameBox()->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
             if (ib->isInlineTextBox()) {
-                ib->setY(height + maxDescender - ib->height() - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                if (UNLIKELY(descenderInOut == 0)) {
+                    if (height < ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight)
+                        ib->setY((height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight + ib->asInlineTextBox()->style()->font()->metrics().m_descender) / 2);
+                    else
+                        ib->setY(height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                } else {
+                    ib->setY(height + maxDescender - ib->height() - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                }
             } else {
                 VerticalAlignValue va = ib->style()->verticalAlign();
                 if (va == VerticalAlignValue::BaselineVAlignValue) {
@@ -194,6 +233,7 @@ void computeVerticalProperties(FrameBox* parentBox, LayoutUnit& ascenderInOut,La
 
         NEXT_STOP_COMPUTE_VERTICAL();
     }
+
 }
 
 template <typename fn>
@@ -473,7 +513,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 
         LayoutUnit ascender = 0;
         LayoutUnit descender = 0;
-        computeVerticalProperties(&b, ascender, descender, ctx);
+        computeVerticalProperties(&b, style(), ascender, descender, ctx);
         b.m_ascender = ascender;
         b.m_descender = descender;
         b.m_frameRect.setWidth(inlineContentWidth);
@@ -614,7 +654,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             LayoutUnit ascender = selfForFinishLayout->style()->font()->metrics().m_ascender;
             LayoutUnit descender = selfForFinishLayout->style()->font()->metrics().m_descender;
 
-            computeVerticalProperties(selfForFinishLayout, ascender, descender, ctx);
+            computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, ctx);
             selfForFinishLayout->m_ascender = ascender;
             selfForFinishLayout->m_descender = descender;
 

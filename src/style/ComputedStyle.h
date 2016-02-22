@@ -266,6 +266,11 @@ public:
         return m_inheritedStyles.m_lineHeight;
     }
 
+    bool hasNormalLineHeight()
+    {
+        return m_inheritedStyles.m_lineHeight.isPercent() && m_inheritedStyles.m_lineHeight.percent() == -100;
+    }
+
     float opacity()
     {
         return m_opacity;
@@ -755,8 +760,6 @@ protected:
 
         if (lineHeight().isPercent()) {
             if (lineHeight().percent() == -100) {
-                // The computed value of 'normal' depends on the element's font metrics.
-                setLineHeight(Length(Length::Fixed, font()->metrics().m_fontHeight));
             } else {
                 // The computed value of the property is this percentage multiplied by the element's computed font size. Negative values are illegal.
                 setLineHeight(Length(Length::Fixed, lineHeight().percent() * fontSize().fixed()));

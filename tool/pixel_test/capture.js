@@ -88,13 +88,14 @@ page.onLoadStarted = function() {
 
 page.onLoadFinished = function() {
     page.evaluate(function() {
+        document.body.bgColor = 'white';
         var style = document.createElement('style'),
-            text = document.createTextNode('* { font-family: Ahem !important; }'),
-            text2 = document.createTextNode('html { background-color:white; } ');
+            text = document.createTextNode('* { font-family: Ahem !important; }');
+//            text2 = document.createTextNode('html { background-color:white; } ');
         style.setAttribute('type', 'text/css');
         style.appendChild(text);
-        if (window.getComputedStyle(document.body)["background-color"] == "rgba(0, 0, 0, 0)")
-            style.appendChild(text2);
+//        if (window.getComputedStyle(document.body)["background-color"] == "rgba(0, 0, 0, 0)")
+//           style.appendChild(text2);
         document.body.appendChild(style, document.head.firstChild);
     });
     var filename = filelist[idx].substr(0, filelist[idx].lastIndexOf("."));
