@@ -2,7 +2,11 @@ Version     , Chapter       , Interface                 , Attribute/Method
 #4          , 3.2           , Event                     , type
 #           ,               ,                           , target
 #           ,               ,                           , currentTarget
-#           ,               ,                           , eventPhase
+            ,               ,                           , NONE
+            ,               ,                           , CAPTURING_PHASE
+            ,               ,                           , AT_TARGET
+            ,               ,                           , BUBBLING_PHASE
+            ,               ,                           , eventPhase
 #           ,               ,                           , stopPropagation
 #           ,               ,                           , stopImmediatePropagation
 #           ,               ,                           , bubbles

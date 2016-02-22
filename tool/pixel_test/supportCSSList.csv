@@ -48,7 +48,10 @@ CSS 2.1          , 8.3       , margin
                  , 9.10      , direction             , ltr
                  , 10.2      , width
                  , 10.5      , height
-                 , 10.8      , line-height
+                 , 10.8      , line-height           , normal
+                                                     , <number>
+                                                     , <length>
+                                                     , <percent>
                  ,           , vertical-align        , baseline
                  ,           ,                       , sub
                  ,           ,                       , super
