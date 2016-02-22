@@ -47,11 +47,16 @@ void ComputedStyle::loadResources(StarFish* sf)
     }
 
 
+
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     if (g_enablePixelTest)
         m_font = sf->fetchFont(String::fromUTF8("Ahem"), fontSize, style, fontWeight);
-    else
-        m_font = sf->fetchFont(String::fromUTF8("Ubuntu"), fontSize, style, fontWeight);
+    else {
+        if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest)
+            m_font = sf->fetchFont(String::fromUTF8("Fixedsys Excelsior 3.01-L"), fontSize, style, fontWeight);
+        else
+            m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
+    }
 #else
     m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
 #endif

@@ -5,7 +5,7 @@
 
 namespace StarFish {
 
-void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut,LayoutUnit& descenderInOut, LayoutContext& ctx)
+void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut,LayoutUnit& descenderInOut, LayoutUnit& minimumHeight, LayoutContext& ctx)
 {
     // TODO vertical align(length, text-top.., etc)
     bool hasSpecialCase = false;
@@ -14,7 +14,7 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
     LayoutUnit mostBiggestBoxHeight = 0;
 
     size_t k = 0;
-    Frame* f = parentBox->firstChild();
+    Frame* f;
 
 #define NEXT_STOP_COMPUTE_VERTICAL() \
     if (parentBox->isLineBox()) { \
@@ -26,6 +26,26 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
     } \
 
     bool hasBoxOtherThanText = false;
+
+    k = 0;
+    f = parentBox->firstChild();
+    while (true) {
+        if (parentBox->isLineBox()) {
+            if (parentBox->asLineBox()->boxes().size() == k) {
+                break;
+            }
+            f = parentBox->asLineBox()->boxes()[k];
+        } else {
+            if (!f)
+                break;
+        }
+
+        minimumHeight = std::max(minimumHeight, f->asFrameBox()->height() + f->asFrameBox()->marginHeight());
+        NEXT_STOP_COMPUTE_VERTICAL();
+    }
+
+    k = 0;
+    f = parentBox->firstChild();
     while (true) {
         if (parentBox->isLineBox()) {
             if (parentBox->asLineBox()->boxes().size() == k) {
@@ -236,6 +256,16 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
 
 }
 
+void LineFormattingContext::breakLine(bool dueToBr)
+{
+    if (dueToBr == false)
+        m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1);
+    m_block.m_lineBoxes.push_back(new LineBox(&m_block));
+    m_block.m_lineBoxes.back()->setWidth(m_lineBoxWidth);
+    m_currentLine++;
+    m_currentLineWidth = 0;
+}
+
 template <typename fn>
 void textDividerForLayout(String* txt, fn f)
 {
@@ -368,9 +398,6 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox())) {
                 LayoutUnit topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
                 ascender = topToLineBox + ctx.lastLineBox()->ascender();
-                if (ascender > f->asFrameBox()->height()) {
-                    ascender = f->asFrameBox()->height();
-                }
             } else {
                 ascender = f->asFrameBox()->height();
             }
@@ -406,7 +433,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     LayoutUnit lineBoxX = paddingLeft() + borderLeft();
     LayoutUnit lineBoxY = paddingTop() + borderTop();
     LayoutUnit inlineContentWidth = contentWidth();
-    LineFormattingContext lineFormattingContext(*this, ctx);
+    LineFormattingContext lineFormattingContext(*this, ctx, inlineContentWidth);
 
     inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, [&](InlineBox* ib) {
         lineFormattingContext.currentLine()->boxes().push_back(ib);
@@ -430,12 +457,32 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             iter ++;
         }
 
+        LayoutUnit ascender;
+        LayoutUnit descender;
+        LayoutUnit minimumHeight;
+        LineBox* back = m_lineBoxes.back();
+        computeVerticalProperties(back, style(), ascender, descender, minimumHeight, ctx);
+        back->m_ascender = ascender;
+        back->m_descender = descender;
+        back->m_frameRect.setHeight(ascender - descender);
         lineFormattingContext.breakLine(dueToBr);
     }, [&](FrameInline* f) {
         lineFormattingContext.registerInlineContent();
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
         InlineNonReplacedBox::layoutInline(inlineBox, ctx, this, &lineFormattingContext, nullptr, true);
     });
+
+    LineBox* back = m_lineBoxes.back();
+    LayoutUnit ascender;
+    LayoutUnit descender;
+    LayoutUnit minimumHeight;
+    computeVerticalProperties(back, style(), ascender, descender, minimumHeight, ctx);
+    back->m_ascender = ascender;
+    back->m_descender = descender;
+    if (style()->hasNormalLineHeight())
+        back->m_frameRect.setHeight(minimumHeight);
+    else
+        back->m_frameRect.setHeight(ascender - descender);
 
     // position each line
     LayoutUnit contentHeight = 0;
@@ -511,13 +558,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             }
         }
 
-        LayoutUnit ascender = 0;
-        LayoutUnit descender = 0;
-        computeVerticalProperties(&b, style(), ascender, descender, ctx);
-        b.m_ascender = ascender;
-        b.m_descender = descender;
-        b.m_frameRect.setWidth(inlineContentWidth);
-        b.m_frameRect.setHeight(ascender - descender);
         contentHeight += b.m_frameRect.height();
     }
 
@@ -653,8 +693,9 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
             LayoutUnit ascender = selfForFinishLayout->style()->font()->metrics().m_ascender;
             LayoutUnit descender = selfForFinishLayout->style()->font()->metrics().m_descender;
+            LayoutUnit minimumHeight;
 
-            computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, ctx);
+            computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, minimumHeight, ctx);
             selfForFinishLayout->m_ascender = ascender;
             selfForFinishLayout->m_descender = descender;
 
