@@ -7,3 +7,4 @@ cscope.out
 tags
 result.xml
 node_modules
+test/tool/pixel_test/bin/nodejs
