@@ -294,26 +294,21 @@ protected:
 
 class LineFormattingContext {
 public:
-    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx)
+    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxWidth)
         : m_block(block)
         , m_layoutContext(ctx)
     {
+        m_lineBoxWidth = lineBoxWidth;
         m_block.m_lineBoxes.clear();
         // m_block.m_lineBoxes.shrink_to_fit();
         m_block.m_lineBoxes.push_back(new LineBox(&m_block));
+        m_block.m_lineBoxes.back()->setWidth(m_lineBoxWidth);
         m_currentLine = 0;
         m_currentLineWidth = 0;
     }
 
 
-    void breakLine(bool dueToBr = false)
-    {
-        if (dueToBr == false)
-            m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1);
-        m_block.m_lineBoxes.push_back(new LineBox(&m_block));
-        m_currentLine++;
-        m_currentLineWidth = 0;
-    }
+    void breakLine(bool dueToBr = false);
 
     bool isBreakedLineWithoutBR(size_t idx)
     {
@@ -332,6 +327,7 @@ public:
 
     std::set<size_t> m_breakedLinesSet;
     LayoutUnit m_currentLineWidth;
+    LayoutUnit m_lineBoxWidth;
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
