@@ -53,7 +53,7 @@ void ComputedStyle::loadResources(StarFish* sf)
         m_font = sf->fetchFont(String::fromUTF8("Ahem"), fontSize, style, fontWeight);
     else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest)
-            m_font = sf->fetchFont(String::fromUTF8("Fixedsys Excelsior 3.01-L"), fontSize, style, fontWeight);
+            m_font = sf->fetchFont(String::fromUTF8("Arial"), fontSize, style, fontWeight);
         else
             m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
     }

@@ -101,12 +101,14 @@ public:
     LayoutUnit m_baseX;
     LayoutUnit m_baseY;
     bool m_mapMode;
+    bool m_visible;
     CanvasState()
     {
         m_clipper = NULL;
         m_opacity = 1;
         m_font = nullptr;
         m_mapMode = false;
+        m_visible = true;
     }
 };
 
@@ -268,6 +270,7 @@ public:
             state.m_baseY = lastState().m_baseY;
             state.m_font = lastState().m_font;
             state.m_mapMode = lastState().m_mapMode;
+            state.m_visible = lastState().m_visible;
         } else {
             state.m_matrix.reset();
             state.m_clipRect.setLTRB(0,0,SkFloatToScalar((float)m_width),SkFloatToScalar((float)m_height));
@@ -396,6 +399,11 @@ public:
         lastState().m_color = clr;
     }
 
+    virtual void setVisible(bool visible)
+    {
+        lastState().m_visible = visible;
+    }
+
     virtual Color color()
     {
         int r = lastState().m_color.r(),g = lastState().m_color.g(),b = lastState().m_color.b();
@@ -411,6 +419,10 @@ public:
 
     virtual void drawRect(const Rect& rt)
     {
+        if (!lastState().m_visible) {
+            return;
+        }
+
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         if (lastState().m_mapMode) {
             SkRect sss = SkRect::MakeXYWH(
@@ -446,6 +458,10 @@ public:
 
     virtual void drawText(const float x, const float y, String* text)
     {
+        if (!lastState().m_visible) {
+            return;
+        }
+
 #ifdef STARFISH_ENABLE_PIXEL_TEST
         if (g_enablePixelTest) {
             if (!text->equals(String::spaceString)) {
@@ -626,6 +642,10 @@ public:
     }
     virtual void drawImage(ImageData* data, const Rect& dst)
     {
+        if (!lastState().m_visible) {
+            return;
+        }
+
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         if (lastState().m_mapMode) {
             SkRect sss = SkRect::MakeXYWH(

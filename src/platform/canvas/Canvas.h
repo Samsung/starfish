@@ -47,6 +47,8 @@ public:
     virtual void setMatrix(const SkMatrix& matrix) = 0;
     virtual SkMatrix matrix() = 0;
 
+    virtual void setVisible(bool visible) = 0;
+
     virtual void* unwrap() = 0;
 };
 

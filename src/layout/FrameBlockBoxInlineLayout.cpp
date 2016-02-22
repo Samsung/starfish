@@ -1015,7 +1015,8 @@ void InlineNonReplacedBox::dump(int depth)
                 printf("  ");
             printf("%s", f->name());
             f->dump(depth + 2);
-            puts("");
+            if (f != lastChild())
+                puts("");
             f = f->next();
         }
     }
