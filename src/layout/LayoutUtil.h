@@ -786,7 +786,9 @@ inline float& operator/=(float& a, const LayoutUnit& b)
 inline int snapSizeToPixel(LayoutUnit size, LayoutUnit location)
 {
     LayoutUnit fraction = location.fraction();
-    return (fraction + size).round() - fraction.round();
+    //NOTE: blink is using 'round', but phantomjs-webkit passes 'floor'.
+    return (fraction + size).floor() - fraction.floor();
+//    return (fraction + size).round() - fraction.round();
 }
 
 inline int roundToInt(LayoutUnit value)

@@ -136,12 +136,12 @@ public:
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
 
-    static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect bgRect)
+    static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect bgRect, LayoutRect borderBox)
     {
         if (!style->bgColor().isTransparent()) {
             canvas->save();
             canvas->setColor(style->bgColor());
-            canvas->drawRect(bgRect);
+            canvas->drawRect(borderBox);
             canvas->restore();
         }
 
@@ -238,7 +238,7 @@ public:
             }
 
             LayoutRect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
-            paintBackground(canvas, style(), bgRect);
+            paintBackground(canvas, style(), bgRect, LayoutRect(0, 0, width(), height()));
 
         } while(false);
 

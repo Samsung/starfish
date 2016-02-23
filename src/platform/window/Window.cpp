@@ -406,10 +406,11 @@ void Window::rendering()
     delete d;
 
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
+        LayoutRect rt(0, 0, width, height);
         if (m_hasRootElementBackground) {
-            FrameBox::paintBackground(canvas, document()->rootElement()->style(), LayoutRect(0, 0, width, height));
+            FrameBox::paintBackground(canvas, document()->rootElement()->style(), rt, rt);
         } else {
-            FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), LayoutRect(0, 0, width, height));
+            FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), rt, rt);
         }
 
     } else {

@@ -417,12 +417,23 @@ public:
         lastState().m_font = font;
     }
 
+    void drawEvasRect(int xx, int yy, int ww, int hh, const Rect& rt)
+    {
+        Evas_Object* eo = evas_object_rectangle_add(m_canvas);
+        if(m_objList) m_objList->push_back(eo);
+        evas_object_color_set(eo,lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
+        evas_object_move(eo, xx, yy);
+        evas_object_resize(eo, ww, hh);
+        applyClippers(eo);
+        applyEvasMapIfNeeded(eo, rt);
+        evas_object_show(eo);
+    }
+
     virtual void drawRect(const Rect& rt)
     {
         if (!lastState().m_visible) {
             return;
         }
-
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         if (lastState().m_mapMode) {
             SkRect sss = SkRect::MakeXYWH(
@@ -443,26 +454,38 @@ public:
             ww = rt.width();
             hh = rt.height();
         }
-        Evas_Object* eo = evas_object_rectangle_add(m_canvas);
-        if(m_objList) m_objList->push_back(eo);
-        evas_object_color_set(eo,lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
-        evas_object_move(eo, xx, yy);
-        evas_object_resize(eo, ww, hh);
-        applyClippers(eo);
-
-        if(shouldApplyEvasMap()) {
-           applyEvasMapIfNeeded(eo, rt);
-        }
-        evas_object_show(eo);
+        drawEvasRect(xx, yy, ww, hh, rt);
     }
 
     virtual void drawRect(const LayoutRect& rt)
     {
-        int rx = rt.x().round();
-        int ry = rt.y().round();
-        int rw = snapSizeToPixel(rt.width(), rt.x());
-        int rh = snapSizeToPixel(rt.height(), rt.y());
-        drawRect(Rect(rx, ry, rw, rh));
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        int xx = 0, yy = 0, ww = 0, hh = 0;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(
+                    SkFloatToScalar((float)rt.x()),
+                    SkFloatToScalar((float)rt.y()),
+                    SkFloatToScalar((float)rt.width()),
+                    SkFloatToScalar((float)rt.height())
+                    );
+            if(!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            LayoutUnit rx = lastState().m_baseX + rt.x();
+            LayoutUnit ry = lastState().m_baseY + rt.y();
+            xx = rx.floor();
+            yy = ry.floor();
+            ww = snapSizeToPixel(rt.width(), rx);
+            hh = snapSizeToPixel(rt.height(), ry);
+        }
+        drawEvasRect(xx, yy, ww, hh, Rect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
     virtual void drawText(const float x, const float y, String* text)

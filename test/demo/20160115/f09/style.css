@@ -7,14 +7,14 @@ body {
     font-size: 2.125rem;
     font-family: Tizen,Samsung Sans,Helvetica;
     color: white;
-	background-color: white;
+	background-color: black;
 	//border: 2px solid red;
 }
 .circleWrapper {
 	background-color: black;
 	width:360px;
 	height:360px;
-	-webkit-clip-path: circle(180px at 180px 180px);
+//	-webkit-clip-path: circle(180px at 180px 180px);
 }
 head {
 	display: none;
