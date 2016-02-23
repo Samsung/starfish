@@ -138,7 +138,7 @@ public:
 
     void paintBackgroundAndBorders(Canvas* canvas)
     {
-        Rect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
+        LayoutRect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
         if (!style()->bgColor().isTransparent()) {
             canvas->save();
             canvas->setColor(style()->bgColor());
@@ -234,16 +234,16 @@ public:
 
             // top
             canvas->setColor(style()->borderTopColor());
-            canvas->drawRect(Rect(0, 0, width(), borderTop()));
+            canvas->drawRect(LayoutRect(0, 0, width(), borderTop()));
             // right
             canvas->setColor(style()->borderTopColor());
-            canvas->drawRect(Rect(width()-borderRight(), 0, borderRight(), height()));
+            canvas->drawRect(LayoutRect(width()-borderRight(), 0, borderRight(), height()));
             // bottom
             canvas->setColor(style()->borderTopColor());
-            canvas->drawRect(Rect(0, height()-borderBottom(), width(), borderBottom()));
+            canvas->drawRect(LayoutRect(0, height()-borderBottom(), width(), borderBottom()));
             // left
             canvas->setColor(style()->borderTopColor());
-            canvas->drawRect(Rect(0, 0, borderLeft(), height()));
+            canvas->drawRect(LayoutRect(0, 0, borderLeft(), height()));
 
             canvas->restore();
         }

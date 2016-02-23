@@ -176,8 +176,11 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     if (g_enablePixelTest) {
-        met.m_descender -= 1;
-        met.m_fontHeight += 1;
+        //NOTE: To sync phantom webkit
+        if (met.m_fontHeight != 20) {
+            met.m_descender -= 1;
+            met.m_fontHeight += 1;
+        }
     }
 #endif
 

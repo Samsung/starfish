@@ -3140,6 +3140,7 @@ bool checkInputErrorBorderUnitColor(std::vector<String*, gc_allocator<String*>>*
         const char* token = tokens->at(0)->utf8Data();
         if (CSSPropertyParser::assureColor(token) ||
             (strcmp(token, "transparent") == 0) ||
+            (strcmp(token, "initial") == 0) ||
             (strcmp(token, "inherit") == 0)) {
             return true;
         }
@@ -3174,6 +3175,7 @@ bool checkInputErrorBorderUnitStyle(std::vector<String*, gc_allocator<String*>>*
         const char* token = tokens->at(0)->utf8Data();
         if ((strcmp(token, "none") == 0) ||
             (strcmp(token, "solid") == 0) ||
+            (strcmp(token, "initial") == 0) ||
             (strcmp(token, "inherit") == 0)) {
             return true;
         }
@@ -3210,6 +3212,7 @@ bool checkInputErrorBorderUnitWidth(std::vector<String*, gc_allocator<String*>>*
             (strcmp(token, "medium") == 0) ||
             (strcmp(token, "thick") == 0) ||
             (strcmp(token, "inherit") == 0) ||
+            (strcmp(token, "initial") == 0) ||
             CSSPropertyParser::assureLength(token, false)) {
             return true;
         }

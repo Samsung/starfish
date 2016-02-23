@@ -783,6 +783,12 @@ inline float& operator/=(float& a, const LayoutUnit& b)
     return a;
 }
 
+inline int snapSizeToPixel(LayoutUnit size, LayoutUnit location)
+{
+    LayoutUnit fraction = location.fraction();
+    return (fraction + size).round() - fraction.round();
+}
+
 inline int roundToInt(LayoutUnit value)
 {
     return value.round();

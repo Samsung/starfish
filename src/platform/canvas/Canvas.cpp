@@ -456,6 +456,15 @@ public:
         evas_object_show(eo);
     }
 
+    virtual void drawRect(const LayoutRect& rt)
+    {
+        int rx = rt.x().round();
+        int ry = rt.y().round();
+        int rw = snapSizeToPixel(rt.width(), rt.x());
+        int rh = snapSizeToPixel(rt.height(), rt.y());
+        drawRect(Rect(rx, ry, rw, rh));
+    }
+
     virtual void drawText(const float x, const float y, String* text)
     {
         if (!lastState().m_visible) {

@@ -41,6 +41,7 @@ public:
     virtual void setFont(Font* font) = 0;
 
     virtual void drawRect(const Rect& rt) = 0;
+    virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void drawText(float x,float y,String* text) = 0;
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
 
