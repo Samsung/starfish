@@ -150,4 +150,19 @@ Attr* Document::createAttribute(QualifiedName localName)
     return new Attr(scriptBindingInstance(),localName);
 }
 
+HTMLHtmlElement* Document::rootElement()
+{
+    // root element of html document is HTMLHtmlElement
+    // https://www.w3.org/TR/html-markup/html.html
+    Node* n = firstChild();
+    while(n) {
+        if (n->isElement() && n->asElement() && n->asElement()->isHTMLElement() && n->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
+            return n->asElement()->asHTMLElement()->asHTMLHtmlElement();
+        }
+        n = n->nextSibling();
+    }
+
+    return nullptr;
+}
+
 }

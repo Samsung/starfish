@@ -416,7 +416,9 @@ public:
 
     void setStyle(ComputedStyle* style)
     {
+        ComputedStyle* old = m_style;
         m_style = style;
+        didComputedStyleChanged(old, style);
     }
 
     ComputedStyle* style()
@@ -452,6 +454,11 @@ public:
     Element* nextElementSibling();
     Element* previousElementSibling();
 
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
+    {
+
+    }
+
 private:
     inline void setNeedsRendering();
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);
@@ -481,9 +488,11 @@ protected:
 
     String* m_baseUri;
 
-    ComputedStyle* m_style;
     Frame* m_frame;
     RareNodeMembers* m_rareNodeMembers;
+
+private:
+    ComputedStyle* m_style;
 };
 
 }

@@ -152,16 +152,7 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
 {
     STARFISH_ASSERT(document->frame());
 
-    // root element of html document is HTMLHtmlElement
-    // https://www.w3.org/TR/html-markup/html.html
-    Node* n = document->firstChild();
-    while(n) {
-        if (n->isElement() && n->asElement() && n->asElement()->isHTMLElement() && n->asElement()->asHTMLElement()->isHTMLElement()) {
-            break;
-        }
-        n = n->nextSibling();
-    }
-    ASSERT(n);
+    Node* n = document->rootElement();
 
     // FIXME display of html element always considered as "block"
     ASSERT(n->style()->display() == DisplayValue::BlockDisplayValue);

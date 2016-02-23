@@ -27,6 +27,31 @@ public:
         return true;
     }
 
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
+    {
+        HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
+        if (!newStyle->bgColor().isTransparent() || newStyle->bgImageData()) {
+            document()->window()->m_hasRootElementBackground = true;
+        } else {
+            document()->window()->m_hasRootElementBackground = false;
+        }
+    }
+
+    HTMLBodyElement* body()
+    {
+        // root element of html document is HTMLHtmlElement
+        // https://www.w3.org/TR/html-markup/html.html
+        Node* n = firstChild();
+        while(n) {
+            if (n->isElement() && n->asElement() && n->asElement()->isHTMLElement() && n->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+                return n->asElement()->asHTMLElement()->asHTMLBodyElement();
+            }
+            n = n->nextSibling();
+        }
+
+        return nullptr;
+    }
+
 protected:
 };
 

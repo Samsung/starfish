@@ -7,6 +7,7 @@
 #include "platform/canvas/font/Font.h"
 
 #include "layout/Frame.h"
+#include "layout/FrameBox.h"
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
@@ -223,6 +224,8 @@ Window::Window(StarFish* starFish)
     m_document->initScriptWrappable(m_document);
     m_timeoutCounter = 0;
     m_needsRendering = false;
+    m_hasRootElementBackground = false;
+    m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
 
@@ -402,12 +405,20 @@ void Window::rendering()
     Canvas* canvas = Canvas::createDirect(d);
     delete d;
 
-    canvas->setColor(Color(0,0,0,255));
+    if (m_hasRootElementBackground || m_hasBodyElementBackground) {
+        if (m_hasRootElementBackground) {
+            FrameBox::paintBackground(canvas, document()->rootElement()->style(), LayoutRect(0, 0, width, height));
+        } else {
+            FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), LayoutRect(0, 0, width, height));
+        }
 
-    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
-        canvas->clearColor(Color(0,0,0,255));
-    else
-        canvas->clearColor(Color(255,255,255,255));
+    } else {
+        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
+            canvas->clearColor(Color(0,0,0,255));
+        else
+            canvas->clearColor(Color(255,255,255,255));
+    }
+
 
     {
         Timer t("painting");

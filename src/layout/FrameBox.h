@@ -136,21 +136,17 @@ public:
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
 
-    void paintBackgroundAndBorders(Canvas* canvas)
+    static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect bgRect)
     {
-        LayoutRect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
-        if (!style()->bgColor().isTransparent()) {
+        if (!style->bgColor().isTransparent()) {
             canvas->save();
-            canvas->setColor(style()->bgColor());
+            canvas->setColor(style->bgColor());
             canvas->drawRect(bgRect);
             canvas->restore();
         }
 
-        if (style()->bgImageData()) {
-            ImageData* id = style()->bgImageData();
-            if (!id->width() || !id->height())
-                return;
-
+        ImageData* id = style->bgImageData();
+        if (id && id->width() && id->height()) {
             // TODO background-position
             canvas->save();
             canvas->translate(bgRect.x(), bgRect.y());
@@ -158,16 +154,16 @@ public:
             float bh = bgRect.height();
             canvas->clip(Rect(0, 0, bgRect.width(), bgRect.height()));
 
-            if (style()->bgSizeType() == BackgroundSizeType::Cover) {
+            if (style->bgSizeType() == BackgroundSizeType::Cover) {
                 canvas->drawImage(id, Rect(0, 0, bw, bh));
-            } else if (style()->bgSizeType() == BackgroundSizeType::Contain) {
+            } else if (style->bgSizeType() == BackgroundSizeType::Contain) {
                 float boxR = bw/bh;
                 float imgR = id->width()/(float)id->height();
                 if (boxR > imgR) {
                     float start = bh * (float)id->width() / (float)id->height();
                     canvas->drawImage(id, Rect(0, 0, start, bh));
 
-                    if (style()->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
+                    if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
                         for (float s = start; s < bw; s += start) {
                             canvas->drawImage(id, Rect(s, 0, start, bh));
                         }
@@ -176,33 +172,33 @@ public:
                     float start = bw * (float)id->height() / (float)id->width();
                     canvas->drawImage(id, Rect(0, 0, bw, start));
 
-                    if (style()->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
+                    if (style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
                         for (float s = start; s < bw; s += start) {
                             canvas->drawImage(id, Rect(0, s, bw, start));
                         }
                     }
                 }
 
-            } else if (style()->bgSizeType() == BackgroundSizeType::SizeValue) {
+            } else if (style->bgSizeType() == BackgroundSizeType::SizeValue) {
                 float w, h;
 
-                if (style()->bgSizeValue()->width().isAuto() && style()->bgSizeValue()->height().isAuto()) {
+                if (style->bgSizeValue()->width().isAuto() && style->bgSizeValue()->height().isAuto()) {
                     w = id->width();
                     h = id->height();
-                } else if (style()->bgSizeValue()->width().isAuto() && !style()->bgSizeValue()->height().isAuto()) {
-                    h = style()->bgSizeValue()->height().specifiedValue(bh);
+                } else if (style->bgSizeValue()->width().isAuto() && !style->bgSizeValue()->height().isAuto()) {
+                    h = style->bgSizeValue()->height().specifiedValue(bh);
                     w = h * id->width() / id->height();
-                } else if (!style()->bgSizeValue()->width().isAuto() && style()->bgSizeValue()->height().isAuto()) {
-                    w = style()->bgSizeValue()->width().specifiedValue(bw);
+                } else if (!style->bgSizeValue()->width().isAuto() && style->bgSizeValue()->height().isAuto()) {
+                    w = style->bgSizeValue()->width().specifiedValue(bw);
                     h = w * id->height() / id->width();
                 } else {
-                    w = style()->bgSizeValue()->width().specifiedValue(bw);
-                    h = style()->bgSizeValue()->height().specifiedValue(bh);
+                    w = style->bgSizeValue()->width().specifiedValue(bw);
+                    h = style->bgSizeValue()->height().specifiedValue(bh);
                 }
 
                 canvas->drawImage(id, Rect(0, 0, w, h));
-                if (style()->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                    if (style()->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
+                if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
+                    if (style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
                         for (float x = 0; x < bw; x += w) {
                             for (float y = 0; y < bh; y += h) {
                                 canvas->drawImage(id, Rect(x, y, w, h));
@@ -214,18 +210,37 @@ public:
                         }
                     }
                 } else {
-                    if (style()->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
+                    if (style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
                         for (float y = 0; y < bh; y += h) {
                             canvas->drawImage(id, Rect(0, y, w, h));
                         }
                     }
                 }
             } else {
-                STARFISH_ASSERT(style()->bgSizeType() == BackgroundSizeType::SizeNone);
+                STARFISH_ASSERT(style->bgSizeType() == BackgroundSizeType::SizeNone);
                 STARFISH_ASSERT_NOT_REACHED();
             }
             canvas->restore();
         }
+    }
+
+    void paintBackgroundAndBorders(Canvas* canvas)
+    {
+        do {
+            if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
+                break;
+            }
+
+            if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+                if (!node()->document()->window()->hasRootElementBackground()) {
+                    break;
+                }
+            }
+
+            LayoutRect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
+            paintBackground(canvas, style(), bgRect);
+
+        } while(false);
 
         // draw border
         if (style()->hasBorderStyle()) {

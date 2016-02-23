@@ -14,6 +14,8 @@ class URL;
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
 class Window : public EventTarget {
+    friend class HTMLHtmlElement;
+    friend class HTMLBodyElement;
 public:
 #ifndef STARFISH_TIZEN_WEARABLE
     static Window* create(StarFish* sf, size_t w = SIZE_MAX, size_t h = SIZE_MAX);
@@ -73,6 +75,16 @@ public:
         return &m_styleResolver;
     }
 
+    bool hasRootElementBackground()
+    {
+        return m_hasRootElementBackground;
+    }
+
+    bool hasBodyElementBackground()
+    {
+        return m_hasBodyElementBackground;
+    }
+
     virtual int width() = 0;
     virtual int height() = 0;
 
@@ -83,7 +95,10 @@ protected:
     StyleResolver m_styleResolver;
 
     bool m_needsRendering;
+    bool m_hasRootElementBackground;
+    bool m_hasBodyElementBackground;
     bool m_isRunning;
+
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
 

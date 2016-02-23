@@ -78,6 +78,7 @@ public:
         return m_scriptBindingInstance;
     }
 
+    HTMLHtmlElement* rootElement();
 
 protected:
     Window* m_window;
