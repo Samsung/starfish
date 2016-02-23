@@ -54,6 +54,7 @@ protected:
         m_lastChild = nullptr;
         m_state = NodeStateNormal;
         m_needsStyleRecalc = true;
+        m_childNeedsStyleRecalc = true;
         m_style = nullptr;
         m_frame = nullptr;
         m_baseUri = String::emptyString; // need to set by the parser
@@ -332,15 +333,22 @@ public:
         return m_state;
     }
 
-    inline void setNeedsStyleRecalc()
+    void setNeedsStyleRecalc()
     {
         if (!m_needsStyleRecalc) {
             m_needsStyleRecalc = true;
+
+            Node* node = parentNode();
+            while (node && !node->childNeedsStyleRecalc()) {
+                node->setChildNeedsStyleRecalc();
+                node = node->parentNode();
+            }
+
             setNeedsRendering();
         }
     }
 
-    inline bool needsStyleRecalc()
+    bool needsStyleRecalc()
     {
         return m_needsStyleRecalc;
     }
@@ -348,6 +356,21 @@ public:
     void clearNeedsStyleRecalc()
     {
         m_needsStyleRecalc = false;
+    }
+
+    void setChildNeedsStyleRecalc()
+    {
+        m_childNeedsStyleRecalc = true;
+    }
+
+    bool childNeedsStyleRecalc()
+    {
+        return m_childNeedsStyleRecalc;
+    }
+
+    void clearChildNeedsStyleRecalc()
+    {
+        m_childNeedsStyleRecalc = false;
     }
 
     void setStyle(ComputedStyle* style)
@@ -403,7 +426,8 @@ private:
     Node* getDocTypeChild();
 
 protected:
-    bool m_needsStyleRecalc;
+    bool m_needsStyleRecalc:1;
+    bool m_childNeedsStyleRecalc:1;
 
     Node* m_nextSibling;
     Node* m_previousSibling;

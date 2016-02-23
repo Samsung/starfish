@@ -4291,23 +4291,26 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
         element->clearNeedsStyleRecalc();
     }
 
-    ComputedStyle* childStyle = nullptr;
-    Node* child = element->firstChild();
-    while (child) {
-        if (child->isElement()) {
-            resolveDOMStyleInner(resolver, child->asElement(), element->style(), force);
-        } else {
-            if (force || child->needsStyleRecalc()) {
-                if (childStyle == nullptr) {
-                    childStyle = new ComputedStyle(element->style());
-                    childStyle->loadResources(element->document()->window()->starFish());
-                    childStyle->arrangeStyleValues(element->style());
+    if (force | element->childNeedsStyleRecalc()) {
+        ComputedStyle* childStyle = nullptr;
+        Node* child = element->firstChild();
+        while (child) {
+            if (child->isElement()) {
+                resolveDOMStyleInner(resolver, child->asElement(), element->style(), force);
+            } else {
+                if (force || child->needsStyleRecalc()) {
+                    if (childStyle == nullptr) {
+                        childStyle = new ComputedStyle(element->style());
+                        childStyle->loadResources(element->document()->window()->starFish());
+                        childStyle->arrangeStyleValues(element->style());
+                    }
+                    child->setStyle(childStyle);
+                    child->clearNeedsStyleRecalc();
                 }
-                child->setStyle(childStyle);
-                child->clearNeedsStyleRecalc();
             }
+            child = child->nextSibling();
         }
-        child = child->nextSibling();
+        element->clearNeedsStyleRecalc();
     }
 }
 

@@ -43,11 +43,13 @@ public:
 
     virtual String* nodeValue()
     {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 
     virtual String* textContent()
     {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 
