@@ -7,6 +7,9 @@
 #include "Traverse.h"
 #include "NodeList.h"
 
+#include "layout/Frame.h"
+#include "layout/FrameTreeBuilder.h"
+
 namespace StarFish {
 
 Node::Node(Document* document)
@@ -388,7 +391,7 @@ Node* Node::appendChild(Node* child)
     }
     m_lastChild = child;
     child->setParentNode(this);
-    setNeedsStyleRecalc();
+    setNeedsLayout();
     return child;
 }
 
@@ -421,7 +424,7 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     child->setParentNode(this);
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
-    setNeedsStyleRecalc();
+    setNeedsLayout();
     return child;
 }
 
@@ -502,8 +505,55 @@ Node* Node::removeChild(Node* child)
     child->setPreviousSibling(nullptr);
     child->setNextSibling(nullptr);
     child->setParentNode(nullptr);
-    setNeedsStyleRecalc();
+    setNeedsLayout();
     return child;
+}
+
+void Node::setNeedsFrameTreeBuild()
+{
+    Frame* old = frame();
+    if (old) {
+        Frame* parent = old->parent();
+        if (!parent) {
+            STARFISH_ASSERT(old->isFrameDocument());
+            parent = old;
+        } else {
+            while (true) {
+                if (parent->isFrameBlockBox() && parent->node()) {
+                    break;
+                }
+                parent = parent->parent();
+            }
+        }
+
+        while (parent->firstChild()) {
+            parent->removeChild(parent->firstChild());
+        }
+
+        Node* node = parent->node()->firstChild();
+        while (node) {
+            FrameTreeBuilder::clearTree(node);
+            node->m_needsFrameTreeBuild = true;
+            node = node->nextSibling();
+        }
+
+        node = parent->node();
+        while (node) {
+            node->setChildNeedsFrameTreeBuild();
+            node = node->parentNode();
+        }
+    } else {
+        Node* node = this;
+        while (node) {
+            if (node->frame()) {
+                node->setNeedsFrameTreeBuild();
+                break;
+            }
+            node = node->parentNode();
+        }
+    }
+
+    setNeedsRendering();
 }
 
 void Node::dumpStyle()

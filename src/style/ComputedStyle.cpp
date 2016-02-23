@@ -68,10 +68,31 @@ void ComputedStyle::loadResources(StarFish* sf)
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle)
 {
+    ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
     if (memcmp(&oldStyle->m_inheritedStyles, &newStyle->m_inheritedStyles, sizeof (ComputedStyle::InheritedStyles)) != 0) {
-        return ComputedStyleDamage::ComputedStyleDamageInherited;
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageInherited | damage);
     }
-    return ComputedStyleDamage::ComputedStyleDamageNone;
+
+    if (newStyle->m_originalDisplay != oldStyle->m_originalDisplay)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
+    if (newStyle->m_position != oldStyle->m_position)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
+    if (newStyle->m_opacity != oldStyle->m_opacity)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
+    if (newStyle->m_overflowX != oldStyle->m_overflowX)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
+    // if (newStyle->m_overflowY != oldStyle->m_overflowY)
+    //     damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
+    // FIXME changing z-index not always cause tree-rebuild
+    if (newStyle->m_zIndex != oldStyle->m_zIndex)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
+    return damage;
 }
 
 

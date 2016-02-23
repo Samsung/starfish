@@ -48,18 +48,6 @@ public:
         return localName()->toUpper();
     }
 
-    virtual void setTextContent(String* val)
-    {
-        Text* node = new Text(m_document, String::emptyString);
-        node->setTextContent(val);
-        while(firstChild()) {
-            removeChild(firstChild());
-        }
-
-        appendChild(node);
-        setNeedsStyleRecalc();
-    }
-
     /* Other methods (not in DOM API) */
 
     virtual bool isHTMLElement() const

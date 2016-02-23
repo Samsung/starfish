@@ -9,8 +9,9 @@
 namespace StarFish {
 
 enum ComputedStyleDamage {
-    ComputedStyleDamageNone,
-    ComputedStyleDamageInherited,
+    ComputedStyleDamageNone = 0,
+    ComputedStyleDamageInherited = 1,
+    ComputedStyleDamageRebuildFrame = 1 << 1,
 };
 
 class ComputedStyle : public gc {

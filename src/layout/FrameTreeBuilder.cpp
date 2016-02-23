@@ -14,7 +14,7 @@
 
 namespace StarFish {
 
-void clearTree(Node* current)
+void FrameTreeBuilder::clearTree(Node* current)
 {
     current->setFrame(nullptr);
 
@@ -25,130 +25,132 @@ void clearTree(Node* current)
     }
 }
 
-void buildTree(Node* current, Frame* parent)
+void buildTree(Node* current, bool force = false)
 {
-    DisplayValue display = current->style()->originalDisplay();
-    Frame* currentFrame;
+    if (current->needsFrameTreeBuild() || force) {
+        force = true;
+        Frame* parent = current->parentNode()->frame();
+        DisplayValue display = current->style()->originalDisplay();
+        Frame* currentFrame;
 
-    bool isBlockChild = false;
-    if (display == DisplayValue::BlockDisplayValue) {
-        isBlockChild = true;
-        if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
-            auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-            currentFrame = new FrameReplacedImage(current, current->style(), element->src());
-        } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
-            currentFrame = new FrameLineBreak(current, current->style());
-        } else {
-            currentFrame = new FrameBlockBox(current, current->style());
-        }
-    } else if (display == DisplayValue::InlineDisplayValue) {
-        if (current->isCharacterData() && current->asCharacterData()->isText()) {
-            currentFrame = new FrameText(current, current->style());
-        } else if(current->isComment()) {
-            clearTree(current);
-            return ;
-        } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
-            auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-            currentFrame = new FrameReplacedImage(current, current->style(), element->src());
-        } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
-            currentFrame = new FrameLineBreak(current, current->style());
-        } else {
-            currentFrame = new FrameInline(current, current->style());
-        }
-    } else if (display == DisplayValue::NoneDisplayValue) {
-        clearTree(current);
-        return ;
-    } else if (display == DisplayValue::InlineBlockDisplayValue) {
-        if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
-            auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-            currentFrame = new FrameReplacedImage(current, current->style(), element->src());
-        } else {
-            currentFrame = new FrameBlockBox(current, current->style());
-        }
-    }
-
-    if (parent->isFrameBlockBox()) {
-        if (!parent->firstChild()) {
-            parent->appendChild(currentFrame);
-        } else {
-            if (parent->asFrameBlockBox()->hasBlockFlow()) {
-                if (isBlockChild) {
-                    // Block... + Block case
-                    parent->appendChild(currentFrame);
-                } else {
-                    // Block... + Inline case
-                    Frame* last = parent->lastChild();
-                    STARFISH_ASSERT(last->style()->display() == BlockDisplayValue);
-
-                    if (last->isNormalFlow()) {
-                        if (last->node()) {
-                            ComputedStyle* newStyle = new ComputedStyle(parent->style());
-                            newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-                            last = new FrameBlockBox(nullptr, newStyle);
-                            parent->appendChild(last);
-                        }
-                    } else {
-                        if (last->previous() && last->previous()->isFrameBlockBox() && !last->previous()->asFrameBlockBox()->hasBlockFlow()) {
-                            last = last->previous();
-                        } else {
-                            ComputedStyle* newStyle = new ComputedStyle(parent->style());
-                            newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-                            last = new FrameBlockBox(nullptr, newStyle);
-                            parent->appendChild(last);
-                        }
-                    }
-
-                    last->appendChild(currentFrame);
-                }
+        bool isBlockChild = false;
+        if (display == DisplayValue::BlockDisplayValue) {
+            isBlockChild = true;
+            if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
+                currentFrame = new FrameReplacedImage(current, current->style(), element->src());
+            } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
+                currentFrame = new FrameLineBreak(current, current->style());
             } else {
-                if (isBlockChild) {
-                    // Inline... + Block case
-                    std::vector<Frame*, gc_allocator<Frame*>> backup;
-                    while (parent->firstChild()) {
-                        backup.push_back(parent->firstChild());
-                        parent->removeChild(parent->firstChild());
-                    }
-
-                    ComputedStyle* newStyle = new ComputedStyle(parent->style());
-                    newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-                    FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
-                    for(unsigned i = 0; i < backup.size(); i ++) {
-                        blockBox->appendChild(backup[i]);
-                    }
-
-                    parent->appendChild(blockBox);
-                    parent->appendChild(currentFrame);
-                } else {
-                    // Inline... + Inline case
-                    parent->appendChild(currentFrame);
-                }
-
+                currentFrame = new FrameBlockBox(current, current->style());
+            }
+        } else if (display == DisplayValue::InlineDisplayValue) {
+            if (current->isCharacterData() && current->asCharacterData()->isText()) {
+                currentFrame = new FrameText(current, current->style());
+            } else if(current->isComment()) {
+                FrameTreeBuilder::clearTree(current);
+                return ;
+            } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
+                currentFrame = new FrameReplacedImage(current, current->style(), element->src());
+            } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
+                currentFrame = new FrameLineBreak(current, current->style());
+            } else {
+                currentFrame = new FrameInline(current, current->style());
+            }
+        } else if (display == DisplayValue::NoneDisplayValue) {
+            FrameTreeBuilder::clearTree(current);
+            return ;
+        } else if (display == DisplayValue::InlineBlockDisplayValue) {
+            if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
+                currentFrame = new FrameReplacedImage(current, current->style(), element->src());
+            } else {
+                currentFrame = new FrameBlockBox(current, current->style());
             }
         }
-    } else {
-        STARFISH_ASSERT(parent->isFrameInline());
-        parent->appendChild(currentFrame);
+
+        if (parent->isFrameBlockBox()) {
+            if (!parent->firstChild()) {
+                parent->appendChild(currentFrame);
+            } else {
+                if (parent->asFrameBlockBox()->hasBlockFlow()) {
+                    if (isBlockChild) {
+                        // Block... + Block case
+                        parent->appendChild(currentFrame);
+                    } else {
+                        // Block... + Inline case
+                        Frame* last = parent->lastChild();
+                        STARFISH_ASSERT(last->style()->display() == BlockDisplayValue);
+
+                        if (last->isNormalFlow()) {
+                            if (last->node()) {
+                                ComputedStyle* newStyle = new ComputedStyle(parent->style());
+                                newStyle->setDisplay(DisplayValue::BlockDisplayValue);
+                                last = new FrameBlockBox(nullptr, newStyle);
+                                parent->appendChild(last);
+                            }
+                        } else {
+                            if (last->previous() && last->previous()->isFrameBlockBox() && !last->previous()->asFrameBlockBox()->hasBlockFlow()) {
+                                last = last->previous();
+                            } else {
+                                ComputedStyle* newStyle = new ComputedStyle(parent->style());
+                                newStyle->setDisplay(DisplayValue::BlockDisplayValue);
+                                last = new FrameBlockBox(nullptr, newStyle);
+                                parent->appendChild(last);
+                            }
+                        }
+
+                        last->appendChild(currentFrame);
+                    }
+                } else {
+                    if (isBlockChild) {
+                        // Inline... + Block case
+                        std::vector<Frame*, gc_allocator<Frame*>> backup;
+                        while (parent->firstChild()) {
+                            backup.push_back(parent->firstChild());
+                            parent->removeChild(parent->firstChild());
+                        }
+
+                        ComputedStyle* newStyle = new ComputedStyle(parent->style());
+                        newStyle->setDisplay(DisplayValue::BlockDisplayValue);
+                        FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
+                        for(unsigned i = 0; i < backup.size(); i ++) {
+                            blockBox->appendChild(backup[i]);
+                        }
+
+                        parent->appendChild(blockBox);
+                        parent->appendChild(currentFrame);
+                    } else {
+                        // Inline... + Inline case
+                        parent->appendChild(currentFrame);
+                    }
+
+                }
+            }
+        } else {
+            STARFISH_ASSERT(parent->isFrameInline());
+            parent->appendChild(currentFrame);
+        }
+
+        STARFISH_ASSERT(currentFrame->parent());
+        current->setFrame(currentFrame);
+        current->clearNeedsFrameTreeBuild();
     }
 
-    current->setFrame(currentFrame);
-    Node* n = current->firstChild();
-    while(n) {
-        buildTree(n, currentFrame);
-        n = n->nextSibling();
+    if (current->childNeedsFrameTreeBuild() || force) {
+        Node* n = current->firstChild();
+        while(n) {
+            buildTree(n, force);
+            n = n->nextSibling();
+        }
+        current->clearChildNeedsFrameTreeBuild();
     }
 }
 
 void FrameTreeBuilder::buildFrameTree(Document* document)
 {
-    if (!document->frame()) {
-        auto df = new FrameDocument(document, document->style());
-        document->setFrame(df);
-    } else {
-        // TODO calc dirty
-        while (document->frame()->firstChild()) {
-            document->frame()->removeChild(document->frame()->firstChild());
-        }
-    }
+    STARFISH_ASSERT(document->frame());
 
     // root element of html document is HTMLHtmlElement
     // https://www.w3.org/TR/html-markup/html.html
@@ -163,7 +165,7 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
 
     // FIXME display of html element always considered as "block"
     ASSERT(n->style()->display() == DisplayValue::BlockDisplayValue);
-    buildTree(n, document->frame());
+    buildTree(n);
 }
 
 void dump(Frame* frm, unsigned depth)

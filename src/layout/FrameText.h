@@ -10,7 +10,6 @@ public:
     FrameText (Node* node, ComputedStyle* style)
         : Frame(node, style)
     {
-        m_text = node->asCharacterData()->data();
     }
 
     virtual bool isFrameText()
@@ -25,7 +24,7 @@ public:
 
     String* text()
     {
-        return m_text;
+        return node()->asCharacterData()->data();
     }
 
     static std::string replaceAll(const std::string &str, const std::string &pattern, const std::string &replace)
@@ -45,7 +44,7 @@ public:
 
     virtual void dump(int depth)
     {
-        std::string str = m_node->asCharacterData()->asText()->data()->utf8Data();
+        std::string str = text()->utf8Data();
         str = replaceAll(str, "\n", "\\n");
         printf("text-> %s", str.data());
     }
@@ -56,7 +55,6 @@ public:
     }
 
 protected:
-    String* m_text;
 };
 
 }

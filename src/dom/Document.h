@@ -11,14 +11,7 @@ class Attribute;
 
 class Document : public Node {
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, ComputedStyle* style)
-        : Node(this, scriptBindingInstance)
-    {
-        m_window = window;
-        m_scriptBindingInstance = scriptBindingInstance;
-        setStyle(style);
-    }
-
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, ComputedStyle* style);
 public:
     /* 4.2.2. Interface NonElementParentNode */
     Element* getElementById(String* id);

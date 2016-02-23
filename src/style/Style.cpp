@@ -1,11 +1,15 @@
 #include "StarFishConfig.h"
+
 #include "Style.h"
+#include "CSSParser.h"
 #include "ComputedStyle.h"
-#include "layout/Frame.h"
+
 #include "dom/Element.h"
 #include "dom/Document.h"
-#include "CSSParser.h"
 #include "dom/DOMTokenList.h"
+
+#include "layout/Frame.h"
+#include "layout/FrameTreeBuilder.h"
 
 namespace StarFish {
 
@@ -4283,31 +4287,53 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
     return ret;
 }
 
-void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedStyle* parentStyle, bool force = false)
+void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedStyle* parentStyle, bool inheritedStyleChanged = false)
 {
-    if (element->needsStyleRecalc() || force) {
+    ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
+
+
+    if (element->needsStyleRecalc() || inheritedStyleChanged) {
         ComputedStyle* style = resolver->resolveStyle(element, parentStyle);
-        if (!element->style() || compareStyle(element->style(), style) == ComputedStyleDamage::ComputedStyleDamageInherited) {
-            force = force | true;
+
+        if (!element->style()) {
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageInherited | ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+        } else {
+            damage = compareStyle(element->style(), style);
         }
+
+        if (damage & ComputedStyleDamage::ComputedStyleDamageInherited) {
+            inheritedStyleChanged = inheritedStyleChanged | true;
+        }
+
+        if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
+            element->setNeedsFrameTreeBuild();
+        } else if (element->frame()) {
+            element->frame()->setStyle(style);
+        }
+
         element->setStyle(style);
         element->clearNeedsStyleRecalc();
     }
 
-    if (force | element->childNeedsStyleRecalc()) {
+    if (inheritedStyleChanged | element->childNeedsStyleRecalc()) {
         ComputedStyle* childStyle = nullptr;
         Node* child = element->firstChild();
         while (child) {
             if (child->isElement()) {
-                resolveDOMStyleInner(resolver, child->asElement(), element->style(), force);
+                resolveDOMStyleInner(resolver, child->asElement(), element->style(), inheritedStyleChanged);
             } else {
-                if (force || child->needsStyleRecalc()) {
+                if (inheritedStyleChanged || child->needsStyleRecalc()) {
                     if (childStyle == nullptr) {
                         childStyle = new ComputedStyle(element->style());
                         childStyle->loadResources(element->document()->window()->starFish());
                         childStyle->arrangeStyleValues(element->style());
                     }
+
                     child->setStyle(childStyle);
+
+                    if (child->frame())
+                        child->frame()->setStyle(childStyle);
+
                     child->clearNeedsStyleRecalc();
                 }
             }

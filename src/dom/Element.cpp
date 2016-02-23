@@ -70,16 +70,13 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
 
 void Element::setTextContent(String* text)
 {
-    Text* newNode = new Text(document(), text);
-    std::vector<Node*> children;
-    for(Node* child=firstChild(); child; child = child->nextSibling()) {
-        children.push_back(child);
+    Text* node = new Text(document(), text);
+
+    while(firstChild()) {
+        removeChild(firstChild());
     }
-    std::for_each(children.begin(), children.end(), [&](Node* child) {
-        removeChild(child);
-        // how to remove child from document?
-    });
-    appendChild(newNode);
+
+    appendChild(node);
 }
 
 Node* Element::clone()

@@ -42,7 +42,7 @@ public:
         HTMLElement::didAttributeChanged(name, old, value);
         if (name == document()->window()->starFish()->staticStrings()->m_src) {
             m_src = value;
-            setNeedsStyleRecalc();
+            setNeedsFrameTreeBuild();
         }
     }
 

@@ -312,6 +312,11 @@ public:
         return m_style;
     }
 
+    void setStyle(ComputedStyle* s)
+    {
+        m_style = s;
+    }
+
     Node* node()
     {
         return m_node;

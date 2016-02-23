@@ -7,6 +7,16 @@
 
 namespace StarFish {
 
+Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, ComputedStyle* style)
+    : Node(this, scriptBindingInstance)
+{
+    m_window = window;
+    m_scriptBindingInstance = scriptBindingInstance;
+    setStyle(style);
+    auto df = new FrameDocument(this, style);
+    setFrame(df);
+}
+
 String* Document::nodeName()
 {
     return window()->starFish()->staticStrings()->m_documentLocalName;

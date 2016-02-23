@@ -47,14 +47,22 @@ protected:
 
     void initNode()
     {
+        m_parentNode = nullptr;
+
         m_nextSibling = nullptr;
         m_previousSibling = nullptr;
-        m_parentNode = nullptr;
+
         m_firstChild = nullptr;
         m_lastChild = nullptr;
+
         m_state = NodeStateNormal;
+
         m_needsStyleRecalc = true;
         m_childNeedsStyleRecalc = true;
+
+        m_needsFrameTreeBuild = true;
+        m_childNeedsFrameTreeBuild = true;
+
         m_style = nullptr;
         m_frame = nullptr;
         m_baseUri = String::emptyString; // need to set by the parser
@@ -373,6 +381,39 @@ public:
         m_childNeedsStyleRecalc = false;
     }
 
+    void setNeedsFrameTreeBuild();
+
+    bool needsFrameTreeBuild()
+    {
+        return m_needsFrameTreeBuild;
+    }
+
+    void clearNeedsFrameTreeBuild()
+    {
+        m_needsFrameTreeBuild = false;
+    }
+
+    void setChildNeedsFrameTreeBuild()
+    {
+        m_childNeedsFrameTreeBuild = true;
+    }
+
+    bool childNeedsFrameTreeBuild()
+    {
+        return m_childNeedsFrameTreeBuild;
+    }
+
+    void clearChildNeedsFrameTreeBuild()
+    {
+        m_childNeedsFrameTreeBuild = false;
+    }
+
+    void setNeedsLayout()
+    {
+        // TODO
+        setNeedsFrameTreeBuild();
+    }
+
     void setStyle(ComputedStyle* style)
     {
         m_style = style;
@@ -413,7 +454,6 @@ public:
 
 private:
     inline void setNeedsRendering();
-
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);
     virtual String* prefix()
     {
@@ -428,6 +468,8 @@ private:
 protected:
     bool m_needsStyleRecalc:1;
     bool m_childNeedsStyleRecalc:1;
+    bool m_needsFrameTreeBuild:1;
+    bool m_childNeedsFrameTreeBuild:1;
 
     Node* m_nextSibling;
     Node* m_previousSibling;

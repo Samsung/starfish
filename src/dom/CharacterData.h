@@ -50,7 +50,8 @@ public:
     {
         STARFISH_ASSERT(data);
         m_data = data;
-        setNeedsStyleRecalc();
+
+        setNeedsLayout();
     }
 
     size_t length()

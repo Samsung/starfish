@@ -88,8 +88,6 @@ public:
         HTMLElement::didAttributeChanged(name, old, value);
         if (name == document()->window()->starFish()->staticStrings()->m_src) {
             m_src = document()->window()->starFish()->makeResourcePath(value);
-            setNeedsStyleRecalc();
-
 #ifdef STARFISH_TIZEN_WEARABLE
             const char* path = m_src->utf8Data();
             STARFISH_LOG_INFO("JMP, path = %s", path);
