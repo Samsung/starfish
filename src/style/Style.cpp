@@ -3,6 +3,7 @@
 #include "Style.h"
 #include "CSSParser.h"
 #include "ComputedStyle.h"
+#include "NamedColors.h"
 
 #include "dom/Element.h"
 #include "dom/Document.h"
@@ -3350,6 +3351,25 @@ Color parseColor(String* str)
         sscanf(s, "rgb(%f,%f,%f)", &r, &g, &b);
         return Color(r, g, b, 255);
     } else {
+        if (strcmp("transparent", s) == 0) {
+            return Color(0, 0, 0, 0);
+        }
+        #define PARSE_COLOR(name, value) \
+        else if(strcmp(#name, s) == 0) { \
+            char r = (value & 0xff0000) >> 16; \
+            char g = (value & 0xff00) >> 8; \
+            char b = (value & 0xff); \
+            char a = 255; \
+            return Color(r, g, b, a); \
+        }
+
+        NAMED_COLOR_FOR_EACH(PARSE_COLOR)
+
+        #undef PARSE_COLOR
+        else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+
         if (strcmp("black", s) == 0) {
             return Color(0, 0, 0, 255);
         } else if (strcmp("red", s) == 0) {

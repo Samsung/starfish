@@ -2,6 +2,7 @@
 #define __StarFishCSSParser__
 
 #include "style/Style.h"
+#include "style/NamedColors.h"
 
 namespace StarFish {
 
@@ -200,7 +201,8 @@ public:
         if (!allowNegative && num < 0) return false;
         if (parser->consumeString()) {
             String* str = parser->parsedString();
-            if (str->equals("px")
+            if ((str->length() == 0 && num == 0)
+                || str->equals("px")
                 || str->equals("em")
                 || str->equals("ex")
                 || str->equals("in")
@@ -257,13 +259,17 @@ public:
 
     static bool assureColor(const char* token)
     {
-        if (strcmp(token, "red") == 0 ||
-            strcmp(token, "green") == 0 ||
-            strcmp(token, "yellow") == 0 ||
-            strcmp(token, "blue") == 0 ||
-            strcmp(token, "purple") == 0 ||
-            strcmp(token, "black") == 0)
+        if (strcmp("transparent", token) == 0) {
             return true;
+        }
+        #define PARSE_COLOR(name, value) \
+        else if(strcmp(#name, token) == 0) { \
+            return true; \
+        }
+
+        NAMED_COLOR_FOR_EACH(PARSE_COLOR)
+        #undef PARSE_COLOR
+
         return false;
     }
 

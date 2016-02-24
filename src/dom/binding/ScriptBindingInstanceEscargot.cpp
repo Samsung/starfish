@@ -1611,6 +1611,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(CSSStyleDeclaration, CSSStyleDeclarationFunction->protoType());
     fetchData(this)->m_cssStyleDeclaration = CSSStyleDeclarationFunction;
 
+
+#undef FOR_EACH_STYLE_ATTRIBUTE
 #define FOR_EACH_STYLE_ATTRIBUTE(F) \
     F(Color, color) \
     F(Direction, direction) \

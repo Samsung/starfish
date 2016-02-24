@@ -85,25 +85,16 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
                     inlineStyle()->setBackground(rule[1]->utf8Data());
                 }
 #define SET_VALUE(name, nameCSSCase) \
-                else if (strcmp(key, nameCSSCase)) { \
-                    inlineStyle()->set##name(rule[1]->utf8Data()); \\
-                }\
+                else if (strcmp(key, nameCSSCase) == 0) { \
+                    inlineStyle()->set##name(rule[1]->utf8Data()); \
+                }
                 FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
 #undef SET_VALUE
                 else {
-                    STARFISH_LOG_INFO("unknown key %s in Element::didAttributeChanged::style", key);
+                    STARFISH_LOG_INFO("unknown key %s in Element::didAttributeChanged::style\n", key);
                 }
             }
         }
-
-        /*
-#define SET_VALUE(name, nameCSSCase) \
-    void setValue##name(std::vector<String*, gc_allocator<String*>>* tokens);
-
-    FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
-#undef SET_VALUE
-*/
-
     }
 }
 

@@ -1,14 +1,7 @@
 test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-001.htm
 test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-004a.htm
-test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-004b.htm
-test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-004c.htm
-test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-004d.htm
 test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-004e.htm
-test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-004f.htm
 test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-005a.htm
-test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-005b.htm
-test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-005c.htm
-test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-005d.htm
 test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-007.htm
 test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-009a.htm
 test/reftest/csswg-test/css21/abspos/abspos-containing-block-initial-009b.htm
