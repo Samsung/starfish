@@ -200,6 +200,7 @@ protected:
 
 
 class LineBox : public FrameBox {
+    friend class LineFormattingContext;
     friend class FrameBlockBox;
     friend class InlineNonReplacedBox;
 public:

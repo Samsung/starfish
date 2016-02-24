@@ -260,6 +260,17 @@ void LineFormattingContext::breakLine(bool dueToBr)
 {
     if (dueToBr == false)
         m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1);
+
+    LayoutUnit ascender;
+    LayoutUnit descender;
+    LayoutUnit minimumHeight;
+    LineBox* back = m_block.m_lineBoxes.back();
+    computeVerticalProperties(back, m_block.style(), ascender, descender, minimumHeight, m_layoutContext);
+    back->m_ascender = ascender;
+    back->m_descender = descender;
+
+    back->setHeight(back->ascender() - back->decender());
+
     m_block.m_lineBoxes.push_back(new LineBox(&m_block));
     m_block.m_lineBoxes.back()->setWidth(m_lineBoxWidth);
     m_currentLine++;
@@ -392,6 +403,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
         } else if (f->isFrameBlockBox()) {
             // inline-block
             FrameBlockBox* r = f->asFrameBlockBox();
+            STARFISH_ASSERT(f->style()->display() == DisplayValue::InlineBlockDisplayValue);
             f->layout(ctx);
 
             LayoutUnit ascender = 0;
@@ -457,14 +469,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             iter ++;
         }
 
-        LayoutUnit ascender;
-        LayoutUnit descender;
-        LayoutUnit minimumHeight;
-        LineBox* back = m_lineBoxes.back();
-        computeVerticalProperties(back, style(), ascender, descender, minimumHeight, ctx);
-        back->m_ascender = ascender;
-        back->m_descender = descender;
-        back->m_frameRect.setHeight(ascender - descender);
         lineFormattingContext.breakLine(dueToBr);
     }, [&](FrameInline* f) {
         lineFormattingContext.registerInlineContent();

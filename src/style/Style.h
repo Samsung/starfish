@@ -924,7 +924,8 @@ public:
 
     enum PseudoClass {
         None,
-        Active
+        Active,
+        Hover,
     };
 
     CSSStyleRule(Kind kind, String* ruleText, PseudoClass pc, Document* document)

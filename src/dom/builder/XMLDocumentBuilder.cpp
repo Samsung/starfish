@@ -85,6 +85,8 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                                 selectorText = cSelectorText.data();
                                 if (strcmp(pcPos + 1, "active") == 0) {
                                     pc = CSSStyleRule::PseudoClass::Active;
+                                } else if (strcmp(pcPos + 1, "hover") == 0) {
+                                    pc = CSSStyleRule::PseudoClass::Hover;
                                 }
                             }
 
