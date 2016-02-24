@@ -5,11 +5,12 @@
 
 namespace StarFish {
 
-void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*>>* tokens, String* src) {
+void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*>>* tokens, String* src)
+{
     tokens->clear();
 
     const char* data = src->utf8Data();
-    size_t length = src->length();
+    size_t length = strlen(data);
 
     bool isWhiteSpaceState = true;
 
@@ -23,13 +24,13 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*>>* tokens,
                 inQuotationMarks = true;
         }
         if (isWhiteSpaceState) {
-            if (data[i] != ' ') {
+            if (!String::isSpaceOrNewline(data[i])) {
                 isWhiteSpaceState = false;
                 str += data[i];
             } else
                 continue;
         } else {
-            if (data[i] == ' ' && !inQuotationMarks) {
+            if (String::isSpaceOrNewline(data[i]) && !inQuotationMarks) {
                 isWhiteSpaceState = true;
                 tokens->push_back(String::fromUTF8(str.data(), str.length()));
                 str.clear();
@@ -42,7 +43,6 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*>>* tokens,
     if (str.length()) {
         tokens->push_back(String::fromUTF8(str.data(), str.length()));
     }
-//    STARFISH_ASSERT(str.find(' ', 0) == SIZE_MAX || tokens->size() > 1);
 }
 
 unsigned long DOMTokenList::length()

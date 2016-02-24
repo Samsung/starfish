@@ -18,10 +18,6 @@ namespace StarFish {
 class ComputedStyle;
 class Element;
 class Document;
-// FIXME
-// for support javascript CSSStyleSheet Object
-// we should store style rules that way(like CSSStyleSheet object)
-
 
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
@@ -59,7 +55,7 @@ public:
         return m_value;
     }
 
-    Length toLength(/* parentValue */)
+    Length toLength()
     {
         // absolute length
         if (m_kind == PX)
@@ -675,59 +671,59 @@ public:
     void setValuePercentageOrLength(const char* value);
 
 #define FOR_EACH_STYLE_ATTRIBUTE(F) \
-    F(Color) \
-    F(BackgroundColor) \
-    F(BackgroundSize) \
-    F(LetterSpacing) \
-    F(LineHeight) \
-    F(MarginTop) \
-    F(MarginRight) \
-    F(MarginBottom) \
-    F(MarginLeft) \
-    F(PaddingTop) \
-    F(PaddingRight) \
-    F(PaddingBottom) \
-    F(PaddingLeft) \
-    F(Top) \
-    F(Right) \
-    F(Bottom) \
-    F(Left) \
-    F(Direction) \
-    F(Height) \
-    F(Width) \
-    F(FontSize) \
-    F(FontStyle) \
-    F(Display) \
-    F(Position) \
-    F(TextDecoration) \
-    F(BorderImageRepeat) \
-    F(BorderImageSlice) \
-    F(BorderImageSource) \
-    F(BorderImageWidth) \
-    F(BorderTopColor) \
-    F(BorderRightColor) \
-    F(BorderBottomColor) \
-    F(BorderLeftColor) \
-    F(BorderTopStyle) \
-    F(BorderRightStyle) \
-    F(BorderBottomStyle) \
-    F(BorderLeftStyle) \
-    F(BorderTopWidth) \
-    F(BorderRightWidth) \
-    F(BorderBottomWidth) \
-    F(BorderLeftWidth) \
-    F(TextAlign) \
-    F(Visibility) \
-    F(Opacity) \
-    F(OverflowX) \
-    F(BackgroundImage) \
-    F(ZIndex) \
-    F(VerticalAlign) \
-    F(BackgroundRepeatX) \
-    F(BackgroundRepeatY) \
-    F(FontWeight) \
+    F(Color, "color") \
+    F(BackgroundColor, "background-color") \
+    F(BackgroundSize, "background-size") \
+    F(LetterSpacing, "letter-spacing") \
+    F(LineHeight, "line-height") \
+    F(MarginTop, "margin-top") \
+    F(MarginRight, "margin-right") \
+    F(MarginBottom, "margin-bottom") \
+    F(MarginLeft, "margin-left") \
+    F(PaddingTop, "padding-top") \
+    F(PaddingRight, "padding-right") \
+    F(PaddingBottom, "padding-bottom") \
+    F(PaddingLeft, "padding-left") \
+    F(Top, "top") \
+    F(Right, "right") \
+    F(Bottom, "bottom") \
+    F(Left, "left") \
+    F(Direction, "direction") \
+    F(Height, "height") \
+    F(Width, "width") \
+    F(FontSize, "font-size") \
+    F(FontStyle, "font-style") \
+    F(Display, "disply") \
+    F(Position, "position") \
+    F(TextDecoration, "text-decoration") \
+    F(BorderImageRepeat, "border-image-repeat") \
+    F(BorderImageSlice, "border-image-slice") \
+    F(BorderImageSource, "border-image-source") \
+    F(BorderImageWidth, "border-image-width") \
+    F(BorderTopColor, "border-top-color") \
+    F(BorderRightColor, "border-right-color") \
+    F(BorderBottomColor, "border-bottom-color") \
+    F(BorderLeftColor, "border-left-color") \
+    F(BorderTopStyle, "border-top-style") \
+    F(BorderRightStyle, "border-right-style") \
+    F(BorderBottomStyle, "border-bottom-style") \
+    F(BorderLeftStyle, "border-left-style") \
+    F(BorderTopWidth, "border-top-width") \
+    F(BorderRightWidth, "border-right-width") \
+    F(BorderBottomWidth, "border-bottom-width") \
+    F(BorderLeftWidth, "border-left-width") \
+    F(TextAlign, "text-align") \
+    F(Visibility, "visibility") \
+    F(Opacity, "opacity") \
+    F(OverflowX, "overflow-x") \
+    F(BackgroundImage, "background-image") \
+    F(ZIndex, "z-index") \
+    F(VerticalAlign, "vertical-align") \
+    F(BackgroundRepeatX, "background-repeat-x") \
+    F(BackgroundRepeatY, "background-repeat-y") \
+    F(FontWeight, "font-weight") \
 
-#define SET_VALUE(name) \
+#define SET_VALUE(name, nameCSSCase) \
     void setValue##name(std::vector<String*, gc_allocator<String*>>* tokens);
 
     FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
@@ -805,6 +801,11 @@ public:
         m_cssValues.push_back(p);
     }
 
+    void clear()
+    {
+        m_cssValues.clear();
+    }
+
     Document* document()
     {
         return m_document;
@@ -812,7 +813,7 @@ public:
 
     void notifyNeedsStyleRecalc();
 
-#define CHECK_INPUT_ERROR(name) \
+#define CHECK_INPUT_ERROR(name, nameCSSCase) \
     bool checkInputError##name(std::vector<String*, gc_allocator<String*>>* tokens);
 
     FOR_EACH_STYLE_ATTRIBUTE(CHECK_INPUT_ERROR)
@@ -826,7 +827,7 @@ public:
     bool checkInputErrorBorderBottom(std::vector<String*, gc_allocator<String*>>* tokens);
     bool checkInputErrorBorderLeft(std::vector<String*, gc_allocator<String*>>* tokens);
     bool checkHavingOneTokenAndLengthOrPercentage(std::vector<String*, gc_allocator<String*>>* tokens, bool allowNegative);
-#define ATTRIBUTE_GETTER(name) \
+#define ATTRIBUTE_GETTER(name, nameCSSCase) \
     String* name () { \
         for (unsigned i = 0; i < m_cssValues.size(); i++) { \
             if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) \
@@ -838,7 +839,7 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_GETTER)
 #undef ATTRIBUTE_GETTER
 
-#define ATTRIBUTE_SETTER(name) \
+#define ATTRIBUTE_SETTER(name, nameCSSCase) \
     void set##name(const char* value) \
     { \
         if (*value == '\0') { \

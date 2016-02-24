@@ -126,6 +126,9 @@ public:
     void split(char delim, Vector& tokens);
     String* trim();
 
+    // token is only 1-byte char now.
+    std::vector<String*, gc_allocator<String*>> tokenize(const char* tokens, size_t tokensLength);
+
 protected:
     template <typename T>
     static bool stringEqual(const T* s, const T* s1, const size_t& len)

@@ -36,6 +36,7 @@ public:
     QualifiedName m_id;
     QualifiedName m_class;
     QualifiedName m_localName;
+    QualifiedName m_style;
     QualifiedName m_src;
 
     // Event Names

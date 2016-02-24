@@ -141,6 +141,8 @@ void String::split(char delim, Vector& tokens)
 
 String* String::trim()
 {
+    // TODO implement utf-32 case
+    // TODO should we consider all-of whitespace case not only ' '?
     if(m_isASCIIString) {
         ASCIIString str = *asASCIIString();
         size_t first = str.find_first_not_of(' ');
@@ -149,6 +151,38 @@ String* String::trim()
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+}
+
+std::vector<String*, gc_allocator<String*>> String::tokenize(const char* tokens, size_t tokensLength)
+{
+    std::vector<String*, gc_allocator<String*>> result;
+    const char* data = utf8Data();
+    size_t length = strlen(data);
+
+    std::string str;
+    for (size_t i = 0; i < length; i ++) {
+        char c = data[i];
+        bool isToken = false;
+        for (size_t j = 0; j < tokensLength; j ++) {
+            if (c == tokens[j]) {
+                isToken = true;
+                break;
+            }
+        }
+
+        if (isToken) {
+            result.push_back(String::fromUTF8(str.data(), str.length()));
+            str.clear();
+        } else {
+            str += c;
+        }
+    }
+
+    if (str.length()) {
+        result.push_back(String::fromUTF8(str.data(), str.length()));
+    }
+
+    return result;
 }
 
 }

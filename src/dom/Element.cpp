@@ -65,6 +65,45 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
     } else if (name == document()->window()->starFish()->staticStrings()->m_class) {
         DOMTokenList::tokenize(&m_classNames, value);
         setNeedsStyleRecalc();
+    } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
+        inlineStyle()->clear();
+        std::vector<String*, gc_allocator<String*>> tokens = value->tokenize(";",1);
+
+        for (size_t i = 0; i < tokens.size(); i ++) {
+
+            std::vector<String*, gc_allocator<String*>> rule = tokens[i]->tokenize(":", 1);
+
+            if (rule.size() > 1) {
+                const char* key = rule[0]->trim()->utf8Data();
+                if (strcmp(key, "margin") == 0) {
+                    inlineStyle()->setMargin(rule[1]->utf8Data());
+                } else if (strcmp(key, "border") == 0) {
+                    inlineStyle()->setBorder(rule[1]->utf8Data());
+                } else if (strcmp(key, "padding") == 0) {
+                    inlineStyle()->setPadding(rule[1]->utf8Data());
+                } else if (strcmp(key, "background") == 0) {
+                    inlineStyle()->setBackground(rule[1]->utf8Data());
+                }
+#define SET_VALUE(name, nameCSSCase) \
+                else if (strcmp(key, nameCSSCase)) { \
+                    inlineStyle()->set##name(rule[1]->utf8Data()); \\
+                }\
+                FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
+#undef SET_VALUE
+                else {
+                    STARFISH_LOG_INFO("unknown key %s in Element::didAttributeChanged::style", key);
+                }
+            }
+        }
+
+        /*
+#define SET_VALUE(name, nameCSSCase) \
+    void setValue##name(std::vector<String*, gc_allocator<String*>>* tokens);
+
+    FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
+#undef SET_VALUE
+*/
+
     }
 }
 

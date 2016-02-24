@@ -18,7 +18,7 @@ public:
         m_id = String::emptyString;
         m_namespace = String::emptyString;
         m_namespacePrefix = String::emptyString;
-        m_style = new CSSStyleDeclaration(document, this);
+        m_inlineStyle = new CSSStyleDeclaration(document, this);
     }
 
     Element(Document* document)
@@ -26,11 +26,12 @@ public:
     {
         initScriptWrappable(this);
         m_id = String::emptyString;
-        m_style = new CSSStyleDeclaration(document, this);
+        m_inlineStyle = new CSSStyleDeclaration(document, this);
     }
 
     /* 4.4 Interface Node */
-    virtual NodeType nodeType() {
+    virtual NodeType nodeType()
+    {
         return ELEMENT_NODE;
     }
 
@@ -88,7 +89,8 @@ public:
         return m_id;
     }
 
-    String* namespaceUri() {
+    String* namespaceUri()
+    {
         return m_namespace;
     }
 
@@ -97,9 +99,9 @@ public:
         return m_namespacePrefix;
     }
 
-    CSSStyleDeclaration* inlineStyle() // style() is taken
+    CSSStyleDeclaration* inlineStyle()
     {
-        return m_style;
+        return m_inlineStyle;
     }
 
     // DO NOT MODIFY THIS VECTOR
@@ -156,7 +158,7 @@ protected:
     String* m_namespace;
     String* m_namespacePrefix;
 
-    CSSStyleDeclaration* m_style;
+    CSSStyleDeclaration* m_inlineStyle;
 };
 
 

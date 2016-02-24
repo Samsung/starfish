@@ -118,6 +118,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_id = QualifiedName::fromString(sf, "id");
     m_class = QualifiedName::fromString(sf, "class");
     m_localName = QualifiedName::fromString(sf, "localName");
+    m_style = QualifiedName::fromString(sf, "style");
     m_src = QualifiedName::fromString(sf, "src");
 
     m_click = QualifiedName::fromString(sf, "click");
