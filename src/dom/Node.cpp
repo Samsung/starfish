@@ -556,6 +556,11 @@ void Node::setNeedsFrameTreeBuild()
     setNeedsRendering();
 }
 
+bool Node::dispatchEvent(Event* event)
+{
+    return EventTarget::dispatchEvent(this, event);
+}
+
 void Node::dumpStyle()
 {
     dump();

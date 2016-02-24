@@ -600,29 +600,19 @@ void Window::dispatchTouchEvent(float x, float y,TouchEventKind kind)
         }
 
         Node* t = m_activeNodeWithTouchDown;
+
         while (t) {
             if (t->isElement() && t->asElement()->isHTMLElement()) {
-                // if (t->asElement()->asHTMLElement()->onclick() != ScriptValueNull) {
-                //     // TODO read return value of onclick
-                //     // implmement stop propagation
-                //     // implmement event argument
-                //     // void callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue)
-                //     callScriptFunction(t->asElement()->asHTMLElement()->onclick(),
-                //             NULL, 0, t->scriptValue());
-                // }
-                auto eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
-                auto clickListeners = t->asElement()->getEventListeners(eventType);
-                if (clickListeners) {
-                    for (unsigned i = 0; i < clickListeners->size(); i++) {
-                        STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                        callScriptFunction(clickListeners->at(i)->scriptValue(), NULL, 0, t->scriptValue());
-                    }
-                }
+                QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
+                Event* e = new Event(starFish()->scriptBindingInstance(), eventType, true, false);
+                EventTarget::dispatchEvent(t->asNode(), e);
+                break;
             }
 
             t->setState(Node::NodeStateNormal);
             t = t->parentNode();
         }
+
         m_activeNodeWithTouchDown = nullptr;
     }
 }

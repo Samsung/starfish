@@ -89,13 +89,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+        escargot::ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
         if (firstArg.isESString() && secondArg.asESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
             // TODO: Verify valid event types (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
             auto listener = new EventListener(secondArg);
-            ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->addEventListener(eventTypeName, listener);
+            bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
+            ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->addEventListener(eventTypeName, listener, capture);
         }
         return escargot::ESValue();
     }, escargot::ESString::create("addEventListener"), 2, false);
@@ -105,13 +107,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+        escargot::ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
         if (firstArg.isESString() && secondArg.asESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
             // TODO: Verify valid event type. (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
             auto listener = new EventListener(secondArg);
-            ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->removeEventListener(eventTypeName, listener);
+            bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
+            ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->removeEventListener(eventTypeName, listener, capture);
         }
         return escargot::ESValue();
     }, escargot::ESString::create("removeEventListener"), 2, false);

@@ -5,14 +5,16 @@
 
 namespace StarFish {
 
-class Window;
+class Event;
 class Node;
+class Window;
 
 class EventListener : public gc {
 public:
-    EventListener(ScriptValue fn, bool isAttribute = false)
+    EventListener(ScriptValue fn, bool isAttribute = false, bool useCapture = false)
         : m_listener(fn)
         , m_isAttribute(isAttribute)
+        , m_capture(useCapture)
     {
     }
     bool isAttribute() const
@@ -21,16 +23,25 @@ public:
     }
     bool compare(const EventListener* other) const
     {
-        return (m_isAttribute == other->m_isAttribute) && (m_listener == other->m_listener);
+        return (m_isAttribute == other->m_isAttribute) && (m_listener == other->m_listener) && (m_capture == other->m_capture);
     }
     ScriptValue scriptValue()
     {
         return m_listener;
     }
+    bool capture() const
+    {
+        return m_capture;
+    }
+    void setCapture(bool capture)
+    {
+        m_capture = capture;
+    }
 
 protected:
     ScriptValue m_listener;
     bool m_isAttribute;
+    bool m_capture;
 };
 
 typedef std::vector<EventListener*, gc_allocator<EventListener*>> EventListenerVector;
@@ -75,7 +86,8 @@ public:
 
     bool addEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture = false);
     bool removeEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture = false);
-    // bool dispatchEvent(PassRefPtrWillBeRawPtr<Event>);
+    virtual bool dispatchEvent(Event* event);
+    bool dispatchEvent(Node* origin, Event* event);
 
     bool setAttributeEventListener(const QualifiedName& eventType, EventListener* listener);
     EventListener* getAttributeEventListener(const QualifiedName& eventType);

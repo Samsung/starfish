@@ -7,6 +7,7 @@
 #include "style/ComputedStyle.h"
 #include "platform/canvas/Canvas.h"
 #include "platform/canvas/image/ImageData.h"
+#include "dom/Event.h"
 #include "dom/EventTarget.h"
 #include "dom/HTMLCollection.h"
 #include "dom/DOMTokenList.h"
@@ -458,6 +459,8 @@ public:
     {
 
     }
+
+    virtual bool dispatchEvent(Event* event) override;
 
 private:
     inline void setNeedsRendering();

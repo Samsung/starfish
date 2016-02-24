@@ -21,6 +21,15 @@ Event::Event(ScriptBindingInstance* instance)
     initScriptWrappable(this, instance);
 }
 
+Event::Event(ScriptBindingInstance* instance, QualifiedName eventType, bool canBubble, bool cancelable)
+    : ScriptWrappable(this)
+    , m_type(eventType)
+    , m_bubbles(canBubble)
+    , m_cancelable(cancelable)
+{
+    initScriptWrappable(this, instance);
+}
+
 UIEvent::UIEvent(ScriptBindingInstance* instance)
     : Event(instance)
 {

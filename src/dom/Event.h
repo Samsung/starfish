@@ -15,7 +15,6 @@ struct EventInit {
 
 class Event : public ScriptWrappable {
 protected:
-    Event(ScriptBindingInstance* instance);
 
 public:
     enum PhaseType {
@@ -25,8 +24,11 @@ public:
         BUBBLING_PHASE      = 3
     };
 
-    const String* type() const { return m_type != nullptr ? m_type : String::emptyString; }
-    void setType(String* type) { m_type = type; }
+    Event(ScriptBindingInstance* instance);
+    Event(ScriptBindingInstance* instance, QualifiedName eventType, bool canBubble, bool cancelable);
+
+    const QualifiedName type() const { return m_type; }
+    void setType(QualifiedName type) { m_type = type; }
 
     EventTarget* target() const { return m_target; }
     void setTarget(EventTarget* target) { m_target = target; }
@@ -37,8 +39,10 @@ public:
     unsigned short eventPhase() const { return m_eventPhase; }
     void setEventPhase(unsigned short phase) { m_eventPhase = phase; }
 
-    void stopPropagation() { m_propagationStopped = true; }
-    void stopImmediatePropagation() { m_propagationStopped = true; m_immediatePropagationStopped = true; }
+    bool stopPropagation() { return m_propagationStopped || m_immediatePropagationStopped; }
+    void setStopPropagation() { m_propagationStopped = true; }
+    bool stopImmediatePropagation() { return m_immediatePropagationStopped; }
+    void setStopImmediatePropagation() { m_propagationStopped = true; m_immediatePropagationStopped = true; }
 
     bool bubbles() const { return m_bubbles; }
     bool cancelable() const { return m_cancelable; }
@@ -50,8 +54,13 @@ public:
     bool defaultPrevented() const { return m_defaultPrevented; }
     void setDefaultPrevented(bool defaultPrevented) { m_defaultPrevented = defaultPrevented; }
 
+    bool isInitialized() const { return m_isInitialized; }
+    void setIsInitialized(bool isInitialized) { m_isInitialized = isInitialized; }
+    bool isDispatched() const { return m_isDispatched; }
+    void setIsDispatched(bool isDispatched) { m_isDispatched = isDispatched; }
+
 private:
-    String* m_type;
+    QualifiedName m_type { QualifiedName::emptyQualifiedName() };
     EventTarget* m_target;
     EventTarget* m_currentTarget;
 
@@ -65,7 +74,7 @@ private:
 
     bool m_defaultPrevented { false }; // canceled flag
     bool m_isInitialized { false }; // initialized flag
-    bool m_dispatched { false }; // dispatch flag
+    bool m_isDispatched { false }; // dispatch flag
 
     // TODO: The `timeStamp` attribute must return the value it was initialized to.
     //       When an event is created the attribute must be initialized to the number of milliseconds that have passed since 00:00:00 UTC on 1 January 1970, ignoring leap seconds.
