@@ -251,13 +251,13 @@ public:
             canvas->setColor(style()->borderTopColor());
             canvas->drawRect(LayoutRect(0, 0, width(), borderTop()));
             // right
-            canvas->setColor(style()->borderTopColor());
+            canvas->setColor(style()->borderRightColor());
             canvas->drawRect(LayoutRect(width()-borderRight(), 0, borderRight(), height()));
             // bottom
-            canvas->setColor(style()->borderTopColor());
+            canvas->setColor(style()->borderBottomColor());
             canvas->drawRect(LayoutRect(0, height()-borderBottom(), width(), borderBottom()));
             // left
-            canvas->setColor(style()->borderTopColor());
+            canvas->setColor(style()->borderLeftColor());
             canvas->drawRect(LayoutRect(0, 0, borderLeft(), height()));
 
             canvas->restore();
