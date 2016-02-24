@@ -956,13 +956,13 @@ void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
         m_border = m_orgBorder;
 
         canvas->save();
-        canvas->translate(0 ,-y());
+        canvas->translate(LayoutUnit(0) ,-y());
         moveY(height());
         setContentHeight(style()->font()->metrics().m_ascender - style()->font()->metrics().m_descender);
         moveY(-contentHeight() - paddingTop() - borderTop());
         setHeight(contentHeight() + paddingHeight() + borderHeight());
 
-        canvas->translate(0 ,y());
+        canvas->translate(LayoutUnit(0) ,y());
         paintBackgroundAndBorders(canvas);
         canvas->restore();
 

@@ -30,7 +30,10 @@ public:
         STARFISH_ASSERT(firstChild() == lastChild());
         if (!firstChild())
             return;
+        canvas->save();
+        canvas->translate(firstChild()->asFrameBox()->x(), firstChild()->asFrameBox()->y());
         firstChild()->paint(canvas, stage);
+        canvas->restore();
     }
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {

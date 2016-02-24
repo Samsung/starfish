@@ -31,6 +31,7 @@ public:
     virtual void rotate(double angle) = 0;
     virtual void rotate(double angle,double ox,double oy) = 0;
     virtual void translate(double x, double y) = 0;
+    virtual void translate(LayoutUnit x, LayoutUnit y) = 0;
 
     virtual void clip(const Rect& rt) = 0;
 

@@ -35,12 +35,12 @@ public:
 
     virtual String* nodeValue()
     {
-        return nullptr;
+        return String::emptyString;
     }
 
     virtual String* textContent()
     {
-        return nullptr;
+        return String::emptyString;
     }
 
     /* 4.7 Interface DocumentType */

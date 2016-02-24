@@ -864,7 +864,6 @@ public:
             ret.setValue##name(&tokens); \
             notifyNeedsStyleRecalc(); \
             m_cssValues.push_back(ret); \
-            printf("aaaa\n");printf("aaaa\n");printf("aaaa\n");printf("aaaa\n");printf("aaaa\n"); \
         } \
     }
 
