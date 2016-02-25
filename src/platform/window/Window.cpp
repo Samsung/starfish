@@ -40,16 +40,6 @@ namespace
     __GET_TICK_COUNT timeStart;
 }
 
-static unsigned long getLongTickCount()
-{
-    static time_t   secStart    = timeStart.tv_.tv_sec;
-    static time_t   usecStart   = timeStart.tv_.tv_usec;
-                    timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec - secStart) * 1000 + (tv.tv_usec - usecStart);
-}
-
-
 class WindowImplEFL : public Window {
 public:
     WindowImplEFL(StarFish* sf)
@@ -322,21 +312,40 @@ Window::Window(StarFish* starFish)
     setNeedsRendering();
 }
 
+// #define STARFISH_ENABLE_TIMER
+
+#ifdef STARFISH_ENABLE_TIMER
+static unsigned long getLongTickCount()
+{
+    static time_t   secStart    = timeStart.tv_.tv_sec;
+    static time_t   usecStart   = timeStart.tv_.tv_usec;
+                    timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec - secStart) * 1000 + (tv.tv_usec - usecStart);
+}
+#endif
+
 class Timer {
 public:
     Timer(const char* msg)
     {
+#ifdef STARFISH_ENABLE_TIMER
         m_start = getLongTickCount();
         m_msg = msg;
+#endif
     }
     ~Timer()
     {
+#ifdef STARFISH_ENABLE_TIMER
         unsigned long end = getLongTickCount();
         STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (end - m_start) / 1000.f);
+#endif
     }
 protected:
+#ifdef STARFISH_ENABLE_TIMER
     unsigned long m_start;
     const char* m_msg;
+#endif
 };
 
 void Window::rendering()
@@ -601,12 +610,13 @@ void Window::dispatchTouchEvent(float x, float y,TouchEventKind kind)
 
         Node* t = m_activeNodeWithTouchDown;
 
+        bool shouldDispatchEvent = true;
         while (t) {
-            if (t->isElement() && t->asElement()->isHTMLElement()) {
+            if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
                 QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
                 Event* e = new Event(starFish()->scriptBindingInstance(), eventType, true, false);
                 EventTarget::dispatchEvent(t->asNode(), e);
-                break;
+                shouldDispatchEvent = false;
             }
 
             t->setState(Node::NodeStateNormal);
