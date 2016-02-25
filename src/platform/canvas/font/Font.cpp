@@ -55,6 +55,13 @@ public:
             familyName = familyName->concat(String::createASCIIString(":style=extrablack"));
             break;
         }
+
+        if (style == FontStyleItalic) {
+            familyName = familyName->concat(String::createASCIIString(" italic"));
+        } else if (style == FontStyleOblique) {
+            familyName = familyName->concat(String::createASCIIString(" oblique"));
+        }
+
         m_fontFamily = familyName;
 
         if (!g_fontSizeAdjuesterInited) {
@@ -95,7 +102,7 @@ public:
         if (m_text)
             unloadFont();
         m_text = evas_object_text_add(internalCanvas());
-        evas_object_text_font_set(m_text,m_fontFamily->utf8Data(), size);
+        evas_object_text_font_set(m_text, m_fontFamily->utf8Data(), size);
     }
 
     void unloadFont()
@@ -104,7 +111,7 @@ public:
         m_text = nullptr;
     }
 
-    virtual float measureText(String* str)
+    virtual LayoutUnit measureText(String* str)
     {
 #ifdef STARFISH_ENABLE_PIXEL_TEST
         if (g_enablePixelTest) {

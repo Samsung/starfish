@@ -6,10 +6,9 @@
 namespace StarFish {
 
 enum FontStyle {
-    FontStyleNormal = 1,
-    FontStyleBold = 1 << 1,
-    FontStyleItalic = 1 << 2,
-    FontStyleUnderline = 1 << 3,
+    FontStyleNormal,
+    FontStyleItalic,
+    FontStyleOblique,
 };
 
 enum FontWeight {
@@ -30,7 +29,7 @@ public:
 
     }
 
-    virtual float measureText(String*) = 0;
+    virtual LayoutUnit measureText(String*) = 0;
     virtual void* unwrap() = 0;
 
     float spaceWidth()
@@ -89,7 +88,7 @@ protected:
     {
 
     }
-    Font* loadFont(String* familyName, float size, char style = 1, char weight = 4);
+    Font* loadFont(String* familyName, float size, char style = 0, char weight = 4);
     void clearCache()
     {
         m_fontCache.clear();

@@ -488,7 +488,7 @@ public:
         drawEvasRect(xx, yy, ww, hh, Rect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
-    virtual void drawText(const float x, const float y, String* text)
+    virtual void drawText(LayoutUnit x, LayoutUnit y, String* text)
     {
         if (!lastState().m_visible) {
             return;
@@ -525,124 +525,41 @@ public:
         }
 #endif
 
-        if (lastState().m_font->weight() == FontWeightNormal && lastState().m_font->style() == FontStyleNormal) {
-            Evas_Object* eo = evas_object_text_add(m_canvas);
-            if(m_objList) m_objList->push_back(eo);
-            Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
-            Rect rt(x,y,sz.width(),sz.height());
+        Evas_Object* eo = evas_object_text_add(m_canvas);
+        if(m_objList) m_objList->push_back(eo);
+        LayoutSize sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
+        LayoutRect rt(x,y,sz.width(),sz.height());
 
-            float xx = 0.0, yy = 0.0;
-            if (lastState().m_mapMode) {
-                SkRect sss = SkRect::MakeXYWH(
-                        SkFloatToScalar((float)rt.x()),
-                        SkFloatToScalar((float)rt.y()),
-                        SkFloatToScalar((float)rt.width()),
-                        SkFloatToScalar((float)rt.height())
-                        );
-                if(!shouldApplyEvasMap())
-                    lastState().m_matrix.mapRect(&sss);
-                xx = sss.x();
-                yy = sss.y();
-            } else {
-                xx = lastState().m_baseX + rt.x();
-                yy = lastState().m_baseY + rt.y();
-            }
-
-            int siz;
-            evas_object_text_font_get((Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
-            float ptSize = siz;
-            evas_object_text_font_set(eo,lastState().m_font->familyName()->utf8Data(),ptSize);
-            evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
-            evas_object_text_text_set(eo, text->utf8Data());
-
-            evas_object_move(eo, xx, yy);
-            applyClippers(eo);
-
-            if(shouldApplyEvasMap()) {
-               applyEvasMapIfNeeded(eo, rt);
-            }
-            evas_object_show(eo);
+        LayoutUnit xx = 0, yy = 0;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(
+                    SkFloatToScalar((float)rt.x()),
+                    SkFloatToScalar((float)rt.y()),
+                    SkFloatToScalar((float)rt.width()),
+                    SkFloatToScalar((float)rt.height())
+                    );
+            if(!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
         } else {
-            Evas_Object* eo = evas_object_textblock_add(m_canvas);
-            if(m_objList) m_objList->push_back(eo);
-            Size sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
-            Rect rt(x,y,sz.width(),sz.height());
-
-            float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-            if (lastState().m_mapMode) {
-                SkRect sss = SkRect::MakeXYWH(
-                        SkFloatToScalar((float)rt.x()),
-                        SkFloatToScalar((float)rt.y()),
-                        SkFloatToScalar((float)rt.width()),
-                        SkFloatToScalar((float)rt.height())
-                        );
-                if(!shouldApplyEvasMap())
-                    lastState().m_matrix.mapRect(&sss);
-                xx = sss.x();
-                yy = sss.y();
-                ww = sss.width();
-                hh = sss.height();
-            } else {
-                xx = lastState().m_baseX + rt.x();
-                yy = lastState().m_baseY + rt.y();
-                ww = rt.width();
-                hh = rt.height();
-            }
-
-            Evas_Textblock_Style* st = evas_textblock_style_new();
-            char buf[256];
-            // float ptSize = convertFromPxToPt(lastState().m_font->size());
-            int siz;
-            evas_object_text_font_get((Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
-            float ptSize = siz;
-            const char* weight;
-            switch (lastState().m_font->weight()) {
-            case 1:
-                weight = "thin";
-                break;
-            case 2:
-                weight = "ultralight";
-                break;
-            case 3:
-                weight = "light";
-                break;
-            case 4:
-                weight = "medium";
-                break;
-            case 5:
-                weight = "semibold";
-                break;
-            case 6:
-                weight = "bold";
-                break;
-            case 7:
-                weight = "ultrabold";
-                break;
-            case 8:
-                weight = "black";
-                break;
-            case 9:
-                weight = "extrablack";
-                break;
-            }
-            snprintf(buf, 256, "DEFAULT='font=%s font_size=%f color=#%02x%02x%02x%02x valign=middle font_weight=%s'",lastState().m_font->familyName()->utf8Data(), ptSize,
-                    (int)lastState().m_color.r(), (int)lastState().m_color.g(), (int)lastState().m_color.b(), (int)lastState().m_color.a(), weight);
-            evas_textblock_style_set(st, buf);
-            evas_object_textblock_style_set(eo, st);
-            evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
-            evas_object_textblock_text_markup_set(eo, text->utf8Data());
-
-            evas_object_resize(eo, ww, hh);
-            evas_object_move(eo, xx, yy);
-
-            applyClippers(eo);
-
-            if(shouldApplyEvasMap()) {
-               applyEvasMapIfNeeded(eo, rt);
-            }
-            evas_object_show(eo);
-            evas_textblock_style_free(st);
+            xx = lastState().m_baseX + rt.x();
+            yy = lastState().m_baseY + rt.y();
         }
+
+        int siz;
+        evas_object_text_font_get((Evas_Object*)lastState().m_font->unwrap(), NULL, &siz);
+        float ptSize = siz;
+        evas_object_text_font_set(eo,lastState().m_font->familyName()->utf8Data(),ptSize);
+        evas_object_color_set(eo, lastState().m_color.r(),lastState().m_color.g(),lastState().m_color.b(),lastState().m_color.a());
+        evas_object_text_text_set(eo, text->utf8Data());
+
+        evas_object_move(eo, (int)xx, (int)yy);
+        applyClippers(eo);
+
+        // NOTE we will implement Composite RenderLayer stuff. so shouldApplyEvasMap() is always false
+        STARFISH_ASSERT(!shouldApplyEvasMap());
+        evas_object_show(eo);
     }
 
     Evas_Object* findPrevDrawnData(ImageData* data)

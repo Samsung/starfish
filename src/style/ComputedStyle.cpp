@@ -9,7 +9,8 @@ namespace StarFish {
 void ComputedStyle::loadResources(StarFish* sf)
 {
     float fontSize = m_inheritedStyles.m_fontSize.fixed();
-    char style = 1;
+
+    char style = m_inheritedStyles.m_fontStyle;
     char fontWeight = 4;
 
     switch (m_inheritedStyles.m_fontWeight) {

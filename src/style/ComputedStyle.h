@@ -810,6 +810,8 @@ protected:
 
     // NOTICE
     // if you add new property, you MUST implement comparing style for new property in [compareStyle function]
+
+    // TODO pack enum values
     struct InheritedStyles {
         Color m_color;
         Length m_fontSize;
@@ -826,20 +828,21 @@ protected:
     DisplayValue m_originalDisplay;
     PositionValue m_position;
     TextOverflowValue m_textOverflow;
-    Length m_width;
-    Length m_height;
     VerticalAlignValue m_verticalAlign;
-    Length m_verticalAlignLength;
-
     OverflowValue m_overflowX;
 //    OverflowValue m_overflowY;
+    TextDecorationValue m_textDecoration;
+
+    Length m_width;
+    Length m_height;
+    Length m_verticalAlignLength;
+
 
     float m_opacity;
     int32_t m_zIndex;
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;
-    TextDecorationValue m_textDecoration;
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);
