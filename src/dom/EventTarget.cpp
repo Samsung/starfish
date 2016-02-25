@@ -81,7 +81,6 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
         if (node->isElement() && node->asElement()->isHTMLElement()) {
             eventPath.push_back(node);
         }
-        node->setState(Node::NodeStateNormal);
         node = node->parentNode();
     }
 
