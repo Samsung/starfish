@@ -6,7 +6,7 @@
 
 namespace StarFish {
 
-class Attribute{
+class Attribute {
 public:
 
     Attribute()

@@ -9,8 +9,8 @@ namespace StarFish {
 const float unitPxPerCm = 96 / 2.54;
 const float unitPxPerMm = unitPxPerCm / 10;
 const float unitPxPerIn = 96;
-const float unitPxPerPc = unitPxPerIn/6;
-const float unitPxPerPt = unitPxPerIn/72;
+const float unitPxPerPc = unitPxPerIn / 6;
+const float unitPxPerPt = unitPxPerIn / 72;
 
 float convertFromCmToPx(float value);
 float convertFromMmToPx(float value);

@@ -9,12 +9,11 @@
 #include "dom/binding/ScriptBindingInstance.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
-
 namespace StarFish {
 
 static ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
 {
-    return (ScriptBindingInstanceDataEscargot *)instance->data();
+    return (ScriptBindingInstanceDataEscargot*)instance->data();
 }
 
 ScriptWrappable::ScriptWrappable(void* extraPointerData)
@@ -40,12 +39,12 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     escargot::ESFunctionObject* setTimeoutFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
-            if (instance->currentExecutionContext()->readArgument(0).isESPointer() &&
-                    instance->currentExecutionContext()->readArgument(0).asESPointer() &&
-                    instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
+            if (instance->currentExecutionContext()->readArgument(0).isESPointer()
+                    && instance->currentExecutionContext()->readArgument(0).asESPointer()
+                    && instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
                 if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
                     Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-                    return  escargot::ESValue(wnd->setTimeout([](Window* wnd, void* data) {
+                    return escargot::ESValue(wnd->setTimeout([](Window* wnd, void* data) {
                                 escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
                                 std::jmp_buf tryPosition;
                                 if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
@@ -62,7 +61,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("setTimeout"), 2, false);
-    ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("setTimeout"), false, false, false, setTimeoutFunction);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setTimeout"), false, false, false, setTimeoutFunction);
 
     // [clearTimeout]
     // https://www.w3.org/TR/html5/webappapis.html
@@ -77,8 +76,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         // FIXME what return value should return?
         return escargot::ESValue(1000);
     }, escargot::ESString::create("clearTimeout"), 1, false);
-    ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), false, false, false, clearTimeoutFunction);
-
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), false, false, false, clearTimeoutFunction);
 
     // TODO : Pass "any... arguments" if exist
     // TODO : First argument can be function or script source (currently allow function only)
@@ -105,7 +103,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("requestAnimationFrame"), 2, false);
-    ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("requestAnimationFrame"), false, false, false, requestAnimationFrameFunction);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("requestAnimationFrame"), false, false, false, requestAnimationFrameFunction);
 
     // https://www.w3.org/TR/html5/webappapis.html
     escargot::ESFunctionObject* cancelAnimationFrameFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -119,7 +117,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         // FIXME what return value should return?
         return escargot::ESValue(1000);
     }, escargot::ESString::create("cancelAnimationFrame"), 1, false);
-    ((escargot::ESObject *)this->m_object)->defineDataProperty(escargot::ESString::create("cancelAnimationFrame"), false, false, false, cancelAnimationFrameFunction);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("cancelAnimationFrame"), false, false, false, cancelAnimationFrameFunction);
 }
 
 void ScriptWrappable::initScriptWrappable(Node* ptr)
@@ -151,7 +149,6 @@ void ScriptWrappable::initScriptWrappable(Element* element, ScriptBindingInstanc
 {
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->m_element->protoType());
-
 }
 
 void ScriptWrappable::initScriptWrappable(Document*)
@@ -279,7 +276,7 @@ void ScriptWrappable::initScriptWrappable(Blob* blob)
     scriptObject()->setExtraData(BlobObject);
 }
 
-void ScriptWrappable::initScriptWrappable(URL* url,ScriptBindingInstance* instance)
+void ScriptWrappable::initScriptWrappable(URL* url, ScriptBindingInstance* instance)
 {
     // auto data = fetchData(instance);
     // scriptObject()->set__proto__(data->m_urlElement->protoType());
@@ -317,14 +314,14 @@ void ScriptWrappable::initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance
     scriptObject()->set__proto__(data->m_mouseEvent->protoType());
 }
 
-void ScriptWrappable::initScriptWrappable(ProgressEvent* ptr, ScriptBindingInstance* instance,uint32_t loaded,uint32_t total)
+void ScriptWrappable::initScriptWrappable(ProgressEvent* ptr, ScriptBindingInstance* instance, uint32_t loaded, uint32_t total)
 {
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->m_progressEvent->protoType());
 
-    bool lengthComputable=false;
-    if(total>0)
-        lengthComputable=true;
+    bool lengthComputable = false;
+    if (total > 0)
+        lengthComputable = true;
 
     scriptObject()->defineDataProperty(escargot::ESString::create("lengthComputable"), false, false, false, escargot::ESValue(lengthComputable));
     scriptObject()->defineDataProperty(escargot::ESString::create("loaded"), false, false, false, escargot::ESValue(loaded));
@@ -387,7 +384,6 @@ void ScriptWrappable::initScriptWrappable(CSSStyleRule* ptr)
     scriptObject()->setExtraData(CSSStyleRuleObject);
 }
 
-
 ScriptValue createScriptString(String* str)
 {
     if (str->isASCIIString()) {
@@ -395,14 +391,13 @@ ScriptValue createScriptString(String* str)
     } else {
         escargot::UTF16String out;
 
-        for (size_t i = 0; i < str->length(); i ++) {
+        for (size_t i = 0; i < str->length(); i++) {
             // TODO utf-16 two char
             out.push_back(str->charAt(i));
         }
 
         return escargot::ESString::create(std::move(out));
     }
-
 }
 
 ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody)
@@ -410,14 +405,14 @@ ScriptValue createScriptFunction(String** argNames, size_t argc, String* functio
     escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
 
     escargot::ESValueVector arg(0);
-    for (size_t i = 0; i < argc; i ++) {
+    for (size_t i = 0; i < argc; i++) {
         arg.push_back(createScriptString(argNames[i]));
     }
 
     arg.push_back(createScriptString(functionBody));
 
     ScriptValue value = escargot::ESFunctionObject::call(instance, instance->globalObject()->function(), escargot::ESValue(),
-            arg.data(), argc + 1, false);
+        arg.data(), argc + 1, false);
 
     return value;
 }
@@ -441,9 +436,8 @@ ScriptValue parseJSON(String* jsonData)
 {
     ScriptValue ret;
     escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-    ScriptValue json_arg[1] = {ScriptValue(createScriptString(jsonData))};
+    ScriptValue json_arg[1] = { ScriptValue(createScriptString(jsonData)) };
     ScriptValue json_parse_fn = instance->globalObject()->json()->get(ScriptValue(createScriptString(String::fromUTF8("parse"))));
-    return callScriptFunction(json_parse_fn,json_arg,1,instance->globalObject()->json());
+    return callScriptFunction(json_parse_fn, json_arg, 1, instance->globalObject()->json());
 }
-
 }

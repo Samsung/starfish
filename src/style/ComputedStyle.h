@@ -6,7 +6,8 @@
 #include "style/StyleSurroundData.h"
 #include "style/DefaultStyle.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
 enum ComputedStyleDamage {
     ComputedStyleDamageNone = 0,
@@ -16,10 +17,12 @@ enum ComputedStyleDamage {
     ComputedStyleDamagePainting = 1 << 3,
 };
 
-class ComputedStyle : public gc {
+class ComputedStyle : public gc
+{
     friend class StyleResolver;
     friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedStyle* parentStyle, bool force);
     friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);
+
 public:
     ComputedStyle()
     {
@@ -500,7 +503,8 @@ public:
         setBorderImageRepeatY(other->borderImageRepeatY());
     }
 
-    StyleSurroundData* surround() {
+    StyleSurroundData* surround()
+    {
         if (m_surround == nullptr) {
             m_surround = new StyleSurroundData();
             // FIXME: need to cleanup
@@ -509,15 +513,17 @@ public:
         return m_surround;
     }
 
-    OverflowValue overflow() {
+    OverflowValue overflow()
+    {
         return overflowX();
     }
 
-    OverflowValue overflowX() {
+    OverflowValue overflowX()
+    {
         return m_overflowX;
     }
 
-/*    OverflowValue overflowY() {
+    /*    OverflowValue overflowY() {
         return m_overflowY;
     }
 */
@@ -748,7 +754,7 @@ protected:
         m_background = nullptr;
         m_surround = nullptr;
         m_overflowX = OverflowValue::VisibleOverflow;
-//        m_overflowY = OverflowValue::VisibleOverflow;
+        //        m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
     }
@@ -797,7 +803,7 @@ protected:
             }
         }
 
-        if(m_background)
+        if (m_background)
             m_background->checkComputed(baseFontSize, font());
 
         // [vertical-align] : Update percentage value referring to the [line-height]
@@ -830,13 +836,12 @@ protected:
     TextOverflowValue m_textOverflow;
     VerticalAlignValue m_verticalAlign;
     OverflowValue m_overflowX;
-//    OverflowValue m_overflowY;
+    //    OverflowValue m_overflowY;
     TextDecorationValue m_textDecoration;
 
     Length m_width;
     Length m_height;
     Length m_verticalAlignLength;
-
 
     float m_opacity;
     int32_t m_zIndex;
@@ -846,7 +851,6 @@ protected:
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);
-
 }
 
 #endif

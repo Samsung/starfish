@@ -3,8 +3,10 @@
 
 #include "style/Length.h"
 
-namespace StarFish {
-class BorderImageLength {
+namespace StarFish
+{
+class BorderImageLength
+{
 public:
     enum Type {
         LengthType,
@@ -41,21 +43,25 @@ public:
         m_number = number;
     }
 
-    bool isLength() {
+    bool isLength()
+    {
         return m_type == LengthType;
     }
 
-    bool isNumber() {
+    bool isNumber()
+    {
         return m_type == NumberType;
     }
 
-    Length& length() {
-        STARFISH_ASSERT(m_type==LengthType);
+    Length& length()
+    {
+        STARFISH_ASSERT(m_type == LengthType);
         return m_length;
     }
 
-    double number() {
-        STARFISH_ASSERT(m_type==NumberType);
+    double number()
+    {
+        STARFISH_ASSERT(m_type == NumberType);
         return m_number;
     }
 
@@ -63,8 +69,7 @@ public:
     {
         if (m_type == LengthType)
             return m_length.dumpString();
-        else if (m_type == NumberType)
-        {
+        else if (m_type == NumberType) {
             char temp[100];
             sprintf(temp, "%f", m_number);
             return String::fromUTF8(temp);
@@ -85,7 +90,7 @@ public:
 
     bool operator!=(const BorderImageLength& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
     Type m_type;
@@ -93,7 +98,8 @@ public:
     double m_number;
 };
 
-class BorderImageLengthBox {
+class BorderImageLengthBox
+{
 public:
     BorderImageLengthBox()
     {
@@ -143,7 +149,7 @@ public:
 
     bool operator!=(const BorderImageLengthBox& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
 private:
@@ -152,7 +158,6 @@ private:
     BorderImageLength m_top;
     BorderImageLength m_bottom;
 };
-
 }
 
 #endif

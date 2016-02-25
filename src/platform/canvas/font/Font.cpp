@@ -68,12 +68,12 @@ public:
             float prevDiff = 100000000000.f;
             int best = 0;
             loadFont(convertFromPxToPt(m_size) - 1);
-            for (int i = convertFromPxToPt(m_size); ; i++) {
+            for (int i = convertFromPxToPt(m_size);; i++) {
                 STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
-                evas_object_text_font_set(m_text,m_fontFamily->utf8Data(), i);
-                evas_object_text_text_set(m_text,"gWAPpqfX");
+                evas_object_text_font_set(m_text, m_fontFamily->utf8Data(), i);
+                evas_object_text_text_set(m_text, "gWAPpqfX");
                 Evas_Coord minw, minh;
-                evas_object_geometry_get(m_text,0,0,&minw,&minh);
+                evas_object_geometry_get(m_text, 0, 0, &minw, &minh);
                 float curDiff = std::abs((float)m_metrics.m_fontHeight - minh);
                 if (prevDiff < curDiff) {
                     break;
@@ -118,9 +118,9 @@ public:
             return str->length() * m_size;
         }
 #endif
-        evas_object_text_text_set(m_text,str->utf8Data());
+        evas_object_text_text_set(m_text, str->utf8Data());
         Evas_Coord minw, minh;
-        evas_object_geometry_get(m_text,0,0,&minw,&minh);
+        evas_object_geometry_get(m_text, 0, 0, &minw, &minh);
         return minw;
     }
     virtual void* unwrap()
@@ -132,9 +132,10 @@ protected:
     Evas_Object* m_text;
 };
 
-#define CHECK_ERROR if (error) { \
-    STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
-}
+#define CHECK_ERROR                            \
+    if (error) {                               \
+        STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+    }
 
 Font::FontMetrics loadFontMetrics(String* familyName, double size)
 {
@@ -144,7 +145,7 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     FcPatternAddString(pattern, FC_FAMILY, (FcChar8*)familyName->utf8Data());
 
     FcConfigSubstitute(config, pattern, FcMatchPattern);
-    FcDefaultSubstitute (pattern);
+    FcDefaultSubstitute(pattern);
 
     FcResult res;
     FcFontSet* set = FcFontSort(config, pattern, FcTrue, NULL, &res);
@@ -156,7 +157,7 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     std::string fontPath;
     for (int i = 0; i < set->nfont; i++) {
         FcPattern* font = set->fonts[i];
-        FcChar8 *file;
+        FcChar8* file;
         if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch) {
             fontPath = (char*)file;
             break;
@@ -183,7 +184,7 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     if (g_enablePixelTest) {
-        //NOTE: To sync phantom webkit
+        // NOTE: To sync phantom webkit
         if (met.m_fontHeight != 20) {
             met.m_descender -= 1;
             met.m_fontHeight += 1;
@@ -194,14 +195,13 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     FT_Done_Face(face);
     FT_Done_FreeType(library);
     return met;
-
 }
 
 Font* FontSelector::loadFont(String* familyName, float size, char style, char weight)
 {
     FontImplEFL* f = nullptr;
 
-    for (unsigned i = 0; i < m_fontCache.size(); i ++) {
+    for (unsigned i = 0; i < m_fontCache.size(); i++) {
         if (std::get<1>(m_fontCache[i])->equals(familyName)) {
             if (std::get<2>(m_fontCache[i]) == size && std::get<3>(m_fontCache[i]) == style && std::get<4>(m_fontCache[i]) == weight) {
                 return std::get<0>(m_fontCache[i]);
@@ -213,5 +213,4 @@ Font* FontSelector::loadFont(String* familyName, float size, char style, char we
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }
-
 }

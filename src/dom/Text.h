@@ -36,7 +36,7 @@ public:
 
     /* 4.10 Interface Text */
 
-    //Text* splitText(unsigned long offset);
+    // Text* splitText(unsigned long offset);
 
     String* wholeText();
 

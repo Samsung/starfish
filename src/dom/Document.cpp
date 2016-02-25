@@ -34,7 +34,7 @@ Node* Document::clone()
 
 Element* Document::getElementById(String* id)
 {
-    return (Element*) Traverse::findDescendant(this, [&](Node* child) {
+    return (Element*)Traverse::findDescendant(this, [&](Node* child) {
         if (child->isElement() && child->asElement()->id()->equals(id)) {
             return true;
         } else
@@ -45,9 +45,10 @@ Element* Document::getElementById(String* id)
 
 HTMLCollection* Document::getElementsByTagName(String* qualifiedName)
 {
-    auto filter = [=](Node* node) {
-        if ( node->isElement() && node->localName()->equals(qualifiedName))
-        return true;
+    auto filter = [=](Node* node)
+    {
+        if (node->isElement() && node->localName()->equals(qualifiedName))
+            return true;
         return false;
     };
     return new HTMLCollection(scriptBindingInstance(), this, filter);
@@ -55,8 +56,9 @@ HTMLCollection* Document::getElementsByTagName(String* qualifiedName)
 
 HTMLCollection* Document::getElementsByClassName(String* classNames)
 {
-    auto filter = [=](Node* node) {
-        if (node->isElement()&&node->asElement()->classNames().size()>0) {
+    auto filter = [=](Node* node)
+    {
+        if (node->isElement() && node->asElement()->classNames().size() > 0) {
 
             const char* data = classNames->utf8Data();
             size_t length = classNames->length();
@@ -74,7 +76,7 @@ HTMLCollection* Document::getElementsByClassName(String* classNames)
                         isWhiteSpaceState = true;
 
                         String* tok = String::fromUTF8(str.data(), str.length());
-                        if(!node->asElement()->hasClassName(tok))
+                        if (!node->asElement()->hasClassName(tok))
                         return false;
 
                         str.clear();
@@ -86,7 +88,7 @@ HTMLCollection* Document::getElementsByClassName(String* classNames)
 
             if (str.length()) {
                 String* tok = String::fromUTF8(str.data(), str.length());
-                if(!node->asElement()->hasClassName(tok))
+                if (!node->asElement()->hasClassName(tok))
                 return false;
             }
 
@@ -99,7 +101,7 @@ HTMLCollection* Document::getElementsByClassName(String* classNames)
 
 Element* Document::createElement(QualifiedName localName)
 {
-    if(!QualifiedName::checkNameProductionRule(localName.string()->utf8Data(),localName.string()->length()))
+    if (!QualifiedName::checkNameProductionRule(localName.string()->utf8Data(), localName.string()->length()))
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
     if (localName == window()->starFish()->staticStrings()->m_htmlLocalName) {
@@ -134,20 +136,20 @@ Element* Document::createElement(QualifiedName localName)
 
 Text* Document::createTextNode(String* data)
 {
-    return new Text(this,data);
+    return new Text(this, data);
 }
 
 Comment* Document::createComment(String* data)
 {
-    return new Comment(this,data);
+    return new Comment(this, data);
 }
 
 Attr* Document::createAttribute(QualifiedName localName)
 {
-    if(!QualifiedName::checkNameProductionRule(localName.string()->utf8Data(),localName.string()->length()))
+    if (!QualifiedName::checkNameProductionRule(localName.string()->utf8Data(), localName.string()->length()))
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
-    return new Attr(scriptBindingInstance(),localName);
+    return new Attr(scriptBindingInstance(), localName);
 }
 
 Event* Document::createEvent(String* eventType)
@@ -160,7 +162,7 @@ HTMLHtmlElement* Document::rootElement()
     // root element of html document is HTMLHtmlElement
     // https://www.w3.org/TR/html-markup/html.html
     Node* n = firstChild();
-    while(n) {
+    while (n) {
         if (n->isElement() && n->asElement() && n->asElement()->isHTMLElement() && n->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
             return n->asElement()->asHTMLElement()->asHTMLHtmlElement();
         }
@@ -169,5 +171,4 @@ HTMLHtmlElement* Document::rootElement()
 
     return nullptr;
 }
-
 }

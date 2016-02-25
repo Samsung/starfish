@@ -80,7 +80,7 @@ public:
         return m_currentPath;
     }
 
-    size_t posPrefix(std::string str,std::string prefix)
+    size_t posPrefix(std::string str, std::string prefix)
     {
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return str.find(prefix);
@@ -91,9 +91,9 @@ public:
         std::string p = m_currentPath->asASCIIString()->data();
         std::string strSrc = src->asASCIIString()->data();
 
-        if(posPrefix(strSrc,"file://") != std::string::npos)
+        if (posPrefix(strSrc, "file://") != std::string::npos)
             p = strSrc.substr(7);
-        else if(posPrefix(strSrc,"blob:") != std::string::npos)
+        else if (posPrefix(strSrc, "blob:") != std::string::npos)
             p = strSrc;
         else
             p.append(strSrc);
@@ -108,7 +108,7 @@ public:
     void evaluate(String* s);
 
     ImageData* fetchImage(String* str);
-    ImageData* fetchImage(String* str,uint32_t size,void* data);
+    ImageData* fetchImage(String* str, uint32_t size, void* data);
 
     Font* fetchFont(String* familyName, float size, char style = FontStyle::FontStyleNormal, char weight = FontWeight::FontWeightNormal)
     {

@@ -38,7 +38,8 @@ public:
 #endif
     }
 
-    static void _on_player_completed_cb(void *user_data) {
+    static void _on_player_completed_cb(void* user_data)
+    {
         STARFISH_LOG_INFO("JMP, HTMLAudioElement::_on_player_completed_cb, start\n");
     }
 
@@ -56,14 +57,14 @@ public:
         return true;
     }
 
-    void play() {
+    void play()
+    {
         STARFISH_LOG_INFO("JMP, HTMLAudioElement::play, start\n");
 #ifdef STARFISH_TIZEN_WEARABLE
         player_state_e state;
         player_get_state(m_player, &state);
 
-        if(state != PLAYER_STATE_PLAYING)
-        {
+        if (state != PLAYER_STATE_PLAYING) {
             STARFISH_LOG_INFO("JMP, HTMLAudioElement::play, player_start\n");
             player_start(m_player);
         }
@@ -71,7 +72,8 @@ public:
         m_isPlaying = true;
     }
 
-    void pause() {
+    void pause()
+    {
         STARFISH_LOG_INFO("JMP, HTMLAudioElement::pause, start\n");
 #ifdef STARFISH_TIZEN_WEARABLE
         if (player_pause(m_player) != PLAYER_ERROR_NONE) {
@@ -112,7 +114,6 @@ protected:
     player_h m_player;
 #endif
 };
-
 }
 
 #endif

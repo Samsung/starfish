@@ -5,11 +5,9 @@
 #include <future>
 #include <Elementary.h>
 
-namespace StarFish
-{
+namespace StarFish {
 
-XMLHttpRequest::XMLHttpRequest()
-{
+XMLHttpRequest::XMLHttpRequest() {
     m_method = UNKNOWN_METHOD;
     m_response_type = DEFAULT_RESPONSE;
     m_ready_state = UNSENT;
@@ -19,9 +17,8 @@ XMLHttpRequest::XMLHttpRequest()
     m_abort_flag = false;
     m_bindingInstance = nullptr;
 
-    //init
+    // init
     initScriptWrappable(this);
-
 }
 
 void XMLHttpRequest::send(String* body)
@@ -34,38 +31,39 @@ void XMLHttpRequest::send(String* body)
     // invoke loadstart Event.
     callEventHandler(String::fromUTF8("loadstart"), true, 0, 0);
 
-    auto task = [](XMLHttpRequest* xhrobj,const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body,uint32_t timeout) -> bool {
+    auto task = [](XMLHttpRequest* xhrobj, const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body, uint32_t timeout) -> bool {
         CURL* curl = curl_easy_init();
         CURLcode res;
 
         HeaderBuffer header;
-        header.memory=NULL;
-        header.contentType=NULL;
-        header.size=0;
+        header.memory = NULL;
+        header.contentType = NULL;
+        header.size = 0;
 
         Buffer buffer;
-        buffer.memory=NULL;
-        buffer.size=0;
+        buffer.memory = NULL;
+        buffer.size = 0;
 
         ProgressData progressData;
         progressData.curl = curl;
         progressData.obj = xhrobj;
         progressData.lastruntime = 0;
 
-        if (!curl) return false;
+        if (!curl)
+            return false;
 
         // for error handle
         // char errbuf[1024];
         // curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
         // errbuf[0] = 0;
 
-            curl_easy_setopt(curl, CURLOPT_URL,url );
-        //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 
-        //for SEC
-        //curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
+        // for SEC
+        // curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
 
-        //for MSEC
+        // for MSEC
             curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(timeout));
 
         // curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback_old);
@@ -79,15 +77,15 @@ void XMLHttpRequest::send(String* body)
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
             curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, WriteHeaderCallback);
 
-            if(methodType==POST_METHOD) {
+            if (methodType == POST_METHOD) {
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
-            } else if(methodType==GET_METHOD) {
+            } else if (methodType == GET_METHOD) {
 
             } else {
                 printf("XMLHttpRequest UnSupportted method!!  \n");
 
-                //invoke loadend event
-                xhrobj->callEventHandler(String::fromUTF8("loadend"),false,progressData.loaded,progressData.total);
+                // invoke loadend event
+                xhrobj->callEventHandler(String::fromUTF8("loadend"), false, progressData.loaded, progressData.total);
                 return false;
             }
 
@@ -101,7 +99,7 @@ void XMLHttpRequest::send(String* body)
 
                 curl_easy_cleanup(curl);
 
-                if(buffer.size==0)
+                if (buffer.size == 0)
                 return false;
 
                 struct Pass {
@@ -124,74 +122,75 @@ void XMLHttpRequest::send(String* body)
                 pass->total = progressData.total;
 
                 ecore_thread_main_loop_begin();
-                ecore_idler_add([](void *data)->Eina_Bool {
-                            Pass* pass = (Pass*)data;
+                ecore_idler_add([](void *data)->Eina_Bool
+                {
+                    Pass* pass = (Pass*)data;
 
-                            XMLHttpRequest* this_obj = pass->obj;
-                            ScriptObject script_obj = this_obj->scriptObject();
+                    XMLHttpRequest* this_obj = pass->obj;
+                    ScriptObject script_obj = this_obj->scriptObject();
 
-                            switch(this_obj->getResponseType()) {
-                                case JSON_RESPONSE:
-                                {
-                                    ScriptValue ret = parseJSON(String::fromUTF8(pass->buf));
-                                    script_obj->set(createScriptString(String::fromUTF8("response")),ret);
-                                }
-                                break;
-                                case BLOB_RESPONSE:
-                                {
-                                    auto blob = new Blob(pass->contentSize,String::fromUTF8(pass->header_contentType),pass->buf);
-                                    script_obj->set(createScriptString(String::fromUTF8("response")),blob->scriptValue());
-                                }
-                                break;
+                    switch (this_obj->getResponseType()) {
+                        case JSON_RESPONSE:
+                        {
+                            ScriptValue ret = parseJSON(String::fromUTF8(pass->buf));
+                            script_obj->set(createScriptString(String::fromUTF8("response")), ret);
+                        }
+                        break;
+                        case BLOB_RESPONSE:
+                        {
+                            auto blob = new Blob(pass->contentSize, String::fromUTF8(pass->header_contentType), pass->buf);
+                            script_obj->set(createScriptString(String::fromUTF8("response")), blob->scriptValue());
+                        }
+                        break;
 
-                                case TEXT_RESPONSE:
-                                default:
-                                script_obj->set(createScriptString(String::fromUTF8("response")),ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
-                                script_obj->set(createScriptString(String::fromUTF8("responseText")),ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
+                        case TEXT_RESPONSE:
+                        default:
+                        script_obj->set(createScriptString(String::fromUTF8("response")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
+                        script_obj->set(createScriptString(String::fromUTF8("responseText")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
 
-                            }
-                            //invoke load event
-                            this_obj->callEventHandler(String::fromUTF8("load"),true,pass->loaded,pass->total);
+                    }
+                    // invoke load event
+                    this_obj->callEventHandler(String::fromUTF8("load"), true, pass->loaded, pass->total);
 
-                            //invoke loadend event
-                            this_obj->callEventHandler(String::fromUTF8("loadend"),true,pass->loaded,pass->total);
+                    // invoke loadend event
+                    this_obj->callEventHandler(String::fromUTF8("loadend"), true, pass->loaded, pass->total);
 
-                            delete pass;
-                            return ECORE_CALLBACK_CANCEL;
-                        }, pass);
+                    delete pass;
+                    return ECORE_CALLBACK_CANCEL;
+                }, pass);
                 ecore_thread_main_loop_end();
                 return true;
 
             } else {
                 // printf("!!! Response code: %ld\n", res_code);
                 // printf("!!! CURLcode code: %d\n", res);
-                // printf("ERROR buffer : %s\n",errbuf);
+                // printf("ERROR buffer : %s\n", errbuf);
 
-                switch(res) {
+                switch (res) {
                     case CURLE_OPERATION_TIMEDOUT:
-                    //invoke timeout event
-                    xhrobj->callEventHandler(String::fromUTF8("timeout"),false,0,0);
+                    // invoke timeout event
+                    xhrobj->callEventHandler(String::fromUTF8("timeout"), false, 0, 0);
                     break;
 
                     case CURLE_ABORTED_BY_CALLBACK:
-                    xhrobj->callEventHandler(String::fromUTF8("abort"),false,0,0);
+                    xhrobj->callEventHandler(String::fromUTF8("abort"), false, 0, 0);
                     break;
 
                     default:
                     break;
                 }
 
-                //invoke error event
-                xhrobj->callEventHandler(String::fromUTF8("error"),false,0,0);
+                // invoke error event
+                xhrobj->callEventHandler(String::fromUTF8("error"), false, 0, 0);
 
-                //invoke loadend event
-                xhrobj->callEventHandler(String::fromUTF8("loadend"),false,0,0);
+                // invoke loadend event
+                xhrobj->callEventHandler(String::fromUTF8("loadend"), false, 0, 0);
             }
             return false;
 
-        };
+    };
 
-    //std::future<bool> runTask = std::async(std::launch::async, task);
+    // std::future<bool> runTask = std::async(std::launch::async, task);
 
     std::thread(task, this, url, m_method, body->utf8Data(), m_timeout).detach();
 }
@@ -236,8 +235,7 @@ void XMLHttpRequest::setOpen(const char* method, String* url)
 
 String* XMLHttpRequest::getResponseTypeStr()
 {
-    switch (m_response_type)
-    {
+    switch (m_response_type) {
     case TEXT_RESPONSE:
         return String::fromUTF8("text");
     case ARRAY_BUFFER_RESPONSE:
@@ -260,7 +258,7 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
     if (eventName->equals("loadstart") || eventName->equals("progress")) {
         m_ready_state = LOADING;
     } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load")
-            || eventName->equals("loadend")) {
+        || eventName->equals("loadend")) {
         m_ready_state = DONE;
     }
 
@@ -271,17 +269,15 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             for (unsigned i = 0; i < clickListeners->size(); i++) {
                 STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
                 ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
-                ScriptValue json_arg[1] =
-                { ScriptValue(pe->scriptObject()) };
+                ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
                 ScriptValue fn = clickListeners->at(i)->scriptValue();
                 if (fn != ScriptValue::ESNull)
-                    callScriptFunction(fn, json_arg, 1,scriptValue());
+                    callScriptFunction(fn, json_arg, 1, scriptValue());
             }
         }
     } else {
 
-        struct Pass
-        {
+        struct Pass {
             XMLHttpRequest* obj;
             String* buf;
             uint32_t loaded;
@@ -296,7 +292,7 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
 
         ecore_thread_main_loop_begin();
         ecore_idler_add(
-                [](void *data)->Eina_Bool {
+            [](void* data) -> Eina_Bool {
                     Pass* pass = (Pass*)data;
                     XMLHttpRequest* this_obj = pass->obj;
 
@@ -305,20 +301,19 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
                     if (clickListeners) {
                         for (unsigned i = 0; i < clickListeners->size(); i++) {
                             STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                            ProgressEvent* pe = new ProgressEvent(this_obj->striptBindingInstance(),pass->loaded,pass->total);
+                            ProgressEvent* pe = new ProgressEvent(this_obj->striptBindingInstance(), pass->loaded, pass->total);
                             ScriptValue json_arg[1] = {ScriptValue(pe->scriptObject())};
                             ScriptValue fn = clickListeners->at(i)->scriptValue();
-                            if(fn!=ScriptValue::ESNull)
-                            callScriptFunction(fn, json_arg, 1,this_obj->scriptObject());
+                            if (fn != ScriptValue::ESNull)
+                            callScriptFunction(fn, json_arg, 1, this_obj->scriptObject());
                         }
                     }
 
                     delete pass;
                     return ECORE_CALLBACK_CANCEL;
-                }, pass);
+            },
+            pass);
         ecore_thread_main_loop_end();
     }
-
 }
-
 }

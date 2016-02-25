@@ -36,14 +36,18 @@ inline int32_t saturatedSubtraction(int32_t a, int32_t b)
     return result;
 }
 
-
 // std::numeric_limits<T>::min() returns the smallest positive value for floating point types
-template<typename T> inline T defaultMinimumForClamp() { return std::numeric_limits<T>::min(); }
-template<> inline float defaultMinimumForClamp() { return -std::numeric_limits<float>::max(); }
-template<> inline double defaultMinimumForClamp() { return -std::numeric_limits<double>::max(); }
-template<typename T> inline T defaultMaximumForClamp() { return std::numeric_limits<T>::max(); }
+template <typename T>
+inline T defaultMinimumForClamp() { return std::numeric_limits<T>::min(); }
+template <>
+inline float defaultMinimumForClamp() { return -std::numeric_limits<float>::max(); }
+template <>
+inline double defaultMinimumForClamp() { return -std::numeric_limits<double>::max(); }
+template <typename T>
+inline T defaultMaximumForClamp() { return std::numeric_limits<T>::max(); }
 
-template<typename T> inline T clampTo(double value, T min = defaultMinimumForClamp<T>(), T max = defaultMaximumForClamp<T>())
+template <typename T>
+inline T clampTo(double value, T min = defaultMinimumForClamp<T>(), T max = defaultMaximumForClamp<T>())
 {
     if (value >= static_cast<double>(max))
         return max;
@@ -51,13 +55,13 @@ template<typename T> inline T clampTo(double value, T min = defaultMinimumForCla
         return min;
     return static_cast<T>(value);
 }
-template<> inline long long int clampTo(double, long long int, long long int); // clampTo does not support long long ints.
+template <>
+inline long long int clampTo(double, long long int, long long int); // clampTo does not support long long ints.
 
 inline int clampToInteger(double value)
 {
     return clampTo<int>(value);
 }
-
 
 static const int kFixedPointDenominator = 64;
 const int intMaxForLayoutUnit = INT_MAX / kFixedPointDenominator;
@@ -65,7 +69,10 @@ const int intMinForLayoutUnit = INT_MIN / kFixedPointDenominator;
 
 class LayoutUnit {
 public:
-    LayoutUnit() : m_value(0) { }
+    LayoutUnit()
+        : m_value(0)
+    {
+    }
     LayoutUnit(int value) { setValue(value); }
     LayoutUnit(unsigned short value) { setValue(value); }
     LayoutUnit(unsigned value) { setValue(value); }
@@ -118,7 +125,11 @@ public:
     int toInt() const { return m_value / kFixedPointDenominator; }
     float toFloat() const { return static_cast<float>(m_value) / kFixedPointDenominator; }
     double toDouble() const { return static_cast<double>(m_value) / kFixedPointDenominator; }
-    unsigned toUnsigned() const { STARFISH_ASSERT(m_value >= 0); return toInt(); }
+    unsigned toUnsigned() const
+    {
+        STARFISH_ASSERT(m_value >= 0);
+        return toInt();
+    }
 
     operator int() const { return toInt(); }
     operator unsigned() const { return toUnsigned(); }
@@ -786,9 +797,9 @@ inline float& operator/=(float& a, const LayoutUnit& b)
 inline int snapSizeToPixel(LayoutUnit size, LayoutUnit location)
 {
     LayoutUnit fraction = location.fraction();
-    //NOTE: blink is using 'round', but phantomjs-webkit passes 'floor'.
+    // NOTE: blink is using 'round', but phantomjs-webkit passes 'floor'.
     return (fraction + size).floor() - fraction.floor();
-//    return (fraction + size).round() - fraction.round();
+    //    return (fraction + size).round() - fraction.round();
 }
 
 inline int roundToInt(LayoutUnit value)
@@ -803,7 +814,10 @@ inline int floorToInt(LayoutUnit value)
 
 inline float roundToDevicePixel(LayoutUnit value, const float pixelSnappingFactor, bool needsDirectionalRounding = false)
 {
-    auto roundInternal = [&] (float valueToRound) { return roundf((valueToRound * pixelSnappingFactor) / kFixedPointDenominator) / pixelSnappingFactor; };
+    auto roundInternal = [&](float valueToRound)
+    {
+        return roundf((valueToRound * pixelSnappingFactor) / kFixedPointDenominator) / pixelSnappingFactor;
+    };
 
     float adjustedValue = value.rawValue() - (needsDirectionalRounding ? LayoutUnit::epsilon() / 2.0f : 0);
     if (adjustedValue >= 0)
@@ -835,7 +849,6 @@ inline bool isIntegerValue(const LayoutUnit value)
     return value.toInt() == value;
 }
 
-
 class LayoutSize {
 public:
     LayoutSize(LayoutUnit w, LayoutUnit h)
@@ -863,6 +876,7 @@ public:
     {
         return m_height;
     }
+
 protected:
     LayoutUnit m_width, m_height;
 };
@@ -894,6 +908,7 @@ public:
     {
         return m_y;
     }
+
 protected:
     LayoutUnit m_x, m_y;
 };
@@ -920,6 +935,7 @@ public:
     {
         return px >= x() && px < (x() + width()) && py >= y() && py < (y() + height());
     }
+
 private:
     LayoutLocation m_location;
     LayoutSize m_size;
@@ -981,7 +997,6 @@ protected:
     LayoutUnit m_bottom;
     LayoutUnit m_left;
 };
-
 }
 
 #endif

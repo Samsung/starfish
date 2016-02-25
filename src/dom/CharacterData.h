@@ -28,7 +28,7 @@ public:
     virtual void setNodeValue(String* val)
     {
         String* d = val;
-        if(d == nullptr) {
+        if (d == nullptr) {
             d = String::emptyString;
         }
         setData(d);
@@ -83,14 +83,13 @@ public:
         return NULL;
     }
 
-    static std::string replaceAll(const std::string &str, const std::string &pattern, const std::string &replace)
+    static std::string replaceAll(const std::string& str, const std::string& pattern, const std::string& replace)
     {
         std::string result = str;
         std::string::size_type pos = 0;
         std::string::size_type offset = 0;
 
-        while((pos = result.find(pattern, offset)) != std::string::npos)
-        {
+        while ((pos = result.find(pattern, offset)) != std::string::npos) {
             result.replace(result.begin() + pos, result.begin() + pos + pattern.size(), replace);
             offset = pos + replace.size();
         }
@@ -106,11 +105,10 @@ public:
         str = replaceAll(str, "\n", "\\n");
         printf("data:%s ", str.data());
     }
+
 protected:
     String* m_data;
 };
-
-
 }
 
 #endif

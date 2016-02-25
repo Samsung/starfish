@@ -4,9 +4,11 @@
 #include "style/Style.h"
 #include "style/NamedColors.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
-class CSSTokenizer: public gc {
+class CSSTokenizer : public gc
+{
     //<ident-token>, <function-token>, <at-keyword-token>, <hash-token>, <string-token>, <bad-string-token>, <url-token>, <bad-url-token>, <delim-token>, <number-token>, <percentage-token>, <dimension-token>, <unicode-range-token>, <include-match-token>, <dash-match-token>, <prefix-match-token>, <suffix-match-token>, <substring-match-token>, <column-token>, <whitespace-token>, <CDO-token>, <CDC-token>, <colon-token>, <semicolon-token>, <comma-token>, <[-token>, <]-token>, <(-token>, <)-token>, <{-token>, and <}-token>
     enum TokenType {
     };
@@ -21,35 +23,42 @@ public:
 
     static bool isAlpha(char c)
     {
-        if (c >= 'a' && c <='z')
+        if (c >= 'a' && c <= 'z')
             return true;
         return false;
     }
 
     static bool isNameStart(char c)
     {
-        if (isAlpha(c)) return true;
-        if (c == '_') return true;
+        if (isAlpha(c))
+            return true;
+        if (c == '_')
+            return true;
         //TODO
         return false;
     }
 
     static bool isNameChar(char c)
     {
-        if (isNameStart(c)) return true;
-        if (isDigit(c)) return true;
-        if (c == '-') return true;
+        if (isNameStart(c))
+            return true;
+        if (isDigit(c))
+            return true;
+        if (c == '-')
+            return true;
         return false;
     }
 
     static bool isUnitChar(char c)
     {
-        if (c == '%') return true;
+        if (c == '%')
+            return true;
         return false;
     }
 };
 
-class CSSPropertyParser : public gc {
+class CSSPropertyParser : public gc
+{
 public:
     CSSPropertyParser(char* value)
         : m_startPos(value)
@@ -71,7 +80,7 @@ public:
             cur++;
         }
         while (CSSTokenizer::isDigit(*cur) && cur < m_endPos) {
-            res = res*10 + (*cur - '0');
+            res = res * 10 + (*cur - '0');
             cur++;
         }
         if (cur == m_curPos)
@@ -80,14 +89,15 @@ public:
             cur++;
             int pt = 10;
             while (CSSTokenizer::isDigit(*cur) && cur < m_endPos) {
-                res += (float)(*cur - '0')/pt;
+                res += (float)(*cur - '0') / pt;
                 pt *= 10;
                 cur++;
             }
         }
 
         m_curPos = cur;
-        if (!sign) res *= (-1);
+        if (!sign)
+            res *= (-1);
         m_parsedNumber = res;
         return true;
     }
@@ -127,7 +137,7 @@ public:
     {
         consumeWhitespaces();
         int len = 0;
-        char mark='\0';
+        char mark = '\0';
         consumeIfNext('\\');
         if (*m_curPos == '"' || *m_curPos == '\'') {
             mark = *m_curPos;
@@ -138,13 +148,15 @@ public:
             m_curPos++;
             len++;
             if (mark != '\0' && mark == *m_curPos) {
-                if (*(m_curPos-1) == '\\') len--;
+                if (*(m_curPos - 1) == '\\')
+                    len--;
                 m_curPos++;
                 consumeWhitespaces();
                 break;
             }
         }
-        if (*m_curPos != ')') return false;
+        if (*m_curPos != ')')
+            return false;
         m_parsedUrl = String::fromUTF8(start, len);
         m_curPos++;
         return true;
@@ -153,36 +165,35 @@ public:
     String* parsedString() { return m_parsedString; }
     String* parsedUrl() { return m_parsedUrl; }
 
-    bool isEnd() {
+    bool isEnd()
+    {
         return (m_curPos == m_endPos);
     }
 
-    static String* parseUrl(std::vector<String*, gc_allocator<String*>>* tokens, unsigned start, unsigned end)
+    static String* parseUrl(std::vector<String*, gc_allocator<String*> >* tokens, unsigned start, unsigned end)
     {
         String* str = String::emptyString;
-        for (unsigned i = start; i < end; i++)
-        {
+        for (unsigned i = start; i < end; i++) {
             str = str->concat(tokens->at(i));
         }
-        CSSPropertyParser* parser = new CSSPropertyParser((char*) str->utf8Data());
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)str->utf8Data());
         if (parser->consumeString()) {
             String* name = parser->parsedString();
             if (name->toLower()->equals("url") && parser->consumeIfNext('(')) {
-                if( parser->consumeUrl() )
+                if (parser->consumeUrl())
                     return String::fromUTF8(parser->parsedUrl()->utf8Data());
             }
         }
         return String::emptyString;
     }
 
-    static bool assureUrl(std::vector<String*, gc_allocator<String*>>* tokens, unsigned start, unsigned end)
+    static bool assureUrl(std::vector<String*, gc_allocator<String*> >* tokens, unsigned start, unsigned end)
     {
         String* str = String::emptyString;
-        for (unsigned i = start; i < end; i++)
-        {
+        for (unsigned i = start; i < end; i++) {
             str = str->concat(tokens->at(i));
         }
-        CSSPropertyParser* parser = new CSSPropertyParser((char*) str->utf8Data());
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)str->utf8Data());
         if (parser->consumeString()) {
             String* name = parser->parsedString();
             if (name->toLower()->equals("url") && parser->consumeIfNext('(')) {
@@ -195,10 +206,12 @@ public:
 
     static bool assureLength(const char* token, bool allowNegative)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*) token);
-        if (!parser->consumeNumber()) return false;
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
         float num = parser->parsedNumber();
-        if (!allowNegative && num < 0) return false;
+        if (!allowNegative && num < 0)
+            return false;
         if (parser->consumeString()) {
             String* str = parser->parsedString();
             if ((str->length() == 0 && num == 0)
@@ -214,7 +227,8 @@ public:
             return false;
         } else {
             // After a zero length, the unit identifier is optional
-            if (num == 0) return true;
+            if (num == 0)
+                return true;
             return false;
         }
         return true;
@@ -222,10 +236,12 @@ public:
 
     static bool assurePercent(const char* token, bool allowNegative)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*) token);
-        if (!parser->consumeNumber()) return false;
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
         float num = parser->parsedNumber();
-        if (!allowNegative && num < 0) return false;
+        if (!allowNegative && num < 0)
+            return false;
         if (parser->consumeString()) {
             String* str = parser->parsedString();
             if (str->equals("%"))
@@ -233,7 +249,8 @@ public:
             return false;
         } else {
             // After a zero length, the unit identifier is optional
-            if (num == 0) return true;
+            if (num == 0)
+                return true;
             return false;
         }
         return true;
@@ -241,19 +258,23 @@ public:
 
     static bool assureNumber(const char* token, bool allowNegative)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*) token);
-        if (!parser->consumeNumber()) return false;
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
         float num = parser->parsedNumber();
-        if (!allowNegative && num < 0) return false;
+        if (!allowNegative && num < 0)
+            return false;
         return parser->isEnd();
     }
 
     static bool assureInteger(const char* token, bool allowNegative)
     {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*) token);
-        if (!parser->consumeNumber()) return false;
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
         float num = parser->parsedNumber();
-        if (num != std::floor(num)) return false;
+        if (num != std::floor(num))
+            return false;
         return parser->isEnd();
     }
 
@@ -262,13 +283,14 @@ public:
         if (strcmp("transparent", token) == 0) {
             return true;
         }
-        #define PARSE_COLOR(name, value) \
-        else if(strcmp(#name, token) == 0) { \
-            return true; \
-        }
+#define PARSE_COLOR(name, value)        \
+    else if (strcmp(#name, token) == 0) \
+    {                                   \
+        return true;                    \
+    }
 
         NAMED_COLOR_FOR_EACH(PARSE_COLOR)
-        #undef PARSE_COLOR
+#undef PARSE_COLOR
 
         return false;
     }
@@ -276,8 +298,7 @@ public:
     static bool assureEssential(const char* token)
     {
         // initial || inherit || none || empty string
-        if (strcmp(token, "initial") == 0 ||
-            strcmp(token, "inherit") == 0)
+        if (strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0)
             return true;
         return false;
     }
@@ -285,10 +306,7 @@ public:
     static bool assureBorderWidth(const char* token)
     {
         // border-width(thin | <medium> | thick) | length
-        if (strcmp(token, "thin") == 0 ||
-            strcmp(token, "medium") == 0 ||
-            strcmp(token, "thick") == 0 ||
-            assureLength(token, false))
+        if (strcmp(token, "thin") == 0 || strcmp(token, "medium") == 0 || strcmp(token, "thick") == 0 || assureLength(token, false))
             return true;
         return false;
     }
@@ -296,8 +314,7 @@ public:
     static bool assureBorderStyle(const char* token)
     {
         // border-style(<none> | solid) | inherit
-        if (strcmp(token, "none") == 0 ||
-            strcmp(token, "solid") == 0)
+        if (strcmp(token, "none") == 0 || strcmp(token, "solid") == 0)
             return true;
         return false;
     }
@@ -305,15 +322,15 @@ public:
     static bool assureBorderColor(const char* token)
     {
         // color | transparent | inherit
-        if (assureColor(token) ||
-            strcmp(token, "transparent") == 0)
+        if (assureColor(token) || strcmp(token, "transparent") == 0)
             return true;
         return false;
     }
 
-    static char* getNextSingleValue(char* str) {
+    static char* getNextSingleValue(char* str)
+    {
         char* next = NULL;
-        while( (next = strchr(str, ' ')) ) {
+        while ((next = strchr(str, ' '))) {
             if (next == str) {
                 str++;
                 continue;
@@ -324,20 +341,22 @@ public:
         return str;
     }
 
-    bool findNextValueKind(char separator, CSSStyleValuePair::ValueKind* kind) {
-        if (m_endPos <= m_curPos) return false;
+    bool findNextValueKind(char separator, CSSStyleValuePair::ValueKind* kind)
+    {
+        if (m_endPos <= m_curPos)
+            return false;
         char* nextSep = strchr(m_curPos, separator);
         if (nextSep == NULL)
             nextSep = m_curPos + strlen(m_curPos);
         if (strncmp(m_curPos, "auto", 4) == 0) {
             *kind = CSSStyleValuePair::ValueKind::Auto;
-        } else if (strncmp(nextSep-1, "%", 1) == 0) {
+        } else if (strncmp(nextSep - 1, "%", 1) == 0) {
             *kind = CSSStyleValuePair::ValueKind::Percentage;
             float f;
             sscanf(m_curPos, "%f%%", &f);
             f = f / 100.f;
             m_parsedFloatValue = f;
-        } else if (strncmp(nextSep-2, "px", 1) == 0) {
+        } else if (strncmp(nextSep - 2, "px", 1) == 0) {
             *kind = CSSStyleValuePair::ValueKind::Length;
             float f;
             sscanf(m_curPos, "%fpx", &f);
@@ -347,7 +366,8 @@ public:
         return true;
     }
 
-    float parsedFloatValue() {
+    float parsedFloatValue()
+    {
         return m_parsedFloatValue;
     }
 
@@ -360,7 +380,6 @@ public:
     String* m_parsedString;
     String* m_parsedUrl;
 };
-
 }
 
 #endif

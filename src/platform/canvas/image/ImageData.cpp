@@ -12,11 +12,11 @@ public:
     ImageDataEFL(String* imageSrc)
     {
         m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_file_set(m_image,imageSrc->utf8Data(),NULL);
+        evas_object_image_file_set(m_image, imageSrc->utf8Data(), NULL);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
 
-        int w,h;
-        evas_object_image_size_get(m_image,&w,&h);
+        int w, h;
+        evas_object_image_size_get(m_image, &w, &h);
         m_width = w;
         m_height = h;
     }
@@ -44,7 +44,7 @@ protected:
 
 class ImageDataNetwork : public ImageData {
 public:
-    ImageDataNetwork(uint32_t size,void* data)
+    ImageDataNetwork(uint32_t size, void* data)
     {
         m_image = evas_object_image_add(internalCanvas());
         char format[4] = "";
@@ -52,8 +52,8 @@ public:
 
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
 
-        int w,h;
-        evas_object_image_size_get(m_image,&w,&h);
+        int w, h;
+        evas_object_image_size_get(m_image, &w, &h);
         m_width = w;
         m_height = h;
     }
@@ -84,9 +84,9 @@ ImageData* ImageData::create(String* imageSrc)
     return new ImageDataEFL(imageSrc);
 }
 
-ImageData* ImageData::create(uint32_t size,void* data)
+ImageData* ImageData::create(uint32_t size, void* data)
 {
-    return new ImageDataNetwork(size,data);
+    return new ImageDataNetwork(size, data);
 }
 
 }

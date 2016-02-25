@@ -9,7 +9,7 @@ class Element;
 class DOMSettableTokenList : public DOMTokenList {
 public:
     DOMSettableTokenList(ScriptBindingInstance* instance, Element* element, QualifiedName localName)
-    : DOMTokenList(instance,element,localName)
+        : DOMTokenList(instance, element, localName)
     {
         initScriptWrappable(this, instance);
     }
@@ -27,10 +27,10 @@ public:
     {
         m_value = value;
     }
+
 private:
     String* m_value;
 };
-
 }
 
 #endif

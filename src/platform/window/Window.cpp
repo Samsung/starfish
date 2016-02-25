@@ -15,7 +15,6 @@
 #include <Ecore_Input.h>
 #include <Ecore_Input_Evas.h>
 
-
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <efl_extension.h>
 #include <tizen.h>
@@ -23,7 +22,8 @@
 
 extern Evas* g_internalCanvas;
 
-namespace StarFish {
+namespace StarFish
+{
 
 namespace
 {
@@ -32,15 +32,16 @@ namespace
     public:
         __GET_TICK_COUNT()
         {
-        if (gettimeofday(&tv_, NULL) != 0)
-            throw 0;
+            if (gettimeofday(&tv_, NULL) != 0)
+                throw 0;
         }
         timeval tv_;
     };
     __GET_TICK_COUNT timeStart;
 }
 
-class WindowImplEFL : public Window {
+class WindowImplEFL : public Window
+{
 public:
     WindowImplEFL(StarFish* sf)
         : Window(sf)
@@ -68,13 +69,13 @@ public:
     Evas_Object* m_background;
     Evas_Object* m_canvasAdpater;
     std::vector<Evas_Object*> m_objectList;
-    std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool>>> m_drawnImageList;
+    std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > > m_drawnImageList;
     Evas_Object* m_dummyBox;
 };
 
-void mainRenderingFunction(Evas_Object *o, Evas_Object_Box_Data *priv, void *user_data)
+void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
 {
-    WindowImplEFL* wnd= (WindowImplEFL*)user_data;
+    WindowImplEFL* wnd = (WindowImplEFL*)user_data;
     wnd->setNeedsLayout();
 }
 
@@ -96,52 +97,52 @@ Window* Window::create(StarFish* sf, size_t w, size_t h)
     elm_win_autodel_set(wnd->m_window, EINA_TRUE);
 
     wnd->m_dummyBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set (wnd->m_dummyBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    evas_object_size_hint_weight_set(wnd->m_dummyBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     elm_win_resize_object_add(wnd->m_window, wnd->m_dummyBox);
-    elm_box_layout_set(wnd->m_dummyBox,mainRenderingFunction,wnd,NULL);
+    elm_box_layout_set(wnd->m_dummyBox, mainRenderingFunction, wnd, NULL);
     evas_object_show(wnd->m_dummyBox);
 
     if (w != SIZE_MAX && h != SIZE_MAX)
         evas_object_resize(wnd->m_window, (int)w, (int)h);
     evas_object_show(wnd->m_window);
-/*
+    /*
     evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST, [](void *data, Evas *e, void *event_info) {
     }, wnd);
 */
-    ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_DOWN,[](void *data, int type, void *event) -> Eina_Bool {
+    ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
         sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventDown);
         return EINA_TRUE;
     }, wnd);
 
-    ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_UP,[](void *data, int type, void *event) -> Eina_Bool {
+    ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_UP, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
         sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventUp);
         return EINA_TRUE;
     }, wnd);
 
-    ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE,[](void *data, int type, void *event) -> Eina_Bool {
+    ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
         sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventMove);
         return EINA_TRUE;
-    } ,wnd);
+    }, wnd);
 
-    ecore_event_handler_add(ECORE_EVENT_KEY_DOWN,[](void *data, int type, void *event) -> Eina_Bool {
+    ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Key* d = (Ecore_Event_Key*)event;
         sf->dispatchKeyEvent(String::createASCIIString(d->keyname), Window::KeyEventDown);
         return EINA_TRUE;
-    } ,wnd);
+    }, wnd);
 
-    ecore_event_handler_add(ECORE_EVENT_KEY_UP,[](void *data, int type, void *event) -> Eina_Bool {
+    ecore_event_handler_add(ECORE_EVENT_KEY_UP, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Key* d = (Ecore_Event_Key*)event;
         sf->dispatchKeyEvent(String::createASCIIString(d->keyname), Window::KeyEventUp);
         return EINA_TRUE;
-    } ,wnd);
+    }, wnd);
 
     return wnd;
 }
@@ -155,18 +156,18 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
 
     Evas* e = evas_object_evas_get(wnd->m_window);
     Evas_Object* mainBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set (mainBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    evas_object_size_hint_weight_set(mainBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     elm_win_resize_object_add(wnd->m_window, mainBox);
-    elm_box_layout_set(mainBox,mainRenderingFunction, wnd, NULL);
+    elm_box_layout_set(mainBox, mainRenderingFunction, wnd, NULL);
     evas_object_show(mainBox);
 
-    wnd->m_dummyBox =  evas_object_rectangle_add(e);
+    wnd->m_dummyBox = evas_object_rectangle_add(e);
     evas_object_color_set(wnd->m_dummyBox, 0, 0, 0, 0); // opaque background
     evas_object_resize(wnd->m_dummyBox, w, h);
     evas_object_show(wnd->m_dummyBox);
     evas_object_show(wnd->m_window);
 
-    evas_object_event_callback_add(wnd->m_dummyBox , EVAS_CALLBACK_MOUSE_DOWN, [](void *data, Evas *evas, Evas_Object *obj, void *event_info) -> void {
+    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
         Evas_Event_Mouse_Down *ev = (Evas_Event_Mouse_Down *)event_info;
         if (sf->m_isRunning)
@@ -174,7 +175,7 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
         return ;
     }, wnd);
 
-    evas_object_event_callback_add(wnd->m_dummyBox , EVAS_CALLBACK_MOUSE_UP, [](void *data, Evas *evas, Evas_Object *obj, void *event_info) -> void {
+    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
         Evas_Event_Mouse_Up *ev = (Evas_Event_Mouse_Up *)event_info;
         if (sf->m_isRunning)
@@ -182,7 +183,7 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
         return ;
     }, wnd);
 
-    evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST, [](void *data, Evas *e, void *event_info) {
+    evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST, [](void* data, Evas* e, void* event_info) {
     }, wnd);
 
     /*
@@ -202,7 +203,6 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
     return wnd;
 }
 #endif
-
 
 Window::Window(StarFish* starFish)
     : m_starFish(starFish)
@@ -323,15 +323,16 @@ Window::Window(StarFish* starFish)
 #ifdef STARFISH_ENABLE_TIMER
 static unsigned long getLongTickCount()
 {
-    static time_t   secStart    = timeStart.tv_.tv_sec;
-    static time_t   usecStart   = timeStart.tv_.tv_usec;
-                    timeval tv;
+    static time_t secStart = timeStart.tv_.tv_sec;
+    static time_t usecStart = timeStart.tv_.tv_usec;
+    timeval tv;
     gettimeofday(&tv, NULL);
     return (tv.tv_sec - secStart) * 1000 + (tv.tv_usec - usecStart);
 }
 #endif
 
-class Timer {
+class Timer
+{
 public:
     Timer(const char* msg)
     {
@@ -347,6 +348,7 @@ public:
         STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (end - m_start) / 1000.f);
 #endif
     }
+
 protected:
 #ifdef STARFISH_ENABLE_TIMER
     unsigned long m_start;
@@ -361,44 +363,38 @@ void Window::rendering()
 
     Timer renderingTimer("Window::rendering");
 
-    if (m_needsStyleRecalc)
-    {
+    if (m_needsStyleRecalc) {
         // resolve style
         Timer t("resolve style");
         m_styleResolver.resolveDOMStyle(m_document);
         m_needsStyleRecalc = false;
     }
 
-
     if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
         // dump style
         m_styleResolver.dumpDOMStyle(m_document);
     }
 
-    if (m_needsFrameTreeBuild)
-    {
+    if (m_needsFrameTreeBuild) {
         // create frame tree
         Timer t("create frame tree");
         FrameTreeBuilder::buildFrameTree(m_document);
         m_needsFrameTreeBuild = false;
     }
 
-    if (m_needsLayout)
-    {
+    if (m_needsLayout) {
         // lay out frame tree
         Timer t("lay out frame tree");
         LayoutContext ctx(nullptr);
         m_document->frame()->layout(ctx);
         m_needsLayout = false;
-
     }
 
     if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableFrameTreeDump) {
         FrameTreeBuilder::dumpFrameTree(m_document);
     }
 
-    if (m_needsPainting)
-    {
+    if (m_needsPainting) {
         Timer t("painting");
         // painting
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
@@ -419,7 +415,7 @@ void Window::rendering()
         d->h = height;
         d->objList = &eflWindow->m_objectList;
         auto iter = eflWindow->m_objectList.begin();
-        while(iter != eflWindow->m_objectList.end()) {
+        while (iter != eflWindow->m_objectList.end()) {
             evas_object_del(*iter);
             iter++;
         }
@@ -439,9 +435,9 @@ void Window::rendering()
 
         } else {
             if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
-                canvas->clearColor(Color(0,0,0,255));
+                canvas->clearColor(Color(0, 0, 0, 255));
             else
-                canvas->clearColor(Color(255,255,255,255));
+                canvas->clearColor(Color(255, 255, 255, 255));
         }
 
         m_document->frame()->paint(canvas);
@@ -451,11 +447,11 @@ void Window::rendering()
     }
 
 #ifdef STARFISH_TIZEN_WEARABLE
-    /*
+/*
     canvas->save();
-    canvas->setColor(Color(255,0,0,255));
+    canvas->setColor(Color(255, 0, 0, 255));
     canvas->drawRect(Rect(180-20, 320, 40, 20));
-    canvas->setColor(Color(255,255,255,255));
+    canvas->setColor(Color(255, 255, 255, 255));
     String* txt = String::createASCIIString("SWC");
     Font* fnt = FontSelector::loadFont(String::createASCIIString(""), 12);
     Size siz = fnt->measureText(txt);
@@ -468,15 +464,14 @@ void Window::rendering()
     m_needsRendering = false;
 
 #ifdef NDEBUG
-    STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB\n", GC_get_heap_size()/1024.f/1024.f);
+    STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
 #else
-    STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB / %f MB\n", GC_get_memory_use()/1024.f/1024.f, GC_get_heap_size()/1024.f/1024.f);
+    STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
 
 #ifdef STARFISH_TIZEN_WEARABLE
     evas_object_raise(eflWindow->m_dummyBox);
 #endif
-
 }
 
 void Window::setNeedsRenderingSlowCase()
@@ -484,7 +479,7 @@ void Window::setNeedsRenderingSlowCase()
     STARFISH_ASSERT(!m_needsRendering);
     m_needsRendering = true;
 
-    ecore_animator_add([](void *data) -> Eina_Bool {
+    ecore_animator_add([](void* data) -> Eina_Bool {
         // FIXME
         // we pass window data as idler.
         // but, bdwgc is cannot see ecore's memory
@@ -520,7 +515,7 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
     // instance of window is not rooted.
     // because timeoutdata is stored in memory area in ecore.
     // this implemention is very unsafe
-    ecore_timer_add(delay/1000.0,[](void *data) -> Eina_Bool {
+    ecore_timer_add(delay / 1000.0, [](void* data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
         auto a = td->m_window->m_timeoutHandler.find(td->m_id);
 
@@ -539,9 +534,9 @@ void Window::clearTimeout(uint32_t id)
 {
     // TODO : Use ecore_timer_del(Ecore_Timer *timer)
     auto handlerData = m_timeoutHandler.find(id);
-    if (handlerData != m_timeoutHandler.end()) handlerData->second.second = nullptr;
+    if (handlerData != m_timeoutHandler.end())
+        handlerData->second.second = nullptr;
 }
-
 
 uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* data)
 {
@@ -551,7 +546,7 @@ uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* da
     td->m_id = id;
     m_requestAnimationFrameHandler.insert(std::make_pair(id, std::make_pair(handler, data)));
 
-    ecore_animator_add([](void *data) -> Eina_Bool {
+    ecore_animator_add([](void* data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
         auto a = td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
 
@@ -599,7 +594,7 @@ Node* Window::hitTest(float x, float y)
     return nullptr;
 }
 
-void Window::dispatchTouchEvent(float x, float y,TouchEventKind kind)
+void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 {
     Node* node = hitTest(x, y);
     if (kind == TouchEventDown) {
@@ -609,7 +604,7 @@ void Window::dispatchTouchEvent(float x, float y,TouchEventKind kind)
             t->setState(Node::NodeStateActive);
             t = t->parentNode();
         }
-   }
+    }
 
     if (kind == TouchEventUp) {
         bool shouldCallOnClick = false;
@@ -659,12 +654,11 @@ void Window::resume()
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 
     auto a = eflWindow->m_drawnImageList.begin();
-    while(a != eflWindow->m_drawnImageList.end()) {
+    while (a != eflWindow->m_drawnImageList.end()) {
         evas_object_unref((Evas_Object*)a->first->unwrap());
         a++;
     }
     eflWindow->m_drawnImageList.clear();
     rendering();
 }
-
 }

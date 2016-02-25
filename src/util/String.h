@@ -238,7 +238,7 @@ inline String* String::toUpper()
 {
     if (m_isASCIIString) {
         ASCIIString str = *asASCIIString();
-        std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataASCII(std::move(str));
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -249,7 +249,7 @@ inline String* String::toLower()
 {
     if (m_isASCIIString) {
         ASCIIString str = *asASCIIString();
-        std::transform(str.begin(), str.end(),str.begin(), ::tolower);
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return new StringDataASCII(std::move(str));
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -258,7 +258,7 @@ inline String* String::toLower()
 
 inline String* String::concat(String* str)
 {
-    if(isASCIIString() && str->isASCIIString()) {
+    if (isASCIIString() && str->isASCIIString()) {
         ASCIIString s = *asASCIIString() + *(str->asASCIIString());
         return new StringDataASCII(std::move(s));
     } else {

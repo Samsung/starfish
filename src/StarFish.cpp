@@ -24,9 +24,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
     m_currentPath = currentPath;
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
-    elm_init(0,0);
+    elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
-    STARFISH_LOG_INFO("dpi... %d\n",ecore_x_dpi_get());
+    STARFISH_LOG_INFO("dpi... %d\n", ecore_x_dpi_get());
     g_screenDpi = ecore_x_dpi_get();
     m_messageLoop = new MessageLoop();
     m_scriptBindingInstance = new ScriptBindingInstance();
@@ -37,7 +37,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win)
     : m_staticStrings(this)
 {
-    STARFISH_LOG_INFO("dpi... %d\n",ecore_x_dpi_get());
+    STARFISH_LOG_INFO("dpi... %d\n", ecore_x_dpi_get());
     g_screenDpi = ecore_x_dpi_get();
     m_startUpFlag = flag;
     m_currentPath = currentPath;
@@ -86,11 +86,11 @@ ImageData* StarFish::fetchImage(String* str)
     return iter->second;
 }
 
-ImageData* StarFish::fetchImage(String* str,uint32_t size,void* data)
+ImageData* StarFish::fetchImage(String* str, uint32_t size, void* data)
 {
     auto iter = m_imageCache.find(str->utf8Data());
     if (iter == m_imageCache.end()) {
-        ImageData* id = ImageData::create(size,data);
+        ImageData* id = ImageData::create(size, data);
         m_imageCache.insert(std::make_pair(std::string(str->utf8Data()), id));
         return id;
     }
@@ -126,4 +126,3 @@ StaticStrings::StaticStrings(StarFish* sf)
 }
 
 }
-

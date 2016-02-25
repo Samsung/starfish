@@ -5,11 +5,13 @@
 
 //"blob:http%3A//ohgyun.com/a9f2fd30-adf0-43dd-a413-9ee8423bec6e"
 
-namespace StarFish {
+namespace StarFish
+{
 
-class Blob : public ScriptWrappable {
+class Blob : public ScriptWrappable
+{
 public:
-    Blob(uint32_t size,String* type,void* data)
+    Blob(uint32_t size, String* type, void* data)
         : ScriptWrappable(this)
     {
         m_size = size;
@@ -19,7 +21,8 @@ public:
         initScriptWrappable(this);
     }
 
-    void* data(){
+    void* data()
+    {
         return m_data;
     }
 
@@ -33,8 +36,6 @@ protected:
     String* m_type;
     void* m_data;
 };
-
-
 }
 
 #endif

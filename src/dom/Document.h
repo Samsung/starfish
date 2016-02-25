@@ -49,7 +49,7 @@ public:
 
     Element* documentElement()
     {
-        if(firstChild() == nullptr) {
+        if (firstChild() == nullptr) {
             return nullptr;
         } else {
             STARFISH_ASSERT(firstChild()->localName()->equals(window()->starFish()->staticStrings()->m_htmlLocalName));

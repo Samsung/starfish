@@ -7,7 +7,7 @@ namespace StarFish {
 
 class HTMLUnknownElement : public HTMLElement {
 public:
-    HTMLUnknownElement(Document* document,String* localName)
+    HTMLUnknownElement(Document* document, String* localName)
         : HTMLElement(document)
     {
         initScriptWrappable(this);

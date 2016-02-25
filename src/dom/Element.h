@@ -4,12 +4,14 @@
 #include "dom/Node.h"
 #include "dom/Attribute.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
 class HTMLElement;
 class CSSStyleDeclaration;
 
-class Element : public Node {
+class Element : public Node
+{
 public:
     Element(Document* document, ScriptBindingInstance* instance)
         : Node(document, instance)
@@ -40,7 +42,7 @@ public:
     virtual Element* parentElement()
     {
         Node* parent = parentNode();
-        if(parent->nodeType() == ELEMENT_NODE) {
+        if (parent->nodeType() == ELEMENT_NODE) {
             return parent->asElement();
         } else {
             return nullptr;
@@ -54,11 +56,11 @@ public:
 
     virtual String* textContent()
     {
-        if((nodeType() == TEXT_NODE) || (nodeType() == DOCUMENT_FRAGMENT_NODE)) {
+        if ((nodeType() == TEXT_NODE) || (nodeType() == DOCUMENT_FRAGMENT_NODE)) {
             return textContent();
         }
         String* str = String::createASCIIString("");
-        for(Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
+        for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
             str = str->concat(child->textContent());
         }
         return str;
@@ -105,15 +107,16 @@ public:
     }
 
     // DO NOT MODIFY THIS VECTOR
-    const std::vector<String*, gc_allocator<String*>>& classNames()
+    const std::vector<String*, gc_allocator<String*> >& classNames()
     {
         return m_classNames;
     }
 
-    bool hasClassName(String* className){
-        for (unsigned i = 0; i < m_classNames.size(); i ++) {
-          if(className->equals(m_classNames[i]))
-            return true;
+    bool hasClassName(String* className)
+    {
+        for (unsigned i = 0; i < m_classNames.size(); i++) {
+            if (className->equals(m_classNames[i]))
+                return true;
         }
         return false;
     }
@@ -138,7 +141,7 @@ public:
 
         printf("id:%s, ", m_id->utf8Data());
         std::string className;
-        for (unsigned i = 0; i < m_classNames.size(); i ++) {
+        for (unsigned i = 0; i < m_classNames.size(); i++) {
             className += m_classNames[i]->utf8Data();
             className += " ";
         }
@@ -148,20 +151,18 @@ public:
 
     virtual Node* clone();
 
-    std::vector<Attribute, gc_allocator<Attribute>>* getAttributes() { return &m_attributes; }
+    std::vector<Attribute, gc_allocator<Attribute> >* getAttributes() { return &m_attributes; }
 
 protected:
-    std::vector<Attribute, gc_allocator<Attribute>> m_attributes;
+    std::vector<Attribute, gc_allocator<Attribute> > m_attributes;
 
     String* m_id;
-    std::vector<String*, gc_allocator<String*>> m_classNames;
+    std::vector<String*, gc_allocator<String*> > m_classNames;
     String* m_namespace;
     String* m_namespacePrefix;
 
     CSSStyleDeclaration* m_inlineStyle;
 };
-
-
 }
 
 #endif

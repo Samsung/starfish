@@ -7,7 +7,7 @@ namespace StarFish {
 
 class FrameText : public Frame {
 public:
-    FrameText (Node* node, ComputedStyle* style)
+    FrameText(Node* node, ComputedStyle* style)
         : Frame(node, style)
     {
     }
@@ -27,14 +27,13 @@ public:
         return node()->asCharacterData()->data();
     }
 
-    static std::string replaceAll(const std::string &str, const std::string &pattern, const std::string &replace)
+    static std::string replaceAll(const std::string& str, const std::string& pattern, const std::string& replace)
     {
         std::string result = str;
         std::string::size_type pos = 0;
         std::string::size_type offset = 0;
 
-        while((pos = result.find(pattern, offset)) != std::string::npos)
-        {
+        while ((pos = result.find(pattern, offset)) != std::string::npos) {
             result.replace(result.begin() + pos, result.begin() + pos + pattern.size(), replace);
             offset = pos + replace.size();
         }
@@ -56,7 +55,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

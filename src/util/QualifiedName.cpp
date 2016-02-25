@@ -2,7 +2,8 @@
 #include "QualifiedName.h"
 #include "StarFish.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
 QualifiedName QualifiedName::fromString(StarFish* sf, String* str)
 {
@@ -14,7 +15,7 @@ QualifiedName QualifiedName::fromString(StarFish* sf, const char* str)
     std::string data = str;
     std::transform(data.begin(), data.end(), data.begin(), ::tolower);
     std::unordered_map<std::string, QualifiedName,
-        std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, QualifiedName>>>& map = sf->staticStrings()->m_staticStringMap;
+        std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, QualifiedName> > >& map = sf->staticStrings()->m_staticStringMap;
     auto iter = map.find(data);
 
     if (iter != map.end()) {
@@ -28,12 +29,12 @@ QualifiedName QualifiedName::fromString(StarFish* sf, const char* str)
     return name;
 }
 
-bool QualifiedName::checkNameProductionRule(const char* str,unsigned length)
+bool QualifiedName::checkNameProductionRule(const char* str, unsigned length)
 {
     if (!checkNameProductionRuleStart_internal(str[0]))
         return false;
 
-    for (unsigned i=1;i<length;++i) {
+    for (unsigned i = 1; i < length; ++i) {
         if (!checkNameProductionRule_internal(str[i]))
             return false;
     }
@@ -42,10 +43,10 @@ bool QualifiedName::checkNameProductionRule(const char* str,unsigned length)
 }
 bool QualifiedName::checkNameProductionRuleStart_internal(char c)
 {
-    if (c==':'||c=='_')
+    if (c == ':' || c == '_')
         return true;
 
-    if(isalpha(c))
+    if (isalpha(c))
         return true;
 
     return false;
@@ -58,10 +59,9 @@ bool QualifiedName::checkNameProductionRule_internal(char c)
     if (isdigit(c))
         return true;
 
-    if (c=='-'||c=='.')
+    if (c == '-' || c == '.')
         return true;
 
     return false;
 }
-
 }

@@ -420,4 +420,7 @@ regression_test:
 	fi;
 	./tool/pixel_test/regression_test.sh $(tc)
 
+tidy:
+	./tool/tidy/check-webkit-style `find src/ -name "*.cpp" -o -name "*.h"`> error_report 2>& 1
+
 .PHONY: clean

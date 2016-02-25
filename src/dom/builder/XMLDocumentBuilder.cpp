@@ -5,8 +5,8 @@
 #include "dom/DOM.h"
 #include "dom/binding/ScriptBindingInstance.h"
 
-namespace StarFish {
-
+namespace StarFish
+{
 
 void XMLDocumentBuilder::build(Document* document, String* filePath)
 {
@@ -15,12 +15,11 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
     tinyxml2::XMLDocument doc;
     doc.LoadFile(filePath->utf8Data());
 
-    if(doc.Error()) {
+    if (doc.Error()) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    std::function<void (Node* parentNode, tinyxml2::XMLElement* xmlElement)> fn = [&fn, &document](Node* parentNode, tinyxml2::XMLElement* xmlElement)
-    {
+    std::function<void(Node * parentNode, tinyxml2::XMLElement * xmlElement)> fn = [&fn, &document](Node* parentNode, tinyxml2::XMLElement* xmlElement) {
         Node* newNode = nullptr;
         int type = xmlElement->IntAttribute("nodeType");
         if (type == 0) {
@@ -45,13 +44,13 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             QualifiedName qname = QualifiedName::fromString(document->window()->starFish(), name);
 
             newNode = document->createElement(qname);
-            if(newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLScriptElement()) {
                 if (parentNode) {
                     parentNode->appendChild(newNode);
                 }
 
                 tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
-                while(child) {
+                while (child) {
                     fn(newNode, child);
                     child = child->NextSiblingElement();
                 }
@@ -59,12 +58,12 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                 String* script = newNode->asElement()->firstChild()->asCharacterData()->asText()->data();
                 document->window()->starFish()->evaluate(script);
                 return;
-            } else if(newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
+            } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
                 //resolve styles.
                 tinyxml2::XMLElement* e = xmlElement->FirstChildElement();
                 CSSStyleSheet* sheet = new CSSStyleSheet;
                 while (e) {
-                    if (strcmp(e->Value(),"style") == 0) {
+                    if (strcmp(e->Value(), "style") == 0) {
                         CSSStyleRule::PseudoClass pc = CSSStyleRule::PseudoClass::None;
 
                         const char* selectorText1 = e->Attribute("selectorText");
@@ -73,7 +72,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                         String* str = String::fromUTF8(selectorText1);
                         String::Vector tokens;
                         str->split(',', tokens);
-                        for(unsigned i=0; i < tokens.size(); i++) {
+                        for (unsigned i=0; i < tokens.size(); i++) {
                             const char* selectorText = tokens[i]->trim()->utf8Data();
                             CSSStyleRule::Kind kind;
                             String* st;
@@ -140,7 +139,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
 
         if (newNode->isElement()) {
             const tinyxml2::XMLAttribute* attr = xmlElement->FirstAttribute();
-            while(attr) {
+            while (attr) {
                 if (strcmp(attr->Name(), "nodeType") == 0) {
                     attr = attr->Next();
                     continue;
@@ -156,7 +155,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
         }
 
         tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
-        while(child) {
+        while (child) {
             fn(newNode, child);
             child = child->NextSiblingElement();
         }
@@ -165,6 +164,4 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
 
     fn(nullptr, doc.FirstChildElement()->FirstChildElement());
 }
-
 }
-

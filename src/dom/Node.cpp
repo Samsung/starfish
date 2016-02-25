@@ -33,8 +33,8 @@ Node* Node::cloneNode(bool deep)
 {
     Node* newNode = clone();
     STARFISH_ASSERT(newNode);
-    if(deep) {
-        for(Node* child=firstChild(); child; child=child->nextSibling()) {
+    if (deep) {
+        for (Node* child = firstChild(); child; child = child->nextSibling()) {
             Node* newChild = child->clone();
             STARFISH_ASSERT(newChild);
             newNode->appendChild(newChild);
@@ -45,46 +45,41 @@ Node* Node::cloneNode(bool deep)
 
 bool Node::isEqualNode(Node* other)
 {
-    if(other == nullptr) {
+    if (other == nullptr) {
         return false;
     }
-    if(this == other) {
+    if (this == other) {
         return true;
     }
-    if(nodeType() != other->nodeType()) {
+    if (nodeType() != other->nodeType()) {
         return false;
     }
 
-    switch(nodeType()) {
-        case DOCUMENT_TYPE_NODE: {
-            DocumentType* thisNode = asDocumentType();
-            DocumentType* otherNode = other->asDocumentType();
-            if(!(thisNode->nodeName()->equals(otherNode->nodeName()) &&
-                 thisNode->publicId()->equals(otherNode->publicId()) &&
-                 thisNode->systemId()->equals(otherNode->systemId()))) {
-                return false;
-            }
+    switch (nodeType()) {
+    case DOCUMENT_TYPE_NODE: {
+        DocumentType* thisNode = asDocumentType();
+        DocumentType* otherNode = other->asDocumentType();
+        if (!(thisNode->nodeName()->equals(otherNode->nodeName()) && thisNode->publicId()->equals(otherNode->publicId()) && thisNode->systemId()->equals(otherNode->systemId()))) {
+            return false;
         }
-        case ELEMENT_NODE: {
-            Element* thisNode = asElement();
-            Element* otherNode = other->asElement();
-            if(!(thisNode->namespaceUri()->equals(otherNode->namespaceUri()) &&
-                 thisNode->namespacePrefix()->equals(otherNode->namespacePrefix()) &&
-                 thisNode->localName()->equals(otherNode->localName()) &&
-                 true /* FIXME: impl 4.8.1 NamedNodeMap */  )) {
-                 return false;
-            }
+    }
+    case ELEMENT_NODE: {
+        Element* thisNode = asElement();
+        Element* otherNode = other->asElement();
+        if (!(thisNode->namespaceUri()->equals(otherNode->namespaceUri()) && thisNode->namespacePrefix()->equals(otherNode->namespacePrefix()) && thisNode->localName()->equals(otherNode->localName()) && true /* FIXME: impl 4.8.1 NamedNodeMap */)) {
+            return false;
         }
-        case PROCESSING_INSTRUCTION_NODE:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        case TEXT_NODE:
-        case COMMENT_NODE:
-            if(!nodeValue()->equals(other->nodeValue())) {
-                return false;
-            }
-        default: {
-            // for any other node, do nothing
+    }
+    case PROCESSING_INSTRUCTION_NODE:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    case TEXT_NODE:
+    case COMMENT_NODE:
+        if (!nodeValue()->equals(other->nodeValue())) {
+            return false;
         }
+    default: {
+        // for any other node, do nothing
+    }
     }
 
     // FIXME: impl 4.8.1 NamedNodeMap to iterate attr
@@ -180,14 +175,14 @@ unsigned long Node::childElementCount()
 
 bool isPreceding(const Node* node, const Node* isPrec, const Node* refNode)
 {
-    if(node == isPrec) {
+    if (node == isPrec) {
         return true;
     } else if (node == refNode) {
         return false;
     }
 
-    for(Node* child = node->firstChild(); child != nullptr; child = child->nextSibling()) {
-        if(isPreceding(child, isPrec, refNode)) {
+    for (Node* child = node->firstChild(); child != nullptr; child = child->nextSibling()) {
+        if (isPreceding(child, isPrec, refNode)) {
             return true;
         }
     }
@@ -197,35 +192,31 @@ bool isPreceding(const Node* node, const Node* isPrec, const Node* refNode)
 unsigned short Node::compareDocumentPosition(const Node* other)
 {
     // spec does not say what to do when other is nullptr
-    if(!other) {
+    if (!other) {
         return DOCUMENT_POSITION_DISCONNECTED;
     }
-    if(this == other) {
+    if (this == other) {
         return 0;
     }
     STARFISH_ASSERT(!isDocument());
-    if(ownerDocument() != other->ownerDocument()) {
-        return DOCUMENT_POSITION_DISCONNECTED +
-               DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
-               DOCUMENT_POSITION_PRECEDING;
+    if (ownerDocument() != other->ownerDocument()) {
+        return DOCUMENT_POSITION_DISCONNECTED + DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC + DOCUMENT_POSITION_PRECEDING;
     }
 
-    for(Node* p = parentNode(); p != nullptr; p = p->parentNode()) {
-        if(p == other) {
-            return DOCUMENT_POSITION_CONTAINS +
-                   DOCUMENT_POSITION_PRECEDING;
+    for (Node* p = parentNode(); p != nullptr; p = p->parentNode()) {
+        if (p == other) {
+            return DOCUMENT_POSITION_CONTAINS + DOCUMENT_POSITION_PRECEDING;
         }
     }
 
-    for(Node* p = other->parentNode(); p != nullptr; p = p->parentNode()) {
-        if(p == this) {
-            return DOCUMENT_POSITION_CONTAINED_BY +
-                   DOCUMENT_POSITION_FOLLOWING;
+    for (Node* p = other->parentNode(); p != nullptr; p = p->parentNode()) {
+        if (p == this) {
+            return DOCUMENT_POSITION_CONTAINED_BY + DOCUMENT_POSITION_FOLLOWING;
         }
     }
 
     Node* root = ownerDocument();
-    if(isPreceding(root, other, this)) {
+    if (isPreceding(root, other, this)) {
         return DOCUMENT_POSITION_PRECEDING;
     } else {
         return DOCUMENT_POSITION_FOLLOWING;
@@ -234,10 +225,10 @@ unsigned short Node::compareDocumentPosition(const Node* other)
 
 String* Node::lookupNamespacePrefix(String* namespaceUri, Element* element)
 {
-    if(namespaceUri == nullptr) {
+    if (namespaceUri == nullptr) {
         return String::emptyString;
     }
-    if(element->lookupNamespaceURI(prefix())->equals(namespaceUri)) {
+    if (element->lookupNamespaceURI(prefix())->equals(namespaceUri)) {
         return prefix();
     }
     // Impl here
@@ -246,35 +237,35 @@ String* Node::lookupNamespacePrefix(String* namespaceUri, Element* element)
 
 String* Node::lookupPrefix(String* namespaceUri)
 {
-    if(!namespaceUri) {
+    if (!namespaceUri) {
         return String::emptyString;
     }
-    if(namespaceUri->equals(String::emptyString)) {
+    if (namespaceUri->equals(String::emptyString)) {
         return String::emptyString;
     }
 
-    switch(nodeType()) {
-        case ELEMENT_NODE:
-            return lookupNamespacePrefix(namespaceUri, asElement());
-        case DOCUMENT_NODE: {
-            Element* documentElement = asDocument()->documentElement();
-            if(documentElement) {
-                return documentElement->lookupPrefix(namespaceUri);
-            } else {
-                return String::emptyString;
-            }
-        }
-        case DOCUMENT_TYPE_NODE:
-        case DOCUMENT_FRAGMENT_NODE:
+    switch (nodeType()) {
+    case ELEMENT_NODE:
+        return lookupNamespacePrefix(namespaceUri, asElement());
+    case DOCUMENT_NODE: {
+        Element* documentElement = asDocument()->documentElement();
+        if (documentElement) {
+            return documentElement->lookupPrefix(namespaceUri);
+        } else {
             return String::emptyString;
-        default: {
-            Node* parent = parentNode();
-            if(parent) {
-                parent->lookupPrefix(namespaceUri);
-            } else {
-                return String::emptyString;
-            }
         }
+    }
+    case DOCUMENT_TYPE_NODE:
+    case DOCUMENT_FRAGMENT_NODE:
+        return String::emptyString;
+    default: {
+        Node* parent = parentNode();
+        if (parent) {
+            parent->lookupPrefix(namespaceUri);
+        } else {
+            return String::emptyString;
+        }
+    }
     }
     return String::emptyString;
 }
@@ -286,7 +277,8 @@ HTMLCollection* Node::children()
     } else if (!m_rareNodeMembers->m_children)
         return m_rareNodeMembers->m_children;
 
-    auto filter = [&](Node* node) {
+    auto filter = [&](Node* node)
+    {
         if (node->parentNode() == this && node->isElement())
             return true;
         return false;
@@ -303,9 +295,8 @@ DOMTokenList* Node::classList()
         } else if (!m_rareNodeMembers->m_domTokenList)
             return m_rareNodeMembers->m_domTokenList;
 
-
         m_rareNodeMembers->m_domTokenList = new DOMTokenList(m_document->scriptBindingInstance(), asElement(),
-                document()->window()->starFish()->staticStrings()->m_class);
+            document()->window()->starFish()->staticStrings()->m_class);
         return m_rareNodeMembers->m_domTokenList;
     }
     return nullptr;
@@ -319,7 +310,6 @@ NamedNodeMap* Node::attributes()
         } else if (!m_rareNodeMembers->m_namedNodeMap)
             return m_rareNodeMembers->m_namedNodeMap;
 
-
         m_rareNodeMembers->m_namedNodeMap = new NamedNodeMap(m_document->scriptBindingInstance(), asElement());
         return m_rareNodeMembers->m_namedNodeMap;
     }
@@ -328,8 +318,8 @@ NamedNodeMap* Node::attributes()
 
 Node* Node::getDocTypeChild()
 {
-    for(Node* c=firstChild(); c != nullptr; c=c->nextSibling()) {
-        if(c->isDocumentType()) {
+    for (Node* c = firstChild(); c != nullptr; c = c->nextSibling()) {
+        if (c->isDocumentType()) {
             return c;
         }
     }
@@ -339,33 +329,28 @@ Node* Node::getDocTypeChild()
 void Node::validatePreinsert(Node* child, Node* childRef) // (node, child)
 {
     // 4.2.1 pre-insertion validity
-    if(!(isDocument() || isElement())) {
+    if (!(isDocument() || isElement())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
     }
-    if(this == child) {
+    if (this == child) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
     }
-    if(childRef != nullptr && childRef->parentNode() != this) {
+    if (childRef != nullptr && childRef->parentNode() != this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
     }
-    if(!(child->isDocumentType() || child->isElement() || child->isText() || child->isComment())) {
+    if (!(child->isDocumentType() || child->isElement() || child->isText() || child->isComment())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is not a DocumentFragment, DocumentType, Element, Text, ProcessingInstruction, or Comment.");
     }
-    if((child->isText() && isDocument()) ||
-        (child->isDocumentType() && !isDocument())) {
+    if ((child->isText() && isDocument()) || (child->isDocumentType() && !isDocument())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Either node is a Text node and parent is a document, or node is a doctype and parent is not a document.");
     }
-    if(isDocument()) {
-        if(child->isElement()) {
-            if((firstElementChild() != nullptr) ||
-               (childRef != nullptr && childRef->isElement()) ||
-               (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
+    if (isDocument()) {
+        if (child->isElement()) {
+            if ((firstElementChild() != nullptr) || (childRef != nullptr && childRef->isElement()) || (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
                 throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child, child is a doctype, or child is not null and a doctype is following child.");
             }
-        } else if(child->isDocumentType()) {
-            if(getDocTypeChild() ||
-               (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement()) ||
-               (childRef == nullptr && firstElementChild() != nullptr)) {
+        } else if (child->isDocumentType()) {
+            if (getDocTypeChild() || (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement()) || (childRef == nullptr && firstElementChild() != nullptr)) {
                 throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child, child is non-null and an element is preceding child, or child is null and parent has an element child.");
             }
         }
@@ -383,7 +368,7 @@ Node* Node::appendChild(Node* child)
     STARFISH_ASSERT(child->nextSibling() == nullptr);
     STARFISH_ASSERT(child->previousSibling() == nullptr);
 
-    if(m_lastChild) {
+    if (m_lastChild) {
         child->setPreviousSibling(m_lastChild);
         m_lastChild->setNextSibling(child);
     } else {
@@ -401,7 +386,7 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     // spec does not say what to do when child is null
     STARFISH_ASSERT(child);
 
-    if(!childRef) {
+    if (!childRef) {
         return appendChild(child);
     }
 
@@ -414,7 +399,7 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     Node* prev = childRef->previousSibling();
     childRef->setPreviousSibling(child);
     STARFISH_ASSERT(m_lastChild != prev);
-    if(prev) {
+    if (prev) {
         STARFISH_ASSERT(m_firstChild != childRef);
         prev->setNextSibling(child);
     } else {
@@ -434,32 +419,28 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
 {
     Node* childRef = childToRemove;
     // 4.2.1 replace validity
-    if(!(isDocument() || isElement())) {
+    if (!(isDocument() || isElement())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
     }
-    if(this == child) {
+    if (this == child) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
     }
-    if(childRef != nullptr && childRef->parentNode() != this) {
+    if (childRef != nullptr && childRef->parentNode() != this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
     }
-    if(!(child->isDocumentType() || child->isElement() || child->isText() || child->isComment())) {
+    if (!(child->isDocumentType() || child->isElement() || child->isText() || child->isComment())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is not a DocumentFragment, DocumentType, Element, Text, ProcessingInstruction, or Comment.");
     }
-    if((child->isText() && isDocument()) ||
-        (child->isDocumentType() && !isDocument())) {
+    if ((child->isText() && isDocument()) || (child->isDocumentType() && !isDocument())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Either node is a Text node and parent is a document, or node is a doctype and parent is not a document.");
     }
-    if(isDocument()) {
-        if(child->isElement()) {
-            if((firstElementChild() != nullptr) ||
-               (childRef != nullptr && childRef->isElement()) ||
-               (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
+    if (isDocument()) {
+        if (child->isElement()) {
+            if ((firstElementChild() != nullptr) || (childRef != nullptr && childRef->isElement()) || (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
                 throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child that is not child or a doctype is following child.");
             }
-        } else if(child->isDocumentType()) {
-            if((getDocTypeChild() != nullptr && getDocTypeChild() != childRef) ||
-               (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement())) {
+        } else if (child->isDocumentType()) {
+            if ((getDocTypeChild() != nullptr && getDocTypeChild() != childRef) || (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement())) {
                 throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child that is not child, or an element is preceding child.");
             }
         }
@@ -484,23 +465,23 @@ Node* Node::removeChild(Node* child)
 {
     STARFISH_ASSERT(child);
 
-    if(child->parentNode() != this) {
+    if (child->parentNode() != this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::NOT_FOUND_ERR, "Child's parent is not parent.");
     }
 
     Node* prevChild = child->previousSibling();
     Node* nextChild = child->nextSibling();
 
-    if(nextChild) {
+    if (nextChild) {
         nextChild->setPreviousSibling(prevChild);
     }
-    if(prevChild) {
+    if (prevChild) {
         prevChild->setNextSibling(nextChild);
     }
-    if(m_firstChild == child) {
+    if (m_firstChild == child) {
         m_firstChild = nextChild;
     }
-    if(m_lastChild == child) {
+    if (m_lastChild == child) {
         m_lastChild = prevChild;
     }
 
@@ -693,7 +674,6 @@ void Node::dumpStyle()
     if (m_style->fontWeight() == FontWeightValue::NineHundredsFontWeightValue)
         printf("900, ");
 
-
     // letter-spacing
     printf("letter-spacing: %f, ", m_style->letterSpacing().fixed());
 
@@ -730,7 +710,7 @@ void Node::dumpStyle()
         printf("background-size: contain, ");
     } else if (m_style->bgSizeType() == BackgroundSizeType::SizeValue) {
         printf("background-size: (%s, %s),", m_style->bgSizeValue()->width().dumpString()->utf8Data(),
-                                             m_style->bgSizeValue()->height().dumpString()->utf8Data());
+            m_style->bgSizeValue()->height().dumpString()->utf8Data());
     }
 
     // box offsets: top
@@ -801,18 +781,26 @@ void Node::dumpStyle()
 
     // border-image-slice
     LengthBox l = m_style->borderImageSlices();
-    if (l.top().isPercent()) printf("border-image-slice: (%.2fp, ", l.top().percent());
-    else printf("border-image-slice: (%.2f, ", l.top().fixed());
-    if (l.right().isPercent()) printf("%.2fp, ", l.right().percent());
-    else printf("%.1f, ", l.right().fixed());
-    if (l.bottom().isPercent()) printf("%.2fp, ", l.bottom().percent());
-    else printf("%.1f, ", l.bottom().fixed());
-    if (l.left().isPercent()) printf("%.2fp, ", l.left().percent());
-    else printf("%.1f, ", l.left().fixed());
+    if (l.top().isPercent())
+        printf("border-image-slice: (%.2fp, ", l.top().percent());
+    else
+        printf("border-image-slice: (%.2f, ", l.top().fixed());
+    if (l.right().isPercent())
+        printf("%.2fp, ", l.right().percent());
+    else
+        printf("%.1f, ", l.right().fixed());
+    if (l.bottom().isPercent())
+        printf("%.2fp, ", l.bottom().percent());
+    else
+        printf("%.1f, ", l.bottom().fixed());
+    if (l.left().isPercent())
+        printf("%.2fp, ", l.left().percent());
+    else
+        printf("%.1f, ", l.left().fixed());
     printf("%d), ", m_style->borderImageSliceFill());
 
     // border-image-source
-    if(!m_style->borderImageSource()->equals(String::emptyString))
+    if (!m_style->borderImageSource()->equals(String::emptyString))
         printf("border-image-source: %s, ", m_style->borderImageSource()->utf8Data());
 
     // border-image-width
@@ -820,7 +808,7 @@ void Node::dumpStyle()
     printf("border-image-width: (%s, %s, %s, %s), ", b.top().dumpString()->utf8Data(), b.right().dumpString()->utf8Data(), b.bottom().dumpString()->utf8Data(), b.left().dumpString()->utf8Data());
 
     // border-style
-    printf("border-style(t,r,b,l): (");
+    printf("border-style(t, r, b, l): (");
     if (m_style->borderTopStyle() == BorderStyleValue::BNone) {
         printf("none,");
     } else if (m_style->borderTopStyle() == BorderStyleValue::BSolid) {
@@ -843,17 +831,20 @@ void Node::dumpStyle()
     }
 
     // border-width
-    printf("border-width(t,r,b,l): (%.0f,%.0f,%.0f,%.0f), ", m_style->borderTopWidth().fixed(), m_style->borderRightWidth().fixed(),
-            m_style->borderBottomWidth().fixed(), m_style->borderLeftWidth().fixed());
+    printf("border-width(t, r, b, l): (%.0f, %.0f, %.0f, %.0f), "
+        , m_style->borderTopWidth().fixed()
+        , m_style->borderRightWidth().fixed()
+        , m_style->borderBottomWidth().fixed()
+        , m_style->borderLeftWidth().fixed());
 
     // background-repeat-x
-    if(m_style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue)
+    if (m_style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue)
         printf("background-repeat-x: repeat, ");
     else
         printf("background-repeat-x: no-repeat, ");
 
     // background-repeat-y
-    if(m_style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue)
+    if (m_style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue)
         printf("background-repeat-y: repeat, ");
     else
         printf("background-repeat-y: no-repeat, ");
@@ -934,26 +925,25 @@ void Node::dumpStyle()
     printf("opacity: %.1f, ", m_style->opacity());
 
     // overflow-x
-    if(m_style->overflowX() == OverflowValue::VisibleOverflow)
+    if (m_style->overflowX() == OverflowValue::VisibleOverflow)
         printf("overflow-x: visible, ");
     else
         printf("overflow-x: hidden, ");
 
     // overflow-y
-/*    if(m_style->overflowY() == OverflowValue::VisibleOverflow)
+    /*    if (m_style->overflowY() == OverflowValue::VisibleOverflow)
         printf("overflow-y: visible, ");
     else
         printf("overflow-y: hidden, ");
 */
     // visibility
-    if(m_style->visibility() == VisibilityValue::VisibleVisibilityValue)
+    if (m_style->visibility() == VisibilityValue::VisibleVisibilityValue)
         printf("visibility: visible, ");
     else
         printf("visibility: hidden, ");
 
-    printf("z-index : %d, ",(int) m_style->zIndex());
+    printf("z-index : %d, ", (int)m_style->zIndex());
 
     printf("}");
 }
-
 }

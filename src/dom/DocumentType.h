@@ -19,7 +19,8 @@ public:
 
     /* 4.4 Interface Node */
 
-    virtual NodeType nodeType() {
+    virtual NodeType nodeType()
+    {
         return DOCUMENT_TYPE_NODE;
     }
 
@@ -75,7 +76,6 @@ protected:
     String* m_publicId;
     String* m_systemId;
 };
-
 }
 
 #endif

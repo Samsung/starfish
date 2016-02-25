@@ -13,7 +13,7 @@ public:
     {
         if (src == String::emptyString || src->equals(String::emptyString)) {
             m_imageData = nullptr;
-            return ;
+            return;
         }
         m_imageData = node->document()->window()->starFish()->fetchImage(node->document()->window()->starFish()->makeResourcePath(src));
     }
@@ -32,7 +32,7 @@ public:
     {
         if (m_imageData)
             canvas->drawImage(m_imageData, Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                    width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
+            width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
     }
 
     virtual Size intrinsicSize()
@@ -46,7 +46,6 @@ public:
 protected:
     ImageData* m_imageData;
 };
-
 }
 
 #endif

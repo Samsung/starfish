@@ -6,44 +6,47 @@
 #include "platform/canvas/Canvas.h"
 #include <curl/curl.h>
 
-#define MINIMAL_PROGRESS_INTERVAL     0.1
+#define MINIMAL_PROGRESS_INTERVAL 0.1
 
-namespace StarFish {
+namespace StarFish
+{
 
-class XMLHttpRequestEventTarget : public EventTarget {
+class XMLHttpRequestEventTarget : public EventTarget
+{
 
 public:
     XMLHttpRequestEventTarget()
         : EventTarget()
-    { }
+    {
+    }
 
-    bool setHandler(QualifiedName& eventType,const ScriptValue& f)
+    bool setHandler(QualifiedName& eventType, const ScriptValue& f)
     {
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
         return false;
     }
 
-
-    ScriptValue getHandler(String* keyName,StarFish* starfish)
+    ScriptValue getHandler(String* keyName, StarFish* starfish)
     {
         auto eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
         EventListener* l = getAttributeEventListener(eventType);
-        if (!l) return ScriptValue::ESNull;
+        if (!l)
+            return ScriptValue::ESNull;
         return l->scriptValue();
     }
 };
 
-
-class XMLHttpRequest : public XMLHttpRequestEventTarget {
+class XMLHttpRequest : public XMLHttpRequestEventTarget
+{
 public:
-    enum METHOD_TYPE{
+    enum METHOD_TYPE {
         POST_METHOD,
         GET_METHOD,
         UNKNOWN_METHOD
     };
 
-    enum RESPONSE_TYPE{
+    enum RESPONSE_TYPE {
         TEXT_RESPONSE,
         ARRAY_BUFFER_RESPONSE,
         BLOB_RESPONSE,
@@ -52,7 +55,7 @@ public:
         DEFAULT_RESPONSE
     };
 
-    enum READY_STATE{
+    enum READY_STATE {
         UNSENT,
         OPENED,
         HEADERS_RECEIVED,
@@ -61,23 +64,23 @@ public:
     };
 
     struct Buffer {
-        char *memory;
+        char* memory;
         size_t size;
     };
 
     struct HeaderBuffer {
-        char *memory;
-        char *contentType;
+        char* memory;
+        char* contentType;
         size_t contentLength;
         size_t size;
     };
 
     struct ProgressData {
-      double lastruntime;
-      CURL *curl;
-      XMLHttpRequest* obj;
-      int32_t loaded;
-      int32_t total;
+        double lastruntime;
+        CURL* curl;
+        XMLHttpRequest* obj;
+        int32_t loaded;
+        int32_t total;
     };
 
     XMLHttpRequest();
@@ -102,7 +105,7 @@ public:
         return m_timeout;
     }
     void setResponseType(const char* responseType);
-    void setOpen(const char* method,String* url);
+    void setOpen(const char* method, String* url);
     void send(String* body);
     void callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total);
 
@@ -113,20 +116,20 @@ public:
 
     String* getAllResponseHeadersStr()
     {
-        if(m_response_header!=nullptr)
+        if (m_response_header != nullptr)
             return m_response_header;
         return String::emptyString;
     }
 
     void abort()
     {
-        m_abort_flag=true;
+        m_abort_flag = true;
     }
 
     bool checkAbort()
     {
-        if(m_abort_flag){
-            m_abort_flag=false;
+        if (m_abort_flag) {
+            m_abort_flag = false;
             return true;
         }
         return false;
@@ -153,20 +156,20 @@ public:
     }
 
     // FIXME:mh.byun (FIX!!! memory leak)
-    static void* CURL_realloc(void *ptr, size_t size)
+    static void* CURL_realloc(void* ptr, size_t size)
     {
-        if(ptr)
+        if (ptr)
             return realloc(ptr, size);
         else
             return malloc(size);
     }
 
-    static size_t WriteMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data)
+    static size_t WriteMemoryCallback(void* ptr, size_t size, size_t nmemb, void* data)
     {
         size_t realsize = size * nmemb;
-        struct Buffer *mem = (struct Buffer *)data;
+        struct Buffer* mem = (struct Buffer*)data;
 
-        mem->memory = (char *)
+        mem->memory = (char*)
             CURL_realloc(mem->memory, mem->size + realsize + 1);
         if (mem->memory) {
             memcpy(&(mem->memory[mem->size]), ptr, realsize);
@@ -176,12 +179,12 @@ public:
         return realsize;
     }
 
-    static size_t WriteHeaderCallback(void *ptr, size_t size, size_t nmemb, void *data)
+    static size_t WriteHeaderCallback(void* ptr, size_t size, size_t nmemb, void* data)
     {
         size_t realsize = size * nmemb;
-        struct HeaderBuffer *mem = (struct HeaderBuffer *)data;
+        struct HeaderBuffer* mem = (struct HeaderBuffer*)data;
 
-        mem->memory = (char *)
+        mem->memory = (char*)
             CURL_realloc(mem->memory, mem->size + realsize + 1);
         if (mem->memory) {
             memcpy(&(mem->memory[mem->size]), ptr, realsize);
@@ -189,43 +192,42 @@ public:
             mem->memory[mem->size] = 0;
         }
 
-        if (strncmp((char *)(ptr), "Content-Type:", 13) == 0) {
-            mem->contentType = (char *)CURL_realloc(mem->contentType, realsize + 1 - 13);
-            sscanf ((char *)(ptr), "Content-Type: %s",mem->contentType);
-        }else if (strncmp((char *)(ptr), "Content-Length:", 15) == 0) {
-            sscanf ((char *)(ptr), "Content-Length: %zu",&(mem->contentLength));
+        if (strncmp((char*)(ptr), "Content-Type:", 13) == 0) {
+            mem->contentType = (char*)CURL_realloc(mem->contentType, realsize + 1 - 13);
+            sscanf((char*)(ptr), "Content-Type: %s", mem->contentType);
+        } else if (strncmp((char*)(ptr), "Content-Length:", 15) == 0) {
+            sscanf((char*)(ptr), "Content-Length: %zu", &(mem->contentLength));
         }
         return realsize;
     }
-    static int progress_callback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
+    static int progress_callback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
     {
-        ProgressData* p_data = (ProgressData *)clientp;
-        CURL *curl = p_data->curl;
+        ProgressData* p_data = (ProgressData*)clientp;
+        CURL* curl = p_data->curl;
         XMLHttpRequest* this_obj = p_data->obj;
         double curtime = 0;
 
         curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &curtime);
 
-        if((curtime - p_data->lastruntime) >= MINIMAL_PROGRESS_INTERVAL) {
-          p_data->lastruntime = curtime;
+        if ((curtime - p_data->lastruntime) >= MINIMAL_PROGRESS_INTERVAL) {
+            p_data->lastruntime = curtime;
 
-          p_data->loaded = static_cast<uint32_t>(dlnow);
-          p_data->total = static_cast<uint32_t>(dltotal);
-          this_obj->callEventHandler(String::fromUTF8("progress"),false,p_data->loaded,p_data->total);
+            p_data->loaded = static_cast<uint32_t>(dlnow);
+            p_data->total = static_cast<uint32_t>(dltotal);
+            this_obj->callEventHandler(String::fromUTF8("progress"), false, p_data->loaded, p_data->total);
 
-          // printf("TOTAL TIME: %f \r\n", curtime);
-          // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
-          //         "  DOWN: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
-          //         "\r\n",
-          //         ulnow, ultotal, dlnow, dltotal);
+            // printf("TOTAL TIME: %f \r\n", curtime);
+            // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
+            //         "  DOWN: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
+            //         "\r\n",
+            //         ulnow, ultotal, dlnow, dltotal);
         }
 
-        //check abort
-        if(this_obj->checkAbort())
+        // check abort
+        if (this_obj->checkAbort())
             return 1;
 
         return 0;
-
     }
 
     // static int progress_callback_old(void *p,
@@ -240,7 +242,7 @@ public:
     //                   (curl_off_t)ulnow);
     // }
 
-    virtual void paint(Canvas* canvas){}
+    virtual void paint(Canvas* canvas) {}
 
 protected:
     String* m_url;
@@ -253,8 +255,6 @@ protected:
     ScriptBindingInstance* m_bindingInstance;
     StarFish* m_starfish;
 };
-
-
 }
 
 #endif

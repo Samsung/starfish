@@ -42,7 +42,7 @@ public:
         // root element of html document is HTMLHtmlElement
         // https://www.w3.org/TR/html-markup/html.html
         Node* n = firstChild();
-        while(n) {
+        while (n) {
             if (n->isElement() && n->asElement() && n->asElement()->isHTMLElement() && n->asElement()->asHTMLElement()->isHTMLBodyElement()) {
                 return n->asElement()->asHTMLElement()->asHTMLBodyElement();
             }

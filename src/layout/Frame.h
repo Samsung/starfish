@@ -9,8 +9,7 @@
 #include "layout/LayoutUtil.h"
 #include "layout/StackingContext.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 class Node;
 class FrameText;
@@ -19,8 +18,7 @@ class FrameBlockBox;
 class FrameReplaced;
 class FrameInline;
 
-enum PaintingStage
-{
+enum PaintingStage {
     PaintingStackingContext,
     PaintingNormalFlowBlock, // the in-flow, non-inline-level, non-positioned descendants.
     PaintingNonPositionedFloats, // the non-positioned floats.
@@ -29,8 +27,7 @@ enum PaintingStage
     PaintingStageEnd
 };
 
-enum HitTestStage
-{
+enum HitTestStage {
     HitTestPositionedElements,
     HitTestNormalFlowInline,
     HitTestNonPositionedFloats,
@@ -41,8 +38,7 @@ enum HitTestStage
 
 class LineBox;
 
-class LayoutContext
-{
+class LayoutContext {
 public:
     LayoutContext(Frame* rootFrame)
     {
@@ -112,7 +108,6 @@ public:
         }
     }
 
-
     void propagatePositionedFrames(LayoutContext& to)
     {
         {
@@ -151,12 +146,11 @@ private:
     Frame* m_rootFrame;
     LineBox* m_lastLineBox;
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
-    std::map<Frame*, std::vector<Frame*>> m_absolutePositionedFrames;
-    std::map<Frame*, std::vector<Frame*>> m_relativePositionedFrames;
+    std::map<Frame*, std::vector<Frame*> > m_absolutePositionedFrames;
+    std::map<Frame*, std::vector<Frame*> > m_relativePositionedFrames;
 };
 
-class ComputePreferredWidthContext
-{
+class ComputePreferredWidthContext {
 public:
     ComputePreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth)
         : m_layoutContext(lc)
@@ -184,18 +178,20 @@ public:
     {
         return m_lastKnownWidth;
     }
+
 private:
     LayoutContext& m_layoutContext;
     LayoutUnit m_result;
     LayoutUnit m_lastKnownWidth;
 };
 
-class Frame: public gc
-{
+class Frame : public gc {
     friend class LayoutContext;
+
 public:
-    Frame(Node* node, ComputedStyle* s) :
-            m_node(node), m_styleWhenNodeIsNull(s)
+    Frame(Node* node, ComputedStyle* s)
+        : m_node(node)
+        , m_styleWhenNodeIsNull(s)
     {
         m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
         m_flags.m_needsLayout = true;
@@ -218,13 +214,13 @@ public:
         }
 
         if (style && style->width().isAuto()) {
-           if (style->display() == InlineBlockDisplayValue) {
-               m_flags.m_shouldComputePreferredWidth = true;
-           } else if (style->position() == AbsolutePositionValue) {
-               m_flags.m_shouldComputePreferredWidth = true;
-           } else {
-               m_flags.m_shouldComputePreferredWidth = false;
-           }
+            if (style->display() == InlineBlockDisplayValue) {
+                m_flags.m_shouldComputePreferredWidth = true;
+            } else if (style->position() == AbsolutePositionValue) {
+                m_flags.m_shouldComputePreferredWidth = true;
+            } else {
+                m_flags.m_shouldComputePreferredWidth = false;
+            }
         } else {
             m_flags.m_shouldComputePreferredWidth = false;
         }
@@ -240,7 +236,6 @@ public:
 
     virtual ~Frame()
     {
-
     }
 
     virtual bool isFrameBox()
@@ -281,31 +276,31 @@ public:
     FrameText* asFrameText()
     {
         STARFISH_ASSERT(isFrameText());
-        return (FrameText*) this;
+        return (FrameText*)this;
     }
 
     FrameBox* asFrameBox()
     {
         STARFISH_ASSERT(isFrameBox());
-        return (FrameBox*) this;
+        return (FrameBox*)this;
     }
 
     FrameReplaced* asFrameReplaced()
     {
         STARFISH_ASSERT(isFrameReplaced());
-        return (FrameReplaced*) this;
+        return (FrameReplaced*)this;
     }
 
     FrameBlockBox* asFrameBlockBox()
     {
         STARFISH_ASSERT(isFrameBlockBox());
-        return (FrameBlockBox*) this;
+        return (FrameBlockBox*)this;
     }
 
     FrameInline* asFrameInline()
     {
         STARFISH_ASSERT(isFrameInline());
-        return (FrameInline*) this;
+        return (FrameInline*)this;
     }
 
     virtual ComputedStyle* style()
@@ -400,7 +395,6 @@ public:
 
     virtual void dump(int depth)
     {
-
     }
 
     virtual const char* name()
@@ -464,25 +458,24 @@ public:
     }
 
 protected:
-    struct
-    {
-        bool m_needsLayout :1;
+    struct {
+        bool m_needsLayout : 1;
 
         // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
         // Floats, absolutely positioned elements, block containers (such as inline-blocks, table-cells, and table-captions) that are not block boxes, and block boxes with 'overflow' other than 'visible' (except when that value has been propagated to the viewport) establish new block formatting contexts for their contents.
-        bool m_isEstablishesBlockFormattingContext :1;
+        bool m_isEstablishesBlockFormattingContext : 1;
 
         // https://www.w3.org/TR/CSS21/visuren.html#propdef-z-index
         // Other stacking contexts are generated by any positioned element (including relatively positioned elements) having a computed value of 'z-index' other than 'auto'. Stacking contexts are not necessarily related to containing blocks. In future levels of CSS, other properties may introduce stacking contexts, for example 'opacity' [CSS3COLOR].
-        bool m_isEstablishesStackingContext :1;
+        bool m_isEstablishesStackingContext : 1;
 
         // https://www.w3.org/TR/CSS21/visuren.html#positioning-scheme
         // 9.3.2
         // An element is said to be positioned if its 'position' property has a value other than 'static'. Positioned elements generate positioned boxes, laid out according to four properties:
-        bool m_isPositionedElement :1;
+        bool m_isPositionedElement : 1;
 
-        bool m_shouldComputePreferredWidth :1;
-        bool m_isNormalFlow :1;
+        bool m_shouldComputePreferredWidth : 1;
+        bool m_isNormalFlow : 1;
     } m_flags;
 
     Node* m_node;
@@ -501,7 +494,6 @@ private:
     Frame* m_firstChild;
     Frame* m_lastChild;
 };
-
 }
 
 #endif

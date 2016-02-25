@@ -67,7 +67,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         setNeedsStyleRecalc();
     } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
         inlineStyle()->clear();
-        std::vector<String*, gc_allocator<String*>> tokens = value->tokenize(";",1);
+        std::vector<String*, gc_allocator<String*>> tokens = value->tokenize(";", 1);
 
         for (size_t i = 0; i < tokens.size(); i ++) {
 
@@ -102,7 +102,7 @@ void Element::setTextContent(String* text)
 {
     Text* node = new Text(document(), text);
 
-    while(firstChild()) {
+    while (firstChild()) {
         removeChild(firstChild());
     }
 
@@ -112,20 +112,20 @@ void Element::setTextContent(String* text)
 Node* Element::clone()
 {
     Node* newNode = nullptr;
-    if(isHTMLElement()) {
-        if(localName()->equals(document()->window()->starFish()->staticStrings()->m_htmlLocalName)) {
+    if (isHTMLElement()) {
+        if (localName()->equals(document()->window()->starFish()->staticStrings()->m_htmlLocalName)) {
             newNode = new HTMLHtmlElement(document());
-        } else if(localName()->equals(document()->window()->starFish()->staticStrings()->m_headLocalName)) {
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_headLocalName)) {
             newNode = new HTMLHeadElement(document());
-        } else if(localName()->equals(document()->window()->starFish()->staticStrings()->m_bodyLocalName)) {
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_bodyLocalName)) {
             newNode = new HTMLBodyElement(document());
-        } else if(localName()->equals(document()->window()->starFish()->staticStrings()->m_divLocalName)) {
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_divLocalName)) {
             newNode = new HTMLDivElement(document());
-        } else if(localName()->equals(document()->window()->starFish()->staticStrings()->m_imageLocalName)) {
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_imageLocalName)) {
             newNode = new HTMLImageElement(document());
-        } else if(localName()->equals(document()->window()->starFish()->staticStrings()->m_scriptLocalName)) {
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_scriptLocalName)) {
             newNode = new HTMLScriptElement(document());
-        } else if(localName()->equals(document()->window()->starFish()->staticStrings()->m_styleLocalName)) {
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_styleLocalName)) {
             newNode = new HTMLStyleElement(document());
         } else {
             STARFISH_RELEASE_ASSERT(false);

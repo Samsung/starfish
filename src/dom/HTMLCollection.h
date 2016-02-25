@@ -9,7 +9,7 @@ class Node;
 class Element;
 class HTMLCollection : public ScriptWrappable {
 public:
-    HTMLCollection(ScriptBindingInstance* instance, Node* root, std::function<bool (Node*)> filter)
+    HTMLCollection(ScriptBindingInstance* instance, Node* root, std::function<bool(Node*)> filter)
         : ScriptWrappable(this), m_root(root), m_filter(filter)
     {
         initScriptWrappable(this, instance);
@@ -19,7 +19,7 @@ public:
     Element* namedItem(String* name);
 private:
     Node* m_root;
-    std::function<bool (Node*)> m_filter;
+    std::function<bool(Node*)> m_filter;
 };
 
 }

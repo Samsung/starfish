@@ -4,7 +4,8 @@
 
 #include "StarFish.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
 void ComputedStyle::loadResources(StarFish* sf)
 {
@@ -47,8 +48,6 @@ void ComputedStyle::loadResources(StarFish* sf)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-
-
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     if (g_enablePixelTest)
         m_font = sf->fetchFont(String::fromUTF8("Ahem"), fontSize, style, fontWeight);
@@ -70,7 +69,7 @@ void ComputedStyle::loadResources(StarFish* sf)
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle)
 {
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
-    if (memcmp(&oldStyle->m_inheritedStyles, &newStyle->m_inheritedStyles, sizeof (ComputedStyle::InheritedStyles)) != 0) {
+    if (memcmp(&oldStyle->m_inheritedStyles, &newStyle->m_inheritedStyles, sizeof(ComputedStyle::InheritedStyles)) != 0) {
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageInherited | damage);
     }
 
@@ -156,6 +155,4 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
 
     return damage;
 }
-
-
 }

@@ -127,12 +127,14 @@ public:
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             auto absLoc = layoutParent()->asFrameBox()->absolutePoint(cb);
             LayoutUnit absX = absLoc.x() - cb->borderLeft();
-            auto setAbsX = [&](LayoutUnit x) {
+            auto setAbsX = [&](LayoutUnit x)
+            {
                 setX(x - absX);
             };
 
             LayoutUnit absY = absLoc.y() - cb->borderTop();
-            auto setAbsY = [&](LayoutUnit y) {
+            auto setAbsY = [&](LayoutUnit y)
+            {
                 setY(y - absY);
             };
 
@@ -171,7 +173,6 @@ public:
             } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
                 moveX(-FrameBox::marginRight());
             } else {
-
             }
 
             LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
@@ -196,7 +197,6 @@ public:
             } else if (marginTop.isAuto() && !marginBottom.isAuto()) {
                 moveY(-FrameBox::marginBottom());
             } else {
-
             }
         }
     }
@@ -221,7 +221,6 @@ public:
 
 protected:
 };
-
 }
 
 #endif

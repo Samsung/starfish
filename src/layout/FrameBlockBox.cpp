@@ -59,7 +59,8 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         FrameBox* parent = Frame::parent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
         LayoutUnit absX = absLoc.x() - cb->borderLeft();
-        auto setAbsX = [&](LayoutUnit x) {
+        auto setAbsX = [&](LayoutUnit x)
+        {
             setX(x - absX);
         };
 
@@ -119,20 +120,20 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
                 LayoutUnit w = getPreferredWidth(parentWidthForComputePreferredWidth);
                 width = Length(Length::Fixed, w);
                 setAbsX(parentWidth - right.specifiedValue(parentWidth) - w - paddingWidth() - borderWidth());
-            } else if(left.isAuto() && right.isAuto() && !width.isAuto()) {
+            } else if (left.isAuto() && right.isAuto() && !width.isAuto()) {
                 // 'left' and 'right' are 'auto' and 'width' is not 'auto',
                 // then if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position,
                 // otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
-            } else if(width.isAuto() && right.isAuto() && !left.isAuto()) {
+            } else if (width.isAuto() && right.isAuto() && !left.isAuto()) {
                 // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
                 LayoutUnit w = getPreferredWidth(parentWidthForComputePreferredWidth);
                 width = Length(Length::Fixed, w);
                 setAbsX(left.specifiedValue(parentWidth));
-            } else if(left.isAuto() && !width.isAuto() && !right.isAuto()) {
+            } else if (left.isAuto() && !width.isAuto() && !right.isAuto()) {
                 // 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
                 LayoutUnit w = width.specifiedValue(parentWidth);
                 setAbsX(parentWidth - right.specifiedValue(parentWidth) - w - paddingWidth() - borderWidth());
-            } else if(width.isAuto() && !left.isAuto() && !right.isAuto()) {
+            } else if (width.isAuto() && !left.isAuto() && !right.isAuto()) {
                 // 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
                 LayoutUnit l = left.specifiedValue(parentWidth);
                 LayoutUnit r = right.specifiedValue(parentWidth);
@@ -157,7 +158,6 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
             moveX(-FrameBox::marginRight());
         } else {
-
         }
 
         if (width.isAuto()) {
@@ -202,7 +202,8 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         FrameBox* parent = Frame::parent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
         LayoutUnit absY = absLoc.y() - cb->borderTop();
-        auto setAbsY = [&](LayoutUnit y) {
+        auto setAbsY = [&](LayoutUnit y)
+        {
             setY(y - absY);
         };
         LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
@@ -221,14 +222,14 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         if (top.isAuto() && height.isAuto() && bottom.isAuto()) {
             // If all three of 'top', 'height', and 'bottom' are auto, set 'top' to the static position and apply rule number three below.
             // TODO add margin-top, margin-bottom
-        } else if(!top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
+        } else if (!top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
             // If none of the three are 'auto': If both 'margin-top' and 'margin-bottom' are 'auto',
             // solve the equation under the extra constraint that the two margins get equal values.
             // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the equation for that value.
             // If the values are over-constrained, ignore the value for 'bottom' and solve for that value.
             // TODO add margin-top, margin-bottom
             setAbsY(top.specifiedValue(parentHeight));
-        } else if(top.isAuto() && height.isAuto() && !bottom.isAuto()) {
+        } else if (top.isAuto() && height.isAuto() && !bottom.isAuto()) {
             // 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then the height is based on the content per 10.6.7
             // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
             setContentHeight(contentHeight);
@@ -244,7 +245,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         } else if (top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
             // 'top' is 'auto', 'height' and 'bottom' are not 'auto', then set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
             setAbsY(parentHeight - height.specifiedValue(parentHeight) - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
-        } else if(height.isAuto() && !top.isAuto() && !bottom.isAuto()) {
+        } else if (height.isAuto() && !top.isAuto() && !bottom.isAuto()) {
             // 'height' is 'auto', 'top' and 'bottom' are not 'auto', then 'auto' values for 'margin-top' and 'margin-bottom' are set to 0 and solve for 'height'
             LayoutUnit t = top.specifiedValue(parentHeight);
             LayoutUnit b = bottom.specifiedValue(parentHeight);
@@ -271,7 +272,6 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         } else if (marginTop.isAuto() && !marginBottom.isAuto()) {
             moveY(-FrameBox::marginBottom());
         } else {
-
         }
     }
 
@@ -330,7 +330,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
     }
 }
 
-Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
+Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
     if (isEstablishesStackingContext()) {
         ASSERT(stage == HitTestStackingContext);
@@ -343,7 +343,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
         while (child) {
             LayoutUnit cx = x - child->asFrameBox()->x();
             LayoutUnit cy = y - child->asFrameBox()->y();
-            result = child->hitTest(cx ,cy , HitTestPositionedElements);
+            result = child->hitTest(cx, cy, HitTestPositionedElements);
             if (result)
                 return result;
             child = child->previous();
@@ -354,7 +354,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
         while (child) {
             LayoutUnit cx = x - child->asFrameBox()->x();
             LayoutUnit cy = y - child->asFrameBox()->y();
-            result = child->hitTest(cx ,cy , HitTestNormalFlowInline);
+            result = child->hitTest(cx, cy, HitTestNormalFlowInline);
             if (result)
                 return result;
             child = child->previous();
@@ -381,7 +381,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
 
         // TODO the child stacking contexts with negative stack levels (most negative first).
         return nullptr;
-    } else if(isPositionedElement() && stage == HitTestPositionedElements) {
+    } else if (isPositionedElement() && stage == HitTestPositionedElements) {
         Frame* result = nullptr;
         HitTestStage s = HitTestStage::HitTestPositionedElements;
         while (s != HitTestStageEnd) {
@@ -390,18 +390,18 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
                 while (child) {
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx ,cy , s);
+                    result = child->hitTest(cx, cy, s);
                     if (result)
                         return result;
                     child = child->previous();
                 }
             } else {
-                for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
+                for (size_t i = 0; i < m_lineBoxes.size(); i++) {
                     LineBox& b = *m_lineBoxes[i];
                     LayoutUnit cx = x - b.m_frameRect.x();
                     LayoutUnit cy = y - b.m_frameRect.y();
 
-                    for (size_t k = 0; k < b.m_boxes.size(); k ++) {
+                    for (size_t k = 0; k < b.m_boxes.size(); k++) {
                         FrameBox* childBox = b.m_boxes[k];
                         LayoutUnit cx2 = cx - childBox->x();
                         LayoutUnit cy2 = cy - childBox->y();
@@ -423,7 +423,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
                 while (child) {
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx ,cy , stage);
+                    result = child->hitTest(cx, cy, stage);
                     if (result)
                         return result;
                     child = child->previous();
@@ -436,12 +436,12 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
         } else {
             if (!hasBlockFlow()) {
                 Frame* result = nullptr;
-                for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
+                for (size_t i = 0; i < m_lineBoxes.size(); i++) {
                     LineBox& b = *m_lineBoxes[i];
                     LayoutUnit cx = x - b.m_frameRect.x();
                     LayoutUnit cy = y - b.m_frameRect.y();
 
-                    for (size_t k = 0; k < b.m_boxes.size(); k ++) {
+                    for (size_t k = 0; k < b.m_boxes.size(); k++) {
                         FrameBox* childBox = b.m_boxes[k];
                         LayoutUnit cx2 = cx - childBox->x();
                         LayoutUnit cy2 = cy - childBox->y();
@@ -458,7 +458,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
                 while (child) {
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx ,cy , stage);
+                    result = child->hitTest(cx, cy, stage);
                     if (result)
                         return result;
                     child = child->previous();
@@ -538,7 +538,7 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
             canvas->setVisible(false);
         }
 
-        if(isPositionedElement()) {
+        if (isPositionedElement()) {
             if (stage == PaintingPositionedElements) {
                 paintBackgroundAndBorders(canvas);
                 PaintingStage s = PaintingStage::PaintingStackingContext;
@@ -571,17 +571,16 @@ void FrameBlockBox::dump(int depth)
     FrameBox::dump(depth);
     if (!hasBlockFlow()) {
         if (m_lineBoxes.size() && m_lineBoxes[0]->m_boxes.size()) {
-            for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
+            for (size_t i = 0; i < m_lineBoxes.size(); i++) {
                 puts("");
-                for(int k = 0; k < depth + 1; k ++)
+                for (int k = 0; k < depth + 1; k++)
                     printf("  ");
-                printf("LineBox(%g,%g,%g,%g)\n", (float)m_lineBoxes[i]->m_frameRect.x(), (float)m_lineBoxes[i]->m_frameRect.y()
-                    , (float)m_lineBoxes[i]->m_frameRect.width(), (float)m_lineBoxes[i]->m_frameRect.height());
+                printf("LineBox(%g,%g,%g,%g)\n", (float)m_lineBoxes[i]->m_frameRect.x(), (float)m_lineBoxes[i]->m_frameRect.y(), (float)m_lineBoxes[i]->m_frameRect.width(), (float)m_lineBoxes[i]->m_frameRect.height());
 
                 LineBox& lb = *m_lineBoxes[i];
-                for (size_t k = 0; k < lb.m_boxes.size(); k ++) {
+                for (size_t k = 0; k < lb.m_boxes.size(); k++) {
                     FrameBox* childBox = lb.m_boxes[k];
-                    for(int k = 0; k < depth + 2; k ++)
+                    for (int k = 0; k < depth + 2; k++)
                         printf("  ");
                     printf("%s", childBox->name());
                     childBox->dump(depth + 3);
@@ -592,6 +591,4 @@ void FrameBlockBox::dump(int depth)
         }
     }
 }
-
-
 }

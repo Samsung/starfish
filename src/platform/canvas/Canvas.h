@@ -27,9 +27,9 @@ public:
     virtual void restore() = 0; // pop state stack and restore state
     // transformations (default transform is the identity matrix)
     virtual void scale(double x, double y) = 0;
-    virtual void scale(double x, double y,double ox,double oy) = 0;
+    virtual void scale(double x, double y, double ox, double oy) = 0;
     virtual void rotate(double angle) = 0;
-    virtual void rotate(double angle,double ox,double oy) = 0;
+    virtual void rotate(double angle, double ox, double oy) = 0;
     virtual void translate(double x, double y) = 0;
     virtual void translate(LayoutUnit x, LayoutUnit y) = 0;
 
@@ -43,7 +43,7 @@ public:
 
     virtual void drawRect(const Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
-    virtual void drawText(LayoutUnit x,LayoutUnit y,String* text) = 0;
+    virtual void drawText(LayoutUnit x, LayoutUnit y, String* text) = 0;
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
 
     virtual void setMatrix(const SkMatrix& matrix) = 0;

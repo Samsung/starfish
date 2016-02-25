@@ -9,18 +9,20 @@ namespace StarFish {
 EventListenerVector* EventTarget::getEventListeners(const QualifiedName& eventType)
 {
     auto pair = m_eventListeners.find(eventType);
-    if (pair == m_eventListeners.end()) return nullptr;
+    if (pair == m_eventListeners.end())
+        return nullptr;
     return pair->second;
 }
 
 bool EventTarget::addEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture)
 {
-    if (!listener) return false;
+    if (!listener)
+        return false;
     listener->setCapture(useCapture);
     auto pair = m_eventListeners.find(eventType);
     EventListenerVector* v;
     if (pair == m_eventListeners.end()) {
-        v = new(GC) EventListenerVector();
+        v = new (GC) EventListenerVector();
         m_eventListeners.insert(std::make_pair(eventType, v));
     } else {
         v = pair->second;
@@ -38,7 +40,8 @@ bool EventTarget::addEventListener(const QualifiedName& eventType, EventListener
 
 bool EventTarget::removeEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture)
 {
-    if (!listener) return false;
+    if (!listener)
+        return false;
     auto pair = m_eventListeners.find(eventType);
     if (pair == m_eventListeners.end()) {
         STARFISH_LOG_INFO("EventTarget::removeEventListener - No such listener \"%s\"\n", eventType.string()->utf8Data());
@@ -75,7 +78,7 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
     event->setTarget(origin);
 
     // 4. If event's target attribute value is participating in a tree, let event path be a static ordered list of all its ancestors in tree order, and let event path be the empty list otherwise.
-    std::vector<Node*, gc_allocator<Node*>> eventPath;
+    std::vector<Node*, gc_allocator<Node*> > eventPath;
     Node* node = origin->parentNode();
     while (node) {
         if (node->isElement() && node->asElement()->isHTMLElement()) {
@@ -167,5 +170,4 @@ bool EventTarget::clearAttributeEventListener(const QualifiedName& eventType)
     auto listener = getAttributeEventListener(eventType);
     return removeEventListener(eventType, listener, false);
 }
-
 }

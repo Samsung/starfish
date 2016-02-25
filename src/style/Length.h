@@ -1,9 +1,11 @@
 #ifndef __StarFishLength__
 #define __StarFishLength__
 
-namespace StarFish {
+namespace StarFish
+{
 
-class Length {
+class Length
+{
 public:
     enum Type {
         Auto,
@@ -19,25 +21,26 @@ public:
         : m_type(type)
         , m_data(data)
     {
-
     }
 
-    void changeToFixedIfNeeded(Length fontSize, Font* font) {
-        if(!isComputed()) {
+    void changeToFixedIfNeeded(Length fontSize, Font* font)
+    {
+        if (!isComputed()) {
             if (m_type == EmToBeFixed) {
-            	float fSize = 0.0f;
-            	if(fontSize.isFixed())
-            		fSize = fontSize.fixed();
+                float fSize = 0.0f;
+                if (fontSize.isFixed())
+                    fSize = fontSize.fixed();
 
-            	m_data = fSize * m_data;
-            	m_type = Fixed;
+                m_data = fSize * m_data;
+                m_type = Fixed;
             } else if (m_type == ExToBeFixed) {
                 // TODO: calculate ex (x-height of font)
             }
         }
     }
 
-    void roundBorderWidth() {
+    void roundBorderWidth()
+    {
         // NOTE: Border Widths are rounded to the nearest integer number of pixels,
         // but values between zero and one pixels are always rounded up to one device pixel.
         if (m_data > 0.0 && m_data < 1.0)
@@ -87,14 +90,14 @@ public:
             return parentLength * percent();
     }
 
-    bool operator == (const Length& src)
+    bool operator==(const Length& src)
     {
         return this->m_type == src.m_type && this->m_data == src.m_data;
     }
 
-    bool operator != (const Length& src)
+    bool operator!=(const Length& src)
     {
-        return !operator ==(src);
+        return !operator==(src);
     }
 
     String* dumpString()
@@ -102,9 +105,9 @@ public:
         char temp[100];
         if (isFixed())
             sprintf(temp, "%f", fixed());
-        else if(isPercent())
+        else if (isPercent())
             sprintf(temp, "%f", percent());
-        else if(isAuto())
+        else if (isAuto())
             sprintf(temp, "auto");
         return String::fromUTF8(temp);
     }
@@ -114,19 +117,22 @@ protected:
     float m_data;
 };
 
-class LengthSize : public gc {
+class LengthSize : public gc
+{
 public:
     LengthSize()
     {
     }
 
     LengthSize(Length width)
-        : m_width(width) {
+        : m_width(width)
+    {
     }
 
     LengthSize(Length width, Length height)
-        : m_width(width),
-          m_height(height) {
+        : m_width(width)
+        , m_height(height)
+    {
     }
 
     Length width()
@@ -146,7 +152,7 @@ public:
 
     bool operator!=(const LengthSize& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
     void checkComputed(Length fontSize, Font* font)
@@ -159,7 +165,8 @@ public:
     Length m_height;
 };
 
-class LengthBox {
+class LengthBox
+{
 public:
     LengthBox()
     {
@@ -196,7 +203,7 @@ public:
 
     bool operator!=(const LengthBox& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
     void checkComputed(Length fontSize, Font* font)
@@ -217,7 +224,6 @@ public:
     Length m_top;
     Length m_bottom;
 };
-
 }
 
 #endif

@@ -1,11 +1,13 @@
 #ifndef __StarFishQualifiedName__
 #define __StarFishQualifiedName__
 
-namespace StarFish {
+namespace StarFish
+{
 
 class StarFish;
 
-class QualifiedName {
+class QualifiedName
+{
     friend class StarFish;
     friend class StaticStrings;
     QualifiedName()
@@ -16,6 +18,7 @@ class QualifiedName {
     {
         m_string = str;
     }
+
 public:
     static QualifiedName fromString(StarFish* sf, String* str);
     static QualifiedName fromString(StarFish* sf, const char* str);
@@ -25,7 +28,7 @@ public:
         return QualifiedName(String::emptyString);
     }
 
-    static bool checkNameProductionRule(const char* str,unsigned length);
+    static bool checkNameProductionRule(const char* str, unsigned length);
 
     bool operator==(const QualifiedName& src)
     {
@@ -54,27 +57,24 @@ private:
     static bool checkNameProductionRuleStart_internal(char c);
     static bool checkNameProductionRule_internal(char c);
 };
-
 }
 
 namespace std
 {
-    template <>
-    struct hash<StarFish::QualifiedName>
+template <>
+struct hash<StarFish::QualifiedName> {
+    size_t operator()(const StarFish::QualifiedName& qn) const
     {
-        size_t operator() (const StarFish::QualifiedName& qn) const
-        {
-            return hash<StarFish::String*>()(qn.stringConst());
-        }
-    };
+        return hash<StarFish::String*>()(qn.stringConst());
+    }
+};
 
-    template <>
-    struct equal_to<StarFish::QualifiedName>
+template <>
+struct equal_to<StarFish::QualifiedName> {
+    size_t operator()(const StarFish::QualifiedName& lqn, const StarFish::QualifiedName& rqn) const
     {
-        size_t operator() (const StarFish::QualifiedName& lqn, const StarFish::QualifiedName& rqn) const
-        {
-            return lqn.stringConst() == rqn.stringConst();
-        }
-    };
+        return lqn.stringConst() == rqn.stringConst();
+    }
+};
 }
 #endif

@@ -3,20 +3,23 @@
 
 #include "style/Style.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
 class ImageData;
 
-class StyleBackgroundData : public gc {
+class StyleBackgroundData : public gc
+{
 public:
     StyleBackgroundData()
         : m_image(String::emptyString)
         , m_imageData(NULL)
         , m_sizeType(BackgroundSizeType::SizeValue)
         , m_sizeValue(NULL)
-    { }
+    {
+    }
 
-    ~StyleBackgroundData() { }
+    ~StyleBackgroundData() {}
 
     void setSizeType(BackgroundSizeType type)
     {
@@ -94,10 +97,9 @@ public:
 
     void checkComputed(Length fontSize, Font* font)
     {
-        if(m_sizeValue)
+        if (m_sizeValue)
             m_sizeValue->checkComputed(fontSize, font);
     }
-
 
 private:
     friend inline bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b);
@@ -149,7 +151,6 @@ bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b)
 {
     return !operator==(a, b);
 }
-
 }
 
 #endif

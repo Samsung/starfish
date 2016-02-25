@@ -3,9 +3,10 @@
 #include "dom/Document.h"
 #include "dom/Element.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
-void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*>>* tokens, String* src)
+void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*> >* tokens, String* src)
 {
     tokens->clear();
 
@@ -16,7 +17,7 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*>>* tokens,
 
     std::string str;
     bool inQuotationMarks = false;
-    for (size_t i = 0; i < length; i ++) {
+    for (size_t i = 0; i < length; i++) {
         if (data[i] == '"' || data[i] == '\'') {
             if (inQuotationMarks)
                 inQuotationMarks = false;
@@ -47,7 +48,7 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*>>* tokens,
 
 unsigned long DOMTokenList::length()
 {
-    std::vector<String*, gc_allocator<String*>> tokens;
+    std::vector<String*, gc_allocator<String*> > tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     return tokens.size();
@@ -55,7 +56,7 @@ unsigned long DOMTokenList::length()
 
 String* DOMTokenList::item(unsigned long index)
 {
-    std::vector<String*, gc_allocator<String*>> tokens;
+    std::vector<String*, gc_allocator<String*> > tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     if (index < tokens.size())
@@ -65,7 +66,7 @@ String* DOMTokenList::item(unsigned long index)
 
 bool DOMTokenList::contains(String* token)
 {
-    std::vector<String*, gc_allocator<String*>> tokens;
+    std::vector<String*, gc_allocator<String*> > tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
     for (unsigned i = 0; i < tokens.size(); i++) {
@@ -75,7 +76,8 @@ bool DOMTokenList::contains(String* token)
     return false;
 }
 
-String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_allocator<String*>>* tokens, String* token) {
+String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_allocator<String*> >* tokens, String* token)
+{
     bool matched = false;
     for (unsigned j = 0; j < tokens->size(); j++) {
         if (token->equals(tokens->at(j))) {
@@ -92,10 +94,10 @@ String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_alloca
     return src;
 }
 
-void DOMTokenList::add(std::vector<String*, gc_allocator<String*>>* tokensToAdd)
+void DOMTokenList::add(std::vector<String*, gc_allocator<String*> >* tokensToAdd)
 {
     String* str = m_element->getAttribute(m_localName);
-    std::vector<String*, gc_allocator<String*>> tokens;
+    std::vector<String*, gc_allocator<String*> > tokens;
     tokenize(&tokens, str);
     for (unsigned i = 0; i < tokensToAdd->size(); i++) {
         str = addSingleToken(str, &tokens, tokensToAdd->at(i));
@@ -103,7 +105,8 @@ void DOMTokenList::add(std::vector<String*, gc_allocator<String*>>* tokensToAdd)
     m_element->setAttribute(m_localName, str);
 }
 
-int DOMTokenList::checkMatchedTokens(bool* matchFlags, std::vector<String*, gc_allocator<String*>>* tokens, String* token) {
+int DOMTokenList::checkMatchedTokens(bool* matchFlags, std::vector<String*, gc_allocator<String*> >* tokens, String* token)
+{
     int count = 0;
     for (unsigned i = 0; i < tokens->size(); i++) {
         if (tokens->at(i)->equals(token)) {
@@ -118,7 +121,7 @@ void DOMTokenList::remove(String* token)
 {
     String* src = m_element->getAttribute(m_localName);
     String* dst;
-    std::vector<String*, gc_allocator<String*>> tokens;
+    std::vector<String*, gc_allocator<String*> > tokens;
     tokenize(&tokens, src);
 
     bool* matchFlags = new bool[tokens.size()];
@@ -140,11 +143,11 @@ void DOMTokenList::remove(String* token)
     }
 }
 
-void DOMTokenList::remove(std::vector<String*, gc_allocator<String*>>* tokensToRemove)
+void DOMTokenList::remove(std::vector<String*, gc_allocator<String*> >* tokensToRemove)
 {
     String* src = m_element->getAttribute(m_localName);
     String* dst;
-    std::vector<String*, gc_allocator<String*>> tokens;
+    std::vector<String*, gc_allocator<String*> > tokens;
     tokenize(&tokens, src);
     bool* matchFlags = new bool[tokens.size()];
     int matchCount = 0;
@@ -170,7 +173,7 @@ void DOMTokenList::remove(std::vector<String*, gc_allocator<String*>>* tokensToR
 
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
 {
-    std::vector<String*, gc_allocator<String*>> tokens;
+    std::vector<String*, gc_allocator<String*> > tokens;
     String* str = m_element->getAttribute(m_localName);
     tokenize(&tokens, str);
     bool needAdd = false;
@@ -192,5 +195,4 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
         remove(token);
     return needAdd;
 }
-
 }

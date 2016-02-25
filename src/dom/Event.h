@@ -47,7 +47,8 @@ public:
     bool bubbles() const { return m_bubbles; }
     bool cancelable() const { return m_cancelable; }
 
-    void preventDefault() {
+    void preventDefault()
+    {
         if (m_cancelable)
             m_defaultPrevented = true; // canceled flag
     }
@@ -78,7 +79,7 @@ private:
 
     // TODO: The `timeStamp` attribute must return the value it was initialized to.
     //       When an event is created the attribute must be initialized to the number of milliseconds that have passed since 00:00:00 UTC on 1 January 1970, ignoring leap seconds.
-    //DOMTimeStamp m_timeStamp;
+    // DOMTimeStamp m_timeStamp;
 };
 
 class UIEvent : public Event {
@@ -94,7 +95,7 @@ public:
 
 class ProgressEvent : public Event {
 public:
-    ProgressEvent(ScriptBindingInstance* instance,uint32_t loaded,uint32_t total);
+    ProgressEvent(ScriptBindingInstance* instance, uint32_t loaded, uint32_t total);
 };
 
 }

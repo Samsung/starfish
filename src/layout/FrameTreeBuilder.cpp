@@ -28,7 +28,7 @@ void FrameTreeBuilder::clearTree(Node* current)
     current->setFrame(nullptr);
 
     Node* n = current->firstChild();
-    while(n) {
+    while (n) {
         clearTree(n);
         n = n->nextSibling();
     }
@@ -64,7 +64,7 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
     } else {
         if (isBlockChild) {
             // Inline... + Block case
-            std::vector<Frame*, gc_allocator<Frame*>> backup;
+            std::vector<Frame*, gc_allocator<Frame*> > backup;
             while (frameBlockBox->firstChild()) {
                 backup.push_back(frameBlockBox->firstChild());
                 frameBlockBox->removeChild(frameBlockBox->firstChild());
@@ -73,7 +73,7 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
             ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
             newStyle->setDisplay(DisplayValue::BlockDisplayValue);
             FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
-            for(unsigned i = 0; i < backup.size(); i ++) {
+            for (unsigned i = 0; i < backup.size(); i++) {
                 blockBox->appendChild(backup[i]);
             }
 
@@ -107,9 +107,9 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             } else if (display == DisplayValue::InlineDisplayValue) {
                 if (current->isCharacterData() && current->asCharacterData()->isText()) {
                     currentFrame = new FrameText(current, current->style());
-                } else if(current->isComment()) {
+                } else if (current->isComment()) {
                     FrameTreeBuilder::clearTree(current);
-                    return ;
+                    return;
                 } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
                     currentFrame = new FrameReplacedImage(current, element->src());
@@ -120,7 +120,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
                 }
             } else if (display == DisplayValue::NoneDisplayValue) {
                 FrameTreeBuilder::clearTree(current);
-                return ;
+                return;
             } else if (display == DisplayValue::InlineBlockDisplayValue) {
                 if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
@@ -161,7 +161,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 
         Node* n = current->firstChild();
 
-        while(n) {
+        while (n) {
             buildTree(n, ctx, force);
             n = n->nextSibling();
         }
@@ -188,7 +188,7 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
 
 void dump(Frame* frm, unsigned depth)
 {
-    for (unsigned i = 0; i < depth; i ++) {
+    for (unsigned i = 0; i < depth; i++) {
         printf("  ");
     }
     printf("%s", frm->name());
@@ -214,6 +214,4 @@ void FrameTreeBuilder::dumpFrameTree(Document* document)
 {
     dump(document->frame(), 0);
 }
-
-
 }

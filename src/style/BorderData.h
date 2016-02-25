@@ -4,9 +4,11 @@
 #include "style/BorderValue.h"
 #include "style/BorderImage.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
-class BorderData {
+class BorderData
+{
 public:
     BorderData()
     {
@@ -56,13 +58,13 @@ public:
     bool operator==(const BorderData& o)
     {
         return this->m_top == o.m_top && this->m_right == o.m_right
-                && this->m_bottom == o.m_bottom && this->m_left == o.m_left
-                && this->m_image == o.m_image;
+            && this->m_bottom == o.m_bottom && this->m_left == o.m_left
+            && this->m_image == o.m_image;
     }
 
     bool operator!=(const BorderData& o)
     {
-        return !operator ==(o);
+        return !operator==(o);
     }
 
 private:
@@ -77,4 +79,3 @@ private:
 } /* namespace StarFish */
 
 #endif /* __StarFishBorderData__ */
-

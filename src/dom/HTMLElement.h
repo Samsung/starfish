@@ -63,7 +63,8 @@ public:
     {
         auto eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
         EventListener* l = getAttributeEventListener(eventType);
-        if (!l) return ScriptValueNull;
+        if (!l)
+            return ScriptValueNull;
         return l->scriptValue();
     }
 

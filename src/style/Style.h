@@ -12,15 +12,16 @@
 
 #include <sstream>
 
-
-namespace StarFish {
+namespace StarFish
+{
 
 class ComputedStyle;
 class Element;
 class Document;
 
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
-class CSSLength {
+class CSSLength
+{
 public:
     enum Kind {
         PX,
@@ -82,7 +83,7 @@ public:
 
     String* toString()
     {
-        std::stringstream ss (std::stringstream::in | std::stringstream::out);
+        std::stringstream ss(std::stringstream::in | std::stringstream::out);
         ss << m_value;
         std::string stdStr = ss.str();
         if (m_kind == PX)
@@ -104,6 +105,7 @@ public:
 
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+
 protected:
     Kind m_kind;
     float m_value;
@@ -230,8 +232,10 @@ enum VisibilityValue {
 class ValueList;
 class CSSStyleDeclaration;
 
-class CSSStyleValuePair : public gc {
+class CSSStyleValuePair : public gc
+{
     friend class ValueList;
+
 public:
     enum KeyKind {
         // <name> <- initial value
@@ -256,7 +260,7 @@ public:
         // https://www.w3.org/TR/CSS21/text.html#propdef-text-align
         TextAlign, // left | right | center | justify | <inherit>
         // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
-        TextDecoration,  // none | [ underline || overline || line-through || blink ] | inherit // Initial value -> none
+        TextDecoration, // none | [ underline || overline || line-through || blink ] | inherit // Initial value -> none
         // https://www.w3.org/TR/2010/WD-css3-text-20101005/#text-overflow0
         TextOverflow, // <clip> | ellipsis | string
         // https://www.w3.org/TR/CSS2/text.html#propdef-letter-spacing
@@ -268,7 +272,7 @@ public:
         // https://www.w3.org/TR/CSS21/colors.html#propdef-background-image
         BackgroundImage, // uri | <none> | inherit
         // https://www.w3.org/TR/css3-background/#the-background-size
-        BackgroundSize, // [length | percentage | auto]{1,2} | cover | contain // initial value -> auto
+        BackgroundSize, // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
         // https://www.w3.org/TR/CSS21/colors.html#propdef-background-repeat
         //BackgroundRepeat, // repeat | repeat-x | repeat-y | no-repeat | initial | inherit
         BackgroundRepeatX, // repeat | no-repeat | initial | inherit
@@ -290,13 +294,13 @@ public:
         BorderBottomColor, // color | transparent | inherit // initial value -> the value of 'color' property
         BorderLeftColor, // color | transparent | inherit // initial value -> the value of 'color' property
         // https://www.w3.org/TR/css3-background/#the-border-image-repeat
-        BorderImageRepeat, // <stretch> | repeat | round | space {1,2}
+        BorderImageRepeat, // <stretch> | repeat | round | space {1, 2}
         // https://www.w3.org/TR/css3-background/#border-image-slice
-        BorderImageSlice, // number | percentage {1,4} && fill? // initial value -> 100%
+        BorderImageSlice, // number | percentage {1, 4} && fill? // initial value -> 100%
         // https://www.w3.org/TR/css3-background/#the-border-image-source
         BorderImageSource, // none | <image>
         // https://www.w3.org/TR/css3-background/#border-image-width
-        BorderImageWidth, // [length | percentage | number | auto] {1,4}
+        BorderImageWidth, // [length | percentage | number | auto] {1, 4}
         // https://www.w3.org/TR/CSS21/box.html#border-style-properties
         // BorderStyle, // border-style(<none> | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset) | inherit
         BorderTopStyle, // border-style(<none> | solid) | inherit -> We doesn't support all type because of implementation issues of Evas
@@ -332,7 +336,7 @@ public:
         OverflowX, // visible | hidden | scroll | auto | inherit // Initial value -> visible
         //OverflowY, // visible | hidden | scroll | auto | inherit // Initial value -> visible
         // https://www.w3.org/TR/CSS2/visufx.html#visibility
-        Visibility,  // visible | hidden | collapse | inherit // Initial value -> visible
+        Visibility, // visible | hidden | collapse | inherit // Initial value -> visible
         // http://www.w3.org/TR/CSS2/visuren.html#z-index
         ZIndex, //  <auto> | integer | inherit
     };
@@ -359,7 +363,7 @@ public:
 
         ValueListKind,
 
-        //BackgroundSize
+        // BackgroundSize
         Cover,
         Contain,
 
@@ -395,7 +399,7 @@ public:
     };
 
     CSSStyleValuePair()
-        : m_value{0}
+        : m_value{ 0 }
     {
     }
 
@@ -483,7 +487,8 @@ public:
         return m_value.m_length;
     }
 
-    float numberValue() {
+    float numberValue()
+    {
         STARFISH_ASSERT(m_valueKind == Number);
         return m_value.m_floatValue;
     }
@@ -515,43 +520,47 @@ public:
 
     BackgroundRepeatValue backgroundRepeatXValue()
     {
-    	STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
-    	return m_value.m_backgroundRepeatX;
+        STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
+        return m_value.m_backgroundRepeatX;
     }
 
     BackgroundRepeatValue backgroundRepeatYValue()
-	{
-		STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
-		return m_value.m_backgroundRepeatY;
-	}
+    {
+        STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
+        return m_value.m_backgroundRepeatY;
+    }
 
-    BorderImageRepeatValue borderImageRepeatValue() {
+    BorderImageRepeatValue borderImageRepeatValue()
+    {
         STARFISH_ASSERT(m_valueKind == BorderImageRepeatValueKind);
         return m_value.m_borderImageRepeat;
     }
 
-    ValueList* multiValue() {
+    ValueList* multiValue()
+    {
         STARFISH_ASSERT(m_valueKind == ValueListKind);
         return m_value.m_multiValue;
     }
 
-    OverflowValue overflowValueX() {
+    OverflowValue overflowValueX()
+    {
         STARFISH_ASSERT(m_valueKind == OverflowValueKind);
         return m_value.m_overflowX;
     }
 
-/*    OverflowValue overflowValueY() {
-        STARFISH_ASSERT(m_valueKind == OverflowValueKind);
-        return m_value.m_overflowY;
-    }
-*/
+    /*    OverflowValue overflowValueY() {
+          STARFISH_ASSERT(m_valueKind == OverflowValueKind);
+          return m_value.m_overflowY;
+          }
+          */
     VisibilityValue visibility()
     {
         STARFISH_ASSERT(m_valueKind == VisibilityKind);
         return m_value.m_visibility;
     }
 
-    TextDecorationValue textDecoration() {
+    TextDecorationValue textDecoration()
+    {
         return m_value.m_textDecoration;
     }
 
@@ -578,7 +587,7 @@ public:
         BorderImageRepeatValue m_borderImageRepeat;
         ValueList* m_multiValue;
         OverflowValue m_overflowX;
-//        OverflowValue m_overflowY;
+        //        OverflowValue m_overflowY;
         VisibilityValue m_visibility;
         TextDecorationValue m_textDecoration;
     };
@@ -592,7 +601,7 @@ public:
     {
         float v = f * 100.f;
         if (v == std::floor(v))
-            return String::fromUTF8(std::to_string((int) std::floor(v)).append("%").c_str());
+            return String::fromUTF8(std::to_string((int)std::floor(v)).append("%").c_str());
 
         return String::fromUTF8(std::to_string(v).append("%").c_str());
     }
@@ -652,79 +661,79 @@ public:
     void setValue(KeyKind kKind, const char* value)
     {
         switch (kKind) {
-            case Color: {
-                setValueKind(StringValueKind);
-                setStringValue(String::fromUTF8(value));
-                break;
-            }
-            case MarginTop:
-            case MarginRight:
-            case MarginBottom:
-            case MarginLeft:
-                setLengthValue(value);
-                break;
-            default:
-                printf("error");
+        case Color: {
+            setValueKind(StringValueKind);
+            setStringValue(String::fromUTF8(value));
+            break;
+        }
+        case MarginTop:
+        case MarginRight:
+        case MarginBottom:
+        case MarginLeft:
+            setLengthValue(value);
+            break;
+        default:
+            printf("error");
         }
     }
 
     void setValuePercentageOrLength(const char* value);
 
-#define FOR_EACH_STYLE_ATTRIBUTE(F) \
-    F(Color, "color") \
-    F(BackgroundColor, "background-color") \
-    F(BackgroundSize, "background-size") \
-    F(LetterSpacing, "letter-spacing") \
-    F(LineHeight, "line-height") \
-    F(MarginTop, "margin-top") \
-    F(MarginRight, "margin-right") \
-    F(MarginBottom, "margin-bottom") \
-    F(MarginLeft, "margin-left") \
-    F(PaddingTop, "padding-top") \
-    F(PaddingRight, "padding-right") \
-    F(PaddingBottom, "padding-bottom") \
-    F(PaddingLeft, "padding-left") \
-    F(Top, "top") \
-    F(Right, "right") \
-    F(Bottom, "bottom") \
-    F(Left, "left") \
-    F(Direction, "direction") \
-    F(Height, "height") \
-    F(Width, "width") \
-    F(FontSize, "font-size") \
-    F(FontStyle, "font-style") \
-    F(Display, "disply") \
-    F(Position, "position") \
-    F(TextDecoration, "text-decoration") \
+#define FOR_EACH_STYLE_ATTRIBUTE(F)             \
+    F(Color, "color")                           \
+    F(BackgroundColor, "background-color")      \
+    F(BackgroundSize, "background-size")        \
+    F(LetterSpacing, "letter-spacing")          \
+    F(LineHeight, "line-height")                \
+    F(MarginTop, "margin-top")                  \
+    F(MarginRight, "margin-right")              \
+    F(MarginBottom, "margin-bottom")            \
+    F(MarginLeft, "margin-left")                \
+    F(PaddingTop, "padding-top")                \
+    F(PaddingRight, "padding-right")            \
+    F(PaddingBottom, "padding-bottom")          \
+    F(PaddingLeft, "padding-left")              \
+    F(Top, "top")                               \
+    F(Right, "right")                           \
+    F(Bottom, "bottom")                         \
+    F(Left, "left")                             \
+    F(Direction, "direction")                   \
+    F(Height, "height")                         \
+    F(Width, "width")                           \
+    F(FontSize, "font-size")                    \
+    F(FontStyle, "font-style")                  \
+    F(Display, "disply")                        \
+    F(Position, "position")                     \
+    F(TextDecoration, "text-decoration")        \
     F(BorderImageRepeat, "border-image-repeat") \
-    F(BorderImageSlice, "border-image-slice") \
+    F(BorderImageSlice, "border-image-slice")   \
     F(BorderImageSource, "border-image-source") \
-    F(BorderImageWidth, "border-image-width") \
-    F(BorderTopColor, "border-top-color") \
-    F(BorderRightColor, "border-right-color") \
+    F(BorderImageWidth, "border-image-width")   \
+    F(BorderTopColor, "border-top-color")       \
+    F(BorderRightColor, "border-right-color")   \
     F(BorderBottomColor, "border-bottom-color") \
-    F(BorderLeftColor, "border-left-color") \
-    F(BorderTopStyle, "border-top-style") \
-    F(BorderRightStyle, "border-right-style") \
+    F(BorderLeftColor, "border-left-color")     \
+    F(BorderTopStyle, "border-top-style")       \
+    F(BorderRightStyle, "border-right-style")   \
     F(BorderBottomStyle, "border-bottom-style") \
-    F(BorderLeftStyle, "border-left-style") \
-    F(BorderTopWidth, "border-top-width") \
-    F(BorderRightWidth, "border-right-width") \
+    F(BorderLeftStyle, "border-left-style")     \
+    F(BorderTopWidth, "border-top-width")       \
+    F(BorderRightWidth, "border-right-width")   \
     F(BorderBottomWidth, "border-bottom-width") \
-    F(BorderLeftWidth, "border-left-width") \
-    F(TextAlign, "text-align") \
-    F(Visibility, "visibility") \
-    F(Opacity, "opacity") \
-    F(OverflowX, "overflow-x") \
-    F(BackgroundImage, "background-image") \
-    F(ZIndex, "z-index") \
-    F(VerticalAlign, "vertical-align") \
+    F(BorderLeftWidth, "border-left-width")     \
+    F(TextAlign, "text-align")                  \
+    F(Visibility, "visibility")                 \
+    F(Opacity, "opacity")                       \
+    F(OverflowX, "overflow-x")                  \
+    F(BackgroundImage, "background-image")      \
+    F(ZIndex, "z-index")                        \
+    F(VerticalAlign, "vertical-align")          \
     F(BackgroundRepeatX, "background-repeat-x") \
     F(BackgroundRepeatY, "background-repeat-y") \
-    F(FontWeight, "font-weight") \
+    F(FontWeight, "font-weight")
 
 #define SET_VALUE(name, nameCSSCase) \
-    void setValue##name(std::vector<String*, gc_allocator<String*>>* tokens);
+    void setValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
 
     FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
 #undef SET_VALUE
@@ -735,7 +744,8 @@ protected:
     ValueData m_value;
 };
 
-class ValueList : public gc {
+class ValueList : public gc
+{
 public:
     enum Separator {
         SpaceSeparator,
@@ -773,17 +783,21 @@ public:
     {
         return m_valueKinds.size();
     }
+
 protected:
     Separator m_separator;
-    std::vector<CSSStyleValuePair::ValueKind, gc_allocator<CSSStyleValuePair::ValueKind>> m_valueKinds;
-    std::vector<CSSStyleValuePair::ValueData, gc_allocator<CSSStyleValuePair::ValueData>> m_values;
+    std::vector<CSSStyleValuePair::ValueKind, gc_allocator<CSSStyleValuePair::ValueKind> > m_valueKinds;
+    std::vector<CSSStyleValuePair::ValueData, gc_allocator<CSSStyleValuePair::ValueData> > m_values;
 };
 
-class CSSStyleDeclaration : public ScriptWrappable {
+class CSSStyleDeclaration : public ScriptWrappable
+{
     friend class StyleResolver;
+
 public:
     CSSStyleDeclaration(Document* document, Element* element = NULL)
-        : ScriptWrappable(this), m_document(document)
+        : ScriptWrappable(this)
+        , m_document(document)
     {
         initScriptWrappable(this);
         m_element = element;
@@ -791,9 +805,9 @@ public:
 
     void addValuePair(CSSStyleValuePair p)
     {
-        for(size_t i = 0; i < m_cssValues.size(); i++) {
+        for (size_t i = 0; i < m_cssValues.size(); i++) {
             CSSStyleValuePair v = m_cssValues[i];
-            if(v.keyKind() == p.keyKind()) {
+            if (v.keyKind() == p.keyKind()) {
                 m_cssValues[i] = p;
                 return;
             }
@@ -814,58 +828,59 @@ public:
     void notifyNeedsStyleRecalc();
 
 #define CHECK_INPUT_ERROR(name, nameCSSCase) \
-    bool checkInputError##name(std::vector<String*, gc_allocator<String*>>* tokens);
+    bool checkInputError##name(std::vector<String*, gc_allocator<String*> >* tokens);
 
     FOR_EACH_STYLE_ATTRIBUTE(CHECK_INPUT_ERROR)
 #undef CHECK_INPUT_ERROR
-    bool checkInputErrorMargin(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkInputErrorBackground(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkInputErrorBackgroundRepeat(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkInputErrorBorder(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkInputErrorBorderTop(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkInputErrorBorderRight(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkInputErrorBorderBottom(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkInputErrorBorderLeft(std::vector<String*, gc_allocator<String*>>* tokens);
-    bool checkHavingOneTokenAndLengthOrPercentage(std::vector<String*, gc_allocator<String*>>* tokens, bool allowNegative);
-#define ATTRIBUTE_GETTER(name, nameCSSCase) \
-    String* name () { \
-        for (unsigned i = 0; i < m_cssValues.size(); i++) { \
+    bool checkInputErrorMargin(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkInputErrorBackground(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkInputErrorBackgroundRepeat(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkInputErrorBorder(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkInputErrorBorderTop(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkInputErrorBorderRight(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkInputErrorBorderBottom(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkInputErrorBorderLeft(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool checkHavingOneTokenAndLengthOrPercentage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
+#define ATTRIBUTE_GETTER(name, nameCSSCase)                                      \
+    String* name()                                                               \
+    {                                                                            \
+        for (unsigned i = 0; i < m_cssValues.size(); i++) {                      \
             if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) \
-                return m_cssValues.at(i).toString(); \
-        } \
-        return String::emptyString; \
+                return m_cssValues.at(i).toString();                             \
+        }                                                                        \
+        return String::emptyString;                                              \
     }
 
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_GETTER)
 #undef ATTRIBUTE_GETTER
 
-#define ATTRIBUTE_SETTER(name, nameCSSCase) \
-    void set##name(const char* value) \
-    { \
-        if (*value == '\0') { \
-            for (unsigned i = 0; i < m_cssValues.size(); i++) { \
+#define ATTRIBUTE_SETTER(name, nameCSSCase)                                            \
+    void set##name(const char* value)                                                  \
+    {                                                                                  \
+        if (*value == '\0') {                                                          \
+            for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
                 if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
-                    m_cssValues.erase(m_cssValues.begin()+i); \
-                } \
-              } \
-             return; \
-        } \
-        std::vector<String*, gc_allocator<String*>> tokens; \
-        DOMTokenList::tokenize(&tokens, String::fromUTF8(value)); \
-        if (checkInputError##name(&tokens)) { \
-            for (unsigned i = 0; i < m_cssValues.size(); i++) { \
+                    m_cssValues.erase(m_cssValues.begin() + i);                        \
+                }                                                                      \
+            }                                                                          \
+            return;                                                                    \
+        }                                                                              \
+        std::vector<String*, gc_allocator<String*> > tokens;                           \
+        DOMTokenList::tokenize(&tokens, String::fromUTF8(value));                      \
+        if (checkInputError##name(&tokens)) {                                          \
+            for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
                 if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
-                    m_cssValues.at(i).setValue##name(&tokens); \
-                    notifyNeedsStyleRecalc(); \
-                    return; \
-                } \
-            } \
-            CSSStyleValuePair ret; \
-            ret.setKeyKind(CSSStyleValuePair::KeyKind::name); \
-            ret.setValue##name(&tokens); \
-            notifyNeedsStyleRecalc(); \
-            m_cssValues.push_back(ret); \
-        } \
+                    m_cssValues.at(i).setValue##name(&tokens);                         \
+                    notifyNeedsStyleRecalc();                                          \
+                    return;                                                            \
+                }                                                                      \
+            }                                                                          \
+            CSSStyleValuePair ret;                                                     \
+            ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                          \
+            ret.setValue##name(&tokens);                                               \
+            notifyNeedsStyleRecalc();                                                  \
+            m_cssValues.push_back(ret);                                                \
+        }                                                                              \
     }
 
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_SETTER)
@@ -899,21 +914,27 @@ public:
     static String* combineBoxString(String* t, String* r, String* b, String* l)
     {
         String* space = String::fromUTF8(" ");
-        if (!r->equals(l)) return t->concat(space)->concat(r)->concat(space)->concat(b)->concat(space)->concat(l);
-        else if (!t->equals(b)) return t->concat(space)->concat(r)->concat(space)->concat(b);
-        else if (!t->equals(r)) return t->concat(space)->concat(r);
-        else return t;
+        if (!r->equals(l))
+            return t->concat(space)->concat(r)->concat(space)->concat(b)->concat(space)->concat(l);
+        else if (!t->equals(b))
+            return t->concat(space)->concat(r)->concat(space)->concat(b);
+        else if (!t->equals(r))
+            return t->concat(space)->concat(r);
+        else
+            return t;
     }
 
 protected:
-    std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair>> m_cssValues;
+    std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> > m_cssValues;
     Document* m_document;
     Element* m_element;
 };
 
 // FIXME implement CSSRule
-class CSSStyleRule : public ScriptWrappable {
+class CSSStyleRule : public ScriptWrappable
+{
     friend class StyleResolver;
+
 public:
     enum Kind {
         UniversalSelector,
@@ -929,7 +950,8 @@ public:
     };
 
     CSSStyleRule(Kind kind, String* ruleText, PseudoClass pc, Document* document)
-        : ScriptWrappable(this),  m_document(document)
+        : ScriptWrappable(this)
+        , m_document(document)
     {
         m_kind = kind;
         m_ruleText = ruleText;
@@ -956,18 +978,22 @@ protected:
     Document* m_document;
 };
 
-class CSSStyleSheet : public gc {
+class CSSStyleSheet : public gc
+{
     friend class StyleResolver;
+
 public:
     void addRule(CSSStyleRule* rule)
     {
         m_rules.push_back(rule);
     }
+
 protected:
-    std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*>> m_rules;
+    std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> > m_rules;
 };
 
-class StyleResolver {
+class StyleResolver
+{
 public:
     void addSheet(CSSStyleSheet* rule)
     {
@@ -980,10 +1006,10 @@ public:
     ComputedStyle* resolveDocumentStyle(StarFish* sf);
     friend Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data);
     ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
-protected:
-    std::vector<CSSStyleSheet*, gc_allocator<CSSStyleSheet*>> m_sheets;
-};
 
+protected:
+    std::vector<CSSStyleSheet*, gc_allocator<CSSStyleSheet*> > m_sheets;
+};
 }
 
 #endif

@@ -14,27 +14,30 @@
 #include "dom/NamedNodeMap.h"
 #include "dom/DOMException.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
 class CharacterData;
 class Element;
 class Frame;
 class NodeList;
 
-class RareNodeMembers : public gc {
+class RareNodeMembers : public gc
+{
 public:
     RareNodeMembers()
-        :m_children(nullptr),
-         m_domTokenList(nullptr),
-         m_namedNodeMap(nullptr) {
-
+        : m_children(nullptr)
+        , m_domTokenList(nullptr)
+        , m_namedNodeMap(nullptr)
+    {
     }
     HTMLCollection* m_children;
     DOMTokenList* m_domTokenList;
     NamedNodeMap* m_namedNodeMap;
 };
 
-class Node : public EventTarget {
+class Node : public EventTarget
+{
 protected:
     Node(Document* document, ScriptBindingInstance* instance)
         : EventTarget()
@@ -69,27 +72,27 @@ protected:
         m_baseUri = String::emptyString; // need to set by the parser
         m_rareNodeMembers = nullptr;
     }
+
 public:
     virtual ~Node()
     {
-
     }
 
     /* 4.4 Interface Node */
 
     enum NodeType {
         ELEMENT_NODE = 1,
-        ATTRIBUTE_NODE = 2,        // historical
+        ATTRIBUTE_NODE = 2, // historical
         TEXT_NODE = 3,
-        CDATA_SECTION_NODE = 4,    // historical
+        CDATA_SECTION_NODE = 4, // historical
         ENTITY_REFERENCE_NODE = 5, // historical
-        ENTITY_NODE = 6,           // historical
+        ENTITY_NODE = 6, // historical
         PROCESSING_INSTRUCTION_NODE = 7,
         COMMENT_NODE = 8,
         DOCUMENT_NODE = 9,
         DOCUMENT_TYPE_NODE = 10,
         DOCUMENT_FRAGMENT_NODE = 11,
-        NOTATION_NODE = 12,         // historical
+        NOTATION_NODE = 12, // historical
     };
 
     enum DocumentPosition {
@@ -112,7 +115,7 @@ public:
 
     Document* ownerDocument() const
     {
-        if(isDocument()) {
+        if (isDocument()) {
             return nullptr;
         } else {
             return m_document;
@@ -160,11 +163,11 @@ public:
 
     virtual String* nodeValue() = 0;
 
-    virtual void setNodeValue(String* val) {};
+    virtual void setNodeValue(String* val){};
 
     virtual String* textContent() = 0;
 
-    virtual void setTextContent(String* val) {};
+    virtual void setTextContent(String* val){};
 
     bool isEqualNode(Node* other);
 
@@ -174,14 +177,14 @@ public:
 
     bool contains(const Node* other) const
     {
-        if(other == nullptr) {
+        if (other == nullptr) {
             return false;
         }
-        if(this == other) {
+        if (this == other) {
             return true;
         }
-        for(Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
-            if(child->contains(other)) {
+        for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
+            if (child->contains(other)) {
                 return true;
             }
         }
@@ -192,10 +195,10 @@ public:
 
     String* lookupNamespaceURI(String* prefix) const
     {
-        if(prefix == nullptr) {
+        if (prefix == nullptr) {
             return String::emptyString;
         }
-        if(prefix->equals(String::emptyString)) {
+        if (prefix->equals(String::emptyString)) {
             return String::emptyString;
         }
         // Impl here
@@ -303,7 +306,8 @@ public:
         m_parentNode = s;
     }
 
-    void remove() {
+    void remove()
+    {
         if (m_parentNode)
             m_parentNode->removeChild(this);
     }
@@ -440,13 +444,11 @@ public:
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
     {
-
     }
 
     virtual bool dispatchEvent(Event* event) override;
 
 private:
-
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);
     virtual String* prefix()
     {
@@ -459,10 +461,10 @@ private:
     Node* getDocTypeChild();
 
 protected:
-    bool m_needsStyleRecalc:1;
-    bool m_childNeedsStyleRecalc:1;
-    bool m_needsFrameTreeBuild:1;
-    bool m_childNeedsFrameTreeBuild:1;
+    bool m_needsStyleRecalc : 1;
+    bool m_childNeedsStyleRecalc : 1;
+    bool m_needsFrameTreeBuild : 1;
+    bool m_childNeedsFrameTreeBuild : 1;
 
     Node* m_nextSibling;
     Node* m_previousSibling;
@@ -480,7 +482,6 @@ protected:
 private:
     ComputedStyle* m_style;
 };
-
 }
 
 #endif

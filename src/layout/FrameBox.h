@@ -157,8 +157,8 @@ public:
             if (style->bgSizeType() == BackgroundSizeType::Cover) {
                 canvas->drawImage(id, Rect(0, 0, bw, bh));
             } else if (style->bgSizeType() == BackgroundSizeType::Contain) {
-                float boxR = bw/bh;
-                float imgR = id->width()/(float)id->height();
+                float boxR = bw / bh;
+                float imgR = id->width() / (float)id->height();
                 if (boxR > imgR) {
                     float start = bh * (float)id->width() / (float)id->height();
                     canvas->drawImage(id, Rect(0, 0, start, bh));
@@ -240,7 +240,7 @@ public:
             LayoutRect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
             paintBackground(canvas, style(), bgRect, LayoutRect(0, 0, width(), height()));
 
-        } while(false);
+        } while (false);
 
         // draw border
         if (style()->hasBorderStyle()) {
@@ -264,7 +264,7 @@ public:
         }
     }
 
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,HitTestStage stage)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
         if (x >= 0 && x < m_frameRect.width() && y >= 0 && y < m_frameRect.height()) {
             return this;

@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     pthread_create(&t, &attr, [](void* data) -> void* {
         char buf[1024];
         sleep(1);
-        while(1) {
+        while (1) {
             fgets(buf, 1024, stdin);
             struct Pass {
                 StarFish::StarFish* sf;
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
 int main()
 {
-    elm_init(0,0);
+    elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
     Evas_Object* wnd = elm_win_add(NULL, "", ELM_WIN_BASIC);
 

@@ -16,14 +16,15 @@ String* Text::localName()
     return document()->window()->starFish()->staticStrings()->m_textLocalName;
 }
 
-//Text* Text::splitText(unsigned long offset)
-//{
+// Text* Text::splitText(unsigned long offset)
+// {
 //    return nullptr;
-//}
+// }
 
 String* Text::wholeText()
 {
-    auto filter = [&](Node* node) {
+    auto filter = [&](Node* node)
+    {
         return node->isText();
     };
     Traverse::NodeCollection* pSiblings = Traverse::previousSiblings(this, filter);
@@ -42,5 +43,4 @@ String* Text::wholeText()
 
     return str;
 }
-
 }

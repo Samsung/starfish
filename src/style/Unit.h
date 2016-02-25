@@ -3,9 +3,11 @@
 
 #include "StarFish.h"
 
-namespace StarFish {
+namespace StarFish
+{
 
-class Size {
+class Size
+{
 public:
     Size(float w, float h)
     {
@@ -32,11 +34,13 @@ public:
     {
         return m_height;
     }
+
 protected:
     float m_width, m_height;
 };
 
-class Location {
+class Location
+{
 public:
     Location(float x, float y)
     {
@@ -63,11 +67,13 @@ public:
     {
         return m_y;
     }
+
 protected:
     float m_x, m_y;
 };
 
-class Rect {
+class Rect
+{
 public:
     Rect(float x, float y, float w, float h)
         : m_location(x, y)
@@ -89,12 +95,14 @@ public:
     {
         return px >= x() && px < (x() + width()) && py >= y() && py < (y() + height());
     }
+
 private:
     Location m_location;
     Size m_size;
 };
 
-class BoxSurroundData {
+class BoxSurroundData
+{
 public:
     BoxSurroundData(float top = 0, float right = 0, float bottom = 0, float left = 0)
     {
@@ -151,7 +159,8 @@ protected:
     float m_left;
 };
 
-class Color {
+class Color
+{
 public:
     Color()
         : m_r(0)
@@ -159,15 +168,13 @@ public:
         , m_b(0)
         , m_a(0)
     {
-
     }
-    Color(unsigned char r,unsigned char g,unsigned char b,unsigned char a)
+    Color(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
         : m_r(r)
         , m_g(g)
         , m_b(b)
         , m_a(a)
     {
-
     }
 
     bool operator==(const Color& c) const
@@ -177,7 +184,7 @@ public:
 
     bool operator!=(const Color& c) const
     {
-        return !this->operator ==(c);
+        return !this->operator==(c);
     }
 
     bool isTransparent()
@@ -190,10 +197,8 @@ public:
     unsigned char b() const { return m_b; }
     unsigned char a() const { return m_a; }
 
-    unsigned char m_r,m_g,m_b,m_a;
+    unsigned char m_r, m_g, m_b, m_a;
 };
-
-
 }
 
 #endif
