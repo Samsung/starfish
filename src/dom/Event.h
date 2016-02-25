@@ -25,7 +25,7 @@ public:
     };
 
     Event(ScriptBindingInstance* instance);
-    Event(ScriptBindingInstance* instance, QualifiedName eventType, bool canBubble, bool cancelable);
+    Event(ScriptBindingInstance* instance, QualifiedName eventType, bool canBubble = false, bool cancelable = false);
 
     const QualifiedName type() const { return m_type; }
     void setType(QualifiedName type) { m_type = type; }

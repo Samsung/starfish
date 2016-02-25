@@ -965,7 +965,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("getElementsByClassName"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByClassName"), false, false, false, getElementsByClassNameFunction);
 
-    escargot::ESFunctionObject*   createAttributeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+    escargot::ESFunctionObject* createAttributeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
@@ -991,6 +991,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("createAttribute"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createAttribute"), false, false, false, createAttributeFunction);
 
+    // FIXME: Possible event types include "UIEvents", "MouseEvents", "MutationEvents", and "HTMLEvents".
+    //        However, AWP spec does not support this method because related functions are deprecated such as `initEvent`.
+    //        Remove this method if it is not needed.
+    escargot::ESFunctionObject* createEventFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+        if (obj->isDocument()) {
+            Document* doc = obj->asDocument();
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            if (argValue.isESString()) {
+                escargot::ESString* argStr = argValue.asESString();
+                Event* elem = doc->createEvent(toBrowserString(argStr));
+                if (elem != nullptr) {
+                    return elem->scriptValue();
+                }
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("createEvent"), 1, false);
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createEvent"), false, false, false, createEventFunction);
 
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("children"), childrenGetter, NULL, false, false, false);
 
@@ -1598,15 +1621,135 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(HTMLUnknownElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlUnknownElement = HTMLUnknownElementFunction;
 
+    /* 3.2 Interface Event */
     DEFINE_FUNCTION(Event, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_event = EventFunction;
 
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("type"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        String* type = ((Event*) originalObj->extraPointerData())->type().string();
+        return toJSString(type);
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("target"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        EventTarget* target = ((Event*) originalObj->extraPointerData())->target();
+        if (target == nullptr) {
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } else {
+            // FIXME: Returns the object to which event is dispatched.
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("currentTarget"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        EventTarget* currentTarget = ((Event*) originalObj->extraPointerData())->currentTarget();
+        if (currentTarget == nullptr) {
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } else {
+            // FIXME: Returns the object whose event listener's callback is currently being invoked.
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("NONE"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        return escargot::ESValue(Event::NONE);
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("CAPTURING_PHASE"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        return escargot::ESValue(Event::CAPTURING_PHASE);
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("AT_TARGET"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        return escargot::ESValue(Event::AT_TARGET);
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("BUBBLING_PHASE"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        return escargot::ESValue(Event::BUBBLING_PHASE);
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("eventPhase"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        unsigned short eventPhase = ((Event*) originalObj->extraPointerData())->eventPhase();
+        return escargot::ESValue(eventPhase);
+    }, NULL, false, false, false);
+
+    auto stopPropagationFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventObject);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount == 0) {
+            ((Event*) thisValue.asESPointer()->asESObject()->extraPointerData())->setStopPropagation();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("stopPropagation"), 0, false);
+    EventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("stopPropagation"), false, false, false, stopPropagationFunction);
+
+    auto stopImmediatePropagationFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventObject);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount == 0) {
+            ((Event*) thisValue.asESPointer()->asESObject()->extraPointerData())->setStopImmediatePropagation();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("stopImmediatePropagation"), 0, false);
+    EventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("stopImmediatePropagation"), false, false, false, stopImmediatePropagationFunction);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("bubbles"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        bool bubbles = ((Event*) originalObj->extraPointerData())->bubbles();
+        return escargot::ESValue(bubbles);
+    }, NULL, false, false, false);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("cancelable"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        bool cancelable = ((Event*) originalObj->extraPointerData())->cancelable();
+        return escargot::ESValue(cancelable);
+    }, NULL, false, false, false);
+
+    auto preventDefaultFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventObject);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount == 0) {
+            ((Event*) thisValue.asESPointer()->asESObject()->extraPointerData())->preventDefault();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("preventDefault"), 0, false);
+    EventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("preventDefault"), false, false, false, preventDefaultFunction);
+
+    EventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("defaultPrevented"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        bool defaultPrevented = ((Event*) originalObj->extraPointerData())->defaultPrevented();
+        return escargot::ESValue(defaultPrevented);
+    }, NULL, false, false, false);
+
+    /* UI Events */
     DEFINE_FUNCTION(UIEvent, EventFunction->protoType());
     fetchData(this)->m_uiEvent = UIEventFunction;
 
+    /* Mouse Events */
     DEFINE_FUNCTION(MouseEvent, UIEventFunction->protoType());
     fetchData(this)->m_mouseEvent = MouseEventFunction;
 
+    /* Progress Events */
     DEFINE_FUNCTION(ProgressEvent, EventFunction->protoType());
     fetchData(this)->m_progressEvent = ProgressEventFunction;
 

@@ -93,6 +93,7 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
             EventListenerVector* listener = node->getEventListeners(event->type());
             if (listener && listener->at(0)->capture()) {
                 STARFISH_ASSERT(listener->at(0)->scriptValue() != ScriptValueNull);
+                // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", origin->localName()->utf8Data());
                 callScriptFunction(listener->at(0)->scriptValue(), NULL, 0, node->scriptValue());
             }
         }

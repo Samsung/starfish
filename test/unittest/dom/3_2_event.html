@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+  </head>
+  <body>
+    <div>3.2 Interface Event</div>
+    <script>
+      var e = document.createEvent('Event')
+      print(e.type)
+      print(e.target)
+      print(e.currentTarget)
+
+      print(e.NONE)
+      print(e.CAPTURING_PHASE)
+      print(e.AT_TARGET)
+      print(e.BUBBLING_PHASE)
+      print(e.eventPhase)
+
+      print(e.stopPropagation())
+      print(e.stopImmediatePropagation())
+      
+      print(e.bubbles)
+      print(e.cancelable)
+      print(e.preventDefault())
+      print(e.defaultPrevented)
+    </script>
+  </body>
+</html>
