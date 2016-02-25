@@ -12,6 +12,8 @@ enum ComputedStyleDamage {
     ComputedStyleDamageNone = 0,
     ComputedStyleDamageInherited = 1,
     ComputedStyleDamageRebuildFrame = 1 << 1,
+    ComputedStyleDamageLayout = 1 << 2,
+    ComputedStyleDamagePainting = 1 << 3,
 };
 
 class ComputedStyle : public gc {
@@ -806,6 +808,8 @@ protected:
 
     void loadResources(StarFish* sf);
 
+    // NOTICE
+    // if you add new property, you MUST implement comparing style for new property in [compareStyle function]
     struct InheritedStyles {
         Color m_color;
         Length m_fontSize;
@@ -832,8 +836,6 @@ protected:
 
     float m_opacity;
     int32_t m_zIndex;
-
-protected:
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;

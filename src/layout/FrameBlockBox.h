@@ -247,7 +247,7 @@ public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
     {
-
+        STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr))
     }
 
     virtual bool isFrameBlockBox()

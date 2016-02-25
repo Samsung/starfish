@@ -69,6 +69,16 @@ public:
         m_bottom.changeToFixedIfNeeded(fontSize, font);
     }
 
+    bool operator==(const LengthData& o)
+    {
+        return m_left == o.m_left && m_right == o.m_right && m_top == o.m_top && m_bottom == o.m_bottom;
+    }
+
+    bool operator!=(const LengthData& o)
+    {
+        return !operator ==(o);
+    }
+
 private:
     Length m_top;
     Length m_right;

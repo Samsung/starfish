@@ -73,14 +73,53 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageInherited | damage);
     }
 
+    if (newStyle->m_inheritedStyles.m_color != oldStyle->m_inheritedStyles.m_color)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+
+    if (newStyle->m_inheritedStyles.m_direction != oldStyle->m_inheritedStyles.m_direction)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_inheritedStyles.m_fontSize != oldStyle->m_inheritedStyles.m_fontSize)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_inheritedStyles.m_fontWeight != oldStyle->m_inheritedStyles.m_fontWeight)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_inheritedStyles.m_letterSpacing != oldStyle->m_inheritedStyles.m_letterSpacing)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_inheritedStyles.m_lineHeight != oldStyle->m_inheritedStyles.m_lineHeight)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_inheritedStyles.m_textAlign != oldStyle->m_inheritedStyles.m_textAlign)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_inheritedStyles.m_visibility != oldStyle->m_inheritedStyles.m_visibility)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+
+    if (newStyle->m_display != oldStyle->m_display)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
     if (newStyle->m_originalDisplay != oldStyle->m_originalDisplay)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
     if (newStyle->m_position != oldStyle->m_position)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
-    if (newStyle->m_opacity != oldStyle->m_opacity)
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    if (newStyle->m_textOverflow != oldStyle->m_textOverflow)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_width != oldStyle->m_width)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_height != oldStyle->m_height)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_verticalAlign != oldStyle->m_verticalAlign)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_verticalAlignLength != oldStyle->m_verticalAlignLength)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
     if (newStyle->m_overflowX != oldStyle->m_overflowX)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
@@ -88,9 +127,31 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     // if (newStyle->m_overflowY != oldStyle->m_overflowY)
     //     damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
+    if (newStyle->m_opacity != oldStyle->m_opacity)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
     // FIXME changing z-index not always cause tree-rebuild
     if (newStyle->m_zIndex != oldStyle->m_zIndex)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
+    if (newStyle->m_background == NULL && oldStyle->m_background == NULL) {
+
+    } else if (newStyle->m_background == NULL || oldStyle->m_background == NULL) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    } else if (*newStyle->m_background != *oldStyle->m_background) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (newStyle->m_surround == NULL && oldStyle->m_surround == NULL) {
+
+    } else if (newStyle->m_surround == NULL || oldStyle->m_surround == NULL) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    } else if (*newStyle->m_surround != *oldStyle->m_surround) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
+    if (newStyle->m_textDecoration != oldStyle->m_textDecoration)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
     return damage;
 }

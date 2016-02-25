@@ -170,11 +170,13 @@ public:
 
     }
 
-    bool operator==(const Color& c) {
+    bool operator==(const Color& c) const
+    {
         return m_r == c.m_r && m_g == c.m_g && m_b == c.m_b && m_a == c.m_a;
     }
 
-    bool operator!=(const Color& c) {
+    bool operator!=(const Color& c) const
+    {
         return !this->operator ==(c);
     }
 

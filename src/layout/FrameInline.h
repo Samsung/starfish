@@ -7,8 +7,8 @@ namespace StarFish {
 
 class FrameInline : public Frame {
 public:
-    FrameInline(Node* node, ComputedStyle* style)
-        : Frame(node, style)
+    FrameInline(Node* node)
+        : Frame(node, nullptr)
     {
 
     }

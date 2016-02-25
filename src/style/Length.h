@@ -129,12 +129,24 @@ public:
           m_height(height) {
     }
 
-    Length width() {
+    Length width()
+    {
         return m_width;
     }
 
-    Length height() {
+    Length height()
+    {
         return m_height;
+    }
+
+    bool operator==(const LengthSize& o)
+    {
+        return this->m_width == o.m_width && this->m_height == o.m_height;
+    }
+
+    bool operator!=(const LengthSize& o)
+    {
+        return !operator ==(o);
     }
 
     void checkComputed(Length fontSize, Font* font)

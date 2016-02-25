@@ -8,8 +8,8 @@ namespace StarFish {
 
 class FrameReplacedImage : public FrameReplaced {
 public:
-    FrameReplacedImage(Node* node, ComputedStyle* style, String* src)
-        : FrameReplaced(node, style)
+    FrameReplacedImage(Node* node, String* src)
+        : FrameReplaced(node, nullptr)
     {
         if (src == String::emptyString || src->equals(String::emptyString)) {
             m_imageData = nullptr;

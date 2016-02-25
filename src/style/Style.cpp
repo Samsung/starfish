@@ -4327,8 +4327,14 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
 
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
             element->setNeedsFrameTreeBuild();
-        } else if (element->frame()) {
-            element->frame()->setStyle(style);
+        }
+
+        if (damage & ComputedStyleDamage::ComputedStyleDamageLayout) {
+            element->setNeedsLayout();
+        }
+
+        if (damage & ComputedStyleDamage::ComputedStyleDamagePainting) {
+            element->setNeedsPainting();
         }
 
         element->setStyle(style);
@@ -4350,10 +4356,6 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
                     }
 
                     child->setStyle(childStyle);
-
-                    if (child->frame())
-                        child->frame()->setStyle(childStyle);
-
                     child->clearNeedsStyleRecalc();
                 }
             }

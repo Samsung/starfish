@@ -16,6 +16,7 @@ typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 class Window : public EventTarget {
     friend class HTMLHtmlElement;
     friend class HTMLBodyElement;
+    friend class Node;
 public:
 #ifndef STARFISH_TIZEN_WEARABLE
     static Window* create(StarFish* sf, size_t w = SIZE_MAX, size_t h = SIZE_MAX);
@@ -28,8 +29,47 @@ public:
         return true;
     }
 
-    void setNeedsRendering();
-    void renderingIfNeeds();
+    void setNeedsStyleRecalc()
+    {
+        if (!m_needsStyleRecalc) {
+            m_needsStyleRecalc = true;
+            setNeedsRendering();
+        }
+    }
+
+    void setNeedsFrameTreeBuild()
+    {
+        if (!m_needsFrameTreeBuild) {
+            m_needsFrameTreeBuild = true;
+            setNeedsRendering();
+        }
+        setNeedsLayout();
+    }
+
+    void setNeedsLayout()
+    {
+        if (!m_needsLayout) {
+            m_needsLayout = true;
+            setNeedsRendering();
+        }
+        setNeedsPainting();
+    }
+
+    void setNeedsPainting()
+    {
+        if (!m_needsPainting) {
+            m_needsPainting = true;
+            setNeedsRendering();
+        }
+    }
+
+    void renderingIfNeeds()
+    {
+        if (m_needsRendering) {
+            rendering();
+            m_needsRendering = false;
+        }
+    }
 
     Document* document()
     {
@@ -89,12 +129,26 @@ public:
     virtual int height() = 0;
 
 protected:
+    void setNeedsRendering()
+    {
+        if (m_needsRendering) {
+            return;
+        }
+        setNeedsRenderingSlowCase();
+    }
+
+    void setNeedsRenderingSlowCase();
     Window(StarFish* starFish);
     void rendering();
 
     StyleResolver m_styleResolver;
 
     bool m_needsRendering;
+    bool m_needsStyleRecalc;
+    bool m_needsFrameTreeBuild;
+    bool m_needsLayout;
+    bool m_needsPainting;
+    // bool m_needsComposite; // TODO
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
     bool m_isRunning;

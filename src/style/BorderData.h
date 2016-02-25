@@ -53,6 +53,18 @@ public:
         m_image.checkComputed(fontSize, font);
     }
 
+    bool operator==(const BorderData& o)
+    {
+        return this->m_top == o.m_top && this->m_right == o.m_right
+                && this->m_bottom == o.m_bottom && this->m_left == o.m_left
+                && this->m_image == o.m_image;
+    }
+
+    bool operator!=(const BorderData& o)
+    {
+        return !operator ==(o);
+    }
+
 private:
     BorderValue m_top;
     BorderValue m_right;

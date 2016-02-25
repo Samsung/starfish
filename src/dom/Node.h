@@ -342,21 +342,7 @@ public:
         return m_state;
     }
 
-    void setNeedsStyleRecalc()
-    {
-        if (!m_needsStyleRecalc) {
-            m_needsStyleRecalc = true;
-
-            Node* node = parentNode();
-            while (node && !node->childNeedsStyleRecalc()) {
-                node->setChildNeedsStyleRecalc();
-                node = node->parentNode();
-            }
-
-            setNeedsRendering();
-        }
-    }
-
+    inline void setNeedsStyleRecalc();
     bool needsStyleRecalc()
     {
         return m_needsStyleRecalc;
@@ -409,11 +395,8 @@ public:
         m_childNeedsFrameTreeBuild = false;
     }
 
-    void setNeedsLayout()
-    {
-        // TODO
-        setNeedsFrameTreeBuild();
-    }
+    inline void setNeedsLayout();
+    inline void setNeedsPainting();
 
     void setStyle(ComputedStyle* style)
     {
@@ -463,7 +446,7 @@ public:
     virtual bool dispatchEvent(Event* event) override;
 
 private:
-    inline void setNeedsRendering();
+
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);
     virtual String* prefix()
     {

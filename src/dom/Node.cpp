@@ -391,7 +391,8 @@ Node* Node::appendChild(Node* child)
     }
     m_lastChild = child;
     child->setParentNode(this);
-    setNeedsLayout();
+    child->setNeedsStyleRecalc();
+    setNeedsFrameTreeBuild();
     return child;
 }
 
@@ -424,7 +425,8 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     child->setParentNode(this);
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
-    setNeedsLayout();
+    child->setNeedsStyleRecalc();
+    setNeedsFrameTreeBuild();
     return child;
 }
 
@@ -505,7 +507,7 @@ Node* Node::removeChild(Node* child)
     child->setPreviousSibling(nullptr);
     child->setNextSibling(nullptr);
     child->setParentNode(nullptr);
-    setNeedsLayout();
+    setNeedsFrameTreeBuild();
     return child;
 }
 
@@ -553,7 +555,7 @@ void Node::setNeedsFrameTreeBuild()
         }
     }
 
-    setNeedsRendering();
+    m_document->window()->setNeedsFrameTreeBuild();
 }
 
 bool Node::dispatchEvent(Event* event)

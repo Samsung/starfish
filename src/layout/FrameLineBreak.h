@@ -7,8 +7,8 @@ namespace StarFish {
 
 class FrameLineBreak : public Frame {
 public:
-    FrameLineBreak(Node* node, ComputedStyle* style)
-        : Frame(node, style)
+    FrameLineBreak(Node* node)
+        : Frame(node, nullptr)
     {
 
     }

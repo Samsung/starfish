@@ -65,6 +65,16 @@ public:
         m_width.roundBorderWidth();
     }
 
+    bool operator==(const BorderValue& o)
+    {
+        return this->m_style == o.m_style && this->m_width == o.m_width && this->m_color == o.m_color && this->m_hasBorderColor == o.m_hasBorderColor;
+    }
+
+    bool operator!=(const BorderValue& o)
+    {
+        return !operator ==(o);
+    }
+
 protected:
     BorderStyleValue m_style;
     Length m_width;

@@ -98,11 +98,11 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             if (display == DisplayValue::BlockDisplayValue) {
                 if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-                    currentFrame = new FrameReplacedImage(current, current->style(), element->src());
+                    currentFrame = new FrameReplacedImage(current, element->src());
                 } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
-                    currentFrame = new FrameLineBreak(current, current->style());
+                    currentFrame = new FrameLineBreak(current);
                 } else {
-                    currentFrame = new FrameBlockBox(current, current->style());
+                    currentFrame = new FrameBlockBox(current, nullptr);
                 }
             } else if (display == DisplayValue::InlineDisplayValue) {
                 if (current->isCharacterData() && current->asCharacterData()->isText()) {
@@ -112,11 +112,11 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
                     return ;
                 } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-                    currentFrame = new FrameReplacedImage(current, current->style(), element->src());
+                    currentFrame = new FrameReplacedImage(current, element->src());
                 } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
-                    currentFrame = new FrameLineBreak(current, current->style());
+                    currentFrame = new FrameLineBreak(current);
                 } else {
-                    currentFrame = new FrameInline(current, current->style());
+                    currentFrame = new FrameInline(current);
                 }
             } else if (display == DisplayValue::NoneDisplayValue) {
                 FrameTreeBuilder::clearTree(current);
@@ -124,9 +124,9 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             } else if (display == DisplayValue::InlineBlockDisplayValue) {
                 if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-                    currentFrame = new FrameReplacedImage(current, current->style(), element->src());
+                    currentFrame = new FrameReplacedImage(current, element->src());
                 } else {
-                    currentFrame = new FrameBlockBox(current, current->style());
+                    currentFrame = new FrameBlockBox(current, nullptr);
                 }
             }
         }

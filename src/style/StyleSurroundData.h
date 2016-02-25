@@ -19,6 +19,16 @@ public:
     {
     }
 
+    bool operator==(const StyleSurroundData& o)
+    {
+        return border == o.border && margin == o.margin && padding == o.padding && offset == o.offset;
+    }
+
+    bool operator!=(const StyleSurroundData& o)
+    {
+        return !operator ==(o);
+    }
+
     BorderData border;
     LengthData margin;
     LengthData padding;

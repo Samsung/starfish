@@ -98,7 +98,11 @@ public:
             m_sizeValue->checkComputed(fontSize, font);
     }
 
+
 private:
+    friend inline bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b);
+    friend inline bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b);
+
     Color m_color;
 
     String* m_image;
@@ -112,6 +116,39 @@ private:
     BackgroundRepeatValue m_repeatX;
     BackgroundRepeatValue m_repeatY;
 };
+
+bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
+{
+    if (a.m_color != b.m_color)
+        return false;
+
+    if (a.m_imageData != b.m_imageData)
+        return false;
+
+    if (a.m_sizeType != b.m_sizeType)
+        return false;
+
+    if (a.m_sizeValue == NULL && b.m_sizeValue == NULL) {
+
+    } else if (a.m_sizeValue == NULL || b.m_sizeValue == NULL) {
+        return false;
+    } else if (*a.m_sizeValue != *b.m_sizeValue) {
+        return false;
+    }
+
+    if (a.m_repeatX != b.m_repeatX)
+        return false;
+
+    if (a.m_repeatY != b.m_repeatY)
+        return false;
+
+    return false;
+}
+
+bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b)
+{
+    return !operator==(a, b);
+}
 
 }
 

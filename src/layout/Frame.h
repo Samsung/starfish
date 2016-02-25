@@ -194,8 +194,8 @@ class Frame: public gc
 {
     friend class LayoutContext;
 public:
-    Frame(Node* node, ComputedStyle* style) :
-            m_node(node), m_style(style)
+    Frame(Node* node, ComputedStyle* s) :
+            m_node(node), m_styleWhenNodeIsNull(s)
     {
         m_firstChild = m_lastChild = m_next = m_previous = m_parent = nullptr;
         m_flags.m_needsLayout = true;
@@ -204,22 +204,23 @@ public:
 
         // TODO add condition
         m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
-        if (m_style) {
-            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (m_style->overflow() != OverflowValue::VisibleOverflow);
+        ComputedStyle* style = Frame::style();
+        if (style) {
+            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->overflow() != OverflowValue::VisibleOverflow);
         }
 
-        m_flags.m_isPositionedElement = m_style && m_style->position() != PositionValue::StaticPositionValue;
+        m_flags.m_isPositionedElement = style && style->position() != PositionValue::StaticPositionValue;
 
         // TODO add condition
         m_flags.m_isEstablishesStackingContext = isRootElement;
-        if (m_style) {
-            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement && m_style->zIndex() != 0);
+        if (style) {
+            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement && style->zIndex() != 0);
         }
 
-        if (m_style && m_style->width().isAuto()) {
-           if (m_style->display() == InlineBlockDisplayValue) {
+        if (style && style->width().isAuto()) {
+           if (style->display() == InlineBlockDisplayValue) {
                m_flags.m_shouldComputePreferredWidth = true;
-           } else if (m_style->position() == AbsolutePositionValue) {
+           } else if (style->position() == AbsolutePositionValue) {
                m_flags.m_shouldComputePreferredWidth = true;
            } else {
                m_flags.m_shouldComputePreferredWidth = false;
@@ -228,7 +229,7 @@ public:
             m_flags.m_shouldComputePreferredWidth = false;
         }
 
-        if (m_style && m_style->position() == PositionValue::AbsolutePositionValue) {
+        if (style && style->position() == PositionValue::AbsolutePositionValue) {
             m_flags.m_isNormalFlow = false;
         } else {
             m_flags.m_isNormalFlow = true;
@@ -307,14 +308,12 @@ public:
         return (FrameInline*) this;
     }
 
-    ComputedStyle* style()
+    virtual ComputedStyle* style()
     {
-        return m_style;
-    }
-
-    void setStyle(ComputedStyle* s)
-    {
-        m_style = s;
+        if (LIKELY(node() != nullptr))
+            return node()->style();
+        else
+            return m_styleWhenNodeIsNull;
     }
 
     Node* node()
@@ -487,8 +486,11 @@ protected:
     } m_flags;
 
     Node* m_node;
-    ComputedStyle* m_style;
+
+    // TODO implement FrameRareData
+    ComputedStyle* m_styleWhenNodeIsNull;
     StackingContext* m_stackingContext;
+
 private:
     Frame* m_parent;
     Frame* m_layoutParent;

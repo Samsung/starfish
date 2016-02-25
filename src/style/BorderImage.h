@@ -30,6 +30,20 @@ public:
         m_slices.checkComputed(fontSize, font);
     }
 
+    bool operator==(const BorderImageImpl& o)
+    {
+        return m_repeatX == o.m_repeatX && m_repeatY == o.m_repeatY
+                && m_url->equals(o.m_url)
+                && m_sliceFill == o.m_sliceFill
+                && m_slices == o.m_slices
+                && m_widths == o.m_widths;
+    }
+
+    bool operator!=(const BorderImageImpl& o)
+    {
+        return !operator ==(o);
+    }
+
 public:
 	BorderImageRepeatValue m_repeatX;   // [border-image-repeat]
 	BorderImageRepeatValue m_repeatY;	// [border-image-repeat]
@@ -65,6 +79,23 @@ public:
         if (m_data) {
             m_data->checkComputed(fontSize, font);
         }
+    }
+
+    bool operator==(const BorderImage& o)
+    {
+        if (m_data == NULL && o.m_data == NULL) {
+
+        } else if (m_data == NULL || o.m_data == NULL) {
+            return false;
+        } else if (*m_data != *o.m_data) {
+            return false;
+        }
+        return true;
+    }
+
+    bool operator!=(const BorderImage& o)
+    {
+        return !operator ==(o);
     }
 
 private:

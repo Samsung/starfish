@@ -7,8 +7,8 @@ namespace StarFish {
 
 class FrameDocument : public FrameBlockBox {
 public:
-    FrameDocument(Node* node, ComputedStyle* style)
-        : FrameBlockBox(node, style)
+    FrameDocument(Node* node)
+        : FrameBlockBox(node, nullptr)
     {
 
     }

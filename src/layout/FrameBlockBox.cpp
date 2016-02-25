@@ -18,7 +18,8 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         computeBorderMarginPadding(parentContentWidth);
 
         // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
-        if (m_style->width().isAuto()) {
+        ComputedStyle* style = Frame::style();
+        if (style->width().isAuto()) {
             if (m_flags.m_shouldComputePreferredWidth) {
                 ComputePreferredWidthContext p(ctx, parentContentWidth);
                 computePreferredWidth(p);
@@ -31,14 +32,14 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
                 setContentWidth(remainWidth);
             }
         } else {
-            if (m_style->width().isFixed()) {
-                setContentWidth(m_style->width().fixed());
+            if (style->width().isFixed()) {
+                setContentWidth(style->width().fixed());
             } else {
-                STARFISH_ASSERT(m_style->width().isPercent());
-                setContentWidth(parentContentWidth * m_style->width().percent());
+                STARFISH_ASSERT(style->width().isPercent());
+                setContentWidth(parentContentWidth * style->width().percent());
             }
 
-            if (style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+            if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
                 LayoutUnit remain = parentContentWidth;
                 remain -= contentWidth();
                 remain -= borderWidth();

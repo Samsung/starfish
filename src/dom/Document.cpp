@@ -13,7 +13,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     m_window = window;
     m_scriptBindingInstance = scriptBindingInstance;
     setStyle(style);
-    auto df = new FrameDocument(this, style);
+    auto df = new FrameDocument(this);
     setFrame(df);
 }
 

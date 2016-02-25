@@ -75,7 +75,7 @@ public:
 void mainRenderingFunction(Evas_Object *o, Evas_Object_Box_Data *priv, void *user_data)
 {
     WindowImplEFL* wnd= (WindowImplEFL*)user_data;
-    wnd->setNeedsRendering();
+    wnd->setNeedsLayout();
 }
 
 #ifndef STARFISH_TIZEN_WEARABLE
@@ -213,7 +213,13 @@ Window::Window(StarFish* starFish)
     initScriptWrappable(this);
     m_document->initScriptWrappable(m_document);
     m_timeoutCounter = 0;
+
     m_needsRendering = false;
+    m_needsStyleRecalc = true;
+    m_needsFrameTreeBuild = true;
+    m_needsLayout = true;
+    m_needsPainting = true;
+
     m_hasRootElementBackground = false;
     m_hasBodyElementBackground = false;
     m_isRunning = true;
@@ -312,7 +318,7 @@ Window::Window(StarFish* starFish)
     setNeedsRendering();
 }
 
-// #define STARFISH_ENABLE_TIMER
+#define STARFISH_ENABLE_TIMER
 
 #ifdef STARFISH_ENABLE_TIMER
 static unsigned long getLongTickCount()
@@ -355,10 +361,12 @@ void Window::rendering()
 
     Timer renderingTimer("Window::rendering");
 
+    if (m_needsStyleRecalc)
     {
         // resolve style
         Timer t("resolve style");
         m_styleResolver.resolveDOMStyle(m_document);
+        m_needsStyleRecalc = false;
     }
 
 
@@ -367,17 +375,21 @@ void Window::rendering()
         m_styleResolver.dumpDOMStyle(m_document);
     }
 
+    if (m_needsFrameTreeBuild)
     {
         // create frame tree
         Timer t("create frame tree");
         FrameTreeBuilder::buildFrameTree(m_document);
+        m_needsFrameTreeBuild = false;
     }
 
+    if (m_needsLayout)
     {
         // lay out frame tree
         Timer t("lay out frame tree");
         LayoutContext ctx(nullptr);
         m_document->frame()->layout(ctx);
+        m_needsLayout = false;
 
     }
 
@@ -385,54 +397,57 @@ void Window::rendering()
         FrameTreeBuilder::dumpFrameTree(m_document);
     }
 
-    // painting
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    int width, height;
-    evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
-    Evas* evas = evas_object_evas_get(eflWindow->m_window);
-    struct dummy {
-        void* a;
-        void* b;
-        int w;
-        int h;
-        std::vector<Evas_Object*>* objList;
-    };
-    dummy* d = new dummy;
-    d->a = evas;
-    d->b = &eflWindow->m_drawnImageList;
-    d->w = width;
-    d->h = height;
-    d->objList = &eflWindow->m_objectList;
-    auto iter = eflWindow->m_objectList.begin();
-    while(iter != eflWindow->m_objectList.end()) {
-        evas_object_del(*iter);
-        iter++;
-    }
-    eflWindow->m_objectList.clear();
-    eflWindow->m_objectList.shrink_to_fit();
-
-    Canvas* canvas = Canvas::createDirect(d);
-    delete d;
-
-    if (m_hasRootElementBackground || m_hasBodyElementBackground) {
-        LayoutRect rt(0, 0, width, height);
-        if (m_hasRootElementBackground) {
-            FrameBox::paintBackground(canvas, document()->rootElement()->style(), rt, rt);
-        } else {
-            FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), rt, rt);
-        }
-
-    } else {
-        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
-            canvas->clearColor(Color(0,0,0,255));
-        else
-            canvas->clearColor(Color(255,255,255,255));
-    }
-
-
+    if (m_needsPainting)
     {
         Timer t("painting");
+        // painting
+        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+        int width, height;
+        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
+        Evas* evas = evas_object_evas_get(eflWindow->m_window);
+        struct dummy {
+            void* a;
+            void* b;
+            int w;
+            int h;
+            std::vector<Evas_Object*>* objList;
+        };
+        dummy* d = new dummy;
+        d->a = evas;
+        d->b = &eflWindow->m_drawnImageList;
+        d->w = width;
+        d->h = height;
+        d->objList = &eflWindow->m_objectList;
+        auto iter = eflWindow->m_objectList.begin();
+        while(iter != eflWindow->m_objectList.end()) {
+            evas_object_del(*iter);
+            iter++;
+        }
+        eflWindow->m_objectList.clear();
+        eflWindow->m_objectList.shrink_to_fit();
+
+        Canvas* canvas = Canvas::createDirect(d);
+        delete d;
+
+        if (m_hasRootElementBackground || m_hasBodyElementBackground) {
+            LayoutRect rt(0, 0, width, height);
+            if (m_hasRootElementBackground) {
+                FrameBox::paintBackground(canvas, document()->rootElement()->style(), rt, rt);
+            } else {
+                FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), rt, rt);
+            }
+
+        } else {
+            if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
+                canvas->clearColor(Color(0,0,0,255));
+            else
+                canvas->clearColor(Color(255,255,255,255));
+        }
+
         m_document->frame()->paint(canvas);
+        m_needsPainting = false;
+
+        delete canvas;
     }
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -450,21 +465,23 @@ void Window::rendering()
     */
 #endif
 
-    delete canvas;
     m_needsRendering = false;
 
+#ifdef NDEBUG
     STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB\n", GC_get_heap_size()/1024.f/1024.f);
+#else
+    STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB / %f MB\n", GC_get_memory_use()/1024.f/1024.f, GC_get_heap_size()/1024.f/1024.f);
+#endif
+
 #ifdef STARFISH_TIZEN_WEARABLE
     evas_object_raise(eflWindow->m_dummyBox);
 #endif
 
 }
 
-void Window::setNeedsRendering()
+void Window::setNeedsRenderingSlowCase()
 {
-    if (m_needsRendering) {
-        return;
-    }
+    STARFISH_ASSERT(!m_needsRendering);
     m_needsRendering = true;
 
     ecore_animator_add([](void *data) -> Eina_Bool {
@@ -478,14 +495,6 @@ void Window::setNeedsRendering()
 
         return ECORE_CALLBACK_CANCEL;
     }, this);
-}
-
-void Window::renderingIfNeeds()
-{
-    if (m_needsRendering) {
-        rendering();
-        m_needsRendering = false;
-    }
 }
 
 void Window::loadXMLDocument(String* filePath)

@@ -18,7 +18,7 @@ public:
 
     /* 4.5. Interface Document */
     Element* createElement(QualifiedName localName);
-    Text*    createTextNode(String* data);
+    Text* createTextNode(String* data);
     Comment* createComment(String* data);
     HTMLCollection* getElementsByTagName(String* qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
@@ -85,10 +85,30 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
 };
 
-void Node::setNeedsRendering()
+void Node::setNeedsStyleRecalc()
 {
-    m_document->window()->setNeedsRendering();
+    if (!m_needsStyleRecalc) {
+        m_needsStyleRecalc = true;
+
+        Node* node = parentNode();
+        while (node && !node->childNeedsStyleRecalc()) {
+            node->setChildNeedsStyleRecalc();
+            node = node->parentNode();
+        }
+    }
+    m_document->window()->setNeedsStyleRecalc();
 }
+
+void Node::setNeedsLayout()
+{
+    m_document->window()->setNeedsLayout();
+}
+
+void Node::setNeedsPainting()
+{
+    m_document->window()->setNeedsPainting();
+}
+
 
 }
 
