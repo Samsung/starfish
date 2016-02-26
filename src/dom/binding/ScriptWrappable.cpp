@@ -40,22 +40,22 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             if (instance->currentExecutionContext()->readArgument(0).isESPointer()
-                    && instance->currentExecutionContext()->readArgument(0).asESPointer()
-                    && instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
+                && instance->currentExecutionContext()->readArgument(0).asESPointer()
+                && instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
                 if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
                     Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
                     return escargot::ESValue(wnd->setTimeout([](Window* wnd, void* data) {
-                                escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
-                                std::jmp_buf tryPosition;
-                                if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
-                                    escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
-                                    escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
-                                } else {
-                                    escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
-                                    printf("Uncaught %s\n", err.toString()->utf8Data());
-                                }
-                            }, instance->currentExecutionContext()->readArgument(1).toUint32(),
-                            instance->currentExecutionContext()->readArgument(0).asESPointer()));
+                        escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+                        std::jmp_buf tryPosition;
+                        if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
+                            escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
+                            escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+                        } else {
+                            escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
+                            printf("Uncaught %s\n", err.toString()->utf8Data());
+                        }
+                    }, instance->currentExecutionContext()->readArgument(1).toUint32(),
+                    instance->currentExecutionContext()->readArgument(0).asESPointer()));
                 }
             }
         }
@@ -83,22 +83,21 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     escargot::ESFunctionObject* requestAnimationFrameFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
-            if (instance->currentExecutionContext()->readArgument(0).isESPointer() &&
-                    instance->currentExecutionContext()->readArgument(0).asESPointer() &&
-                    instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
+            if (instance->currentExecutionContext()->readArgument(0).isESPointer()
+                && instance->currentExecutionContext()->readArgument(0).asESPointer()
+                && instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
                     Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
                     return escargot::ESValue(wnd->requestAnimationFrame([](Window* wnd, void* data) {
-                                escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
-                                std::jmp_buf tryPosition;
-                                if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
-                                    escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
-                                    escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
-                                } else {
-                                    escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
-                                    printf("Uncaught %s\n", err.toString()->utf8Data());
-                                }
-
-                            }, instance->currentExecutionContext()->readArgument(0).asESPointer()));
+                        escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+                        std::jmp_buf tryPosition;
+                        if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
+                            escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
+                            escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+                        } else {
+                            escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
+                            printf("Uncaught %s\n", err.toString()->utf8Data());
+                        }
+                    }, instance->currentExecutionContext()->readArgument(0).asESPointer()));
             }
         }
         return escargot::ESValue();
