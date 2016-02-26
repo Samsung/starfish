@@ -23,7 +23,6 @@ public:
     HTMLCollection* getElementsByTagName(String* qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
     Attr* createAttribute(QualifiedName localName);
-    Event* createEvent(String* eventType);
 
     /* Other methods */
     virtual NodeType nodeType()

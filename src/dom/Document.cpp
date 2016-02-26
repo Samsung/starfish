@@ -152,11 +152,6 @@ Attr* Document::createAttribute(QualifiedName localName)
     return new Attr(scriptBindingInstance(), localName);
 }
 
-Event* Document::createEvent(String* eventType)
-{
-    return new Event(scriptBindingInstance(), QualifiedName::fromString(window()->starFish(), eventType));
-}
-
 HTMLHtmlElement* Document::rootElement()
 {
     // root element of html document is HTMLHtmlElement

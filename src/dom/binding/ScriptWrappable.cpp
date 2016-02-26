@@ -294,8 +294,10 @@ bool ScriptWrappable::hasProperty(String* name)
     return m_object->escargot::ESObject::hasProperty(createScriptString(name));
 }
 
-void ScriptWrappable::initScriptWrappable(Event* ptr, ScriptBindingInstance* instance)
+void ScriptWrappable::initScriptWrappable(Event* event)
 {
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->m_event->protoType());
     scriptObject()->setExtraData(EventObject);

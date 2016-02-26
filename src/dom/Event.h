@@ -24,8 +24,8 @@ public:
         BUBBLING_PHASE      = 3
     };
 
-    Event(ScriptBindingInstance* instance);
-    Event(ScriptBindingInstance* instance, QualifiedName eventType, bool canBubble = false, bool cancelable = false);
+    Event();
+    Event(QualifiedName eventType, const EventInit& init = EventInit(false, false));
 
     const QualifiedName type() const { return m_type; }
     void setType(QualifiedName type) { m_type = type; }
@@ -61,6 +61,8 @@ public:
     void setIsDispatched(bool isDispatched) { m_isDispatched = isDispatched; }
 
 private:
+    bool m_isInitialized { false }; // initialized flag
+
     QualifiedName m_type { QualifiedName::emptyQualifiedName() };
     EventTarget* m_target;
     EventTarget* m_currentTarget;
@@ -72,9 +74,8 @@ private:
 
     bool m_bubbles { false };
     bool m_cancelable { false };
-
     bool m_defaultPrevented { false }; // canceled flag
-    bool m_isInitialized { false }; // initialized flag
+
     bool m_isDispatched { false }; // dispatch flag
 
     // TODO: The `timeStamp` attribute must return the value it was initialized to.

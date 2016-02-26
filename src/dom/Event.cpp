@@ -15,23 +15,25 @@ EventInit::EventInit(bool b, bool c)
 {
 }
 
-Event::Event(ScriptBindingInstance* instance)
+Event::Event()
     : ScriptWrappable(this)
+    , m_isInitialized(true)
 {
-    initScriptWrappable(this, instance);
+    initScriptWrappable(this);
 }
 
-Event::Event(ScriptBindingInstance* instance, QualifiedName eventType, bool canBubble, bool cancelable)
+Event::Event(QualifiedName eventType, const EventInit& init)
     : ScriptWrappable(this)
+    , m_isInitialized(true)
     , m_type(eventType)
-    , m_bubbles(canBubble)
-    , m_cancelable(cancelable)
+    , m_bubbles(init.bubbles)
+    , m_cancelable(init.cancelable)
 {
-    initScriptWrappable(this, instance);
+    initScriptWrappable(this);
 }
 
 UIEvent::UIEvent(ScriptBindingInstance* instance)
-    : Event(instance)
+    : Event()
 {
     initScriptWrappable(this, instance);
 }
@@ -43,7 +45,7 @@ MouseEvent::MouseEvent(ScriptBindingInstance* instance)
 }
 
 ProgressEvent::ProgressEvent(ScriptBindingInstance* instance, uint32_t loaded, uint32_t total)
-    : Event(instance)
+    : Event()
 {
     initScriptWrappable(this, instance, loaded, total);
 }

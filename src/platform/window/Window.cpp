@@ -613,7 +613,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         while (t) {
             if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
                 QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
-                Event* e = new Event(starFish()->scriptBindingInstance(), eventType, true, false);
+                Event* e = new Event(eventType, EventInit(true, false));
                 EventTarget::dispatchEvent(t->asNode(), e);
                 shouldDispatchEvent = false;
             }

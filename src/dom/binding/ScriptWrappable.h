@@ -108,7 +108,7 @@ public:
     void initScriptWrappable(HTMLUnknownElement* ptr);
     void initScriptWrappable(HTMLAudioElement* ptr);
 
-    void initScriptWrappable(Event* ptr, ScriptBindingInstance*);
+    void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr, ScriptBindingInstance*);
     void initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance*);
     void initScriptWrappable(ProgressEvent* ptr, ScriptBindingInstance* instance, uint32_t loaded, uint32_t total);

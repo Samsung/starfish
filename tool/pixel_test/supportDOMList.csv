@@ -1,5 +1,5 @@
 Version     , Chapter       , Interface                 , Attribute/Method
-#4          , 3.2           , Event                     , type
+4           , 3.2           , Event                     , type
 #           ,               ,                           , target
 #           ,               ,                           , currentTarget
             ,               ,                           , NONE
@@ -7,17 +7,17 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , AT_TARGET
             ,               ,                           , BUBBLING_PHASE
             ,               ,                           , eventPhase
-#           ,               ,                           , stopPropagation
-#           ,               ,                           , stopImmediatePropagation
-#           ,               ,                           , bubbles
-#           ,               ,                           , cancelable
-#           ,               ,                           , preventDefault
-#           ,               ,                           , defaultPrevented
-#           ,               ,                           , isTrusted
+            ,               ,                           , stopPropagation
+            ,               ,                           , stopImmediatePropagation
+            ,               ,                           , bubbles
+            ,               ,                           , cancelable
+            ,               ,                           , preventDefault
+            ,               ,                           , defaultPrevented
 #           ,               ,                           , timeStamp
-#           ,               ,                           , initEvent
-#           , 3.6           , EventTarget               , addEventListener
-#           ,               ,                           , removeEventListener
+            ,               ,                           , initEvent::bubbles
+            ,               ,                           , initEvent::cancelable
+            , 3.6           , EventTarget               , addEventListener
+            ,               ,                           , removeEventListener
 #           ,               ,                           , dispatchEvent
 #           ,               , EventListener             , handleEvent
             , 4.2           , NonElementParentNode      , getElementById
