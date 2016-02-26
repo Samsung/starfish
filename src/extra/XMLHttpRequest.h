@@ -8,11 +8,9 @@
 
 #define MINIMAL_PROGRESS_INTERVAL 0.1
 
-namespace StarFish
-{
+namespace StarFish {
 
-class XMLHttpRequestEventTarget : public EventTarget
-{
+class XMLHttpRequestEventTarget : public EventTarget {
 
 public:
     XMLHttpRequestEventTarget()
@@ -37,8 +35,7 @@ public:
     }
 };
 
-class XMLHttpRequest : public XMLHttpRequestEventTarget
-{
+class XMLHttpRequest : public XMLHttpRequestEventTarget {
 public:
     enum METHOD_TYPE {
         POST_METHOD,
@@ -242,7 +239,8 @@ public:
     //                   (curl_off_t)ulnow);
     // }
 
-    virtual void paint(Canvas* canvas) {}
+    virtual void paint(Canvas* canvas) {
+    }
 
 protected:
     String* m_url;

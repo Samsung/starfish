@@ -22,13 +22,10 @@
 
 extern Evas* g_internalCanvas;
 
-namespace StarFish
-{
+namespace StarFish {
 
-namespace
-{
-    class __GET_TICK_COUNT
-    {
+namespace {
+    class __GET_TICK_COUNT {
     public:
         __GET_TICK_COUNT()
         {
@@ -40,8 +37,7 @@ namespace
     __GET_TICK_COUNT timeStart;
 }
 
-class WindowImplEFL : public Window
-{
+class WindowImplEFL : public Window {
 public:
     WindowImplEFL(StarFish* sf)
         : Window(sf)
@@ -331,8 +327,7 @@ static unsigned long getLongTickCount()
 }
 #endif
 
-class Timer
-{
+class Timer {
 public:
     Timer(const char* msg)
     {

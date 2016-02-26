@@ -2,8 +2,7 @@
 #include "String.h"
 #include <sstream>
 
-namespace StarFish
-{
+namespace StarFish {
 
 String* String::emptyString = String::createASCIIString("");
 String* String::spaceString = String::createASCIIString(" ");

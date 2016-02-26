@@ -1,13 +1,11 @@
 #ifndef __StarFishQualifiedName__
 #define __StarFishQualifiedName__
 
-namespace StarFish
-{
+namespace StarFish {
 
 class StarFish;
 
-class QualifiedName
-{
+class QualifiedName {
     friend class StarFish;
     friend class StaticStrings;
     QualifiedName()
@@ -59,8 +57,7 @@ private:
 };
 }
 
-namespace std
-{
+namespace std {
 template <>
 struct hash<StarFish::QualifiedName> {
     size_t operator()(const StarFish::QualifiedName& qn) const

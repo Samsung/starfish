@@ -87,7 +87,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
                     instance->currentExecutionContext()->readArgument(0).asESPointer() &&
                     instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
                     Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-                    return  escargot::ESValue(wnd->requestAnimationFrame([](Window* wnd, void* data) {
+                    return escargot::ESValue(wnd->requestAnimationFrame([](Window* wnd, void* data) {
                                 escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
                                 std::jmp_buf tryPosition;
                                 if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {

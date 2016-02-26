@@ -3,8 +3,7 @@
 #include "dom/Document.h"
 #include "dom/Element.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*> >* tokens, String* src)
 {

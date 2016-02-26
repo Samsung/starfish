@@ -877,7 +877,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         if (obj->isDocument()) {
             Node* docTypeNode = obj->firstChild();
-            if (docTypeNode->isDocumentType()){
+            if (docTypeNode->isDocumentType()) {
                 return docTypeNode->scriptValue();
             }
         } else {
@@ -907,7 +907,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 THROW_ILLEGAL_INVOCATION()
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
-        } catch(DOMException* e){
+        } catch (DOMException* e) {
             escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -1017,7 +1017,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 THROW_ILLEGAL_INVOCATION()
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
-        } catch(DOMException* e){
+        } catch (DOMException* e) {
             escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -1915,7 +1915,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject);
         if (v.isNumber()) {
             ((CSSStyleDeclaration*)originalObj->extraPointerData())->setOpacity(std::to_string(v.toNumber()).c_str());
-        }else if (v.isESString()){
+        }else if (v.isESString()) {
             ((CSSStyleDeclaration*)originalObj->extraPointerData())->setOpacity(v.asESString()->utf8Data());
         }
         },
@@ -1946,7 +1946,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isESString()){
+        if (v.isESString()) {
             ((XMLHttpRequest*)originalObj->extraPointerData())->setResponseType(v.asESString()->utf8Data());
         }
         },
@@ -1963,7 +1963,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isObject()){
+        if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
             ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
@@ -1982,7 +1982,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isObject()){
+        if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "progress");
             ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
@@ -2001,7 +2001,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isObject()){
+        if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "abort");
             ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
@@ -2020,7 +2020,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isObject()){
+        if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "error");
             ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
@@ -2039,7 +2039,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isObject()){
+        if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "load");
             ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
@@ -2058,7 +2058,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isObject()){
+        if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "timeout");
             ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);
@@ -2077,7 +2077,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v) {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isObject()){
+        if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadend");
             ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName,v);

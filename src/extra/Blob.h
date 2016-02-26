@@ -3,13 +3,11 @@
 
 #include "dom/binding/ScriptWrappable.h"
 
-//"blob:http%3A//ohgyun.com/a9f2fd30-adf0-43dd-a413-9ee8423bec6e"
+// "blob:http%3A//ohgyun.com/a9f2fd30-adf0-43dd-a413-9ee8423bec6e"
 
-namespace StarFish
-{
+namespace StarFish {
 
-class Blob : public ScriptWrappable
-{
+class Blob : public ScriptWrappable {
 public:
     Blob(uint32_t size, String* type, void* data)
         : ScriptWrappable(this)
@@ -17,7 +15,7 @@ public:
         m_size = size;
         m_type = type;
         m_data = data;
-        //init
+        // init
         initScriptWrappable(this);
     }
 

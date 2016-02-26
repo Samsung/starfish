@@ -4,11 +4,9 @@
 #include "style/BorderValue.h"
 #include "style/BorderImage.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
-class BorderData
-{
+class BorderData {
 public:
     BorderData()
     {

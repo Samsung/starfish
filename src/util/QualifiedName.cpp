@@ -2,8 +2,7 @@
 #include "QualifiedName.h"
 #include "StarFish.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 QualifiedName QualifiedName::fromString(StarFish* sf, String* str)
 {
