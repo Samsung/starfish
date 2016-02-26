@@ -4,14 +4,12 @@
 #include "dom/Node.h"
 #include "dom/Attribute.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 class HTMLElement;
 class CSSStyleDeclaration;
 
-class Element : public Node
-{
+class Element : public Node {
 public:
     Element(Document* document, ScriptBindingInstance* instance)
         : Node(document, instance)

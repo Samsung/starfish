@@ -3,10 +3,8 @@
 
 #include "style/Length.h"
 
-namespace StarFish
-{
-class BorderImageLength
-{
+namespace StarFish {
+class BorderImageLength {
 public:
     enum Type {
         LengthType,
@@ -98,8 +96,7 @@ public:
     double m_number;
 };
 
-class BorderImageLengthBox
-{
+class BorderImageLengthBox {
 public:
     BorderImageLengthBox()
     {

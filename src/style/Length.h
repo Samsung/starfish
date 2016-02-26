@@ -1,18 +1,16 @@
 #ifndef __StarFishLength__
 #define __StarFishLength__
 
-namespace StarFish
-{
+namespace StarFish {
 
-class Length
-{
+class Length {
 public:
     enum Type {
         Auto,
         Percent,
         Fixed,
 
-        //After finishing resolveStyle, ex/em values should be changed to Fixed
+        // After finishing resolveStyle, ex/em values should be changed to Fixed
         ExToBeFixed,
         EmToBeFixed
     };
@@ -64,7 +62,7 @@ public:
     float percent() const
     {
         STARFISH_ASSERT(m_type == Percent);
-        //0~1
+        // 0~1
         return m_data;
     }
 
@@ -117,8 +115,7 @@ protected:
     float m_data;
 };
 
-class LengthSize : public gc
-{
+class LengthSize : public gc {
 public:
     LengthSize()
     {
@@ -165,8 +162,7 @@ public:
     Length m_height;
 };
 
-class LengthBox
-{
+class LengthBox {
 public:
     LengthBox()
     {

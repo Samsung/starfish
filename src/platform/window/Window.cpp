@@ -165,18 +165,18 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
 
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
-        Evas_Event_Mouse_Down *ev = (Evas_Event_Mouse_Down *)event_info;
+        Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*) event_info;
         if (sf->m_isRunning)
             sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventDown);
-        return ;
+        return;
     }, wnd);
 
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
-        Evas_Event_Mouse_Up *ev = (Evas_Event_Mouse_Up *)event_info;
+        Evas_Event_Mouse_Up* ev = (Evas_Event_Mouse_Up*) event_info;
         if (sf->m_isRunning)
             sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventUp);
-        return ;
+        return;
     }, wnd);
 
     evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST, [](void* data, Evas* e, void* event_info) {

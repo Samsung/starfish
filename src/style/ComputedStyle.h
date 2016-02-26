@@ -6,8 +6,7 @@
 #include "style/StyleSurroundData.h"
 #include "style/DefaultStyle.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 enum ComputedStyleDamage {
     ComputedStyleDamageNone = 0,
@@ -17,8 +16,7 @@ enum ComputedStyleDamage {
     ComputedStyleDamagePainting = 1 << 3,
 };
 
-class ComputedStyle : public gc
-{
+class ComputedStyle : public gc {
     friend class StyleResolver;
     friend void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedStyle* parentStyle, bool force);
     friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);

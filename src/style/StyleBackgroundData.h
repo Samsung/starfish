@@ -3,13 +3,11 @@
 
 #include "style/Style.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 class ImageData;
 
-class StyleBackgroundData : public gc
-{
+class StyleBackgroundData : public gc {
 public:
     StyleBackgroundData()
         : m_image(String::emptyString)
@@ -19,7 +17,9 @@ public:
     {
     }
 
-    ~StyleBackgroundData() {}
+    ~StyleBackgroundData()
+    {
+    }
 
     void setSizeType(BackgroundSizeType type)
     {
@@ -110,11 +110,11 @@ private:
     String* m_image;
     ImageData* m_imageData;
 
-    //background-size
+    // background-size
     BackgroundSizeType m_sizeType;
     LengthSize* m_sizeValue;
 
-    //background-repeat
+    // background-repeat
     BackgroundRepeatValue m_repeatX;
     BackgroundRepeatValue m_repeatY;
 };

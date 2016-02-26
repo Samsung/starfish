@@ -3,11 +3,9 @@
 
 #include "StarFish.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
-class Size
-{
+class Size {
 public:
     Size(float w, float h)
     {
@@ -39,8 +37,7 @@ protected:
     float m_width, m_height;
 };
 
-class Location
-{
+class Location {
 public:
     Location(float x, float y)
     {
@@ -72,8 +69,7 @@ protected:
     float m_x, m_y;
 };
 
-class Rect
-{
+class Rect {
 public:
     Rect(float x, float y, float w, float h)
         : m_location(x, y)
@@ -101,8 +97,7 @@ private:
     Size m_size;
 };
 
-class BoxSurroundData
-{
+class BoxSurroundData {
 public:
     BoxSurroundData(float top = 0, float right = 0, float bottom = 0, float left = 0)
     {
@@ -159,8 +154,7 @@ protected:
     float m_left;
 };
 
-class Color
-{
+class Color {
 public:
     Color()
         : m_r(0)

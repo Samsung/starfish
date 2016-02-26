@@ -831,11 +831,7 @@ void Node::dumpStyle()
     }
 
     // border-width
-    printf("border-width(t, r, b, l): (%.0f, %.0f, %.0f, %.0f), "
-        , m_style->borderTopWidth().fixed()
-        , m_style->borderRightWidth().fixed()
-        , m_style->borderBottomWidth().fixed()
-        , m_style->borderLeftWidth().fixed());
+    printf("border-width(t, r, b, l): (%.0f, %.0f, %.0f, %.0f), ", m_style->borderTopWidth().fixed(), m_style->borderRightWidth().fixed(), m_style->borderBottomWidth().fixed(), m_style->borderLeftWidth().fixed());
 
     // background-repeat-x
     if (m_style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue)

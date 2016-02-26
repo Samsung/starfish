@@ -4,12 +4,10 @@
 #include "style/Style.h"
 #include "style/NamedColors.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
-class CSSTokenizer : public gc
-{
-    //<ident-token>, <function-token>, <at-keyword-token>, <hash-token>, <string-token>, <bad-string-token>, <url-token>, <bad-url-token>, <delim-token>, <number-token>, <percentage-token>, <dimension-token>, <unicode-range-token>, <include-match-token>, <dash-match-token>, <prefix-match-token>, <suffix-match-token>, <substring-match-token>, <column-token>, <whitespace-token>, <CDO-token>, <CDC-token>, <colon-token>, <semicolon-token>, <comma-token>, <[-token>, <]-token>, <(-token>, <)-token>, <{-token>, and <}-token>
+class CSSTokenizer : public gc {
+    // <ident-token>, <function-token>, <at-keyword-token>, <hash-token>, <string-token>, <bad-string-token>, <url-token>, <bad-url-token>, <delim-token>, <number-token>, <percentage-token>, <dimension-token>, <unicode-range-token>, <include-match-token>, <dash-match-token>, <prefix-match-token>, <suffix-match-token>, <substring-match-token>, <column-token>, <whitespace-token>, <CDO-token>, <CDC-token>, <colon-token>, <semicolon-token>, <comma-token>, <[-token>, <]-token>, <(-token>, <)-token>, <{-token>, and <}-token>
     enum TokenType {
     };
 
@@ -34,7 +32,7 @@ public:
             return true;
         if (c == '_')
             return true;
-        //TODO
+        // TODO
         return false;
     }
 
@@ -57,8 +55,7 @@ public:
     }
 };
 
-class CSSPropertyParser : public gc
-{
+class CSSPropertyParser : public gc {
 public:
     CSSPropertyParser(char* value)
         : m_startPos(value)

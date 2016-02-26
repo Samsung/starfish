@@ -5,8 +5,7 @@
 #include "dom/DOM.h"
 #include "dom/binding/ScriptBindingInstance.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 void XMLDocumentBuilder::build(Document* document, String* filePath)
 {
@@ -19,12 +18,13 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    std::function<void(Node * parentNode, tinyxml2::XMLElement * xmlElement)> fn = [&fn, &document](Node* parentNode, tinyxml2::XMLElement* xmlElement) {
+    std::function<void(Node * parentNode, tinyxml2::XMLElement * xmlElement)> fn = [&fn, &document](Node* parentNode, tinyxml2::XMLElement* xmlElement)
+    {
         Node* newNode = nullptr;
         int type = xmlElement->IntAttribute("nodeType");
         if (type == 0) {
             // invaild node.
-            return ;
+            return;
         }
         if (type == 9) {
             newNode = document;
@@ -59,7 +59,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                 document->window()->starFish()->evaluate(script);
                 return;
             } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
-                //resolve styles.
+                // resolve styles.
                 tinyxml2::XMLElement* e = xmlElement->FirstChildElement();
                 CSSStyleSheet* sheet = new CSSStyleSheet;
                 while (e) {
@@ -72,7 +72,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                         String* str = String::fromUTF8(selectorText1);
                         String::Vector tokens;
                         str->split(',', tokens);
-                        for (unsigned i=0; i < tokens.size(); i++) {
+                        for (unsigned i = 0; i < tokens.size(); i++) {
                             const char* selectorText = tokens[i]->trim()->utf8Data();
                             CSSStyleRule::Kind kind;
                             String* st;
@@ -106,7 +106,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                                 }
                             }
 
-                            CSSStyleRule *rule = new CSSStyleRule(kind, st, pc, document);
+                            CSSStyleRule* rule = new CSSStyleRule(kind, st, pc, document);
                             const tinyxml2::XMLAttribute* attr = e->FirstAttribute();
                             while (attr) {
                                 if (strcmp(attr->Name(), "selectorText") != 0) {
@@ -128,7 +128,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                 document->window()->styleResolver()->addSheet(sheet);
 
                 // TODO add child
-                return ;
+                return;
             }
         } else {
             printf("invalid node type %d\n", type);

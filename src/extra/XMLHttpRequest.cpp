@@ -7,7 +7,8 @@
 
 namespace StarFish {
 
-XMLHttpRequest::XMLHttpRequest() {
+XMLHttpRequest::XMLHttpRequest()
+{
     m_method = UNKNOWN_METHOD;
     m_response_type = DEFAULT_RESPONSE;
     m_ready_state = UNSENT;
@@ -130,21 +131,21 @@ void XMLHttpRequest::send(String* body)
                     ScriptObject script_obj = this_obj->scriptObject();
 
                     switch (this_obj->getResponseType()) {
-                        case JSON_RESPONSE:
+                    case JSON_RESPONSE:
                         {
                             ScriptValue ret = parseJSON(String::fromUTF8(pass->buf));
                             script_obj->set(createScriptString(String::fromUTF8("response")), ret);
                         }
                         break;
-                        case BLOB_RESPONSE:
+                    case BLOB_RESPONSE:
                         {
                             auto blob = new Blob(pass->contentSize, String::fromUTF8(pass->header_contentType), pass->buf);
                             script_obj->set(createScriptString(String::fromUTF8("response")), blob->scriptValue());
                         }
                         break;
 
-                        case TEXT_RESPONSE:
-                        default:
+                    case TEXT_RESPONSE:
+                    default:
                         script_obj->set(createScriptString(String::fromUTF8("response")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
                         script_obj->set(createScriptString(String::fromUTF8("responseText")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
 
@@ -167,16 +168,16 @@ void XMLHttpRequest::send(String* body)
                 // printf("ERROR buffer : %s\n", errbuf);
 
                 switch (res) {
-                    case CURLE_OPERATION_TIMEDOUT:
+                case CURLE_OPERATION_TIMEDOUT:
                     // invoke timeout event
                     xhrobj->callEventHandler(String::fromUTF8("timeout"), false, 0, 0);
                     break;
 
-                    case CURLE_ABORTED_BY_CALLBACK:
+                case CURLE_ABORTED_BY_CALLBACK:
                     xhrobj->callEventHandler(String::fromUTF8("abort"), false, 0, 0);
                     break;
 
-                    default:
+                default:
                     break;
                 }
 
@@ -293,24 +294,24 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
         ecore_thread_main_loop_begin();
         ecore_idler_add(
             [](void* data) -> Eina_Bool {
-                    Pass* pass = (Pass*)data;
-                    XMLHttpRequest* this_obj = pass->obj;
+                Pass* pass = (Pass*)data;
+                XMLHttpRequest* this_obj = pass->obj;
 
-                    QualifiedName eventType = QualifiedName::fromString(this_obj->starfishInstance(), pass->buf);
-                    auto clickListeners = this_obj->getEventListeners(eventType);
-                    if (clickListeners) {
-                        for (unsigned i = 0; i < clickListeners->size(); i++) {
-                            STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                            ProgressEvent* pe = new ProgressEvent(this_obj->striptBindingInstance(), pass->loaded, pass->total);
-                            ScriptValue json_arg[1] = {ScriptValue(pe->scriptObject())};
-                            ScriptValue fn = clickListeners->at(i)->scriptValue();
-                            if (fn != ScriptValue::ESNull)
-                            callScriptFunction(fn, json_arg, 1, this_obj->scriptObject());
-                        }
+                QualifiedName eventType = QualifiedName::fromString(this_obj->starfishInstance(), pass->buf);
+                auto clickListeners = this_obj->getEventListeners(eventType);
+                if (clickListeners) {
+                    for (unsigned i = 0; i < clickListeners->size(); i++) {
+                        STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                        ProgressEvent* pe = new ProgressEvent(this_obj->striptBindingInstance(), pass->loaded, pass->total);
+                        ScriptValue json_arg[1] = {ScriptValue(pe->scriptObject())};
+                        ScriptValue fn = clickListeners->at(i)->scriptValue();
+                        if (fn != ScriptValue::ESNull)
+                        callScriptFunction(fn, json_arg, 1, this_obj->scriptObject());
                     }
+                }
 
-                    delete pass;
-                    return ECORE_CALLBACK_CANCEL;
+                delete pass;
+                return ECORE_CALLBACK_CANCEL;
             },
             pass);
         ecore_thread_main_loop_end();

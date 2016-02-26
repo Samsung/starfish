@@ -12,8 +12,7 @@
 #include "layout/Frame.h"
 #include "layout/FrameTreeBuilder.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 bool startsWith(const char* base, const char* str)
 {
@@ -1627,7 +1626,7 @@ CSSStyleValuePair CSSStyleValuePair::fromString(const char* key, const char* val
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     } else if (strcmp(key, "white-space") == 0) {
-        //TODO
+        // TODO
     } else if (strcmp(key, "font-style") == 0) {
         ret.setValueFontStyle(&tokens);
     } else if (strcmp(key, "direction") == 0) {
@@ -1826,7 +1825,7 @@ CSSStyleValuePair CSSStyleValuePair::fromString(const char* key, const char* val
     } else {
         STARFISH_LOG_ERROR("CSSStyleValuePair::fromString -> unsupport key = %s\n", key);
         result = false;
-        //STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        // STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     return ret;
 }
@@ -2105,7 +2104,7 @@ String* CSSStyleValuePair::toString()
             return s;
         }
         default:
-            //initial or inherit
+            // initial or inherit
             return lengthOrPercentageOrKeywordToString();
         }
     }
@@ -2128,7 +2127,7 @@ String* CSSStyleValuePair::toString()
             return s;
         }
         default:
-            //initial or inherit
+            // initial or inherit
             return lengthOrPercentageOrKeywordToString();
         }
     }
@@ -2142,7 +2141,7 @@ String* CSSStyleValuePair::toString()
             return str;
         }
         default:
-            //initial or inherit or none
+            // initial or inherit or none
             return lengthOrPercentageOrKeywordToString();
         }
     }
@@ -3285,8 +3284,7 @@ Color parseColor(String* str)
         NAMED_COLOR_FOR_EACH(PARSE_COLOR)
 
 #undef PARSE_COLOR
-        else
-        {
+        else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
 
@@ -3336,8 +3334,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 {
     ComputedStyle* ret = new ComputedStyle(parent);
 
-    auto apply = [](std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle) {
-        for (unsigned k = 0; k < cssValues.size(); k ++) {
+    auto apply = [](std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
+    {
+        for (unsigned k = 0; k < cssValues.size(); k++) {
             switch (cssValues[k].keyKind()) {
             case CSSStyleValuePair::KeyKind::Display:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
@@ -3521,8 +3520,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::LetterSpacing:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setLetterSpacing(parentStyle->letterSpacing());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Normal) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Normal) {
                     style->setLetterSpacing(Length(Length::Fixed, 0));
                 } else {
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length);
@@ -3542,8 +3541,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::BackgroundColor:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBgColor(parentStyle->bgColor());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Transparent) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Transparent) {
                     style->setBgColor(Color(0, 0, 0, 0));
                 } else {
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
@@ -3551,8 +3550,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundImage:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
                     style->setBgImage(ComputedStyle::initialBgImage());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBgImage(parentStyle->bgImage());
@@ -3610,8 +3609,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::Top:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setTop(parentStyle->top());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
                     style->setTop(Length());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
                     style->setTop(cssValues[k].lengthValue().toLength());
@@ -3624,8 +3623,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::Right:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setRight(parentStyle->right());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
                     style->setRight(Length());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
                     style->setRight(cssValues[k].lengthValue().toLength());
@@ -3638,8 +3637,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::Bottom:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBottom(parentStyle->bottom());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
                     style->setBottom(Length());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
                     style->setBottom(cssValues[k].lengthValue().toLength());
@@ -3652,8 +3651,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::Left:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setLeft(parentStyle->left());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
                     style->setLeft(Length());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
                     style->setLeft(cssValues[k].lengthValue().toLength());
@@ -3815,8 +3814,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 // border-style(<none> | solid) | inherit
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBorderTopStyle(parentStyle->borderTopStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
                     style->setBorderTopStyle(BorderStyleValue::BNone);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
                     style->setBorderTopStyle(BorderStyleValue::BSolid);
@@ -3828,8 +3827,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 // border-style(<none> | solid) | inherit
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBorderRightStyle(parentStyle->borderRightStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
                     style->setBorderRightStyle(BorderStyleValue::BNone);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
                     style->setBorderRightStyle(BorderStyleValue::BSolid);
@@ -3841,8 +3840,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 // border-style(<none> | solid) | inherit
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBorderBottomStyle(parentStyle->borderBottomStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
                     style->setBorderBottomStyle(BorderStyleValue::BNone);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
                     style->setBorderBottomStyle(BorderStyleValue::BSolid);
@@ -3854,8 +3853,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 // border-style(<none> | solid) | inherit
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBorderLeftStyle(parentStyle->borderLeftStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
                     style->setBorderLeftStyle(BorderStyleValue::BNone);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
                     style->setBorderLeftStyle(BorderStyleValue::BSolid);
@@ -3871,8 +3870,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderTopWidth(cssValues[k].lengthValue().toLength());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
                     style->setBorderTopWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
                     style->setBorderTopWidth(Length(Length::Fixed, 3));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
                     style->setBorderTopWidth(Length(Length::Fixed, 5));
@@ -3888,8 +3887,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderRightWidth(cssValues[k].lengthValue().toLength());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
                     style->setBorderRightWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
                     style->setBorderRightWidth(Length(Length::Fixed, 3));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
                     style->setBorderRightWidth(Length(Length::Fixed, 5));
@@ -3905,8 +3904,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderBottomWidth(cssValues[k].lengthValue().toLength());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
                     style->setBorderBottomWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
                     style->setBorderBottomWidth(Length(Length::Fixed, 3));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
                     style->setBorderBottomWidth(Length(Length::Fixed, 5));
@@ -3922,8 +3921,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderLeftWidth(cssValues[k].lengthValue().toLength());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
                     style->setBorderLeftWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
                     style->setBorderLeftWidth(Length(Length::Fixed, 3));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
                     style->setBorderLeftWidth(Length(Length::Fixed, 5));
@@ -3935,15 +3934,15 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 // <normal> | number | length | percentage | inherit
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setLineHeight(parentStyle->lineHeight());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Normal) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Normal) {
                     // The compute value should be 'normal'.
                     // https://developer.mozilla.org/ko/docs/Web/CSS/line-height.
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Number) {
                     // The computed value should be same as the specified value.
                     style->setLineHeight(Length(Length::EmToBeFixed, cssValues[k].numberValue()));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
                     style->setLineHeight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -3955,9 +3954,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setMarginTop(Length(Length::Fixed, 0));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setMarginTop(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -3969,9 +3968,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setMarginBottom(ComputedStyle::initialMargin());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setMarginBottom(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -3981,9 +3980,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setMarginLeft(Length(Length::Fixed, 0));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setMarginLeft(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -3993,9 +3992,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setMarginRight(Length(Length::Fixed, 0));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setMarginRight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -4005,8 +4004,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setPaddingTop(Length(Length::Fixed, 0));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setPaddingTop(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -4016,8 +4015,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setPaddingRight(ComputedStyle::initialPadding());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setPaddingRight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -4027,8 +4026,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setPaddingBottom(Length(Length::Fixed, 0));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setPaddingBottom(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -4038,8 +4037,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setPaddingLeft(Length(Length::Fixed, 0));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length ||
-                                    cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
                     style->setPaddingLeft(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
                 }
                 break;
@@ -4086,8 +4085,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::ZIndex:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->m_zIndex = parentStyle->m_zIndex;
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial ||
-                        cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
                     style->m_zIndex = 0;
                 } else {
                     style->m_zIndex = cssValues[k].numberValue();

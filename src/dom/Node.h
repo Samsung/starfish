@@ -14,16 +14,14 @@
 #include "dom/NamedNodeMap.h"
 #include "dom/DOMException.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 class CharacterData;
 class Element;
 class Frame;
 class NodeList;
 
-class RareNodeMembers : public gc
-{
+class RareNodeMembers : public gc {
 public:
     RareNodeMembers()
         : m_children(nullptr)
@@ -36,8 +34,7 @@ public:
     NamedNodeMap* m_namedNodeMap;
 };
 
-class Node : public EventTarget
-{
+class Node : public EventTarget {
 protected:
     Node(Document* document, ScriptBindingInstance* instance)
         : EventTarget()
@@ -163,11 +160,11 @@ public:
 
     virtual String* nodeValue() = 0;
 
-    virtual void setNodeValue(String* val){};
+    virtual void setNodeValue(String* val) { };
 
     virtual String* textContent() = 0;
 
-    virtual void setTextContent(String* val){};
+    virtual void setTextContent(String* val) { };
 
     bool isEqualNode(Node* other);
 

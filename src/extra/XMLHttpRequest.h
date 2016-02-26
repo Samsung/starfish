@@ -239,7 +239,8 @@ public:
     //                   (curl_off_t)ulnow);
     // }
 
-    virtual void paint(Canvas* canvas) {
+    virtual void paint(Canvas* canvas)
+    {
     }
 
 protected:

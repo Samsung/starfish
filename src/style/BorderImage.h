@@ -3,8 +3,7 @@
 
 #include "style/BorderImageLength.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 #define DEFAULT_VALUE_IMAGE_WIDTH() \
     (BorderImageLengthBox(1.0))
@@ -13,8 +12,7 @@ namespace StarFish
 #define DEFAULT_VALUE_IMAGE_REPEAT() \
     (StretchValue)
 
-class BorderImageImpl : public gc
-{
+class BorderImageImpl : public gc {
 public:
     BorderImageImpl()
         : m_repeatX(DEFAULT_VALUE_IMAGE_REPEAT())
@@ -56,8 +54,7 @@ public:
     BorderImageLengthBox m_widths; // [border-image-width]
 };
 
-class BorderImage
-{
+class BorderImage {
 public:
     BorderImage()
         : m_data(nullptr)

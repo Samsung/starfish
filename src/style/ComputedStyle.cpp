@@ -4,8 +4,7 @@
 
 #include "StarFish.h"
 
-namespace StarFish
-{
+namespace StarFish {
 
 void ComputedStyle::loadResources(StarFish* sf)
 {

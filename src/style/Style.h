@@ -12,16 +12,14 @@
 
 #include <sstream>
 
-namespace StarFish
-{
+namespace StarFish {
 
 class ComputedStyle;
 class Element;
 class Document;
 
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
-class CSSLength
-{
+class CSSLength {
 public:
     enum Kind {
         PX,
@@ -113,7 +111,7 @@ protected:
 
 // inline | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit
 enum DisplayValue {
-    InlineDisplayValue, //initial value
+    InlineDisplayValue, // initial value
     BlockDisplayValue,
     InlineBlockDisplayValue,
     NoneDisplayValue,
@@ -232,8 +230,7 @@ enum VisibilityValue {
 class ValueList;
 class CSSStyleDeclaration;
 
-class CSSStyleValuePair : public gc
-{
+class CSSStyleValuePair : public gc {
     friend class ValueList;
 
 public:
@@ -274,7 +271,7 @@ public:
         // https://www.w3.org/TR/css3-background/#the-background-size
         BackgroundSize, // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
         // https://www.w3.org/TR/CSS21/colors.html#propdef-background-repeat
-        //BackgroundRepeat, // repeat | repeat-x | repeat-y | no-repeat | initial | inherit
+        // BackgroundRepeat, // repeat | repeat-x | repeat-y | no-repeat | initial | inherit
         BackgroundRepeatX, // repeat | no-repeat | initial | inherit
         BackgroundRepeatY, // repeat | no-repeat | initial | inherit
         // https://www.w3.org/TR/CSS21/visuren.html#propdef-top
@@ -332,9 +329,9 @@ public:
         // https://www.w3.org/TR/css3-color/#transparency
         Opacity, // alphavalue | inherit // <1>
         // https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#propdef-overflow
-        //Overflow, // visible | hidden | scroll | auto | inherit // Initial value -> visible
+        // Overflow, // visible | hidden | scroll | auto | inherit // Initial value -> visible
         OverflowX, // visible | hidden | scroll | auto | inherit // Initial value -> visible
-        //OverflowY, // visible | hidden | scroll | auto | inherit // Initial value -> visible
+        // OverflowY, // visible | hidden | scroll | auto | inherit // Initial value -> visible
         // https://www.w3.org/TR/CSS2/visufx.html#visibility
         Visibility, // visible | hidden | collapse | inherit // Initial value -> visible
         // http://www.w3.org/TR/CSS2/visuren.html#z-index
@@ -399,7 +396,7 @@ public:
     };
 
     CSSStyleValuePair()
-        : m_value{ 0 }
+        : m_value {0}
     {
     }
 
@@ -744,8 +741,7 @@ protected:
     ValueData m_value;
 };
 
-class ValueList : public gc
-{
+class ValueList : public gc {
 public:
     enum Separator {
         SpaceSeparator,
@@ -790,8 +786,7 @@ protected:
     std::vector<CSSStyleValuePair::ValueData, gc_allocator<CSSStyleValuePair::ValueData> > m_values;
 };
 
-class CSSStyleDeclaration : public ScriptWrappable
-{
+class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
 
 public:
@@ -931,8 +926,7 @@ protected:
 };
 
 // FIXME implement CSSRule
-class CSSStyleRule : public ScriptWrappable
-{
+class CSSStyleRule : public ScriptWrappable {
     friend class StyleResolver;
 
 public:
@@ -978,8 +972,7 @@ protected:
     Document* m_document;
 };
 
-class CSSStyleSheet : public gc
-{
+class CSSStyleSheet : public gc {
     friend class StyleResolver;
 
 public:
@@ -992,8 +985,7 @@ protected:
     std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> > m_rules;
 };
 
-class StyleResolver
-{
+class StyleResolver {
 public:
     void addSheet(CSSStyleSheet* rule)
     {
