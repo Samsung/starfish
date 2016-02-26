@@ -40,7 +40,10 @@ public:
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
-
+    virtual void setNeedsUnderline(bool b) = 0;
+    virtual void setNeedsLineThrough(bool b) = 0;
+    virtual void setUnderlineColor(Color clr) = 0;
+    virtual void setLineThroughColor(Color clr) = 0;
     virtual void drawRect(const Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void drawText(LayoutUnit x, LayoutUnit y, String* text) = 0;

@@ -17,10 +17,70 @@ namespace StarFish {
 class FrameTreeBuilderContext {
 public:
     FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer)
-        : m_currentBlockContainer(currentBlockContainer)
     {
+        setCurrentBlockContainer(currentBlockContainer);
+        computeTextDecorationData(currentBlockContainer->style());
     }
+
+    void setCurrentBlockContainer(FrameBlockBox* blockContainer)
+    {
+        m_currentBlockContainer = blockContainer;
+    }
+
+    void setCurrentTextDecorationData(FrameTextTextDecorationData* deco)
+    {
+        m_currentDecorationData = deco;
+    }
+
+    FrameBlockBox* currentBlockContainer()
+    {
+        return m_currentBlockContainer;
+    }
+
+    void computeTextDecorationData(ComputedStyle* style)
+    {
+        if (style->textDecoration() != NoneTextDecorationValue) {
+            m_currentDecorationData = new FrameTextTextDecorationData;
+            m_currentDecorationData->m_hasUnderLine = false;
+            m_currentDecorationData->m_hasLineThrough = false;
+            if (style->textDecoration() == UnderLineTextDecorationValue) {
+                m_currentDecorationData->m_hasUnderLine = true;
+                m_currentDecorationData->m_underLineColor = style->color();
+            } else if (style->textDecoration() == LineThroughTextDecorationValue) {
+                m_currentDecorationData->m_hasLineThrough = true;
+                m_currentDecorationData->m_lineThroughColor = style->color();
+            }
+        } else {
+            m_currentDecorationData = nullptr;
+        }
+    }
+
+    void mergeTextDecorationData(ComputedStyle* style)
+    {
+        if (style->textDecoration() != NoneTextDecorationValue) {
+            if (!m_currentDecorationData) {
+                m_currentDecorationData = new FrameTextTextDecorationData;
+                m_currentDecorationData->m_hasUnderLine = false;
+                m_currentDecorationData->m_hasLineThrough = false;
+            }
+            if (style->textDecoration() == UnderLineTextDecorationValue) {
+                m_currentDecorationData->m_hasUnderLine = true;
+                m_currentDecorationData->m_underLineColor = style->color();
+            } else if (style->textDecoration() == LineThroughTextDecorationValue) {
+                m_currentDecorationData->m_hasLineThrough = true;
+                m_currentDecorationData->m_lineThroughColor = style->color();
+            }
+        }
+    }
+
+    FrameTextTextDecorationData* currentDecorationData()
+    {
+        return m_currentDecorationData;
+    }
+
+protected:
     FrameBlockBox* m_currentBlockContainer;
+    FrameTextTextDecorationData* m_currentDecorationData;
 };
 
 void FrameTreeBuilder::clearTree(Node* current)
@@ -89,6 +149,8 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
 
 void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 {
+    FrameTextTextDecorationData* textDecoBack = ctx.currentDecorationData();
+
     if (current->needsFrameTreeBuild() || force) {
         force = true;
 
@@ -106,7 +168,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
                 }
             } else if (display == DisplayValue::InlineDisplayValue) {
                 if (current->isCharacterData() && current->asCharacterData()->isText()) {
-                    currentFrame = new FrameText(current, current->style());
+                    currentFrame = new FrameText(current, current->style(), ctx.currentDecorationData());
                 } else if (current->isComment()) {
                     FrameTreeBuilder::clearTree(current);
                     return;
@@ -132,7 +194,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         }
 
         bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
-        if (isBlockChild && !ctx.m_currentBlockContainer->hasBlockFlow() && current->parentNode()->style()->display() == InlineDisplayValue && currentFrame->isNormalFlow()) {
+        if (isBlockChild && !ctx.currentBlockContainer()->hasBlockFlow() && current->parentNode()->style()->display() == InlineDisplayValue && currentFrame->isNormalFlow()) {
             // divide block. when comes Inline.. + Block(normal flow)
             Frame* parent = current->parentNode()->frame();
             while (true) {
@@ -141,22 +203,31 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 
                 parent = parent->parent();
             }
-            ctx.m_currentBlockContainer = parent->asFrameBlockBox();
+
+            ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
         }
 
-        frameBlockBoxChildInserter(ctx.m_currentBlockContainer, currentFrame);
+        frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame);
 
         STARFISH_ASSERT(currentFrame->parent());
         current->setFrame(currentFrame);
         current->clearNeedsFrameTreeBuild();
     }
 
+    Frame* currentFrame = current->frame();
+    if (currentFrame->style()->display() == InlineBlockDisplayValue || !currentFrame->isNormalFlow()) {
+        ctx.computeTextDecorationData(currentFrame->style());
+    } else {
+        ctx.mergeTextDecorationData(currentFrame->style());
+    }
+
     if (current->childNeedsFrameTreeBuild() || force) {
         Frame* currentFrame = current->frame();
-        Frame* back = ctx.m_currentBlockContainer;
+        FrameBlockBox* back = ctx.currentBlockContainer();
+
         bool isBlockContainer = currentFrame->isFrameBlockBox();
         if (isBlockContainer) {
-            ctx.m_currentBlockContainer = currentFrame->asFrameBlockBox();
+            ctx.setCurrentBlockContainer(currentFrame->asFrameBlockBox());
         }
 
         Node* n = current->firstChild();
@@ -167,11 +238,13 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         }
 
         if (isBlockContainer) {
-            ctx.m_currentBlockContainer = back->asFrameBlockBox();
+            ctx.setCurrentBlockContainer(back);
         }
 
         current->clearChildNeedsFrameTreeBuild();
     }
+
+    ctx.setCurrentTextDecorationData(textDecoBack);
 }
 
 void FrameTreeBuilder::buildFrameTree(Document* document)

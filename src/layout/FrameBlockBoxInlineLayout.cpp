@@ -254,6 +254,59 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
     }
 }
 
+InlineBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
+{
+    InlineBox* result = b;
+    Frame* f = b->firstChild();
+    while (f) {
+
+        if (f->asFrameBox()->isInlineBox()) {
+            InlineBox* ib = f->asFrameBox()->asInlineBox();
+            if (ib->isInlineNonReplacedBox()) {
+                result = findLastInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
+            } else {
+                result = ib;
+            }
+        }
+
+        f = f->next();
+    }
+    return result;
+}
+
+InlineBox* findLastInlineBox(LineBox* lb)
+{
+    InlineBox* result = nullptr;
+    for (size_t i = 0; i < lb->boxes().size(); i ++) {
+        if (lb->boxes()[i]->isInlineBox()) {
+            InlineBox* b = lb->boxes()[i]->asInlineBox();
+            if (b->isInlineNonReplacedBox()) {
+                result = findLastInlineBoxNonReplacedBoxCase(b->asInlineNonReplacedBox());
+            } else {
+                result = b;
+            }
+        }
+    }
+
+    return result;
+}
+
+void LineFormattingContext::completeLastLine()
+{
+    LineBox* back = m_block.m_lineBoxes.back();
+    InlineBox* last = findLastInlineBox(back);
+    if (last && last->isInlineTextBox()) {
+        if (last->asInlineTextBox()->text()->equals(String::spaceString)) {
+            if (last->parent()->asFrameBox()->isLineBox()) {
+                std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = last->parent()->asFrameBox()->asLineBox()->boxes();
+                last->parent()->asFrameBox()->asLineBox()->boxes().erase(std::find(boxes.begin(), boxes.end(), last));
+            } else {
+                last->parent()->removeChild(last);
+            }
+        }
+    }
+}
+
 void LineFormattingContext::breakLine(bool dueToBr)
 {
     if (dueToBr == false)
@@ -266,7 +319,7 @@ void LineFormattingContext::breakLine(bool dueToBr)
     computeVerticalProperties(back, m_block.style(), ascender, descender, minimumHeight, m_layoutContext);
     back->m_ascender = ascender;
     back->m_descender = descender;
-
+    completeLastLine();
     back->setHeight(back->ascender() - back->decender());
 
     m_block.m_lineBoxes.push_back(new LineBox(&m_block));
@@ -370,7 +423,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     lineBreakCallback(false);
                     goto textAppendRetry;
                 }
-                InlineBox* ib = new InlineTextBox(f->node(), f->style(), nullptr, resultString);
+                InlineBox* ib = new InlineTextBox(f->node(), f->style(), nullptr, resultString, f->asFrameText());
                 ib->setWidth(textWidth);
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);
                 lineFormattingContext.m_currentLineWidth += textWidth;
@@ -449,23 +502,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     lineFormattingContext.registerInlineContent(); 
     }, [&](bool dueToBr)
     {
-        std::vector<FrameBox*, gc_allocator<FrameBox*>>& vector = lineFormattingContext.currentLine()->boxes();
-        auto iter = vector.rbegin();
-        size_t i = vector.size();
-        while (vector.rend() != iter) {
-            i--;
-            if ((*iter)->isInlineBox()) {
-                InlineBox* ib = (*iter)->asInlineBox();
-                if (ib->isInlineTextBox()) {
-                    if (ib->asInlineTextBox()->text()->equals(String::spaceString)) {
-                        vector.erase(i + vector.begin());
-                    }
-                }
-                break;
-            }
-            iter++;
-        }
-
         lineFormattingContext.breakLine(dueToBr);
     }, [&](FrameInline* f)
     {
@@ -485,6 +521,8 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         back->m_frameRect.setHeight(minimumHeight);
     else
         back->m_frameRect.setHeight(ascender - descender);
+
+    lineFormattingContext.completeLastLine();
 
     // position each line
     LayoutUnit contentHeight = 0;
@@ -921,6 +959,23 @@ void FrameBlockBox::paintChildrenWith(FrameBlockBox* block, Canvas* canvas, Pain
             }
             canvas->restore();
         }
+    }
+}
+
+void InlineTextBox::paint(Canvas* canvas, PaintingStage stage)
+{
+    if (stage == PaintingNormalFlowInline) {
+        if (m_origin->textDecorationData()) {
+            auto data = m_origin->textDecorationData();
+            canvas->setNeedsLineThrough(data->m_hasLineThrough);
+            canvas->setNeedsUnderline(data->m_hasUnderLine);
+            canvas->setLineThroughColor(data->m_lineThroughColor);
+            canvas->setUnderlineColor(data->m_underLineColor);
+        }
+
+        canvas->setFont(style()->font());
+        canvas->setColor(style()->color());
+        canvas->drawText(0, 0, m_text);
     }
 }
 

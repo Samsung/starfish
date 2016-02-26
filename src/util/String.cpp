@@ -142,12 +142,27 @@ void String::split(char delim, Vector& tokens)
 String* String::trim()
 {
     // TODO implement utf-32 case
-    // TODO should we consider all-of whitespace case not only ' '?
     if (m_isASCIIString) {
         ASCIIString str = *asASCIIString();
-        size_t first = str.find_first_not_of(' ');
-        size_t last = str.find_last_not_of(' ');
-        return String::fromUTF8(str.substr(first, (last - first + 1)).c_str());
+        size_t first = 0;
+        size_t last = 0;
+        if (str.length()) {
+            last = str.length() - 1;
+
+            for (size_t i = 0; i < str.length(); i ++) {
+                if (!String::isSpaceOrNewline(str[i])) {
+                    first = i;
+                    break;
+                }
+            }
+
+            do {
+                if (!String::isSpaceOrNewline(str[last]))
+                    break;
+            } while (last--);
+
+        }
+        return String::createASCIIString(str.substr(first, (last - first + 1)).c_str());
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

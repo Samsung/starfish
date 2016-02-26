@@ -5,11 +5,19 @@
 
 namespace StarFish {
 
+struct FrameTextTextDecorationData : public gc {
+    bool m_hasUnderLine;
+    bool m_hasLineThrough;
+    Color m_underLineColor;
+    Color m_lineThroughColor;
+};
+
 class FrameText : public Frame {
 public:
-    FrameText(Node* node, ComputedStyle* style)
+    FrameText(Node* node, ComputedStyle* style, FrameTextTextDecorationData* deco)
         : Frame(node, style)
     {
+        m_textDecorationData = deco;
     }
 
     virtual bool isFrameText()
@@ -20,6 +28,11 @@ public:
     virtual const char* name()
     {
         return "FrameText";
+    }
+
+    FrameTextTextDecorationData* textDecorationData()
+    {
+        return m_textDecorationData;
     }
 
     String* text()
@@ -54,6 +67,7 @@ public:
     }
 
 protected:
+    FrameTextTextDecorationData* m_textDecorationData;
 };
 }
 

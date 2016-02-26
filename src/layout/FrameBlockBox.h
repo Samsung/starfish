@@ -62,23 +62,16 @@ public:
 
 class InlineTextBox : public InlineBox {
 public:
-    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str)
+    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, FrameText* origin)
         : InlineBox(node, style, parent)
     {
         m_text = str;
+        m_origin = origin;
     }
 
     virtual bool isInlineTextBox() const { return true; }
 
-    virtual void paint(Canvas* canvas, PaintingStage stage)
-    {
-        if (stage == PaintingNormalFlowInline) {
-            canvas->setFont(style()->font());
-            canvas->setColor(style()->color());
-            canvas->drawText(0, 0, m_text);
-        }
-    }
-
+    virtual void paint(Canvas* canvas, PaintingStage stage);
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
@@ -97,6 +90,7 @@ public:
 
 protected:
     String* m_text;
+    FrameText* m_origin;
 };
 
 class InlineReplacedBox : public InlineBox {
@@ -244,7 +238,6 @@ protected:
 class FrameBlockBox : public FrameBox {
     friend class LineFormattingContext;
     friend class InlineNonReplacedBox;
-
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
@@ -285,11 +278,9 @@ public:
 
         return child->style()->display() == BlockDisplayValue;
     }
-
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
-
     std::vector<LineBox*, gc_allocator<LineBox*> > m_lineBoxes;
 
     static void paintChildrenWith(FrameBlockBox* block, Canvas* canvas, PaintingStage stage);
@@ -304,13 +295,15 @@ public:
         m_lineBoxWidth = lineBoxWidth;
         m_block.m_lineBoxes.clear();
         // m_block.m_lineBoxes.shrink_to_fit();
-        m_block.m_lineBoxes.push_back(new LineBox(&m_block));
-        m_block.m_lineBoxes.back()->setWidth(m_lineBoxWidth);
+        LineBox* lineBox = new LineBox(&m_block);
+        lineBox->setWidth(m_lineBoxWidth);
+        m_block.m_lineBoxes.push_back(lineBox);
         m_currentLine = 0;
         m_currentLineWidth = 0;
     }
 
     void breakLine(bool dueToBr = false);
+    void completeLastLine();
 
     bool isBreakedLineWithoutBR(size_t idx)
     {

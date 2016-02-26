@@ -126,6 +126,16 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     // if (newStyle->m_overflowY != oldStyle->m_overflowY)
     //     damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
+    // NOTE.
+    // text-decoration is not inherited.
+    // but it influence its child boxes, within it's inline formatting context
+    // and is further propagated to any in-flow block-level boxes that split the inline (see section 9.2.1.1).
+    // we store text-decoration values in FrameBlockBox
+    // so we need to rebuild frame from this point
+    // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
+    if (newStyle->m_textDecoration != oldStyle->m_textDecoration)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+
     if (newStyle->m_opacity != oldStyle->m_opacity)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
@@ -149,8 +159,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->m_textDecoration != oldStyle->m_textDecoration)
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
     return damage;
 }

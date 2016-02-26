@@ -10,3 +10,4 @@ node_modules
 test/tool/pixel_test/bin/nodejs
 Demo.regression
 *.pyc
+*.png_

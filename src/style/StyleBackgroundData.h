@@ -144,7 +144,7 @@ bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
     if (a.m_repeatY != b.m_repeatY)
         return false;
 
-    return false;
+    return true;
 }
 
 bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b)

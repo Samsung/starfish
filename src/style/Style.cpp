@@ -4245,6 +4245,7 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
 
         if (damage & ComputedStyleDamage::ComputedStyleDamagePainting) {
             element->setNeedsPainting();
+            damage = compareStyle(element->style(), style);
         }
 
         element->setStyle(style);

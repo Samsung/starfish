@@ -66,6 +66,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         DOMTokenList::tokenize(&m_classNames, value);
         setNeedsStyleRecalc();
     } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
+        // TODO implement parse comment
         inlineStyle()->clear();
         std::vector<String*, gc_allocator<String*>> tokens = value->tokenize(";", 1);
 
