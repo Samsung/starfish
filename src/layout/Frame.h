@@ -37,6 +37,7 @@ enum HitTestStage {
 };
 
 class LineBox;
+class MarginInfo;
 
 class LayoutContext {
 public:
@@ -142,9 +143,28 @@ public:
         }
     }
 
+    void setMaxPositiveMarginTop(LayoutUnit m)
+    {
+        m_maxPositiveMarginTop = m;
+    }
+    LayoutUnit maxPositiveMarginTop()
+    {
+        return m_maxPositiveMarginTop;
+    }
+    void setMaxNegativeMarginTop(LayoutUnit m)
+    {
+        m_maxNegativeMarginTop = m;
+    }
+    LayoutUnit maxNegativeMarginTop()
+    {
+        return m_maxNegativeMarginTop;
+    }
+
 private:
     Frame* m_rootFrame;
     LineBox* m_lastLineBox;
+    LayoutUnit m_maxPositiveMarginTop;
+    LayoutUnit m_maxNegativeMarginTop;
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
     std::map<Frame*, std::vector<Frame*> > m_absolutePositionedFrames;
     std::map<Frame*, std::vector<Frame*> > m_relativePositionedFrames;

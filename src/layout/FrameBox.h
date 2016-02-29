@@ -31,6 +31,11 @@ public:
         return false;
     }
 
+    virtual bool isSelfCollapsingBlock()
+    {
+        return false;
+    }
+
     LineBox* asLineBox()
     {
         STARFISH_ASSERT(isLineBox());

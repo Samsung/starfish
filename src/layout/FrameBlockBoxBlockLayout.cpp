@@ -8,7 +8,22 @@ namespace StarFish {
 LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 {
     LayoutUnit top = paddingTop() + borderTop();
+    LayoutUnit bottom = paddingBottom() + borderBottom();
     LayoutUnit normalFlowHeight = 0;
+    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext());
+    LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
+    LayoutUnit lastMarginBottom;
+    if (marginInfo.canCollapseTopWithChildren()) {
+        if (marginTop() >= 0) {
+            maxPositiveMarginTop = marginTop();
+            ctx.setMaxPositiveMarginTop(std::max(ctx.maxPositiveMarginTop(), marginTop()));
+            marginInfo.setPositiveMargin(ctx.maxPositiveMarginTop());
+        } else {
+            maxNegativeMarginTop = marginTop();
+            ctx.setMaxNegativeMarginTop(std::max(ctx.maxNegativeMarginTop(), marginTop()));
+            marginInfo.setNegativeMargin(ctx.maxNegativeMarginTop());
+        }
+    }
     Frame* child = firstChild();
     while (child) {
         // Place the child.
@@ -38,18 +53,47 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 mX = child->asFrameBox()->marginLeft();
             }
             child->asFrameBox()->moveX(mX);
-            // TODO implement margin-collapse
-            child->asFrameBox()->moveY(child->asFrameBox()->marginTop());
+
+            //FIXME(june0cho): consider negative margin
+            LayoutUnit posTop = std::max(child->asFrameBox()->marginTop(), ctx.maxPositiveMarginTop());
+
+            if (marginInfo.canCollapseWithMarginTop()) {
+                maxPositiveMarginTop = std::max(maxPositiveMarginTop, posTop);
+            }
+
+            if (child->asFrameBox()->isSelfCollapsingBlock()) {
+                posTop = std::max(posTop, child->asFrameBox()->marginBottom());
+            }
+            LayoutUnit logicalTop = std::max(marginInfo.positiveMargin(), posTop);
+            if (child->asFrameBox()->isSelfCollapsingBlock()) {
+                marginInfo.setPositiveMargin(logicalTop);
+            } else {
+                if (!marginInfo.atTopSideOfBlock() || !marginInfo.canCollapseWithMarginTop()) {
+                    logicalTop = std::max(marginInfo.positiveMargin(), posTop);
+                    child->asFrameBox()->moveY(logicalTop);
+                }
+                marginInfo.setPositiveMargin(child->asFrameBox()->marginBottom());
+            }
+            ctx.setMaxPositiveMarginTop(marginInfo.positiveMargin());
+
+            if (marginInfo.atTopSideOfBlock() && !child->asFrameBox()->isSelfCollapsingBlock()) {
+                marginInfo.setAtTopSideOfBlock(false);
+            }
         }
 
+        lastMarginBottom = marginInfo.positiveMargin();
         if (child->isNormalFlow()) {
-            // TODO implement margin-collapse
-            normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() + child->asFrameBox()->marginBottom() - top;
-        } else
+            normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() /*+ child->asFrameBox()->marginBottom() */- top;
+        } else {
             ctx.registerAbsolutePositionedFrames(child);
+            lastMarginBottom = 0;
+        }
 
         child = child->next();
     }
+    // TODO(june0cho) implement margin-collapse for bottom
+    normalFlowHeight += lastMarginBottom;
+    ctx.setMaxPositiveMarginTop(maxPositiveMarginTop);
     return normalFlowHeight;
 }
 

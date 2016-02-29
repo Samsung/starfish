@@ -235,6 +235,53 @@ protected:
     LayoutUnit m_descender;
 };
 
+class MarginInfo {
+public:
+    MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding, bool isNewContext)
+    {
+        m_canCollapseWithChildren = !isNewContext && !topBorderPadding && !bottomBorderPadding;
+        m_canCollapseTopWithChildren = m_canCollapseWithChildren && !topBorderPadding;
+        m_canCollapseBottomWithChildren = m_canCollapseWithChildren && !bottomBorderPadding;
+        m_atTopSideOfBlock = true;
+    }
+    void setPositiveMargin(LayoutUnit m)
+    {
+        m_positiveMargin = m;
+    }
+    LayoutUnit positiveMargin()
+    {
+        return m_positiveMargin;
+    }
+    void setNegativeMargin(LayoutUnit m)
+    {
+        m_negativeMargin = m;
+    }
+    LayoutUnit negativeMargin()
+    {
+        return m_negativeMargin;
+    }
+    bool canCollapseTopWithChildren()
+    {
+        return m_canCollapseTopWithChildren;
+    }
+    void setAtTopSideOfBlock(bool b) { m_atTopSideOfBlock = b; }
+    void setAtBottomSideOfBlock(bool b) { m_atBottomSideOfBlock = b; }
+    bool atTopSideOfBlock() { return m_atTopSideOfBlock; }
+    bool canCollapseWithMarginTop() {
+        return m_atTopSideOfBlock && m_canCollapseTopWithChildren;
+    }
+    bool canCollapseWithMarginBottom() {
+        return m_atBottomSideOfBlock && m_canCollapseBottomWithChildren;
+    }
+    bool m_canCollapseWithChildren;
+    bool m_canCollapseTopWithChildren;
+    bool m_canCollapseBottomWithChildren;
+    bool m_atTopSideOfBlock;
+    bool m_atBottomSideOfBlock;
+    LayoutUnit m_positiveMargin;
+    LayoutUnit m_negativeMargin;
+};
+
 class FrameBlockBox : public FrameBox {
     friend class LineFormattingContext;
     friend class InlineNonReplacedBox;
@@ -278,6 +325,16 @@ public:
 
         return child->style()->display() == BlockDisplayValue;
     }
+
+    bool isSelfCollapsingBlock()
+    {
+        if (isEstablishesBlockFormattingContext())
+            return false;
+        if (asFrameBox()->height() > 0)
+            return false;
+        return true;
+    }
+
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
