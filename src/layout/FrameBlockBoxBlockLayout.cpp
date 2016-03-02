@@ -19,13 +19,12 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             ctx.setMaxPositiveMarginTop(std::max(ctx.maxPositiveMarginTop(), marginTop()));
             marginInfo.setPositiveMargin(ctx.maxPositiveMarginTop());
         } else {
-            maxNegativeMarginTop = marginTop();
-            ctx.setMaxNegativeMarginTop(std::max(ctx.maxNegativeMarginTop(), marginTop()));
+            maxNegativeMarginTop = -marginTop();
+            ctx.setMaxNegativeMarginTop(std::max(ctx.maxNegativeMarginTop(), maxNegativeMarginTop));
             marginInfo.setNegativeMargin(ctx.maxNegativeMarginTop());
         }
     } else {
-        ctx.setMaxPositiveMarginTop(0);
-        ctx.setMaxNegativeMarginTop(0);
+        ctx.setMaxMarginTop(0, 0);
     }
     Frame* child = firstChild();
     while (child) {
@@ -57,34 +56,43 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
             child->asFrameBox()->moveX(mX);
 
-            // FIXME(june0cho): consider negative margin
-            LayoutUnit posTop = std::max(child->asFrameBox()->marginTop(), ctx.maxPositiveMarginTop());
+            LayoutUnit posTop, negTop;
+            if (child->asFrameBox()->marginTop() >= 0)
+                posTop = std::max(child->asFrameBox()->marginTop(), ctx.maxPositiveMarginTop());
+            else
+                negTop = std::max(-child->asFrameBox()->marginTop(), ctx.maxNegativeMarginTop());
 
             if (marginInfo.canCollapseWithMarginTop()) {
                 maxPositiveMarginTop = std::max(maxPositiveMarginTop, posTop);
+                maxNegativeMarginTop = std::max(maxNegativeMarginTop, posTop);
             }
 
             if (child->asFrameBox()->isSelfCollapsingBlock()) {
-                posTop = std::max(posTop, child->asFrameBox()->marginBottom());
+                if (child->asFrameBox()->marginBottom() >= 0)
+                    posTop = std::max(posTop, child->asFrameBox()->marginBottom());
+                else
+                    negTop = std::max(negTop, -child->asFrameBox()->marginBottom());
             }
-            LayoutUnit logicalTop = std::max(marginInfo.positiveMargin(), posTop);
+            posTop = std::max(marginInfo.positiveMargin(), posTop);
+            negTop = std::max(marginInfo.negativeMargin(), negTop);
             if (child->asFrameBox()->isSelfCollapsingBlock()) {
-                marginInfo.setPositiveMargin(logicalTop);
+                marginInfo.setMargin(posTop, negTop);
             } else {
                 if (!marginInfo.atTopSideOfBlock() || !marginInfo.canCollapseWithMarginTop()) {
-                    logicalTop = std::max(marginInfo.positiveMargin(), posTop);
+                    LayoutUnit logicalTop = std::max(marginInfo.positiveMargin(), posTop)
+                                - std::max(marginInfo.negativeMargin(), negTop);
                     child->asFrameBox()->moveY(logicalTop);
                 }
-                marginInfo.setPositiveMargin(child->asFrameBox()->marginBottom());
+                marginInfo.setMargin(child->asFrameBox()->marginBottom());
             }
-            ctx.setMaxPositiveMarginTop(marginInfo.positiveMargin());
+            ctx.setMaxMarginTop(marginInfo.positiveMargin(), marginInfo.negativeMargin());
 
             if (marginInfo.atTopSideOfBlock() && !child->asFrameBox()->isSelfCollapsingBlock()) {
                 marginInfo.setAtTopSideOfBlock(false);
             }
         }
 
-        lastMarginBottom = marginInfo.positiveMargin();
+        lastMarginBottom = marginInfo.positiveMargin() - marginInfo.negativeMargin();
         if (child->isNormalFlow()) {
             normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
         } else {
@@ -96,7 +104,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     }
     // TODO(june0cho) implement margin-collapse for bottom
     normalFlowHeight += lastMarginBottom;
-    ctx.setMaxPositiveMarginTop(maxPositiveMarginTop);
+    ctx.setMaxMarginTop(maxPositiveMarginTop, maxNegativeMarginTop);
     return normalFlowHeight;
 }
 

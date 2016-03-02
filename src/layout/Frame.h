@@ -159,6 +159,12 @@ public:
     {
         return m_maxNegativeMarginTop;
     }
+    void setMaxMarginTop(LayoutUnit pos, LayoutUnit neg)
+    {
+        STARFISH_ASSERT(pos >= 0 && neg >= 0);
+        m_maxPositiveMarginTop = pos;
+        m_maxNegativeMarginTop = neg;
+    }
 
 private:
     Frame* m_rootFrame;

@@ -260,6 +260,20 @@ public:
     {
         return m_negativeMargin;
     }
+    void setMargin(LayoutUnit pos, LayoutUnit neg)
+    {
+        STARFISH_ASSERT(pos >= 0 && neg >= 0);
+        m_positiveMargin = pos;
+        m_negativeMargin = neg;
+    }
+    void setMargin(LayoutUnit val)
+    {
+        if (val >= 0) {
+            setMargin(val, 0);
+        } else {
+            setMargin(0, -val);
+        }
+    }
     bool canCollapseTopWithChildren()
     {
         return m_canCollapseTopWithChildren;
