@@ -1,6 +1,11 @@
 #include "StarFishConfig.h"
 #include "Event.h"
 
+#include <time.h>
+
+#define BILLION 1000000000L
+#define MILLION 1000000L
+
 namespace StarFish {
 
 EventInit::EventInit()
@@ -20,6 +25,10 @@ Event::Event()
     , m_isInitialized(true)
 {
     initScriptWrappable(this);
+
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    m_timeStamp = (BILLION * time.tv_sec + time.tv_nsec) / MILLION;
 }
 
 Event::Event(QualifiedName eventType, const EventInit& init)
@@ -30,6 +39,10 @@ Event::Event(QualifiedName eventType, const EventInit& init)
     , m_cancelable(init.cancelable)
 {
     initScriptWrappable(this);
+
+    struct timespec time;
+    clock_gettime(CLOCK_REALTIME, &time);
+    m_timeStamp = (BILLION * time.tv_sec + time.tv_nsec) / MILLION;
 }
 
 UIEvent::UIEvent(ScriptBindingInstance* instance)

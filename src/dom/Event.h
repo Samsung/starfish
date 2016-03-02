@@ -13,6 +13,9 @@ struct EventInit {
     bool cancelable;
 };
 
+// https://heycam.github.io/webidl/#common-DOMTimeStamp
+typedef unsigned long long DOMTimeStamp;
+
 class Event : public ScriptWrappable {
 protected:
 
@@ -55,6 +58,8 @@ public:
     bool defaultPrevented() const { return m_defaultPrevented; }
     void setDefaultPrevented(bool defaultPrevented) { m_defaultPrevented = defaultPrevented; }
 
+    DOMTimeStamp timeStamp() const { return m_timeStamp; }
+
     bool isInitialized() const { return m_isInitialized; }
     void setIsInitialized(bool isInitialized) { m_isInitialized = isInitialized; }
     bool isDispatched() const { return m_isDispatched; }
@@ -76,11 +81,9 @@ private:
     bool m_cancelable { false };
     bool m_defaultPrevented { false }; // canceled flag
 
-    bool m_isDispatched { false }; // dispatch flag
+    DOMTimeStamp m_timeStamp;
 
-    // TODO: The `timeStamp` attribute must return the value it was initialized to.
-    //       When an event is created the attribute must be initialized to the number of milliseconds that have passed since 00:00:00 UTC on 1 January 1970, ignoring leap seconds.
-    // DOMTimeStamp m_timeStamp;
+    bool m_isDispatched { false }; // dispatch flag
 };
 
 class UIEvent : public Event {

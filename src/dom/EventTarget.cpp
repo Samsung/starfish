@@ -97,8 +97,8 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
             if (listener && listener->at(0)->capture()) {
                 STARFISH_ASSERT(listener->at(0)->scriptValue() != ScriptValueNull);
                 // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", origin->localName()->utf8Data());
-                callScriptFunction(listener->at(0)->scriptValue(), NULL, 0, node->scriptValue());
-            }
+                ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
+                callScriptFunction(listener->at(0)->scriptValue(), argv, 1, origin->scriptValue());            }
         }
     }
 
@@ -110,7 +110,9 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
     if (listener && !event->stopPropagation()) {
         STARFISH_ASSERT(listener->at(0)->scriptValue() != ScriptValueNull);
         // STARFISH_LOG_INFO("[AT_TARGET] node: %s\n", origin->localName()->utf8Data());
-        callScriptFunction(listener->at(0)->scriptValue(), NULL, 0, origin->scriptValue());
+        // callScriptFunction(listener->at(0)->scriptValue(), NULL, 0, origin->scriptValue());
+        ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
+        callScriptFunction(listener->at(0)->scriptValue(), argv, 1, origin->scriptValue());
     }
 
     // 9. If event's bubbles attribute value is true, run these substeps:
@@ -125,8 +127,8 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
             if (listener && !listener->at(0)->capture()) {
                 STARFISH_ASSERT(listener->at(0)->scriptValue() != ScriptValueNull);
                 // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s\n", node->localName()->utf8Data());
-                callScriptFunction(listener->at(0)->scriptValue(), NULL, 0, node->scriptValue());
-            }
+                ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
+                callScriptFunction(listener->at(0)->scriptValue(), argv, 1, origin->scriptValue());            }
         }
     }
 

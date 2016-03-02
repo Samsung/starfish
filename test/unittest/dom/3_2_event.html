@@ -24,6 +24,8 @@
       print(e.preventDefault())
       print(e.defaultPrevented)
 
+      print(e.timeStamp)
+
       var e = new Event("init", {bubbles: true, cancelable: true})
       print(e.type)
       print(e.target)
@@ -42,6 +44,8 @@
       print(e.cancelable)
       print(e.preventDefault())
       print(e.defaultPrevented)
+
+      print(e.timeStamp)
     </script>
   </body>
 </html>

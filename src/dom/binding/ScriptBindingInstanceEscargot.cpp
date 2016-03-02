@@ -118,7 +118,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("removeEventListener"), 2, false);
-
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), true, true, true, fnAddEventListener);
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeEventListener"), true, true, true, fnRemoveEventListener);
 
@@ -1714,12 +1713,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
         EventTarget* target = ((Event*) originalObj->extraPointerData())->target();
-        if (target == nullptr) {
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        } else {
-            // FIXME: Returns the object to which event is dispatched.
-            return escargot::ESValue(escargot::ESValue::ESNull);
+        if (target && target->isNode()) {
+            Node* node = target->asNode();
+            if (node->isElement()) {
+                return node->asElement()->scriptValue();
+            } else {
+                return node->scriptValue();
+            }
         }
+        return escargot::ESValue(escargot::ESValue::ESNull);
         },
         NULL, false, false, false);
 
@@ -1727,12 +1729,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
         EventTarget* currentTarget = ((Event*) originalObj->extraPointerData())->currentTarget();
-        if (currentTarget == nullptr) {
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        } else {
-            // FIXME: Returns the object whose event listener's callback is currently being invoked.
-            return escargot::ESValue(escargot::ESValue::ESNull);
+        if (currentTarget && currentTarget->isNode()) {
+            Node* node = currentTarget->asNode();
+            if (node->isElement()) {
+                return node->asElement()->scriptValue();
+            } else {
+                return node->scriptValue();
+            }
         }
+        return escargot::ESValue(escargot::ESValue::ESNull);
         },
         NULL, false, false, false);
 
@@ -1826,6 +1831,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
         bool defaultPrevented = ((Event*) originalObj->extraPointerData())->defaultPrevented();
         return escargot::ESValue(defaultPrevented);
+        },
+        NULL, false, false, false);
+
+    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("timeStamp"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
+        DOMTimeStamp timeStamp = ((Event*) originalObj->extraPointerData())->timeStamp();
+        return escargot::ESValue(timeStamp);
         },
         NULL, false, false, false);
 
