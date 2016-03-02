@@ -21,10 +21,10 @@ public:
         setParent(parent);
     }
 
-    Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage)
+    Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
         if (stage == HitTestStage::HitTestNormalFlowInline) {
-            return FrameBox::hitTest(x, y, ctx, stage);
+            return FrameBox::hitTest(x, y, stage);
         }
         return nullptr;
     }
@@ -71,7 +71,7 @@ public:
 
     virtual bool isInlineTextBox() const { return true; }
 
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage);
+    virtual void paint(Canvas* canvas, PaintingStage stage);
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
@@ -103,9 +103,9 @@ public:
 
     virtual bool isInlineReplacedBox() const { return true; }
 
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
+    virtual void paint(Canvas* canvas, PaintingStage stage)
     {
-        m_frameReplaced->paint(canvas, ctx, stage);
+        m_frameReplaced->paint(canvas, stage);
     }
 
     virtual const char* name()
@@ -136,8 +136,8 @@ public:
 
     virtual bool isInlineBlockBox() const { return true; }
 
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage);
+    virtual void paint(Canvas* canvas, PaintingStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual const char* name()
     {
         return "InlineBlockBox";
@@ -171,9 +171,11 @@ public:
     }
     static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx, FrameBlockBox* blockBox,
         LineFormattingContext* lineFormattingContext, FrameBox* layoutParentBox, bool freshStart);
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage);
+    virtual void paint(Canvas* canvas, PaintingStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual void dump(int depth);
+
+    virtual void paintBackgroundAndBorders(Canvas* canvas);
 
     LayoutUnit ascender()
     {
@@ -322,8 +324,10 @@ public:
     virtual void computePreferredWidth(ComputePreferredWidthContext& ctx);
 
     virtual void dump(int depth);
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage);
+    virtual void paint(Canvas* canvas, PaintingStage stage);
+    virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
     bool hasBlockFlow()
     {
@@ -372,8 +376,6 @@ protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
     std::vector<LineBox*, gc_allocator<LineBox*> > m_lineBoxes;
-
-    static void paintChildrenWith(FrameBlockBox* block, Canvas* canvas, PaintingContext& ctx, PaintingStage stage);
 };
 
 class LineFormattingContext {

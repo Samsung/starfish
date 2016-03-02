@@ -208,7 +208,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
+    virtual void paint(Canvas* canvas, PaintingStage stage)
     {
         if (isPositionedElement() && stage == PaintingPositionedElements) {
             paintBackgroundAndBorders(canvas);

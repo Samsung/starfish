@@ -471,8 +471,7 @@ void Window::rendering()
                 canvas->clearColor(Color(255, 255, 255, 255));
         }
 
-        PaintingContext ctx;
-        m_document->frame()->paint(canvas, ctx);
+        m_document->frame()->paint(canvas, PaintingStageEnd);
         m_needsPainting = false;
 
         delete canvas;
@@ -606,8 +605,7 @@ Node* Window::hitTest(float x, float y)
     renderingIfNeeds();
 
     if (document() && document()->frame()) {
-        HitTestContext ctx;
-        Frame* frame = document()->frame()->hitTest(x, y, ctx);
+        Frame* frame = document()->frame()->hitTest(x, y, HitTestStageEnd);
         if (!frame)
             return nullptr;
 

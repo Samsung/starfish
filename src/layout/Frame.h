@@ -19,7 +19,6 @@ class FrameReplaced;
 class FrameInline;
 
 enum PaintingStage {
-    PaintingStackingContext,
     PaintingNormalFlowBlock, // the in-flow, non-inline-level, non-positioned descendants.
     PaintingNonPositionedFloats, // the non-positioned floats.
     PaintingNormalFlowInline, // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
@@ -32,7 +31,6 @@ enum HitTestStage {
     HitTestNormalFlowInline,
     HitTestNonPositionedFloats,
     HitTestNormalFlowBlock,
-    HitTestStackingContext,
     HitTestStageEnd,
 };
 
@@ -209,62 +207,6 @@ private:
     LayoutContext& m_layoutContext;
     LayoutUnit m_result;
     LayoutUnit m_lastKnownWidth;
-};
-
-class PaintingContext {
-public:
-    PaintingContext()
-    {
-        m_currentStackingContext = nullptr;
-    }
-
-    ~PaintingContext()
-    {
-
-    }
-
-    inline bool shouldContinuePainting(FrameBox* box);
-
-    void setCurrentStackingContext(StackingContext* currentStackingContext)
-    {
-        m_currentStackingContext = currentStackingContext;
-    }
-
-    StackingContext* currentStackingContext()
-    {
-        return m_currentStackingContext;
-    }
-
-protected:
-    StackingContext* m_currentStackingContext;
-};
-
-class HitTestContext {
-public:
-    HitTestContext()
-    {
-        m_currentStackingContext = nullptr;
-    }
-
-    ~HitTestContext()
-    {
-
-    }
-
-    inline bool shouldContinueHitTesting(FrameBox* box);
-
-    void setCurrentStackingContext(StackingContext* currentStackingContext)
-    {
-        m_currentStackingContext = currentStackingContext;
-    }
-
-    StackingContext* currentStackingContext()
-    {
-        return m_currentStackingContext;
-    }
-
-protected:
-    StackingContext* m_currentStackingContext;
 };
 
 class Frame : public gc {
@@ -496,12 +438,12 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage = PaintingStackingContext)
+    virtual void paint(Canvas* canvas, PaintingStage)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage = HitTestStackingContext)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

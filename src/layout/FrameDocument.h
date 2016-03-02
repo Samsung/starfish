@@ -24,26 +24,26 @@ public:
     }
 
     virtual void layout(LayoutContext& ctx);
-    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
+    virtual void paint(Canvas* canvas, PaintingStage stage)
     {
-        STARFISH_ASSERT(stage == PaintingStackingContext);
+        STARFISH_ASSERT(stage == PaintingStageEnd);
         STARFISH_ASSERT(firstChild() == lastChild());
         if (!firstChild())
             return;
         canvas->save();
         canvas->translate(firstChild()->asFrameBox()->x(), firstChild()->asFrameBox()->y());
-        firstChild()->asFrameBox()->paintStackingContext(canvas, ctx);
+        firstChild()->asFrameBox()->paintStackingContext(canvas);
         canvas->restore();
     }
 
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
-        STARFISH_ASSERT(stage == HitTestStackingContext);
+        STARFISH_ASSERT(stage == HitTestStageEnd);
         STARFISH_ASSERT(firstChild() == lastChild());
         if (!firstChild())
             return nullptr;
 
-        Frame* result = firstChild()->asFrameBox()->hitTestStackingContext(x, y, ctx);
+        Frame* result = firstChild()->asFrameBox()->hitTestStackingContext(x, y);
         if (result)
             return result;
         return this;

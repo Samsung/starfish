@@ -147,6 +147,18 @@ public:
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
 
+    virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage)
+    {
+        Frame* child = firstChild();
+        while (child) {
+            canvas->save();
+            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
+            child->paint(canvas, stage);
+            canvas->restore();
+            child = child->next();
+        }
+    }
+
     static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect bgRect, LayoutRect borderBox)
     {
         if (!style->bgColor().isTransparent()) {
@@ -235,7 +247,7 @@ public:
         }
     }
 
-    void paintBackgroundAndBorders(Canvas* canvas)
+    virtual void paintBackgroundAndBorders(Canvas* canvas)
     {
         do {
             if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
@@ -275,12 +287,27 @@ public:
         }
     }
 
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
         if (x >= 0 && x < m_frameRect.width() && y >= 0 && y < m_frameRect.height()) {
             return this;
         }
         return nullptr;
+    }
+
+    virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+    {
+        Frame* child = lastChild();
+        Frame* result = nullptr;
+        while (child) {
+            LayoutUnit cx = x - child->asFrameBox()->x();
+            LayoutUnit cy = y - child->asFrameBox()->y();
+            result = child->hitTest(cx, cy, stage);
+            if (result)
+                return result;
+            child = child->previous();
+        }
+        return result;
     }
 
     Location absolutePoint(FrameBox* top)
@@ -358,189 +385,8 @@ public:
         }
     }
 
-    template <typename T>
-    class StackingContextPusher {
-    public:
-        StackingContextPusher(FrameBox* box, T& ctx)
-            : m_ctx(ctx)
-        {
-            STARFISH_ASSERT(box->isEstablishesStackingContext());
-            STARFISH_ASSERT(box->stackingContext());
-
-            m_old = ctx.currentStackingContext();
-            m_ctx.setCurrentStackingContext(box->stackingContext());
-        }
-
-        ~StackingContextPusher()
-        {
-            m_ctx.setCurrentStackingContext(m_old);
-        }
-
-    private:
-        StackingContext* m_old;
-        T& m_ctx;
-    };
-
-    void paintStackingContext(Canvas* canvas, PaintingContext& ctx)
-    {
-        STARFISH_ASSERT(isEstablishesStackingContext());
-        STARFISH_ASSERT(m_stackingContext);
-
-        StackingContextPusher<PaintingContext> pusher(this, ctx);
-
-        // Within each stacking context, the following layers are painted in back-to-front order:
-
-        // the background and borders of the element forming the stacking context.
-        paintBackgroundAndBorders(canvas);
-
-        // the child stacking contexts with negative stack levels (most negative first).
-        {
-            auto iter = m_stackingContext->childContexts().begin();
-            while (iter != m_stackingContext->childContexts().end()) {
-                int32_t num = iter->first;
-                if (num > 0)
-                    break;
-                auto iter2 = iter->second->begin();
-                while (iter2 != iter->second->end()) {
-                    StackingContext* sCtx = *iter2;
-                    canvas->save();
-
-                    Location l = sCtx->owner()->absolutePoint(this);
-                    canvas->translate(l.x(), l.y());
-                    sCtx->owner()->paintStackingContext(canvas, ctx);
-
-                    canvas->restore();
-                    iter2++;
-                }
-                iter++;
-            }
-        }
-
-        // the in-flow, non-inline-level, non-positioned descendants.
-        paint(canvas, ctx, PaintingNormalFlowBlock);
-
-        // TODO the non-positioned floats.
-        // paint(canvas, PaintingNonPositionedFloats);
-
-        // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-        paint(canvas, ctx, PaintingNormalFlowInline);
-
-        // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-        paint(canvas, ctx, PaintingPositionedElements);
-
-        // the child stacking contexts with positive stack levels (least positive first).
-        {
-            auto iter = m_stackingContext->childContexts().begin();
-            while (iter != m_stackingContext->childContexts().end()) {
-                int32_t num = iter->first;
-                if (num > 0) {
-                    auto iter2 = iter->second->begin();
-                    while (iter2 != iter->second->end()) {
-                        StackingContext* sCtx = *iter2;
-                        canvas->save();
-
-                        Location l = sCtx->owner()->absolutePoint(this);
-                        canvas->translate(l.x(), l.y());
-                        sCtx->owner()->paintStackingContext(canvas, ctx);
-
-                        canvas->restore();
-                        iter2++;
-                    }
-                }
-                iter++;
-            }
-        }
-
-    }
-
-    Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y, HitTestContext& ctx)
-    {
-        STARFISH_ASSERT(isEstablishesStackingContext());
-        STARFISH_ASSERT(m_stackingContext);
-
-        StackingContextPusher<HitTestContext> pusher(this, ctx);
-
-        Frame* result = nullptr;
-        // TODO the child stacking contexts with positive stack levels (least positive first).
-        {
-            auto iter = m_stackingContext->childContexts().rbegin();
-            while (iter != m_stackingContext->childContexts().rend()) {
-                int32_t num = iter->first;
-                if (num > 0) {
-                    auto iter2 = iter->second->rbegin();
-                    LayoutUnit oldX = x;
-                    LayoutUnit oldY = y;
-                    while (iter2 != iter->second->rend()) {
-                        StackingContext* sCtx = *iter2;
-                        Location l = sCtx->owner()->absolutePoint(this);
-                        x += l.x();
-                        y += l.y();
-                        result = sCtx->owner()->hitTestStackingContext(x, y, ctx);
-                        x = oldX;
-                        y = oldY;
-                        if (result)
-                            return result;
-
-                        iter2++;
-                    }
-                }
-                iter++;
-            }
-        }
-
-        // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-        result = hitTest(x, y, ctx, HitTestPositionedElements);
-        if (result)
-            return result;
-
-        // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-        result = hitTest(x, y, ctx, HitTestNormalFlowInline);
-        if (result)
-            return result;
-
-        // TODO the non-positioned floats.
-
-        // the in-flow, non-inline-level, non-positioned descendants.
-        result = hitTest(x, y, ctx, HitTestNormalFlowBlock);
-        if (result)
-            return result;
-
-        // TODO the child stacking contexts with negative stack levels (most negative first).
-        {
-            auto iter = m_stackingContext->childContexts().rbegin();
-            while (iter != m_stackingContext->childContexts().rend()) {
-                int32_t num = iter->first;
-                if (num > 0)
-                    break;
-                auto iter2 = iter->second->rbegin();
-                LayoutUnit oldX = x;
-                LayoutUnit oldY = y;
-                while (iter2 != iter->second->rend()) {
-                    StackingContext* sCtx = *iter2;
-
-                    Location l = sCtx->owner()->absolutePoint(this);
-                    x += l.x();
-                    y += l.y();
-                    result = sCtx->owner()->hitTestStackingContext(x, y, ctx);
-                    if (result)
-                        return result;
-
-                    x = oldX;
-                    y = oldY;
-                    iter2++;
-                }
-                iter++;
-            }
-        }
-
-
-        // the background and borders of the element forming the stacking context.
-        result = FrameBox::hitTest(x, y, ctx, HitTestStackingContext);
-        if (result)
-            return result;
-
-        return nullptr;
-    }
+    void paintStackingContext(Canvas* canvas);
+    Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
 
 protected:
     // content + padding + border
@@ -549,15 +395,6 @@ protected:
 
     StackingContext* m_stackingContext;
 };
-
-bool PaintingContext::shouldContinuePainting(FrameBox* box)
-{
-    if (box->isEstablishesStackingContext() && box->stackingContext() != currentStackingContext()) {
-        return false;
-    }
-
-    return true;
-}
 
 }
 

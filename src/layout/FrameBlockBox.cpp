@@ -330,41 +330,54 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
     }
 }
 
-Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage)
+Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage s)
 {
+    Frame* result = nullptr;
+    if (hasBlockFlow()) {
+        Frame* child = lastChild();
+        while (child) {
+            LayoutUnit cx = x - child->asFrameBox()->x();
+            LayoutUnit cy = y - child->asFrameBox()->y();
+            result = child->hitTest(cx, cy, s);
+            if (result)
+                return result;
+            child = child->previous();
+        }
+    } else {
+        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+            LineBox& b = *m_lineBoxes[i];
+            LayoutUnit cx = x - b.m_frameRect.x();
+            LayoutUnit cy = y - b.m_frameRect.y();
+
+            for (size_t k = 0; k < b.m_boxes.size(); k++) {
+                FrameBox* childBox = b.m_boxes[k];
+                LayoutUnit cx2 = cx - childBox->x();
+                LayoutUnit cy2 = cy - childBox->y();
+                result = childBox->hitTest(cx2, cy2,  s);
+                if (result)
+                    return result;
+            }
+        }
+    }
+
+    return result;
+}
+
+Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+{
+    if (isEstablishesStackingContext()) {
+        return nullptr;
+    }
+
     if (isPositionedElement() && stage == HitTestPositionedElements) {
         Frame* result = nullptr;
         HitTestStage s = HitTestStage::HitTestPositionedElements;
         while (s != HitTestStageEnd) {
-            if (hasBlockFlow()) {
-                Frame* child = lastChild();
-                while (child) {
-                    LayoutUnit cx = x - child->asFrameBox()->x();
-                    LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx, cy, ctx, s);
-                    if (result)
-                        return result;
-                    child = child->previous();
-                }
-            } else {
-                for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-                    LineBox& b = *m_lineBoxes[i];
-                    LayoutUnit cx = x - b.m_frameRect.x();
-                    LayoutUnit cy = y - b.m_frameRect.y();
-
-                    for (size_t k = 0; k < b.m_boxes.size(); k++) {
-                        FrameBox* childBox = b.m_boxes[k];
-                        LayoutUnit cx2 = cx - childBox->x();
-                        LayoutUnit cy2 = cy - childBox->y();
-                        result = childBox->hitTest(cx2, cy2, ctx, s);
-                        if (result)
-                            return result;
-                    }
-                }
-            }
+            result = hitTestChildrenWith(x, y, s);
+            if (result)
+                return result;
             s = (HitTestStage)(s + 1);
         }
-
         return result;
     } else {
         if (stage == HitTestNormalFlowBlock) {
@@ -374,56 +387,26 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, H
                 while (child) {
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx, cy, ctx, stage);
+                    result = child->hitTest(cx, cy, stage);
                     if (result)
                         return result;
                     child = child->previous();
                 }
 
-                return FrameBox::hitTest(x, y, ctx, stage);
+                return FrameBox::hitTest(x, y, stage);
             } else {
-                return node() ? FrameBox::hitTest(x, y, ctx, stage) : nullptr;
+                return node() ? FrameBox::hitTest(x, y, stage) : nullptr;
             }
         } else {
-            if (!hasBlockFlow()) {
-                Frame* result = nullptr;
-                for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-                    LineBox& b = *m_lineBoxes[i];
-                    LayoutUnit cx = x - b.m_frameRect.x();
-                    LayoutUnit cy = y - b.m_frameRect.y();
-
-                    for (size_t k = 0; k < b.m_boxes.size(); k++) {
-                        FrameBox* childBox = b.m_boxes[k];
-                        LayoutUnit cx2 = cx - childBox->x();
-                        LayoutUnit cy2 = cy - childBox->y();
-                        result = childBox->hitTest(cx2, cy2, ctx, stage);
-                        if (result)
-                            return result;
-                    }
-                }
-
-                return nullptr;
-            } else {
-                Frame* result = nullptr;
-                Frame* child = lastChild();
-                while (child) {
-                    LayoutUnit cx = x - child->asFrameBox()->x();
-                    LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx, cy, ctx, stage);
-                    if (result)
-                        return result;
-                    child = child->previous();
-                }
-                return nullptr;
-            }
+            return hitTestChildrenWith(x, y, stage);
         }
     }
     return nullptr;
 }
 
-void FrameBlockBox::paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
+void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
 {
-    if (!ctx.shouldContinuePainting(this)) {
+    if (isEstablishesStackingContext()) {
         return;
     }
 
@@ -442,16 +425,16 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingContext& ctx, PaintingStage st
             paintBackgroundAndBorders(canvas);
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
-                paintChildrenWith(this, canvas, ctx, s);
+                paintChildrenWith(canvas, s);
                 s = (PaintingStage)(s + 1);
             }
         }
     } else {
         if (stage == PaintingNormalFlowBlock) {
             paintBackgroundAndBorders(canvas);
-            paintChildrenWith(this, canvas, ctx, stage);
+            paintChildrenWith(canvas, stage);
         } else {
-            paintChildrenWith(this, canvas, ctx, stage);
+            paintChildrenWith(canvas, stage);
         }
     }
 
