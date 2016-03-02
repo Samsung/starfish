@@ -267,10 +267,12 @@ public:
     void setAtTopSideOfBlock(bool b) { m_atTopSideOfBlock = b; }
     void setAtBottomSideOfBlock(bool b) { m_atBottomSideOfBlock = b; }
     bool atTopSideOfBlock() { return m_atTopSideOfBlock; }
-    bool canCollapseWithMarginTop() {
+    bool canCollapseWithMarginTop()
+    {
         return m_atTopSideOfBlock && m_canCollapseTopWithChildren;
     }
-    bool canCollapseWithMarginBottom() {
+    bool canCollapseWithMarginBottom()
+    {
         return m_atBottomSideOfBlock && m_canCollapseBottomWithChildren;
     }
     bool m_canCollapseWithChildren;

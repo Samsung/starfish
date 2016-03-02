@@ -54,7 +54,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
             child->asFrameBox()->moveX(mX);
 
-            //FIXME(june0cho): consider negative margin
+            // FIXME(june0cho): consider negative margin
             LayoutUnit posTop = std::max(child->asFrameBox()->marginTop(), ctx.maxPositiveMarginTop());
 
             if (marginInfo.canCollapseWithMarginTop()) {
