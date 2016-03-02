@@ -51,6 +51,12 @@ public:
         STARFISH_ASSERT(m_relativePositionedFrames.size() == 0);
     }
 
+    void propagateDataToParentLayoutContext(LayoutContext& parentCtx)
+    {
+        propagatePositionedFrames(parentCtx);
+        parentCtx.setLastLineBox(lastLineBox());
+    }
+
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);

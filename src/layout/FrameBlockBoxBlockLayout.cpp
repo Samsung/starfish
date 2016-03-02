@@ -80,7 +80,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             } else {
                 if (!marginInfo.atTopSideOfBlock() || !marginInfo.canCollapseWithMarginTop()) {
                     LayoutUnit logicalTop = std::max(marginInfo.positiveMargin(), posTop)
-                                - std::max(marginInfo.negativeMargin(), negTop);
+                        - std::max(marginInfo.negativeMargin(), negTop);
                     child->asFrameBox()->moveY(logicalTop);
                 }
                 marginInfo.setMargin(child->asFrameBox()->marginBottom());

@@ -458,7 +458,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             f->layout(ctx);
 
             LayoutUnit ascender = 0;
-            if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox())) {
+            if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox()) && r->style()->overflow() == OverflowValue::VisibleOverflow) {
                 LayoutUnit topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
                 ascender = topToLineBox + ctx.lastLineBox()->ascender();
             } else {

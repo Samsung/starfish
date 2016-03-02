@@ -326,7 +326,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
     });
 
     if (isEstablishesBlockFormattingContext()) {
-        ctx.propagatePositionedFrames(passedCtx);
+        ctx.propagateDataToParentLayoutContext(passedCtx);
     }
 }
 

@@ -645,7 +645,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 
         Node* t = m_activeNodeWithTouchDown;
 
-        bool shouldDispatchEvent = true;
+        bool shouldDispatchEvent = shouldCallOnClick;
         while (t) {
             if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
                 QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
@@ -664,11 +664,6 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 
 void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 {
-    if (kind == KeyEventDown) {
-        // callFunction(String::createASCIIString("onKeyDown"));
-    } else if (kind == KeyEventUp) {
-        // callFunction(String::createASCIIString("onKeyUp"));
-    }
 }
 
 void Window::pause()
