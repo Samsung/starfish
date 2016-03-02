@@ -59,9 +59,9 @@ enum StarFishStartUpFlag {
 class StarFish : public gc {
 public:
 #ifndef STARFISH_TIZEN_WEARABLE
-    StarFish(StarFishStartUpFlag flag, String* currentPath = String::createASCIIString(""));
+    StarFish(StarFishStartUpFlag flag, String* currentPath = String::createASCIIString(""), int w = 360, int h = 360);
 #else
-    StarFish(StarFishStartUpFlag flag, String* currentPath, void* win);
+    StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int w = 360, int h = 360);
 #endif
     void run();
 

@@ -17,7 +17,7 @@ bool g_enablePixelTest = false;
 #endif
 
 #ifndef STARFISH_TIZEN_WEARABLE
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
+StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
     : m_staticStrings(this)
 {
     m_startUpFlag = flag;
@@ -31,10 +31,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath)
     m_messageLoop = new MessageLoop();
     m_scriptBindingInstance = new ScriptBindingInstance();
     m_scriptBindingInstance->initBinding(this);
-    m_window = Window::create(this, 360, 360);
+    m_window = Window::create(this, w, h);
 }
 #else
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win)
+StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int w, int h)
     : m_staticStrings(this)
 {
     STARFISH_LOG_INFO("dpi... %d\n", ecore_x_dpi_get());
@@ -46,7 +46,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win)
     m_messageLoop = new MessageLoop();
     m_scriptBindingInstance = new ScriptBindingInstance();
     m_scriptBindingInstance->initBinding(this);
-    m_window = Window::create(this, 360, 360, win);
+    m_window = Window::create(this, w, h, win);
 }
 #endif
 

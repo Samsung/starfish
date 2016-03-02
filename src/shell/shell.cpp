@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
     int flag = 0;
 
     const char* path = "";
+    int width = 360, height = 360;
     for (int i = 2; i < argc; i ++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
             flag |= StarFish::enableComputedStyleDump;
@@ -30,13 +31,17 @@ int main(int argc, char *argv[])
             path = argv[i] + strlen("--working-directory=");
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
             g_enablePixelTest = true;
+        } else if (strstr(argv[i], "--width=") == argv[i]) {
+            width = std::atoi(argv[i] + strlen("--width="));
+        } else if (strstr(argv[i], "--height=") == argv[i]) {
+            height = std::atoi(argv[i] + strlen("--height="));
         } else if (strcmp(argv[i], "--regression-test") == 0) {
             flag |= StarFish::enableRegressionTest;
         }
     }
 
     printf("running StarFish (working directory = %s)\n", path);
-    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path));
+    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path), width, height);
     if (argc == 1) {
         puts("please specify xml path");
         return -1;

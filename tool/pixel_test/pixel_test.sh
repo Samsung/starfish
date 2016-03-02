@@ -24,7 +24,7 @@ fi
 
 if [[ "$tc" == *"reftest"* ]]; then
     echo "[ERROR] Use make pixel_test_css*"
-    exit 1;
+#    exit 1;
 fi
 
 if [[ "$tc" == *"/" ]]; then
