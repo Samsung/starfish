@@ -526,6 +526,11 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 
     lineFormattingContext.completeLastLine();
 
+    if (m_lineBoxes.size() == 1 && m_lineBoxes.back()->boxes().size() == 0) {
+        m_lineBoxes.clear();
+        m_lineBoxes.shrink_to_fit();
+    }
+
     // position each line
     LayoutUnit contentHeight = 0;
     for (size_t i = 0; i < m_lineBoxes.size(); i++) {
