@@ -10,6 +10,8 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
     LayoutContext newCtx(this);
     LayoutContext& ctx = isEstablishesBlockFormattingContext() ? newCtx : passedCtx;
 
+    establishesStackingContextIfNeeds();
+
     if (isNormalFlow()) {
         // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
         // Determine horizontal margins and width of this object.
@@ -227,13 +229,11 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
             // solve the equation under the extra constraint that the two margins get equal values.
             // If one of 'margin-top' or 'margin-bottom' is 'auto', solve the equation for that value.
             // If the values are over-constrained, ignore the value for 'bottom' and solve for that value.
-            // TODO add margin-top, margin-bottom
             setAbsY(top.specifiedValue(parentHeight));
         } else if (top.isAuto() && height.isAuto() && !bottom.isAuto()) {
             // 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then the height is based on the content per 10.6.7
             // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
             setContentHeight(contentHeight);
-            // TODO add margin-top, margin-bottom
             setAbsY(parentHeight - contentHeight - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
         } else if (top.isAuto() && bottom.isAuto() && !height.isAuto()) {
             // 'top' and 'bottom' are 'auto' and 'height' is not 'auto', then set 'top' to the static position
@@ -241,7 +241,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
         } else if (height.isAuto() && bottom.isAuto() && !top.isAuto()) {
             // 'height' and 'bottom' are 'auto' and 'top' is not 'auto', then the height is based on the content per 10.6.7,
             // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
-            setY(top.specifiedValue(parentHeight));
+            setAbsY(top.specifiedValue(parentHeight));
         } else if (top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
             // 'top' is 'auto', 'height' and 'bottom' are not 'auto', then set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
             setAbsY(parentHeight - height.specifiedValue(parentHeight) - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
@@ -330,58 +330,9 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
     }
 }
 
-Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage)
 {
-    if (isEstablishesStackingContext()) {
-        ASSERT(stage == HitTestStackingContext);
-        Frame* result = nullptr;
-        Frame* child;
-        // TODO the child stacking contexts with positive stack levels (least positive first).
-
-        // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-        child = lastChild();
-        while (child) {
-            LayoutUnit cx = x - child->asFrameBox()->x();
-            LayoutUnit cy = y - child->asFrameBox()->y();
-            result = child->hitTest(cx, cy, HitTestPositionedElements);
-            if (result)
-                return result;
-            child = child->previous();
-        }
-
-        // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-        child = lastChild();
-        while (child) {
-            LayoutUnit cx = x - child->asFrameBox()->x();
-            LayoutUnit cy = y - child->asFrameBox()->y();
-            result = child->hitTest(cx, cy, HitTestNormalFlowInline);
-            if (result)
-                return result;
-            child = child->previous();
-        }
-
-        // TODO the non-positioned floats.
-
-        // the in-flow, non-inline-level, non-positioned descendants.
-        ASSERT(hasBlockFlow());
-        child = lastChild();
-        while (child) {
-            LayoutUnit cx = x - child->asFrameBox()->x();
-            LayoutUnit cy = y - child->asFrameBox()->y();
-            result = child->hitTest(cx, cy, HitTestNormalFlowBlock);
-            if (result)
-                return result;
-            child = child->previous();
-        }
-
-        // the background and borders of the element forming the stacking context.
-        result = FrameBox::hitTest(x, y, stage);
-        if (result)
-            return result;
-
-        // TODO the child stacking contexts with negative stack levels (most negative first).
-        return nullptr;
-    } else if (isPositionedElement() && stage == HitTestPositionedElements) {
+    if (isPositionedElement() && stage == HitTestPositionedElements) {
         Frame* result = nullptr;
         HitTestStage s = HitTestStage::HitTestPositionedElements;
         while (s != HitTestStageEnd) {
@@ -390,7 +341,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                 while (child) {
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx, cy, s);
+                    result = child->hitTest(cx, cy, ctx, s);
                     if (result)
                         return result;
                     child = child->previous();
@@ -405,7 +356,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                         FrameBox* childBox = b.m_boxes[k];
                         LayoutUnit cx2 = cx - childBox->x();
                         LayoutUnit cy2 = cy - childBox->y();
-                        result = childBox->hitTest(cx2, cy2, s);
+                        result = childBox->hitTest(cx2, cy2, ctx, s);
                         if (result)
                             return result;
                     }
@@ -423,15 +374,15 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                 while (child) {
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx, cy, stage);
+                    result = child->hitTest(cx, cy, ctx, stage);
                     if (result)
                         return result;
                     child = child->previous();
                 }
 
-                return FrameBox::hitTest(x, y, stage);
+                return FrameBox::hitTest(x, y, ctx, stage);
             } else {
-                return node() ? FrameBox::hitTest(x, y, stage) : nullptr;
+                return node() ? FrameBox::hitTest(x, y, ctx, stage) : nullptr;
             }
         } else {
             if (!hasBlockFlow()) {
@@ -445,7 +396,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                         FrameBox* childBox = b.m_boxes[k];
                         LayoutUnit cx2 = cx - childBox->x();
                         LayoutUnit cy2 = cy - childBox->y();
-                        result = childBox->hitTest(cx2, cy2, stage);
+                        result = childBox->hitTest(cx2, cy2, ctx, stage);
                         if (result)
                             return result;
                     }
@@ -458,7 +409,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                 while (child) {
                     LayoutUnit cx = x - child->asFrameBox()->x();
                     LayoutUnit cy = y - child->asFrameBox()->y();
-                    result = child->hitTest(cx, cy, stage);
+                    result = child->hitTest(cx, cy, ctx, stage);
                     if (result)
                         return result;
                     child = child->previous();
@@ -470,99 +421,46 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     return nullptr;
 }
 
-void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
+void FrameBlockBox::paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
 {
-    if (isEstablishesStackingContext()) {
-        if (stage != PaintingStackingContext) {
-            return;
+    if (!ctx.shouldContinuePainting(this)) {
+        return;
+    }
+
+    if (style()->overflow() == OverflowValue::HiddenOverflow) {
+        canvas->save();
+        canvas->clip(Rect(0, 0, width(), height()));
+    }
+
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        canvas->save();
+        canvas->setVisible(false);
+    }
+
+    if (isPositionedElement()) {
+        if (stage == PaintingPositionedElements) {
+            paintBackgroundAndBorders(canvas);
+            PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
+            while (s != PaintingStageEnd) {
+                paintChildrenWith(this, canvas, ctx, s);
+                s = (PaintingStage)(s + 1);
+            }
         }
-        // Within each stacking context, the following layers are painted in back-to-front order:
-
-        // the background and borders of the element forming the stacking context.
-        paintBackgroundAndBorders(canvas);
-
-        // TODO the child stacking contexts with negative stack levels (most negative first).
-
-        // the in-flow, non-inline-level, non-positioned descendants.
-        ASSERT(hasBlockFlow());
-        Frame* child = firstChild();
-        while (child) {
-            canvas->save();
-            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-            child->paint(canvas, PaintingNormalFlowBlock);
-            canvas->restore();
-            child = child->next();
-        }
-
-        // TODO the non-positioned floats.
-        /*
-        child = firstChild();
-        while (child) {
-            canvas->save();
-            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-            child->paint(canvas, PaintingNonPositionedFloats);
-            canvas->restore();
-            child = child->next();
-        }
-        */
-
-        // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-        child = firstChild();
-        while (child) {
-            canvas->save();
-            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-            child->paint(canvas, PaintingNormalFlowInline);
-            canvas->restore();
-            child = child->next();
-        }
-
-        // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-        child = firstChild();
-        while (child) {
-            canvas->save();
-            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-            child->paint(canvas, PaintingPositionedElements);
-            canvas->restore();
-            child = child->next();
-        }
-
-        // TODO the child stacking contexts with positive stack levels (least positive first).
     } else {
-        if (style()->overflow() == OverflowValue::HiddenOverflow) {
-            canvas->save();
-            canvas->clip(Rect(0, 0, width(), height()));
-        }
-
-        if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
-            canvas->save();
-            canvas->setVisible(false);
-        }
-
-        if (isPositionedElement()) {
-            if (stage == PaintingPositionedElements) {
-                paintBackgroundAndBorders(canvas);
-                PaintingStage s = PaintingStage::PaintingStackingContext;
-                while (s != PaintingStageEnd) {
-                    paintChildrenWith(this, canvas, s);
-                    s = (PaintingStage)(s + 1);
-                }
-            }
+        if (stage == PaintingNormalFlowBlock) {
+            paintBackgroundAndBorders(canvas);
+            paintChildrenWith(this, canvas, ctx, stage);
         } else {
-            if (stage == PaintingNormalFlowBlock) {
-                paintBackgroundAndBorders(canvas);
-                paintChildrenWith(this, canvas, stage);
-            } else {
-                paintChildrenWith(this, canvas, stage);
-            }
+            paintChildrenWith(this, canvas, ctx, stage);
         }
+    }
 
-        if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
-            canvas->restore();
-        }
+    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        canvas->restore();
+    }
 
-        if (style()->overflow() == OverflowValue::HiddenOverflow) {
-            canvas->restore();
-        }
+    if (style()->overflow() == OverflowValue::HiddenOverflow) {
+        canvas->restore();
     }
 }
 

@@ -205,6 +205,62 @@ private:
     LayoutUnit m_lastKnownWidth;
 };
 
+class PaintingContext {
+public:
+    PaintingContext()
+    {
+        m_currentStackingContext = nullptr;
+    }
+
+    ~PaintingContext()
+    {
+
+    }
+
+    inline bool shouldContinuePainting(FrameBox* box);
+
+    void setCurrentStackingContext(StackingContext* currentStackingContext)
+    {
+        m_currentStackingContext = currentStackingContext;
+    }
+
+    StackingContext* currentStackingContext()
+    {
+        return m_currentStackingContext;
+    }
+
+protected:
+    StackingContext* m_currentStackingContext;
+};
+
+class HitTestContext {
+public:
+    HitTestContext()
+    {
+        m_currentStackingContext = nullptr;
+    }
+
+    ~HitTestContext()
+    {
+
+    }
+
+    inline bool shouldContinueHitTesting(FrameBox* box);
+
+    void setCurrentStackingContext(StackingContext* currentStackingContext)
+    {
+        m_currentStackingContext = currentStackingContext;
+    }
+
+    StackingContext* currentStackingContext()
+    {
+        return m_currentStackingContext;
+    }
+
+protected:
+    StackingContext* m_currentStackingContext;
+};
+
 class Frame : public gc {
     friend class LayoutContext;
 
@@ -217,6 +273,8 @@ public:
         m_flags.m_needsLayout = true;
 
         bool isRootElement = node && node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLHtmlElement();
+
+        m_flags.m_isRootElement = isRootElement;
 
         // TODO add condition
         m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
@@ -250,8 +308,6 @@ public:
         } else {
             m_flags.m_isNormalFlow = true;
         }
-
-        m_stackingContext = nullptr;
     }
 
     virtual ~Frame()
@@ -432,12 +488,12 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void paint(Canvas* canvas, PaintingStage = PaintingStackingContext)
+    virtual void paint(Canvas* canvas, PaintingContext& ctx, PaintingStage = PaintingStackingContext)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage = HitTestStackingContext)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage = HitTestStackingContext)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -472,6 +528,11 @@ public:
         return m_flags.m_isNormalFlow;
     }
 
+    bool isRootElement()
+    {
+        return m_flags.m_isRootElement;
+    }
+
     bool shouldComputePreferredWidth()
     {
         return m_flags.m_shouldComputePreferredWidth;
@@ -496,14 +557,13 @@ protected:
 
         bool m_shouldComputePreferredWidth : 1;
         bool m_isNormalFlow : 1;
+        bool m_isRootElement : 1;
     } m_flags;
 
     Node* m_node;
 
     // TODO implement FrameRareData
     ComputedStyle* m_styleWhenNodeIsNull;
-    StackingContext* m_stackingContext;
-
 private:
     Frame* m_parent;
     Frame* m_layoutParent;

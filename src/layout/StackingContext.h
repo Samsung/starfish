@@ -4,25 +4,34 @@
 namespace StarFish {
 class Node;
 class FrameBox;
+class StackingContext;
+
+class StackingContextChild : public std::vector<StackingContext*, gc_allocator<StackingContext*> > , public gc {
+};
 
 class StackingContext : public gc {
 public:
-    StackingContext(FrameBox* owner)
+    StackingContext(FrameBox* owner, StackingContext* parent);
+    void clearChildContexts()
     {
-        m_owner = owner;
-        m_parent = nullptr;
+        m_childContexts.clear();
     }
 
-    StackingContext(FrameBox* owner, StackingContext* parent)
+    const std::map<int32_t, StackingContextChild*, std::less<int32_t>, gc_allocator<std::pair<uint32_t, StackingContextChild*> > >& childContexts()
     {
-        m_owner = owner;
-        m_parent = parent;
+        return m_childContexts;
+    }
+
+    FrameBox* owner()
+    {
+        return m_owner;
     }
 
 protected:
     FrameBox* m_owner;
     StackingContext* m_parent;
-    std::map<int32_t, StackingContext*, std::less<int32_t>, gc_allocator<std::pair<uint32_t, StackingContext> > > m_childContexts;
+
+    std::map<int32_t, StackingContextChild*, std::less<int32_t>, gc_allocator<std::pair<uint32_t, StackingContextChild*> > > m_childContexts;
 };
 }
 

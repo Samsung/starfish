@@ -11,6 +11,9 @@ void FrameDocument::layout(LayoutContext& ctx)
     style()->setWidth(Length(Length::Fixed, w));
     style()->setHeight(Length(Length::Fixed, h));
 
+    STARFISH_ASSERT(firstChild() == lastChild());
+    STARFISH_ASSERT(firstChild()->isRootElement());
+
     FrameBlockBox::layout(ctx);
 }
 

@@ -83,7 +83,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
         lastMarginBottom = marginInfo.positiveMargin();
         if (child->isNormalFlow()) {
-            normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() /*+ child->asFrameBox()->marginBottom() */- top;
+            normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() + child->asFrameBox()->marginBottom() - top;
         } else {
             ctx.registerAbsolutePositionedFrames(child);
             lastMarginBottom = 0;

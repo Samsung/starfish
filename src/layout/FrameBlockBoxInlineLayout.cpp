@@ -246,6 +246,8 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
 
             if (ib->style()->position() == PositionValue::RelativePositionValue)
                 ctx.registerRelativePositionedFrames(ib);
+
+            ib->establishesStackingContextIfNeeds();
         } else {
             // out of flow boxes
         }
@@ -934,14 +936,14 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
     }
 }
 
-void FrameBlockBox::paintChildrenWith(FrameBlockBox* block, Canvas* canvas, PaintingStage stage)
+void FrameBlockBox::paintChildrenWith(FrameBlockBox* block, Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
 {
     if (block->hasBlockFlow()) {
         Frame* child = block->firstChild();
         while (child) {
             canvas->save();
             canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-            child->paint(canvas, stage);
+            child->paint(canvas, ctx, stage);
             canvas->restore();
             child = child->next();
         }
@@ -954,7 +956,7 @@ void FrameBlockBox::paintChildrenWith(FrameBlockBox* block, Canvas* canvas, Pain
                 FrameBox* childBox = b.m_boxes[k];
                 canvas->save();
                 canvas->translate(childBox->x(), childBox->y());
-                childBox->paint(canvas, stage);
+                childBox->paint(canvas, ctx, stage);
                 canvas->restore();
             }
             canvas->restore();
@@ -962,7 +964,7 @@ void FrameBlockBox::paintChildrenWith(FrameBlockBox* block, Canvas* canvas, Pain
     }
 }
 
-void InlineTextBox::paint(Canvas* canvas, PaintingStage stage)
+void InlineTextBox::paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
 {
     if (stage == PaintingNormalFlowInline) {
         if (m_origin->textDecorationData()) {
@@ -979,25 +981,25 @@ void InlineTextBox::paint(Canvas* canvas, PaintingStage stage)
     }
 }
 
-void InlineBlockBox::paint(Canvas* canvas, PaintingStage stage)
+void InlineBlockBox::paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
 {
     if (stage == PaintingNormalFlowInline) {
         STARFISH_ASSERT(!m_frameBlockBox->isEstablishesStackingContext());
         PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
         while (s != PaintingStageEnd) {
-            m_frameBlockBox->paint(canvas, s);
+            m_frameBlockBox->paint(canvas, ctx, s);
             s = (PaintingStage)(s + 1);
         }
     }
 }
 
-Frame* InlineBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+Frame* InlineBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage)
 {
     if (stage == HitTestStage::HitTestNormalFlowInline) {
         Frame* result = nullptr;
         HitTestStage s = HitTestStage::HitTestPositionedElements;
         while (s != HitTestStageEnd) {
-            result = m_frameBlockBox->hitTest(x, y, s);
+            result = m_frameBlockBox->hitTest(x, y, ctx, s);
             if (result)
                 return result;
             s = (HitTestStage)(s + 1);
@@ -1006,7 +1008,7 @@ Frame* InlineBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     return nullptr;
 }
 
-void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
+void InlineNonReplacedBox::paint(Canvas* canvas, PaintingContext& ctx, PaintingStage stage)
 {
     // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
     if (stage == PaintingNormalFlowInline) {
@@ -1037,13 +1039,13 @@ void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
     while (child) {
         canvas->save();
         canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-        child->paint(canvas, stage);
+        child->paint(canvas, ctx, stage);
         canvas->restore();
         child = child->next();
     }
 }
 
-Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestContext& ctx, HitTestStage stage)
 {
     if (stage == HitTestStage::HitTestNormalFlowInline) {
         Frame* result = nullptr;
@@ -1054,7 +1056,7 @@ Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage st
             while (f) {
                 LayoutUnit cx = x - f->asFrameBox()->x();
                 LayoutUnit cy = y - f->asFrameBox()->y();
-                result = f->hitTest(cx, cy, s);
+                result = f->hitTest(cx, cy, ctx, s);
                 if (result)
                     return result;
                 f = f->previous();

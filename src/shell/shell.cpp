@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
             flag |= StarFish::enableComputedStyleDump;
         } else if (strcmp(argv[i], "--dump-frame-tree") == 0) {
             flag |= StarFish::enableFrameTreeDump;
+        } else if (strcmp(argv[i], "--dump-stacking-context") == 0) {
+            flag |= StarFish::enableStackingContextDump;
         } else if (strcmp(argv[i], "--dump-hittest") == 0) {
             flag |= StarFish::enableHitTestDump;
         } else if (strcmp(argv[i], "--enable-black-theme") == 0) {

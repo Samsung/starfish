@@ -389,6 +389,42 @@ void Window::rendering()
         FrameTreeBuilder::dumpFrameTree(m_document);
     }
 
+    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
+        STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
+        StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
+
+        std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](StackingContext* ctx, int depth)
+        {
+            for (int i = 0; i < depth; i ++) {
+                printf("  ");
+            }
+
+            printf("StackingContext[%p, frame %p]\n", ctx, ctx->owner());
+
+            auto iter = ctx->childContexts().begin();
+            while (iter != ctx->childContexts().end()) {
+
+                int32_t num = iter->first;
+
+                for (int i = 0; i < depth + 1; i ++) {
+                    printf("  ");
+                }
+
+                printf("z-index: %d\n", (int)num);
+
+                auto iter2 = iter->second->begin();
+                while (iter2 != iter->second->end()) {
+                    dumpSC(*iter2, depth + 2);
+                    iter2++;
+                }
+
+                iter++;
+            }
+        };
+
+        dumpSC(ctx, 0);
+    }
+
     if (m_needsPainting) {
         Timer t("painting");
         // painting
@@ -435,7 +471,8 @@ void Window::rendering()
                 canvas->clearColor(Color(255, 255, 255, 255));
         }
 
-        m_document->frame()->paint(canvas);
+        PaintingContext ctx;
+        m_document->frame()->paint(canvas, ctx);
         m_needsPainting = false;
 
         delete canvas;
@@ -569,7 +606,8 @@ Node* Window::hitTest(float x, float y)
     renderingIfNeeds();
 
     if (document() && document()->frame()) {
-        Frame* frame = document()->frame()->hitTest(x, y);
+        HitTestContext ctx;
+        Frame* frame = document()->frame()->hitTest(x, y, ctx);
         if (!frame)
             return nullptr;
 
