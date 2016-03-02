@@ -281,6 +281,8 @@ public:
         ComputedStyle* style = Frame::style();
         if (style) {
             m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->overflow() != OverflowValue::VisibleOverflow);
+            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
+            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->position() == PositionValue::AbsolutePositionValue);
         }
 
         m_flags.m_isPositionedElement = style && style->position() != PositionValue::StaticPositionValue;
