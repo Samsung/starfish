@@ -391,6 +391,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                     return result;
                 s = (HitTestStage)(s + 1);
             }
+            return FrameBox::hitTest(x, y, stage);
         }
     } else {
         if (stage == HitTestNormalFlowBlock) {
