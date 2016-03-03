@@ -20,6 +20,9 @@ bool g_enablePixelTest = false;
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
     : m_staticStrings(this)
 {
+    GC_set_free_space_divisor(64);
+    STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
+
     m_startUpFlag = flag;
     m_currentPath = currentPath;
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
@@ -37,7 +40,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int w, int h)
     : m_staticStrings(this)
 {
-    STARFISH_LOG_INFO("dpi... %d\n", ecore_x_dpi_get());
+    GC_set_free_space_divisor(64);
+    STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
+
     g_screenDpi = ecore_x_dpi_get();
     m_startUpFlag = flag;
     m_currentPath = currentPath;

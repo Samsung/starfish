@@ -21,25 +21,39 @@ public:
         m_height = h;
     }
 
+    ImageDataEFL(size_t w, size_t h)
+    {
+        m_image = evas_object_image_add(internalCanvas());
+        evas_object_image_size_set(m_image, w, h);
+        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
+        m_width = w;
+        m_height = h;
+    }
+
+    ~ImageDataEFL()
+    {
+        evas_object_unref(m_image);
+    }
+
     virtual void* unwrap()
     {
         return m_image;
     }
 
-    virtual int width()
+    virtual size_t width()
     {
         return m_width;
     }
 
-    virtual int height()
+    virtual size_t height()
     {
         return m_height;
     }
 
 protected:
     Evas_Object* m_image;
-    int m_width;
-    int m_height;
+    size_t m_width;
+    size_t m_height;
 };
 
 class ImageDataNetwork : public ImageData {
@@ -63,25 +77,30 @@ public:
         return m_image;
     }
 
-    virtual int width()
+    virtual size_t width()
     {
         return m_width;
     }
 
-    virtual int height()
+    virtual size_t height()
     {
         return m_height;
     }
 
 protected:
     Evas_Object* m_image;
-    int m_width;
-    int m_height;
+    size_t m_width;
+    size_t m_height;
 };
 
 ImageData* ImageData::create(String* imageSrc)
 {
     return new ImageDataEFL(imageSrc);
+}
+
+ImageData* ImageData::create(size_t w, size_t h)
+{
+    return new ImageDataEFL(w, h);
 }
 
 ImageData* ImageData::create(uint32_t size, void* data)
