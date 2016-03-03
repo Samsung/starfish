@@ -9,7 +9,6 @@ namespace StarFish {
 class FrameBlockBox;
 class LineFormattingContext;
 class InlineTextBox; // TextNode
-class InlineBlockBox; // display-inline:block
 class InlineNonReplacedBox; // non-replaced element, display: inline
 
 class InlineBox : public FrameBox {
@@ -30,19 +29,12 @@ public:
 
     virtual bool isInlineBox() { return true; }
     virtual bool isInlineTextBox() const { return false; }
-    virtual bool isInlineBlockBox() const { return false; }
     virtual bool isInlineNonReplacedBox() const { return false; }
 
     InlineTextBox* asInlineTextBox()
     {
         STARFISH_ASSERT(isInlineTextBox());
         return (InlineTextBox*)this;
-    }
-
-    InlineBlockBox* asInlineBlockBox()
-    {
-        STARFISH_ASSERT(isInlineBlockBox());
-        return (InlineBlockBox*)this;
     }
 
     InlineNonReplacedBox* asInlineNonReplacedBox()
@@ -83,37 +75,6 @@ public:
 protected:
     String* m_text;
     FrameText* m_origin;
-};
-
-class InlineBlockBox : public InlineBox {
-    friend FrameBlockBox;
-
-public:
-    InlineBlockBox(Node* node, ComputedStyle* style, Frame* parent, FrameBlockBox* f, LayoutUnit ascender)
-        : InlineBox(node, style, parent)
-    {
-        m_frameBlockBox = f;
-        m_ascender = ascender;
-        ((FrameBox*)m_frameBlockBox)->setLayoutParent(this);
-    }
-
-    virtual bool isInlineBlockBox() const { return true; }
-
-    virtual void paint(Canvas* canvas, PaintingStage stage);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
-    virtual const char* name()
-    {
-        return "InlineBlockBox";
-    }
-
-    LayoutUnit ascender()
-    {
-        return m_ascender;
-    }
-
-protected:
-    LayoutUnit m_ascender;
-    FrameBlockBox* m_frameBlockBox;
 };
 
 class InlineNonReplacedBox : public InlineBox {
@@ -401,12 +362,25 @@ public:
         return m_block.m_lineBoxes.back();
     }
 
-    std::set<size_t> m_breakedLinesSet;
+    void registerInlineBlockAscender(LayoutUnit ascender, FrameBlockBox* box)
+    {
+        m_inlineBlockAscender[box] = ascender;
+    }
+
+    LayoutUnit inlineBlockAscender(FrameBlockBox* box)
+    {
+        STARFISH_ASSERT(m_inlineBlockAscender.find(box) != m_inlineBlockAscender.end());
+        return m_inlineBlockAscender[box];
+    }
+
     LayoutUnit m_currentLineWidth;
     LayoutUnit m_lineBoxWidth;
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
+
+    std::set<size_t> m_breakedLinesSet;
+    std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 };
 }
 

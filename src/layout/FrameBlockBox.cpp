@@ -372,8 +372,8 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
         return nullptr;
     }
 
+    Frame* result = nullptr;
     if (isPositionedElement() && stage == HitTestPositionedElements) {
-        Frame* result = nullptr;
         HitTestStage s = HitTestStage::HitTestPositionedElements;
         while (s != HitTestStageEnd) {
             result = hitTestChildrenWith(x, y, s);
@@ -382,6 +382,16 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
             s = (HitTestStage)(s + 1);
         }
         return result;
+    } else if (style()->display() == InlineBlockDisplayValue) {
+        if (stage == HitTestNormalFlowInline) {
+            HitTestStage s = HitTestStage::HitTestPositionedElements;
+            while (s != HitTestStageEnd) {
+                result = hitTestChildrenWith(x, y, s);
+                if (result)
+                    return result;
+                s = (HitTestStage)(s + 1);
+            }
+        }
     } else {
         if (stage == HitTestNormalFlowBlock) {
             if (hasBlockFlow()) {
@@ -425,6 +435,15 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
 
     if (isPositionedElement()) {
         if (stage == PaintingPositionedElements) {
+            paintBackgroundAndBorders(canvas);
+            PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
+            while (s != PaintingStageEnd) {
+                paintChildrenWith(canvas, s);
+                s = (PaintingStage)(s + 1);
+            }
+        }
+    } else if (style()->display() == InlineBlockDisplayValue) {
+        if (stage == PaintingNormalFlowInline) {
             paintBackgroundAndBorders(canvas);
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {

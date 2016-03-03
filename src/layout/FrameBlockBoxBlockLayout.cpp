@@ -104,7 +104,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     }
     ctx.setMaxMarginTop(maxPositiveMarginTop, maxNegativeMarginTop);
     ctx.setMaxMarginBottom(std::max(ctx.maxPositiveMarginBottom(), marginInfo.positiveMargin()),
-                            std::max(ctx.maxNegativeMarginBottom(), marginInfo.negativeMargin()));
+        std::max(ctx.maxNegativeMarginBottom(), marginInfo.negativeMargin()));
     if (!marginInfo.canCollapseWithMarginBottom()) {
         normalFlowHeight += ctx.maxPositiveMarginBottom() - ctx.maxNegativeMarginBottom();
         ctx.setMaxMarginBottom(0, 0);

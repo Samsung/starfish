@@ -78,6 +78,7 @@ public:
         Frame* cb = containingBlock(frm);
         m_absolutePositionedFrames.insert(std::make_pair(cb, std::vector<Frame*>()));
         std::vector<Frame*>& vec = m_absolutePositionedFrames[cb];
+        STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
         vec.push_back(frm);
     }
 
@@ -98,6 +99,7 @@ public:
         Frame* cb = containingBlock(frm);
         m_relativePositionedFrames.insert(std::make_pair(cb, std::vector<Frame*>()));
         std::vector<Frame*>& vec = m_relativePositionedFrames[cb];
+        STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
         vec.push_back(frm);
     }
 
