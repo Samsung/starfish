@@ -38,17 +38,7 @@ void FrameBox::paintStackingContext(Canvas* canvas)
         }
     }
 
-    // the in-flow, non-inline-level, non-positioned descendants.
-    paintChildrenWith(canvas, PaintingNormalFlowBlock);
-
-    // TODO the non-positioned floats.
-    // paintChildrenWith(canvas, ctx, PaintingNonPositionedFloats);
-
-    // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-    paintChildrenWith(canvas, PaintingNormalFlowInline);
-
-    // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-    paintChildrenWith(canvas, PaintingPositionedElements);
+    paintStackingContextContent(canvas);
 
     // the child stacking contexts with positive stack levels (least positive first).
     {
@@ -73,6 +63,21 @@ void FrameBox::paintStackingContext(Canvas* canvas)
         }
     }
 
+}
+
+void FrameBox::paintStackingContextContent(Canvas* canvas)
+{
+    // the in-flow, non-inline-level, non-positioned descendants.
+    paintChildrenWith(canvas, PaintingNormalFlowBlock);
+
+    // TODO the non-positioned floats.
+    // paintChildrenWith(canvas, ctx, PaintingNonPositionedFloats);
+
+    // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
+    paintChildrenWith(canvas, PaintingNormalFlowInline);
+
+    // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
+    paintChildrenWith(canvas, PaintingPositionedElements);
 }
 
 Frame* FrameBox::hitTestStackingContext(LayoutUnit x, LayoutUnit y)

@@ -344,19 +344,22 @@ Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestSta
             child = child->previous();
         }
     } else {
-        for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            LineBox& b = *m_lineBoxes[i];
+        auto iterL = m_lineBoxes.rbegin();
+        while (iterL != m_lineBoxes.rend()) {
+            LineBox& b = **iterL;
             LayoutUnit cx = x - b.m_frameRect.x();
             LayoutUnit cy = y - b.m_frameRect.y();
-
-            for (size_t k = 0; k < b.m_boxes.size(); k++) {
-                FrameBox* childBox = b.m_boxes[k];
+            auto iter = b.m_boxes.rbegin();
+            while (iter != b.m_boxes.rend()) {
+                FrameBox* childBox = *iter;
                 LayoutUnit cx2 = cx - childBox->x();
                 LayoutUnit cy2 = cy - childBox->y();
                 result = childBox->hitTest(cx2, cy2,  s);
                 if (result)
                     return result;
+                iter++;
             }
+            iterL++;
         }
     }
 

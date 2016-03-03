@@ -373,9 +373,9 @@ public:
     {
         if (isEstablishesStackingContext()) {
             if (!isRootElement()) {
-                FrameBox* p = parent()->asFrameBox();
+                FrameBox* p = layoutParent()->asFrameBox();
                 while (!p->isEstablishesStackingContext()) {
-                    p = p->parent()->asFrameBox();
+                    p = p->layoutParent()->asFrameBox();
                 }
                 m_stackingContext = new StackingContext(this, p->stackingContext());
             } else {
@@ -386,7 +386,11 @@ public:
     }
 
     void paintStackingContext(Canvas* canvas);
+    virtual void paintStackingContextContent(Canvas* canvas);
+
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
+
+
 
 protected:
     // content + padding + border

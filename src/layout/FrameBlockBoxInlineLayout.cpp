@@ -13,128 +13,86 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
     LayoutUnit maxDescender = descenderInOut;
     LayoutUnit mostBiggestBoxHeight = 0;
 
-    size_t k = 0;
-    Frame* f;
-
-#define NEXT_STOP_COMPUTE_VERTICAL() \
-    if (parentBox->isLineBox()) {    \
-        k++;                         \
-    } else {                         \
-        if (!f)                      \
-            break;                   \
-        f = f->next();               \
-    }
-
     bool hasBoxOtherThanText = false;
 
-    k = 0;
-    f = parentBox->firstChild();
-    while (true) {
-        if (parentBox->isLineBox()) {
-            if (parentBox->asLineBox()->boxes().size() == k) {
-                break;
-            }
-            f = parentBox->asLineBox()->boxes()[k];
-        } else {
-            if (!f)
-                break;
-        }
-
-        minimumHeight = std::max(minimumHeight, f->asFrameBox()->height() + f->asFrameBox()->marginHeight());
-        NEXT_STOP_COMPUTE_VERTICAL();
+    std::vector<FrameBox*, gc_allocator<FrameBox*> >* boxes;
+    if (parentBox->isLineBox()) {
+        boxes = &parentBox->asLineBox()->boxes();
+    } else {
+        boxes = &parentBox->asInlineBox()->asInlineNonReplacedBox()->boxes();
     }
 
-    k = 0;
-    f = parentBox->firstChild();
-    while (true) {
-        if (parentBox->isLineBox()) {
-            if (parentBox->asLineBox()->boxes().size() == k) {
-                break;
-            }
-            f = parentBox->asLineBox()->boxes()[k];
-        } else {
-            if (!f)
-                break;
-        }
+    for (size_t k = 0; k < boxes->size(); k ++) {
+        Frame* f = boxes->at(k);
+        minimumHeight = std::max(minimumHeight, f->asFrameBox()->height() + f->asFrameBox()->marginHeight());
+    }
 
-        if (f->asFrameBox()->isInlineBox()) {
+    for (size_t k = 0; k < boxes->size(); k ++) {
+        FrameBox* f = boxes->at(k);
+
+        if (f->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
-            if (ib->isInlineBox()) {
-                // normal flow
-                if (ib->isInlineTextBox()) {
-                    maxAscender = std::max(ib->asInlineTextBox()->style()->font()->metrics().m_ascender, maxAscender);
-                    maxDescender = std::min(ib->asInlineTextBox()->style()->font()->metrics().m_descender, maxDescender);
-
-                    NEXT_STOP_COMPUTE_VERTICAL();
-                    continue;
-                }
-
-                hasBoxOtherThanText = true;
-                VerticalAlignValue va = ib->style()->verticalAlign();
-                if (va == VerticalAlignValue::BaselineVAlignValue) {
-                    if (ib->isInlineReplacedBox()) {
-                        // TODO use this code for when replaced content does not have content
-                        /*
-                           LayoutUnit asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
-                           + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
-                           LayoutUnit dec = -(ib->asInlineReplacedBox()->replacedBox()->paddingBottom() + ib->asInlineReplacedBox()->replacedBox()->borderBottom()
-                           + ib->marginBottom());
-                           maxAscender = std::max(asc, maxAscender);
-                           maxDescender = std::min(dec, maxDescender);
-                           */
-                        LayoutUnit asc = ib->height() + ib->marginHeight();
-                        maxAscender = std::max(asc, maxAscender);
-                    } else if (ib->isInlineBlockBox()) {
-                        if (ib->asInlineBlockBox()->ascender() == ib->height()) {
-                            maxAscender = std::max(ib->asInlineBlockBox()->ascender() + ib->marginHeight(), maxAscender);
-                            maxDescender = std::min(LayoutUnit(0), maxDescender);
-                        } else {
-                            LayoutUnit dec = -(ib->height() - ib->asInlineBlockBox()->ascender()) - ib->marginBottom();
-                            maxAscender = std::max(ib->asInlineBlockBox()->ascender() + ib->marginTop(), maxAscender);
-                            maxDescender = std::min(dec, maxDescender);
-                        }
-                    } else {
-                        maxAscender = std::max(ib->asInlineNonReplacedBox()->ascender(), maxAscender);
-                        maxDescender = std::min(ib->asInlineNonReplacedBox()->decender(), maxDescender);
-                    }
-                } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                    LayoutUnit height = ib->height();
-                    maxAscender = std::max(height / 2 + ib->marginTop(), maxAscender);
-                    maxDescender = std::min(-height / 2 - ib->marginBottom(), maxDescender);
-                } else if (va == VerticalAlignValue::TopVAlignValue || va == VerticalAlignValue::BottomVAlignValue) {
-                    hasSpecialCase = true;
-                    LayoutUnit height = ib->height() + ib->marginHeight();
-                    mostBiggestBoxHeight = std::max(mostBiggestBoxHeight, height);
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-
-            } else {
-                // out of flow boxes
-                f->asFrameBox()->setY(f->asFrameBox()->marginTop());
+            // normal flow
+            if (ib->isInlineTextBox()) {
+                maxAscender = std::max(ib->asInlineTextBox()->style()->font()->metrics().m_ascender, maxAscender);
+                maxDescender = std::min(ib->asInlineTextBox()->style()->font()->metrics().m_descender, maxDescender);
+                continue;
             }
-        }
 
-        NEXT_STOP_COMPUTE_VERTICAL();
+            hasBoxOtherThanText = true;
+            VerticalAlignValue va = ib->style()->verticalAlign();
+            if (va == VerticalAlignValue::BaselineVAlignValue) {
+                if (ib->isInlineBlockBox()) {
+                    if (ib->asInlineBlockBox()->ascender() == ib->height()) {
+                        maxAscender = std::max(ib->asInlineBlockBox()->ascender() + ib->marginHeight(), maxAscender);
+                        maxDescender = std::min(LayoutUnit(0), maxDescender);
+                    } else {
+                        LayoutUnit dec = -(ib->height() - ib->asInlineBlockBox()->ascender()) - ib->marginBottom();
+                        maxAscender = std::max(ib->asInlineBlockBox()->ascender() + ib->marginTop(), maxAscender);
+                        maxDescender = std::min(dec, maxDescender);
+                    }
+                } else {
+                    maxAscender = std::max(ib->asInlineNonReplacedBox()->ascender(), maxAscender);
+                    maxDescender = std::min(ib->asInlineNonReplacedBox()->decender(), maxDescender);
+                }
+            } else if (va == VerticalAlignValue::MiddleVAlignValue) {
+                LayoutUnit height = ib->height();
+                maxAscender = std::max(height / 2 + ib->marginTop(), maxAscender);
+                maxDescender = std::min(-height / 2 - ib->marginBottom(), maxDescender);
+            } else if (va == VerticalAlignValue::TopVAlignValue || va == VerticalAlignValue::BottomVAlignValue) {
+                hasSpecialCase = true;
+                LayoutUnit height = ib->height() + ib->marginHeight();
+                mostBiggestBoxHeight = std::max(mostBiggestBoxHeight, height);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+
+        } else if (f->isFrameReplaced()) {
+            // TODO use this code for when replaced content does not have content
+            /*
+           LayoutUnit asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
+           + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
+           LayoutUnit dec = -(ib->asInlineReplacedBox()->replacedBox()->paddingBottom() + ib->asInlineReplacedBox()->replacedBox()->borderBottom()
+           + ib->marginBottom());
+           maxAscender = std::max(asc, maxAscender);
+           maxDescender = std::min(dec, maxDescender);
+           */
+            hasBoxOtherThanText = true;
+            LayoutUnit asc = f->height() + f->marginHeight();
+            maxAscender = std::max(asc, maxAscender);
+        } else {
+            // out of flow boxes
+            STARFISH_ASSERT(!f->isNormalFlow());
+            f->asFrameBox()->setY(f->asFrameBox()->marginTop());
+        }
     }
 
     if (hasSpecialCase) {
         while ((maxAscender - maxDescender) < mostBiggestBoxHeight) {
-            f = parentBox->firstChild();
-            k = 0;
-            while (true) {
-                if (parentBox->isLineBox()) {
-                    if (parentBox->asLineBox()->boxes().size() == k) {
-                        break;
-                    }
-                    f = parentBox->asLineBox()->boxes()[k];
-                } else {
-                    if (!f)
-                        break;
-                }
-                InlineBox* ib = f->asFrameBox()->asInlineBox();
-                VerticalAlignValue va = ib->style()->verticalAlign();
-                LayoutUnit height = ib->height() + ib->marginHeight();
+            for (size_t k = 0; k < boxes->size(); k ++) {
+                FrameBox* box = boxes->at(k);
+                VerticalAlignValue va = box->style()->verticalAlign();
+                LayoutUnit height = box->height() + box->marginHeight();
                 if (height > maxAscender - maxDescender) {
                     if (va == VerticalAlignValue::TopVAlignValue) {
                         LayoutUnit dec = -height + maxAscender;
@@ -144,8 +102,6 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
                         maxAscender = std::max(maxAscender, asc);
                     }
                 }
-
-                NEXT_STOP_COMPUTE_VERTICAL();
             }
         }
     }
@@ -184,20 +140,17 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
     descenderInOut = maxDescender;
 
     LayoutUnit height = maxAscender - maxDescender;
-    f = parentBox->firstChild();
-    k = 0;
-    while (true) {
-        if (parentBox->isLineBox()) {
-            if (parentBox->asLineBox()->boxes().size() == k) {
-                break;
-            }
-            f = parentBox->asLineBox()->boxes()[k];
-        } else {
-            if (!f)
-                break;
+    for (size_t k = 0; k < boxes->size(); k ++) {
+        FrameBox* f = boxes->at(k);
+
+        if (f->isNormalFlow()) {
+            f->establishesStackingContextIfNeeds();
         }
 
-        if (f->asFrameBox()->isInlineBox()) {
+        if (f->style()->position() == PositionValue::RelativePositionValue)
+            ctx.registerRelativePositionedFrames(f);
+
+        if (f->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
             if (ib->isInlineTextBox()) {
                 if (UNLIKELY(descenderInOut == 0)) {
@@ -211,16 +164,7 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
             } else {
                 VerticalAlignValue va = ib->style()->verticalAlign();
                 if (va == VerticalAlignValue::BaselineVAlignValue) {
-                    if (ib->isInlineReplacedBox()) {
-                        // TODO use this code for when replaced content does not have content
-                        /*
-                           LayoutUnit asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
-                           + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
-                           ib->setY(height + maxDescender - asc + ib->marginTop());
-                           */
-                        LayoutUnit asc = ib->height() + ib->marginHeight();
-                        ib->setY(height + maxDescender - asc + ib->marginTop());
-                    } else if (ib->isInlineBlockBox()) {
+                    if (ib->isInlineBlockBox()) {
                         if (ib->asInlineBlockBox()->ascender() == ib->height()) {
                             LayoutUnit dec = 0;
                             ib->setY(height + maxDescender - ib->height() - dec - ib->marginTop());
@@ -244,24 +188,29 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
                 }
             }
 
-            if (ib->style()->position() == PositionValue::RelativePositionValue)
-                ctx.registerRelativePositionedFrames(ib);
-
-            ib->establishesStackingContextIfNeeds();
+        } else if (f->isFrameReplaced()) {
+            // TODO use this code for when replaced content does not have content
+            /*
+               LayoutUnit asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
+               + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
+               ib->setY(height + maxDescender - asc + ib->marginTop());
+               */
+            LayoutUnit asc = f->height() + f->marginHeight();
+            f->setY(height + maxDescender - asc + f->marginTop());
         } else {
             // out of flow boxes
+            STARFISH_ASSERT(!f->isNormalFlow());
         }
-
-        NEXT_STOP_COMPUTE_VERTICAL();
     }
 }
 
-InlineBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
+FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
 {
-    InlineBox* result = b;
-    Frame* f = b->firstChild();
-    while (f) {
+    FrameBox* result = b;
 
+    auto iter = b->boxes().begin();
+    while (iter != b->boxes().end()) {
+        FrameBox* f = *iter;
         if (f->asFrameBox()->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
             if (ib->isInlineNonReplacedBox()) {
@@ -269,16 +218,18 @@ InlineBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
             } else {
                 result = ib;
             }
+        } else {
+            result = *iter;
         }
-
-        f = f->next();
+        iter++;
     }
+
     return result;
 }
 
-InlineBox* findLastInlineBox(LineBox* lb)
+FrameBox* findLastInlineBox(LineBox* lb)
 {
-    InlineBox* result = nullptr;
+    FrameBox* result = nullptr;
     for (size_t i = 0; i < lb->boxes().size(); i ++) {
         if (lb->boxes()[i]->isInlineBox()) {
             InlineBox* b = lb->boxes()[i]->asInlineBox();
@@ -287,6 +238,8 @@ InlineBox* findLastInlineBox(LineBox* lb)
             } else {
                 result = b;
             }
+        } else if (lb->boxes()[i]->isNormalFlow()) {
+            result = lb->boxes()[i];
         }
     }
 
@@ -296,14 +249,15 @@ InlineBox* findLastInlineBox(LineBox* lb)
 void LineFormattingContext::completeLastLine()
 {
     LineBox* back = m_block.m_lineBoxes.back();
-    InlineBox* last = findLastInlineBox(back);
-    if (last && last->isInlineTextBox()) {
-        if (last->asInlineTextBox()->text()->equals(String::spaceString)) {
-            if (last->parent()->asFrameBox()->isLineBox()) {
-                std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = last->parent()->asFrameBox()->asLineBox()->boxes();
-                last->parent()->asFrameBox()->asLineBox()->boxes().erase(std::find(boxes.begin(), boxes.end(), last));
+    FrameBox* last = findLastInlineBox(back);
+    if (last && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
+        if (last->asInlineBox()->asInlineTextBox()->text()->equals(String::spaceString)) {
+            if (last->layoutParent()->asFrameBox()->isLineBox()) {
+                std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = last->layoutParent()->asFrameBox()->asLineBox()->boxes();
+                boxes.erase(std::find(boxes.begin(), boxes.end(), last));
             } else {
-                last->parent()->removeChild(last);
+                std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = last->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox()->boxes();
+                boxes.erase(std::find(boxes.begin(), boxes.end(), last));
             }
         }
     }
@@ -367,7 +321,7 @@ void textDividerForLayout(String* txt, fn f)
 }
 
 void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit inlineContentWidth,
-    std::function<void(InlineBox*)> gotInlineBoxCallback, std::function<void(bool)> lineBreakCallback, std::function<void(FrameInline*)> frameInlineCallback)
+    std::function<void(FrameBox*)> gotInlineBoxCallback, std::function<void(bool)> lineBreakCallback, std::function<void(FrameInline*)> frameInlineCallback)
 {
     Frame* f = origin->firstChild();
     while (f) {
@@ -438,15 +392,8 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
         insertReplacedBox:
             if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth) || lineFormattingContext.m_currentLineWidth == 0) {
-                InlineBox* ib = new InlineReplacedBox(f->node(), f->style(), nullptr, r);
-                ib->setMarginLeft(r->marginLeft());
-                ib->setMarginTop(r->marginTop());
-                ib->setMarginRight(r->marginRight());
-                ib->setMarginBottom(r->marginBottom());
-                ib->setWidth(r->width());
-                ib->setHeight(r->height());
-                lineFormattingContext.m_currentLineWidth += (ib->width() + ib->marginWidth());
-                gotInlineBoxCallback(ib);
+                lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
+                gotInlineBoxCallback(r);
             } else {
                 lineBreakCallback(false);
                 goto insertReplacedBox;
@@ -498,10 +445,10 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     LayoutUnit inlineContentWidth = contentWidth();
     LineFormattingContext lineFormattingContext(*this, ctx, inlineContentWidth);
 
-    inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, [&](InlineBox* ib) {
-    lineFormattingContext.currentLine()->boxes().push_back(ib);
-    ib->setParent(lineFormattingContext.currentLine());
-    lineFormattingContext.registerInlineContent(); 
+    inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, [&](FrameBox* ib) {
+        lineFormattingContext.currentLine()->boxes().push_back(ib);
+        ib->setLayoutParent(lineFormattingContext.currentLine());
+        lineFormattingContext.registerInlineContent();
     }, [&](bool dueToBr)
     {
         lineFormattingContext.breakLine(dueToBr);
@@ -612,7 +559,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 }
 
 InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx,
-    FrameBlockBox* blockBox, LineFormattingContext* lfc, FrameBox* layoutParentBox, bool freshStart)
+    FrameBlockBox* blockBox, LineFormattingContext* lfc, InlineNonReplacedBox* layoutParentBox, bool freshStart)
 {
     LineFormattingContext& lineFormattingContext = *lfc;
     // just lay out children are horizontally.
@@ -639,9 +586,10 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
         if (!layoutParentBox) {
             lineFormattingContext.currentLine()->boxes().push_back(self);
-            self->setParent(lineFormattingContext.currentLine());
+            self->setLayoutParent(lineFormattingContext.currentLine());
         } else {
-            layoutParentBox->appendChild(self);
+            layoutParentBox->boxes().push_back(self);
+            self->setLayoutParent(layoutParentBox);
         }
 
         lineFormattingContext.registerInlineContent();
@@ -664,7 +612,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             }
 
             addingUpWidth = currentSelf->asFrameBox();
-            currentSelf = currentSelf->parent();
+            currentSelf = currentSelf->layoutParent();
         }
 
         lineFormattingContext.breakLine();
@@ -678,10 +626,11 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
             if (first) {
                 lineFormattingContext.currentLine()->boxes().push_back(newBox);
-                newBox->setParent(lineFormattingContext.currentLine());
+                newBox->setLayoutParent(lineFormattingContext.currentLine());
                 first = false;
             } else {
-                last->appendChild(newBox);
+                last->boxes().push_back(newBox);
+                newBox->setLayoutParent(last);
             }
             last = newBox;
 
@@ -748,13 +697,13 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             selfForFinishLayout->m_descender = descender;
 
             selfForFinishLayout->setContentHeight(ascender - descender);
-            if (selfForFinishLayout->parent()->asFrameBox()->isLineBox()) {
+            if (selfForFinishLayout->layoutParent()->asFrameBox()->isLineBox()) {
                 break;
             }
             if (lastNode) {
                 break;
             }
-            selfForFinishLayout = selfForFinishLayout->parent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
+            selfForFinishLayout = selfForFinishLayout->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
         }
     };
 
@@ -762,10 +711,10 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
     finishLayout();  \
     breakLine();
 
-    inlineBoxGenerator(self->m_origin, ctx, lineFormattingContext, inlineContentWidth, [&](InlineBox* ib)
+    inlineBoxGenerator(self->m_origin, ctx, lineFormattingContext, inlineContentWidth, [&](FrameBox* ib)
     {
-        STARFISH_ASSERT(ib->isInlineBox());
-        self->appendChild(ib);
+        self->boxes().push_back(ib);
+        ib->setLayoutParent(self);
         ib->setX(self->width() + ib->marginLeft());
         self->setWidth(self->width() + ib->width() + ib->marginWidth());
     }, [&](bool dueToBr)
@@ -777,7 +726,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
         inlineBox->setX(self->width());
         InlineNonReplacedBox* result = InlineNonReplacedBox::layoutInline(inlineBox, ctx, blockBox, lfc, self, true);
-        Frame* newSelfCandi = result->parent();
+        Frame* newSelfCandi = result->layoutParent();
         if (newSelfCandi->asFrameBox()->isInlineBox() && newSelfCandi->asFrameBox()->asInlineBox()->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* newSelf = newSelfCandi->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
             if (self != newSelf) {
@@ -1055,14 +1004,15 @@ Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage st
         HitTestStage s = HitTestStage::HitTestPositionedElements;
 
         while (s != HitTestStageEnd) {
-            Frame* f = lastChild();
-            while (f) {
+            auto iter = boxes().rbegin();
+            while (iter != boxes().rend()) {
+                FrameBox* f = *iter;
                 LayoutUnit cx = x - f->asFrameBox()->x();
                 LayoutUnit cy = y - f->asFrameBox()->y();
                 result = f->hitTest(cx, cy, s);
                 if (result)
                     return result;
-                f = f->previous();
+                iter++;
             }
             s = (HitTestStage)(s + 1);
         }
@@ -1074,17 +1024,16 @@ void InlineNonReplacedBox::dump(int depth)
 {
     InlineBox::dump(depth);
     puts("");
-    if (firstChild()) {
-        Frame* f = firstChild();
-        while (f) {
-            for (int k = 0; k < depth + 1; k++)
-                printf("  ");
-            printf("%s", f->name());
-            f->dump(depth + 2);
-            if (f != lastChild())
-                puts("");
-            f = f->next();
-        }
+    auto iter = boxes().begin();
+    while (iter != boxes().end()) {
+        FrameBox* f = *iter;
+        for (int k = 0; k < depth + 1; k++)
+            printf("  ");
+        printf("%s", f->name());
+        f->dump(depth + 2);
+        if (iter + 1 != boxes().end())
+            puts("");
+        iter++;
     }
 }
 }

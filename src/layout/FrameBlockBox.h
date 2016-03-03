@@ -10,7 +10,6 @@ class FrameBlockBox;
 class LineFormattingContext;
 class InlineTextBox; // TextNode
 class InlineBlockBox; // display-inline:block
-class InlineReplacedBox; // replaced element, display: inline
 class InlineNonReplacedBox; // non-replaced element, display: inline
 
 class InlineBox : public FrameBox {
@@ -31,7 +30,6 @@ public:
 
     virtual bool isInlineBox() { return true; }
     virtual bool isInlineTextBox() const { return false; }
-    virtual bool isInlineReplacedBox() const { return false; }
     virtual bool isInlineBlockBox() const { return false; }
     virtual bool isInlineNonReplacedBox() const { return false; }
 
@@ -45,12 +43,6 @@ public:
     {
         STARFISH_ASSERT(isInlineBlockBox());
         return (InlineBlockBox*)this;
-    }
-
-    InlineReplacedBox* asInlineReplacedBox()
-    {
-        STARFISH_ASSERT(isInlineReplacedBox());
-        return (InlineReplacedBox*)this;
     }
 
     InlineNonReplacedBox* asInlineNonReplacedBox()
@@ -93,35 +85,6 @@ protected:
     FrameText* m_origin;
 };
 
-class InlineReplacedBox : public InlineBox {
-public:
-    InlineReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameReplaced* f)
-        : InlineBox(node, style, parent)
-    {
-        m_frameReplaced = f;
-    }
-
-    virtual bool isInlineReplacedBox() const { return true; }
-
-    virtual void paint(Canvas* canvas, PaintingStage stage)
-    {
-        m_frameReplaced->paint(canvas, stage);
-    }
-
-    virtual const char* name()
-    {
-        return "InlineReplacedBox";
-    }
-
-    FrameReplaced* replacedBox()
-    {
-        return m_frameReplaced;
-    }
-
-protected:
-    FrameReplaced* m_frameReplaced;
-};
-
 class InlineBlockBox : public InlineBox {
     friend FrameBlockBox;
 
@@ -130,8 +93,8 @@ public:
         : InlineBox(node, style, parent)
     {
         m_frameBlockBox = f;
-        ((FrameBox*)m_frameBlockBox)->setLayoutParent(this);
         m_ascender = ascender;
+        ((FrameBox*)m_frameBlockBox)->setLayoutParent(this);
     }
 
     virtual bool isInlineBlockBox() const { return true; }
@@ -170,8 +133,20 @@ public:
         return "InlineNonReplacedBox";
     }
     static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx, FrameBlockBox* blockBox,
-        LineFormattingContext* lineFormattingContext, FrameBox* layoutParentBox, bool freshStart);
+        LineFormattingContext* lineFormattingContext, InlineNonReplacedBox* layoutParentBox, bool freshStart);
     virtual void paint(Canvas* canvas, PaintingStage stage);
+    virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage)
+    {
+        auto iter = boxes().begin();
+        while (iter != boxes().end()) {
+            FrameBox* child = *iter;
+            canvas->save();
+            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
+            child->paint(canvas, stage);
+            canvas->restore();
+            iter++;
+        }
+    }
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual void dump(int depth);
 
@@ -187,11 +162,17 @@ public:
         return m_descender;
     }
 
+    std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes()
+    {
+        return m_boxes;
+    }
+
 protected:
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     FrameInline* m_origin;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
+    std::vector<FrameBox*, gc_allocator<FrameBox*> > m_boxes;
 };
 
 class LineBox : public FrameBox {

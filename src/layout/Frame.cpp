@@ -6,7 +6,7 @@ namespace StarFish {
 
 Frame* LayoutContext::blockContainer(Frame* currentFrame)
 {
-    Frame* f = currentFrame->parent();
+    Frame* f = currentFrame->layoutParent();
 
     if (!f)
         return currentFrame;
@@ -15,7 +15,7 @@ Frame* LayoutContext::blockContainer(Frame* currentFrame)
         if (f->isFrameBlockBox() && f->node() != nullptr) {
             return f;
         }
-        f = f->parent();
+        f = f->layoutParent();
     }
 }
 

@@ -210,6 +210,9 @@ public:
 
     virtual void paint(Canvas* canvas, PaintingStage stage)
     {
+        if (isEstablishesStackingContext())
+            return;
+
         if (isPositionedElement() && stage == PaintingPositionedElements) {
             paintBackgroundAndBorders(canvas);
             paintReplaced(canvas);
@@ -217,6 +220,11 @@ public:
             paintBackgroundAndBorders(canvas);
             paintReplaced(canvas);
         }
+    }
+
+    virtual void paintStackingContextContent(Canvas* canvas)
+    {
+        paintReplaced(canvas);
     }
 
 protected:
