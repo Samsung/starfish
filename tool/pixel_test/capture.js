@@ -12,19 +12,18 @@ var testPath = "";
 var basePath = "../../test/";
 var filelist = [];
 var pathToSave = "";
+var W = 360, H = 360;
 
 function initialize() {
     if (args.length == 1) {
         testPath = "/unittest/css";
         basePath = "../../test/";
     }
-    else if (args.length == 2) {
+    else if (args.length >= 2) {
         if (args[1] == "css" || args[1] == "dom" || args[1] == "xhr") {
             testPath = "/unittest/" + args[1];
             return true;
         }
-    }
-    else if (args.length >= 3) {
         if (args[1] == "-f" && fs.isFile(args[2]) && (args[2].endsWith(".html") || args[2].endsWith(".htm"))) {
             var last = args[2].lastIndexOf('/');
             filelist[0] = args[2].substring(last);
@@ -40,6 +39,10 @@ function initialize() {
         }
     }
     return false;
+}
+if (args[args.length-1] == "pc") {
+    W = 800;
+    H = 600;
 }
 
 if (!initialize()) {
@@ -58,8 +61,8 @@ console.log("     * The captured images will be saved in " + pathToSave);
 var page = require('webpage').create();
 
 page.viewportSize = {
-    width: 360,
-    height: 360
+    width: W,
+    height: H
 };
 
 page.clipRect = {

@@ -10,7 +10,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
     LayoutUnit normalFlowHeight = 0;
-    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext());
+    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
     LayoutUnit lastMarginBottom;
     if (marginInfo.canCollapseTopWithChildren()) {
@@ -102,9 +102,13 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
         child = child->next();
     }
-    // TODO(june0cho) implement margin-collapse for bottom
-    normalFlowHeight += lastMarginBottom;
     ctx.setMaxMarginTop(maxPositiveMarginTop, maxNegativeMarginTop);
+    ctx.setMaxMarginBottom(std::max(ctx.maxPositiveMarginBottom(), marginInfo.positiveMargin()),
+                            std::max(ctx.maxNegativeMarginBottom(), marginInfo.negativeMargin()));
+    if (!marginInfo.canCollapseWithMarginBottom()) {
+        normalFlowHeight += ctx.maxPositiveMarginBottom() - ctx.maxNegativeMarginBottom();
+        ctx.setMaxMarginBottom(0, 0);
+    }
     return normalFlowHeight;
 }
 

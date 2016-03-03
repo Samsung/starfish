@@ -169,12 +169,32 @@ public:
         m_maxPositiveMarginTop = pos;
         m_maxNegativeMarginTop = neg;
     }
+    LayoutUnit maxPositiveMarginBottom()
+    {
+        return m_maxPositiveMarginBottom;
+    }
+    void setMaxNegativeMarginBottom(LayoutUnit m)
+    {
+        m_maxNegativeMarginBottom = m;
+    }
+    LayoutUnit maxNegativeMarginBottom()
+    {
+        return m_maxNegativeMarginBottom;
+    }
+    void setMaxMarginBottom(LayoutUnit pos, LayoutUnit neg)
+    {
+        STARFISH_ASSERT(pos >= 0 && neg >= 0);
+        m_maxPositiveMarginBottom = pos;
+        m_maxNegativeMarginBottom = neg;
+    }
 
 private:
     Frame* m_rootFrame;
     LineBox* m_lastLineBox;
     LayoutUnit m_maxPositiveMarginTop;
     LayoutUnit m_maxNegativeMarginTop;
+    LayoutUnit m_maxPositiveMarginBottom;
+    LayoutUnit m_maxNegativeMarginBottom;
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
     std::map<Frame*, std::vector<Frame*> > m_absolutePositionedFrames;
     std::map<Frame*, std::vector<Frame*> > m_relativePositionedFrames;

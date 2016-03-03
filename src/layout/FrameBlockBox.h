@@ -239,11 +239,11 @@ protected:
 
 class MarginInfo {
 public:
-    MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding, bool isNewContext)
+    MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding, bool isNewContext, Length height)
     {
         m_canCollapseWithChildren = !isNewContext && !topBorderPadding && !bottomBorderPadding;
         m_canCollapseTopWithChildren = m_canCollapseWithChildren && !topBorderPadding;
-        m_canCollapseBottomWithChildren = m_canCollapseWithChildren && !bottomBorderPadding;
+        m_canCollapseBottomWithChildren = m_canCollapseWithChildren && !bottomBorderPadding && height.isAuto();
         m_atTopSideOfBlock = true;
     }
     void setPositiveMargin(LayoutUnit m)
@@ -290,6 +290,14 @@ public:
     bool canCollapseWithMarginBottom()
     {
         return m_atBottomSideOfBlock && m_canCollapseBottomWithChildren;
+    }
+    bool canCollapseBottomWithChildren()
+    {
+        return m_canCollapseBottomWithChildren;
+    }
+    void setCanCollapseBottomWithChildren(bool v)
+    {
+        m_canCollapseBottomWithChildren = v;
     }
     bool m_canCollapseWithChildren;
     bool m_canCollapseTopWithChildren;

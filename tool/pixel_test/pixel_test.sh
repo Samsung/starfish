@@ -15,11 +15,18 @@ mkdir -p $OUTDIR
 mkdir -p $EXPECTED_IMAGE_PATH
 PASS=0
 FAIL=0
+W=360
+H=360
 
 if [ "$1" = "" ]; then
     tc=$(find test -name "*.html" | grep -v "csswg-test" | sort)
 else
     tc=$1
+fi
+
+if [ "$2" = "pc" ]; then
+    W=800
+    H=600
 fi
 
 if [[ "$tc" == *"reftest"* ]]; then
@@ -28,7 +35,7 @@ if [[ "$tc" == *"reftest"* ]]; then
 fi
 
 if [[ "$tc" == *"/" ]]; then
-    tc=$(find $tc -name "*.html" | grep -v "csswg-test" | sort);
+    tc=$(find $tc -name "*.htm*" | grep -v "csswg-test" | sort);
 fi
 
 if [[ "$tc" == *".res" ]]; then
@@ -48,7 +55,7 @@ for i in $tc ; do
 
     # Capture the screenshot
 #    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
-    ELM_ENGINE="shot:" ./tool/pixel_test/bin/nodejs runner.js ${i} --pixel-test > /dev/null 2>&1
+ELM_ENGINE="shot:" ./tool/pixel_test/bin/nodejs runner.js ${i} --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
 
     # Compare
     mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}
@@ -59,7 +66,7 @@ for i in $tc ; do
     #echo $STARFISH_PNG
     #echo $DIFF_PNG
     if [ ! -f ${WEBKIT_PNG} ]; then
-        phantomjs tool/pixel_test/capture.js -f ${i} out/ > /dev/null 2>&1
+        phantomjs tool/pixel_test/capture.js -f ${i} out/ $2 > /dev/null 2>&1
         mv out/${file}_expected.png ${WEBKIT_PNG}
     fi
 

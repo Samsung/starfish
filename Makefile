@@ -386,17 +386,17 @@ pixel_test:
 	if [[ ! -f tool/pixel_test/bin/nodejs ]]; then \
 		make install_pixel_test_dep; \
 	fi;
-	./tool/pixel_test/pixel_test.sh $(tc)
+	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
 pixel_test_css1:
-	make pixel_test tc=tool/pixel_test/css1.res
+	make pixel_test tc=tool/pixel_test/css1.res screen=pc
 pixel_test_css21:
-	make pixel_test tc=tool/pixel_test/css21.res
+	make pixel_test tc=tool/pixel_test/css21.res screen=pc
 pixel_test_css3_color:
-	make pixel_test tc=tool/pixel_test/css-color-3.res
+	make pixel_test tc=tool/pixel_test/css-color-3.res screen=pc
 pixel_test_css3_backgrounds:
-	make pixel_test tc=tool/pixel_test/css-backgrounds-3.res
+	make pixel_test tc=tool/pixel_test/css-backgrounds-3.res screen=pc
 pixel_test_css3_transforms:
-	make pixel_test tc=tool/pixel_test/css-transforms-1.res
+	make pixel_test tc=tool/pixel_test/css-transforms-1.res screen=pc
 
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
