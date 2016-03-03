@@ -99,7 +99,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->addEventListener(eventTypeName, listener, capture);
         }
         return escargot::ESValue();
-    }, escargot::ESString::create("addEventListener"), 2, false);
+    }, escargot::ESString::create("addEventListener"), 0, false);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), false, false, false, fnAddEventListener);
 
     auto fnRemoveEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -117,9 +118,21 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->removeEventListener(eventTypeName, listener, capture);
         }
         return escargot::ESValue();
-    }, escargot::ESString::create("removeEventListener"), 2, false);
-    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), true, true, true, fnAddEventListener);
-    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeEventListener"), true, true, true, fnRemoveEventListener);
+    }, escargot::ESString::create("removeEventListener"), 0, false);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeEventListener"), false, false, false, fnRemoveEventListener);
+
+    auto fnDispatchEvent = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        if (argCount == 1 && firstArg.isObject()) {
+            Event* event = (Event*)firstArg.asESPointer()->asESObject()->extraPointerData();
+            ((EventTarget*)thisValue.asESPointer()->asESObject()->extraPointerData())->dispatchEvent(event);
+        }
+        return escargot::ESValue();
+    }, escargot::ESString::create("dispatchEvent"), 1, false);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("dispatchEvent"), false, false, false, fnDispatchEvent);
 
     DEFINE_FUNCTION(Window, EventTargetFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("window"), false, false, false, fetchData(this)->m_instance->globalObject());
@@ -1695,7 +1708,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             // FIXME: TypeError
             return escargot::ESValue();
         }
-    }, escargot::ESString::create("Event"), 2, true);
+    }, escargot::ESString::create("Event"), 1, true);
     eventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     eventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), false, false, false, eventFunction);
@@ -1715,11 +1728,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         EventTarget* target = ((Event*) originalObj->extraPointerData())->target();
         if (target && target->isNode()) {
             Node* node = target->asNode();
-            if (node->isElement()) {
-                return node->asElement()->scriptValue();
-            } else {
-                return node->scriptValue();
-            }
+            return node->asElement()->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
         },
@@ -1731,11 +1740,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         EventTarget* currentTarget = ((Event*) originalObj->extraPointerData())->currentTarget();
         if (currentTarget && currentTarget->isNode()) {
             Node* node = currentTarget->asNode();
-            if (node->isElement()) {
-                return node->asElement()->scriptValue();
-            } else {
-                return node->scriptValue();
-            }
+            return node->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
         },
