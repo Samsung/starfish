@@ -343,7 +343,7 @@ public:
     virtual void beginOpacityLayer(float c)
     {
         save();
-        lastState().m_opacity = c;
+        lastState().m_opacity = c * lastState().m_opacity;
     }
 
     virtual void endOpacityLayer()
@@ -475,8 +475,14 @@ public:
             ww = sss.width();
             hh = sss.height();
         } else {
-            xx = lastState().m_baseX + rt.x();
-            yy = lastState().m_baseY + rt.y();
+            if (!shouldApplyEvasMap()) {
+                xx = lastState().m_baseX + rt.x();
+                yy = lastState().m_baseY + rt.y();
+            } else {
+                xx = rt.x();
+                yy = rt.y();
+            }
+
             ww = rt.width();
             hh = rt.height();
         }
@@ -503,14 +509,18 @@ public:
             ww = sss.width();
             hh = sss.height();
         } else {
-            LayoutUnit rx = lastState().m_baseX + rt.x();
-            LayoutUnit ry = lastState().m_baseY + rt.y();
+            LayoutUnit rx = rt.x();
+            LayoutUnit ry = rt.y();
+            if (!shouldApplyEvasMap()) {
+                rx += lastState().m_baseX;
+                ry += lastState().m_baseY;
+            }
             xx = rx.floor();
             yy = ry.floor();
             ww = snapSizeToPixel(rt.width(), rx);
             hh = snapSizeToPixel(rt.height(), ry);
         }
-        drawEvasRect(xx, yy, ww, hh, Rect(rt.x(), rt.y(), rt.width(), rt.height()));
+        drawEvasRect(xx, yy, ww, hh, Rect(xx, yy, ww, hh));
     }
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, String* text)
@@ -518,6 +528,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
+
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
         if (g_enablePixelTest) {
@@ -572,8 +583,13 @@ public:
                 xx = sss.x();
                 yy = sss.y();
             } else {
-                xx = lastState().m_baseX + rt.x();
-                yy = lastState().m_baseY + rt.y();
+                if (!shouldApplyEvasMap()) {
+                    xx = lastState().m_baseX + rt.x();
+                    yy = lastState().m_baseY + rt.y();
+                } else {
+                    xx = x;
+                    yy = y;
+                }
             }
 
             int siz;
@@ -585,9 +601,8 @@ public:
 
             evas_object_move(eo, (int)xx, (int)yy);
             applyClippers(eo);
+            applyEvasMapIfNeeded(eo, rt);
 
-            // NOTE we will implement Composite RenderLayer stuff. so shouldApplyEvasMap() is always false
-            STARFISH_ASSERT(!shouldApplyEvasMap());
             evas_object_show(eo);
         } else {
             if (text->equals(String::spaceString)) {
@@ -616,8 +631,13 @@ public:
                 ww = sss.width();
                 hh = sss.height();
             } else {
-                xx = lastState().m_baseX + rt.x();
-                yy = lastState().m_baseY + rt.y();
+                if (!shouldApplyEvasMap()) {
+                    xx = lastState().m_baseX + rt.x();
+                    yy = lastState().m_baseY + rt.y();
+                } else {
+                    xx = x;
+                    yy = y;
+                }
                 ww = rt.width();
                 hh = rt.height();
             }
@@ -686,9 +706,7 @@ public:
             evas_object_move(eo, xx, yy);
 
             applyClippers(eo);
-
-            // NOTE we will implement Composite RenderLayer stuff. so shouldApplyEvasMap() is always false
-            STARFISH_ASSERT(!shouldApplyEvasMap());
+            applyEvasMapIfNeeded(eo, rt);
 
             evas_object_show(eo);
             evas_textblock_style_free(st);
@@ -742,8 +760,12 @@ public:
             ww = sss.width();
             hh = sss.height();
         } else {
-            xx = lastState().m_baseX + dst.x();
-            yy = lastState().m_baseY + dst.y();
+            xx = dst.x();
+            yy = dst.y();
+            if (!shouldApplyEvasMap()) {
+                xx = lastState().m_baseX + dst.x();
+                yy = lastState().m_baseY + dst.y();
+            }
             ww = dst.width();
             hh = dst.height();
         }
@@ -773,14 +795,13 @@ public:
         evas_object_resize(eo, ww, hh);
 
         applyClippers(eo);
-        if (shouldApplyEvasMap()) {
-            applyEvasMapIfNeeded(eo, dst, true);
-        }
+        applyEvasMapIfNeeded(eo, dst, true);
         evas_object_show(eo);
     }
 
     virtual void setMatrix(const SkMatrix& matrix)
     {
+        lastState().m_mapMode = true;
         lastState().m_matrix = matrix;
     }
 
@@ -806,12 +827,19 @@ public:
     {
         return lastState().m_matrix.getType() & SkMatrix::TypeMask::kAffine_Mask;
     }
+
     bool shouldApplyEvasMap()
     {
         if (lastState().m_opacity != 1) {
             return true;
         }
         return hasMatrixAffine();
+    }
+
+    void applyEvasMapIfNeeded(Evas_Object* eo, const LayoutRect& dst, bool isImage = false)
+    {
+        Rect rt((float)dst.x(), (float)dst.y(), (float)dst.width(), (float)dst.height());
+        applyEvasMapIfNeeded(eo, rt, isImage);
     }
 
     void applyEvasMapIfNeeded(Evas_Object* eo, const Rect& dst, bool isImage = false)
@@ -835,22 +863,38 @@ public:
                 SkPoint to;
                 fromX = SkFloatToScalar((float)dst.x());
                 fromY = SkFloatToScalar((float)dst.y());
-                lastState().m_matrix.mapXY(fromX, fromY, &to);
+                if (lastState().m_mapMode) {
+                    lastState().m_matrix.mapXY(fromX, fromY, &to);
+                } else {
+                    to.set(lastState().m_baseX + fromX, lastState().m_baseY + fromY);
+                }
                 evas_map_point_coord_set(map, 0, SkScalarToFloat(to.x()), SkScalarToFloat(to.y()), 0);
 
                 fromX = SkFloatToScalar((float)(dst.x() + dst.width()));
                 fromY = SkFloatToScalar((float)dst.y());
-                lastState().m_matrix.mapXY(fromX, fromY, &to);
+                if (lastState().m_mapMode) {
+                    lastState().m_matrix.mapXY(fromX, fromY, &to);
+                } else {
+                    to.set(lastState().m_baseX + fromX, lastState().m_baseY + fromY);
+                }
                 evas_map_point_coord_set(map, 1, SkScalarToFloat(to.x()), SkScalarToFloat(to.y()), 0);
 
                 fromX = SkFloatToScalar((float)(dst.x() + dst.width()));
                 fromY = SkFloatToScalar((float)(dst.y() + dst.height()));
-                lastState().m_matrix.mapXY(fromX, fromY, &to);
+                if (lastState().m_mapMode) {
+                    lastState().m_matrix.mapXY(fromX, fromY, &to);
+                } else {
+                    to.set(lastState().m_baseX + fromX, lastState().m_baseY + fromY);
+                }
                 evas_map_point_coord_set(map, 2, SkScalarToFloat(to.x()), SkScalarToFloat(to.y()), 0);
 
                 fromX = SkFloatToScalar((float)dst.x());
                 fromY = SkFloatToScalar((float)(dst.y() + dst.height()));
-                lastState().m_matrix.mapXY(fromX, fromY, &to);
+                if (lastState().m_mapMode) {
+                    lastState().m_matrix.mapXY(fromX, fromY, &to);
+                } else {
+                    to.set(lastState().m_baseX + fromX, lastState().m_baseY + fromY);
+                }
                 evas_map_point_coord_set(map, 3, SkScalarToFloat(to.x()), SkScalarToFloat(to.y()), 0);
             }
 

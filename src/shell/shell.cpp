@@ -16,6 +16,8 @@ int main(int argc, char *argv[])
     // GC_disable();
     int flag = 0;
 
+    // printf("%d", (int)sizeof (StarFish::ComputedStyle));
+
     const char* path = "";
     int width = 360, height = 360;
     for (int i = 2; i < argc; i ++) {

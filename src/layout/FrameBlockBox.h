@@ -257,7 +257,7 @@ public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
     {
-        STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr))
+        STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
     }
 
     virtual bool isFrameBlockBox()
@@ -326,6 +326,9 @@ protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
     std::vector<LineBox*, gc_allocator<LineBox*> > m_lineBoxes;
+
+    // TODO overflow:scroll
+    // LayoutRect m_visibleRect;
 };
 
 class LineFormattingContext {

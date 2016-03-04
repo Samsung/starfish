@@ -380,7 +380,7 @@ void Window::rendering()
     if (m_needsLayout) {
         // lay out frame tree
         Timer t("lay out frame tree");
-        LayoutContext ctx(nullptr);
+        LayoutContext ctx;
         m_document->frame()->layout(ctx);
         m_needsLayout = false;
     }

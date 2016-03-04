@@ -94,7 +94,7 @@ void FrameTreeBuilder::clearTree(Node* current)
     }
 }
 
-void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame)
+void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode)
 {
     if (!frameBlockBox->firstChild()) {
         frameBlockBox->appendChild(currentFrame);
@@ -113,7 +113,10 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
 
             if (last->node()) {
                 ComputedStyle* newStyle = new ComputedStyle(currentFrame->style());
+                newStyle->loadResources(last->node()->document()->window()->starFish());
+                newStyle->arrangeStyleValues(currentFrame->style());
                 newStyle->setDisplay(DisplayValue::BlockDisplayValue);
+
                 last = new FrameBlockBox(nullptr, newStyle);
                 frameBlockBox->appendChild(last);
                 last->appendChild(currentFrame);
@@ -132,6 +135,9 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
 
             ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
             newStyle->setDisplay(DisplayValue::BlockDisplayValue);
+            newStyle->loadResources(currentNode->document()->window()->starFish());
+            newStyle->arrangeStyleValues(frameBlockBox->style());
+
             FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
             for (unsigned i = 0; i < backup.size(); i++) {
                 blockBox->appendChild(backup[i]);
@@ -207,7 +213,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
         }
 
-        frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame);
+        frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame, current);
 
         STARFISH_ASSERT(currentFrame->parent());
         current->setFrame(currentFrame);

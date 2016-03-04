@@ -310,9 +310,9 @@ public:
         return result;
     }
 
-    Location absolutePoint(FrameBox* top)
+    LayoutLocation absolutePoint(FrameBox* top)
     {
-        Location l(0, 0);
+        LayoutLocation l(0, 0);
         Frame* p = this;
         while (top != p) {
             l.setX(l.x() + p->asFrameBox()->x());

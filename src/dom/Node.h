@@ -334,8 +334,10 @@ public:
 
     void setState(NodeState state)
     {
-        m_state = state;
-        setNeedsStyleRecalc();
+        if (state != m_state) {
+            m_state = state;
+            setNeedsStyleRecalc();
+        }
     }
 
     NodeState state()

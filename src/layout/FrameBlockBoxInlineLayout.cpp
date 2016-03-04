@@ -18,6 +18,10 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
     std::vector<FrameBox*, gc_allocator<FrameBox*> >* boxes;
     if (parentBox->isLineBox()) {
         boxes = &parentBox->asLineBox()->boxes();
+        if (!boxes->size()) {
+            maxAscender = parentStyle->font()->metrics().m_ascender;
+            maxDescender = parentStyle->font()->metrics().m_descender;
+        }
     } else {
         boxes = &parentBox->asInlineBox()->asInlineNonReplacedBox()->boxes();
     }

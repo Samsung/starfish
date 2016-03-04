@@ -743,20 +743,7 @@ public:
     static bool initialBorderImageSliceFill() { return false; }
     static BorderImageRepeatValue initialBorderImageRepeat() { return BorderImageRepeatValue::StretchValue; }
 
-protected:
-    void initNonInheritedStyles()
-    {
-        m_display = DisplayValue::InlineDisplayValue;
-        m_opacity = 1;
-        m_zIndex = 0;
-        m_background = nullptr;
-        m_surround = nullptr;
-        m_overflowX = OverflowValue::VisibleOverflow;
-        //        m_overflowY = OverflowValue::VisibleOverflow;
-        m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
-        m_verticalAlign = initialVerticalAlign();
-    }
-
+    void loadResources(StarFish* sf);
     void arrangeStyleValues(ComputedStyle* parentStyle)
     {
         // 9.7 Relationships between 'display', 'position', and 'float'
@@ -810,7 +797,19 @@ protected:
         }
     }
 
-    void loadResources(StarFish* sf);
+protected:
+    void initNonInheritedStyles()
+    {
+        m_display = DisplayValue::InlineDisplayValue;
+        m_opacity = 1;
+        m_zIndex = 0;
+        m_background = nullptr;
+        m_surround = nullptr;
+        m_overflowX = OverflowValue::VisibleOverflow;
+        //        m_overflowY = OverflowValue::VisibleOverflow;
+        m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
+        m_verticalAlign = initialVerticalAlign();
+    }
 
     // NOTICE
     // if you add new property, you MUST implement comparing style for new property in [compareStyle function]
@@ -819,23 +818,23 @@ protected:
     struct InheritedStyles {
         Color m_color;
         Length m_fontSize;
-        FontStyleValue m_fontStyle;
-        FontWeightValue m_fontWeight;
         Length m_letterSpacing;
         Length m_lineHeight;
-        TextAlignValue m_textAlign;
-        DirectionValue m_direction;
-        VisibilityValue m_visibility;
+        FontStyleValue m_fontStyle : 2;
+        FontWeightValue m_fontWeight : 4;
+        TextAlignValue m_textAlign : 3;
+        DirectionValue m_direction : 2;
+        VisibilityValue m_visibility : 1;
     } m_inheritedStyles;
 
-    DisplayValue m_display;
-    DisplayValue m_originalDisplay;
-    PositionValue m_position;
-    TextOverflowValue m_textOverflow;
-    VerticalAlignValue m_verticalAlign;
-    OverflowValue m_overflowX;
-    //    OverflowValue m_overflowY;
-    TextDecorationValue m_textDecoration;
+    DisplayValue m_display : 3;
+    DisplayValue m_originalDisplay : 3;
+    PositionValue m_position : 2;
+    TextOverflowValue m_textOverflow : 1;
+    VerticalAlignValue m_verticalAlign : 4;
+    OverflowValue m_overflowX : 1;
+    // OverflowValue m_overflowY : 1;
+    TextDecorationValue m_textDecoration : 3;
 
     Length m_width;
     Length m_height;

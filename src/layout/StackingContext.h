@@ -28,6 +28,7 @@ public:
     }
 
 protected:
+    bool m_needsOwnBuffer;
     FrameBox* m_owner;
     StackingContext* m_parent;
 

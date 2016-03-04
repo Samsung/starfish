@@ -10,6 +10,9 @@ void FrameBox::paintStackingContext(Canvas* canvas)
     STARFISH_ASSERT(isEstablishesStackingContext());
     STARFISH_ASSERT(m_stackingContext);
 
+    if (style()->opacity() != 1) {
+        canvas->beginOpacityLayer(style()->opacity());
+    }
     // Within each stacking context, the following layers are painted in back-to-front order:
 
     // the background and borders of the element forming the stacking context.
@@ -20,14 +23,14 @@ void FrameBox::paintStackingContext(Canvas* canvas)
         auto iter = m_stackingContext->childContexts().begin();
         while (iter != m_stackingContext->childContexts().end()) {
             int32_t num = iter->first;
-            if (num > 0)
+            if (num >= 0)
                 break;
             auto iter2 = iter->second->begin();
             while (iter2 != iter->second->end()) {
                 StackingContext* sCtx = *iter2;
                 canvas->save();
 
-                Location l = sCtx->owner()->absolutePoint(this);
+                LayoutLocation l = sCtx->owner()->absolutePoint(this);
                 canvas->translate(l.x(), l.y());
                 sCtx->owner()->paintStackingContext(canvas);
 
@@ -45,13 +48,13 @@ void FrameBox::paintStackingContext(Canvas* canvas)
         auto iter = m_stackingContext->childContexts().begin();
         while (iter != m_stackingContext->childContexts().end()) {
             int32_t num = iter->first;
-            if (num > 0) {
+            if (num >= 0) {
                 auto iter2 = iter->second->begin();
                 while (iter2 != iter->second->end()) {
                     StackingContext* sCtx = *iter2;
                     canvas->save();
 
-                    Location l = sCtx->owner()->absolutePoint(this);
+                    LayoutLocation l = sCtx->owner()->absolutePoint(this);
                     canvas->translate(l.x(), l.y());
                     sCtx->owner()->paintStackingContext(canvas);
 
@@ -61,6 +64,10 @@ void FrameBox::paintStackingContext(Canvas* canvas)
             }
             iter++;
         }
+    }
+
+    if (style()->opacity() != 1) {
+        canvas->endOpacityLayer();
     }
 
 }
@@ -97,7 +104,7 @@ Frame* FrameBox::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
                 LayoutUnit oldY = y;
                 while (iter2 != iter->second->rend()) {
                     StackingContext* sCtx = *iter2;
-                    Location l = sCtx->owner()->absolutePoint(this);
+                    LayoutLocation l = sCtx->owner()->absolutePoint(this);
                     x -= l.x();
                     y -= l.y();
                     result = sCtx->owner()->hitTestStackingContext(x, y);
@@ -143,7 +150,7 @@ Frame* FrameBox::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
             while (iter2 != iter->second->rend()) {
                 StackingContext* sCtx = *iter2;
 
-                Location l = sCtx->owner()->absolutePoint(this);
+                LayoutLocation l = sCtx->owner()->absolutePoint(this);
                 x -= l.x();
                 y -= l.y();
                 result = sCtx->owner()->hitTestStackingContext(x, y);

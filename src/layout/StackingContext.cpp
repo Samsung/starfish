@@ -9,7 +9,6 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
 {
     m_owner = owner;
     m_parent = parent;
-
     if (m_parent) {
         int32_t num = owner->style()->zIndex();
         auto iter = m_parent->m_childContexts.find(num);
@@ -18,6 +17,11 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
         }
         iter->second->push_back(this);
     }
+
+    bool needsOwnBuffer = false;
+    m_needsOwnBuffer = needsOwnBuffer;
 }
+
+
 
 }

@@ -39,22 +39,27 @@ class MarginInfo;
 
 class LayoutContext {
 public:
-    LayoutContext(Frame* rootFrame)
+    LayoutContext()
+        : m_lastLineBox(nullptr)
     {
-        m_rootFrame = rootFrame;
-        m_lastLineBox = nullptr;
+        establishBlockFormattingContext();
     }
 
     ~LayoutContext()
     {
+        STARFISH_ASSERT(m_blockFormattingContextInfo.size() == 1);
         STARFISH_ASSERT(m_absolutePositionedFrames.size() == 0);
         STARFISH_ASSERT(m_relativePositionedFrames.size() == 0);
     }
 
-    void propagateDataToParentLayoutContext(LayoutContext& parentCtx)
+    void establishBlockFormattingContext()
     {
-        propagatePositionedFrames(parentCtx);
-        parentCtx.setLastLineBox(lastLineBox());
+        m_blockFormattingContextInfo.push_back(BlockFormattingContext());
+    }
+
+    void removeBlockFormattingContext()
+    {
+        m_blockFormattingContextInfo.pop_back();
     }
 
     LayoutUnit parentContentWidth(Frame* currentFrame);
@@ -151,53 +156,62 @@ public:
 
     void setMaxPositiveMarginTop(LayoutUnit m)
     {
-        m_maxPositiveMarginTop = m;
+        m_blockFormattingContextInfo.back().m_maxPositiveMarginTop = m;
     }
     LayoutUnit maxPositiveMarginTop()
     {
-        return m_maxPositiveMarginTop;
+        return m_blockFormattingContextInfo.back().m_maxPositiveMarginTop;
     }
     void setMaxNegativeMarginTop(LayoutUnit m)
     {
-        m_maxNegativeMarginTop = m;
+        m_blockFormattingContextInfo.back().m_maxNegativeMarginTop = m;
     }
     LayoutUnit maxNegativeMarginTop()
     {
-        return m_maxNegativeMarginTop;
+        return m_blockFormattingContextInfo.back().m_maxNegativeMarginTop;
     }
     void setMaxMarginTop(LayoutUnit pos, LayoutUnit neg)
     {
         STARFISH_ASSERT(pos >= 0 && neg >= 0);
-        m_maxPositiveMarginTop = pos;
-        m_maxNegativeMarginTop = neg;
+        m_blockFormattingContextInfo.back().m_maxPositiveMarginTop = pos;
+        m_blockFormattingContextInfo.back().m_maxNegativeMarginTop = neg;
     }
     LayoutUnit maxPositiveMarginBottom()
     {
-        return m_maxPositiveMarginBottom;
+        return m_blockFormattingContextInfo.back().m_maxPositiveMarginBottom;
     }
     void setMaxNegativeMarginBottom(LayoutUnit m)
     {
-        m_maxNegativeMarginBottom = m;
+        m_blockFormattingContextInfo.back().m_maxNegativeMarginBottom = m;
     }
     LayoutUnit maxNegativeMarginBottom()
     {
-        return m_maxNegativeMarginBottom;
+        return m_blockFormattingContextInfo.back().m_maxNegativeMarginBottom;
     }
     void setMaxMarginBottom(LayoutUnit pos, LayoutUnit neg)
     {
         STARFISH_ASSERT(pos >= 0 && neg >= 0);
-        m_maxPositiveMarginBottom = pos;
-        m_maxNegativeMarginBottom = neg;
+        m_blockFormattingContextInfo.back().m_maxPositiveMarginBottom = pos;
+        m_blockFormattingContextInfo.back().m_maxNegativeMarginBottom = neg;
     }
 
 private:
-    Frame* m_rootFrame;
+
+    struct BlockFormattingContext {
+        BlockFormattingContext()
+        {
+
+        }
+        LayoutUnit m_maxPositiveMarginTop;
+        LayoutUnit m_maxNegativeMarginTop;
+        LayoutUnit m_maxPositiveMarginBottom;
+        LayoutUnit m_maxNegativeMarginBottom;
+    };
+
     LineBox* m_lastLineBox;
-    LayoutUnit m_maxPositiveMarginTop;
-    LayoutUnit m_maxNegativeMarginTop;
-    LayoutUnit m_maxPositiveMarginBottom;
-    LayoutUnit m_maxNegativeMarginBottom;
+
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
+    std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
     std::map<Frame*, std::vector<Frame*> > m_absolutePositionedFrames;
     std::map<Frame*, std::vector<Frame*> > m_relativePositionedFrames;
 };
@@ -267,6 +281,7 @@ public:
         m_flags.m_isEstablishesStackingContext = isRootElement;
         if (style) {
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement && style->zIndex() != 0);
+            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->opacity() != 1);
         }
 
         if (style && style->width().isAuto()) {

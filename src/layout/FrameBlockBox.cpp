@@ -5,10 +5,10 @@
 
 namespace StarFish {
 
-void FrameBlockBox::layout(LayoutContext& passedCtx)
+void FrameBlockBox::layout(LayoutContext& ctx)
 {
-    LayoutContext newCtx(this);
-    LayoutContext& ctx = isEstablishesBlockFormattingContext() ? newCtx : passedCtx;
+    if (isEstablishesBlockFormattingContext())
+        ctx.establishBlockFormattingContext();
 
     establishesStackingContextIfNeeds();
 
@@ -326,7 +326,7 @@ void FrameBlockBox::layout(LayoutContext& passedCtx)
     });
 
     if (isEstablishesBlockFormattingContext()) {
-        ctx.propagateDataToParentLayoutContext(passedCtx);
+        ctx.removeBlockFormattingContext();
     }
 }
 
