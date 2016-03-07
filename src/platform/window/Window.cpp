@@ -475,6 +475,9 @@ void Window::rendering()
         m_needsPainting = false;
 
         delete canvas;
+#ifdef STARFISH_TIZEN_WEARABLE
+        evas_object_raise(eflWindow->m_dummyBox);
+#endif
     }
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -500,9 +503,6 @@ void Window::rendering()
     STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
 
-#ifdef STARFISH_TIZEN_WEARABLE
-    evas_object_raise(eflWindow->m_dummyBox);
-#endif
 }
 
 void Window::setNeedsRenderingSlowCase()

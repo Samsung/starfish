@@ -74,8 +74,6 @@ else ifeq ($(HOST), tizen_arm)
 
 	CXXFLAGS += -DEIRENE_TIZEN
 	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
-	CXXFLAGS += -I$(EIRENE_ROOT_DIR)
-	CXXFLAGS += -I$(WTF_ROOT_DIR)
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
 	CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
@@ -95,8 +93,6 @@ else ifeq ($(HOST), tizen_wearable_arm)
 
 	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
 	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
-	CXXFLAGS += -I$(EIRENE_ROOT_DIR)
-	CXXFLAGS += -I$(WTF_ROOT_DIR)
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
 	CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
@@ -136,7 +132,7 @@ endif
 #######################################################
 
 # common flags
-CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/
+CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Ipublic/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof
@@ -225,6 +221,8 @@ SRC += $(foreach dir, src/platform/window , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/image , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/font , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/public , $(wildcard $(dir)/*.cpp))
+
 ifeq ($(TYPE), lib)
 else
   SRC += $(foreach dir, src/shell , $(wildcard $(dir)/*.cpp))

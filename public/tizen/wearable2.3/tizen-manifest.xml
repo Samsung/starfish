@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns="http://tizen.org/ns/packages" package="com.sec.starfish" api-version="2.3.1" version="1.0.0">
+	<profile name="wearable" />
+	<widget-application appid="com.sec.starfish" exec="starfish" main="true" update-period="0" >
+		<icon>icon.png</icon>
+		<label>starfish</label>
+		<support-size preview="preview.png">2x2</support-size>
+	</widget-application>
+</manifest>
