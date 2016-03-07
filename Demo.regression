@@ -1,6 +1,7 @@
 
 test/demo/20160115/f01/index.html
 test/demo/20160115/f02/index.html
+test/demo/20160115/f02_interactive/index.html
 test/demo/20160115/f03/index.html
 test/demo/20160115/f04/index.html
 test/demo/20160115/f05/index.html
@@ -25,7 +26,6 @@ test/demo/20160115/p06/index.html
 test/demo/20160115/p07/index.html
 test/demo/20160115/p09/index.html
 test/demo/20160115/p10/index.html
-test/demo/20160115/progress_test/index.html
 test/demo/20160115/s01/index.html
 test/demo/20160115/s02/index.html
 test/demo/20160115/s03/index.html

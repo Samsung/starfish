@@ -31,7 +31,7 @@ fi
 cnt=0
 echo -e "${BOLD}###### CSS Regression Test ######${RESET}\n"
 for i in $tc ; do
-    if [[ $i == *"network"* ]]
+    if [[ $i == *"network"* || $i == *"f01_interactive"* ]]
     then
         continue;
     fi

@@ -64,7 +64,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
             if (marginInfo.canCollapseWithMarginTop()) {
                 maxPositiveMarginTop = std::max(maxPositiveMarginTop, posTop);
-                maxNegativeMarginTop = std::max(maxNegativeMarginTop, posTop);
+                maxNegativeMarginTop = std::max(maxNegativeMarginTop, negTop);
             }
 
             if (child->asFrameBox()->isSelfCollapsingBlock()) {
