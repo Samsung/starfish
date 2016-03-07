@@ -2,6 +2,10 @@
 #include "starfish.h"
 #include <StarFishPublic.h>
 
+#include <sys/types.h>
+#include <sys/syscall.h>
+
+
 typedef struct widget_instance_data {
 	Evas_Object *win;
 	StarFishInstance* starfish;
@@ -26,7 +30,7 @@ widget_instance_create(widget_context_h context, bundle *content, int w, int h, 
 	}
 
 	evas_object_resize(wid->win, w, h);
-	dlog_print(DLOG_ERROR, "StarFish", "StarFishStart");
+	dlog_print(DLOG_ERROR, "StarFish", "StarFishStart t(%zu)", (size_t)syscall(__NR_gettid));
 	char* buf = app_get_shared_resource_path();
 	buf[strlen(buf)-4] = 0;
 	dlog_print(DLOG_ERROR, "StarFish", "StarFishInit %s", buf);
