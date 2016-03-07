@@ -137,8 +137,6 @@ CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof
 
-CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
-
 ifeq ($(HOST), tizen)
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
 endif
@@ -256,6 +254,7 @@ ifeq ($(HOST), linux)
   CC           = gcc
   CXX          = g++
   STRIP        = strip
+  CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
 else ifeq ($(HOST), tizen_arm)
   ifndef TIZEN_SDK_HOME
     $(error TIZEN_SDK_HOME must be set)

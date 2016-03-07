@@ -10,12 +10,9 @@ class FrameReplacedImage : public FrameReplaced {
 public:
     FrameReplacedImage(Node* node, String* src)
         : FrameReplaced(node, nullptr)
+        , m_imageData(nullptr)
     {
-        if (src == String::emptyString || src->equals(String::emptyString)) {
-            m_imageData = nullptr;
-            return;
-        }
-        m_imageData = node->document()->window()->starFish()->fetchImage(node->document()->window()->starFish()->makeResourcePath(src));
+        replaceImageData(node, src);
     }
 
     virtual bool isFrameReplacedImage()
@@ -35,12 +32,21 @@ public:
             width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
     }
 
-    virtual Size intrinsicSize()
+    virtual LayoutSize intrinsicSize()
     {
         if (m_imageData)
-            return Size(m_imageData->width(), m_imageData->height());
+            return LayoutSize(m_imageData->width(), m_imageData->height());
         else
-            return Size(0, 0);
+            return LayoutSize(0, 0);
+    }
+
+    void replaceImageData(Node* node, String* src)
+    {
+        if (src == String::emptyString || src->equals(String::emptyString)) {
+            m_imageData = nullptr;
+        } else {
+            m_imageData = node->document()->window()->starFish()->fetchImage(node->document()->window()->starFish()->makeResourcePath(src));
+        }
     }
 
 protected:

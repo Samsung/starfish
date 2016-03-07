@@ -37,7 +37,7 @@ public:
 
     virtual void layout(LayoutContext& ctx)
     {
-        Size s = intrinsicSize();
+        LayoutSize s = intrinsicSize();
         LayoutUnit parentContentWidth = ctx.blockContainer(this)->asFrameBox()->contentWidth();
         computeBorderMarginPadding(parentContentWidth);
 
@@ -201,7 +201,7 @@ public:
         }
     }
 
-    virtual Size intrinsicSize() = 0;
+    virtual LayoutSize intrinsicSize() = 0;
 
     virtual void paintReplaced(Canvas* canvas)
     {

@@ -12,7 +12,7 @@ using namespace StarFish;
 
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 
-StarFishInstance* starfishInit(void* window, const char* workingDirectory)
+extern "C" StarFishInstance* starfishInit(void* window, const char* workingDirectory)
 {
     starfishGCAddRoots(String::emptyString, String::emptyString + sizeof(String*));
     starfishGCAddRoots(String::spaceString, String::spaceString + sizeof(String*));

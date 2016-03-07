@@ -314,7 +314,7 @@ Window::Window(StarFish* starFish)
     setNeedsRendering();
 }
 
-// #define STARFISH_ENABLE_TIMER
+#define STARFISH_ENABLE_TIMER
 
 #ifdef STARFISH_ENABLE_TIMER
 static unsigned long getLongTickCount()
@@ -627,6 +627,9 @@ Node* Window::hitTest(float x, float y)
 
 void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 {
+    if (!m_isRunning)
+        return;
+
     Node* node = hitTest(x, y);
     if (kind == TouchEventDown) {
         m_activeNodeWithTouchDown = node;
@@ -676,7 +679,8 @@ void Window::resume()
 {
     STARFISH_LOG_INFO("onResume");
     m_isRunning = true;
-    setNeedsRendering();
+    m_needsRendering = true;
+    m_needsPainting = true;
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 
     auto a = eflWindow->m_drawnImageList.begin();

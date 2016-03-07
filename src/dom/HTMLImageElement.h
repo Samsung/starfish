@@ -37,14 +37,7 @@ public:
         return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value)
-    {
-        HTMLElement::didAttributeChanged(name, old, value);
-        if (name == document()->window()->starFish()->staticStrings()->m_src) {
-            m_src = value;
-            setNeedsFrameTreeBuild();
-        }
-    }
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
 
 protected:
     String* m_src;

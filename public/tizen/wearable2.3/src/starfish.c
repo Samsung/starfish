@@ -30,7 +30,7 @@ widget_instance_create(widget_context_h context, bundle *content, int w, int h, 
 	}
 
 	evas_object_resize(wid->win, w, h);
-	dlog_print(DLOG_ERROR, "StarFish", "StarFishStart t(%zu)", (size_t)syscall(__NR_gettid));
+	dlog_print(DLOG_ERROR, "StarFish", "StarFishStart tid(%zu)", (size_t)syscall(__NR_gettid));
 	char* buf = app_get_shared_resource_path();
 	buf[strlen(buf)-4] = 0;
 	dlog_print(DLOG_ERROR, "StarFish", "StarFishInit %s", buf);
@@ -96,6 +96,7 @@ widget_instance_update(widget_context_h context, bundle *content,
                              int force, void *user_data)
 {
 	/* Take necessary actions when widget instance should be updated. */
+	dlog_print(DLOG_ERROR, "StarFish", "StarFish instance Update");
 	return WIDGET_ERROR_NONE;
 }
 
@@ -103,6 +104,7 @@ static int
 widget_instance_resize(widget_context_h context, int w, int h, void *user_data)
 {
 	/* Take necessary actions when the size of widget instance was changed. */
+	dlog_print(DLOG_ERROR, "StarFish", "StarFish instance Resize");
 	return WIDGET_ERROR_NONE;
 }
 

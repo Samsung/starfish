@@ -877,6 +877,11 @@ public:
         return m_height;
     }
 
+    bool operator==(const LayoutSize& src) const
+    {
+        return width() == src.width() && height() == src.height();
+    }
+
 protected:
     LayoutUnit m_width, m_height;
 };
