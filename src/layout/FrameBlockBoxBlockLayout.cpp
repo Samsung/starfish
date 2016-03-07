@@ -9,7 +9,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 {
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
-    LayoutUnit normalFlowHeight = 0;
+    LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = 0;
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
     LayoutUnit lastMarginBottom;
@@ -94,6 +94,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
         lastMarginBottom = marginInfo.positiveMargin() - marginInfo.negativeMargin();
         if (child->isNormalFlow()) {
+            if (maxNormalFlowBottom < child->asFrameBox()->height() + child->asFrameBox()->y())
+                maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
             normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
         } else {
             ctx.registerAbsolutePositionedFrames(child);
@@ -105,6 +107,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     ctx.setMaxMarginTop(maxPositiveMarginTop, maxNegativeMarginTop);
     ctx.setMaxMarginBottom(std::max(ctx.maxPositiveMarginBottom(), marginInfo.positiveMargin()),
         std::max(ctx.maxNegativeMarginBottom(), marginInfo.negativeMargin()));
+    normalFlowHeight = maxNormalFlowBottom - top;
     if (!marginInfo.canCollapseWithMarginBottom()) {
         normalFlowHeight += ctx.maxPositiveMarginBottom() - ctx.maxNegativeMarginBottom();
         ctx.setMaxMarginBottom(0, 0);
