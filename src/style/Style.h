@@ -230,6 +230,68 @@ enum VisibilityValue {
 class ValueList;
 class CSSStyleDeclaration;
 
+#define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
+    F(Color, color, "color")                                       \
+    F(Direction, direction, "direction")                           \
+    F(BackgroundColor, backgroundColor, "background-color")        \
+    F(LetterSpacing, letterSpacing, "letter-spacing")              \
+    F(LineHeight, lineHeight, "line-height")                       \
+    F(PaddingTop, paddingTop, "padding-top")                       \
+    F(PaddingRight, paddingRight, "padding-right")                 \
+    F(PaddingBottom, paddingBottom, "padding-bottom")              \
+    F(PaddingLeft, paddingLeft, "padding-left")                    \
+    F(Padding, padding, "padding")                                 \
+    F(MarginTop, marginTop, "margin-top")                          \
+    F(MarginRight, marginRight, "margin-right")                    \
+    F(MarginBottom, marginBottom, "margin-bottom")                 \
+    F(MarginLeft, marginLeft, "margin-left")                       \
+    F(Margin, margin, "margin")                                    \
+    F(Top, top, "top")                                             \
+    F(Bottom, bottom, "bottom")                                    \
+    F(Left, left, "left")                                          \
+    F(Right, right, "right")                                       \
+    F(Width, width, "width")                                       \
+    F(Height, height, "height")                                    \
+    F(FontSize, fontSize, "font-size")                             \
+    F(FontStyle, fontStyle, "font-style")                          \
+    F(Position, position, "position")                              \
+    F(TextDecoration, textDecoration, "text-decoration")           \
+    F(Display, display, "display")                                 \
+    F(Border, border, "border")                                    \
+    F(BorderImageRepeat, borderImageRepeat, "border-image-repeat") \
+    F(BorderImageSlice, borderImageSlice, "border-image-slice")    \
+    F(BorderImageSource, borderImageSource, "border-image-source") \
+    F(BorderImageWidth, borderImageWidth, "border-image-width")    \
+    F(BorderTop, borderTop, "border-top")                          \
+    F(BorderRight, borderRight, "border-right")                    \
+    F(BorderBottom, borderBottom, "border-bottom")                 \
+    F(BorderLeft, borderLeft, "border-left")                       \
+    F(BorderTopColor, borderTopColor, "border-top-color")          \
+    F(BorderRightColor, borderRightColor, "border-right-color")    \
+    F(BorderBottomColor, borderBottomColor, "border-bottom-color") \
+    F(BorderLeftColor, borderLeftColor, "border-left-color")       \
+    F(BorderTopStyle, borderTopStyle, "border-top-style")          \
+    F(BorderRightStyle, borderRightStyle, "border-right-style")    \
+    F(BorderBottomStyle, borderBottomStyle, "border-bottom-style") \
+    F(BorderLeftStyle, borderLeftStyle, "border-left-style")       \
+    F(BorderTopWidth, borderTopWidth, "border-top-width")          \
+    F(BorderRightWidth, borderRightWidth, "border-right-width")    \
+    F(BorderBottomWidth, borderBottomWidth, "border-bottom-width") \
+    F(BorderLeftWidth, borderLeftWidth, "border-left-width")       \
+    F(TextAlign, textAlign, "text-align")                          \
+    F(Visibility, visibility, "visibility")                        \
+    F(OverflowX, overflow, "overflow")                             \
+    F(BackgroundImage, backgroundImage, "background-image")        \
+    F(BackgroundSize, backgroundSize, "background-size")           \
+    F(ZIndex, zIndex, "z-index")                                   \
+    F(VerticalAlign, verticalAlign, "vertical-align")              \
+    F(BackgroundRepeat, backgroundRepeat, "background-repeat")     \
+    F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x") \
+    F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y") \
+    F(Background, background, "background")                        \
+    F(FontWeight, fontWeight, "font-weight")
+
+
 class CSSStyleValuePair : public gc {
     friend class ValueList;
 

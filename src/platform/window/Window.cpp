@@ -314,7 +314,7 @@ Window::Window(StarFish* starFish)
     setNeedsRendering();
 }
 
-#define STARFISH_ENABLE_TIMER
+// #define STARFISH_ENABLE_TIMER
 
 #ifdef STARFISH_ENABLE_TIMER
 static unsigned long getLongTickCount()

@@ -523,6 +523,56 @@ public:
         drawEvasRect(xx, yy, ww, hh, Rect(xx, yy, ww, hh));
     }
 
+    virtual void drawRect(LayoutLocation p1, LayoutLocation p2, LayoutLocation p3, LayoutLocation p4)
+    {
+        STARFISH_ASSERT(!hasMatrixAffine());
+        STARFISH_ASSERT(!lastState().m_mapMode);
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        p1.setX(p1.x() + lastState().m_baseX);
+        p1.setY(p1.y() + lastState().m_baseY);
+
+        p2.setX(p2.x() + lastState().m_baseX);
+        p2.setY(p2.y() + lastState().m_baseY);
+
+        p3.setX(p3.x() + lastState().m_baseX);
+        p3.setY(p3.y() + lastState().m_baseY);
+
+        p4.setX(p4.x() + lastState().m_baseX);
+        p4.setY(p4.y() + lastState().m_baseY);
+
+        Evas_Object* eo = evas_object_polygon_add(m_canvas);
+        if (m_objList)
+            m_objList->push_back(eo);
+        evas_object_color_set(eo, lastState().m_color.r(), lastState().m_color.g(), lastState().m_color.b(), lastState().m_color.a());
+
+        evas_object_polygon_point_add(eo, p1.x().floor(), p1.y().floor());
+        evas_object_polygon_point_add(eo, p2.x().floor(), p2.y().floor());
+        evas_object_polygon_point_add(eo, p3.x().floor(), p3.y().floor());
+        evas_object_polygon_point_add(eo, p4.x().floor(), p4.y().floor());
+
+        if (lastState().m_opacity != 1) {
+            Evas_Map* map = evas_map_new(4);
+
+            evas_map_util_points_populate_from_object(map, eo);
+            evas_map_alpha_set(map, EINA_TRUE);
+
+            int c = lastState().m_opacity * 255;
+            evas_map_point_color_set(map, 0, c, c, c, c);
+            evas_map_point_color_set(map, 1, c, c, c, c);
+            evas_map_point_color_set(map, 2, c, c, c, c);
+            evas_map_point_color_set(map, 3, c, c, c, c);
+
+            evas_object_map_set(eo, map);
+            evas_object_map_enable_set(eo, EINA_TRUE);
+            evas_map_free(map);
+        }
+
+        evas_object_show(eo);
+    }
+
     virtual void drawText(LayoutUnit x, LayoutUnit y, String* text)
     {
         if (!lastState().m_visible) {
@@ -809,6 +859,40 @@ public:
     {
         assureMapMode();
         return lastState().m_matrix;
+    }
+
+    virtual void applyMatrixTo(LayoutLocation lp)
+    {
+        if (lastState().m_mapMode) {
+            STARFISH_ASSERT(!hasMatrixAffine());
+            SkPoint point = SkPoint::Make((float)lp.x(), (float)lp.y());
+            lastState().m_matrix.mapPoints(&point, 1);
+            lp.setX(point.x());
+            lp.setY(point.y());
+        } else {
+            lp.setX(lp.x() + lastState().m_baseX);
+            lp.setY(lp.y() + lastState().m_baseY);
+        }
+    }
+
+    virtual void applyMatrixTo(LayoutRect lp)
+    {
+        if (lastState().m_mapMode) {
+            STARFISH_ASSERT(!hasMatrixAffine());
+            SkRect sss = SkRect::MakeXYWH(
+                SkFloatToScalar((float)lp.x()),
+                SkFloatToScalar((float)lp.y()),
+                SkFloatToScalar((float)lp.width()),
+                SkFloatToScalar((float)lp.height()));
+            lastState().m_matrix.mapRect(&sss);
+            lp.setX(sss.x());
+            lp.setY(sss.y());
+            lp.setWidth(sss.width());
+            lp.setHeight(sss.height());
+        } else {
+            lp.setX(lp.x() + lastState().m_baseX);
+            lp.setY(lp.y() + lastState().m_baseY);
+        }
     }
 
     virtual void* unwrap()

@@ -1864,69 +1864,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(CSSStyleDeclaration, CSSStyleDeclarationFunction->protoType());
     fetchData(this)->m_cssStyleDeclaration = CSSStyleDeclarationFunction;
 
-#undef FOR_EACH_STYLE_ATTRIBUTE
-#define FOR_EACH_STYLE_ATTRIBUTE(F)         \
-    F(Color, color)                         \
-    F(Direction, direction)                 \
-    F(BackgroundColor, backgroundColor)     \
-    F(LetterSpacing, letterSpacing)         \
-    F(LineHeight, lineHeight)               \
-    F(PaddingTop, paddingTop)               \
-    F(PaddingRight, paddingRight)           \
-    F(PaddingBottom, paddingBottom)         \
-    F(PaddingLeft, paddingLeft)             \
-    F(Padding, padding)                     \
-    F(MarginTop, marginTop)                 \
-    F(MarginRight, marginRight)             \
-    F(MarginBottom, marginBottom)           \
-    F(MarginLeft, marginLeft)               \
-    F(Margin, margin)                       \
-    F(Top, top)                             \
-    F(Bottom, bottom)                       \
-    F(Left, left)                           \
-    F(Right, right)                         \
-    F(Width, width)                         \
-    F(Height, height)                       \
-    F(FontSize, fontSize)                   \
-    F(FontStyle, fontStyle)                 \
-    F(Position, position)                   \
-    F(TextDecoration, textDecoration)       \
-    F(Display, display)                     \
-    F(Border, border)                       \
-    F(BorderImageRepeat, borderImageRepeat) \
-    F(BorderImageSlice, borderImageSlice)   \
-    F(BorderImageSource, borderImageSource) \
-    F(BorderImageWidth, borderImageWidth)   \
-    F(BorderTop, borderTop)                 \
-    F(BorderRight, borderRight)             \
-    F(BorderBottom, borderBottom)           \
-    F(BorderLeft, borderLeft)               \
-    F(BorderTopColor, borderTopColor)       \
-    F(BorderRightColor, borderRightColor)   \
-    F(BorderBottomColor, borderBottomColor) \
-    F(BorderLeftColor, borderLeftColor)     \
-    F(BorderTopStyle, borderTopStyle)       \
-    F(BorderRightStyle, borderRightStyle)   \
-    F(BorderBottomStyle, borderBottomStyle) \
-    F(BorderLeftStyle, borderLeftStyle)     \
-    F(BorderTopWidth, borderTopWidth)       \
-    F(BorderRightWidth, borderRightWidth)   \
-    F(BorderBottomWidth, borderBottomWidth) \
-    F(BorderLeftWidth, borderLeftWidth)     \
-    F(TextAlign, textAlign)                 \
-    F(Visibility, visibility)               \
-    F(OverflowX, overflow)                  \
-    F(BackgroundImage, backgroundImage)     \
-    F(BackgroundSize, backgroundSize)       \
-    F(ZIndex, zIndex)                       \
-    F(VerticalAlign, verticalAlign)         \
-    F(BackgroundRepeat, backgroundRepeat)   \
-    F(BackgroundRepeatX, backgroundRepeatX) \
-    F(BackgroundRepeatY, backgroundRepeatY) \
-    F(Background, background)               \
-    F(FontWeight, fontWeight)
-
-#define DEFINE_ACCESSOR_PROPERTY(name, nameLower)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
+#define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
     CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create(#nameLower),                                                                                                                                                                                                                                                                                                                                                                                                            \
         [](::escargot::ESObject * obj, ::escargot::ESObject * originalObj, escargot::ESString * name) -> escargot::ESValue { \
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject); \
@@ -1945,8 +1883,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
         false, false, false);
 
-    FOR_EACH_STYLE_ATTRIBUTE(DEFINE_ACCESSOR_PROPERTY)
-#undef FOR_EACH_STYLE_ATTRIBUTE
+    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
     /* Define css attributes that cannot use the template above */
     CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("opacity"),

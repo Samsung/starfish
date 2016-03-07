@@ -3267,6 +3267,18 @@ Color parseColor(String* str)
         float r, g, b;
         sscanf(s, "rgb(%f,%f,%f)", &r, &g, &b);
         return Color(r, g, b, 255);
+    } else if (startsWith(s, "#") && (str->length() == 9)) {
+        unsigned int r, g, b, a;
+        sscanf(s, "#%02x%02x%02x%02x", &r, &g, &b, &a);
+        return Color(r, g, b, a);
+    } else if (startsWith(s, "#") && (str->length() == 7)) {
+        unsigned int r, g, b;
+        sscanf(s, "#%02x%02x%02x", &r, &g, &b);
+        return Color(r, g, b, 255);
+    } else if (startsWith(s, "#") && (str->length() == 4)) {
+        unsigned int r, g, b;
+        sscanf(s, "#%01x%01x%01x", &r, &g, &b);
+        return Color(r * 17, g * 17, b * 17, 255);
     } else {
         if (strcmp("transparent", s) == 0) {
             return Color(0, 0, 0, 0);
@@ -3285,46 +3297,6 @@ Color parseColor(String* str)
 
 #undef PARSE_COLOR
         else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        if (strcmp("black", s) == 0) {
-            return Color(0, 0, 0, 255);
-        } else if (strcmp("red", s) == 0) {
-            return Color(255, 0, 0, 255);
-        } else if (strcmp("green", s) == 0) {
-            return Color(0, 128, 0, 255);
-        } else if (strcmp("blue", s) == 0) {
-            return Color(0, 0, 255, 255);
-        } else if (strcmp("aqua", s) == 0) {
-            return Color(0, 255, 255, 255);
-        } else if (strcmp("fuchsia", s) == 0) {
-            return Color(255, 0, 255, 255);
-        } else if (strcmp("gray", s) == 0) {
-            return Color(128, 128, 128, 255);
-        } else if (strcmp("lime", s) == 0) {
-            return Color(0, 255, 0, 255);
-        } else if (strcmp("maroon", s) == 0) {
-            return Color(128, 0, 0, 255);
-        } else if (strcmp("navy", s) == 0) {
-            return Color(0, 0, 128, 255);
-        } else if (strcmp("olive", s) == 0) {
-            return Color(128, 128, 0, 255);
-        } else if (strcmp("orange", s) == 0) {
-            return Color(255, 165, 0, 255);
-        } else if (strcmp("yellow", s) == 0) {
-            return Color(255, 255, 0, 255);
-        } else if (strcmp("purple", s) == 0) {
-            return Color(128, 0, 128, 255);
-        } else if (strcmp("silver", s) == 0) {
-            return Color(192, 192, 192, 255);
-        } else if (strcmp("teal", s) == 0) {
-            return Color(0, 128, 128, 255);
-        } else if (strcmp("white", s) == 0) {
-            return Color(255, 255, 255, 255);
-        } else if (strcmp("transparent", s) == 0) {
-            return Color(0, 0, 0, 0);
-        } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }

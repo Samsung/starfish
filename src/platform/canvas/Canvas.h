@@ -46,11 +46,15 @@ public:
     virtual void setLineThroughColor(Color clr) = 0;
     virtual void drawRect(const Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
+    virtual void drawRect(LayoutLocation p1, LayoutLocation p2, LayoutLocation p3, LayoutLocation p4) = 0; // left, top, right, bottom
     virtual void drawText(LayoutUnit x, LayoutUnit y, String* text) = 0;
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
 
     virtual void setMatrix(const SkMatrix& matrix) = 0;
     virtual SkMatrix matrix() = 0;
+
+    virtual void applyMatrixTo(LayoutLocation lp) = 0;
+    virtual void applyMatrixTo(LayoutRect lp) = 0;
 
     virtual void setVisible(bool visible) = 0;
 

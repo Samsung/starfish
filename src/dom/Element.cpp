@@ -76,20 +76,14 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
 
             if (rule.size() > 1) {
                 const char* key = rule[0]->trim()->utf8Data();
-                if (strcmp(key, "margin") == 0) {
-                    inlineStyle()->setMargin(rule[1]->utf8Data());
-                } else if (strcmp(key, "border") == 0) {
-                    inlineStyle()->setBorder(rule[1]->utf8Data());
-                } else if (strcmp(key, "padding") == 0) {
-                    inlineStyle()->setPadding(rule[1]->utf8Data());
-                } else if (strcmp(key, "background") == 0) {
-                    inlineStyle()->setBackground(rule[1]->utf8Data());
+                if (false) {
+
                 }
-#define SET_VALUE(name, nameCSSCase) \
+#define SET_VALUE(name, nameLower, nameCSSCase) \
                 else if (strcmp(key, nameCSSCase) == 0) { \
                     inlineStyle()->set##name(rule[1]->utf8Data()); \
                 }
-                FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
+                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_VALUE)
 #undef SET_VALUE
                 else {
                     STARFISH_LOG_INFO("unknown key %s in Element::didAttributeChanged::style\n", key);

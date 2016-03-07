@@ -279,6 +279,16 @@ public:
     {
         if (strcmp("transparent", token) == 0) {
             return true;
+        } else if (strstr(token, "rgba") == token) {
+            return true;
+        } else if (strstr(token, "rgb") == token) {
+            return true;
+        } else if (strlen(token) == 9 && token[0] == '#') {
+            return true;
+        } else if (strlen(token) == 7 && token[0] == '#') {
+            return true;
+        } else if (strlen(token) == 4 && token[0] == '#') {
+            return true;
         }
 #define PARSE_COLOR(name, value)        \
     else if (strcmp(#name, token) == 0) \
@@ -319,7 +329,7 @@ public:
     static bool assureBorderColor(const char* token)
     {
         // color | transparent | inherit
-        if (assureColor(token) || strcmp(token, "transparent") == 0)
+        if (assureColor(token))
             return true;
         return false;
     }

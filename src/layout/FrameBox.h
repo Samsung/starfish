@@ -270,18 +270,61 @@ public:
             // TODO border-join
             canvas->save();
 
-            // top
-            canvas->setColor(style()->borderTopColor());
-            canvas->drawRect(LayoutRect(0, 0, width(), borderTop()));
-            // right
-            canvas->setColor(style()->borderRightColor());
-            canvas->drawRect(LayoutRect(width()-borderRight(), 0, borderRight(), height()));
-            // bottom
-            canvas->setColor(style()->borderBottomColor());
-            canvas->drawRect(LayoutRect(0, height()-borderBottom(), width(), borderBottom()));
-            // left
-            canvas->setColor(style()->borderLeftColor());
-            canvas->drawRect(LayoutRect(0, 0, borderLeft(), height()));
+            if ((style()->borderTopColor() == style()->borderRightColor())
+                && (style()->borderRightColor() == style()->borderBottomColor())
+                && (style()->borderBottomColor() == style()->borderLeftColor())) {
+                // if 4-colors are same.
+
+                // top
+                canvas->setColor(style()->borderTopColor());
+                canvas->drawRect(LayoutRect(0, 0, width(), borderTop()));
+                // right
+                canvas->setColor(style()->borderRightColor());
+                canvas->drawRect(LayoutRect(width()-borderRight(), 0, borderRight(), height()));
+                // bottom
+                canvas->setColor(style()->borderBottomColor());
+                canvas->drawRect(LayoutRect(0, height()-borderBottom(), width(), borderBottom()));
+                // left
+                canvas->setColor(style()->borderLeftColor());
+                canvas->drawRect(LayoutRect(0, 0, borderLeft(), height()));
+            } else {
+
+                // top
+                canvas->setColor(style()->borderTopColor());
+                canvas->drawRect(
+                    LayoutLocation(0, 0),
+                    LayoutLocation(width(), 0),
+                    LayoutLocation(width() - borderRight(), borderTop()),
+                    LayoutLocation(borderLeft(), borderTop())
+                );
+
+                // right
+                canvas->setColor(style()->borderRightColor());
+                canvas->drawRect(
+                    LayoutLocation(width() - borderRight(), borderTop()),
+                    LayoutLocation(width(), 0),
+                    LayoutLocation(width(), height()),
+                    LayoutLocation(width() - borderRight(), height() - borderBottom())
+                );
+
+                // bottom
+                canvas->setColor(style()->borderBottomColor());
+                canvas->drawRect(
+                    LayoutLocation(borderLeft(), height() - borderBottom()),
+                    LayoutLocation(width() - borderRight(), height() - borderBottom()),
+                    LayoutLocation(width(), height()),
+                    LayoutLocation(0, height())
+                );
+
+                // left
+                canvas->setColor(style()->borderLeftColor());
+                canvas->drawRect(
+                    LayoutLocation(0, 0),
+                    LayoutLocation(borderLeft(), borderTop()),
+                    LayoutLocation(borderLeft(), height() - borderBottom()),
+                    LayoutLocation(0, height())
+                );
+            }
 
             canvas->restore();
         }
