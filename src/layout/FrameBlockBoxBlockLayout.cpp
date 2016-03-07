@@ -84,6 +84,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                     child->asFrameBox()->moveY(logicalTop);
                 }
                 marginInfo.setMargin(child->asFrameBox()->marginBottom());
+                marginInfo.setPositiveMargin(std::max(marginInfo.positiveMargin(), ctx.maxPositiveMarginBottom()));
+                marginInfo.setNegativeMargin(std::max(marginInfo.negativeMargin(), ctx.maxNegativeMarginBottom()));
             }
             ctx.setMaxMarginTop(marginInfo.positiveMargin(), marginInfo.negativeMargin());
 
