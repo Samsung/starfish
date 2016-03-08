@@ -50,3 +50,8 @@ NUMPROC=$(grep 'processor' /proc/cpuinfo | wc -l)
 
 cd third_party/escargot/
 ./build_third_party.sh && make x64.interpreter.release.shared -j && make x64.interpreter.debug.shared -j
+
+if [ -n "$TIZEN_SDK_HOME" ]; then
+make tizen_wearable_arm.interpreter.release.shared -j
+fi
+
