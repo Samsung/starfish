@@ -9,6 +9,15 @@ namespace StarFish {
 class Window;
 class Attribute;
 
+
+/* Page Visibility */
+enum PageVisibilityState {
+    PageVisibilityStateHidden,
+    PageVisibilityStateVisible,
+    PageVisibilityStatePrerender,
+    PageVisibilityStateUnloaded
+};
+
 class Document : public Node {
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance, ComputedStyle* style);
@@ -80,9 +89,16 @@ public:
 
     HTMLHtmlElement* rootElement();
 
+    /* Page Visibility */
+    bool hidden() const;
+    String* visibilityState();
+    void setVisibleState(PageVisibilityState visibilityState);
+    void visibilityStateChanged();
+
 protected:
     Window* m_window;
     ScriptBindingInstance* m_scriptBindingInstance;
+    PageVisibilityState m_pageVisibilityState;
 };
 
 void Node::setNeedsStyleRecalc()

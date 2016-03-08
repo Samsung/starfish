@@ -166,4 +166,39 @@ HTMLHtmlElement* Document::rootElement()
 
     return nullptr;
 }
+
+bool Document::hidden() const
+{
+    return m_pageVisibilityState == PageVisibilityState::PageVisibilityStateHidden;
+}
+
+String* Document::visibilityState()
+{
+    switch(m_pageVisibilityState) {
+    case PageVisibilityState::PageVisibilityStateHidden:
+        return String::createASCIIString("hidden");
+    case PageVisibilityState::PageVisibilityStatePrerender:
+        return String::createASCIIString("prerender");
+    case PageVisibilityState::PageVisibilityStateUnloaded:
+        return String::createASCIIString("unloaded");
+    case PageVisibilityState::PageVisibilityStateVisible:
+        return String::createASCIIString("visible");
+    }
+
+    STARFISH_ASSERT_NOT_REACHED();
+    return String::emptyString;
+}
+
+void Document::setVisibleState(PageVisibilityState visibilityState)
+{
+    m_pageVisibilityState = visibilityState;
+}
+
+void Document::visibilityStateChanged()
+{
+    QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "visibilitychange");
+    Event* e = new Event(eventType, EventInit(false, false));
+    EventTarget::dispatchEvent(this->asNode(), e);
+}
+
 }

@@ -1055,6 +1055,23 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("children"), childrenGetter, NULL, false, false, false);
 
+    /* Page Visibility */
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("hidden"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        bool hidden = ((Document*) originalObj->extraPointerData())->hidden();
+        return escargot::ESValue(hidden);
+        },
+        NULL, false, false, false);
+
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("visibilityState"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        String* visibilityState = ((Document*) originalObj->extraPointerData())->visibilityState();
+        return toJSString(visibilityState);
+        },
+        NULL, false, false, false);
+
     DEFINE_FUNCTION(HTMLDocument, DocumentFunction->protoType());
     fetchData(this)->m_htmlDocument = HTMLDocumentFunction;
 

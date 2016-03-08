@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      if (document.addEventListener) {
+        document.addEventListener("visibilitychange", visibilityChanged);
+      }
+
+      function visibilityChanged() {
+        console.log("+++ visibilityChanged")
+        console.log("+++ document.hidden: " + document.hidden)
+        console.log("+++ document.visibilityState: " + document.visibilityState)
+      }
+      
+      function onClick() {
+        console.log("+++ onClick")
+        console.log("+++ document.hidden: " + document.hidden)
+        console.log("+++ document.visibilityState: " + document.visibilityState)
+      }
+    </script>
+  </head>
+  <body>
+    <div onclick="onClick()">Page Visibility</div>
+  </body>
+</html>

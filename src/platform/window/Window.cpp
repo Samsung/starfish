@@ -675,6 +675,9 @@ void Window::pause()
 {
     STARFISH_LOG_INFO("onPause");
     m_isRunning = false;
+
+    document()->setVisibleState(PageVisibilityState::PageVisibilityStateHidden);
+    document()->visibilityStateChanged();
 }
 
 void Window::resume()
@@ -692,5 +695,8 @@ void Window::resume()
     }
     eflWindow->m_drawnImageList.clear();
     rendering();
+
+    document()->setVisibleState(PageVisibilityState::PageVisibilityStateVisible);
+    document()->visibilityStateChanged();
 }
 }
