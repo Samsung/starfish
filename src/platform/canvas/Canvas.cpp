@@ -579,19 +579,16 @@ public:
             return;
         }
 
-
 #ifdef STARFISH_ENABLE_PIXEL_TEST
         if (g_enablePixelTest) {
             if (!text->equals(String::spaceString)) {
-                float w = lastState().m_font->size() * text->length();
                 float h = lastState().m_font->size();
-                if (text->indexOf('p') == SIZE_MAX) {
-                    Rect rt(x, y, w, h);
-                    drawRect(rt);
-                } else {
-                    float xx = x;
-                    for (size_t i = 0; i < text->length(); i++) {
-                        char32_t ch = text->charAt(i);
+                float xx = x;
+                for (size_t i = 0; i < text->length(); i++) {
+                    char32_t ch = text->charAt(i);
+                    if (ch == 160) { // nbsp
+
+                    } else {
                         if (ch != 'p') {
                             Rect rt(xx, y, h, h);
                             drawRect(rt);
@@ -603,8 +600,8 @@ public:
                             g_enablePixelTest = true;
                             restore();
                         }
-                        xx += h;
                     }
+                    xx += h;
                 }
             }
             return;
