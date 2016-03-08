@@ -553,11 +553,11 @@ protected:
         bool m_isRootElement : 1;
     } m_flags;
 
+private:
     Node* m_node;
-
     // TODO implement FrameRareData
     ComputedStyle* m_styleWhenNodeIsNull;
-private:
+
     Frame* m_parent;
     Frame* m_layoutParent;
 

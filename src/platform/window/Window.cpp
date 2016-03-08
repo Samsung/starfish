@@ -363,11 +363,11 @@ void Window::rendering()
         Timer t("resolve style");
         m_styleResolver.resolveDOMStyle(m_document);
         m_needsStyleRecalc = false;
-    }
 
-    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
-        // dump style
-        m_styleResolver.dumpDOMStyle(m_document);
+        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
+            // dump style
+            m_styleResolver.dumpDOMStyle(m_document);
+        }
     }
 
     if (m_needsFrameTreeBuild) {
@@ -389,44 +389,46 @@ void Window::rendering()
         FrameTreeBuilder::dumpFrameTree(m_document);
     }
 
-    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
-        STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
-        StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
+    if (m_needsPainting) {
+        Timer t("painting");
+        m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
 
-        std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](StackingContext* ctx, int depth)
-        {
-            for (int i = 0; i < depth; i ++) {
-                printf("  ");
-            }
+        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
+            STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
+            StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
 
-            printf("StackingContext[%p, frame %p]\n", ctx, ctx->owner());
-
-            auto iter = ctx->childContexts().begin();
-            while (iter != ctx->childContexts().end()) {
-
-                int32_t num = iter->first;
-
-                for (int i = 0; i < depth + 1; i ++) {
+            std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](StackingContext* ctx, int depth)
+            {
+                for (int i = 0; i < depth; i ++) {
                     printf("  ");
                 }
 
-                printf("z-index: %d\n", (int)num);
+                printf("StackingContext[%p, frame %p, buf %d]\n", ctx, ctx->owner(), (int)ctx->needsOwnBuffer());
 
-                auto iter2 = iter->second->begin();
-                while (iter2 != iter->second->end()) {
-                    dumpSC(*iter2, depth + 2);
-                    iter2++;
+                auto iter = ctx->childContexts().begin();
+                while (iter != ctx->childContexts().end()) {
+
+                    int32_t num = iter->first;
+
+                    for (int i = 0; i < depth + 1; i ++) {
+                        printf("  ");
+                    }
+
+                    printf("z-index: %d\n", (int)num);
+
+                    auto iter2 = iter->second->begin();
+                    while (iter2 != iter->second->end()) {
+                        dumpSC(*iter2, depth + 2);
+                        iter2++;
+                    }
+
+                    iter++;
                 }
+            };
 
-                iter++;
-            }
-        };
+            dumpSC(ctx, 0);
+        }
 
-        dumpSC(ctx, 0);
-    }
-
-    if (m_needsPainting) {
-        Timer t("painting");
         // painting
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int width, height;

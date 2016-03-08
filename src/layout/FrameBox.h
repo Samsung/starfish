@@ -353,6 +353,11 @@ public:
         return result;
     }
 
+    virtual LayoutRect visibleRect()
+    {
+        return m_frameRect;
+    }
+
     LayoutLocation absolutePoint(FrameBox* top)
     {
         LayoutLocation l(0, 0);

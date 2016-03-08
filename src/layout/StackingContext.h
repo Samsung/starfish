@@ -27,10 +27,18 @@ public:
         return m_owner;
     }
 
+    bool needsOwnBuffer()
+    {
+        return m_needsOwnBuffer;
+    }
+    bool computeStackingContextProperties(bool forceNeedsBuffer = false);
+
 protected:
     bool m_needsOwnBuffer;
     FrameBox* m_owner;
     StackingContext* m_parent;
+
+    SkMatrix m_matrix;
 
     std::map<int32_t, StackingContextChild*, std::less<int32_t>, gc_allocator<std::pair<uint32_t, StackingContextChild*> > > m_childContexts;
 };

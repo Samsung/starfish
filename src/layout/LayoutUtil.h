@@ -877,6 +877,8 @@ public:
         return m_height;
     }
 
+    bool isEmpty() const { return m_width <= 0 || m_height <= 0; }
+
     bool operator==(const LayoutSize& src) const
     {
         return width() == src.width() && height() == src.height();
@@ -918,6 +920,11 @@ protected:
     LayoutUnit m_x, m_y;
 };
 
+inline LayoutSize operator-(const LayoutLocation& a, const LayoutLocation& b)
+{
+    return LayoutSize(a.x() - b.x(), a.y() - b.y());
+}
+
 class LayoutRect {
 public:
     LayoutRect(LayoutUnit x, LayoutUnit y, LayoutUnit w, LayoutUnit h)
@@ -928,6 +935,8 @@ public:
 
     LayoutUnit x() const { return m_location.x(); }
     LayoutUnit y() const { return m_location.y(); }
+    LayoutUnit maxX() const { return x() + width(); }
+    LayoutUnit maxY() const { return y() + height(); }
     LayoutUnit width() const { return m_size.width(); }
     LayoutUnit height() const { return m_size.height(); }
 
@@ -936,9 +945,27 @@ public:
     void setWidth(LayoutUnit width) { m_size.setWidth(width); }
     void setHeight(LayoutUnit height) { m_size.setHeight(height); }
 
+    bool isEmpty() const { return m_size.isEmpty(); }
+
     bool contains(LayoutUnit px, LayoutUnit py) const
     {
         return px >= x() && px < (x() + width()) && py >= y() && py < (y() + height());
+    }
+
+    void unite(const LayoutRect& other)
+    {
+        if (other.isEmpty())
+            return;
+        if (isEmpty()) {
+            *this = other;
+            return;
+        }
+
+        LayoutLocation newLocation(std::min(x(), other.x()), std::min(y(), other.y()));
+        LayoutLocation newMaxPoint(std::max(maxX(), other.maxX()), std::max(maxY(), other.maxY()));
+
+        m_location = newLocation;
+        m_size = newMaxPoint - newLocation;
     }
 
 private:
