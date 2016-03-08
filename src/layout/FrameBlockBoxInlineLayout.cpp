@@ -684,8 +684,8 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
                 selfForFinishLayout->setWidth(0);
             }
 
-            LayoutUnit ascender = selfForFinishLayout->style()->font()->metrics().m_ascender;
-            LayoutUnit descender = selfForFinishLayout->style()->font()->metrics().m_descender;
+            LayoutUnit ascender = std::max(selfForFinishLayout->style()->font()->metrics().m_ascender, blockBox->style()->font()->metrics().m_ascender);
+            LayoutUnit descender = std::min(selfForFinishLayout->style()->font()->metrics().m_descender, blockBox->style()->font()->metrics().m_descender);
             LayoutUnit minimumHeight;
 
             computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, minimumHeight, lineFormattingContext);
