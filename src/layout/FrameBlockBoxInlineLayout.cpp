@@ -180,11 +180,11 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
                         STARFISH_ASSERT(f->isFrameBlockBox() && f->style()->display() == InlineBlockDisplayValue);
                         LayoutUnit ascender = ctx.inlineBlockAscender(f->asFrameBlockBox());
                         if (ascender == f->height()) {
-                            LayoutUnit dec = 0;
-                            f->setY(height + maxDescender - f->height() - dec - f->marginTop());
+                            LayoutUnit dec = f->marginBottom();
+                            f->setY(height + maxDescender - f->height() - dec);
                         } else {
-                            LayoutUnit dec = -(f->height() - ascender) - f->marginBottom();
-                            f->setY(height + maxDescender - f->height() - dec - f->marginTop());
+                            LayoutUnit dec = -(f->height() - ascender) + f->marginBottom();
+                            f->setY(height + maxDescender - f->height() - dec);
                         }
                     }
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
