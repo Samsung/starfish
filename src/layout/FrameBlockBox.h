@@ -304,23 +304,26 @@ public:
         if (asFrameBox()->height() > 0)
             return false;
         Length heightLength = style()->height();
-        // FIXME(june0cho): consider height auto
-        if (heightLength.isZero()) {
+        // FIXME(june0cho): consider height percentage.
+        // should check whether containing blocks' height is fixed.
+        if (heightLength.isAuto() || heightLength.isZero()) {
             // If the block is inline flow and has any line boxes,
             // this is not self-collapsing.
             if (!hasBlockFlow())
                 return !m_lineBoxes.size();
             Frame* child = firstChild();
             while (child) {
-                if (!child->isNormalFlow())
+                if (!child->isNormalFlow()) {
+                    child = child->next();
                     continue;
+                }
                 if (!child->asFrameBox()->isSelfCollapsingBlock())
                     return false;
                 child = child->next();
             }
             return true;
         }
-        return true;
+        return false;
     }
 
     virtual LayoutRect visibleRect()

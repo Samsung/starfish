@@ -12,7 +12,6 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top;
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
-    LayoutUnit lastMarginBottom;
     if (marginInfo.canCollapseTopWithChildren()) {
         if (marginTop() >= 0) {
             maxPositiveMarginTop = marginTop();
@@ -29,6 +28,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     Frame* child = firstChild();
     if (!child)
         marginInfo.setMargin(0, 0);
+    LayoutUnit marginForAbsolute;
     while (child) {
         // Place the child.
         child->asFrameBox()->setX(paddingLeft() + borderLeft());
@@ -64,7 +64,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             else
                 negTop = std::max(-child->asFrameBox()->marginTop(), ctx.maxNegativeMarginTop());
 
-            if (marginInfo.canCollapseWithMarginTop()) {
+            if (marginInfo.canCollapseWithMarginTop() && marginInfo.atTopSideOfBlock()) {
                 maxPositiveMarginTop = std::max(maxPositiveMarginTop, posTop);
                 maxNegativeMarginTop = std::max(maxNegativeMarginTop, negTop);
             }
@@ -86,6 +86,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                     child->asFrameBox()->moveY(logicalTop);
                 }
                 marginInfo.setMargin(child->asFrameBox()->marginBottom());
+                marginForAbsolute = marginInfo.positiveMargin() - marginInfo.negativeMargin();
                 marginInfo.setPositiveMargin(std::max(marginInfo.positiveMargin(), ctx.maxPositiveMarginBottom()));
                 marginInfo.setNegativeMargin(std::max(marginInfo.negativeMargin(), ctx.maxNegativeMarginBottom()));
             }
@@ -96,18 +97,18 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
         }
 
-        lastMarginBottom = marginInfo.positiveMargin() - marginInfo.negativeMargin();
         if (child->isNormalFlow()) {
             if (maxNormalFlowBottom < child->asFrameBox()->height() + child->asFrameBox()->y())
                 maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
             normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
         } else {
+            child->asFrameBox()->moveY(marginForAbsolute);
             ctx.registerAbsolutePositionedFrames(child);
-            lastMarginBottom = 0;
         }
 
         child = child->next();
     }
+
     ctx.setMaxMarginTop(maxPositiveMarginTop, maxNegativeMarginTop);
     ctx.setMaxMarginBottom(std::max(ctx.maxPositiveMarginBottom(), marginInfo.positiveMargin()),
         std::max(ctx.maxNegativeMarginBottom(), marginInfo.negativeMargin()));
