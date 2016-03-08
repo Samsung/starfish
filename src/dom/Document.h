@@ -9,7 +9,6 @@ namespace StarFish {
 class Window;
 class Attribute;
 
-
 /* Page Visibility */
 enum PageVisibilityState {
     PageVisibilityStateHidden,
