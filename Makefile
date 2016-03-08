@@ -41,6 +41,9 @@ ifneq (,$(findstring tizen_wearable_arm,$(MAKECMDGOALS)))
   HOST=tizen_wearable_arm
 else ifneq (,$(findstring tizen_arm,$(MAKECMDGOALS)))
   HOST=tizen_arm
+else ifneq (,$(findstring tizen_wearable_emulator, $(MAKECMDGOALS)))
+  HOST=tizen_wearable_emulator
+  ARCH=x86
 endif
 
 ifneq (,$(findstring exe,$(MAKECMDGOALS)))
@@ -100,6 +103,25 @@ else ifeq ($(HOST), tizen_wearable_arm)
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
 	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
 	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
+else ifeq ($(HOST), tizen_wearable_emulator)
+  OUTDIR=out/tizen_$(ARCH)/$(TYPE)/$(MODE)
+	TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
+			ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
+			efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0 freetype2 media
+
+	TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player
+
+	DEPENDENCY_INCLUDE =
+ 
+	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
+	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
+	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
+	CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
+ 
+	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
+	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
+	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
 endif
 
 $(info host... $(HOST))
@@ -112,7 +134,7 @@ CXXFLAGS += -std=c++11
 
 ifeq ($(ARCH), x86)
   #https://gcc.gnu.org/onlinedocs/gcc-4.8.0/gcc/i386-and-x86_002d64-Options.html
-  CXXFLAGS += -m32  -march=native -mtune=native -mfpmath=sse -msse2 -msse3
+  CXXFLAGS += -m32  -march=native -mtune=native -mfpmath=sse -msse2 -msse3 -DESCARGOT_32=1 
   LDFLAGS += -m32
 else ifeq ($(ARCH), arm)
   CXXFLAGS += -DESCARGOT_32=1 -march=armv7-a -mthumb
@@ -136,6 +158,8 @@ CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Ipublic/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof
+
+CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
 
 ifeq ($(HOST), tizen)
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
@@ -190,7 +214,7 @@ else
     # TODO : use this option only for HOST=linux
     LDFLAGS += -Wl,-rpath=$(LOCAL_PATH)/third_party/escargot/out/x64/interpreter/release
     else
-    LDFLAGS += -Lthird_party/escargot/out/arm/interpreter/release
+    LDFLAGS += -Lthird_party/escargot/out/$(ARCH)/interpreter/release
     endif
 endif
 
@@ -254,7 +278,6 @@ ifeq ($(HOST), linux)
   CC           = gcc
   CXX          = g++
   STRIP        = strip
-  CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
 else ifeq ($(HOST), tizen_arm)
   ifndef TIZEN_SDK_HOME
     $(error TIZEN_SDK_HOME must be set)
@@ -285,6 +308,20 @@ else ifeq ($(HOST), tizen_wearable_arm)
   LD    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
+  CXXFLAGS += -Os -g0 -finline-limit=64 -s
+else ifeq ($(HOST), tizen_wearable_emulator)
+  ifndef TIZEN_SDK_HOME
+    $(error TIZEN_SDK_HOME must be set)
+  endif
+  TIZEN_ROOT=$(TIZEN_SDK_HOME)
+  TIZEN_TOOLCHAIN=$(TIZEN_ROOT)/tools/i386-linux-gnueabi-gcc-4.9
+  TIZEN_SYSROOT=$(TIZEN_ROOT)/platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-emulator.core
+  CC    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-gcc
+  CXX   = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-g++
+  LINK  = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-g++
+  LD    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ld
+  AR    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ar
+  STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
   CXXFLAGS += -Os -g0 -finline-limit=64 -s
 endif
 
@@ -324,6 +361,18 @@ tizen_wearable_arm.lib.debug: $(OUTDIR)/$(LIB)
 	cp -f $< .
 tizen_wearable_arm.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $< .
+tizen_wearable_emulator.exe.debug: $(OUTDIR)/$(BIN)
+	cp -f $< .
+tizen_wearable_emulator.exe.release: $(OUTDIR)/$(BIN)
+	cp -f $< .
+tizen_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
+	cp -f $< .
+tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
+	cp -f $< .
+
+
+
+
 
 $(OUTDIR)/$(BIN): $(OBJS) $(THIRD_PARTY_LIBS)
 	@echo "[LINK] $@"
