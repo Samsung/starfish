@@ -9,7 +9,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 {
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
-    LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = 0;
+    LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top;
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
     LayoutUnit lastMarginBottom;
@@ -27,6 +27,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         ctx.setMaxMarginTop(0, 0);
     }
     Frame* child = firstChild();
+    if (!child)
+        marginInfo.setMargin(0, 0);
     while (child) {
         // Place the child.
         child->asFrameBox()->setX(paddingLeft() + borderLeft());

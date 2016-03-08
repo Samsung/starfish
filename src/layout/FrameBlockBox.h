@@ -183,7 +183,7 @@ class MarginInfo {
 public:
     MarginInfo(LayoutUnit topBorderPadding, LayoutUnit bottomBorderPadding, bool isNewContext, Length height)
     {
-        m_canCollapseWithChildren = !isNewContext && !topBorderPadding && !bottomBorderPadding;
+        m_canCollapseWithChildren = !isNewContext;
         m_canCollapseTopWithChildren = m_canCollapseWithChildren && !topBorderPadding;
         m_canCollapseBottomWithChildren = m_canCollapseWithChildren && !bottomBorderPadding && height.isAuto();
         m_atTopSideOfBlock = true;
