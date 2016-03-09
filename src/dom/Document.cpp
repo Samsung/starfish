@@ -174,7 +174,7 @@ bool Document::hidden() const
 
 String* Document::visibilityState()
 {
-    switch(m_pageVisibilityState) {
+    switch (m_pageVisibilityState) {
     case PageVisibilityState::PageVisibilityStateHidden:
         return String::createASCIIString("hidden");
     case PageVisibilityState::PageVisibilityStatePrerender:

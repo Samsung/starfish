@@ -32,7 +32,7 @@ public:
         return false;
     }
 
-    virtual bool isSelfCollapsingBlock()
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
     {
         return false;
     }

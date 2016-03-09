@@ -297,15 +297,19 @@ public:
         return child->style()->display() == BlockDisplayValue;
     }
 
-    bool isSelfCollapsingBlock()
+    bool isSelfCollapsingBlock(LayoutContext& ctx)
     {
         if (isEstablishesBlockFormattingContext())
             return false;
         if (asFrameBox()->height() > 0)
             return false;
         Length heightLength = style()->height();
-        // FIXME(june0cho): consider height percentage.
-        // should check whether containing blocks' height is fixed.
+        // NOTE: In case of percentage height,
+        // if containing blocks' height is fixed, the block is not self-collaping block.
+        if (heightLength.isPercent() && !heightLength.isZero() && ctx.parentHasFixedHeight(this)) {
+            return false;
+        }
+
         if (heightLength.isAuto() || heightLength.isZero()) {
             // If the block is inline flow and has any line boxes,
             // this is not self-collapsing.
@@ -317,7 +321,7 @@ public:
                     child = child->next();
                     continue;
                 }
-                if (!child->asFrameBox()->isSelfCollapsingBlock())
+                if (!child->asFrameBox()->isSelfCollapsingBlock(ctx))
                     return false;
                 child = child->next();
             }

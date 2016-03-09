@@ -69,7 +69,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 maxNegativeMarginTop = std::max(maxNegativeMarginTop, negTop);
             }
 
-            if (child->asFrameBox()->isSelfCollapsingBlock()) {
+            if (child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
                 if (child->asFrameBox()->marginBottom() >= 0)
                     posTop = std::max(posTop, child->asFrameBox()->marginBottom());
                 else
@@ -77,7 +77,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
             posTop = std::max(marginInfo.positiveMargin(), posTop);
             negTop = std::max(marginInfo.negativeMargin(), negTop);
-            if (child->asFrameBox()->isSelfCollapsingBlock()) {
+            if (child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
                 marginInfo.setMargin(posTop, negTop);
             } else {
                 if (!marginInfo.atTopSideOfBlock() || !marginInfo.canCollapseWithMarginTop()) {
@@ -92,7 +92,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
             ctx.setMaxMarginTop(marginInfo.positiveMargin(), marginInfo.negativeMargin());
 
-            if (marginInfo.atTopSideOfBlock() && !child->asFrameBox()->isSelfCollapsingBlock()) {
+            if (marginInfo.atTopSideOfBlock() && !child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
                 marginInfo.setAtTopSideOfBlock(false);
             }
         }
