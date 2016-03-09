@@ -58,13 +58,14 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
             child->asFrameBox()->moveX(mX);
 
-            LayoutUnit posTop, negTop;
+            LayoutUnit posTop = ctx.maxPositiveMarginTop(), negTop = ctx.maxNegativeMarginTop();
             if (child->asFrameBox()->marginTop() >= 0)
-                posTop = std::max(child->asFrameBox()->marginTop(), ctx.maxPositiveMarginTop());
+                posTop = std::max(child->asFrameBox()->marginTop(), posTop);
             else
-                negTop = std::max(-child->asFrameBox()->marginTop(), ctx.maxNegativeMarginTop());
+                negTop = std::max(-child->asFrameBox()->marginTop(), negTop);
 
             if (marginInfo.canCollapseWithMarginTop() && marginInfo.atTopSideOfBlock()) {
+                // NOTE: max[Positive/Negative]MarginTop has the collapsed margin between ancestors and first child
                 maxPositiveMarginTop = std::max(maxPositiveMarginTop, posTop);
                 maxNegativeMarginTop = std::max(maxNegativeMarginTop, negTop);
             }
@@ -109,7 +110,11 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         child = child->next();
     }
 
+    // NOTE: At this point, ctx.max[P/N]MarginTop has the collapsed margin
+    // between collapsible ancestors and first descendants.
     ctx.setMaxMarginTop(maxPositiveMarginTop, maxNegativeMarginTop);
+    // NOTE: At this point, ctx.max[P/N]MarginBottom has the collapsed margin
+    // between this block and last descendants.
     ctx.setMaxMarginBottom(std::max(ctx.maxPositiveMarginBottom(), marginInfo.positiveMargin()),
         std::max(ctx.maxNegativeMarginBottom(), marginInfo.negativeMargin()));
     normalFlowHeight = maxNormalFlowBottom - top;
