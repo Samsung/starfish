@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="./xml2json.js"></script>
+		<script src="./js2xmlparser.js"></script>
+		<script src="./jquery-2.2.0.min.js"></script>
+	</head>
+	<body>
+		<h1>input html code you want</h1>
+		<h3> external links(.css, .js) are not supported.</h3>
+		<form onsubmit="onSubmit()" action="#" id="form">
+			<input type="submit">
+			<br>
+			<textarea rows="30" cols="80" id="code">
+<html>
+
+<link rel="stylesheet" type="text/css" href="file:///home/ksh8281/work/StarFish/test/test.css">
+
+
+<div>
+asdf
+</div>
+
+</html>
+			</textarea>
+			<h3>output</h3>
+			<textarea rows="30" cols="80" id="result"></textarea>
+		</form>
+		<script type="text/javascript" >
+
+			function printResult() {
+				var iframe = document.querySelector("iframe")
+
+				function nameFromType(type) {
+						switch(type) {
+							case 1:
+								return "element"
+							case 9:
+								return "document"
+							case 10:
+								return "documentType"
+							case 8:
+								return "comment"
+							case 3:
+								return "text"
+							default:
+								console.log("nodetype warning!!" + type)
+								return "idontknow"
+						}
+					}
+					var result = {
+						"node" : {
+						}
+					}
+					function process(node, into) {
+						into["@"] = {
+							"nodeType" : node.nodeType,
+							"localName" : nameFromType(node.nodeType)
+						}
+
+						if (node.nodeType == 1) {
+							into["@"].localName = node.localName;
+
+							if(node.localName == "style") {
+								// console.log(node)
+								into.style = []
+								var rules = node.sheet.cssRules;
+								for(var i = 0; i < rules.length; i ++) {
+									var selectorText = rules[i].selectorText;
+									// console.log(selectorText)
+									var st = {};
+									st["@"] = {}
+									st["@"].selectorText = selectorText
+									for (var j = 0; j < rules[i].style.length; j ++) {
+										// console.log(rules[i].style[j])
+										// console.log(rules[i].style[rules[i].style[j]]);
+										var v = rules[i].style[rules[i].style[j]];
+										if(v.substring(0,3).toLowerCase() == "url") {
+											var abPath = window.point;
+											v = v.replace(")", "");
+											v = "url(./" + v.substring(v.indexOf(abPath)+abPath.length)+")";
+										}
+
+										d = rules[i]
+										st["@"][rules[i].style[j]] = v;
+									}
+
+									into.style.push(st);
+								}
+							}
+
+							var attrs = node.attributes;
+							for(var i = 0; i < attrs.length; i ++) {
+								into["@"][attrs[i].name] = attrs[i].value;
+							}
+						} else if (node.nodeType == 3) {
+							into["text"] = {"#":node.data};
+						}
+
+						into.node = [];
+						var c = node.firstChild;
+						while(c) {
+							var t = {};
+							process(c, t);
+							Array.prototype.push.call(into.node, t);
+
+							c = c.nextSibling;
+						}
+					}
+					process(iframe.contentDocument,result.node)
+					console.log(result);
+
+					var output = document.getElementById("result")
+					//var x2js = new X2JS();
+					//output.value = x2js.json2xml_str(result);
+					output.value = js2xmlparser("HTMLDocument", result, {useCDATA:true})
+
+					// document.body.removeChild(iframe);
+			}
+
+
+			function onSubmit() {
+				if (document.querySelector("iframe"))
+					document.querySelector("iframe").parentElement.removeChild(document.querySelector("iframe"))
+				var code = document.getElementById("code");
+
+				var iframe = document.createElement("iframe");
+				iframe.width = "360"
+				iframe.height = "360"
+				iframe.srcdoc = code.value;
+				document.body.appendChild(iframe);
+
+				iframe.onload = function() {
+					console.log("onload");
+					var resCnt = 0;
+
+					var links = iframe.contentDocument.querySelectorAll("link")
+
+					for (var i = 0; i < links.length; i ++) {
+						// <link rel="stylesheet" href="/lib/w3.css">
+						if (links[i].getAttribute("rel") == "stylesheet") {
+							resCnt++;
+							function result(rr) {
+								console.log("ajax result")
+								console.log(rr)
+								links[arguments.callee.i].outerHTML = "<style>"
+        						+ rr +
+        						"</style>";
+        						resCnt--;
+							}
+							result.i = i;
+							var url = links[i].getAttribute("href");
+
+							var point;
+							if (window.point) {
+								point = window.point;
+							} else {
+								point = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + "/"
+							}
+							url = "file://" + point + url;
+							console.log(url)
+							$.ajax({async: false, type:"GET", url: url, success: result, error: function (error) {
+								console.log("ajax error")
+								console.log(arguments[0])
+								console.log(arguments[1])
+								console.log(arguments[2])
+    							resCnt--;
+    						}});
+						}
+					}
+
+					console.log("resCnt" + resCnt)
+					var iid =
+					window.setInterval(function () {
+						console.log("interval")
+						console.log("print result")
+						if (resCnt == 0) {
+							printResult();
+							window.clearInterval(iid)
+						} else {
+						}
+					}, 50)	;
+				}
+
+			}
+		</script>
+	</body>
+</html>
