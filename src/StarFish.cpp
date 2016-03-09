@@ -10,8 +10,6 @@
 
 namespace StarFish {
 
-int g_screenDpi;
-
 #ifdef STARFISH_ENABLE_PIXEL_TEST
 bool g_enablePixelTest = false;
 #endif
@@ -29,8 +27,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
-    STARFISH_LOG_INFO("dpi... %d\n", ecore_x_dpi_get());
-    g_screenDpi = ecore_x_dpi_get();
+    // STARFISH_LOG_INFO("dpi... %d\n", ecore_x_dpi_get());
     m_messageLoop = new MessageLoop();
     m_scriptBindingInstance = new ScriptBindingInstance();
     m_scriptBindingInstance->initBinding(this);
@@ -43,7 +40,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int
     GC_set_free_space_divisor(64);
     STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
 
-    g_screenDpi = ecore_x_dpi_get();
     m_startUpFlag = flag;
     m_currentPath = currentPath;
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));

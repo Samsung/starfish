@@ -370,6 +370,11 @@ public:
         return l;
     }
 
+    LayoutRect absoluteRect(FrameBox* top)
+    {
+        return LayoutRect(absolutePoint(top), top->frameRect().size());
+    }
+
     void computeBorderMarginPadding(LayoutUnit parentContentWidth)
     {
         // padding

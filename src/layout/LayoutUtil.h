@@ -933,12 +933,28 @@ public:
     {
     }
 
+    LayoutRect(LayoutLocation loc, LayoutSize siz)
+        : m_location(loc)
+        , m_size(siz)
+    {
+    }
+
     LayoutUnit x() const { return m_location.x(); }
     LayoutUnit y() const { return m_location.y(); }
     LayoutUnit maxX() const { return x() + width(); }
     LayoutUnit maxY() const { return y() + height(); }
     LayoutUnit width() const { return m_size.width(); }
     LayoutUnit height() const { return m_size.height(); }
+
+    LayoutLocation location() const
+    {
+        return m_location;
+    }
+
+    LayoutSize size() const
+    {
+        return m_size;
+    }
 
     void setX(LayoutUnit x) { m_location.setX(x); }
     void setY(LayoutUnit y) { m_location.setY(y); }

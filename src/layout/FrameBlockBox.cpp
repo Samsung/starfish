@@ -278,11 +278,32 @@ void FrameBlockBox::layout(LayoutContext& ctx)
     if (style()->position() == PositionValue::RelativePositionValue)
         ctx.registerRelativePositionedFrames(this);
 
+    // compute visible rect
+    bool isOverflowHidden = style()->overflow() == OverflowValue::HiddenOverflow;
+
+    if (isOverflowHidden) {
+        m_visibleRect = m_frameRect;
+    } else {
+        m_visibleRect = m_frameRect;
+        if (height() < contentHeight) {
+            m_visibleRect.setHeight(contentHeight);
+        }
+    }
+
+    auto mergeVisibleRect = [&](FrameBox* child)
+    {
+        if (isOverflowHidden) {
+            LayoutRect absRect = child->absoluteRect(this);
+            m_visibleRect.unite(absRect);
+        }
+    };
+
     // layout absolute positioned blocks
     ctx.layoutRegisteredAbsolutePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
         for (size_t i = 0; i < frames.size(); i ++) {
             Frame* f = frames[i];
             f->layout(ctx);
+            mergeVisibleRect(f->asFrameBox());
         }
     });
 
@@ -322,6 +343,8 @@ void FrameBlockBox::layout(LayoutContext& ctx)
 
             f->asFrameBox()->moveX(mX);
             f->asFrameBox()->moveY(mY);
+
+            mergeVisibleRect(f->asFrameBox());
         }
     });
 

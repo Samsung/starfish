@@ -75,7 +75,6 @@ else ifeq ($(HOST), tizen_arm)
 
 	DEPENDENCY_INCLUDE = zlib png
 
-	CXXFLAGS += -DEIRENE_TIZEN
 	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
@@ -109,7 +108,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
 			ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
 			efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0 freetype2 media
 
-	TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player
+	TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input
 
 	DEPENDENCY_INCLUDE =
  
@@ -133,8 +132,7 @@ $(info build dir... $(OUTDIR))
 CXXFLAGS += -std=c++11
 
 ifeq ($(ARCH), x86)
-  #https://gcc.gnu.org/onlinedocs/gcc-4.8.0/gcc/i386-and-x86_002d64-Options.html
-  CXXFLAGS += -m32  -march=native -mtune=native -mfpmath=sse -msse2 -msse3 -DESCARGOT_32=1 
+  CXXFLAGS += -m32 -mfpmath=sse -msse2 -DESCARGOT_32=1
   LDFLAGS += -m32
 else ifeq ($(ARCH), arm)
   CXXFLAGS += -DESCARGOT_32=1 -march=armv7-a -mthumb
@@ -158,8 +156,6 @@ CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Ipublic/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof
-
-CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
 
 ifeq ($(HOST), tizen)
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
@@ -278,6 +274,7 @@ ifeq ($(HOST), linux)
   CC           = gcc
   CXX          = g++
   STRIP        = strip
+  CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
 else ifeq ($(HOST), tizen_arm)
   ifndef TIZEN_SDK_HOME
     $(error TIZEN_SDK_HOME must be set)
@@ -322,7 +319,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
   LD    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
-  CXXFLAGS += -Os -g0 -finline-limit=64 -s
+  CXXFLAGS += -Os -g0 -finline-limit=64
 endif
 
 ifeq ($(TYPE), lib)

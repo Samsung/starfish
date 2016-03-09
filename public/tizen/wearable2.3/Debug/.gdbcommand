@@ -1,5 +1,0 @@
-set sysroot /home/ksh8281/tizen-sdk-2.4.r2/tools/smart-build-interface/../../platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-device.core
-set debug-file-directory /home/ksh8281/tizen-sdk-2.4.r2/tools/smart-build-interface/../../platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-device.core/usr/lib/debug
-set solib-search-path /home/ksh8281/work/StarFish/public/tizen/wearable2.3/Debug
-dir /home/ksh8281/tizen-sdk-2.4.r2/tools/smart-build-interface/../../platforms/tizen-2.3.1/wearable/rootstraps/wearable-2.3.1-device.core/usr/src/debug
-file "/home/ksh8281/work/StarFish/public/tizen/wearable2.3/Debug/starfish"

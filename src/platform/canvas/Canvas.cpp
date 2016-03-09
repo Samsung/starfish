@@ -15,8 +15,6 @@
 Evas* g_internalCanvas;
 namespace StarFish {
 
-extern int g_screenDpi;
-
 /*
 static void initInternalCanvas()
 {
@@ -123,7 +121,6 @@ public:
 class CanvasEFL : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
-        g_screenDpi = ecore_x_dpi_get();
         Evas* canvas;
         int method;
         method = evas_render_method_lookup("buffer");
@@ -175,7 +172,6 @@ class CanvasEFL : public Canvas {
 public:
     CanvasEFL(void* data)
     {
-        g_screenDpi = ecore_x_dpi_get();
         m_image = NULL;
         m_buffer = NULL;
         m_directDraw = true;
