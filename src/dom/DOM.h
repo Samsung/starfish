@@ -23,7 +23,9 @@
 #include "dom/HTMLImageElement.h"
 #include "dom/HTMLSpanElement.h"
 #include "dom/HTMLBRElement.h"
+#ifdef STARFISH_ENABLE_AUDIO
 #include "dom/HTMLAudioElement.h"
+#endif
 #include "dom/HTMLCollection.h"
 #include "dom/HTMLUnknownElement.h"
 #include "dom/DOMTokenList.h"

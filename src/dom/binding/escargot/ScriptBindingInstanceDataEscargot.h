@@ -25,7 +25,9 @@ public:
     escargot::ESFunctionObject* m_htmlDivElement;
     escargot::ESFunctionObject* m_htmlImageElement;
     escargot::ESFunctionObject* m_htmlBrElement;
+#ifdef STARFISH_ENABLE_AUDIO
     escargot::ESFunctionObject* m_htmlAudioElement;
+#endif
     escargot::ESFunctionObject* m_htmlCollection;
     escargot::ESFunctionObject* m_htmlUnknownElement;
     escargot::ESFunctionObject* m_event;

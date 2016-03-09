@@ -1218,6 +1218,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(HTMLBRElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBrElement = HTMLBRElementFunction;
 
+#ifdef STARFISH_ENABLE_AUDIO
     DEFINE_FUNCTION(HTMLAudioElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
 
@@ -1271,6 +1272,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             RELEASE_ASSERT_NOT_REACHED();
         },
         NULL, true, true, false);
+#endif
 
     DEFINE_FUNCTION(HTMLCollection, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_htmlCollection = HTMLCollectionFunction;

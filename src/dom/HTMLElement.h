@@ -5,6 +5,7 @@
 
 namespace StarFish {
 
+#ifdef STARFISH_ENABLE_AUDIO
 #define FOR_EACH_HTML_ELEMENT_OP(F) \
         F(Html) \
         F(Head) \
@@ -18,6 +19,20 @@ namespace StarFish {
         F(Span) \
         F(BR) \
         F(Audio)
+#else
+#define FOR_EACH_HTML_ELEMENT_OP(F) \
+        F(Html) \
+        F(Head) \
+        F(Script) \
+        F(Style) \
+        F(Meta) \
+        F(Body) \
+        F(Div) \
+        F(Paragraph) \
+        F(Image) \
+        F(Span) \
+        F(BR)
+#endif
 
 #define FORWRAD_DECLARE_NAME(kind) class HTML##kind##Element;
 

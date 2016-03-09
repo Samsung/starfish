@@ -241,12 +241,14 @@ void ScriptWrappable::initScriptWrappable(HTMLBRElement* ptr)
     scriptObject()->set__proto__(data->m_htmlBrElement->protoType());
 }
 
+#ifdef STARFISH_ENABLE_AUDIO
 void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
     scriptObject()->set__proto__(data->m_htmlAudioElement->protoType());
 }
+#endif
 
 void ScriptWrappable::initScriptWrappable(HTMLUnknownElement* ptr)
 {

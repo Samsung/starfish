@@ -13,7 +13,9 @@
 #include "HTMLImageElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLStyleElement.h"
+#ifdef STARFISH_ENABLE_AUDIO
 #include "HTMLAudioElement.h"
+#endif
 
 
 namespace StarFish {

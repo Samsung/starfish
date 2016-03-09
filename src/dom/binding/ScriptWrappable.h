@@ -23,7 +23,9 @@ class HTMLScriptElement;
 class HTMLDivElement;
 class HTMLImageElement;
 class HTMLBRElement;
+#ifdef STARFISH_ENABLE_AUDIO
 class HTMLAudioElement;
+#endif
 class HTMLUnknownElement;
 class Event;
 class UIEvent;
@@ -106,7 +108,9 @@ public:
     void initScriptWrappable(HTMLBRElement* ptr);
     void initScriptWrappable(HTMLDivElement* ptr);
     void initScriptWrappable(HTMLUnknownElement* ptr);
+#ifdef STARFISH_ENABLE_AUDIO
     void initScriptWrappable(HTMLAudioElement* ptr);
+#endif
 
     void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr, ScriptBindingInstance*);

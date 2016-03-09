@@ -1,4 +1,4 @@
-#ifndef __StarFishHTMLAudioElement__
+#if !defined(STARFISH_ENABLE_AUDIO) && !defined (__StarFishHTMLAudioElement__)
 #define __StarFishHTMLAudioElement__
 
 #include "dom/HTMLElement.h"
