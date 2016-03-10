@@ -14,7 +14,6 @@ public:
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_file_set(m_image, imageSrc->utf8Data(), NULL);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
-
         int w, h;
         evas_object_image_size_get(m_image, &w, &h);
         m_width = w;
@@ -26,19 +25,18 @@ public:
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_size_set(m_image, w, h);
         evas_object_image_filled_set(m_image, EINA_TRUE);
-        evas_object_image_size_set(m_image, m_width, m_height);
         evas_object_image_colorspace_set(m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
         evas_object_image_alpha_set(m_image, EINA_TRUE);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         m_width = w;
         m_height = h;
 
-        STARFISH_LOG_INFO("crate ImageData %p", m_image);
+        STARFISH_LOG_INFO("create ImageData %p\n", m_image);
     }
 
     ~ImageDataEFL()
     {
-        STARFISH_LOG_INFO("release ImageData %p", m_image);
+        STARFISH_LOG_INFO("release ImageData %p\n", m_image);
         evas_object_unref(m_image);
     }
 
@@ -55,6 +53,14 @@ public:
     virtual size_t height()
     {
         return m_height;
+    }
+
+    virtual void clear()
+    {
+        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
+        size_t end = m_width * m_height * sizeof(uint32_t);
+        memset(address, 0, end);
+        evas_object_image_data_set(m_image, address);
     }
 
 protected:
@@ -92,6 +98,10 @@ public:
     virtual size_t height()
     {
         return m_height;
+    }
+
+    virtual void clear()
+    {
     }
 
 protected:

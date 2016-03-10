@@ -5,11 +5,12 @@
 
 namespace StarFish {
 
-LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
+std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
 {
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
     LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top;
+    LayoutRect visibleRect(0, 0, 0, 0);
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
     if (marginInfo.canCollapseTopWithChildren()) {
@@ -102,6 +103,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             if (maxNormalFlowBottom < child->asFrameBox()->height() + child->asFrameBox()->y())
                 maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
             normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
+            visibleRect.unite(child->asFrameBox()->frameRect());
         } else {
             child->asFrameBox()->moveY(marginForAbsolute);
             ctx.registerAbsolutePositionedFrames(child);
@@ -122,7 +124,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         normalFlowHeight += ctx.maxPositiveMarginBottom() - ctx.maxNegativeMarginBottom();
         ctx.setMaxMarginBottom(0, 0);
     }
-    return normalFlowHeight;
+
+    return std::make_pair(normalFlowHeight, visibleRect);
 }
 
 }

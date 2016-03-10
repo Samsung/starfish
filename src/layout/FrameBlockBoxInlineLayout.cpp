@@ -184,7 +184,7 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
                             f->setY(height + maxDescender - f->height() - dec);
                         } else {
                             LayoutUnit dec = -(f->height() - ascender) + f->marginBottom();
-                            f->setY(height + maxDescender - f->height() - dec);
+                            f->setY(height + maxDescender - f->height() - dec + f->marginTop());
                         }
                     }
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
@@ -434,8 +434,9 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
     }
 }
 
-LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
+std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx)
 {
+    LayoutRect visibleRect(0, 0, 0, 0);
     LayoutUnit lineBoxX = paddingLeft() + borderLeft();
     LayoutUnit lineBoxY = paddingTop() + borderTop();
     LayoutUnit inlineContentWidth = contentWidth();
@@ -548,10 +549,16 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             }
         }
 
+        for (size_t k = 0; k < b.m_boxes.size(); k++) {
+            FrameBox* childBox = b.m_boxes[k];
+            LayoutRect vr = childBox->absoluteRect(this);
+            visibleRect.unite(vr);
+        }
+
         contentHeight += b.m_frameRect.height();
     }
 
-    return contentHeight;
+    return std::make_pair(contentHeight, visibleRect);
 }
 
 InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx,

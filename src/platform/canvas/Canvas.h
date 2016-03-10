@@ -14,6 +14,7 @@ protected:
     }
 public:
     static Canvas* createDirect(void* data);
+    static Canvas* create(ImageData* data);
 
     virtual ~Canvas()
     {

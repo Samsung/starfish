@@ -178,10 +178,15 @@ void FrameBlockBox::layout(LayoutContext& ctx)
     }
 
     LayoutUnit contentHeight;
+    LayoutRect visibleRect(0, 0, 0, 0);
     if (hasBlockFlow()) {
-        contentHeight = layoutBlock(ctx);
+        auto ret = layoutBlock(ctx);
+        contentHeight = ret.first;
+        visibleRect = ret.second;
     } else {
-        contentHeight = layoutInline(ctx);
+        auto ret = layoutInline(ctx);
+        contentHeight = ret.first;
+        visibleRect = ret.second;
     }
 
     // Now the intrinsic height of the object is known because the children are placed
@@ -281,18 +286,14 @@ void FrameBlockBox::layout(LayoutContext& ctx)
     // compute visible rect
     bool isOverflowHidden = style()->overflow() == OverflowValue::HiddenOverflow;
 
-    if (isOverflowHidden) {
-        m_visibleRect = m_frameRect;
-    } else {
-        m_visibleRect = m_frameRect;
-        if (height() < contentHeight) {
-            m_visibleRect.setHeight(contentHeight);
-        }
+    m_visibleRect = LayoutRect(LayoutLocation(0, 0), LayoutSize(m_frameRect.size()));
+    if (!isOverflowHidden) {
+        m_visibleRect.unite(visibleRect);
     }
 
     auto mergeVisibleRect = [&](FrameBox* child)
     {
-        if (isOverflowHidden) {
+        if (!isOverflowHidden) {
             LayoutRect absRect = child->absoluteRect(this);
             m_visibleRect.unite(absRect);
         }

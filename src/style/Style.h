@@ -230,6 +230,7 @@ enum VisibilityValue {
 class ValueList;
 class CSSStyleDeclaration;
 
+// TODO add opacity
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
     F(Color, color, "color")                                       \
     F(Direction, direction, "direction")                           \

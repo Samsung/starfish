@@ -78,8 +78,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
 
             if (rule.size() > 1) {
                 const char* key = rule[0]->trim()->utf8Data();
-                if (false) {
-
+                if (strcmp(key, "opacity") == 0) { \
+                    inlineStyle()->setOpacity(rule[1]->utf8Data());
                 }
 #define SET_VALUE(name, nameLower, nameCSSCase) \
                 else if (strcmp(key, nameCSSCase) == 0) { \

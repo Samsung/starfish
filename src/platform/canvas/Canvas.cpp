@@ -200,18 +200,31 @@ public:
         save();
     }
 
+    CanvasEFL(ImageData* data)
+    {
+        m_objList = NULL;
+        m_directDraw = false;
+        m_image = (Evas_Object*)data->unwrap();
+        void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
+        m_buffer = buffer;
+        m_prevDrawnImageMap = NULL;
+        initFromBuffer(buffer, data->width(), data->height(), evas_object_image_stride_get(m_image));
+    }
+
     ~CanvasEFL()
     {
         restore();
+
+        if (m_image && m_buffer) {
+            evas_object_image_data_set(m_image, m_buffer);
+            // evas_object_image_data_update_add(m_image, 0, 0, m_width, m_height);
+        }
+
         if (m_directDraw) {
             // evas_damage_rectangle_add(m_canvas, 0, 0, m_width, m_height);
         } else {
             evas_render(m_canvas);
             evas_free(m_canvas);
-        }
-
-        if (m_image && m_buffer) {
-            evas_object_image_data_update_add(m_image, 0, 0, m_width, m_height);
         }
 
         if (m_prevDrawnImageMap) {
@@ -1008,4 +1021,10 @@ Canvas* Canvas::createDirect(void* data)
 {
     return new CanvasEFL(data);
 }
+
+Canvas* Canvas::create(ImageData* data)
+{
+    return new CanvasEFL(data);
+}
+
 }

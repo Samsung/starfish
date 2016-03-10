@@ -5,6 +5,8 @@ namespace StarFish {
 class Node;
 class FrameBox;
 class StackingContext;
+class Canvas;
+class Frame;
 
 class StackingContextChild : public std::vector<StackingContext*, gc_allocator<StackingContext*> > , public gc {
 };
@@ -33,10 +35,14 @@ public:
     }
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
 
+    void paintStackingContext(Canvas* canvas);
+    Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
+
 protected:
     bool m_needsOwnBuffer;
     FrameBox* m_owner;
     StackingContext* m_parent;
+    ImageData* m_buffer;
 
     SkMatrix m_matrix;
 

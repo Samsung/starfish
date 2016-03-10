@@ -355,7 +355,7 @@ public:
 
     virtual LayoutRect visibleRect()
     {
-        return m_frameRect;
+        return LayoutRect(LayoutLocation(0, 0), LayoutSize(m_frameRect.size()));
     }
 
     LayoutLocation absolutePoint(FrameBox* top)
@@ -372,7 +372,7 @@ public:
 
     LayoutRect absoluteRect(FrameBox* top)
     {
-        return LayoutRect(absolutePoint(top), top->frameRect().size());
+        return LayoutRect(absolutePoint(top), frameRect().size());
     }
 
     void computeBorderMarginPadding(LayoutUnit parentContentWidth)
@@ -438,12 +438,7 @@ public:
         }
     }
 
-    void paintStackingContext(Canvas* canvas);
     virtual void paintStackingContextContent(Canvas* canvas);
-
-    Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
-
-
 
 protected:
     // content + padding + border

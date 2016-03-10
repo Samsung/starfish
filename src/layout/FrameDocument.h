@@ -32,7 +32,7 @@ public:
             return;
         canvas->save();
         canvas->translate(firstChild()->asFrameBox()->x(), firstChild()->asFrameBox()->y());
-        firstChild()->asFrameBox()->paintStackingContext(canvas);
+        firstChild()->asFrameBox()->stackingContext()->paintStackingContext(canvas);
         canvas->restore();
     }
 
@@ -43,7 +43,7 @@ public:
         if (!firstChild())
             return nullptr;
 
-        Frame* result = firstChild()->asFrameBox()->hitTestStackingContext(x, y);
+        Frame* result = firstChild()->asFrameBox()->stackingContext()->hitTestStackingContext(x, y);
         if (result)
             return result;
         return this;
