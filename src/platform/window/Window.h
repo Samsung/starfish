@@ -107,8 +107,12 @@ public:
         return m_activeNodeWithTouchDown;
     }
 
+    void setActiveNode(Node* n);
+    void releaseActiveNode();
+
     void pause();
     void resume();
+    void close();
 
     StyleResolver* styleResolver()
     {
@@ -155,6 +159,7 @@ protected:
 
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
+    Location m_touchDownPoint;
 
     StarFish* m_starFish;
 
@@ -165,6 +170,8 @@ protected:
     uint32_t m_requestAnimationFrameCounter;
     std::unordered_map<uint32_t, std::pair<WindowSetTimeoutHandler, void*>, std::hash<uint32_t>, std::equal_to<uint32_t>,
         gc_allocator<std::pair<uint32_t, std::pair<WindowSetTimeoutHandler, void*> > > > m_requestAnimationFrameHandler;
+
+    std::vector<Node*, gc_allocator<Node*> > m_activeNodes;
 };
 
 }

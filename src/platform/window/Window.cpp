@@ -166,16 +166,21 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
         Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*) event_info;
-        if (sf->m_isRunning)
-            sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventDown);
+        sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventDown);
+        return;
+    }, wnd);
+
+    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
+        Window* sf = (Window*)data;
+        Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*) event_info;
+        sf->dispatchTouchEvent(ev->cur.canvas.x, ev->cur.canvas.y, Window::TouchEventMove);
         return;
     }, wnd);
 
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
         Evas_Event_Mouse_Up* ev = (Evas_Event_Mouse_Up*) event_info;
-        if (sf->m_isRunning)
-            sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventUp);
+        sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventUp);
         return;
     }, wnd);
 
@@ -201,7 +206,8 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
 #endif
 
 Window::Window(StarFish* starFish)
-    : m_starFish(starFish)
+    : m_touchDownPoint(0, 0)
+    , m_starFish(starFish)
 {
     STARFISH_ASSERT(m_starFish->scriptBindingInstance());
 
@@ -627,43 +633,66 @@ Node* Window::hitTest(float x, float y)
     return nullptr;
 }
 
+void Window::setActiveNode(Node* n)
+{
+    Node* t = n;
+    while (t) {
+        t->setState(Node::NodeStateActive);
+        m_activeNodes.push_back(t);
+        t = t->parentNode();
+    }
+    m_activeNodeWithTouchDown = n;
+}
+
+void Window::releaseActiveNode()
+{
+    for (size_t i = 0; i < m_activeNodes.size() ; i ++) {
+        m_activeNodes[i]->setState(Node::NodeStateNormal);
+    }
+    m_activeNodes.clear();
+    m_activeNodes.shrink_to_fit();
+    m_activeNodeWithTouchDown = nullptr;
+}
+
 void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 {
+    // STARFISH_LOG_INFO("Window::dispatchTouchEvent %f %f kind %d\n", x, y, (int)kind);
     if (!m_isRunning)
         return;
 
     Node* node = hitTest(x, y);
     if (kind == TouchEventDown) {
-        m_activeNodeWithTouchDown = node;
-        Node* t = node;
-        while (t) {
-            t->setState(Node::NodeStateActive);
-            t = t->parentNode();
-        }
-    }
-
-    if (kind == TouchEventUp) {
-        bool shouldCallOnClick = false;
-        if (m_activeNodeWithTouchDown == node) {
-            shouldCallOnClick = true;
-        }
-
-        Node* t = m_activeNodeWithTouchDown;
-
-        bool shouldDispatchEvent = shouldCallOnClick;
-        while (t) {
-            if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
-                QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
-                Event* e = new Event(eventType, EventInit(true, false));
-                EventTarget::dispatchEvent(t->asNode(), e);
-                shouldDispatchEvent = false;
+        m_touchDownPoint = Location(x, y);
+        setActiveNode(node);
+    } else {
+        if (kind == TouchEventMove) {
+            if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 15) || (abs(m_touchDownPoint.y() - y) > 15))) {
+                releaseActiveNode();
+                m_activeNodeWithTouchDown = nullptr;
+            }
+        } else if (kind == TouchEventUp) {
+            bool shouldCallOnClick = false;
+            if (m_activeNodeWithTouchDown == node) {
+                shouldCallOnClick = true;
             }
 
-            t->setState(Node::NodeStateNormal);
-            t = t->parentNode();
-        }
+            Node* t = m_activeNodeWithTouchDown;
 
-        m_activeNodeWithTouchDown = nullptr;
+            bool shouldDispatchEvent = shouldCallOnClick;
+            while (t) {
+                if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
+                    QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
+                    Event* e = new Event(eventType, EventInit(true, false));
+                    EventTarget::dispatchEvent(t->asNode(), e);
+                    shouldDispatchEvent = false;
+                }
+                t = t->parentNode();
+            }
+
+            releaseActiveNode();
+
+            m_activeNodeWithTouchDown = nullptr;
+        }
     }
 }
 
@@ -699,4 +728,11 @@ void Window::resume()
     document()->setVisibleState(PageVisibilityState::PageVisibilityStateVisible);
     document()->visibilityStateChanged();
 }
+
+void Window::close()
+{
+    STARFISH_LOG_INFO("onClose");
+}
+
+
 }

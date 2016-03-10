@@ -836,6 +836,7 @@ public:
 
             Evas_Object* imgData = (Evas_Object*)data->unwrap();
             void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
+            evas_object_image_data_set(imgData, imgBuf);
 
             evas_object_image_size_set(eo, data->width(), data->height());
             evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));

@@ -21,6 +21,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
     GC_set_free_space_divisor(64);
     STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
 
+    m_deviceKind = deviceKindUseMouse;
     m_startUpFlag = flag;
     m_currentPath = currentPath;
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
@@ -40,6 +41,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int
     GC_set_free_space_divisor(64);
     STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
 
+    m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
     m_currentPath = currentPath;
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
@@ -69,6 +71,11 @@ void StarFish::resume()
 void StarFish::pause()
 {
     m_window->pause();
+}
+
+void StarFish::close()
+{
+    m_window->close();
 }
 
 void StarFish::evaluate(String* s)

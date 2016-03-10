@@ -24,6 +24,7 @@ extern "C" StarFishInstance* starfishInit(void* window, const char* workingDirec
 
 extern "C" void starfishRemove(StarFishInstance* instance)
 {
+    TO_STARFISH(instance)->close();
     starfishGCRemoveRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
     delete TO_STARFISH(instance);
     free(instance);

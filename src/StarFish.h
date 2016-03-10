@@ -57,6 +57,12 @@ enum StarFishStartUpFlag {
     enableRegressionTest = 1 << 5,
 };
 
+
+enum StarFishDeviceKind {
+    deviceKindUseMouse = 0,
+    deviceKindUseTouchScreen = 1 << 0,
+};
+
 class StarFish : public gc {
 public:
 #ifndef STARFISH_TIZEN_WEARABLE
@@ -106,6 +112,7 @@ public:
 
     void resume();
     void pause();
+    void close();
     void evaluate(String* s);
 
     ImageData* fetchImage(String* str);
@@ -127,8 +134,14 @@ public:
     {
         return (StarFishStartUpFlag)m_startUpFlag;
     }
+
+    StarFishDeviceKind deviceKind()
+    {
+        return m_deviceKind;
+    }
 protected:
     unsigned int m_startUpFlag;
+    StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
     ScriptBindingInstance* m_scriptBindingInstance;
     Window* m_window;
