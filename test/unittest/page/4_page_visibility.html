@@ -1,25 +1,48 @@
 <!doctype html>
 <html>
   <head>
+    <style>
+      body {
+        width: 300px;
+        height: 300px;
+        background-color: yellow;
+      }
+    </style>
     <script>
       if (document.addEventListener) {
+        // Add the visibilitychange event listener
         document.addEventListener("visibilitychange", visibilityChanged);
       }
 
+      // This function is invoked when the widget is resumed or paused
       function visibilityChanged() {
+        if (document.hidden) {
+          // When the widget is paused
+          document.body.style.backgroundColor = "black"
+        } else {
+          // When the widget is resumed
+          document.body.style.backgroundColor = "white"
+        }
+
         console.log("+++ visibilityChanged")
         console.log("+++ document.hidden: " + document.hidden)
         console.log("+++ document.visibilityState: " + document.visibilityState)
       }
-      
+
       function onClick() {
+        if (document.hidden) {
+          document.body.style.backgroundColor = "red"
+        } else {
+          document.body.style.backgroundColor = "blue"
+        }
+
         console.log("+++ onClick")
         console.log("+++ document.hidden: " + document.hidden)
         console.log("+++ document.visibilityState: " + document.visibilityState)
       }
     </script>
   </head>
-  <body>
-    <div onclick="onClick()">Page Visibility</div>
+  <body onclick="onClick()">
+    Page Visibility
   </body>
 </html>
