@@ -198,8 +198,8 @@ void Document::setVisibleState(PageVisibilityState visibilityState)
 
 void Document::visibilityStateChanged()
 {
-    QualifiedName eventType = QualifiedName::fromString(window()->starFish(), "visibilitychange");
-    Event* e = new Event(eventType, EventInit(false, false));
+    QualifiedName eventType = window()->starFish()->staticStrings()->m_visibilitychange;
+    Event* e = new Event(eventType, EventInit(true, false));
     EventTarget::dispatchEvent(this->asNode(), e);
 }
 

@@ -42,6 +42,9 @@ public:
     // Event Names
     QualifiedName m_click;
     QualifiedName m_onclick;
+    QualifiedName m_load;
+    QualifiedName m_onload;
+    QualifiedName m_visibilitychange;
 
 protected:
     std::unordered_map<std::string, QualifiedName,

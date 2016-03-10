@@ -101,6 +101,16 @@ public:
     };
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
+    Node* onloadNode()
+    {
+        return m_onloadNode;
+    }
+    void setOnloadNode(Node* node)
+    {
+        m_onloadNode = node;
+    }
+    void dispatchLoadEvent();
+
     Node* hitTest(float x, float y);
     Node* activeNodeWithTouchDown()
     {
@@ -160,6 +170,7 @@ protected:
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
     Location m_touchDownPoint;
+    Node* m_onloadNode;
 
     StarFish* m_starFish;
 

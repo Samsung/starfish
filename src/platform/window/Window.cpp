@@ -226,6 +226,7 @@ Window::Window(StarFish* starFish)
     m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
+    m_onloadNode = nullptr;
 
     CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet;
 
@@ -535,6 +536,7 @@ void Window::loadXMLDocument(String* filePath)
 {
     XMLDocumentBuilder* builder = new XMLDocumentBuilder;
     builder->build(m_document, filePath);
+    dispatchLoadEvent();
 }
 
 struct TimeoutData {
@@ -681,8 +683,8 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
             bool shouldDispatchEvent = shouldCallOnClick;
             while (t) {
                 if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
-                    QualifiedName eventType = QualifiedName::fromString(document()->window()->starFish(), "click");
-                    Event* e = new Event(eventType, EventInit(true, false));
+                    QualifiedName eventType = starFish()->staticStrings()->m_click;
+                    Event* e = new Event(eventType, EventInit(true, true));
                     EventTarget::dispatchEvent(t->asNode(), e);
                     shouldDispatchEvent = false;
                 }
@@ -698,6 +700,15 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 
 void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 {
+}
+
+void Window::dispatchLoadEvent()
+{
+    QualifiedName eventType = starFish()->staticStrings()->m_load;
+    Event* e = new Event(eventType, EventInit(false, false));
+    if (onloadNode() != nullptr) {
+        EventTarget::dispatchEvent(onloadNode(), e);
+    }
 }
 
 void Window::pause()
