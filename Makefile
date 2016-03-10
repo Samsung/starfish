@@ -410,7 +410,7 @@ asm:
 
 install_runner_dep:
 	sudo apt-get install nodejs phantomjs npm
-	npm install fs path phantom
+	npm install fs path phantom@0.8.4
 
 install_pixel_test_dep:
 	mkdir -p ~/.fonts
