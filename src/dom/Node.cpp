@@ -976,6 +976,13 @@ void Node::dumpStyle()
 
     printf("z-index : %d, ", (int)m_style->zIndex());
 
+    // transform
+    if (m_style->transform() == NULL) {
+        printf("transform : none, ");
+    } else {
+        printf("transform : %s, ", m_style->transform()->dumpString()->utf8Data());
+    }
+
     printf("}");
 }
 }

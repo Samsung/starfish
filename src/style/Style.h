@@ -109,6 +109,57 @@ protected:
     float m_value;
 };
 
+// https://www.w3.org/TR/css3-values/#angles
+class CSSAngle {
+public:
+    enum Kind {
+        DEG,
+        GRAD,
+        RAD,
+        TURN
+    };
+
+    CSSAngle(float f)
+    {
+        m_kind = DEG;
+        m_value = f;
+    }
+
+    CSSAngle(Kind kind, float f)
+    {
+        m_kind = kind;
+        m_value = f;
+    }
+
+    CSSAngle(String* str, float f)
+    {
+        if (str->length() == 0 || str->equals("deg")) {
+            m_kind = DEG;
+        } else if (str->equals("grad")) {
+            m_kind = GRAD;
+        } else if (str->equals("rad")) {
+            m_kind = RAD;
+        } else if (str->equals("turn")) {
+            m_kind = TURN;
+        }
+        m_value = f;
+    }
+
+    Kind kind()
+    {
+        return m_kind;
+    }
+
+    float value()
+    {
+        return m_value;
+    }
+
+protected:
+    Kind m_kind;
+    float m_value;
+};
+
 // inline | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit
 enum DisplayValue {
     InlineDisplayValue, // initial value
@@ -280,6 +331,7 @@ class CSSStyleDeclaration;
     F(BorderBottomWidth, borderBottomWidth, "border-bottom-width") \
     F(BorderLeftWidth, borderLeftWidth, "border-left-width")       \
     F(TextAlign, textAlign, "text-align")                          \
+    F(Transform, transform, "transform")                  \
     F(Visibility, visibility, "visibility")                        \
     F(OverflowX, overflow, "overflow")                             \
     F(BackgroundImage, backgroundImage, "background-image")        \
@@ -292,6 +344,48 @@ class CSSStyleDeclaration;
     F(Background, background, "background")                        \
     F(FontWeight, fontWeight, "font-weight")
 
+
+class CSSTransformFunction {
+public:
+    enum Kind {
+        Matrix,
+        Translate,
+        TranslateX,
+        TranslateY,
+        Scale,
+        ScaleX,
+        ScaleY,
+        Rotate,
+        Skew,
+        SkewX,
+        SkewY
+    };
+
+    CSSTransformFunction(Kind kind, ValueList* values)
+    {
+        m_kind = kind;
+        m_values = values;
+    }
+
+    CSSTransformFunction(Kind kind)
+    {
+        m_kind = kind;
+    }
+
+    Kind kind()
+    {
+        return m_kind;
+    }
+
+    ValueList* values()
+    {
+        return m_values;
+    }
+
+protected:
+    Kind m_kind;
+    ValueList* m_values;
+};
 
 class CSSStyleValuePair : public gc {
     friend class ValueList;
@@ -323,6 +417,8 @@ public:
         TextDecoration, // none | [ underline || overline || line-through || blink ] | inherit // Initial value -> none
         // https://www.w3.org/TR/2010/WD-css3-text-20101005/#text-overflow0
         TextOverflow, // <clip> | ellipsis | string
+        // https://www.w3.org/TR/css3-transforms/#propdef-transform
+        Transform, // none | <transform-function>+
         // https://www.w3.org/TR/CSS2/text.html#propdef-letter-spacing
         LetterSpacing, //  normal | length | inherit // Initial -> normal
         // https://www.w3.org/TR/CSS21/visuren.html#propdef-direction
@@ -409,6 +505,7 @@ public:
         Auto,
         None,
         Number, // real number values - https://www.w3.org/TR/CSS21/syndata.html#value-def-number
+        Angle, //
         Normal,
         StringValueKind,
         UrlValueKind,
@@ -456,6 +553,9 @@ public:
         OverflowValueKind,
         TextDecorationKind,
         VisibilityKind,
+
+        // transform
+        TransformFunction,
     };
 
     CSSStyleValuePair()
@@ -545,6 +645,18 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == Length);
         return m_value.m_length;
+    }
+
+    CSSAngle angleValue()
+    {
+        STARFISH_ASSERT(m_valueKind == Angle);
+        return m_value.m_angle;
+    }
+
+    CSSTransformFunction transformValue()
+    {
+        STARFISH_ASSERT(m_valueKind == TransformFunction);
+        return m_value.m_transform;
     }
 
     float numberValue()
@@ -641,6 +753,7 @@ public:
         TextAlignValue m_textAlign;
         DirectionValue m_direction;
         CSSLength m_length;
+        CSSAngle m_angle;
         String* m_stringValue;
         BackgroundRepeatValue m_backgroundRepeatX;
         BackgroundRepeatValue m_backgroundRepeatY;
@@ -650,6 +763,7 @@ public:
         //        OverflowValue m_overflowY;
         VisibilityValue m_visibility;
         TextDecorationValue m_textDecoration;
+        CSSTransformFunction m_transform;
     };
 
     ValueData& value()
@@ -782,6 +896,7 @@ public:
     F(BorderBottomWidth, "border-bottom-width") \
     F(BorderLeftWidth, "border-left-width")     \
     F(TextAlign, "text-align")                  \
+    F(Transform, "transform")                  \
     F(Visibility, "visibility")                 \
     F(Opacity, "opacity")                       \
     F(OverflowX, "overflow-x")                  \

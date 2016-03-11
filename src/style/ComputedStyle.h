@@ -4,6 +4,7 @@
 #include "style/Style.h"
 #include "style/StyleBackgroundData.h"
 #include "style/StyleSurroundData.h"
+#include "style/StyleTransformData.h"
 #include "style/DefaultStyle.h"
 
 namespace StarFish {
@@ -162,6 +163,25 @@ public:
         if (m_background == NULL) {
             m_background = new StyleBackgroundData();
         }
+    }
+
+    StyleTransformData* transform()
+    {
+        return m_transform;
+    }
+
+    void setTransformIfNeeded()
+    {
+        if (m_transform == NULL) {
+            m_transform = new StyleTransformData();
+        }
+    }
+
+    void setTransformMatrix(double a, double b, double c, double d, double e, double f)
+    {
+        setTransformIfNeeded();
+        m_transform->setType(StyleTransformData::OperationType::Matrix);
+        m_transform->setMatrix(a, b, c, d, e, f);
     }
 
     void setBgColor(Color color)
@@ -809,6 +829,7 @@ protected:
         //        m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
+        m_transform = nullptr;
     }
 
     // NOTICE
@@ -845,6 +866,7 @@ protected:
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;
+    StyleTransformData* m_transform;
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);
