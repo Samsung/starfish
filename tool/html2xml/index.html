@@ -125,6 +125,8 @@ asdf
 				var code = document.getElementById("code");
 
 				var iframe = document.createElement("iframe");
+                // Set the 'sandbox' attribute except the 'allow-scripts' value
+                iframe.setAttribute("sandbox", "allow-forms allow-pointer-lock allow-popups allow-same-origin allow-top-navigation");
 				iframe.width = "360"
 				iframe.height = "360"
 				iframe.srcdoc = code.value;
