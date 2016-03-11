@@ -184,19 +184,19 @@ public:
         m_transform->setMatrix(a, b, c, d, e, f);
     }
 
-    void setBgColor(Color color)
+    void setBackgroundColor(Color color)
     {
         setBackgroundIfNeeded();
         m_background->setBgColor(color);
     }
 
-    void setBgImage(String* img)
+    void setBackgroundImage(String* img)
     {
         setBackgroundIfNeeded();
         m_background->setBgImage(img);
     }
 
-    void setBgImageData(ImageData* imgdata)
+    void setBackgroundImageData(ImageData* imgdata)
     {
         setBackgroundIfNeeded();
         m_background->setBgImageData(imgdata);
@@ -226,21 +226,21 @@ public:
         m_background->setSizeValue(size);
     }
 
-    Color bgColor()
+    Color backgroundColor()
     {
         if (m_background == NULL)
             return Color();
         return m_background->bgColor();
     }
 
-    String* bgImage()
+    String* backgroundImage()
     {
         if (m_background == NULL)
             return String::emptyString;
         return m_background->bgImage();
     }
 
-    ImageData* bgImageData()
+    ImageData* backgroundImageData()
     {
         if (m_background == NULL)
             return NULL;
@@ -496,7 +496,12 @@ public:
         surround()->border.left().setWidth(width);
     }
 
-    String* borderImageSource() { return surround()->border.image().url(); }
+    String* borderImageSource()
+    {
+        if (m_surround)
+            return surround()->border.image().url();
+        return String::emptyString;
+    }
     LengthBox borderImageSlices() { return surround()->border.image().slices(); }
     bool borderImageSliceFill() { return surround()->border.image().sliceFill(); }
     BorderImageRepeatValue borderImageRepeatX() { return surround()->border.image().repeatX(); }

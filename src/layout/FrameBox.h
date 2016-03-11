@@ -161,14 +161,14 @@ public:
 
     static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect bgRect, LayoutRect borderBox)
     {
-        if (!style->bgColor().isTransparent()) {
+        if (!style->backgroundColor().isTransparent()) {
             canvas->save();
-            canvas->setColor(style->bgColor());
+            canvas->setColor(style->backgroundColor());
             canvas->drawRect(borderBox);
             canvas->restore();
         }
 
-        ImageData* id = style->bgImageData();
+        ImageData* id = style->backgroundImageData();
         if (id && id->width() && id->height()) {
             // TODO background-position
             canvas->save();

@@ -60,8 +60,8 @@ void ComputedStyle::loadResources(StarFish* sf)
     m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
 #endif
 
-    if (!bgImage()->equals(String::emptyString)) {
-        setBgImageData(sf->fetchImage(sf->makeResourcePath(bgImage())));
+    if (!backgroundImage()->equals(String::emptyString)) {
+        setBackgroundImageData(sf->fetchImage(sf->makeResourcePath(backgroundImage())));
     }
 }
 

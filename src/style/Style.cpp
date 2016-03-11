@@ -3602,24 +3602,24 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundColor:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBgColor(parentStyle->bgColor());
+                    style->setBackgroundColor(parentStyle->backgroundColor());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
                     || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Transparent) {
-                    style->setBgColor(Color(0, 0, 0, 0));
+                    style->setBackgroundColor(Color(0, 0, 0, 0));
                 } else {
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    style->setBgColor(parseColor(cssValues[k].stringValue()));
+                    style->setBackgroundColor(parseColor(cssValues[k].stringValue()));
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundImage:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
                     || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
-                    style->setBgImage(ComputedStyle::initialBgImage());
+                    style->setBackgroundImage(ComputedStyle::initialBgImage());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBgImage(parentStyle->bgImage());
+                    style->setBackgroundImage(parentStyle->backgroundImage());
                 } else {
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::UrlValueKind);
-                    style->setBgImage(cssValues[k].urlValue());
+                    style->setBackgroundImage(cssValues[k].urlValue());
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundSize:

@@ -30,7 +30,7 @@ public:
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
     {
         HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
-        if (!newStyle->bgColor().isTransparent() || newStyle->bgImageData()) {
+        if (!newStyle->backgroundColor().isTransparent() || newStyle->backgroundImageData()) {
             document()->window()->m_hasBodyElementBackground = true;
         } else {
             document()->window()->m_hasBodyElementBackground = false;

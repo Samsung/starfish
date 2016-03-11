@@ -730,13 +730,13 @@ void Node::dumpStyle()
     printf("color: (%d,%d,%d,%d), ", m_style->color().r(), m_style->color().g(), m_style->color().b(), m_style->color().a());
 
     // background-color
-    printf("background-color: (%d,%d,%d,%d), ", m_style->bgColor().r(), m_style->bgColor().g(), m_style->bgColor().b(), m_style->bgColor().a());
+    printf("background-color: (%d,%d,%d,%d), ", m_style->backgroundColor().r(), m_style->backgroundColor().g(), m_style->backgroundColor().b(), m_style->backgroundColor().a());
 
     // background-image
-    if (m_style->bgImage()->length() == 0) {
+    if (m_style->backgroundImage()->length() == 0) {
         printf("background-image: none, ");
     } else {
-        printf("background-image: %s, ", m_style->bgImage()->utf8Data());
+        printf("background-image: %s, ", m_style->backgroundImage()->utf8Data());
     }
 
     // background-size
