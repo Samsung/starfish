@@ -1200,6 +1200,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(HTMLScriptElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlScriptElement = HTMLScriptElementFunction;
 
+    HTMLScriptElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("src"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_src));
+            }
+            THROW_ILLEGAL_INVOCATION();
+            RELEASE_ASSERT_NOT_REACHED();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_src, toBrowserString(value.toString()));
+                return;
+            }
+            THROW_ILLEGAL_INVOCATION();
+        },
+        true, true, false);
+
     DEFINE_FUNCTION(HTMLStyleElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlStyleElement = HTMLStyleElementFunction;
 

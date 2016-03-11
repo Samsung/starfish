@@ -357,6 +357,17 @@ void Node::validatePreinsert(Node* child, Node* childRef) // (node, child)
     }
 }
 
+bool Node::isInDocumentScope()
+{
+    Node* t = this;
+    while (t) {
+        if (t->isDocument())
+            return true;
+        t = t->parentNode();
+    }
+    return false;
+}
+
 Node* Node::appendChild(Node* child)
 {
     // spec does not say what to do when child is null
@@ -378,6 +389,28 @@ Node* Node::appendChild(Node* child)
     child->setParentNode(this);
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
+
+    child->didNodeInserted();
+
+    return child;
+}
+
+Node* Node::appendChildForParser(Node* child)
+{
+    STARFISH_ASSERT(child);
+    STARFISH_ASSERT(child->parentNode() == nullptr);
+    STARFISH_ASSERT(child->nextSibling() == nullptr);
+    STARFISH_ASSERT(child->previousSibling() == nullptr);
+
+    if (m_lastChild) {
+        child->setPreviousSibling(m_lastChild);
+        m_lastChild->setNextSibling(child);
+    } else {
+        m_firstChild = child;
+    }
+    m_lastChild = child;
+    child->setParentNode(this);
+    child->setNeedsStyleRecalc();
     return child;
 }
 
@@ -412,6 +445,9 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     child->setNextSibling(childRef);
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
+
+    child->didNodeInserted();
+
     return child;
 }
 

@@ -32,11 +32,11 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             newNode = new DocumentType(document);
         } else if (type == 3) {
             newNode = new Text(document, String::fromUTF8(xmlElement->FirstChildElement()->FirstChild()->Value()));
-            parentNode->appendChild(newNode);
+            parentNode->appendChildForParser(newNode);
             return;
         } else if (type == 8) {
             newNode = new Comment(document, String::emptyString);
-            parentNode->appendChild(newNode);
+            parentNode->appendChildForParser(newNode);
             return;
         } else if (type == 1) {
             const char* name = xmlElement->Attribute("localName");
@@ -46,7 +46,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             newNode = document->createElement(qname);
             if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLScriptElement()) {
                 if (parentNode) {
-                    parentNode->appendChild(newNode);
+                    parentNode->appendChildForParser(newNode);
                 }
 
                 tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
@@ -55,8 +55,18 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                     child = child->NextSiblingElement();
                 }
 
-                String* script = newNode->asElement()->firstChild()->asCharacterData()->asText()->data();
-                document->window()->starFish()->evaluate(script);
+                const tinyxml2::XMLAttribute* attr = xmlElement->FirstAttribute();
+                while (attr) {
+                    if (strcmp(attr->Name(), "nodeType") == 0) {
+                        attr = attr->Next();
+                        continue;
+                    }
+
+                    newNode->asElement()->setAttribute(QualifiedName::fromString(document->window()->starFish(), attr->Name()), String::fromUTF8(attr->Value()));
+                    attr = attr->Next();
+                }
+
+                newNode->asElement()->asHTMLElement()->asHTMLScriptElement()->executeScript();
                 return;
             } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
                 // resolve styles.
@@ -151,7 +161,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
         }
 
         if (parentNode) {
-            parentNode->appendChild(newNode);
+            parentNode->appendChildForParser(newNode);
         }
 
         tinyxml2::XMLElement* child = xmlElement->FirstChildElement();

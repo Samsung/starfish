@@ -9,6 +9,7 @@ class HTMLScriptElement : public HTMLElement {
 public:
     HTMLScriptElement(Document* document)
         : HTMLElement(document)
+        , m_isAlreadyStarted(false)
     {
         initScriptWrappable(this);
     }
@@ -27,8 +28,12 @@ public:
         return true;
     }
 
+    void executeScript();
+
+    virtual void didNodeInserted();
+
 protected:
-    // String* m_text;
+    bool m_isAlreadyStarted;
 };
 
 }

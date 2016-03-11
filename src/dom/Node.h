@@ -207,7 +207,10 @@ public:
         return false;
     }
 
+    bool isInDocumentScope();
+
     Node* appendChild(Node* child);
+    Node* appendChildForParser(Node* child);
     Node* insertBefore(Node* child, Node* childRef = nullptr);
     Node* replaceChild(Node* child, Node* childToRemove);
     Node* removeChild(Node* child);
@@ -441,9 +444,8 @@ public:
     Element* nextElementSibling();
     Element* previousElementSibling();
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
-    {
-    }
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle) { }
+    virtual void didNodeInserted() { }
 
     virtual bool dispatchEvent(Event* event) override;
 
@@ -465,11 +467,6 @@ protected:
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;
 
-    Node* m_nextSibling;
-    Node* m_previousSibling;
-    Node* m_firstChild;
-    Node* m_lastChild;
-    Node* m_parentNode;
     Document* m_document;
     NodeState m_state;
 
@@ -477,8 +474,12 @@ protected:
 
     Frame* m_frame;
     RareNodeMembers* m_rareNodeMembers;
-
 private:
+    Node* m_nextSibling;
+    Node* m_previousSibling;
+    Node* m_firstChild;
+    Node* m_lastChild;
+    Node* m_parentNode;
     ComputedStyle* m_style;
 };
 }
