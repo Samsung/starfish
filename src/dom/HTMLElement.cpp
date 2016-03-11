@@ -15,6 +15,9 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
     } else if (name == document()->window()->starFish()->staticStrings()->m_onload) {
         String* name[] = {String::createASCIIString("event")};
         setOnload(createScriptFunction(name, 1, value));
+    } else if (name == document()->window()->starFish()->staticStrings()->m_onunload) {
+        String* name[] = {String::createASCIIString("event")};
+        setOnunload(createScriptFunction(name, 1, value));
     }
 }
 

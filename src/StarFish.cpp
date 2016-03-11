@@ -133,6 +133,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onclick = QualifiedName::fromString(sf, "onclick");
     m_load = QualifiedName::fromString(sf, "load");
     m_onload = QualifiedName::fromString(sf, "onload");
+    m_unload = QualifiedName::fromString(sf, "unload");
+    m_onunload = QualifiedName::fromString(sf, "onunload");
     m_visibilitychange = QualifiedName::fromString(sf, "visibilitychange");
 }
 

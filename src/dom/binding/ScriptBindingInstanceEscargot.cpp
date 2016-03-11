@@ -1137,7 +1137,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
         {
             CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            Node* nd = (Node *)originalObj->extraPointerData();
             if (nd->isElement() && nd->asElement()->isHTMLElement()) {
                 auto element = nd->asElement()->asHTMLElement();
                 return element->onclick();
@@ -1148,7 +1148,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
         {
             CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            Node* nd = (Node *)originalObj->extraPointerData();
             if (nd->isElement() && nd->asElement()->isHTMLElement()) {
                 auto element = nd->asElement()->asHTMLElement();
                 if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
@@ -1166,7 +1166,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
         {
             CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            Node* nd = (Node *)originalObj->extraPointerData();
             if (nd->isElement() && nd->asElement()->isHTMLElement()) {
                 auto element = nd->asElement()->asHTMLElement();
                 return element->onload();
@@ -1177,13 +1177,42 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
         {
             CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            Node* nd = (Node *)originalObj->extraPointerData();
             if (nd->isElement() && nd->asElement()->isHTMLElement()) {
                 auto element = nd->asElement()->asHTMLElement();
                 if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
                     element->setOnload(v);
                 } else {
                     element->clearOnload();
+                }
+            } else {
+                THROW_ILLEGAL_INVOCATION();
+            }
+        },
+        true, true, true);
+
+    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onunload"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = (Node *)originalObj->extraPointerData();
+            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+                auto element = nd->asElement()->asHTMLElement();
+                return element->onunload();
+            } else {
+                THROW_ILLEGAL_INVOCATION();
+            }
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = (Node *)originalObj->extraPointerData();
+            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+                auto element = nd->asElement()->asHTMLElement();
+                if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+                    element->setOnunload(v);
+                } else {
+                    element->clearOnunload();
                 }
             } else {
                 THROW_ILLEGAL_INVOCATION();

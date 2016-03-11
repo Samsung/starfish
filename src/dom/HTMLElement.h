@@ -119,6 +119,29 @@ public:
         clearAttributeEventListener(eventType);
     }
 
+    ScriptValue onunload()
+    {
+        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload;
+        EventListener* l = getAttributeEventListener(eventType);
+        if (!l)
+            return ScriptValueNull;
+        return l->scriptValue();
+    }
+
+    void setOnunload(ScriptValue f)
+    {
+        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload;
+        EventListener* l = new EventListener(f, true);
+        setAttributeEventListener(eventType, l);
+        document()->window()->setOnloadNode(this->asNode());
+    }
+
+    void clearOnunload()
+    {
+        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload;
+        clearAttributeEventListener(eventType);
+    }
+
 protected:
     String* m_id;
     String* m_className;

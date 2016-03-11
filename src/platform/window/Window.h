@@ -110,6 +110,7 @@ public:
         m_onloadNode = node;
     }
     void dispatchLoadEvent();
+    void dispatchUnloadEvent();
 
     Node* hitTest(float x, float y);
     Node* activeNodeWithTouchDown()

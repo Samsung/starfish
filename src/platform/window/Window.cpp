@@ -711,6 +711,16 @@ void Window::dispatchLoadEvent()
     }
 }
 
+void Window::dispatchUnloadEvent()
+{
+    QualifiedName eventType = starFish()->staticStrings()->m_unload;
+    Event* e = new Event(eventType, EventInit(false, false));
+    // onunload event is supported for body tag
+    if (document() != nullptr) {
+        EventTarget::dispatchEvent(document()->asNode(), e);
+    }
+}
+
 void Window::pause()
 {
     STARFISH_LOG_INFO("onPause");
@@ -743,6 +753,7 @@ void Window::resume()
 void Window::close()
 {
     STARFISH_LOG_INFO("onClose");
+    dispatchUnloadEvent();
 }
 
 

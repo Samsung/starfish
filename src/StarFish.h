@@ -44,6 +44,8 @@ public:
     QualifiedName m_onclick;
     QualifiedName m_load;
     QualifiedName m_onload;
+    QualifiedName m_unload;
+    QualifiedName m_onunload;
     QualifiedName m_visibilitychange;
 
 protected:
