@@ -12,7 +12,7 @@ using namespace StarFish;
 
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 
-extern "C" StarFishInstance* starfishInit(void* window, const char* workingDirectory)
+extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* workingDirectory)
 {
     starfishGCAddRoots(String::emptyString, String::emptyString + sizeof(String*));
     starfishGCAddRoots(String::spaceString, String::spaceString + sizeof(String*));
@@ -22,7 +22,7 @@ extern "C" StarFishInstance* starfishInit(void* window, const char* workingDirec
     return instance;
 }
 
-extern "C" void starfishRemove(StarFishInstance* instance)
+extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 {
     TO_STARFISH(instance)->close();
     starfishGCRemoveRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
@@ -30,27 +30,27 @@ extern "C" void starfishRemove(StarFishInstance* instance)
     free(instance);
 }
 
-extern "C" void starfishLoadXMLDocument(StarFishInstance* instance, const char* xmlPath)
+extern "C" STARFISH_EXPORT void starfishLoadXMLDocument(StarFishInstance* instance, const char* xmlPath)
 {
     TO_STARFISH(instance)->loadXMLDocument(String::fromUTF8(xmlPath));
 }
 
-extern "C" void starfishNotifyPause(StarFishInstance* instance)
+extern "C" STARFISH_EXPORT void starfishNotifyPause(StarFishInstance* instance)
 {
     TO_STARFISH(instance)->pause();
 }
 
-extern "C" void starfishNotifyResume(StarFishInstance* instance)
+extern "C" STARFISH_EXPORT void starfishNotifyResume(StarFishInstance* instance)
 {
     TO_STARFISH(instance)->resume();
 }
 
-extern "C" void starfishGCAddRoots(void* start, void* end)
+extern "C" STARFISH_EXPORT void starfishGCAddRoots(void* start, void* end)
 {
     GC_add_roots(start, end);
 }
 
-extern "C" void starfishGCRemoveRoots(void* start, void* end)
+extern "C" STARFISH_EXPORT void starfishGCRemoveRoots(void* start, void* end)
 {
     GC_remove_roots(start, end);
 }

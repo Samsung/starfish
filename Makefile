@@ -155,13 +155,16 @@ endif
 CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Ipublic/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
-CXXFLAGS += -Wno-invalid-offsetof
+CXXFLAGS += -Wno-invalid-offsetof -fvisibility=hidden
 
 ifeq ($(HOST), tizen)
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
 endif
 
-LDFLAGS += -Wl,--gc-sections
+# fixme 
+# this causes
+# /home/ksh8281/tizen-sdk-2.4.r2/tools/arm-linux-gnueabi-gcc-4.9/bin/../lib/gcc/arm-linux-gnueabi/4.9.2/../../../../arm-linux-gnueabi/bin/ld: BFD (GNU Binutils) 2.22 assertion fail ../../bfd/elf32-arm.c:12049
+# LDFLAGS += -Wl,--gc-sections
 
 ifeq ($(HOST), tizen)
   LDFLAGS += --sysroot=$(TIZEN_SYSROOT)

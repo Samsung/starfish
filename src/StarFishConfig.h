@@ -159,6 +159,7 @@
 #define WARN_UNUSED_RETURN
 #endif
 
+#include "StarFishExport.h"
 
 #include "util/String.h"
 #include "util/QualifiedName.h"
