@@ -33,28 +33,18 @@ public:
 
     const char* utf8Data();
 
-    bool equals(const String* str) const
-    {
-        size_t lenA = length();
-        size_t lenB = str->length();
-        if (lenA == lenB) {
-            bool aa = isASCIIString();
-            bool bb = str->isASCIIString();
-            if (aa && bb) {
-                return stringEqual(asASCIIString()->data(), str->asASCIIString()->data(), lenA);
-            } else if (aa && !bb) {
-                return stringEqual(str->asUTF32String()->data(), asASCIIString()->data(), lenA);
-            } else if (!aa && bb) {
-                return stringEqual(asUTF32String()->data(), str->asASCIIString()->data(), lenA);
-            } else {
-                return stringEqual(asUTF32String()->data(), str->asUTF32String()->data(), lenA);
-            }
-        }
-        return false;
-    }
-
+    bool equals(const String* str) const;
     bool equals(const char* str)
     {
+#ifndef NDEBUG
+        {
+            const char* c = str;
+            while (*c) {
+                STARFISH_ASSERT(*c > 0);
+                c++;
+            }
+        }
+#endif
         if (*asASCIIString() == str) {
             return true;
         }
@@ -146,6 +136,7 @@ protected:
         return true;
     }
 
+    UTF32String toUTF32String();
     const char* utf8DataSlowCase();
     String()
     {
@@ -187,84 +178,6 @@ public:
         m_isASCIIString = false;
     }
 };
-
-inline String* String::fromUTF8(const char* src, size_t len)
-{
-    for (unsigned i = 0; i < len; i ++) {
-        if (src[i] < 0) {
-            return new StringDataUTF32(src, len);
-        }
-    }
-    return new StringDataASCII(src, len);
-}
-
-inline String* String::fromUTF8(const char* str)
-{
-    const char* p = str;
-    while (*p) {
-        if (*p < 0) {
-            return new StringDataUTF32(str, strlen(str));
-        }
-        p++;
-    }
-
-    return new StringDataASCII(str);
-}
-
-inline String* String::createASCIIString(const char* str)
-{
-    return new StringDataASCII(str);
-}
-
-inline const char* String::utf8Data()
-{
-    if (m_isASCIIString) {
-        return asASCIIString()->data();
-    } else {
-        return utf8DataSlowCase();
-    }
-}
-
-inline String* String::substring(size_t pos, size_t len)
-{
-    if (m_isASCIIString) {
-        return new StringDataASCII(std::move(asASCIIString()->substr(pos, len)));
-    } else {
-        return new StringDataUTF32(std::move(asUTF32String()->substr(pos, len)));
-    }
-}
-
-inline String* String::toUpper()
-{
-    if (m_isASCIIString) {
-        ASCIIString str = *asASCIIString();
-        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-        return new StringDataASCII(std::move(str));
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-inline String* String::toLower()
-{
-    if (m_isASCIIString) {
-        ASCIIString str = *asASCIIString();
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-        return new StringDataASCII(std::move(str));
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-inline String* String::concat(String* str)
-{
-    if (isASCIIString() && str->isASCIIString()) {
-        ASCIIString s = *asASCIIString() + *(str->asASCIIString());
-        return new StringDataASCII(std::move(s));
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
 
 }
 #endif

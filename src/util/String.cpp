@@ -100,6 +100,7 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len, size_t* bufferSize
 
     return result;
 }
+
 StringDataUTF32::StringDataUTF32(const char* src, size_t len)
 {
     m_isASCIIString = false;
@@ -115,6 +116,91 @@ const char* String::utf8DataSlowCase()
 {
     STARFISH_ASSERT(!m_isASCIIString);
     return utf32ToUtf8(asUTF32String()->data(), asUTF32String()->length());
+}
+
+String* String::fromUTF8(const char* src, size_t len)
+{
+    for (unsigned i = 0; i < len; i ++) {
+        if (src[i] < 0) {
+            return new StringDataUTF32(src, len);
+        }
+    }
+    return new StringDataASCII(src, len);
+}
+
+String* String::fromUTF8(const char* str)
+{
+    const char* p = str;
+    while (*p) {
+        if (*p < 0) {
+            return new StringDataUTF32(str, strlen(str));
+        }
+        p++;
+    }
+
+    return new StringDataASCII(str);
+}
+
+String* String::createASCIIString(const char* str)
+{
+    return new StringDataASCII(str);
+}
+
+const char* String::utf8Data()
+{
+    if (m_isASCIIString) {
+        return asASCIIString()->data();
+    } else {
+        return utf8DataSlowCase();
+    }
+}
+
+String* String::substring(size_t pos, size_t len)
+{
+    if (m_isASCIIString) {
+        return new StringDataASCII(std::move(asASCIIString()->substr(pos, len)));
+    } else {
+        return new StringDataUTF32(std::move(asUTF32String()->substr(pos, len)));
+    }
+}
+
+String* String::toUpper()
+{
+    if (m_isASCIIString) {
+        ASCIIString str = *asASCIIString();
+        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+        return new StringDataASCII(std::move(str));
+    } else {
+        UTF32String str = *asUTF32String();
+        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+        return new StringDataUTF32(std::move(str));
+    }
+}
+
+String* String::toLower()
+{
+    if (m_isASCIIString) {
+        ASCIIString str = *asASCIIString();
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        return new StringDataASCII(std::move(str));
+    } else {
+        UTF32String str = *asUTF32String();
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        return new StringDataUTF32(std::move(str));
+    }
+}
+
+String* String::concat(String* str)
+{
+    if (isASCIIString() && str->isASCIIString()) {
+        ASCIIString s = *asASCIIString() + *(str->asASCIIString());
+        return new StringDataASCII(std::move(s));
+    } else {
+        UTF32String a = toUTF32String();
+        UTF32String b = toUTF32String();
+        a = a + b;
+        return new StringDataUTF32(std::move(a));
+    }
 }
 
 String* String::fromFloat(float f)
@@ -141,31 +227,25 @@ void String::split(char delim, Vector& tokens)
 
 String* String::trim()
 {
-    // TODO implement utf-32 case
-    if (m_isASCIIString) {
-        ASCIIString str = *asASCIIString();
-        size_t first = 0;
-        size_t last = 0;
-        if (str.length()) {
-            last = str.length() - 1;
+    size_t first = 0;
+    size_t last = 0;
+    if (length()) {
+        last = length() - 1;
 
-            for (size_t i = 0; i < str.length(); i ++) {
-                if (!String::isSpaceOrNewline(str[i])) {
-                    first = i;
-                    break;
-                }
+        for (size_t i = 0; i < length(); i ++) {
+            if (!String::isSpaceOrNewline(charAt(i))) {
+                first = i;
+                break;
             }
-
-            do {
-                if (!String::isSpaceOrNewline(str[last]))
-                    break;
-            } while (last--);
-
         }
-        return String::createASCIIString(str.substr(first, (last - first + 1)).c_str());
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+
+        do {
+            if (!String::isSpaceOrNewline(charAt(last)))
+                break;
+        } while (last--);
     }
+
+    return substring(first, (last - first + 1));
 }
 
 std::vector<String*, gc_allocator<String*> > String::tokenize(const char* tokens, size_t tokensLength)
@@ -199,4 +279,42 @@ std::vector<String*, gc_allocator<String*> > String::tokenize(const char* tokens
 
     return result;
 }
+
+
+UTF32String String::toUTF32String()
+{
+    if (m_isASCIIString) {
+        UTF32String str;
+        const ASCIIString& src = *asASCIIString();
+        size_t len = src.length();
+        for (size_t i = 0; i < len; i ++) {
+            str.push_back(src[i]);
+        }
+        return str;
+    } else {
+        return *asUTF32String();
+    }
+}
+
+bool String::equals(const String* str) const
+{
+    size_t lenA = length();
+    size_t lenB = str->length();
+    if (lenA == lenB) {
+        bool aa = isASCIIString();
+        bool bb = str->isASCIIString();
+        if (aa && bb) {
+            return stringEqual(asASCIIString()->data(), str->asASCIIString()->data(), lenA);
+        } else if (aa && !bb) {
+            return stringEqual(str->asUTF32String()->data(), asASCIIString()->data(), lenA);
+        } else if (!aa && bb) {
+            return stringEqual(asUTF32String()->data(), str->asASCIIString()->data(), lenA);
+        } else {
+            return stringEqual(asUTF32String()->data(), str->asUTF32String()->data(), lenA);
+        }
+    }
+    return false;
+}
+
+
 }
