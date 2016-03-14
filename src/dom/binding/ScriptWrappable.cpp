@@ -117,6 +117,30 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         return escargot::ESValue(1000);
     }, escargot::ESString::create("cancelAnimationFrame"), 1, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("cancelAnimationFrame"), false, false, false, cancelAnimationFrameFunction);
+
+    // https://www.w3.org/TR/cssom-view/#dom-window-innerwidth
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("innerWidth"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            double innerWidth = ((Window*)originalObj->extraPointerData())->innerWidth();
+            return escargot::ESValue(innerWidth);
+        }
+        return escargot::ESValue(0);
+        },
+        NULL, false, false, false);
+
+    // https://www.w3.org/TR/cssom-view/#dom-window-innerheight
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("innerHeight"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            double innerHeight = ((Window*)originalObj->extraPointerData())->innerHeight();
+            return escargot::ESValue(innerHeight);
+        }
+        return escargot::ESValue(0);
+        },
+        NULL, false, false, false);
 }
 
 void ScriptWrappable::initScriptWrappable(Node* ptr)
