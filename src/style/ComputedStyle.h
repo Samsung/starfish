@@ -199,6 +199,22 @@ public:
         t.setScale(a, b);
         m_transforms->append(t);
     }
+    
+    void setTransformRotate(double a)
+    {
+        setTransformIfNeeded();
+        StyleTransformData t(StyleTransformData::OperationType::Rotate);
+        t.setRotate(a);
+        m_transforms->append(t);
+    }
+    
+    void setTransformSkew(double a, double b)
+    {
+        setTransformIfNeeded();
+        StyleTransformData t(StyleTransformData::OperationType::Skew);
+        t.setSkew(a, b);
+        m_transforms->append(t);
+    }
 
     void setBackgroundColor(Color color)
     {

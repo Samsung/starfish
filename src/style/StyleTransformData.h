@@ -4,6 +4,8 @@
 #include "style/Style.h"
 #include "style/MatrixTransform.h"
 #include "style/ScaleTransform.h"
+#include "style/RotateTransform.h"
+#include "style/SkewTransform.h"
 
 namespace StarFish {
 
@@ -24,6 +26,8 @@ public:
         : m_type(None)
         , m_matrix(NULL)
         , m_scale(NULL)
+        , m_rotate(NULL)
+        , m_skew(NULL)
     {
     }
 
@@ -31,6 +35,8 @@ public:
         : m_type(type)
         , m_matrix(NULL)
         , m_scale(NULL)
+        , m_rotate(NULL)
+        , m_skew(NULL)
     {
     }
 
@@ -63,10 +69,48 @@ public:
         }
     }
 
+    void setRotate(double ang)
+    {
+        STARFISH_ASSERT(m_type == Rotate);
+        if (m_rotate == NULL) {
+            m_rotate = new RotateTransform(ang);
+        } else {
+            m_rotate->setData(ang);
+        }
+    }
+
+    void setSkew(double angX, double angY)
+    {
+        STARFISH_ASSERT(m_type == Skew);
+        if (m_skew == NULL) {
+            m_skew = new SkewTransform(angX, angY);
+        } else {
+            m_skew->setData(angX, angY);
+        }
+    }
+
     MatrixTransform* matrix()
     {
         STARFISH_ASSERT(type() == OperationType::Matrix);
         return m_matrix;
+    }
+
+    ScaleTransform* scale()
+    {
+        STARFISH_ASSERT(type() == OperationType::Scale);
+        return m_scale;
+    }
+
+    RotateTransform* rotate()
+    {
+        STARFISH_ASSERT(type() == OperationType::Rotate);
+        return m_rotate;
+    }
+
+    SkewTransform* skew()
+    {
+        STARFISH_ASSERT(type() == OperationType::Skew);
+        return m_skew;
     }
 
     OperationType type()
@@ -78,9 +122,13 @@ public:
     {
         char temp[100];
         if (m_type == Matrix) {
-            sprintf(temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f)", m_matrix->a(), m_matrix->b(), m_matrix->c(), m_matrix->d(), m_matrix->e(), m_matrix->f());
+            sprintf(temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", m_matrix->a(), m_matrix->b(), m_matrix->c(), m_matrix->d(), m_matrix->e(), m_matrix->f());
         } else if (m_type == Scale) {
-            sprintf(temp, "scale(%.3f %.3f)", m_scale->x(), m_scale->y());
+            sprintf(temp, "scale(%.3f %.3f) ", m_scale->x(), m_scale->y());
+        } else if (m_type == Rotate) {
+            sprintf(temp, "rotate(%.3f) ", m_rotate->angle());
+        } else if (m_type == Skew) {
+            sprintf(temp, "skew(%.3f %.3f) ", m_skew->angleX(), m_skew->angleY());
         }
         // TODO
         return String::fromUTF8(temp);
@@ -94,8 +142,8 @@ private:
     // TODO
 //    TranslateTransform* m_translate;
     ScaleTransform* m_scale;
-//    RotateTransform* m_rotate;
-//    SkewTransform* m_skew;
+    RotateTransform* m_rotate;
+    SkewTransform* m_skew;
 };
 
 class StyleTransformDataGroup : public gc {

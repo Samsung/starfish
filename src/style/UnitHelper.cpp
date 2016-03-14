@@ -32,4 +32,20 @@ float convertFromPxToPt(float value)
 {
     return value / unitPxPerPt;
 }
+
+float convertFromGradToDeg(float value)
+{
+    return value * 360 / 400;
+}
+
+float convertFromRadToDeg(float value)
+{
+    return value * 180 / pi;
+}
+
+float convertFromTurnToDeg(float value)
+{
+    return value * 360;
+}
+
 }

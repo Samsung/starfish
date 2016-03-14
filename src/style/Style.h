@@ -155,6 +155,20 @@ public:
         return m_value;
     }
 
+    float toDegreeValue()
+    {
+        if (m_kind == DEG)
+            return m_value;
+        else if (m_kind == RAD)
+            return convertFromRadToDeg(m_value);
+        else if (m_kind == GRAD)
+            return convertFromGradToDeg(m_value);
+        else if (m_kind == TURN)
+            return convertFromTurnToDeg(m_value);
+
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
 protected:
     Kind m_kind;
     float m_value;

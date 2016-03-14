@@ -4170,32 +4170,51 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     for (int c = 0; c < funcs->size(); c++) {
                         CSSTransformFunction f = funcs->at(c);
                         int valueSize = f.values()->size();
-                        double dValues[valueSize];
+                        float dValues[valueSize];
                         for (int i = 0; i < valueSize; i++) {
                             if (f.values()->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::Number) {
                                 dValues[i] = f.values()->getValueAtIndex(i).m_floatValue;
                             } else if (f.values()->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::Angle) {
-                                // TODO
+                                dValues[i] = f.values()->getValueAtIndex(i).m_angle.toDegreeValue();
                             } else {
                                 // TODO
                             }
                         }
-                        if (f.kind() == CSSTransformFunction::Kind::Matrix) {
+
+                        switch (f.kind()) {
+                        case CSSTransformFunction::Kind::Matrix:
                             style->setTransformMatrix(dValues[0], dValues[1], dValues[2], dValues[3], dValues[4], dValues[5]);
-                        } else if (f.kind() == CSSTransformFunction::Kind::Scale) {
-                            double x = dValues[0];
-                            double y;
-                            if (valueSize >= 2)
-                                y = dValues[1];
+                            break;
+                        case CSSTransformFunction::Kind::Scale:
+                            if (valueSize == 1)
+                                style->setTransformScale(dValues[0], dValues[0]);
+                            else if (valueSize == 2)
+                                style->setTransformScale(dValues[0], dValues[1]);
                             else
-                                y = x;
-                            style->setTransformScale(x, y);
-                        } else if (f.kind() == CSSTransformFunction::Kind::ScaleX) {
+                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                            break;
+                        case CSSTransformFunction::Kind::ScaleX:
                             style->setTransformScale(dValues[0], 1);
-                        } else if (f.kind() == CSSTransformFunction::Kind::ScaleY) {
+                            break;
+                        case CSSTransformFunction::Kind::ScaleY:
                             style->setTransformScale(1, dValues[0]);
-                        } else {
-                            // TODO
+                            break;
+                        case CSSTransformFunction::Kind::Rotate:
+                            style->setTransformRotate(dValues[0]);
+                            break;
+                        case CSSTransformFunction::Kind::Skew:
+                            if (valueSize == 2) {
+                                style->setTransformSkew(dValues[0], dValues[1]);
+                                break;
+                            }
+                        case CSSTransformFunction::Kind::SkewX:
+                            style->setTransformSkew(dValues[0], 0);
+                            break;
+                        case CSSTransformFunction::Kind::SkewY:
+                            style->setTransformSkew(0, dValues[0]);
+                            break;
+                        default:
+                            break;
                         }
                     }
                 }

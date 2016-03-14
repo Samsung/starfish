@@ -2,6 +2,7 @@
 #define __StarFishUnitHelper__
 
 #include "StarFish.h"
+#include <math.h>
 
 namespace StarFish {
 
@@ -18,6 +19,13 @@ float convertFromInToPx(float value);
 float convertFromPcToPx(float value);
 float convertFromPtToPx(float value);
 float convertFromPxToPt(float value);
+
+// https://www.w3.org/TR/css3-values/#angle-value
+const float pi = static_cast<float>(M_PI);
+
+float convertFromGradToDeg(float value);
+float convertFromRadToDeg(float value);
+float convertFromTurnToDeg(float value);
 
 }
 
