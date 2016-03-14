@@ -282,6 +282,7 @@ public:
         if (style) {
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement && style->zIndex() != 0);
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->opacity() != 1);
+            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->hasTransforms());
         }
 
         if (style && style->width().isAuto()) {

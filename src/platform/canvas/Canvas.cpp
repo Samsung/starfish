@@ -825,7 +825,9 @@ public:
             ww = dst.width();
             hh = dst.height();
         }
-        Evas_Object* eo = findPrevDrawnData(data);
+        Evas_Object* eo = nullptr;
+        if (!data->isBufferImage())
+            findPrevDrawnData(data);
 
         if (!eo) {
             eo = evas_object_image_add(m_canvas);
@@ -843,9 +845,11 @@ public:
             evas_object_image_data_set(eo, imgBuf);
             evas_object_image_filled_set(eo, EINA_TRUE);
             evas_object_image_alpha_set(eo, EINA_TRUE);
-            // evas_object_anti_alias_set(eo, EINA_TRUE);
+            if (data->isBufferImage())
+                evas_object_anti_alias_set(eo, EINA_TRUE);
 
-            pushPrevDrawnData(data, eo);
+            if (!data->isBufferImage())
+                pushPrevDrawnData(data, eo);
         }
 
         evas_object_move(eo, xx, yy);
@@ -856,16 +860,10 @@ public:
         evas_object_show(eo);
     }
 
-    virtual void setMatrix(const SkMatrix& matrix)
-    {
-        lastState().m_mapMode = true;
-        lastState().m_matrix = matrix;
-    }
-
-    virtual SkMatrix matrix()
+    virtual void postMatrix(const SkMatrix& matrix)
     {
         assureMapMode();
-        return lastState().m_matrix;
+        lastState().m_matrix.preConcat(matrix);
     }
 
     virtual void applyMatrixTo(LayoutLocation lp)

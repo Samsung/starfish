@@ -507,7 +507,7 @@ void Window::rendering()
         paintWindowBackground(canvas);
         m_document->frame()->paint(canvas, PaintingStageEnd);
         m_needsPainting = false;
-        m_needsComposite = false;
+        m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
 
         delete canvas;
 #ifdef STARFISH_TIZEN_WEARABLE

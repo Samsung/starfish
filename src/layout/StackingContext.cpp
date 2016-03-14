@@ -35,8 +35,8 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     }
 
     m_matrix.reset();
-
-    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1;
+    m_matrix = m_owner->style()->transformsToMatrix();
+    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || !m_matrix.isIdentity();
     return m_needsOwnBuffer;
 }
 
@@ -71,7 +71,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         canvas->translate(-minX, -minY);
     }
 
-    ComputedStyle* ownerStyle = m_owner->style();
     // Within each stacking context, the following layers are painted in back-to-front order:
 
     // the background and borders of the element forming the stacking context.
@@ -127,13 +126,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     if (m_needsOwnBuffer) {
         delete canvas;
-        if (ownerStyle->opacity() != 1) {
-            oldCanvas->beginOpacityLayer(ownerStyle->opacity());
-        }
-        oldCanvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
-        if (ownerStyle->opacity() != 1) {
-            oldCanvas->endOpacityLayer();
-        }
     }
 }
 
@@ -157,14 +149,28 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         size_t bufferWidth = (int)(maxX - minX);
         size_t bufferHeight = (int)(maxY - minY);
 
+        canvas->save();
         ComputedStyle* ownerStyle = m_owner->style();
         if (ownerStyle->opacity() != 1) {
             canvas->beginOpacityLayer(ownerStyle->opacity());
         }
-        canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+        if (!m_matrix.isIdentity()) {
+            // TODO transform-origin
+            LayoutUnit ox = m_owner->width() / 2;
+            LayoutUnit oy = m_owner->height() / 2;
+            canvas->translate(ox, oy);
+            canvas->postMatrix(m_matrix);
+            canvas->drawImage(m_buffer, Rect(minX - ox, minY - oy, bufferWidth, bufferHeight));
+        } else {
+            canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+        }
+
+
+
         if (ownerStyle->opacity() != 1) {
             canvas->endOpacityLayer();
         }
+        canvas->restore();
     }
 
     // Within each stacking context, the following layers are painted in back-to-front order:

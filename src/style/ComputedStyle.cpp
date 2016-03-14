@@ -186,9 +186,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
 
 SkMatrix ComputedStyle::transformsToMatrix()
 {
-    STARFISH_ASSERT(hasTransforms());
     SkMatrix matrix;
     matrix.reset();
+    if (!hasTransforms()) {
+        return matrix;
+    }
     for (size_t i = 0; i < m_transforms->size(); i ++) {
         StyleTransformData t = m_transforms->at(i);
         if (t.type() == StyleTransformData::Matrix) {
@@ -202,6 +204,9 @@ SkMatrix ComputedStyle::transformsToMatrix()
             matrix.set(3, m->b());
             matrix.set(4, m->d());
             matrix.set(5, m->f());
+        } else if (t.type() == StyleTransformData::Scale) {
+            ScaleTransform* m = t.scale();
+            matrix.preScale(m->x(), m->y());
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

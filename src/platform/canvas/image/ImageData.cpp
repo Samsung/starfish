@@ -10,6 +10,7 @@ Evas* internalCanvas();
 class ImageDataEFL : public ImageData {
 public:
     ImageDataEFL(String* imageSrc)
+        : m_isBufferImage(false)
     {
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_file_set(m_image, imageSrc->utf8Data(), NULL);
@@ -21,6 +22,7 @@ public:
     }
 
     ImageDataEFL(size_t w, size_t h)
+        : m_isBufferImage(true)
     {
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_size_set(m_image, w, h);
@@ -63,10 +65,16 @@ public:
         evas_object_image_data_set(m_image, address);
     }
 
+    virtual bool isBufferImage()
+    {
+        return m_isBufferImage;
+    }
+
 protected:
     Evas_Object* m_image;
     size_t m_width;
     size_t m_height;
+    bool m_isBufferImage;
 };
 
 class ImageDataNetwork : public ImageData {
@@ -102,6 +110,11 @@ public:
 
     virtual void clear()
     {
+    }
+
+    virtual bool isBufferImage()
+    {
+        return false;
     }
 
 protected:
