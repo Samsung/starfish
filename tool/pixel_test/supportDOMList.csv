@@ -1,7 +1,7 @@
 Version     , Chapter       , Interface                 , Attribute/Method
 4           , 3.2           , Event                     , type
-           ,               ,                           , target
-           ,               ,                           , currentTarget
+            ,               ,                           , target
+            ,               ,                           , currentTarget
             ,               ,                           , NONE
             ,               ,                           , CAPTURING_PHASE
             ,               ,                           , AT_TARGET
@@ -13,20 +13,18 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , cancelable
             ,               ,                           , preventDefault
             ,               ,                           , defaultPrevented
-           ,               ,                           , timeStamp
+            ,               ,                           , timeStamp
             ,               ,                           , initEvent::bubbles
             ,               ,                           , initEvent::cancelable
             , 3.6           , EventTarget               , addEventListener
             ,               ,                           , removeEventListener
-           ,               ,                           , dispatchEvent
-           ,               , EventListener             , handleEvent
+            ,               ,                           , dispatchEvent
+            ,               , EventListener             , handleEvent
             , 4.2           , NonElementParentNode      , getElementById
             ,               , ParentNode                , children
             ,               ,                           , firstElementChild
             ,               ,                           , lastElementChild
             ,               ,                           , childElementCount
-#           ,               ,                           , querySelector
-#           ,               ,                           , querySelectorAll
             ,               , NonDocumentTypeChildNode  , previousElementSibling
             ,               ,                           , nextElementSibling
             ,               , ChildNode                 , remove
@@ -47,8 +45,8 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , nextSibling
             ,               ,                           , nodeValue
             ,               ,                           , textContent
-#           ,               ,                           , cloneNode
-#           ,               ,                           , isEqualNode
+            ,               ,                           , cloneNode
+            ,               ,                           , isEqualNode
             ,               ,                           , compareDocumentPosition
             ,               ,                           , contains
             ,               ,                           , insertBefore
@@ -68,8 +66,6 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , createElement
             ,               ,                           , createTextNode
             ,               ,                           , createComment
-#           ,               ,                           , createEvent
-#           ,               ,                           , createNodeIterator
             , 4.7           , DocumentType              , name
             ,               ,                           , publicId
             ,               ,                           , systemId
@@ -78,12 +74,12 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , className
             ,               ,                           , classList
             ,               ,                           , attributes
-#           ,               ,                           , getAttribute
-#           ,               ,                           , setAttribute
-#           ,               ,                           , removeAttribute
-#           ,               ,                           , hasAttribute
-#           ,               ,                           , getElementsByTagName
-#           ,               ,                           , getElementsByClassName
+            ,               ,                           , getAttribute
+            ,               ,                           , setAttribute
+            ,               ,                           , removeAttribute
+            ,               ,                           , hasAttribute
+            ,               ,                           , getElementsByTagName
+            ,               ,                           , getElementsByClassName
             ,               , Attr                      , name
             ,               ,                           , value
             ,               ,                           , specified
@@ -94,22 +90,11 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , insertData
             ,               ,                           , deleteData
             ,               ,                           , replaceData
-#           , 4.10          , Text                      , splitText
             ,               ,                           , wholeText
             , 4.12          , Comment                   , 
-#           , 6.1           , NodeIterator              , root
-#           ,               ,                           , referenceNode
-#           ,               ,                           , pointerBeforeReferenceNode
-#           ,               ,                           , whatToShow
-#           ,               ,                           , filter
-#           ,               ,                           , nextNode
-#           ,               ,                           , previousNode
-#           ,               ,                           , detach
             , 7.1           , DOMTokenList              , length
             ,               ,                           , item
             ,               ,                           , contains
             ,               ,                           , add
             ,               ,                           , remove
             ,               ,                           , toggle
-#           , A.2           , DOMError                  , name
-#           ,               ,                           , message

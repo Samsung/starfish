@@ -23,10 +23,3 @@ Element         , 4.1.1     , html
                 ,           ,                       , width
                 ,           ,                       , height
                 , 4.11.1    , script
-                , 4.7.7     , audio                , src
-                , 4.7.8     , source               , src
-                ,           ,                      , type
-##                , 4.10.5    , input                , type*
-##                , 4.10.14   , progress             , value
-##                ,           ,                      , max
-##                , 4.10.6    , button               , type
