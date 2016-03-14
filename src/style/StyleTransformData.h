@@ -6,6 +6,7 @@
 #include "style/ScaleTransform.h"
 #include "style/RotateTransform.h"
 #include "style/SkewTransform.h"
+#include "style/TranslateTransform.h"
 
 namespace StarFish {
 
@@ -25,6 +26,7 @@ public:
     StyleTransformData()
         : m_type(None)
         , m_matrix(NULL)
+        , m_translate(NULL)
         , m_scale(NULL)
         , m_rotate(NULL)
         , m_skew(NULL)
@@ -34,6 +36,7 @@ public:
     StyleTransformData(OperationType type)
         : m_type(type)
         , m_matrix(NULL)
+        , m_translate(NULL)
         , m_scale(NULL)
         , m_rotate(NULL)
         , m_skew(NULL)
@@ -89,10 +92,26 @@ public:
         }
     }
 
+    void setTranslate(Length x, Length y)
+    {
+        STARFISH_ASSERT(m_type == Translate);
+        if (m_translate == NULL) {
+            m_translate = new TranslateTransform(x, y);
+        } else {
+            m_translate->setData(x, y);
+        }
+    }
+
     MatrixTransform* matrix()
     {
         STARFISH_ASSERT(type() == OperationType::Matrix);
         return m_matrix;
+    }
+
+    TranslateTransform* translate()
+    {
+        STARFISH_ASSERT(type() == OperationType::Translate);
+        return m_translate;
     }
 
     ScaleTransform* scale()
@@ -129,6 +148,8 @@ public:
             sprintf(temp, "rotate(%.3f) ", m_rotate->angle());
         } else if (m_type == Skew) {
             sprintf(temp, "skew(%.3f %.3f) ", m_skew->angleX(), m_skew->angleY());
+        } else if (m_type == Translate) {
+            sprintf(temp, "translate(%s %s) ", m_translate->tx().dumpString()->utf8Data(), m_translate->ty().dumpString()->utf8Data());
         }
         // TODO
         return String::fromUTF8(temp);
@@ -136,11 +157,9 @@ public:
 
 private:
     OperationType m_type;
-    // TODO m_origin;
     // TODO save pointers in union
     MatrixTransform* m_matrix;
-    // TODO
-//    TranslateTransform* m_translate;
+    TranslateTransform* m_translate;
     ScaleTransform* m_scale;
     RotateTransform* m_rotate;
     SkewTransform* m_skew;

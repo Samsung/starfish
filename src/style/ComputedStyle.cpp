@@ -207,6 +207,16 @@ SkMatrix ComputedStyle::transformsToMatrix()
         } else if (t.type() == StyleTransformData::Scale) {
             ScaleTransform* m = t.scale();
             matrix.preScale(m->x(), m->y());
+        } else if (t.type() == StyleTransformData::Rotate) {
+            RotateTransform* m = t.rotate();
+            matrix.preRotate(m->angle());
+        } else if (t.type() == StyleTransformData::Skew) {
+            SkewTransform* m = t.skew();
+            matrix.preSkew(m->angleX(), m->angleY());
+        } else if (t.type() == StyleTransformData::Translate) {
+            TranslateTransform* m = t.translate();
+            // TODO: consider percent value
+            matrix.preTranslate(m->tx().fixed(), m->ty().fixed());
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

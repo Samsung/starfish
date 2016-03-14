@@ -107,9 +107,9 @@ public:
     {
         char temp[100];
         if (isFixed())
-            sprintf(temp, "%f", fixed());
+            sprintf(temp, "%.1f", fixed());
         else if (isPercent())
-            sprintf(temp, "%f", percent());
+            sprintf(temp, "%.1f%%", percent());
         else if (isAuto())
             sprintf(temp, "auto");
         return String::fromUTF8(temp);

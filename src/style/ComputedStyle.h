@@ -216,6 +216,14 @@ public:
         m_transforms->append(t);
     }
 
+    void setTransformTranslate(Length a, Length b)
+    {
+        setTransformIfNeeded();
+        StyleTransformData t(StyleTransformData::OperationType::Translate);
+        t.setTranslate(a, b);
+        m_transforms->append(t);
+    }
+
     void setBackgroundColor(Color color)
     {
         setBackgroundIfNeeded();

@@ -935,6 +935,18 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
                         ValueData data = {.m_angle = CSSAngle(parser->parsedString(), parser->parsedNumber())};
                         values->append(CSSStyleValuePair::ValueKind::Angle, data);
                     } else { // TranslationValue
+                        parser->consumeNumber();
+                        float num = parser->parsedNumber();
+                        if (parser->consumeString()) {
+                            String* str = parser->parsedString();
+                            if (str->equals("%")) {
+                                ValueData data = {.m_floatValue = num};
+                                values->append(CSSStyleValuePair::ValueKind::Percentage, data);
+                            } else {
+                                ValueData data = {.m_length = CSSLength(num)};
+                                values->append(CSSStyleValuePair::ValueKind::Length, data);
+                            }
+                        }
                     }
                     parser->consumeWhitespaces();
                     if (!parser->consumeIfNext(','))
@@ -4176,8 +4188,6 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                                 dValues[i] = f.values()->getValueAtIndex(i).m_floatValue;
                             } else if (f.values()->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::Angle) {
                                 dValues[i] = f.values()->getValueAtIndex(i).m_angle.toDegreeValue();
-                            } else {
-                                // TODO
                             }
                         }
 
@@ -4185,6 +4195,25 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                         case CSSTransformFunction::Kind::Matrix:
                             style->setTransformMatrix(dValues[0], dValues[1], dValues[2], dValues[3], dValues[4], dValues[5]);
                             break;
+                        case CSSTransformFunction::Kind::Translate:
+                            {
+                            Length a, b(Length::Fixed, 0);
+                            a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
+                            if (valueSize > 1)
+                                b = convertValueToLength(f.values()->getValueKindAtIndex(1), f.values()->getValueAtIndex(1));
+                            style->setTransformTranslate(a, b);
+                            break;
+                            }
+                        case CSSTransformFunction::Kind::TranslateX:
+                            {
+                            Length a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
+                            style->setTransformTranslate(a, Length(Length::Fixed, 0));
+                            }
+                        case CSSTransformFunction::Kind::TranslateY:
+                            {
+                            Length a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
+                            style->setTransformTranslate(Length(Length::Fixed, 0), a);
+                            }
                         case CSSTransformFunction::Kind::Scale:
                             if (valueSize == 1)
                                 style->setTransformScale(dValues[0], dValues[0]);
@@ -4214,7 +4243,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                             style->setTransformSkew(0, dValues[0]);
                             break;
                         default:
-                            break;
+                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
                         }
                     }
                 }
