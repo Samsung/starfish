@@ -226,13 +226,29 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
 {
     STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
 
+    if (!m_matrix.isIdentity()) {
+        SkMatrix invert;
+        STARFISH_RELEASE_ASSERT(m_matrix.invert(&invert));
+
+        // TODO transform-origin
+        LayoutUnit ox = m_owner->width() / 2;
+        LayoutUnit oy = m_owner->height() / 2;
+        x -= ox;
+        y -= oy;
+        SkPoint pt = SkPoint::Make((float)x, (float)y);
+
+        invert.mapPoints(&pt, 1);
+        x = pt.x() + ox;
+        y = pt.y() + oy;
+    }
+
     Frame* result = nullptr;
-    // TODO the child stacking contexts with positive stack levels (least positive first).
+    // the child stacking contexts with positive stack levels (least positive first).
     {
         auto iter = childContexts().rbegin();
         while (iter != childContexts().rend()) {
             int32_t num = iter->first;
-            if (num > 0) {
+            if (num >= 0) {
                 auto iter2 = iter->second->rbegin();
                 LayoutUnit oldX = x;
                 LayoutUnit oldY = y;
