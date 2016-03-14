@@ -3,6 +3,7 @@
 
 #include "style/Style.h"
 #include "style/MatrixTransform.h"
+#include "style/ScaleTransform.h"
 
 namespace StarFish {
 
@@ -22,12 +23,14 @@ public:
     StyleTransformData()
         : m_type(None)
         , m_matrix(NULL)
+        , m_scale(NULL)
     {
     }
 
     StyleTransformData(OperationType type)
         : m_type(type)
         , m_matrix(NULL)
+        , m_scale(NULL)
     {
     }
 
@@ -50,6 +53,16 @@ public:
         }
     }
 
+    void setScale(double a, double b)
+    {
+        STARFISH_ASSERT(m_type == Scale);
+        if (m_scale == NULL) {
+            m_scale = new ScaleTransform(a, b);
+        } else {
+            m_scale->setData(a, b);
+        }
+    }
+
     OperationType type()
     {
         return m_type;
@@ -59,7 +72,9 @@ public:
     {
         char temp[100];
         if (m_type == Matrix) {
-            sprintf(temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f)", m_matrix->a(), m_matrix->b(), m_matrix->c(), m_matrix->d(), m_matrix->e(), m_matrix->f());    
+            sprintf(temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f)", m_matrix->a(), m_matrix->b(), m_matrix->c(), m_matrix->d(), m_matrix->e(), m_matrix->f());
+        } else if (m_type == Scale) {
+            sprintf(temp, "scale(%.3f %.3f)", m_scale->x(), m_scale->y());
         }
         // TODO
         return String::fromUTF8(temp);
@@ -71,7 +86,7 @@ private:
     MatrixTransform* m_matrix;
     // TODO
 //    TranslateTransform* m_translate;
-//    ScaleTransform* m_scale;
+    ScaleTransform* m_scale;
 //    RotateTransform* m_rotate;
 //    SkewTransform* m_skew;
 };

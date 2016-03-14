@@ -185,6 +185,14 @@ public:
         m_transforms->append(t);
     }
 
+    void setTransformScale(double a, double b)
+    {
+        setTransformIfNeeded();
+        StyleTransformData t(StyleTransformData::OperationType::Scale);
+        t.setScale(a, b);
+        m_transforms->append(t);
+    }
+
     void setBackgroundColor(Color color)
     {
         setBackgroundIfNeeded();
