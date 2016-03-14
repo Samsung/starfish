@@ -60,7 +60,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             }
         }
         return escargot::ESValue();
-    }, escargot::ESString::create("setTimeout"), 2, false);
+    }, escargot::ESString::create("setTimeout"), 1, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setTimeout"), false, false, false, setTimeoutFunction);
 
     // [clearTimeout]
@@ -75,7 +75,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         // FIXME what return value should return?
         return escargot::ESValue(1000);
-    }, escargot::ESString::create("clearTimeout"), 1, false);
+    }, escargot::ESString::create("clearTimeout"), 0, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), false, false, false, clearTimeoutFunction);
 
     // TODO : Pass "any... arguments" if exist
@@ -101,7 +101,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             }
         }
         return escargot::ESValue();
-    }, escargot::ESString::create("requestAnimationFrame"), 2, false);
+    }, escargot::ESString::create("requestAnimationFrame"), 1, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("requestAnimationFrame"), false, false, false, requestAnimationFrameFunction);
 
     // https://www.w3.org/TR/html5/webappapis.html
