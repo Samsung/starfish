@@ -15,6 +15,7 @@ enum ComputedStyleDamage {
     ComputedStyleDamageRebuildFrame = 1 << 1,
     ComputedStyleDamageLayout = 1 << 2,
     ComputedStyleDamagePainting = 1 << 3,
+    ComputedStyleDamageComposite = 1 << 4,
 };
 
 class ComputedStyle : public gc {
@@ -165,11 +166,17 @@ public:
         }
     }
 
+    bool hasTransforms()
+    {
+        return m_transforms != nullptr;
+    }
+
     StyleTransformDataGroup* transforms()
     {
         return m_transforms;
     }
 
+    SkMatrix transformsToMatrix();
     void setTransformIfNeeded()
     {
         if (m_transforms == NULL) {
@@ -840,7 +847,7 @@ protected:
         m_background = nullptr;
         m_surround = nullptr;
         m_overflowX = OverflowValue::VisibleOverflow;
-        //        m_overflowY = OverflowValue::VisibleOverflow;
+        // m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
         m_transforms = nullptr;

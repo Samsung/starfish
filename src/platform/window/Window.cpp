@@ -72,7 +72,12 @@ public:
 void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
 {
     WindowImplEFL* wnd = (WindowImplEFL*)user_data;
-    wnd->setNeedsLayout();
+    if (!wnd->inRendering())
+        wnd->setNeedsLayout();
+}
+
+void dummyRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
+{
 }
 
 #ifndef STARFISH_TIZEN_WEARABLE
@@ -348,6 +353,7 @@ public:
 #ifdef STARFISH_ENABLE_TIMER
         unsigned long end = getLongTickCount();
         STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (end - m_start) / 1000.f);
+        fflush(stdout);
 #endif
     }
 
@@ -358,10 +364,66 @@ protected:
 #endif
 };
 
+
+Canvas* preparePainting(WindowImplEFL* eflWindow)
+{
+    int width, height;
+    evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
+    Evas* evas = evas_object_evas_get(eflWindow->m_window);
+    struct dummy {
+        void* a;
+        void* b;
+        int w;
+        int h;
+        std::vector<Evas_Object*>* objList;
+    };
+    dummy* d = new dummy;
+    d->a = evas;
+    d->b = &eflWindow->m_drawnImageList;
+    d->w = width;
+    d->h = height;
+    d->objList = &eflWindow->m_objectList;
+    auto iter = eflWindow->m_objectList.begin();
+    while (iter != eflWindow->m_objectList.end()) {
+        evas_object_del(*iter);
+        iter++;
+    }
+    eflWindow->m_objectList.clear();
+    eflWindow->m_objectList.shrink_to_fit();
+
+    Canvas* canvas = Canvas::createDirect(d);
+    delete d;
+
+    return canvas;
+}
+
+void Window::paintWindowBackground(Canvas* canvas)
+{
+    if (m_hasRootElementBackground || m_hasBodyElementBackground) {
+        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+        int width, height;
+        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
+        LayoutRect rt(0, 0, width, height);
+        if (m_hasRootElementBackground) {
+            FrameBox::paintBackground(canvas, document()->rootElement()->style(), rt, rt);
+        } else {
+            FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), rt, rt);
+        }
+
+    } else {
+        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
+            canvas->clearColor(Color(0, 0, 0, 255));
+        else
+            canvas->clearColor(Color(255, 255, 255, 255));
+    }
+}
+
 void Window::rendering()
 {
     if (!m_needsRendering)
         return;
+    m_inRendering = true;
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 
     Timer renderingTimer("Window::rendering");
 
@@ -389,6 +451,10 @@ void Window::rendering()
         Timer t("lay out frame tree");
         LayoutContext ctx;
         m_document->frame()->layout(ctx);
+        {
+            Timer t("computeStackingContextProperties");
+            m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
+        }
         m_needsLayout = false;
     }
 
@@ -396,97 +462,71 @@ void Window::rendering()
         FrameTreeBuilder::dumpFrameTree(m_document);
     }
 
-    if (m_needsPainting) {
-        Timer t("painting");
-        m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
+    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
+        STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
+        StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
 
-        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
-            STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
-            StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
+        std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](StackingContext* ctx, int depth)
+        {
+            for (int i = 0; i < depth; i ++) {
+                printf("  ");
+            }
 
-            std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](StackingContext* ctx, int depth)
-            {
-                for (int i = 0; i < depth; i ++) {
+            printf("StackingContext[%p, frame %p, buf %d]\n", ctx, ctx->owner(), (int)ctx->needsOwnBuffer());
+
+            auto iter = ctx->childContexts().begin();
+            while (iter != ctx->childContexts().end()) {
+
+                int32_t num = iter->first;
+
+                for (int i = 0; i < depth + 1; i ++) {
                     printf("  ");
                 }
 
-                printf("StackingContext[%p, frame %p, buf %d]\n", ctx, ctx->owner(), (int)ctx->needsOwnBuffer());
+                printf("z-index: %d\n", (int)num);
 
-                auto iter = ctx->childContexts().begin();
-                while (iter != ctx->childContexts().end()) {
-
-                    int32_t num = iter->first;
-
-                    for (int i = 0; i < depth + 1; i ++) {
-                        printf("  ");
-                    }
-
-                    printf("z-index: %d\n", (int)num);
-
-                    auto iter2 = iter->second->begin();
-                    while (iter2 != iter->second->end()) {
-                        dumpSC(*iter2, depth + 2);
-                        iter2++;
-                    }
-
-                    iter++;
+                auto iter2 = iter->second->begin();
+                while (iter2 != iter->second->end()) {
+                    dumpSC(*iter2, depth + 2);
+                    iter2++;
                 }
-            };
 
-            dumpSC(ctx, 0);
-        }
+                iter++;
+            }
+        };
+
+        dumpSC(ctx, 0);
+    }
+
+    if (m_needsPainting) {
+        Timer t("painting");
 
         // painting
-        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-        int width, height;
-        evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
-        Evas* evas = evas_object_evas_get(eflWindow->m_window);
-        struct dummy {
-            void* a;
-            void* b;
-            int w;
-            int h;
-            std::vector<Evas_Object*>* objList;
-        };
-        dummy* d = new dummy;
-        d->a = evas;
-        d->b = &eflWindow->m_drawnImageList;
-        d->w = width;
-        d->h = height;
-        d->objList = &eflWindow->m_objectList;
-        auto iter = eflWindow->m_objectList.begin();
-        while (iter != eflWindow->m_objectList.end()) {
-            evas_object_del(*iter);
-            iter++;
-        }
-        eflWindow->m_objectList.clear();
-        eflWindow->m_objectList.shrink_to_fit();
+        Canvas* canvas = preparePainting(eflWindow);
 
-        Canvas* canvas = Canvas::createDirect(d);
-        delete d;
-
-        if (m_hasRootElementBackground || m_hasBodyElementBackground) {
-            LayoutRect rt(0, 0, width, height);
-            if (m_hasRootElementBackground) {
-                FrameBox::paintBackground(canvas, document()->rootElement()->style(), rt, rt);
-            } else {
-                FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), rt, rt);
-            }
-
-        } else {
-            if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
-                canvas->clearColor(Color(0, 0, 0, 255));
-            else
-                canvas->clearColor(Color(255, 255, 255, 255));
-        }
-
+        paintWindowBackground(canvas);
         m_document->frame()->paint(canvas, PaintingStageEnd);
         m_needsPainting = false;
+        m_needsComposite = false;
 
         delete canvas;
 #ifdef STARFISH_TIZEN_WEARABLE
         evas_object_raise(eflWindow->m_dummyBox);
 #endif
+    }
+
+    if (m_needsComposite) {
+        Timer t("composite");
+        STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer());
+        Canvas* canvas = preparePainting(eflWindow);
+        paintWindowBackground(canvas);
+        m_document->frame()->firstChild()->asFrameBox()->stackingContext()->compositeStackingContext(canvas);
+
+        delete canvas;
+#ifdef STARFISH_TIZEN_WEARABLE
+        evas_object_raise(eflWindow->m_dummyBox);
+#endif
+        m_needsComposite = false;
     }
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -505,13 +545,12 @@ void Window::rendering()
 #endif
 
     m_needsRendering = false;
-
+    m_inRendering = false;
 #ifdef NDEBUG
     STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
 #else
     STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
-
 }
 
 void Window::setNeedsRenderingSlowCase()

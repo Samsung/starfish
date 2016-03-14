@@ -84,6 +84,10 @@ public:
                         kPerspective_Mask);
     }
 
+    bool hasAffine() const {
+        return getType() & SkMatrix::TypeMask::kAffine_Mask;
+    }
+
     /** Returns true if the matrix contains only translation, rotation/reflection or uniform scale
         Returns false if other transformation types are included or is degenerate
      */

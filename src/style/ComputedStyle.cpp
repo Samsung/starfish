@@ -136,8 +136,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     if (newStyle->m_textDecoration != oldStyle->m_textDecoration)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
-    if (newStyle->m_opacity != oldStyle->m_opacity)
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    if (newStyle->m_opacity != oldStyle->m_opacity) {
+        if ((newStyle->m_opacity) < 1 && (oldStyle->m_opacity < 1)) {
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+        } else {
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+        }
+    }
 
     // FIXME changing z-index not always cause tree-rebuild
     if (newStyle->m_zIndex != oldStyle->m_zIndex)
@@ -159,7 +164,50 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->m_transforms == NULL && oldStyle->m_transforms == NULL) {
+
+    } else if (newStyle->m_transforms == NULL || oldStyle->m_transforms == NULL) {
+        // if element has transform, we should re-layout for building stacking-context
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    } else {
+        SkMatrix a = newStyle->transformsToMatrix();
+        SkMatrix b = oldStyle->transformsToMatrix();
+        if (a.hasAffine() && b.hasAffine()) {
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+        } else {
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
+    }
 
     return damage;
 }
+
+
+SkMatrix ComputedStyle::transformsToMatrix()
+{
+    STARFISH_ASSERT(hasTransforms());
+    SkMatrix matrix;
+    matrix.reset();
+    for (size_t i = 0; i < m_transforms->size(); i ++) {
+        StyleTransformData t = m_transforms->at(i);
+        if (t.type() == StyleTransformData::Matrix) {
+            MatrixTransform* m = t.matrix();
+            // [ a c e ]
+            // [ b d f ]
+            // [ x x x ]
+            matrix.set(0, m->a());
+            matrix.set(1, m->c());
+            matrix.set(2, m->e());
+            matrix.set(3, m->b());
+            matrix.set(4, m->d());
+            matrix.set(5, m->f());
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+
+    return matrix;
+}
+
 }

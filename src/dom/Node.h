@@ -403,6 +403,7 @@ public:
 
     inline void setNeedsLayout();
     inline void setNeedsPainting();
+    inline void setNeedsComposite();
 
     void setStyle(ComputedStyle* style)
     {

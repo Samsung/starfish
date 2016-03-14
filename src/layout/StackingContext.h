@@ -36,6 +36,7 @@ public:
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
 
     void paintStackingContext(Canvas* canvas);
+    void compositeStackingContext(Canvas* canvas);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
 
 protected:

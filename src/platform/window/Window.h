@@ -10,6 +10,7 @@ class StarFish;
 class Document;
 class Window;
 class URL;
+class Canvas;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -27,6 +28,11 @@ public:
     virtual bool isWindow()
     {
         return true;
+    }
+
+    bool inRendering()
+    {
+        return m_inRendering;
     }
 
     void setNeedsStyleRecalc()
@@ -59,6 +65,14 @@ public:
     {
         if (!m_needsPainting) {
             m_needsPainting = true;
+            setNeedsRendering();
+        }
+    }
+
+    void setNeedsComposite()
+    {
+        if (!m_needsComposite) {
+            m_needsComposite = true;
             setNeedsRendering();
         }
     }
@@ -165,15 +179,17 @@ protected:
     void setNeedsRenderingSlowCase();
     Window(StarFish* starFish);
     void rendering();
+    void paintWindowBackground(Canvas* canvas);
 
     StyleResolver m_styleResolver;
 
+    bool m_inRendering;
     bool m_needsRendering;
     bool m_needsStyleRecalc;
     bool m_needsFrameTreeBuild;
     bool m_needsLayout;
     bool m_needsPainting;
-    // bool m_needsComposite; // TODO
+    bool m_needsComposite;
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
     bool m_isRunning;

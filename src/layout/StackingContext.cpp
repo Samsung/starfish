@@ -36,8 +36,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 
     m_matrix.reset();
 
-    // m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1;
-    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer;
+    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1;
     return m_needsOwnBuffer;
 }
 
@@ -73,9 +72,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     }
 
     ComputedStyle* ownerStyle = m_owner->style();
-    if (ownerStyle->opacity() != 1) {
-        canvas->beginOpacityLayer(ownerStyle->opacity());
-    }
     // Within each stacking context, the following layers are painted in back-to-front order:
 
     // the background and borders of the element forming the stacking context.
@@ -129,13 +125,94 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
-    if (ownerStyle->opacity() != 1) {
-        canvas->endOpacityLayer();
-    }
-
     if (m_needsOwnBuffer) {
         delete canvas;
+        if (ownerStyle->opacity() != 1) {
+            oldCanvas->beginOpacityLayer(ownerStyle->opacity());
+        }
         oldCanvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+        if (ownerStyle->opacity() != 1) {
+            oldCanvas->endOpacityLayer();
+        }
+    }
+}
+
+void StackingContext::compositeStackingContext(Canvas* canvas)
+{
+    STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
+
+    LayoutRect visibleRect = m_owner->visibleRect();
+
+    if (m_needsOwnBuffer) {
+        LayoutUnit minX = visibleRect.x();
+        LayoutUnit maxX = visibleRect.maxX();
+        LayoutUnit minY = visibleRect.y();
+        LayoutUnit maxY = visibleRect.maxY();
+
+        minX = minX.floor();
+        maxX = maxX.ceil();
+        minY = minY.floor();
+        maxY = maxY.ceil();
+
+        size_t bufferWidth = (int)(maxX - minX);
+        size_t bufferHeight = (int)(maxY - minY);
+
+        ComputedStyle* ownerStyle = m_owner->style();
+        if (ownerStyle->opacity() != 1) {
+            canvas->beginOpacityLayer(ownerStyle->opacity());
+        }
+        canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+        if (ownerStyle->opacity() != 1) {
+            canvas->endOpacityLayer();
+        }
+    }
+
+    // Within each stacking context, the following layers are painted in back-to-front order:
+
+    // the child stacking contexts with negative stack levels (most negative first).
+    {
+        auto iter = childContexts().begin();
+        while (iter != childContexts().end()) {
+            int32_t num = iter->first;
+            if (num >= 0)
+                break;
+            auto iter2 = iter->second->begin();
+            while (iter2 != iter->second->end()) {
+                StackingContext* sCtx = *iter2;
+                canvas->save();
+
+                LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+                canvas->translate(l.x(), l.y());
+                sCtx->owner()->stackingContext()->compositeStackingContext(canvas);
+
+                canvas->restore();
+                iter2++;
+            }
+            iter++;
+        }
+    }
+
+    // the child stacking contexts with positive stack levels (least positive first).
+    {
+        auto iter = childContexts().begin();
+        while (iter != childContexts().end()) {
+            int32_t num = iter->first;
+            if (num >= 0) {
+                auto iter2 = iter->second->begin();
+                while (iter2 != iter->second->end()) {
+                    StackingContext* sCtx = *iter2;
+                    canvas->save();
+
+                    LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
+                    canvas->translate(l.x(), l.y());
+                    sCtx->owner()->stackingContext()->compositeStackingContext(canvas);
+
+                    canvas->restore();
+                    iter2++;
+                }
+            }
+            iter++;
+        }
     }
 }
 

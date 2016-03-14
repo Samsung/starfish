@@ -124,6 +124,11 @@ void Node::setNeedsPainting()
     m_document->window()->setNeedsPainting();
 }
 
+void Node::setNeedsComposite()
+{
+    m_document->window()->setNeedsComposite();
+}
+
 
 }
 

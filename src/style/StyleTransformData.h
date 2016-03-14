@@ -63,6 +63,12 @@ public:
         }
     }
 
+    MatrixTransform* matrix()
+    {
+        STARFISH_ASSERT(type() == OperationType::Matrix);
+        return m_matrix;
+    }
+
     OperationType type()
     {
         return m_type;
@@ -83,6 +89,7 @@ public:
 private:
     OperationType m_type;
     // TODO m_origin;
+    // TODO save pointers in union
     MatrixTransform* m_matrix;
     // TODO
 //    TranslateTransform* m_translate;
@@ -111,7 +118,7 @@ public:
         return m_group[i];
     }
 
-    int size()
+    size_t size()
     {
         return m_group.size();
     }
@@ -119,7 +126,7 @@ public:
     String* dumpString()
     {
         String* str = String::emptyString;
-        for (int i = 0; i < size(); i++) {
+        for (size_t i = 0; i < size(); i++) {
             str = str->concat(at(i).dumpString());
         }
         return str;
