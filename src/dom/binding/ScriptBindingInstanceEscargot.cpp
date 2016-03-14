@@ -1296,6 +1296,68 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         true, true, false);
 
+    HTMLImageElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("width"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                    return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLImageElement()->width());
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+        RELEASE_ASSERT_NOT_REACHED();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
+        {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setWidth(value.toInt32());
+                    return;
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+        },
+        true, true, false);
+
+    HTMLImageElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("height"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                    return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLImageElement()->height());
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+        RELEASE_ASSERT_NOT_REACHED();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
+        {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
+                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setHeight(value.toInt32());
+                    return;
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+        },
+        true, true, false);
+
     DEFINE_FUNCTION(HTMLBRElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBrElement = HTMLBRElementFunction;
 

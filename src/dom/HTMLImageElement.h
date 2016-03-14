@@ -37,6 +37,11 @@ public:
         return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
     }
 
+    int width() { return m_width; }
+    void setWidth(int width) { m_width = width; }
+    int height() { return m_height; }
+    void setHeight(int height) { m_height = height; }
+
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
 
 protected:
@@ -48,6 +53,8 @@ protected:
     }
 
     String* m_src;
+    int m_width;
+    int m_height;
 };
 
 }
