@@ -387,6 +387,35 @@ protected:
     ValueList* m_values;
 };
 
+class CSSTransformFunctions : public gc {
+public:
+    CSSTransformFunctions()
+    {
+    }
+
+    ~CSSTransformFunctions()
+    {
+    }
+
+    void append(CSSTransformFunction f)
+    {
+        m_transforms.push_back(f);
+    }
+
+    CSSTransformFunction at(int i)
+    {
+        return m_transforms[i];
+    }
+
+    int size()
+    {
+        return m_transforms.size();
+    }
+
+protected:
+    std::vector<CSSTransformFunction, gc_allocator<CSSTransformFunction> > m_transforms;
+};
+
 class CSSStyleValuePair : public gc {
     friend class ValueList;
 
@@ -555,7 +584,7 @@ public:
         VisibilityKind,
 
         // transform
-        TransformFunction,
+        TransformFunctions,
     };
 
     CSSStyleValuePair()
@@ -653,10 +682,10 @@ public:
         return m_value.m_angle;
     }
 
-    CSSTransformFunction transformValue()
+    CSSTransformFunctions* transformValue()
     {
-        STARFISH_ASSERT(m_valueKind == TransformFunction);
-        return m_value.m_transform;
+        STARFISH_ASSERT(m_valueKind == TransformFunctions);
+        return m_value.m_transforms;
     }
 
     float numberValue()
@@ -763,7 +792,7 @@ public:
         //        OverflowValue m_overflowY;
         VisibilityValue m_visibility;
         TextDecorationValue m_textDecoration;
-        CSSTransformFunction m_transform;
+        CSSTransformFunctions* m_transforms;
     };
 
     ValueData& value()

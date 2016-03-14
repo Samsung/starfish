@@ -165,23 +165,24 @@ public:
         }
     }
 
-    StyleTransformData* transform()
+    StyleTransformDataGroup* transforms()
     {
-        return m_transform;
+        return m_transforms;
     }
 
     void setTransformIfNeeded()
     {
-        if (m_transform == NULL) {
-            m_transform = new StyleTransformData();
+        if (m_transforms == NULL) {
+            m_transforms = new StyleTransformDataGroup();
         }
     }
 
     void setTransformMatrix(double a, double b, double c, double d, double e, double f)
     {
         setTransformIfNeeded();
-        m_transform->setType(StyleTransformData::OperationType::Matrix);
-        m_transform->setMatrix(a, b, c, d, e, f);
+        StyleTransformData t(StyleTransformData::OperationType::Matrix);
+        t.setMatrix(a, b, c, d, e, f);
+        m_transforms->append(t);
     }
 
     void setBackgroundColor(Color color)
@@ -834,7 +835,7 @@ protected:
         //        m_overflowY = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
-        m_transform = nullptr;
+        m_transforms = nullptr;
     }
 
     // NOTICE
@@ -871,7 +872,7 @@ protected:
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;
-    StyleTransformData* m_transform;
+    StyleTransformDataGroup* m_transforms;
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);

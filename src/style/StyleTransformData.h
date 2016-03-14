@@ -21,11 +21,13 @@ public:
 
     StyleTransformData()
         : m_type(None)
+        , m_matrix(NULL)
     {
     }
 
     StyleTransformData(OperationType type)
         : m_type(type)
+        , m_matrix(NULL)
     {
     }
 
@@ -73,6 +75,45 @@ private:
 //    RotateTransform* m_rotate;
 //    SkewTransform* m_skew;
 };
+
+class StyleTransformDataGroup : public gc {
+public:
+    StyleTransformDataGroup()
+    {
+    }
+
+    ~StyleTransformDataGroup()
+    {
+    }
+
+    void append(StyleTransformData f)
+    {
+        m_group.push_back(f);
+    }
+
+    StyleTransformData at(int i)
+    {
+        return m_group[i];
+    }
+
+    int size()
+    {
+        return m_group.size();
+    }
+
+    String* dumpString()
+    {
+        String* str = String::emptyString;
+        for (int i = 0; i < size(); i++) {
+            str = str->concat(at(i).dumpString());
+        }
+        return str;
+    }
+
+private:
+    std::vector<StyleTransformData, gc_allocator<StyleTransformData> > m_group;
+};
+
 }
 
 #endif
