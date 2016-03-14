@@ -103,6 +103,11 @@ public:
     }
 
     static String* fromFloat(float f);
+    static String* fromInt(int i);
+    static int parseInt(String* s)
+    {
+        return atoi(s->utf8Data());
+    }
 
     String* substring(size_t pos, size_t len);
 

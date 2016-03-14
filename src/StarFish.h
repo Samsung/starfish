@@ -38,6 +38,8 @@ public:
     QualifiedName m_localName;
     QualifiedName m_style;
     QualifiedName m_src;
+    QualifiedName m_width;
+    QualifiedName m_height;
 
     // Event Names
     QualifiedName m_click;

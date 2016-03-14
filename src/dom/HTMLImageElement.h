@@ -37,24 +37,30 @@ public:
         return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
     }
 
-    int width() { return m_width; }
-    void setWidth(int width) { m_width = width; }
-    int height() { return m_height; }
-    void setHeight(int height) { m_height = height; }
+    int width()
+    {
+        return String::parseInt(getAttribute(document()->window()->starFish()->staticStrings()->m_width));
+    }
+
+    void setWidth(int width)
+    {
+        setAttribute(document()->window()->starFish()->staticStrings()->m_width, String::fromInt(width));
+    }
+
+    int height()
+    {
+        return String::parseInt(getAttribute(document()->window()->starFish()->staticStrings()->m_height));
+    }
+
+    void setHeight(int height)
+    {
+        setAttribute(document()->window()->starFish()->staticStrings()->m_height, String::fromInt(height));
+    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
 
 protected:
-    virtual Node* clone()
-    {
-        HTMLImageElement* newNode = static_cast<HTMLImageElement*>(Element::clone());
-        newNode->m_src = m_src;
-        return newNode;
-    }
-
     String* m_src;
-    int m_width;
-    int m_height;
 };
 
 }

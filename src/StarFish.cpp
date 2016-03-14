@@ -128,6 +128,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_localName = QualifiedName::fromString(sf, "localName");
     m_style = QualifiedName::fromString(sf, "style");
     m_src = QualifiedName::fromString(sf, "src");
+    m_width = QualifiedName::fromString(sf, "width");
+    m_height = QualifiedName::fromString(sf, "height");
 
     m_click = QualifiedName::fromString(sf, "click");
     m_onclick = QualifiedName::fromString(sf, "onclick");

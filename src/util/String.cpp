@@ -211,6 +211,11 @@ String* String::fromFloat(float f)
     return String::fromUTF8(std::to_string(f).c_str());
 }
 
+String* String::fromInt(int i)
+{
+    return String::fromUTF8(std::to_string(i).c_str());
+}
+
 void String::split(char delim, Vector& tokens)
 {
     if (m_isASCIIString) {
