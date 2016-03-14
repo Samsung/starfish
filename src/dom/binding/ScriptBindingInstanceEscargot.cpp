@@ -1315,6 +1315,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+
+        if (!(value.isESString() && value.asESString()->hasOnlyDigit())) {
+            return;
+        }
+
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
@@ -1346,6 +1351,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+
+        if (!(value.isESString() && value.asESString()->hasOnlyDigit())) {
+            return;
+        }
+
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
