@@ -11,22 +11,25 @@ class CSSStyleDeclaration;
 
 class Element : public Node {
 public:
+
     Element(Document* document, ScriptBindingInstance* instance)
         : Node(document, instance)
+        , m_id(String::emptyString)
+        , m_namespace(String::emptyString)
+        , m_namespacePrefix(String::emptyString)
+        , m_inlineStyle(new CSSStyleDeclaration(document, this))
     {
         initScriptWrappable(this, instance);
-        m_id = String::emptyString;
-        m_namespace = String::emptyString;
-        m_namespacePrefix = String::emptyString;
-        m_inlineStyle = new CSSStyleDeclaration(document, this);
     }
 
     Element(Document* document)
         : Node(document)
+        , m_id(String::emptyString)
+        , m_namespace(String::emptyString)
+        , m_namespacePrefix(String::emptyString)
+        , m_inlineStyle(new CSSStyleDeclaration(document, this))
     {
         initScriptWrappable(this);
-        m_id = String::emptyString;
-        m_inlineStyle = new CSSStyleDeclaration(document, this);
     }
 
     /* 4.4 Interface Node */
@@ -147,14 +150,15 @@ public:
         printf("className:%s", className.data());
     }
 
-    virtual Node* clone();
-
     std::vector<Attribute, gc_allocator<Attribute> >* getAttributes() { return &m_attributes; }
 
 protected:
+    virtual Node* clone();
+
     std::vector<Attribute, gc_allocator<Attribute> > m_attributes;
 
     String* m_id;
+    String* m_className;
     std::vector<String*, gc_allocator<String*> > m_classNames;
     String* m_namespace;
     String* m_namespacePrefix;

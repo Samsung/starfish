@@ -108,7 +108,7 @@ void Element::setTextContent(String* text)
 
 Node* Element::clone()
 {
-    Node* newNode = nullptr;
+    Element* newNode = nullptr;
     if (isHTMLElement()) {
         if (localName()->equals(document()->window()->starFish()->staticStrings()->m_htmlLocalName)) {
             newNode = new HTMLHtmlElement(document());
@@ -131,9 +131,20 @@ Node* Element::clone()
         STARFISH_RELEASE_ASSERT(false);
     }
 
-    // FIXME: impl 4.8.1 NamedNodeMap to iterate attr
-
     STARFISH_ASSERT(newNode);
+
+    for (Attribute& attr : m_attributes) {
+        newNode->setAttribute(attr.name(), attr.value());
+    }
+    newNode->m_id = m_id;
+    newNode->m_className = m_className;
+    for (String* str : m_classNames) {
+        newNode->m_classNames.push_back(str);
+    }
+    newNode->m_namespace = m_namespace;
+    newNode->m_namespacePrefix = m_namespacePrefix;
+    newNode->m_inlineStyle = m_inlineStyle; // FIXME: need to dup inline style
+
     return newNode;
 }
 

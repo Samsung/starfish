@@ -143,8 +143,6 @@ public:
     }
 
 protected:
-    String* m_id;
-    String* m_className;
 };
 
 }

@@ -33,9 +33,15 @@ Node* Node::cloneNode(bool deep)
 {
     Node* newNode = clone();
     STARFISH_ASSERT(newNode);
+    newNode->m_state = m_state;
+    newNode->m_baseUri = m_baseUri;
+    newNode->m_frame = m_frame;
+    newNode->m_rareNodeMembers = m_rareNodeMembers; // FIXME: what is this?
+    newNode->m_style = m_style; // FIXME: need to clone
+
     if (deep) {
         for (Node* child = firstChild(); child; child = child->nextSibling()) {
-            Node* newChild = child->clone();
+            Node* newChild = child->cloneNode();
             STARFISH_ASSERT(newChild);
             newNode->appendChild(newChild);
         }

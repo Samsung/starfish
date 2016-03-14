@@ -40,6 +40,13 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
 
 protected:
+    virtual Node* clone()
+    {
+        HTMLImageElement* newNode = static_cast<HTMLImageElement*>(Element::clone());
+        newNode->m_src = m_src;
+        return newNode;
+    }
+
     String* m_src;
 };
 
