@@ -132,7 +132,7 @@ public:
         return m_skew;
     }
 
-    OperationType type()
+    OperationType type() const
     {
         return m_type;
     }
@@ -156,6 +156,9 @@ public:
     }
 
 private:
+    friend inline bool operator==(const StyleTransformData& a, const StyleTransformData& b);
+    friend inline bool operator!=(const StyleTransformData& a, const StyleTransformData& b);
+
     OperationType m_type;
     // TODO save pointers in union
     MatrixTransform* m_matrix;
@@ -164,6 +167,44 @@ private:
     RotateTransform* m_rotate;
     SkewTransform* m_skew;
 };
+
+bool operator==(const StyleTransformData& a, const StyleTransformData& b)
+{
+    if (a.type() != b.type())
+        return false;
+
+    switch (a.m_type) {
+    case StyleTransformData::OperationType::Matrix:
+        if (*(a.m_matrix) != *(b.m_matrix))
+            return false;
+        break;
+    case StyleTransformData::OperationType::Scale:
+        if (*(a.m_scale) != *(b.m_scale))
+            return false;
+        break;
+    case StyleTransformData::OperationType::Translate:
+        if (*(a.m_translate) != *(b.m_translate))
+            return false;
+        break;
+    case StyleTransformData::OperationType::Rotate:
+        if (*(a.m_rotate) != *(b.m_rotate))
+            return false;
+        break;
+    case StyleTransformData::OperationType::Skew:
+        if (*(a.m_skew) != *(b.m_skew))
+            return false;
+        break;
+    case StyleTransformData::OperationType::None:
+    default:
+        break;
+    }
+    return true;
+}
+
+bool operator!=(const StyleTransformData& a, const StyleTransformData& b)
+{
+    return !operator==(a, b);
+}
 
 class StyleTransformDataGroup : public gc {
 public:
@@ -180,12 +221,12 @@ public:
         m_group.push_back(f);
     }
 
-    StyleTransformData at(int i)
+    StyleTransformData at(int i) const
     {
         return m_group[i];
     }
 
-    size_t size()
+    size_t size() const
     {
         return m_group.size();
     }
@@ -200,8 +241,29 @@ public:
     }
 
 private:
+    friend inline bool operator==(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b);
+    friend inline bool operator!=(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b);
+
     std::vector<StyleTransformData, gc_allocator<StyleTransformData> > m_group;
 };
+
+bool operator==(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b)
+{
+    if (a.size() != b.size())
+        return false;
+
+    for (size_t i = 0; i < a.size(); i++) {
+        if (a.at(i) != b.at(i))
+            return false;
+    }
+
+    return true;
+}
+
+bool operator!=(const StyleTransformDataGroup& a, const StyleTransformDataGroup& b)
+{
+    return !operator==(a, b);
+}
 
 }
 

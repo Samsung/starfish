@@ -26,6 +26,17 @@ public:
     double x() { return m_x; }
     double y() { return m_y; }
 
+    bool operator==(const ScaleTransform& o)
+    {
+        return this->m_x == o.m_x && this->m_y == o.m_y;
+    }
+
+    bool operator!=(const ScaleTransform& o)
+    {
+        return !operator==(o);
+    }
+
+private:
     double m_x;
     double m_y;
 };

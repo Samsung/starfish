@@ -23,6 +23,16 @@ public:
 
     double angle() { return m_angle; }
 
+    bool operator==(const RotateTransform& o)
+    {
+        return this->m_angle == o.m_angle;
+    }
+
+    bool operator!=(const RotateTransform& o)
+    {
+        return !operator==(o);
+    }
+
 private:
     double m_angle;
 };

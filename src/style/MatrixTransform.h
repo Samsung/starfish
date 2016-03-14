@@ -38,6 +38,18 @@ public:
     double e() { return m_e; }
     double f() { return m_f; }
 
+    bool operator==(const MatrixTransform& o)
+    {
+        return this->m_a == o.m_a && this->m_b == o.m_b && this->m_c == o.m_c
+            && this->m_d == o.m_d && this->m_e == o.m_e && this->m_f == o.m_f;
+    }
+
+    bool operator!=(const MatrixTransform& o)
+    {
+        return !operator==(o);
+    }
+
+private:
     double m_a;
     double m_b;
     double m_c;

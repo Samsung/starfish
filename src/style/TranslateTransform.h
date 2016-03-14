@@ -26,6 +26,16 @@ public:
     Length tx() { return m_tx; }
     Length ty() { return m_ty; }
 
+    bool operator==(const TranslateTransform& o)
+    {
+        return this->m_tx == o.m_tx && this->m_ty == o.m_ty;
+    }
+
+    bool operator!=(const TranslateTransform& o)
+    {
+        return !operator==(o);
+    }
+
     Length m_tx;
     Length m_ty;
 };

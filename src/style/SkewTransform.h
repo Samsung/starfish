@@ -26,6 +26,17 @@ public:
     double angleX() { return m_angleX; }
     double angleY() { return m_angleY; }
 
+    bool operator==(const SkewTransform& o)
+    {
+        return this->m_angleX == o.m_angleX && this->m_angleY == o.m_angleY;
+    }
+
+    bool operator!=(const SkewTransform& o)
+    {
+        return !operator==(o);
+    }
+
+private:
     double m_angleX;
     double m_angleY;
 };
