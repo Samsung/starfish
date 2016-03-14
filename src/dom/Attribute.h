@@ -37,6 +37,7 @@ public:
     {
         m_value = v;
     }
+
 protected:
     QualifiedName m_name;
     String* m_value;

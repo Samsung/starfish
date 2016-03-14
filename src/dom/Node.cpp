@@ -65,14 +65,19 @@ bool Node::isEqualNode(Node* other)
     case DOCUMENT_TYPE_NODE: {
         DocumentType* thisNode = asDocumentType();
         DocumentType* otherNode = other->asDocumentType();
-        if (!(thisNode->nodeName()->equals(otherNode->nodeName()) && thisNode->publicId()->equals(otherNode->publicId()) && thisNode->systemId()->equals(otherNode->systemId()))) {
+        if (!(thisNode->nodeName()->equals(otherNode->nodeName())
+            && thisNode->publicId()->equals(otherNode->publicId())
+            && thisNode->systemId()->equals(otherNode->systemId()))) {
             return false;
         }
     }
     case ELEMENT_NODE: {
         Element* thisNode = asElement();
         Element* otherNode = other->asElement();
-        if (!(thisNode->namespaceUri()->equals(otherNode->namespaceUri()) && thisNode->namespacePrefix()->equals(otherNode->namespacePrefix()) && thisNode->localName()->equals(otherNode->localName()) && true /* FIXME: impl 4.8.1 NamedNodeMap */)) {
+        if (!(thisNode->namespaceUri()->equals(otherNode->namespaceUri())
+            && thisNode->namespacePrefix()->equals(otherNode->namespacePrefix())
+            && thisNode->localName()->equals(otherNode->localName())
+            && thisNode->hasSameAttributes(otherNode))) {
             return false;
         }
     }
@@ -88,8 +93,17 @@ bool Node::isEqualNode(Node* other)
     }
     }
 
-    // FIXME: impl 4.8.1 NamedNodeMap to iterate attr
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    if (childElementCount() != other->childElementCount()) {
+        return false;
+    }
+    Node* otherChild = other->firstChild();
+    for (Node* child = firstChild(); child; child = child->nextSibling()) {
+        if (!child->isEqualNode(otherChild)) {
+            return false;
+        }
+        otherChild = otherChild->nextSibling();
+    }
+
     return true;
 }
 

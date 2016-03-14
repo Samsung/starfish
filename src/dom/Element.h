@@ -152,6 +152,22 @@ public:
 
     std::vector<Attribute, gc_allocator<Attribute> >* getAttributes() { return &m_attributes; }
 
+
+    /* Other than DOM API */
+    bool hasSameAttributes(Element* otherNode)
+    {
+        if (getAttributes()->size() != otherNode->getAttributes()->size()) {
+            return false;
+        }
+
+        for (Attribute& attr : *(otherNode->getAttributes())) {
+            if (!getAttribute(attr.name())->equals(attr.value())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 protected:
     virtual Node* clone();
 
