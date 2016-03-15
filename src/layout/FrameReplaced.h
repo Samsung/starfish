@@ -96,7 +96,7 @@ public:
                 setContentWidth(s.width());
                 setContentHeight(s.height());
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
-                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
+                LayoutUnit w = style()->width().specifiedValue(ctx.containingBlock(this)->asFrameBox()->contentWidth());
                 LayoutUnit h = w * (s.height() / s.width());
                 setContentWidth(w);
                 setContentHeight(h);

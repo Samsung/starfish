@@ -10,8 +10,6 @@ void FrameBlockBox::layout(LayoutContext& ctx)
     if (isEstablishesBlockFormattingContext())
         ctx.establishBlockFormattingContext();
 
-    establishesStackingContextIfNeeds();
-
     if (isNormalFlow()) {
         // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
         // Determine horizontal margins and width of this object.

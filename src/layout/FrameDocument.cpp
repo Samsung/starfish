@@ -15,6 +15,8 @@ void FrameDocument::layout(LayoutContext& ctx)
     STARFISH_ASSERT(firstChild()->isRootElement());
 
     FrameBlockBox::layout(ctx);
+
+    firstChild()->asFrameBox()->asFrameBlockBox()->m_visibleRect.unite(m_visibleRect);
 }
 
 }

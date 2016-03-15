@@ -449,10 +449,18 @@ void Window::rendering()
     if (m_needsLayout) {
         // lay out frame tree
         Timer t("lay out frame tree");
+
+        m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
+            box->clearStackingContextIfNeeds();
+        });
+
         LayoutContext ctx;
         m_document->frame()->layout(ctx);
         {
             Timer t("computeStackingContextProperties");
+            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
+                box->establishesStackingContextIfNeeds();
+            });
             m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
         }
         m_needsLayout = false;
@@ -472,7 +480,18 @@ void Window::rendering()
                 printf("  ");
             }
 
-            printf("StackingContext[%p, frame %p, buf %d]\n", ctx, ctx->owner(), (int)ctx->needsOwnBuffer());
+            auto fr = ctx->owner()->visibleRect();
+
+
+            std::string className;
+            for (unsigned i = 0; i < ctx->owner()->node()->asElement()->classNames().size(); i++) {
+                className += ctx->owner()->node()->asElement()->classNames()[i]->utf8Data();
+                className += " ";
+            }
+
+            printf("StackingContext[%p, node %p %s id:%s className:%s , frame %p, buf %d, %d %d %d %d]\n",
+                ctx, ctx->owner()->node(), ctx->owner()->node()->localName()->utf8Data(), ctx->owner()->node()->asElement()->id()->utf8Data(), className.data(), ctx->owner(), (int)ctx->needsOwnBuffer()
+                , (int)fr.x(), (int)fr.y(), (int)fr.width(), (int)fr.height());
 
             auto iter = ctx->childContexts().begin();
             while (iter != ctx->childContexts().end()) {

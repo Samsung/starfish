@@ -796,7 +796,8 @@ public:
             vec.push_back(std::pair<Evas_Object*, bool>(eo, true));
         }
     }
-    virtual void drawImage(ImageData* data, const Rect& dst)
+
+    void drawImageInner(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b)
     {
         if (!lastState().m_visible) {
             return;
@@ -827,11 +828,11 @@ public:
         }
         Evas_Object* eo = nullptr;
         if (!data->isBufferImage())
-            findPrevDrawnData(data);
+            eo = findPrevDrawnData(data);
 
         if (!eo) {
             eo = evas_object_image_add(m_canvas);
-            if (!m_prevDrawnImageMap) {
+            if (!m_prevDrawnImageMap || data->isBufferImage()) {
                 if (m_objList)
                     m_objList->push_back(eo);
             }
@@ -852,12 +853,23 @@ public:
                 pushPrevDrawnData(data, eo);
         }
 
+        evas_object_image_border_set(eo, l, r, t, b);
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
 
         applyClippers(eo);
         applyEvasMapIfNeeded(eo, dst, true);
         evas_object_show(eo);
+    }
+
+    virtual void drawImage(ImageData* data, const Rect& dst)
+    {
+        drawImageInner(data, dst, 0, 0, 0, 0);
+    }
+
+    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b)
+    {
+        drawImageInner(data, dst, l, t, r, b);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

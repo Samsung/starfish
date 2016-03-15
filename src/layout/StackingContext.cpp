@@ -21,6 +21,12 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     m_buffer = nullptr;
 }
 
+StackingContext::~StackingContext()
+{
+    clearChildContexts();
+    delete m_buffer;
+}
+
 bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 {
     bool childNeedsBuffer = false;
@@ -69,6 +75,19 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         oldCanvas = canvas;
         canvas = Canvas::create(m_buffer);
         canvas->translate(-minX, -minY);
+    } else {
+        if (owner()->style()->overflow() == OverflowValue::HiddenOverflow) {
+            canvas->save();
+            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
+        }
+    }
+
+    {
+        // draw debug rect
+        // canvas->save();
+        // canvas->setColor(Color(0, 0, 255, 32));
+        // canvas->drawRect(visibleRect);
+        // canvas->restore();
     }
 
     // Within each stacking context, the following layers are painted in back-to-front order:
@@ -90,7 +109,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
                 LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                 canvas->translate(l.x(), l.y());
-                sCtx->owner()->stackingContext()->paintStackingContext(canvas);
+                sCtx->paintStackingContext(canvas);
 
                 canvas->restore();
                 iter2++;
@@ -114,7 +133,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
                     LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                     canvas->translate(l.x(), l.y());
-                    sCtx->owner()->stackingContext()->paintStackingContext(canvas);
+                    sCtx->paintStackingContext(canvas);
 
                     canvas->restore();
                     iter2++;
@@ -126,6 +145,10 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     if (m_needsOwnBuffer) {
         delete canvas;
+    } else {
+        if (owner()->style()->overflow() == OverflowValue::HiddenOverflow) {
+            canvas->restore();
+        }
     }
 }
 
@@ -161,8 +184,16 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->translate(ox, oy);
             canvas->postMatrix(m_matrix);
             canvas->drawImage(m_buffer, Rect(minX - ox, minY - oy, bufferWidth, bufferHeight));
+
+            // draw debug rect
+            // canvas->setColor(Color(255, 0, 0, 128));
+            // canvas->drawRect(Rect(minX - ox, minY - oy, bufferWidth, bufferHeight));
         } else {
             canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+
+            // draw debug rect
+            // canvas->setColor(Color(255, 0, 0, 128));
+            // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
         }
 
 
@@ -189,7 +220,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 
                 LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                 canvas->translate(l.x(), l.y());
-                sCtx->owner()->stackingContext()->compositeStackingContext(canvas);
+                sCtx->compositeStackingContext(canvas);
 
                 canvas->restore();
                 iter2++;
@@ -211,7 +242,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 
                     LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                     canvas->translate(l.x(), l.y());
-                    sCtx->owner()->stackingContext()->compositeStackingContext(canvas);
+                    sCtx->compositeStackingContext(canvas);
 
                     canvas->restore();
                     iter2++;
@@ -303,7 +334,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
                 LayoutLocation l = sCtx->owner()->absolutePoint(m_owner);
                 x -= l.x();
                 y -= l.y();
-                result = sCtx->owner()->stackingContext()->hitTestStackingContext(x, y);
+                result = sCtx->hitTestStackingContext(x, y);
                 if (result)
                     return result;
 

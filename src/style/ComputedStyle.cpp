@@ -171,10 +171,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
-        // TODO implement operator == of style matrix data
-        SkMatrix a = newStyle->transformsToMatrix(100, 100);
-        SkMatrix b = oldStyle->transformsToMatrix(100, 100);
-        if (a != b) {
+        if (*newStyle->m_transforms != *oldStyle->m_transforms) {
             damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageComposite | damage);
         }
     }

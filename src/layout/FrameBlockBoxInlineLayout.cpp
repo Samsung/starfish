@@ -151,7 +151,6 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
             ctx.m_layoutContext.registerRelativePositionedFrames(f);
 
         if (f->isNormalFlow()) {
-            f->establishesStackingContextIfNeeds();
             if (f->isInlineBox() && f->asInlineBox()->isInlineTextBox()) {
                 InlineBox* ib = f->asFrameBox()->asInlineBox();
                 if (UNLIKELY(descenderInOut == 0)) {

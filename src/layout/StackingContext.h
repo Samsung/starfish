@@ -14,6 +14,8 @@ class StackingContextChild : public std::vector<StackingContext*, gc_allocator<S
 class StackingContext : public gc {
 public:
     StackingContext(FrameBox* owner, StackingContext* parent);
+    ~StackingContext();
+
     void clearChildContexts()
     {
         m_childContexts.clear();

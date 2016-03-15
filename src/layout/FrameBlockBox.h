@@ -111,6 +111,14 @@ public:
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual void dump(int depth);
 
+    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    {
+        fn(this);
+        for (size_t i = 0; i < m_boxes.size(); i ++) {
+            m_boxes[i]->iterateChildBoxes(fn);
+        }
+    }
+
     virtual void paintBackgroundAndBorders(Canvas* canvas);
 
     LayoutUnit ascender()
@@ -167,6 +175,15 @@ public:
     std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes()
     {
         return m_boxes;
+    }
+
+    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    {
+        fn(this);
+
+        for (size_t i = 0; i < m_boxes.size(); i ++) {
+            m_boxes[i]->iterateChildBoxes(fn);
+        }
     }
 
 protected:
@@ -253,6 +270,7 @@ public:
 class FrameBlockBox : public FrameBox {
     friend class LineFormattingContext;
     friend class InlineNonReplacedBox;
+    friend class FrameDocument;
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
@@ -279,6 +297,20 @@ public:
     virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+
+    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    {
+        if (hasBlockFlow()) {
+            FrameBox::iterateChildBoxes(fn);
+            return;
+        }
+
+        fn(this);
+
+        for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
+            m_lineBoxes[i]->iterateChildBoxes(fn);
+        }
+    }
 
     bool hasBlockFlow()
     {

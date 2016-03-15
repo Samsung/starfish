@@ -425,6 +425,7 @@ public:
     void establishesStackingContextIfNeeds()
     {
         if (isEstablishesStackingContext()) {
+            STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
             if (!isRootElement()) {
                 FrameBox* p = layoutParent()->asFrameBox();
                 while (!p->isEstablishesStackingContext()) {
@@ -438,7 +439,36 @@ public:
         }
     }
 
+    void clearStackingContextIfNeeds()
+    {
+        if (m_stackingContext) {
+            if (isRootElement()) {
+                m_stackingContext->clearChildContexts();
+            } else {
+                delete m_stackingContext;
+            }
+            m_stackingContext = nullptr;
+        }
+    }
+
+
     virtual void paintStackingContextContent(Canvas* canvas);
+
+    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    {
+        fn(this);
+
+        if (firstChild()) {
+            FrameBox* child = firstChild()->asFrameBox();
+            while (true) {
+                child->iterateChildBoxes(fn);
+                if (child->next())
+                    child = child->next()->asFrameBox();
+                else
+                    break;
+            }
+        }
+    }
 
 protected:
     // content + padding + border
