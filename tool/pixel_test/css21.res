@@ -992,7 +992,6 @@ test/reftest/csswg-test/css21/cascade-import/cascade-import-dynamic-004.htm
 test/reftest/csswg-test/css21/cascade-import/cascade-import-dynamic-005.htm
 test/reftest/csswg-test/css21/cascade-import/cascade-import-dynamic-006.htm
 test/reftest/csswg-test/css21/cascade-import/cascade-import-dynamic-control.htm
-test/reftest/csswg-test/css21/colors/bidi-color-001.htm
 test/reftest/csswg-test/css21/colors/color-176.htm
 test/reftest/csswg-test/css21/colors/color-applies-to-001.htm
 test/reftest/csswg-test/css21/colors/color-applies-to-002.htm
