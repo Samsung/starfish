@@ -5,6 +5,7 @@
 #include "style/StyleBackgroundData.h"
 #include "style/StyleSurroundData.h"
 #include "style/StyleTransformData.h"
+#include "style/StyleTransformOrigin.h"
 #include "style/DefaultStyle.h"
 
 namespace StarFish {
@@ -222,6 +223,18 @@ public:
         StyleTransformData t(StyleTransformData::OperationType::Translate);
         t.setTranslate(a, b);
         m_transforms->append(t);
+    }
+
+    void setTransformOriginIfNeeded()
+    {
+        if (m_transformOrigin == NULL)
+            m_transformOrigin = new StyleTransformOrigin();
+    }
+
+    void setTransformOriginValue(Length x, Length y)
+    {
+        setTransformOriginIfNeeded();
+        m_transformOrigin->setOriginValue(x, y);
     }
 
     void setBackgroundColor(Color color)
@@ -474,6 +487,11 @@ public:
         } else {
             return m_surround->border.left().width();
         }
+    }
+
+    StyleTransformOrigin* transformOrigin()
+    {
+        return m_transformOrigin;
     }
 
     void setBorderTopColor(Color color)
@@ -912,6 +930,7 @@ protected:
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;
     StyleTransformDataGroup* m_transforms;
+    StyleTransformOrigin* m_transformOrigin;
 };
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);

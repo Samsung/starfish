@@ -960,6 +960,52 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
     }
 }
 
+void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    //  [ left | center | right | top | bottom | <percentage> | <length> ]
+    // |
+    //  [ left | center | right | <percentage> | <length> ]
+    //  [ top | center | bottom | <percentage> | <length> ] <length>?
+    // |
+    //  [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>?
+
+    const char* value = tokens->at(0)->utf8Data();
+    m_keyKind = CSSStyleValuePair::KeyKind::TransformOrigin;
+
+    if (VALUE_IS_INHERIT()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
+    } else if (VALUE_IS_INITIAL()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
+    } else {
+        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+        ValueList* values = new ValueList();
+
+        for (unsigned int i = 0; i < tokens->size(); i++) {
+            value = tokens->at(i)->utf8Data();
+            if (VALUE_IS_STRING("left")) {
+                values->append(CSSStyleValuePair::ValueKind::TransformOriginLeft, { 0 });
+            } else if (VALUE_IS_STRING("right")) {
+                values->append(CSSStyleValuePair::ValueKind::TransformOriginRight, { 0 });
+            } else if (VALUE_IS_STRING("center")) {
+                values->append(CSSStyleValuePair::ValueKind::TransformOriginCenter, { 0 });
+            } else if (VALUE_IS_STRING("top")) {
+                values->append(CSSStyleValuePair::ValueKind::TransformOriginTop, { 0 });
+            } else if (VALUE_IS_STRING("bottom")) {
+                values->append(CSSStyleValuePair::ValueKind::TransformOriginBottom, { 0 });
+            } else if (endsWith(value, "%")) {
+                float f;
+                sscanf(value, "%f%%", &f);
+                values->append(CSSStyleValuePair::ValueKind::Percentage, {.m_floatValue = (f / 100.f) });
+            } else {
+                CSSStyleValuePair::ValueData data = {.m_length = parseCSSLength(value) };
+                values->append(CSSStyleValuePair::ValueKind::Length, data);
+            }
+        }
+
+        m_value.m_multiValue = values;
+    }
+}
+
 String* BorderString(String* width, String* style, String* color)
 {
     String* space = String::fromUTF8(" ");
@@ -1923,6 +1969,9 @@ CSSStyleValuePair CSSStyleValuePair::fromString(const char* key, const char* val
     } else if (strcmp(key, "transform") == 0) {
         ret.m_keyKind = CSSStyleValuePair::KeyKind::Transform;
         ret.setValueTransform(&tokens);
+    } else if (strcmp(key, "transform-origin") == 0) {
+        ret.m_keyKind = CSSStyleValuePair::KeyKind::TransformOrigin;
+        ret.setValueTransformOrigin(&tokens);
     } else {
         STARFISH_LOG_ERROR("CSSStyleValuePair::fromString -> unsupport key = %s\n", key);
         result = false;
@@ -2398,6 +2447,39 @@ String* CSSStyleValuePair::toString()
             return lengthOrPercentageOrKeywordToString();
         }
     }
+    case TransformOrigin:
+        switch (m_valueKind) {
+        case CSSStyleValuePair::ValueKind::Initial:
+            return String::fromUTF8("initial");
+        case CSSStyleValuePair::ValueKind::Inherit:
+            return String::fromUTF8("inherit");
+        case CSSStyleValuePair::ValueKind::ValueListKind: {
+            String* str = String::fromUTF8("");
+            ValueList* vals = multiValue();
+            for (unsigned int i = 0; i < vals->size(); i++) {
+
+                if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginLeft)
+                    str = str->concat(String::fromUTF8("left"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginRight)
+                    str = str->concat(String::fromUTF8("right"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginTop)
+                    str = str->concat(String::fromUTF8("top"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginBottom)
+                    str = str->concat(String::fromUTF8("bottom"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginCenter)
+                    str = str->concat(String::fromUTF8("center"));
+                else
+                    str = str->concat(valueToString(vals->getValueKindAtIndex(i), vals->getValueAtIndex(i)));
+
+                if (i < vals->size() - 1) {
+                    str = str->concat(String::fromUTF8(" "));
+                }
+            }
+            return str;
+        }
+        default:
+            return String::emptyString;
+        }
     default: {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
@@ -3345,6 +3427,24 @@ bool CSSStyleDeclaration::checkInputErrorTransform(std::vector<String*, gc_alloc
     return true;
 }
 
+bool CSSStyleDeclaration::checkInputErrorTransformOrigin(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() == 1 || tokens->size() == 2) {
+        const char* value;
+        for (unsigned int i = 0; i < tokens->size(); i++) {
+            value = (*tokens)[i]->toLower()->utf8Data();
+            if (VALUE_IS_STRING("left") || VALUE_IS_STRING("right") || VALUE_IS_STRING("top") || VALUE_IS_STRING("bottom") || VALUE_IS_STRING("center")) {
+                return true;
+            } else if (CSSPropertyParser::assureLength(value, true) || CSSPropertyParser::assurePercent(value, true)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return false;
+}
+
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 {
     if (m_element)
@@ -4247,6 +4347,43 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                         }
                     }
                 }
+                break;
+            case CSSStyleValuePair::KeyKind::TransformOrigin:
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                    style->m_transformOrigin = parentStyle->m_transformOrigin;
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->setTransformOriginValue(Length(Length::Percent, 0.5f), Length(Length::Percent, 0.5f));
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+                    ValueList* list = cssValues[k].multiValue();
+                    Length xAxis, yAxis;
+
+                    xAxis = Length(Length::Percent, 0.5f);
+                    yAxis = Length(Length::Percent, 0.5f);
+
+                    for (unsigned int i = 0; i < list->size(); i++) {
+                        if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginLeft) {
+                            xAxis = Length(Length::Percent, 0.0f);
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginRight) {
+                            xAxis = Length(Length::Percent, 1.0f);
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginCenter) {
+
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginTop) {
+                            yAxis = Length(Length::Percent, 0.0f);
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginBottom) {
+                            yAxis = Length(Length::Percent, 1.0f);
+                        } else {
+                            if (i == 0)
+                                xAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                            else
+                                yAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                        }
+                    }
+
+                    style->setTransformOriginValue(xAxis, yAxis);
+                } else {
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+
                 break;
             }
         }

@@ -1003,6 +1003,12 @@ void Node::dumpStyle()
         printf("transform : %s, ", m_style->transforms()->dumpString()->utf8Data());
     }
 
+    if (m_style->transformOrigin() == NULL) {
+        printf("transform-origin : '', ");
+    } else {
+        printf("transform-origin : %s", m_style->transformOrigin()->dumpString()->utf8Data());
+    }
+
     printf("}");
 }
 }

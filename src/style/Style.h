@@ -346,6 +346,7 @@ class CSSStyleDeclaration;
     F(BorderLeftWidth, borderLeftWidth, "border-left-width")       \
     F(TextAlign, textAlign, "text-align")                          \
     F(Transform, transform, "transform")                  \
+    F(TransformOrigin, transformOrigin, "transform-origin")        \
     F(Visibility, visibility, "visibility")                        \
     F(OverflowX, overflow, "overflow")                             \
     F(BackgroundImage, backgroundImage, "background-image")        \
@@ -462,6 +463,8 @@ public:
         TextOverflow, // <clip> | ellipsis | string
         // https://www.w3.org/TR/css3-transforms/#propdef-transform
         Transform, // none | <transform-function>+
+        // https://www.w3.org/TR/css3-transforms/#transform-origin-property
+        TransformOrigin, // [ left | center | right | top | bottom | <percentage> | <length> ] | [ left | center | right | <percentage> | <length> ] [ top | center | bottom | <percentage> | <length> ] <length>? | [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>? // Initial: 50% 50%
         // https://www.w3.org/TR/CSS2/text.html#propdef-letter-spacing
         LetterSpacing, //  normal | length | inherit // Initial -> normal
         // https://www.w3.org/TR/CSS21/visuren.html#propdef-direction
@@ -599,6 +602,13 @@ public:
 
         // transform
         TransformFunctions,
+
+        // tranform-origin
+        TransformOriginLeft,
+        TransformOriginRight,
+        TransformOriginTop,
+        TransformOriginBottom,
+        TransformOriginCenter,
     };
 
     CSSStyleValuePair()
@@ -940,6 +950,7 @@ public:
     F(BorderLeftWidth, "border-left-width")     \
     F(TextAlign, "text-align")                  \
     F(Transform, "transform")                  \
+    F(TransformOrigin, "transform-origin")      \
     F(Visibility, "visibility")                 \
     F(Opacity, "opacity")                       \
     F(OverflowX, "overflow-x")                  \
