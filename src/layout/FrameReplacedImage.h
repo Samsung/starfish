@@ -34,10 +34,15 @@ public:
 
     virtual LayoutSize intrinsicSize()
     {
-        if (m_imageData)
-            return LayoutSize(m_imageData->width(), m_imageData->height());
-        else
+        if (m_imageData) {
+            STARFISH_ASSERT(node()->asElement()->asHTMLElement()->isHTMLImageElement());
+            HTMLImageElement* imgNode = static_cast<HTMLImageElement*>(node()->asElement()->asHTMLElement());
+            int width = imgNode->width() >= 0? imgNode->width(): m_imageData->width();
+            int height = imgNode->height() >= 0? imgNode->height(): m_imageData->height();
+            return LayoutSize(width, height);
+        } else {
             return LayoutSize(0, 0);
+        }
     }
 
     void replaceImageData(Node* node, String* src)

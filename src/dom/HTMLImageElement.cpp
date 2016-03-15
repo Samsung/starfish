@@ -10,7 +10,6 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
 {
     HTMLElement::didAttributeChanged(name, old, value);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        m_src = value;
         if (frame()) {
             LayoutSize sizBefore = frame()->asFrameReplaced()->asFrameReplacedImage()->intrinsicSize();
             frame()->asFrameReplaced()->asFrameReplacedImage()->replaceImageData(this, value);
@@ -23,8 +22,19 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
         } else {
             setNeedsFrameTreeBuild();
         }
+    } else if (name == document()->window()->starFish()->staticStrings()->m_width
+        || name == document()->window()->starFish()->staticStrings()->m_height) {
+        if (frame()) {
+            LayoutSize sizeBefore = frame()->asFrameReplaced()->asFrameReplacedImage()->intrinsicSize();
+            if ((sizeBefore.width() == width()) && (sizeBefore.height() == height())) {
+                setNeedsPainting();
+            } else {
+                setNeedsLayout();
+            }
+        } else {
+            setNeedsFrameTreeBuild();
+        }
     }
 }
-
 
 }
