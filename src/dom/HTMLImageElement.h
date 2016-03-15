@@ -25,7 +25,6 @@ public:
     void setSrc(String* src)
     {
         setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
-        didAttributeChanged(document()->window()->starFish()->staticStrings()->m_src, String::emptyString, src);
     }
 
     String* src()
@@ -46,7 +45,6 @@ public:
     void setWidth(int width)
     {
         setAttribute(document()->window()->starFish()->staticStrings()->m_width, String::fromInt(width));
-        didAttributeChanged(document()->window()->starFish()->staticStrings()->m_width, String::emptyString, String::fromInt(width));
     }
 
     int height()
@@ -62,7 +60,6 @@ public:
     void setHeight(int height)
     {
         setAttribute(document()->window()->starFish()->staticStrings()->m_height, String::fromInt(height));
-        didAttributeChanged(document()->window()->starFish()->staticStrings()->m_height, String::emptyString, String::fromInt(height));
     }
 
     /* Other methods (not in DOM API) */
