@@ -35,7 +35,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     }
 
     m_matrix.reset();
-    m_matrix = m_owner->style()->transformsToMatrix();
+    m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height());
     m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || !m_matrix.isIdentity();
     return m_needsOwnBuffer;
 }

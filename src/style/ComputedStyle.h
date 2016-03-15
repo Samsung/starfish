@@ -176,7 +176,7 @@ public:
         return m_transforms;
     }
 
-    SkMatrix transformsToMatrix();
+    SkMatrix transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight);
     void setTransformIfNeeded()
     {
         if (m_transforms == NULL) {

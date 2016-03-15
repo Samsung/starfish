@@ -171,20 +171,23 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
-        SkMatrix a = newStyle->transformsToMatrix();
-        SkMatrix b = oldStyle->transformsToMatrix();
-        if (a.hasAffine() && b.hasAffine()) {
+        // TODO implement operator == of style matrix data
+        SkMatrix a = newStyle->transformsToMatrix(100, 100);
+        SkMatrix b = oldStyle->transformsToMatrix(100, 100);
+        if (a != b) {
             damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageComposite | damage);
-        } else {
-            damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
     }
 
     return damage;
 }
 
+inline double deg2rad(float degree)
+{
+    return degree * 3.14159265358979323846 / 180;
+}
 
-SkMatrix ComputedStyle::transformsToMatrix()
+SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight)
 {
     SkMatrix matrix;
     matrix.reset();
@@ -212,11 +215,10 @@ SkMatrix ComputedStyle::transformsToMatrix()
             matrix.preRotate(m->angle());
         } else if (t.type() == StyleTransformData::Skew) {
             SkewTransform* m = t.skew();
-            matrix.preSkew(m->angleX(), m->angleY());
+            matrix.preSkew(tan(deg2rad(m->angleX())), tan(deg2rad(m->angleY())));
         } else if (t.type() == StyleTransformData::Translate) {
             TranslateTransform* m = t.translate();
-            // TODO: consider percent value
-            matrix.preTranslate(m->tx().fixed(), m->ty().fixed());
+            matrix.preTranslate(m->tx().specifiedValue(containerWidth), m->ty().specifiedValue(containerHeight));
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
