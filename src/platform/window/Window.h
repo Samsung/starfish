@@ -98,6 +98,8 @@ public:
     void loadXMLDocument(String* filePath);
     uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
     void clearTimeout(uint32_t id);
+    uint32_t setInterval(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
+    void clearInterval(uint32_t id);
 
     uint32_t requestAnimationFrame(WindowSetTimeoutHandler handler, void* data);
     void cancelAnimationFrame(uint32_t reqID);

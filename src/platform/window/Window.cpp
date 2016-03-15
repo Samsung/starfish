@@ -619,6 +619,38 @@ void Window::clearTimeout(uint32_t id)
         handlerData->second.second = nullptr;
 }
 
+uint32_t Window::setInterval(WindowSetTimeoutHandler handler, uint32_t delay, void* data)
+{
+    TimeoutData* td = new TimeoutData;
+    td->m_window = this;
+    uint32_t id = m_timeoutCounter++;
+    td->m_id = id;
+    m_timeoutHandler.insert(std::make_pair(id, std::make_pair(handler, data)));
+
+    // FIXME
+    // instance of window is not rooted.
+    // because timeoutdata is stored in memory area in ecore.
+    // this implemention is very unsafe
+    ecore_timer_add(delay / 1000.0, [](void* data) -> Eina_Bool {
+        TimeoutData* td = (TimeoutData*)data;
+        auto a = td->m_window->m_timeoutHandler.find(td->m_id);
+
+        if (a->second.second != nullptr)
+            a->second.first(td->m_window, a->second.second);
+        return ECORE_CALLBACK_RENEW;
+    }, td);
+
+    return id;
+}
+
+void Window::clearInterval(uint32_t id)
+{
+    // TODO : Use ecore_timer_del(Ecore_Timer *timer)
+    auto handlerData = m_timeoutHandler.find(id);
+    if (handlerData != m_timeoutHandler.end())
+        handlerData->second.second = nullptr;
+}
+
 uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* data)
 {
     TimeoutData* td = new TimeoutData;

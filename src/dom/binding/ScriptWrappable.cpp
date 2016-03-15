@@ -31,7 +31,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     scriptObject()->setExtraPointerData(window);
 
     // [setTimeout]
-    // https://www.w3.org/TR/html5/webappapis.html
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-settimeout
     // long setTimeout(Function handler, optional long timeout, any... arguments);
 
     // TODO : Pass "any... arguments" if exist
@@ -64,7 +64,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setTimeout"), false, false, false, setTimeoutFunction);
 
     // [clearTimeout]
-    // https://www.w3.org/TR/html5/webappapis.html
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-cleartimeout
     escargot::ESFunctionObject* clearTimeoutFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
@@ -73,10 +73,50 @@ void ScriptWrappable::initScriptWrappable(Window* window)
                 wnd->clearTimeout(instance->currentExecutionContext()->readArgument(0).toUint32());
             }
         }
-        // FIXME what return value should return?
-        return escargot::ESValue(1000);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("clearTimeout"), 0, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), false, false, false, clearTimeoutFunction);
+
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-setinterval
+    escargot::ESFunctionObject* setIntervalFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            if (instance->currentExecutionContext()->readArgument(0).isESPointer()
+                && instance->currentExecutionContext()->readArgument(0).asESPointer()
+                && instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
+                if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
+                    Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+                    return escargot::ESValue(wnd->setInterval([](Window* wnd, void* data) {
+                        escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+                        std::jmp_buf tryPosition;
+                        if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
+                            escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
+                            escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+                        } else {
+                            escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
+                            printf("Uncaught %s\n", err.toString()->utf8Data());
+                        }
+                    }, instance->currentExecutionContext()->readArgument(1).toUint32(),
+                    instance->currentExecutionContext()->readArgument(0).asESPointer()));
+                }
+            }
+        }
+        return escargot::ESValue();
+    }, escargot::ESString::create("setInterval"), 1, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setInterval"), false, false, false, setIntervalFunction);
+
+    // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-clearinterval
+    escargot::ESFunctionObject* clearIntervalFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            if (instance->currentExecutionContext()->readArgument(0).isNumber()) {
+                Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+                wnd->clearInterval(instance->currentExecutionContext()->readArgument(0).toUint32());
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("clearInterval"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearInterval"), false, false, false, clearIntervalFunction);
 
     // TODO : Pass "any... arguments" if exist
     // TODO : First argument can be function or script source (currently allow function only)
