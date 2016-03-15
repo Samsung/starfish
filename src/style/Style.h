@@ -169,6 +169,23 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    String* toString()
+    {
+        std::stringstream ss(std::stringstream::in | std::stringstream::out);
+        ss << m_value;
+        std::string stdStr = ss.str();
+        if (m_kind == DEG)
+            return String::fromUTF8(stdStr.append("deg").c_str());
+        else if (m_kind == RAD)
+            return String::fromUTF8(stdStr.append("rad").c_str());
+        else if (m_kind == GRAD)
+            return String::fromUTF8(stdStr.append("grad").c_str());
+        else if (m_kind == TURN)
+            return String::fromUTF8(stdStr.append("turn").c_str());
+
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
 protected:
     Kind m_kind;
     float m_value;
@@ -397,6 +414,35 @@ public:
         return m_values;
     }
 
+    String* functionName()
+    {
+        switch (m_kind) {
+        case Matrix:
+            return String::fromUTF8("matrix");
+        case Translate:
+            return String::fromUTF8("translate");
+        case TranslateX:
+            return String::fromUTF8("translateX");
+        case TranslateY:
+            return String::fromUTF8("translateY");
+        case Scale:
+            return String::fromUTF8("scale");
+        case ScaleX:
+            return String::fromUTF8("scaleX");
+        case ScaleY:
+            return String::fromUTF8("scaleY");
+        case Rotate:
+            return String::fromUTF8("rotate");
+        case Skew:
+            return String::fromUTF8("skew");
+        case SkewX:
+            return String::fromUTF8("skewX");
+        case SkewY:
+            return String::fromUTF8("skewY");
+        }
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
 protected:
     Kind m_kind;
     ValueList* m_values;
@@ -417,12 +463,17 @@ public:
         m_transforms.push_back(f);
     }
 
+    void clear()
+    {
+        m_transforms.clear();
+    }
+
     CSSTransformFunction at(int i)
     {
         return m_transforms[i];
     }
 
-    int size()
+    unsigned size()
     {
         return m_transforms.size();
     }
@@ -875,6 +926,8 @@ public:
             return percentageToString(data.m_floatValue);
         else if (kind == CSSStyleValuePair::ValueKind::Number)
             return numberToString(data.m_floatValue);
+        else if (kind == CSSStyleValuePair::ValueKind::Angle)
+            return data.m_angle.toString();
         else if (kind == CSSStyleValuePair::ValueKind::StringValueKind)
             return data.m_stringValue;
         else

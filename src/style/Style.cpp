@@ -872,90 +872,102 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
         CSSTransformFunction::Kind fkind;
-        String* str = String::emptyString;
         if (m_value.m_transforms == NULL)
             m_value.m_transforms = new CSSTransformFunctions();
-        for (unsigned i = 0; i < tokens->size(); i++) {
-            str = str->concat(tokens->at(i)->toLower());
-            if (endsWith(tokens->at(i)->utf8Data(), ")")) {
-                CSSPropertyParser* parser = new CSSPropertyParser((char*)str->utf8Data());
-                parser->consumeString() && parser->consumeIfNext('(');
-                String* name = parser->parsedString();
-                enum {
-                    Number, // <number>
-                    Angle, // <angle>
-                    TranslationValue // <translation-value>: percentage or length
-                } unit = Number;
-                int expectedArgCnt = 1;
-                if (name->equals("matrix")) {
-                    fkind = CSSTransformFunction::Kind::Matrix;
-                    expectedArgCnt = 6;
-                } else if (name->equals("translate")) {
-                    fkind = CSSTransformFunction::Kind::Translate;
-                    expectedArgCnt = 2;
-                    unit = TranslationValue;
-                } else if (name->equals("translatex")) {
-                    fkind = CSSTransformFunction::Kind::TranslateX;
-                    unit = TranslationValue;
-                } else if (name->equals("translatey")) {
-                    fkind = CSSTransformFunction::Kind::TranslateY;
-                    unit = TranslationValue;
-                } else if (name->equals("scale")) {
-                    expectedArgCnt = 2;
-                    fkind = CSSTransformFunction::Kind::Scale;
-                } else if (name->equals("scalex")) {
-                    fkind = CSSTransformFunction::Kind::ScaleX;
-                } else if (name->equals("scaley")) {
-                    fkind = CSSTransformFunction::Kind::ScaleY;
-                } else if (name->equals("rotate")) {
-                    fkind = CSSTransformFunction::Kind::Rotate;
-                    unit = Angle;
-                } else if (name->equals("skew")) {
-                    fkind = CSSTransformFunction::Kind::Skew;
-                    expectedArgCnt = 2;
-                    unit = Angle;
-                } else if (name->equals("skewx")) {
-                    fkind = CSSTransformFunction::Kind::SkewX;
-                    unit = Angle;
-                } else if (name->equals("skewy")) {
-                    fkind = CSSTransformFunction::Kind::SkewY;
-                    unit = Angle;
-                }
+        else
+            m_value.m_transforms->clear();
 
-                ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
-                for (int i = 0; i < expectedArgCnt; i++) {
-                    parser->consumeWhitespaces();
-                    if (unit == Number) {
-                        parser->consumeNumber();
-                        float num = parser->parsedNumber();
-                        values->append(CSSStyleValuePair::ValueKind::Number, {.m_floatValue = num});
-                    } else if (unit == Angle) {
-                        parser->consumeNumber();
-                        parser->consumeString();
-                        ValueData data = {.m_angle = CSSAngle(parser->parsedString(), parser->parsedNumber())};
-                        values->append(CSSStyleValuePair::ValueKind::Angle, data);
-                    } else { // TranslationValue
-                        parser->consumeNumber();
-                        float num = parser->parsedNumber();
-                        if (parser->consumeString()) {
-                            String* str = parser->parsedString();
-                            if (str->equals("%")) {
-                                ValueData data = {.m_floatValue = num};
-                                values->append(CSSStyleValuePair::ValueKind::Percentage, data);
-                            } else {
-                                ValueData data = {.m_length = CSSLength(num)};
-                                values->append(CSSStyleValuePair::ValueKind::Length, data);
-                            }
+        bool hasClosing = false;
+        for (unsigned i = 0; i< tokens->size(); i++) {
+            if (tokens->at(i)->indexOf(')') != SIZE_MAX) {
+                hasClosing = true;
+                break;
+            }
+        }
+        if (hasClosing) {
+            String* str = String::emptyString;
+            for (unsigned i = 0; i< tokens->size(); i++) {
+                str = str->concat(tokens->at(i)->toLower());
+            }
+            tokens->clear();
+            str->split(')', *tokens);
+        }
+        for (unsigned i = 0; i < tokens->size(); i++) {
+            CSSPropertyParser* parser = new CSSPropertyParser((char*)tokens->at(i)->utf8Data());
+            parser->consumeString() && parser->consumeIfNext('(');
+            String* name = parser->parsedString();
+            enum {
+                Number, // <number>
+                Angle, // <angle>
+                TranslationValue // <translation-value>: percentage or length
+            } unit = Number;
+            int expectedArgCnt = 1;
+            if (name->equals("matrix")) {
+                fkind = CSSTransformFunction::Kind::Matrix;
+                expectedArgCnt = 6;
+            } else if (name->equals("translate")) {
+                fkind = CSSTransformFunction::Kind::Translate;
+                expectedArgCnt = 2;
+                unit = TranslationValue;
+            } else if (name->equals("translatex")) {
+                fkind = CSSTransformFunction::Kind::TranslateX;
+                unit = TranslationValue;
+            } else if (name->equals("translatey")) {
+                fkind = CSSTransformFunction::Kind::TranslateY;
+                unit = TranslationValue;
+            } else if (name->equals("scale")) {
+                expectedArgCnt = 2;
+                fkind = CSSTransformFunction::Kind::Scale;
+            } else if (name->equals("scalex")) {
+                fkind = CSSTransformFunction::Kind::ScaleX;
+            } else if (name->equals("scaley")) {
+                fkind = CSSTransformFunction::Kind::ScaleY;
+            } else if (name->equals("rotate")) {
+                fkind = CSSTransformFunction::Kind::Rotate;
+                unit = Angle;
+            } else if (name->equals("skew")) {
+                fkind = CSSTransformFunction::Kind::Skew;
+                expectedArgCnt = 2;
+                unit = Angle;
+            } else if (name->equals("skewx")) {
+                fkind = CSSTransformFunction::Kind::SkewX;
+                unit = Angle;
+            } else if (name->equals("skewy")) {
+                fkind = CSSTransformFunction::Kind::SkewY;
+                unit = Angle;
+            }
+
+            ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
+            for (int i = 0; i < expectedArgCnt; i++) {
+                parser->consumeWhitespaces();
+                if (unit == Number) {
+                    parser->consumeNumber();
+                    float num = parser->parsedNumber();
+                    values->append(CSSStyleValuePair::ValueKind::Number, {.m_floatValue = num});
+                } else if (unit == Angle) {
+                    parser->consumeNumber();
+                    parser->consumeString();
+                    ValueData data = {.m_angle = CSSAngle(parser->parsedString(), parser->parsedNumber())};
+                    values->append(CSSStyleValuePair::ValueKind::Angle, data);
+                } else { // TranslationValue
+                    parser->consumeNumber();
+                    float num = parser->parsedNumber();
+                    if (parser->consumeString()) {
+                        String* str = parser->parsedString();
+                        if (str->equals("%")) {
+                            ValueData data = {.m_floatValue = num / 100.f};
+                            values->append(CSSStyleValuePair::ValueKind::Percentage, data);
+                        } else {
+                            ValueData data = {.m_length = CSSLength(num)};
+                            values->append(CSSStyleValuePair::ValueKind::Length, data);
                         }
                     }
-                    parser->consumeWhitespaces();
-                    if (!parser->consumeIfNext(','))
-                        break;
                 }
-                parser->consumeIfNext(')');
-                m_value.m_transforms->append(CSSTransformFunction(fkind, values));
-                str = String::emptyString;
+                parser->consumeWhitespaces();
+                if (!parser->consumeIfNext(','))
+                    break;
             }
+            m_value.m_transforms->append(CSSTransformFunction(fkind, values));
         }
     }
 }
@@ -2480,6 +2492,31 @@ String* CSSStyleValuePair::toString()
         default:
             return String::emptyString;
         }
+    case Transform: {
+        if (m_valueKind == TransformFunctions) {
+            CSSTransformFunctions* trans = transformValue();
+            String* result = String::emptyString;
+            for (unsigned i = 0; i < trans->size(); i++) {
+                CSSTransformFunction item = trans->at(i);
+                String* itemStr = item.functionName()->concat(String::fromUTF8("("));
+                ValueList* values = item.values();
+                for (unsigned int j = 0; j < values->size(); j++) {
+                    String* newstr = valueToString(values->getValueKindAtIndex(j),
+                        values->getValueAtIndex(j));
+                    itemStr = itemStr->concat(newstr);
+                    if (j != values->size() - 1)
+                        itemStr = itemStr->concat(String::fromUTF8(", "));
+                    else
+                        itemStr = itemStr->concat(String::fromUTF8(") "));
+                }
+                result = result->concat(itemStr);
+            }
+            return result;
+        } else {
+            // initial or inherit or none
+            return lengthOrPercentageOrKeywordToString();
+        }
+    }
     default: {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
@@ -3423,7 +3460,56 @@ bool CSSStyleDeclaration::checkInputErrorVerticalAlign(std::vector<String*, gc_a
 
 bool CSSStyleDeclaration::checkInputErrorTransform(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    // TODO: transform
+    const char* str0 = tokens->at(0)->utf8Data();
+    if (tokens->size() == 1) {
+        if (CSSPropertyParser::assureEssential(str0) || strcmp(str0, "none") == 0)
+            return true;
+    }
+    String* str = String::emptyString;
+    for (unsigned i = 0; i< tokens->size(); i++)
+        str = str->concat(tokens->at(i)->toLower());
+    tokens->clear();
+    str->split(')', *tokens);
+    for (unsigned i = 0; i < tokens->size(); i++) {
+        str0 = tokens->at(i)->utf8Data();
+        if (startsWith(str0, "matrix(")) {
+            // NOTE: strlen("matrix(") => 7
+            if (!CSSPropertyParser::assureNumberList(str0 + 7, true, 6, 6))
+                return false;
+        } else if (startsWith(str0, "translate(")) {
+            if (!CSSPropertyParser::assureLengthOrPercentList(str0 + 11, true, 1, 2))
+                return false;
+        } else if (startsWith(str0, "translateX(")) {
+            if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
+                return false;
+        } else if (startsWith(str0, "translateY(")) {
+            if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
+                return false;
+        } else if (startsWith(str0, "scale(")) {
+            if (!CSSPropertyParser::assureNumberList(str0 + 6, true, 1, 2))
+                return false;
+        } else if (startsWith(str0, "scalex(")) {
+            if (!CSSPropertyParser::assureNumber(str0 + 7, true))
+                return false;
+        } else if (startsWith(str0, "scaley(")) {
+            if (!CSSPropertyParser::assureNumber(str0 + 7, true))
+                return false;
+        } else if (startsWith(str0, "rotate(")) {
+            if (!CSSPropertyParser::assureAngle(str0 + 7))
+                return false;
+        } else if (startsWith(str0, "skew(")) {
+            if (!CSSPropertyParser::assureAngleList(str0 + 5, 1, 2))
+                return false;
+        } else if (startsWith(str0, "skewx(")) {
+            if (!CSSPropertyParser::assureAngle(str0 + 6))
+                return false;
+        } else if (startsWith(str0, "skewy(")) {
+            if (!CSSPropertyParser::assureAngle(str0 + 6))
+                return false;
+        } else {
+            return false;
+        }
+    }
     return true;
 }
 
@@ -4279,7 +4365,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else {
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::TransformFunctions);
                     CSSTransformFunctions* funcs = cssValues[k].transformValue();
-                    for (int c = 0; c < funcs->size(); c++) {
+                    for (unsigned c = 0; c < funcs->size(); c++) {
                         CSSTransformFunction f = funcs->at(c);
                         int valueSize = f.values()->size();
                         float dValues[valueSize];

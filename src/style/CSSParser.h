@@ -201,6 +201,70 @@ public:
         return false;
     }
 
+    static bool assureLengthOrPercent(const char* token, bool allowNegative)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
+        float num = parser->parsedNumber();
+        if (!allowNegative && num < 0)
+            return false;
+        if (parser->consumeString()) {
+            String* str = parser->parsedString();
+            if ((str->length() == 0 && num == 0)
+                || str->equals("px")
+                || str->equals("em")
+                || str->equals("ex")
+                || str->equals("in")
+                || str->equals("cm")
+                || str->equals("mm")
+                || str->equals("pt")
+                || str->equals("pc")
+                || str->equals("%"))
+                return parser->isEnd();
+            return false;
+        } else {
+            // After a zero length, the unit identifier is optional
+            if (num == 0)
+                return true;
+            return false;
+        }
+        return true;
+    }
+
+    static bool assureLengthOrPercentList(const char* token, bool allowNegative, int minSize, int maxSize)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        int cnt = 0;
+        do {
+            if (!parser->consumeNumber())
+                return false;
+            float num = parser->parsedNumber();
+            if (!allowNegative && num < 0)
+                return false;
+            if (parser->consumeString()) {
+                String* str = parser->parsedString();
+                if (!((str->length() == 0 && num == 0)
+                    || str->equals("px")
+                    || str->equals("em")
+                    || str->equals("ex")
+                    || str->equals("in")
+                    || str->equals("cm")
+                    || str->equals("mm")
+                    || str->equals("pt")
+                    || str->equals("pc")
+                    || str->equals("%")))
+                    return false;
+            } else {
+                // After a zero length, the unit identifier is optional
+                if (num != 0)
+                    return false;
+            }
+            cnt++;
+        } while (parser->consumeIfNext(','));
+        return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
+    }
+
     static bool assureLength(const char* token, bool allowNegative)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -229,6 +293,60 @@ public:
             return false;
         }
         return true;
+    }
+
+    static bool assureAngle(const char* token)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
+        float num = parser->parsedNumber();
+        if (parser->consumeString()) {
+            String* str = parser->parsedString();
+            if ((str->length() == 0 && num == 0)
+                || str->equals("deg")
+                || str->equals("grad")
+                || str->equals("rad")
+                || str->equals("turn"))
+                return parser->isEnd();
+            return false;
+        } else {
+            // After a zero length, the unit identifier is optional
+            if (num == 0)
+                return true;
+            return false;
+        }
+        return true;
+    }
+
+    // comma-seperated list
+    static bool assureAngleList(const char* token, int minSize, int maxSize)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        int cnt = 0;
+        do {
+            if (!parser->consumeNumber())
+                return false;
+            float num = parser->parsedNumber();
+            if (parser->consumeString()) {
+                String* str = parser->parsedString();
+                if ((str->length() == 0 && num == 0)
+                    || str->equals("deg")
+                    || str->equals("grad")
+                    || str->equals("rad")
+                    || str->equals("turn"))
+                    cnt++;
+                else
+                    return false;
+            } else {
+                // After a zero length, the unit identifier is optional
+                if (num == 0)
+                    cnt++;
+                else
+                    return false;
+            }
+        } while (parser->consumeIfNext(','));
+        return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
     }
 
     static bool assurePercent(const char* token, bool allowNegative)
@@ -262,6 +380,20 @@ public:
         if (!allowNegative && num < 0)
             return false;
         return parser->isEnd();
+    }
+
+    static bool assureNumberList(const char* token, bool allowNegative, int minSize, int maxSize) // comma-seperated list
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        int cnt = 0;
+        do {
+            if (!parser->consumeNumber())
+                return false;
+            if (!allowNegative && parser->parsedNumber() < 0)
+                return false;
+            cnt++;
+        } while (parser->consumeIfNext(','));
+        return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
     }
 
     static bool assureInteger(const char* token, bool allowNegative)
@@ -304,8 +436,8 @@ public:
 
     static bool assureEssential(const char* token)
     {
-        // initial || inherit || none || empty string
-        if (strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0)
+        // initial || inherit || empty string
+        if (strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0 || strcmp(token, ""))
             return true;
         return false;
     }
