@@ -157,6 +157,8 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
 
     LayoutRect visibleRect = m_owner->visibleRect();
+    ComputedStyle* ownerStyle = m_owner->style();
+    canvas->save();
 
     if (m_needsOwnBuffer) {
         LayoutUnit minX = visibleRect.x();
@@ -172,8 +174,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         size_t bufferWidth = (int)(maxX - minX);
         size_t bufferHeight = (int)(maxY - minY);
 
-        canvas->save();
-        ComputedStyle* ownerStyle = m_owner->style();
         if (ownerStyle->opacity() != 1) {
             canvas->beginOpacityLayer(ownerStyle->opacity());
         }
@@ -195,13 +195,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             // canvas->setColor(Color(255, 0, 0, 128));
             // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
         }
-
-
-
-        if (ownerStyle->opacity() != 1) {
-            canvas->endOpacityLayer();
-        }
-        canvas->restore();
     }
 
     // Within each stacking context, the following layers are painted in back-to-front order:
@@ -251,6 +244,13 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             iter++;
         }
     }
+
+    if (m_needsOwnBuffer) {
+        if (ownerStyle->opacity() != 1) {
+            canvas->endOpacityLayer();
+        }
+    }
+    canvas->restore();
 }
 
 Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
