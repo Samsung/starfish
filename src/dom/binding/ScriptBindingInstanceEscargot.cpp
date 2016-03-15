@@ -1304,7 +1304,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLImageElement()->width());
+                    int width = nd->asElement()->asHTMLElement()->asHTMLImageElement()->width();
+                    if (width >= 0) {
+                        return escargot::ESValue(width);
+                    } else {
+                        return escargot::ESValue(escargot::ESValue::ESNull);
+                    }
                 }
             }
         }
@@ -1340,7 +1345,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLImageElement()->height());
+                    int height = nd->asElement()->asHTMLElement()->asHTMLImageElement()->height();
+                    if (height >= 0) {
+                        return escargot::ESValue(height);
+                    } else {
+                        return escargot::ESValue(escargot::ESValue::ESNull);
+                    }
                 }
             }
         }

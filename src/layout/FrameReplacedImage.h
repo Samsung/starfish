@@ -36,7 +36,7 @@ public:
     {
         if (m_imageData) {
             STARFISH_ASSERT(node()->asElement()->asHTMLElement()->isHTMLImageElement());
-            HTMLImageElement* imgNode = static_cast<HTMLImageElement*>(node()->asElement()->asHTMLElement());
+            HTMLImageElement* imgNode = node()->asElement()->asHTMLElement()->asHTMLImageElement();
             int width = imgNode->width() >= 0? imgNode->width(): m_imageData->width();
             int height = imgNode->height() >= 0? imgNode->height(): m_imageData->height();
             return LayoutSize(width, height);
