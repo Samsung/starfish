@@ -5,9 +5,8 @@
 body {
 	width: 360px;
 	height: 360px;
-    font-size: 2.125rem;
+    font-size: 2.125em;
     text-align: center;
-    font-family: Tizen,Samsung Sans,Helvetica;
     color: white;
 	background-color: black;
 }

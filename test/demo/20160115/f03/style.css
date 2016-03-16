@@ -6,8 +6,7 @@ body {
 	left:0px;
 	width:360px;
 	height:360px;
-    font-size: 2.125rem;
-    font-family: Tizen,Samsung Sans,Helvetica;
+    font-size: 2.125em;
     color: white;
 	background-color: white;
 	//border: 2px solid red;
@@ -16,7 +15,7 @@ body {
 	background-color: black;
 	width:360px;
 	height:360px;
-	-webkit-clip-path: circle(180px at 180px 180px);
+//	-webkit-clip-path: circle(180px at 180px 180px);
 }
 head {
 	display: none;
