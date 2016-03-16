@@ -10,7 +10,6 @@ Evas* internalCanvas();
 class ImageDataEFL : public ImageData {
 public:
     ImageDataEFL(String* imageSrc)
-        : m_isBufferImage(false)
     {
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_file_set(m_image, imageSrc->utf8Data(), NULL);
@@ -21,25 +20,10 @@ public:
         m_height = h;
     }
 
-    ImageDataEFL(size_t w, size_t h)
-        : m_isBufferImage(true)
-    {
-        m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_size_set(m_image, w, h);
-        evas_object_image_filled_set(m_image, EINA_TRUE);
-        evas_object_image_colorspace_set(m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
-        evas_object_image_alpha_set(m_image, EINA_TRUE);
-        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
-        m_width = w;
-        m_height = h;
-
-        STARFISH_LOG_INFO("create ImageData %p\n", m_image);
-    }
-
     ~ImageDataEFL()
     {
-        STARFISH_LOG_INFO("release ImageData %p\n", m_image);
-        evas_object_unref(m_image);
+        evas_object_hide(m_image);
+        evas_object_del(m_image);
     }
 
     virtual void* unwrap()
@@ -65,16 +49,10 @@ public:
         evas_object_image_data_set(m_image, address);
     }
 
-    virtual bool isBufferImage()
-    {
-        return m_isBufferImage;
-    }
-
 protected:
     Evas_Object* m_image;
     size_t m_width;
     size_t m_height;
-    bool m_isBufferImage;
 };
 
 class ImageDataNetwork : public ImageData {
@@ -126,11 +104,6 @@ protected:
 ImageData* ImageData::create(String* imageSrc)
 {
     return new ImageDataEFL(imageSrc);
-}
-
-ImageData* ImageData::create(size_t w, size_t h)
-{
-    return new ImageDataEFL(w, h);
 }
 
 ImageData* ImageData::create(uint32_t size, void* data)

@@ -68,7 +68,10 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     if (m_needsOwnBuffer) {
         // TODO treat when buffer is too large
         if (!m_buffer || ((m_buffer->width() != bufferWidth) && (m_buffer->height() != bufferHeight))) {
-            m_buffer = ImageData::create(bufferWidth, bufferHeight);
+            if (!m_buffer) {
+                delete m_buffer;
+            }
+            m_buffer = CanvasSurface::create(m_owner->node()->document()->window(), bufferWidth, bufferHeight);
         }
 
         m_buffer->clear();

@@ -6,6 +6,7 @@ class Node;
 class FrameBox;
 class StackingContext;
 class Canvas;
+class CanvasSurface;
 class Frame;
 
 class StackingContextChild : public std::vector<StackingContext*, gc_allocator<StackingContext*> > , public gc {
@@ -45,7 +46,7 @@ protected:
     bool m_needsOwnBuffer;
     FrameBox* m_owner;
     StackingContext* m_parent;
-    ImageData* m_buffer;
+    CanvasSurface* m_buffer;
 
     SkMatrix m_matrix;
 

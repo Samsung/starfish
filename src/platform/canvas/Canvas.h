@@ -5,6 +5,24 @@ namespace StarFish {
 
 class ImageData;
 class Font;
+class Window;
+class CanvasSurface : public gc_cleanup {
+protected:
+    CanvasSurface()
+    {
+
+    }
+public:
+    static CanvasSurface* create(Window* window, size_t w, size_t h);
+    virtual void* unwrap() = 0;
+    virtual size_t width() = 0;
+    virtual size_t height() = 0;
+    virtual void clear() = 0;
+    virtual ~CanvasSurface()
+    {
+
+    }
+};
 
 class Canvas : public gc {
 protected:
@@ -14,7 +32,7 @@ protected:
     }
 public:
     static Canvas* createDirect(void* data);
-    static Canvas* create(ImageData* data);
+    static Canvas* create(CanvasSurface* data);
 
     virtual ~Canvas()
     {
@@ -51,6 +69,7 @@ public:
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2, LayoutLocation p3, LayoutLocation p4) = 0; // left, top, right, bottom
     virtual void drawText(LayoutUnit x, LayoutUnit y, String* text) = 0;
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
+    virtual void drawImage(CanvasSurface* data, const Rect& dst) = 0;
     virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b) = 0;
 
 

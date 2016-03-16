@@ -12,8 +12,9 @@
 #include <vector>
 #include <SkMatrix.h>
 
-Evas* g_internalCanvas;
+__thread Evas* g_internalCanvas;
 namespace StarFish {
+
 
 /*
 static void initInternalCanvas()
@@ -181,6 +182,7 @@ public:
             int w;
             int h;
             std::vector<Evas_Object*>* objList;
+            std::vector<Evas_Object*>* surfaceList;
         };
         dummy* d = (dummy*)data;
         m_canvas = (Evas*)d->a;
@@ -197,12 +199,14 @@ public:
         m_width = d->w;
         m_height = d->h;
         m_objList = d->objList;
+        m_surfaceList = d->surfaceList;
         save();
     }
 
-    CanvasEFL(ImageData* data)
+    CanvasEFL(CanvasSurface* data)
     {
         m_objList = NULL;
+        m_surfaceList = NULL;
         m_directDraw = false;
         m_image = (Evas_Object*)data->unwrap();
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
@@ -827,12 +831,11 @@ public:
             hh = dst.height();
         }
         Evas_Object* eo = nullptr;
-        if (!data->isBufferImage())
-            eo = findPrevDrawnData(data);
+        eo = findPrevDrawnData(data);
 
         if (!eo) {
             eo = evas_object_image_add(m_canvas);
-            if (!m_prevDrawnImageMap || data->isBufferImage()) {
+            if (!m_prevDrawnImageMap) {
                 if (m_objList)
                     m_objList->push_back(eo);
             }
@@ -846,11 +849,9 @@ public:
             evas_object_image_data_set(eo, imgBuf);
             evas_object_image_filled_set(eo, EINA_TRUE);
             evas_object_image_alpha_set(eo, EINA_TRUE);
-            if (data->isBufferImage())
-                evas_object_anti_alias_set(eo, EINA_TRUE);
+            // evas_object_anti_alias_set(eo, EINA_TRUE);
 
-            if (!data->isBufferImage())
-                pushPrevDrawnData(data, eo);
+            pushPrevDrawnData(data, eo);
         }
 
         evas_object_image_border_set(eo, l, r, t, b);
@@ -870,6 +871,47 @@ public:
     virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b)
     {
         drawImageInner(data, dst, l, t, r, b);
+    }
+
+    void drawImage(CanvasSurface* data, const Rect& dst)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(
+                SkFloatToScalar((float)dst.x()),
+                SkFloatToScalar((float)dst.y()),
+                SkFloatToScalar((float)dst.width()),
+                SkFloatToScalar((float)dst.height()));
+            if (!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            xx = dst.x();
+            yy = dst.y();
+            if (!shouldApplyEvasMap()) {
+                xx = lastState().m_baseX + dst.x();
+                yy = lastState().m_baseY + dst.y();
+            }
+            ww = dst.width();
+            hh = dst.height();
+        }
+        Evas_Object* eo = (Evas_Object*)data->unwrap();
+
+        evas_object_move(eo, xx, yy);
+        evas_object_resize(eo, ww, hh);
+        evas_object_raise(eo);
+
+        applyClippers(eo);
+        applyEvasMapIfNeeded(eo, dst, true);
+        STARFISH_ASSERT(evas_object_visible_get(eo) == EINA_FALSE);
+        evas_object_show(eo);
+        m_surfaceList->push_back(eo);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)
@@ -1025,6 +1067,7 @@ protected:
     unsigned m_width;
     unsigned m_height;
     std::vector<Evas_Object*>* m_objList;
+    std::vector<Evas_Object*>* m_surfaceList;
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > >* m_prevDrawnImageMap;
 };
 
@@ -1033,7 +1076,7 @@ Canvas* Canvas::createDirect(void* data)
     return new CanvasEFL(data);
 }
 
-Canvas* Canvas::create(ImageData* data)
+Canvas* Canvas::create(CanvasSurface* data)
 {
     return new CanvasEFL(data);
 }

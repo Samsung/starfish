@@ -21,7 +21,6 @@ public:
     {
 
     }
-    virtual bool isBufferImage() = 0;
 };
 
 }

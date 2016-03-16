@@ -20,9 +20,11 @@
 #include <tizen.h>
 #endif
 
-extern Evas* g_internalCanvas;
+extern __thread Evas* g_internalCanvas;
 
 namespace StarFish {
+
+Evas* internalCanvas();
 
 namespace {
     class __GET_TICK_COUNT {
@@ -65,9 +67,76 @@ public:
     Evas_Object* m_background;
     Evas_Object* m_canvasAdpater;
     std::vector<Evas_Object*> m_objectList;
+    std::vector<Evas_Object*> m_surfaceList;
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > > m_drawnImageList;
     Evas_Object* m_dummyBox;
 };
+
+class CanvasSurfaceEFL : public CanvasSurface {
+public:
+    CanvasSurfaceEFL(Window* wnd, size_t w, size_t h)
+    {
+        m_window = (WindowImplEFL*)wnd;
+        STARFISH_ASSERT(evas_object_evas_get(m_window->m_window) == internalCanvas());
+        m_image = evas_object_image_add(internalCanvas());
+        evas_object_image_size_set(m_image, w, h);
+        evas_object_image_filled_set(m_image, EINA_TRUE);
+        evas_object_image_colorspace_set(m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
+        evas_object_image_alpha_set(m_image, EINA_TRUE);
+        evas_object_anti_alias_set(m_image, EINA_TRUE);
+        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
+        m_width = w;
+        m_height = h;
+        STARFISH_LOG_INFO("create CanvasSurfaceEFL %p\n", m_image);
+
+        STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
+    }
+
+    ~CanvasSurfaceEFL()
+    {
+        STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", m_image);
+        evas_object_hide(m_image);
+        evas_object_del(m_image);
+
+        auto iter = std::find(m_window->m_surfaceList.begin(), m_window->m_surfaceList.end(), m_image);
+        if (m_window->m_surfaceList.end() != iter)
+            m_window->m_surfaceList.erase(iter);
+    }
+
+    virtual void* unwrap()
+    {
+        return m_image;
+    }
+
+    virtual size_t width()
+    {
+        return m_width;
+    }
+
+    virtual size_t height()
+    {
+        return m_height;
+    }
+
+    virtual void clear()
+    {
+        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
+        size_t end = m_width * m_height * sizeof(uint32_t);
+        memset(address, 0, end);
+        evas_object_image_data_set(m_image, address);
+    }
+
+protected:
+    WindowImplEFL* m_window;
+    Evas_Object* m_image;
+    size_t m_width;
+    size_t m_height;
+};
+
+CanvasSurface* CanvasSurface::create(Window* wnd, size_t w, size_t h)
+{
+    return new CanvasSurfaceEFL(wnd, w, h);
+}
 
 void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
 {
@@ -376,6 +445,7 @@ Canvas* preparePainting(WindowImplEFL* eflWindow)
         int w;
         int h;
         std::vector<Evas_Object*>* objList;
+        std::vector<Evas_Object*>* surfaceList;
     };
     dummy* d = new dummy;
     d->a = evas;
@@ -383,6 +453,7 @@ Canvas* preparePainting(WindowImplEFL* eflWindow)
     d->w = width;
     d->h = height;
     d->objList = &eflWindow->m_objectList;
+    d->surfaceList = &eflWindow->m_surfaceList;
     auto iter = eflWindow->m_objectList.begin();
     while (iter != eflWindow->m_objectList.end()) {
         evas_object_del(*iter);
@@ -390,6 +461,14 @@ Canvas* preparePainting(WindowImplEFL* eflWindow)
     }
     eflWindow->m_objectList.clear();
     eflWindow->m_objectList.shrink_to_fit();
+
+    iter = eflWindow->m_surfaceList.begin();
+    while (iter != eflWindow->m_surfaceList.end()) {
+        evas_object_hide(*iter);
+        iter++;
+    }
+    eflWindow->m_surfaceList.clear();
+    eflWindow->m_surfaceList.shrink_to_fit();
 
     Canvas* canvas = Canvas::createDirect(d);
     delete d;
