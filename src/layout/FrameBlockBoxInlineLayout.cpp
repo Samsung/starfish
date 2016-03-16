@@ -5,7 +5,7 @@
 
 namespace StarFish {
 
-void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, LayoutUnit& minimumHeight, LineFormattingContext& ctx)
+LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, LineFormattingContext& ctx)
 {
     // TODO vertical align(length, text-top.., etc)
     bool hasSpecialCase = false;
@@ -26,26 +26,11 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
         boxes = &parentBox->asInlineBox()->asInlineNonReplacedBox()->boxes();
     }
 
-    bool otherThanInlineBlock = false;
-    for (size_t k = 0; k < boxes->size(); k ++) {
-        Frame* f = boxes->at(k);
-        if (f->isNormalFlow()) {
-            minimumHeight = std::max(minimumHeight, f->asFrameBox()->height() + f->asFrameBox()->marginHeight());
-            if (f->style()->display() != InlineBlockDisplayValue) {
-                otherThanInlineBlock = true;
-            }
-
-        }
-    }
-
-    if (otherThanInlineBlock) {
-        minimumHeight = std::max(minimumHeight, parentStyle->font()->metrics().m_fontHeight);
-        maxAscender = parentStyle->font()->metrics().m_ascender;
-        maxDescender = parentStyle->font()->metrics().m_descender;
-    }
-
+    bool hasNormalFlowContent = false;
     for (size_t k = 0; k < boxes->size(); k ++) {
         FrameBox* f = boxes->at(k);
+        if (f->isNormalFlow())
+            hasNormalFlowContent = true;
 
         if (f->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
@@ -55,7 +40,6 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
                 maxDescender = std::min(ib->asInlineTextBox()->style()->font()->metrics().m_descender, maxDescender);
                 continue;
             }
-
             hasBoxOtherThanText = true;
             VerticalAlignValue va = ib->style()->verticalAlign();
             if (va == VerticalAlignValue::BaselineVAlignValue) {
@@ -102,6 +86,11 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
             STARFISH_ASSERT(!f->isNormalFlow());
             f->asFrameBox()->setY(f->asFrameBox()->marginTop());
         }
+    }
+
+    if (hasNormalFlowContent) {
+        maxAscender = std::max(parentStyle->font()->metrics().m_ascender, maxAscender);
+        maxDescender = std::min(parentStyle->font()->metrics().m_descender, maxDescender);
     }
 
     if (hasSpecialCase) {
@@ -216,6 +205,8 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
             STARFISH_ASSERT(!f->isNormalFlow());
         }
     }
+
+    return ascenderInOut - descenderInOut;
 }
 
 FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
@@ -284,13 +275,12 @@ void LineFormattingContext::breakLine(bool dueToBr)
 
     LayoutUnit ascender;
     LayoutUnit descender;
-    LayoutUnit minimumHeight;
     LineBox* back = m_block.m_lineBoxes.back();
-    computeVerticalProperties(back, m_block.style(), ascender, descender, minimumHeight, *this);
+    computeVerticalProperties(back, m_block.style(), ascender, descender, *this);
     back->m_ascender = ascender;
     back->m_descender = descender;
-    completeLastLine();
     back->setHeight(back->ascender() - back->decender());
+    completeLastLine();
 
     m_block.m_lineBoxes.push_back(new LineBox(&m_block));
     m_block.m_lineBoxes.back()->setWidth(m_lineBoxWidth);
@@ -420,7 +410,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
             LayoutUnit ascender = 0;
             if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox()) && r->style()->overflow() == OverflowValue::VisibleOverflow) {
-                LayoutUnit topToLineBox = ctx.lastLineBox()->absolutePoint(r).y();
+                LayoutUnit topToLineBox = ctx.lastLineBox()->absolutePointWithoutRelativePosition(r).y();
                 ascender = topToLineBox + ctx.lastLineBox()->ascender();
             } else {
                 ascender = f->asFrameBox()->height();
@@ -472,13 +462,10 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
     LayoutUnit ascender;
     LayoutUnit descender;
     LayoutUnit minimumHeight;
-    computeVerticalProperties(back, style(), ascender, descender, minimumHeight, lineFormattingContext);
+    LayoutUnit h = computeVerticalProperties(back, style(), ascender, descender, lineFormattingContext);
     back->m_ascender = ascender;
     back->m_descender = descender;
-    if (style()->hasNormalLineHeight())
-        back->m_frameRect.setHeight(minimumHeight);
-    else
-        back->m_frameRect.setHeight(ascender - descender);
+    back->m_frameRect.setHeight(h);
 
     lineFormattingContext.completeLastLine();
 
@@ -705,9 +692,8 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
             LayoutUnit ascender = std::max(selfForFinishLayout->style()->font()->metrics().m_ascender, blockBox->style()->font()->metrics().m_ascender);
             LayoutUnit descender = std::min(selfForFinishLayout->style()->font()->metrics().m_descender, blockBox->style()->font()->metrics().m_descender);
-            LayoutUnit minimumHeight;
 
-            computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, minimumHeight, lineFormattingContext);
+            computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, lineFormattingContext);
             selfForFinishLayout->m_ascender = ascender;
             selfForFinishLayout->m_descender = descender;
 

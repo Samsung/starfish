@@ -343,6 +343,8 @@ void FrameBlockBox::layout(LayoutContext& ctx)
             f->asFrameBox()->moveX(mX);
             f->asFrameBox()->moveY(mY);
 
+            f->asFrameBox()->setPositionRelativeOffset(LayoutLocation(mX, mY));
+
             mergeVisibleRect(f->asFrameBox());
         }
     });

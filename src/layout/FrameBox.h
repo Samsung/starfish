@@ -13,6 +13,7 @@ public:
     FrameBox(Node* node, ComputedStyle* style)
         : Frame(node, style)
         , m_frameRect(0, 0, 0, 0)
+        , m_positionRelativeOffset(0, 0)
         , m_stackingContext(nullptr)
     {
     }
@@ -145,6 +146,16 @@ public:
     LayoutUnit contentHeight()
     {
         return m_frameRect.height() - paddingHeight() - borderHeight();
+    }
+
+    LayoutLocation positionRelativeOffset()
+    {
+        return m_positionRelativeOffset;
+    }
+
+    void setPositionRelativeOffset(LayoutLocation l)
+    {
+        m_positionRelativeOffset = l;
     }
 
     virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage)
@@ -376,6 +387,8 @@ public:
         return LayoutRect(LayoutLocation(0, 0), LayoutSize(m_frameRect.size()));
     }
 
+    LayoutLocation absolutePointWithoutRelativePosition(FrameBox* top);
+
     LayoutLocation absolutePoint(FrameBox* top)
     {
         LayoutLocation l(0, 0);
@@ -493,6 +506,7 @@ protected:
     LayoutRect m_frameRect;
     LayoutBoxSurroundData m_padding, m_border, m_margin;
 
+    LayoutLocation m_positionRelativeOffset;
     StackingContext* m_stackingContext;
 };
 

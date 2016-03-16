@@ -41,7 +41,6 @@ public:
     void paintStackingContext(Canvas* canvas);
     void compositeStackingContext(Canvas* canvas);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
-
 protected:
     bool m_needsOwnBuffer;
     FrameBox* m_owner;
