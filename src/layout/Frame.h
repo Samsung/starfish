@@ -40,9 +40,8 @@ class MarginInfo;
 class LayoutContext {
 public:
     LayoutContext()
-        : m_lastLineBox(nullptr)
     {
-        establishBlockFormattingContext();
+        establishBlockFormattingContext(true);
     }
 
     ~LayoutContext()
@@ -52,13 +51,16 @@ public:
         STARFISH_ASSERT(m_relativePositionedFrames.size() == 0);
     }
 
-    void establishBlockFormattingContext()
+    void establishBlockFormattingContext(bool isNormalFlow)
     {
-        m_blockFormattingContextInfo.push_back(BlockFormattingContext());
+        m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow));
     }
 
     void removeBlockFormattingContext()
     {
+        if (m_blockFormattingContextInfo.size() > 1 && m_blockFormattingContextInfo.back().m_isNormalFlow) {
+            m_blockFormattingContextInfo[m_blockFormattingContextInfo.size() - 2].m_lastLineBox = m_blockFormattingContextInfo.back().m_lastLineBox;
+        }
         m_blockFormattingContextInfo.pop_back();
     }
 
@@ -70,12 +72,12 @@ public:
 
     void setLastLineBox(LineBox* l)
     {
-        m_lastLineBox = l;
+        m_blockFormattingContextInfo.back().m_lastLineBox = l;
     }
 
     LineBox* lastLineBox()
     {
-        return m_lastLineBox;
+        return m_blockFormattingContextInfo.back().m_lastLineBox;
     }
 
     void registerAbsolutePositionedFrames(Frame* frm)
@@ -198,17 +200,18 @@ public:
 private:
 
     struct BlockFormattingContext {
-        BlockFormattingContext()
+        BlockFormattingContext(bool isNormalFlow)
         {
-
+            m_lastLineBox = nullptr;
+            m_isNormalFlow = isNormalFlow;
         }
+        bool m_isNormalFlow;
         LayoutUnit m_maxPositiveMarginTop;
         LayoutUnit m_maxNegativeMarginTop;
         LayoutUnit m_maxPositiveMarginBottom;
         LayoutUnit m_maxNegativeMarginBottom;
+        LineBox* m_lastLineBox;
     };
-
-    LineBox* m_lastLineBox;
 
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;

@@ -218,7 +218,7 @@ public:
     ~CanvasEFL()
     {
         restore();
-
+        STARFISH_ASSERT(m_state.size() == 0);
         if (m_image && m_buffer) {
             evas_object_image_data_set(m_image, m_buffer);
             // evas_object_image_data_update_add(m_image, 0, 0, m_width, m_height);

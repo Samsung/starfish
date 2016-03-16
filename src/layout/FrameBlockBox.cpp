@@ -8,7 +8,7 @@ namespace StarFish {
 void FrameBlockBox::layout(LayoutContext& ctx)
 {
     if (isEstablishesBlockFormattingContext())
-        ctx.establishBlockFormattingContext();
+        ctx.establishBlockFormattingContext(isNormalFlow());
 
     if (isNormalFlow()) {
         // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
@@ -56,7 +56,7 @@ void FrameBlockBox::layout(LayoutContext& ctx)
 
         STARFISH_ASSERT(node() != nullptr);
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
-        FrameBox* parent = Frame::parent()->asFrameBox();
+        FrameBox* parent = Frame::layoutParent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
         LayoutUnit absX = absLoc.x() - cb->borderLeft();
         auto setAbsX = [&](LayoutUnit x)
@@ -204,7 +204,7 @@ void FrameBlockBox::layout(LayoutContext& ctx)
         }
     } else {
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
-        FrameBox* parent = Frame::parent()->asFrameBox();
+        FrameBox* parent = Frame::layoutParent()->asFrameBox();
         auto absLoc = parent->absolutePoint(cb);
         LayoutUnit absY = absLoc.y() - cb->borderTop();
         auto setAbsY = [&](LayoutUnit y)

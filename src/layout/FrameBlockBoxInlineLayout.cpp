@@ -26,9 +26,22 @@ void computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, 
         boxes = &parentBox->asInlineBox()->asInlineNonReplacedBox()->boxes();
     }
 
+    bool otherThanInlineBlock = false;
     for (size_t k = 0; k < boxes->size(); k ++) {
         Frame* f = boxes->at(k);
-        minimumHeight = std::max(minimumHeight, f->asFrameBox()->height() + f->asFrameBox()->marginHeight());
+        if (f->isNormalFlow()) {
+            minimumHeight = std::max(minimumHeight, f->asFrameBox()->height() + f->asFrameBox()->marginHeight());
+            if (f->style()->display() != InlineBlockDisplayValue) {
+                otherThanInlineBlock = true;
+            }
+
+        }
+    }
+
+    if (otherThanInlineBlock) {
+        minimumHeight = std::max(minimumHeight, parentStyle->font()->metrics().m_fontHeight);
+        maxAscender = parentStyle->font()->metrics().m_ascender;
+        maxDescender = parentStyle->font()->metrics().m_descender;
     }
 
     for (size_t k = 0; k < boxes->size(); k ++) {

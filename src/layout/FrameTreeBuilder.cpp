@@ -102,6 +102,13 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
     }
 
     bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
+    bool isNormalFlow = currentFrame->isNormalFlow();
+
+    if (!isNormalFlow) {
+        frameBlockBox->appendChild(currentFrame);
+        return;
+    }
+
     if (frameBlockBox->hasBlockFlow()) {
         if (isBlockChild) {
             // Block... + Block case

@@ -831,7 +831,7 @@ public:
     {
         // 9.7 Relationships between 'display', 'position', and 'float'
         m_originalDisplay = m_display;
-        if (position() == AbsolutePositionValue || position() == FixedPositionValue) {
+        if (m_originalDisplay != DisplayValue::NoneDisplayValue && (position() == AbsolutePositionValue || position() == FixedPositionValue)) {
             m_display = DisplayValue::BlockDisplayValue;
         }
 

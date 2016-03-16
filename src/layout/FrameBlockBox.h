@@ -372,7 +372,6 @@ protected:
     std::pair<LayoutUnit, LayoutRect> layoutInline(LayoutContext& ctx);
     std::vector<LineBox*, gc_allocator<LineBox*> > m_lineBoxes;
 
-    // TODO overflow:scroll
     LayoutRect m_visibleRect;
 };
 
