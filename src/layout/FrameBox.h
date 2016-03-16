@@ -283,9 +283,8 @@ public:
                 , scale, style()->surround()->border.image().sliceFill());
 
             canvas->restore();
-        }
-        // draw border
-        else if (style()->hasBorderStyle()) {
+        } else if (style()->hasBorderStyle()) {
+            // draw border
             // TODO border-join
             canvas->save();
 
