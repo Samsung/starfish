@@ -1,3 +1,6 @@
 [submodule "third_party/escargot"]
 	path = third_party/escargot
 	url = http://10.113.64.203/escargot/escargot.git
+[submodule "public"]
+	path = public
+	url = http://10.113.64.203/StarFish/starfishpublic.git
