@@ -152,7 +152,7 @@ endif
 #######################################################
 
 # common flags
-CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Ipublic/
+CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Iinc/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof -fvisibility=hidden
