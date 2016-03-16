@@ -75,7 +75,7 @@ asdf
 										// console.log(rules[i].style[j])
 										// console.log(rules[i].style[rules[i].style[j]]);
 										var v = rules[i].style[rules[i].style[j]];
-										if(v.substring(0,3).toLowerCase() == "url") {
+										if(v && v.substring(0,3).toLowerCase() == "url") {
 											var abPath = window.point;
 											v = v.replace(")", "");
 											v = "url(./" + v.substring(v.indexOf(abPath)+abPath.length)+")";
