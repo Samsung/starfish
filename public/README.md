@@ -9,7 +9,7 @@ preprocessor\
   runner.js
   tool\
 
-tizen\
+starting_with_ide\
   wearable2.3\
     inc\
       *.h
