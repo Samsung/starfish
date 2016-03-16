@@ -265,8 +265,27 @@ public:
 
         } while (false);
 
+        // draw border-image
+        if (style()->hasBorderImageData()) {
+            // TODO border-join
+            canvas->save();
+
+            double bWidth = style()->surround()->border.top().width().specifiedValue(height());
+            double bImgWidth = style()->surround()->border.image().widths().top().specifiedValue(bWidth);
+            double bImgSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
+            double scale = bImgWidth / bImgSlice;
+
+            canvas->drawBorderImage(style()->surround()->border.image().imageData(), Rect(0, 0, width(), height())
+                , style()->surround()->border.image().slices().left().specifiedValue(width())
+                , style()->surround()->border.image().slices().top().specifiedValue(height())
+                , style()->surround()->border.image().slices().right().specifiedValue(width())
+                , style()->surround()->border.image().slices().bottom().specifiedValue(height())
+                , scale, style()->surround()->border.image().sliceFill());
+
+            canvas->restore();
+        }
         // draw border
-        if (style()->hasBorderStyle()) {
+        else if (style()->hasBorderStyle()) {
             // TODO border-join
             canvas->save();
 

@@ -70,7 +70,7 @@ public:
     virtual void drawText(LayoutUnit x, LayoutUnit y, String* text) = 0;
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
     virtual void drawImage(CanvasSurface* data, const Rect& dst) = 0;
-    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b) = 0;
+    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b, double scale, bool fill) = 0;
 
 
     virtual void applyMatrixTo(LayoutLocation lp) = 0;

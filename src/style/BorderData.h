@@ -22,6 +22,11 @@ public:
         return m_top.hasBorderStyle() || m_right.hasBorderStyle() || m_bottom.hasBorderStyle() || m_left.hasBorderStyle();
     }
 
+    bool hasBorderImageData()
+    {
+        return m_image.imageData() != NULL;
+    }
+
     BorderValue& top()
     {
         return m_top;

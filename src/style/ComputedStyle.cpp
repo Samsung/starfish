@@ -63,6 +63,14 @@ void ComputedStyle::loadResources(StarFish* sf)
     if (!backgroundImage()->equals(String::emptyString)) {
         setBackgroundImageData(sf->fetchImage(sf->makeResourcePath(backgroundImage())));
     }
+
+    if (!borderImageSource()->equals(String::emptyString)) {
+        setBorderImageData(sf->fetchImage(sf->makeResourcePath(borderImageSource())));
+        setBorderLeftStyle(BorderStyleValue::BSolid);
+        setBorderTopStyle(BorderStyleValue::BSolid);
+        setBorderRightStyle(BorderStyleValue::BSolid);
+        setBorderBottomStyle(BorderStyleValue::BSolid);
+    }
 }
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle)

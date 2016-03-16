@@ -381,6 +381,15 @@ public:
         }
     }
 
+    bool hasBorderImageData()
+    {
+        if (m_surround == nullptr) {
+            return false;
+        } else {
+            return m_surround->border.hasBorderImageData();
+        }
+    }
+
     Color borderTopColor()
     {
         if (m_surround == nullptr) {
@@ -572,6 +581,7 @@ public:
     void setBorderImageRepeatX(BorderImageRepeatValue value) { surround()->border.image().setRepeatX(value); }
     void setBorderImageRepeatY(BorderImageRepeatValue value) { surround()->border.image().setRepeatY(value); }
     void setBorderImageWidths(BorderImageLengthBox value) { surround()->border.image().setWidths(value); }
+    void setBorderImageData(ImageData* value) { surround()->border.image().setImageData(value); }
 
     void setBorderImageSliceFromOther(ComputedStyle* other)
     {

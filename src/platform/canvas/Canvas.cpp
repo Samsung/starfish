@@ -801,7 +801,7 @@ public:
         }
     }
 
-    void drawImageInner(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b)
+    void drawImageInner(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b, double scale, bool fill)
     {
         if (!lastState().m_visible) {
             return;
@@ -855,6 +855,13 @@ public:
         }
 
         evas_object_image_border_set(eo, l, r, t, b);
+        evas_object_image_border_scale_set(eo, scale);
+
+        Evas_Border_Fill_Mode isFill = Evas_Border_Fill_Mode::EVAS_BORDER_FILL_NONE;
+        if (fill)
+            isFill = Evas_Border_Fill_Mode::EVAS_BORDER_FILL_DEFAULT;
+
+        evas_object_image_border_center_fill_set(eo, isFill);
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
 
@@ -865,12 +872,12 @@ public:
 
     virtual void drawImage(ImageData* data, const Rect& dst)
     {
-        drawImageInner(data, dst, 0, 0, 0, 0);
+        drawImageInner(data, dst, 0, 0, 0, 0, 1.0, true);
     }
 
-    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b)
+    virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b, double scale, bool fill)
     {
-        drawImageInner(data, dst, l, t, r, b);
+        drawImageInner(data, dst, l, t, r, b, scale, fill);
     }
 
     void drawImage(CanvasSurface* data, const Rect& dst)

@@ -51,6 +51,8 @@ public:
         return m_type == NumberType;
     }
 
+    bool isSpecified() { return isLength() || isNumber(); }
+
     Length& length()
     {
         STARFISH_ASSERT(m_type == LengthType);
@@ -61,6 +63,15 @@ public:
     {
         STARFISH_ASSERT(m_type == NumberType);
         return m_number;
+    }
+
+    float specifiedValue(LayoutUnit parentLength)
+    {
+        STARFISH_ASSERT(isSpecified());
+        if (isLength())
+            return length().specifiedValue(parentLength);
+        else
+            return parentLength * number();
     }
 
     String* dumpString()
