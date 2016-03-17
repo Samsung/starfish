@@ -3481,13 +3481,13 @@ bool CSSStyleDeclaration::checkInputErrorTransform(std::vector<String*, gc_alloc
         } else if (startsWith(str0, "translate(")) {
             if (!CSSPropertyParser::assureLengthOrPercentList(str0 + 11, true, 1, 2))
                 return false;
-        } else if (startsWith(str0, "translateX(")) {
+        } else if (startsWith(str0, "translatex(")) {
             if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
                 return false;
-        } else if (startsWith(str0, "translateY(")) {
+        } else if (startsWith(str0, "translatey(")) {
             if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
                 return false;
-        } else if (startsWith(str0, "translateZ(")) {
+        } else if (startsWith(str0, "translatez(")) {
             if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
                 return false;
         } else if (startsWith(str0, "scale(")) {
