@@ -60,9 +60,16 @@ public:
                     setContentWidth(w);
                     setContentHeight(h);
                 } else {
-                    // FIXME
-                    setContentWidth(s.width());
-                    setContentHeight(s.height());
+                    STARFISH_ASSERT(style()->height().isPercent());
+                    if (ctx.parentHasFixedHeight(this)) {
+                        LayoutUnit h = style()->height().percent() * ctx.parentFixedHeight(this);
+                        LayoutUnit w = h * (s.width() / s.height());
+                        setContentWidth(w);
+                        setContentHeight(h);
+                    } else {
+                        setContentWidth(s.width());
+                        setContentHeight(s.height());
+                    }
                 }
             } else {
                 STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());

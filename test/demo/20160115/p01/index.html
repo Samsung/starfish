@@ -46,6 +46,8 @@
 			font-size: 90px;
 			font-weight: 700;
 			margin-top: 20px;
+                        position: relative;
+                        z-index: 2;
 		}
 
 		.plus_text:active {
@@ -93,6 +95,17 @@
                         width: 250%;
                         height: 16px;
                 }
+
+                .plus_wrapper {
+                        position: relative;
+                 }
+                 .effect { display:none;
+                        position: absolute; text-align:center; z-index: 1;
+                        width: 100%; height: 100%; left: 0; top: 0;
+                 }
+                 .effect_img {
+                        width: initial; height: 100%;
+                 }
 		</style>
 	</head>
 	<body>
@@ -101,13 +114,19 @@
 	    		<img id="img_water" src="images/water0.png">
                         <div id="water_top"><img id="img_water_top" src="images/water_top.png"></div>
 	    		<div class="img_text" id="img_water_tag">1</div>
-	    		<div class="plus_text" id="plus_water"> + </div>
+                        <div class="plus_wrapper" id="plus_wrapper_water">
+	    		     <div class="plus_text" id="plus_water"> + </div>
+                             <div class="effect" id="effect_water"><img class="effect_img" src="./images/btn_back.png"></div>
+                        </div>
 	    	</div>
 	    	<div id="coffee_area" class="wrapper_inlineBlock">
 	    		<img id="img_coffee" src="images/coffee0.png">
                         <div id="coffee_top"><img id="img_coffee_top" src="images/coffee_top.png"></div>
 	    		<div class="img_text" id="img_coffee_tag">2</div>
-	    		<div class="plus_text" id="plus_coffee"> + </div>
+                        <div class="plus_wrapper" id="plus_wrapper_coffee">
+	    		     <div class="plus_text" id="plus_coffee"> + </div>
+                             <div class="effect" id="effect_coffee"><img class="effect_img" src="./images/btn_back.png"></div>
+                        </div>
 	    	</div>
 	    </div>
 	</body>
@@ -118,20 +137,30 @@
 		this.imgElement = document.getElementById("img_" + kind);
 		this.textElement = document.getElementById("img_" + kind + "_tag");
                 this.topElement = document.getElementById("img_" + kind+"_top");
+                this.effectElement = document.getElementById("effect_"+kind)
+                this.wElement = document.getElementById("plus_wrapper_"+kind)
 		this.currentIndex = 0;
 		this.animing = false;
 		this.forceStop = false;
                 this.startX = -110
+                this.opa = 1;
                 this.tX = this.startX
 		this.goAnim = function() {
                         if(this.tX > 210) {
-                            this.tX = this.startX;
+                            this.tX = this.startX; this.opa = 1;
                             this.topElement.parentElement.style.display = "none"
+                            this.effectElement.style.display="none"
+ //                           this.wElement.style.transform=""
                             return;
                         }
+                        this.effectElement.style.display = "block"
                         this.topElement.parentElement.style.display = "block"
                         this.topElement.style.transform = "translateX("+this.tX+"%)"
-                        this.tX+=7;
+                        this.effectElement.style.opacity=this.opa;
+                        this.effectElement.style.transform="scale("+(1-this.opa)+")"
+//                        this.wElement.style.transform = "translateY(" + -20*Math.sin(Math.PI/2 * (1-this.opa)) +"px)"
+                        this.tX+=8;
+                        this.opa-=0.020;
                         var b = this.goAnim.bind(this)
                         window.requestAnimationFrame(b)
 /*

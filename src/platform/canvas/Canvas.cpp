@@ -12,29 +12,32 @@
 #include <vector>
 #include <SkMatrix.h>
 
+#ifndef STARFISH_TIZEN_WEARABLE
 __thread Evas* g_internalCanvas;
+#else
+Evas* g_internalCanvas;
+#endif
+
 namespace StarFish {
 
 
-/*
-static void initInternalCanvas()
+
+void initInternalCanvas()
 {
     if (!g_internalCanvas) {
-        Evas *canvas;
-        int width=16;
-        int height=16;
-        Evas_Engine_Info_Buffer *einfo;
+        Evas* canvas;
+        int width = 16;
+        int height = 16;
+        Evas_Engine_Info_Buffer* einfo;
         int method;
-        void *pixels;
+        void* pixels;
         method = evas_render_method_lookup("buffer");
-        if (method <= 0)
-        {
+        if (method <= 0) {
             fputs("ERROR: evas was not compiled with 'buffer' engine!\n", stderr);
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         canvas = evas_new();
-        if (!canvas)
-        {
+        if (!canvas) {
             fputs("ERROR: could not instantiate new evas canvas.\n", stderr);
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -43,8 +46,7 @@ static void initInternalCanvas()
         evas_output_viewport_set(canvas, 0, 0, width, height);
         einfo = (Evas_Engine_Info_Buffer *) evas_engine_info_get(canvas);
 
-        if (!einfo)
-        {
+        if (!einfo) {
             fputs("ERROR: could not get evas engine info!\n", stderr);
             evas_free(canvas);
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -52,8 +54,7 @@ static void initInternalCanvas()
 
         // ARGB32 is sizeof(int), that is 4 bytes, per pixel
         pixels = malloc(width * height * sizeof(int));
-        if (!pixels)
-        {
+        if (!pixels) {
             fputs("ERROR: could not allocate canvas pixels!\n", stderr);
             evas_free(canvas);
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -70,7 +71,7 @@ static void initInternalCanvas()
         g_internalCanvas = canvas;
     }
 }
-*/
+
 Evas* internalCanvas()
 {
     STARFISH_RELEASE_ASSERT(g_internalCanvas);

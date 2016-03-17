@@ -41,8 +41,13 @@ LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
 bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 {
     Frame* container = blockContainer(currentFrame);
+    if (currentFrame->style()->position() == PositionValue::AbsolutePositionValue) {
+        return true;
+    }
     while (container) {
-        if (container->style()->height().isFixed()) {
+        if (container->style()->position() == PositionValue::AbsolutePositionValue) {
+            return true;
+        } else if (container->style()->height().isFixed()) {
             return true;
         } else if (container->style()->height().isAuto()) {
             return false;
@@ -57,10 +62,16 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
 LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
 {
     Frame* container = blockContainer(currentFrame);
+    if (currentFrame->style()->position() == PositionValue::AbsolutePositionValue) {
+        return containingBlock(currentFrame)->asFrameBox()->contentHeight();
+    }
     std::vector<Length> reverse;
     while (container) {
         STARFISH_ASSERT(!container->style()->height().isAuto());
-        if (container->style()->height().isFixed()) {
+        if (container->style()->position() == PositionValue::AbsolutePositionValue) {
+            reverse.push_back(Length(Length::Fixed, containingBlock(container)->asFrameBox()->contentHeight()));
+            break;
+        } else if (container->style()->height().isFixed()) {
             reverse.push_back(container->style()->height());
             break;
         } else {

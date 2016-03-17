@@ -25,9 +25,29 @@ static ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* insta
 
 ScriptBindingInstance::ScriptBindingInstance()
 {
+    m_enterCount = 0;
     m_data = new ScriptBindingInstanceDataEscargot();
     fetchData(this)->m_instance = new escargot::ESVMInstance();
-    fetchData(this)->m_instance->enter();
+    enter();
+}
+
+
+void ScriptBindingInstance::enter()
+{
+    if (m_enterCount == 0) {
+        STARFISH_RELEASE_ASSERT(escargot::ESVMInstance::currentInstance() == nullptr);
+        fetchData(this)->m_instance->enter();
+    }
+    m_enterCount++;
+}
+
+void ScriptBindingInstance::exit()
+{
+    if (m_enterCount == 1) {
+        STARFISH_RELEASE_ASSERT(escargot::ESVMInstance::currentInstance() != nullptr);
+        fetchData(this)->m_instance->exit();
+    }
+    m_enterCount--;
 }
 
 #define DEFINE_FUNCTION(functionName, parentName)                                                                                                                                                                          \

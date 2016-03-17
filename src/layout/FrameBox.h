@@ -502,11 +502,7 @@ public:
     void clearStackingContextIfNeeds()
     {
         if (m_stackingContext) {
-            if (isRootElement()) {
-                m_stackingContext->clearChildContexts();
-            } else {
-                delete m_stackingContext;
-            }
+            delete m_stackingContext;
             m_stackingContext = nullptr;
         }
     }

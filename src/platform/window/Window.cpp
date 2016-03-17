@@ -20,11 +20,16 @@
 #include <tizen.h>
 #endif
 
+#ifndef STARFISH_TIZEN_WEARABLE
 extern __thread Evas* g_internalCanvas;
+#else
+extern Evas* g_internalCanvas;
+#endif
 
 namespace StarFish {
 
 Evas* internalCanvas();
+void initInternalCanvas();
 
 namespace {
     class __GET_TICK_COUNT {
@@ -77,8 +82,7 @@ public:
     CanvasSurfaceEFL(Window* wnd, size_t w, size_t h)
     {
         m_window = (WindowImplEFL*)wnd;
-        STARFISH_ASSERT(evas_object_evas_get(m_window->m_window) == internalCanvas());
-        m_image = evas_object_image_add(internalCanvas());
+        m_image = evas_object_image_add(evas_object_evas_get(m_window->m_window));
         evas_object_image_size_set(m_image, w, h);
         evas_object_image_filled_set(m_image, EINA_TRUE);
         evas_object_image_colorspace_set(m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
@@ -153,7 +157,7 @@ void dummyRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* us
 Window* Window::create(StarFish* sf, size_t w, size_t h)
 {
     Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
-    g_internalCanvas = evas_object_evas_get(wndObj);
+    initInternalCanvas();
     auto wnd = new WindowImplEFL(sf);
     wnd->m_starFish = sf;
     wnd->m_window = wndObj;
@@ -395,7 +399,7 @@ Window::Window(StarFish* starFish)
     setNeedsRendering();
 }
 
-#define STARFISH_ENABLE_TIMER
+// #define STARFISH_ENABLE_TIMER
 
 #ifdef STARFISH_ENABLE_TIMER
 static unsigned long getLongTickCount()
@@ -518,7 +522,16 @@ void Window::rendering()
         }
     }
 
+    bool shouldClearStackingContext = true;
     if (m_needsFrameTreeBuild) {
+
+        if (m_document->frame()) {
+            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
+                box->clearStackingContextIfNeeds();
+            });
+            shouldClearStackingContext = false;
+        }
+
         // create frame tree
         Timer t("create frame tree");
         FrameTreeBuilder::buildFrameTree(m_document);
@@ -528,6 +541,12 @@ void Window::rendering()
     if (m_needsLayout) {
         // lay out frame tree
         Timer t("lay out frame tree");
+
+        if (shouldClearStackingContext) {
+            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
+                box->clearStackingContextIfNeeds();
+            });
+        }
 
         m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
             box->clearStackingContextIfNeeds();
@@ -645,11 +664,16 @@ void Window::rendering()
 
     m_needsRendering = false;
     m_inRendering = false;
+
+    static int logCounter = 0;
+    logCounter++;
+    if (logCounter % 20 == 0) {
 #ifdef NDEBUG
     STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
 #else
     STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
+    }
 }
 
 void Window::setNeedsRenderingSlowCase()
