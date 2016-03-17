@@ -915,6 +915,8 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
             } else if (name->equals("translatey")) {
                 fkind = CSSTransformFunction::Kind::TranslateY;
                 unit = TranslationValue;
+            } else if (name->equals("translatez")) {
+                continue;
             } else if (name->equals("scale")) {
                 expectedArgCnt = 2;
                 fkind = CSSTransformFunction::Kind::Scale;
@@ -3485,6 +3487,9 @@ bool CSSStyleDeclaration::checkInputErrorTransform(std::vector<String*, gc_alloc
         } else if (startsWith(str0, "translateY(")) {
             if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
                 return false;
+        } else if (startsWith(str0, "translateZ(")) {
+            if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
+                return false;
         } else if (startsWith(str0, "scale(")) {
             if (!CSSPropertyParser::assureNumberList(str0 + 6, true, 1, 2))
                 return false;
@@ -4395,11 +4400,13 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                             Length a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
                             style->setTransformTranslate(a, Length(Length::Fixed, 0));
                             }
+                            break;
                         case CSSTransformFunction::Kind::TranslateY:
                             {
                             Length a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
                             style->setTransformTranslate(Length(Length::Fixed, 0), a);
                             }
+                            break;
                         case CSSTransformFunction::Kind::Scale:
                             if (valueSize == 1)
                                 style->setTransformScale(dValues[0], dValues[0]);

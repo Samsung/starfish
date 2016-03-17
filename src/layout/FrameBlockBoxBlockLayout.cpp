@@ -103,7 +103,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
             if (maxNormalFlowBottom < child->asFrameBox()->height() + child->asFrameBox()->y())
                 maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
             normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
-            visibleRect.unite(child->asFrameBox()->frameRect());
+            visibleRect.unite(child->asFrameBox()->visibleRect());
         } else {
             child->asFrameBox()->moveY(marginForAbsolute);
             ctx.registerAbsolutePositionedFrames(child);

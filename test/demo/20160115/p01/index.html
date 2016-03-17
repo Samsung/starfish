@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+                <meta name="viewport" content="width=device-width, user-scalable=no">
 		<meta charset="utf-8"/>
 		<style>
 		* {
@@ -25,6 +26,7 @@
 		}
 
 		.wrapper_inlineBlock {
+                        position: relative;
 			display: inline-block;
 			width: 48%;
 			text-align: center;
@@ -51,8 +53,7 @@
 		}
 
 		img {
-			width: 100%;
-
+			width:100%;
 		}
 
 		#img_coffee {
@@ -63,11 +64,34 @@
 			margin-left:-6px;
 		}
 
-                .btn_back {
+                #water_top {
+                        display: none;
                         position: absolute;
-                        width: 100%;
-                        left: 50%;
-                        top: 155px;
+                        left: 36px;
+                        top: 50px;
+                        width: 71px;
+                        overflow: hidden;
+                        text-align: left;
+                }
+
+                #img_water_top {
+                        width: 250%;
+                        height: 16px;
+                }
+
+                #coffee_top {
+                        display: none;
+                        position: absolute;
+                        left: 32px;
+                        top: 64px;
+                        width: 80px;
+                        overflow: hidden;
+                        text-align: left;
+                }
+
+                #img_coffee_top {
+                        width: 250%;
+                        height: 16px;
                 }
 		</style>
 	</head>
@@ -75,27 +99,42 @@
 	    <div id="box"> 
 	        <div id="water_area" class="wrapper_inlineBlock">
 	    		<img id="img_water" src="images/water0.png">
+                        <div id="water_top"><img id="img_water_top" src="images/water_top.png"></div>
 	    		<div class="img_text" id="img_water_tag">1</div>
 	    		<div class="plus_text" id="plus_water"> + </div>
-                        <img src="images/btn_back.png" class="btn_back" style="transform: scale(2)" >
 	    	</div>
 	    	<div id="coffee_area" class="wrapper_inlineBlock">
 	    		<img id="img_coffee" src="images/coffee0.png">
+                        <div id="coffee_top"><img id="img_coffee_top" src="images/coffee_top.png"></div>
 	    		<div class="img_text" id="img_coffee_tag">2</div>
 	    		<div class="plus_text" id="plus_coffee"> + </div>
 	    	</div>
 	    </div>
 	</body>
 	<script>
+
 	var anim = function(kind, max_scene) {
-		this.INTERVAL = 50;
 		this.IMG_MAX = max_scene;
 		this.imgElement = document.getElementById("img_" + kind);
 		this.textElement = document.getElementById("img_" + kind + "_tag");
+                this.topElement = document.getElementById("img_" + kind+"_top");
 		this.currentIndex = 0;
 		this.animing = false;
 		this.forceStop = false;
+                this.startX = -110
+                this.tX = this.startX
 		this.goAnim = function() {
+                        if(this.tX > 210) {
+                            this.tX = this.startX;
+                            this.topElement.parentElement.style.display = "none"
+                            return;
+                        }
+                        this.topElement.parentElement.style.display = "block"
+                        this.topElement.style.transform = "translateX("+this.tX+"%)"
+                        this.tX+=7;
+                        var b = this.goAnim.bind(this)
+                        window.requestAnimationFrame(b)
+/*
 			if (this.animing) {
 				if (this.currentIndex > (this.IMG_MAX / 2)) this.currentIndex = 0;
 			} else {
@@ -115,10 +154,7 @@
 					// console.log("hello");
 				});
 				nextscene();
-			}
-		};
-		this.stopAnim = function() {
-			this.forceStop = true;
+			}*/
 		};
 		document.getElementById(kind + "_area").onclick = function(event) {
 			this.goAnim();
@@ -126,7 +162,7 @@
 		}.bind(this);
 	};
 
-	var water = new anim("water", 11);
-	var coffee = new anim("coffee", 11);
+	var water = new anim("water");
+	var coffee = new anim("coffee");
 	</script>
 </html>

@@ -54,6 +54,8 @@ public:
     {
         Frame::dump(depth);
         printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(), (float)width(), (float)height());
+        LayoutRect rt = visibleRect();
+        printf(" visibleRect(%g,%g,%g,%g) ", (float)rt.x(), (float)rt.y(), (float)rt.width(), (float)rt.height());
     }
 
     StackingContext* stackingContext()

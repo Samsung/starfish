@@ -542,9 +542,11 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
         } else {
             STARFISH_ASSERT(style()->textAlign() == TextAlignValue::CenterTextAlignValue);
             LayoutUnit diff = (inlineContentWidth - x) / 2;
-            for (size_t k = 0; k < b.m_boxes.size(); k++) {
-                FrameBox* childBox = b.m_boxes[k];
-                childBox->moveX(diff);
+            if (diff > 0) {
+                for (size_t k = 0; k < b.m_boxes.size(); k++) {
+                    FrameBox* childBox = b.m_boxes[k];
+                    childBox->moveX(diff);
+                }
             }
         }
 

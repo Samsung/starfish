@@ -41,8 +41,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     }
 
     m_matrix.reset();
-    m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height());
-    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || !m_matrix.isIdentity();
+    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || m_owner->style()->hasTransforms();
     return m_needsOwnBuffer;
 }
 
@@ -164,6 +163,11 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     canvas->save();
 
     if (m_needsOwnBuffer) {
+
+        if (owner()->style()->overflow() == OverflowValue::HiddenOverflow) {
+            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
+        }
+
         LayoutUnit minX = visibleRect.x();
         LayoutUnit maxX = visibleRect.maxX();
         LayoutUnit minY = visibleRect.y();
@@ -180,8 +184,15 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         if (ownerStyle->opacity() != 1) {
             canvas->beginOpacityLayer(ownerStyle->opacity());
         }
+
+        m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height());
+
         if (!m_matrix.isIdentity()) {
             // TODO transform-origin
+            /* printf("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
+                , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
+                , m_matrix.get(3), m_matrix.get(4), m_matrix.get(5)
+                , m_matrix.get(6), m_matrix.get(7), m_matrix.get(8)); */
             LayoutUnit ox = m_owner->width() / 2;
             LayoutUnit oy = m_owner->height() / 2;
             canvas->translate(ox, oy);
