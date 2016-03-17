@@ -3,7 +3,7 @@
 <head>
 <style> 
 #borderimg { 
-    border-width: 10px;
+    border-width: 20px;
     padding: 15px;
     border-image-source: url(border.png);    
     border-image-slice: 30;
@@ -16,18 +16,9 @@
 <script type="text/javascript">
     function run() {
         var divNode = document.getElementById("borderimg");
-        print(divNode.nodeName);
-        print(divNode.style.borderImageSource);
-        divNode.style.borderImageSource = "url(     \"border.png\"  )";
-        print(divNode.style.borderImageSource);
-        divNode.style.borderImageSource = "url(     'border.png  '  )";
-        print(divNode.style.borderImageSource);
-        divNode.style.borderImageSource = "url(     border.png  )";
-        print(divNode.style.borderImageSource);
-        divNode.style.borderImageSlice = "20";
-        print(divNode.style.borderImageSlice);
-        divNode.style.borderImageWidth = "20px";
-        print(divNode.style.borderImageSlice);
+        divNode.style.borderImageSource = "url(border.png)";
+        divNode.style.borderImageSlice = "40";
+        divNode.style.borderImageWidth = "44px";
     }
     run();
 </script>

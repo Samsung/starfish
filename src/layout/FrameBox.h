@@ -278,28 +278,55 @@ public:
 
         } while (false);
 
+        canvas->save();
+
         // draw border-image
         if (style()->hasBorderImageData()) {
-            // TODO border-join
-            canvas->save();
-
             double bWidth = style()->surround()->border.top().width().specifiedValue(height());
             double bImgWidth = style()->surround()->border.image().widths().top().specifiedValue(bWidth);
             double bImgSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
+
+            size_t imgWidth = style()->surround()->border.image().imageData()->width();
+            size_t imgHeight = style()->surround()->border.image().imageData()->height();
+
+            size_t lSlice = style()->surround()->border.image().slices().left().specifiedValue(width());
+            size_t tSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
+            size_t rSlice = style()->surround()->border.image().slices().right().specifiedValue(width());
+            size_t bSlice = style()->surround()->border.image().slices().bottom().specifiedValue(height());
+
+            ImageData* imgData = style()->surround()->border.image().imageData();
+
+            if (bImgSlice > imgWidth || bImgSlice > imgHeight)
+                bImgSlice = std::min(imgWidth, imgHeight);
+
+            double value = std::min((float)width() / (bImgWidth*2), (float)height() / (bImgWidth*2));
+            if (value < 1)
+                bImgWidth *= value;
+
             double scale = bImgWidth / bImgSlice;
+            bool isFill = false;
 
-            canvas->drawBorderImage(style()->surround()->border.image().imageData(), Rect(0, 0, width(), height())
-                , style()->surround()->border.image().slices().left().specifiedValue(width())
-                , style()->surround()->border.image().slices().top().specifiedValue(height())
-                , style()->surround()->border.image().slices().right().specifiedValue(width())
-                , style()->surround()->border.image().slices().bottom().specifiedValue(height())
-                , scale, style()->surround()->border.image().sliceFill());
+            if ((lSlice + rSlice > imgWidth) || (tSlice + bSlice > imgHeight)) {
+                float drawRect = std::min((float)width(), (float)height()) / 2.0;
 
-            canvas->restore();
+                if (drawRect > bImgWidth)
+                    drawRect = bImgWidth;
+
+                // left-top
+                canvas->drawBorderImage(imgData, Rect(0, 0, drawRect, drawRect), lSlice, tSlice, 0, 0, scale, isFill);
+                // right-top
+                canvas->drawBorderImage(imgData, Rect((float)width() - drawRect, 0, drawRect, drawRect), 0, tSlice, rSlice, 0, scale, isFill);
+                // right-bottom
+                canvas->drawBorderImage(imgData, Rect((float)width() - drawRect, (float)height() - drawRect, drawRect, drawRect), 0, 0, rSlice, bSlice, scale, isFill);
+                // left-bottom
+                canvas->drawBorderImage(imgData, Rect(0, (float)height() - drawRect, drawRect, drawRect), lSlice, 0, 0, bSlice, scale, isFill);
+            } else {
+                isFill = style()->surround()->border.image().sliceFill();
+                canvas->drawBorderImage(imgData, Rect(0, 0, width(), height()), lSlice, tSlice, rSlice, bSlice, scale, isFill);
+            }
         } else if (style()->hasBorderStyle()) {
             // draw border
             // TODO border-join
-            canvas->save();
 
             if ((style()->borderTopColor() == style()->borderRightColor())
                 && (style()->borderRightColor() == style()->borderBottomColor())
@@ -356,9 +383,9 @@ public:
                     LayoutLocation(0, height())
                 );
             }
-
-            canvas->restore();
         }
+
+        canvas->restore();
     }
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
