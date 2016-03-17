@@ -4,6 +4,7 @@
 		<script src="./xml2json.js"></script>
 		<script src="./js2xmlparser.js"></script>
 		<script src="./jquery-2.2.0.min.js"></script>
+		<script src="./cssParser.js"></script>
 	</head>
 	<body>
 		<h1>input html code you want</h1>
@@ -27,7 +28,8 @@ asdf
 			<textarea rows="30" cols="80" id="result"></textarea>
 		</form>
 		<script type="text/javascript" >
-
+			var styles = {};
+			
 			function printResult() {
 				var iframe = document.querySelector("iframe")
 
@@ -52,7 +54,7 @@ asdf
 						"node" : {
 						}
 					}
-					function process(node, into) {
+					function process(node, into, nextStyleIndex) {
 						into["@"] = {
 							"nodeType" : node.nodeType,
 							"localName" : nameFromType(node.nodeType)
@@ -64,29 +66,31 @@ asdf
 							if(node.localName == "style") {
 								// console.log(node)
 								into.style = []
-								var rules = node.sheet.cssRules;
+								var parser = new CSSParser();
+								var rules = parser.parse(styles[nextStyleIndex]).cssRules;
 								for(var i = 0; i < rules.length; i ++) {
-									var selectorText = rules[i].selectorText;
+									var selectorText = rules[i].mSelectorText;
 									// console.log(selectorText)
 									var st = {};
 									st["@"] = {}
 									st["@"].selectorText = selectorText
-									for (var j = 0; j < rules[i].style.length; j ++) {
+									for (var j = 0; j < rules[i].declarations.length; j ++) {
 										// console.log(rules[i].style[j])
 										// console.log(rules[i].style[rules[i].style[j]]);
-										var v = rules[i].style[rules[i].style[j]];
+										var v = rules[i].declarations[j].valueText;
 										if(v && v.substring(0,3).toLowerCase() == "url") {
 											var abPath = window.point;
 											v = v.replace(")", "");
 											v = "url(./" + v.substring(v.indexOf(abPath)+abPath.length)+")";
 										}
 
-										d = rules[i]
-										st["@"][rules[i].style[j]] = v;
+										st["@"][rules[i].declarations[j].property] = v;
 									}
 
 									into.style.push(st);
 								}
+
+								nextStyleIndex++;
 							}
 
 							var attrs = node.attributes;
@@ -101,13 +105,13 @@ asdf
 						var c = node.firstChild;
 						while(c) {
 							var t = {};
-							process(c, t);
+							process(c, t, nextStyleIndex);
 							Array.prototype.push.call(into.node, t);
 
 							c = c.nextSibling;
 						}
 					}
-					process(iframe.contentDocument,result.node)
+					process(iframe.contentDocument,result.node, 0)
 					console.log(result);
 
 					var output = document.getElementById("result")
@@ -123,6 +127,41 @@ asdf
 				if (document.querySelector("iframe"))
 					document.querySelector("iframe").parentElement.removeChild(document.querySelector("iframe"))
 				var code = document.getElementById("code");
+
+				var count = 0;
+				var i = 0;
+				var onTagStart = false, onTagEnd = false;
+				while (i < code.value.length - 1) {
+					var tagName;
+					if (code.value[i] == '\<') {
+						if (code.value[i+1] != '\/') {
+							onTagStart = true;
+							tagName = "";
+						} else {
+							onTagEnd = true;
+						}
+					} else if (code.value[i] == '\>') {
+						if (onTagStart) {
+							onTagStart = false;
+							if (tagName == "style") {
+								styles[count] = "";
+								i++;
+								while (code.value[i] != '\<') {
+									styles[count] += code.value[i];
+									i++;
+								}
+								//console.log(styles[count]);
+								count++;
+								continue;
+							}
+						} else if (onTagEnd)
+							onTagEnd = false;
+					} else if (onTagStart) {
+						tagName += code.value[i];
+					}
+					
+					i++;
+				}
 
 				var iframe = document.createElement("iframe");
                 // Set the 'sandbox' attribute except the 'allow-scripts' value
