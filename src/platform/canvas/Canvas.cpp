@@ -915,8 +915,21 @@ public:
         evas_object_resize(eo, ww, hh);
         evas_object_raise(eo);
 
-        applyClippers(eo);
+        Evas_Object* clip = evas_object_rectangle_add(m_canvas);
+        int c = lastState().m_opacity * 255;
+        evas_object_color_set(eo, c, c, c, c);
+        assureMapMode();
+
+        evas_object_move(clip, lastState().m_clipRect.x(), lastState().m_clipRect.y());
+        evas_object_resize(clip, lastState().m_clipRect.width(), lastState().m_clipRect.height());
+        evas_object_show(clip);
+
+        if (m_objList)
+            m_objList->push_back(clip);
+        evas_object_clip_set(eo, clip);
         applyEvasMapIfNeeded(eo, dst, true);
+        applyEvasMapIfNeeded(clip, dst);
+
         STARFISH_ASSERT(evas_object_visible_get(eo) == EINA_FALSE);
         evas_object_show(eo);
         m_surfaceList->push_back(eo);
@@ -1051,6 +1064,7 @@ public:
 
             evas_object_anti_alias_set(eo, EINA_TRUE);
 
+            /*
             evas_map_alpha_set(map, EINA_TRUE);
             if (lastState().m_opacity != 1) {
                 int c = lastState().m_opacity * 255;
@@ -1059,6 +1073,8 @@ public:
                 evas_map_point_color_set(map, 2, c, c, c, c);
                 evas_map_point_color_set(map, 3, c, c, c, c);
             }
+            */
+            evas_map_smooth_set(map, EINA_TRUE);
 
             evas_object_map_set(eo, map);
             evas_object_map_enable_set(eo, EINA_TRUE);
