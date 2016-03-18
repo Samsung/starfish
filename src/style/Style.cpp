@@ -760,10 +760,6 @@ void CSSStyleValuePair::setValueBorderImageSlice(std::vector<String*, gc_allocat
             const char* currentToken = tokens->at(i)->toLower()->utf8Data();
             if (startsWith(currentToken, "fill")) {
                 m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::StringValueKind, { 0 });
-            } else if (endsWith(currentToken, "%")) {
-                float f;
-                sscanf(currentToken, "%f%%", &f);
-                m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Percentage, {.m_floatValue = (f / 100.f) });
             } else {
                 char* pEnd;
                 double d = strtod(currentToken, &pEnd);
@@ -831,7 +827,7 @@ void CSSStyleValuePair::setValueBorderImageRepeat(std::vector<String*, gc_alloca
 void CSSStyleValuePair::setValueBorderImageWidth(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
-    // [length | percentage | number | auto] {1, 4}
+    // [length | number]
     m_keyKind = CSSStyleValuePair::KeyKind::BorderImageWidth;
     if (VALUE_IS_INHERIT()) {
         m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
@@ -842,13 +838,7 @@ void CSSStyleValuePair::setValueBorderImageWidth(std::vector<String*, gc_allocat
         ValueList* values = new ValueList();
         for (unsigned int i = 0; i < tokens->size(); i++) {
             const char* currentToken = tokens->at(i)->utf8Data();
-            if (strcmp(currentToken, "auto") == 0) {
-                values->append(CSSStyleValuePair::ValueKind::Auto, { 0 });
-            } else if (endsWith(currentToken, "%")) {
-                float f;
-                sscanf(currentToken, "%f%%", &f);
-                values->append(CSSStyleValuePair::ValueKind::Percentage, {.m_floatValue = (f / 100.f) });
-            } else if (endsWithNumber(currentToken)) {
+            if (endsWithNumber(currentToken)) {
                 char* pEnd;
                 double d = strtod(currentToken, &pEnd);
                 STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
@@ -3200,23 +3190,31 @@ bool CSSStyleDeclaration::checkInputErrorBorderImageRepeat(std::vector<String*, 
 
 bool CSSStyleDeclaration::checkInputErrorBorderImageSlice(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    // number | percentage {1, 4} && fill
-    if (tokens->size() > 4)
+    // number && fill?
+    if (tokens->size() > 2)
         return false;
+
+    bool isNum = false, isFill = false;
     for (unsigned int i = 0; i < tokens->size(); i++) {
         const char* currentToken = tokens->at(i)->toLower()->utf8Data();
-        if (CSSPropertyParser::assurePercent(currentToken, false) || CSSPropertyParser::assureNumber(currentToken, false))
-            continue;
-        else if (strcmp(currentToken, "fill") == 0) {
-            if (i == tokens->size() - 1)
-                return true;
-            else
+        if (CSSPropertyParser::assureNumber(currentToken, false)) {
+            isNum = true;
+        } else if (strcmp(currentToken, "fill") == 0) {
+            if (!isFill) {
+                isFill = true;
+            } else {
                 return false;
+            }
         } else {
             return false;
         }
     }
-    return true;
+
+    if (isNum) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool CSSStyleDeclaration::checkInputErrorBorderImageSource(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -3234,18 +3232,15 @@ bool CSSStyleDeclaration::checkInputErrorBorderImageSource(std::vector<String*, 
 
 bool CSSStyleDeclaration::checkInputErrorBorderImageWidth(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    // [ <length> | <percentage> | <number> | auto ]{1, 4}
-    if (tokens->size() > 4)
+    // [ <length> | <number> ]
+    if (tokens->size() != 1)
         return false;
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        const char* currentToken = tokens->at(i)->toLower()->utf8Data();
-        if (CSSPropertyParser::assureLength(currentToken, false) || CSSPropertyParser::assurePercent(currentToken, false) || CSSPropertyParser::assureNumber(currentToken, false) || strcmp(currentToken, "auto") == 0) {
-            continue;
-        } else {
-            return false;
-        }
-    }
-    return true;
+
+    const char* currentToken = tokens->at(0)->toLower()->utf8Data();
+    if (CSSPropertyParser::assureLength(currentToken, false) || CSSPropertyParser::assureNumber(currentToken, false))
+        return true;
+
+    return false;
 }
 
 bool CSSStyleDeclaration::checkInputErrorBorder(std::vector<String*, gc_allocator<String*> >* tokens)

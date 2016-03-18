@@ -549,11 +549,11 @@ public:
         // https://www.w3.org/TR/css3-background/#the-border-image-repeat
         BorderImageRepeat, // <stretch> | repeat | round | space {1, 2}
         // https://www.w3.org/TR/css3-background/#border-image-slice
-        BorderImageSlice, // number | percentage {1, 4} && fill? // initial value -> 100%
+        BorderImageSlice, // number && fill?
         // https://www.w3.org/TR/css3-background/#the-border-image-source
         BorderImageSource, // none | <image>
         // https://www.w3.org/TR/css3-background/#border-image-width
-        BorderImageWidth, // [length | percentage | number | auto] {1, 4}
+        BorderImageWidth, // [ <length> | <number> ]
         // https://www.w3.org/TR/CSS21/box.html#border-style-properties
         // BorderStyle, // border-style(<none> | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset) | inherit
         BorderTopStyle, // border-style(<none> | solid) | inherit -> We doesn't support all type because of implementation issues of Evas
