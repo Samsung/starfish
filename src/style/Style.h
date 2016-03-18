@@ -1143,6 +1143,7 @@ public:
                     m_cssValues.erase(m_cssValues.begin() + i);                        \
                 }                                                                      \
             }                                                                          \
+            notifyNeedsStyleRecalc();                                                  \
             return;                                                                    \
         }                                                                              \
         std::vector<String*, gc_allocator<String*> > tokens;                           \

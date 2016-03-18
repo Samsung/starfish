@@ -150,7 +150,7 @@
                             this.tX = this.startX; this.opa = 1;
                             this.topElement.parentElement.style.display = "none"
                             this.effectElement.style.display="none"
- //                           this.wElement.style.transform=""
+                            this.wElement.style.transform=""
                             return;
                         }
                         this.effectElement.style.display = "block"
@@ -158,9 +158,9 @@
                         this.topElement.style.transform = "translateX("+this.tX+"%)"
                         this.effectElement.style.opacity=this.opa;
                         this.effectElement.style.transform="scale("+(1-this.opa)+")"
-//                        this.wElement.style.transform = "translateY(" + -20*Math.sin(Math.PI/2 * (1-this.opa)) +"px)"
+                        this.wElement.style.transform = "translateY(" + -20*Math.sin(Math.PI * (1-this.opa)) +"px)"
                         this.tX+=8;
-                        this.opa-=0.020;
+                        this.opa-=0.025;
                         var b = this.goAnim.bind(this)
                         window.requestAnimationFrame(b)
 /*

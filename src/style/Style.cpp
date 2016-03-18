@@ -3462,6 +3462,7 @@ bool CSSStyleDeclaration::checkInputErrorTransform(std::vector<String*, gc_alloc
         if (CSSPropertyParser::assureEssential(str0) || strcmp(str0, "none") == 0)
             return true;
     }
+
     String* str = String::emptyString;
     for (unsigned i = 0; i< tokens->size(); i++)
         str = str->concat(tokens->at(i)->toLower());

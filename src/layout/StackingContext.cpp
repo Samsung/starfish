@@ -202,10 +202,11 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->translate(ox, oy);
             canvas->postMatrix(m_matrix);
             canvas->drawImage(m_buffer, Rect(minX - ox, minY - oy, bufferWidth, bufferHeight));
+            canvas->translate(-ox, -oy);
 
             // draw debug rect
             // canvas->setColor(Color(255, 0, 0, 128));
-            // canvas->drawRect(Rect(minX - ox, minY - oy, bufferWidth, bufferHeight));
+            // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
         } else {
             canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
 
