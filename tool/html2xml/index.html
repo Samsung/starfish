@@ -28,8 +28,6 @@ asdf
 			<textarea rows="30" cols="80" id="result"></textarea>
 		</form>
 		<script type="text/javascript" >
-			var styles = {};
-			
 			function printResult() {
 				var iframe = document.querySelector("iframe")
 
@@ -54,7 +52,7 @@ asdf
 						"node" : {
 						}
 					}
-					function process(node, into, nextStyleIndex) {
+					function process(node, into) {
 						into["@"] = {
 							"nodeType" : node.nodeType,
 							"localName" : nameFromType(node.nodeType)
@@ -64,33 +62,46 @@ asdf
 							into["@"].localName = node.localName;
 
 							if(node.localName == "style") {
-								// console.log(node)
+								console.log(node.textContent)
 								into.style = []
+
 								var parser = new CSSParser();
-								var rules = parser.parse(styles[nextStyleIndex]).cssRules;
+                                var rules = parser.parse(node.textContent).cssRules;
+								var transformSelector, transformValue;
 								for(var i = 0; i < rules.length; i ++) {
-									var selectorText = rules[i].mSelectorText;
-									// console.log(selectorText)
-									var st = {};
-									st["@"] = {}
-									st["@"].selectorText = selectorText
-									for (var j = 0; j < rules[i].declarations.length; j ++) {
-										// console.log(rules[i].style[j])
-										// console.log(rules[i].style[rules[i].style[j]]);
-										var v = rules[i].declarations[j].valueText;
-										if(v && v.substring(0,3).toLowerCase() == "url") {
-											var abPath = window.point;
-											v = v.replace(")", "");
-											v = "url(./" + v.substring(v.indexOf(abPath)+abPath.length)+")";
-										}
+                                	for (var j = 0; j < rules[i].declarations.length; j ++) {
+                                    	if (rules[i].declarations[j].property == "transform") {
+											transformSelector = rules[i].mSelectorText;
+                                        	transformValue = rules[i].declarations[j].valueText;
+                                        }
+                                    }
+                                }
 
-										st["@"][rules[i].declarations[j].property] = v;
-									}
+                                rules = node.sheet.cssRules;
+                                for(var i = 0; i < rules.length; i ++) {
+                                    var selectorText = rules[i].selectorText;
+                                    // console.log(selectorText)
+                                	var st = {};
+                                    st["@"] = {}
+                                    st["@"].selectorText = selectorText
+                                    for (var j = 0; j < rules[i].style.length; j ++) {
+                                         console.log(rules[i].style[j])
+                                        // console.log(rules[i].style[rules[i].style[j]]);
+                                        var v = rules[i].style[rules[i].style[j]];
+                                        if(v && v.substring(0,3).toLowerCase() == "url") {
+                                            var abPath = window.point;
+                                            v = v.replace(")", "");
+                                            v = "url(./" + v.substring(v.indexOf(abPath)+abPath.length)+")";
+                                        } 
 
-									into.style.push(st);
-								}
-
-								nextStyleIndex++;
+                                        d = rules[i]
+                                        st["@"][rules[i].style[j]] = v;
+                                    }
+									if (selectorText == transformSelector)
+										st["@"]["transform"] = transformValue;
+									
+                                	into.style.push(st);
+                                }
 							}
 
 							var attrs = node.attributes;
@@ -105,13 +116,13 @@ asdf
 						var c = node.firstChild;
 						while(c) {
 							var t = {};
-							process(c, t, nextStyleIndex);
+							process(c, t);
 							Array.prototype.push.call(into.node, t);
 
 							c = c.nextSibling;
 						}
 					}
-					process(iframe.contentDocument,result.node, 0)
+					process(iframe.contentDocument,result.node)
 					console.log(result);
 
 					var output = document.getElementById("result")
@@ -127,41 +138,6 @@ asdf
 				if (document.querySelector("iframe"))
 					document.querySelector("iframe").parentElement.removeChild(document.querySelector("iframe"))
 				var code = document.getElementById("code");
-
-				var count = 0;
-				var i = 0;
-				var onTagStart = false, onTagEnd = false;
-				while (i < code.value.length - 1) {
-					var tagName;
-					if (code.value[i] == '\<') {
-						if (code.value[i+1] != '\/') {
-							onTagStart = true;
-							tagName = "";
-						} else {
-							onTagEnd = true;
-						}
-					} else if (code.value[i] == '\>') {
-						if (onTagStart) {
-							onTagStart = false;
-							if (tagName == "style") {
-								styles[count] = "";
-								i++;
-								while (code.value[i] != '\<') {
-									styles[count] += code.value[i];
-									i++;
-								}
-								//console.log(styles[count]);
-								count++;
-								continue;
-							}
-						} else if (onTagEnd)
-							onTagEnd = false;
-					} else if (onTagStart) {
-						tagName += code.value[i];
-					}
-					
-					i++;
-				}
 
 				var iframe = document.createElement("iframe");
                 // Set the 'sandbox' attribute except the 'allow-scripts' value
