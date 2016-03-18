@@ -1901,7 +1901,7 @@ CSSStyleValuePair CSSStyleValuePair::fromString(const char* key, const char* val
         } else {
             sscanf(value, "%f%%", &ret.m_value.m_floatValue);
         }
-    } else if (strcmp(key, "overflow-x") == 0) {
+    } else if (strcmp(key, "overflow") == 0 || strcmp(key, "overflow-x") == 0) {
         // visible | hidden | scroll(X) | auto(X) | inherit // initial value -> visible
         ret.m_keyKind = CSSStyleValuePair::KeyKind::OverflowX;
         ret.m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;

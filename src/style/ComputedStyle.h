@@ -503,6 +503,11 @@ public:
         return m_transformOrigin;
     }
 
+    bool hasTransformOrigin()
+    {
+        return m_transformOrigin != nullptr;
+    }
+
     void setBorderTopColor(Color color)
     {
         surround()->border.top().setColor(color);
@@ -903,6 +908,7 @@ protected:
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
         m_transforms = nullptr;
+        m_transformOrigin = nullptr;
     }
 
     // NOTICE

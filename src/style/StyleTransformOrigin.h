@@ -95,6 +95,13 @@ public:
         return String::fromUTF8(temp);
     }
 
+    bool operator==(const StyleTransformOrigin& origin)
+    {
+        return m_originValue->getXAxis() == origin.m_originValue->getXAxis()
+            && m_originValue->getYAxis() == origin.m_originValue->getYAxis()
+            && m_originValue->getZAxis() == origin.m_originValue->getZAxis();
+    }
+
 
 private:
     TransformOriginData* m_originValue;

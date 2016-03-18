@@ -184,6 +184,16 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         }
     }
 
+    if (newStyle->m_transformOrigin == NULL && oldStyle->m_transformOrigin == NULL) {
+
+    } else if (newStyle->m_transformOrigin == NULL || oldStyle->m_transformOrigin == NULL) {
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+    } else {
+        if (!(*newStyle->m_transformOrigin == *oldStyle->m_transformOrigin)) {
+            damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageComposite | damage);
+        }
+    }
+
     return damage;
 }
 

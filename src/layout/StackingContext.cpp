@@ -195,6 +195,10 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
                 , m_matrix.get(6), m_matrix.get(7), m_matrix.get(8)); */
             LayoutUnit ox = m_owner->width() / 2;
             LayoutUnit oy = m_owner->height() / 2;
+            if (m_owner->style()->hasTransformOrigin()) {
+                ox = m_owner->style()->transformOrigin()->originValue()->getXAxis().specifiedValue(m_owner->width());
+                oy = m_owner->style()->transformOrigin()->originValue()->getYAxis().specifiedValue(m_owner->height());
+            }
             canvas->translate(ox, oy);
             canvas->postMatrix(m_matrix);
             canvas->drawImage(m_buffer, Rect(minX - ox, minY - oy, bufferWidth, bufferHeight));
@@ -275,13 +279,15 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
         SkMatrix invert;
         STARFISH_RELEASE_ASSERT(m_matrix.invert(&invert));
 
-        // TODO transform-origin
         LayoutUnit ox = m_owner->width() / 2;
         LayoutUnit oy = m_owner->height() / 2;
+        if (m_owner->style()->hasTransformOrigin()) {
+            ox = m_owner->style()->transformOrigin()->originValue()->getXAxis().specifiedValue(m_owner->width());
+            oy = m_owner->style()->transformOrigin()->originValue()->getYAxis().specifiedValue(m_owner->height());
+        }
         x -= ox;
         y -= oy;
         SkPoint pt = SkPoint::Make((float)x, (float)y);
-
         invert.mapPoints(&pt, 1);
         x = pt.x() + ox;
         y = pt.y() + oy;
