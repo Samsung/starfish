@@ -8,7 +8,7 @@ namespace StarFish {
 #define DEFAULT_VALUE_IMAGE_WIDTH() \
     (BorderImageLengthBox(1.0))
 #define DEFAULT_VALUE_IMAGE_SLICE() \
-    (LengthBox(Length(Length::Percent, 1.f), Length(Length::Percent, 1.f), Length(Length::Percent, 1.f), Length(Length::Percent, 1.f)))
+    (LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0)))
 #define DEFAULT_VALUE_IMAGE_REPEAT() \
     (StretchValue)
 

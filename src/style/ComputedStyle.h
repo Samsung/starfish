@@ -832,7 +832,7 @@ public:
     static Length initialMargin() { return Length(Length::Fixed, 0); }
     static String* initialBgImage() { return String::emptyString; }
     static String* initialBorderImageSource() { return String::emptyString; }
-    static LengthBox initialBorderImageSlices() { return LengthBox(Length(Length::Percent, 1.f), Length(Length::Percent, 1.f), Length(Length::Percent, 1.f), Length(Length::Percent, 1.f)); }
+    static LengthBox initialBorderImageSlices() { return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0)); }
     static bool initialBorderImageSliceFill() { return false; }
     static BorderImageRepeatValue initialBorderImageRepeat() { return BorderImageRepeatValue::StretchValue; }
 

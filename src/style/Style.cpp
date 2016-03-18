@@ -3191,7 +3191,7 @@ bool CSSStyleDeclaration::checkInputErrorBorderImageRepeat(std::vector<String*, 
 bool CSSStyleDeclaration::checkInputErrorBorderImageSlice(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // number && fill?
-    if (tokens->size() > 2)
+    if (tokens->size() != 1 && tokens->size() != 2)
         return false;
 
     bool isNum = false, isFill = false;
