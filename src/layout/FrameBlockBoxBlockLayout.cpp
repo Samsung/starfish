@@ -30,6 +30,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     if (!child)
         marginInfo.setMargin(0, 0);
     LayoutUnit marginForAbsolute;
+    bool hasOnlySelfCollapsing = true;
     while (child) {
         // Place the child.
         child->asFrameBox()->setX(paddingLeft() + borderLeft());
@@ -79,12 +80,12 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
             posTop = std::max(marginInfo.positiveMargin(), posTop);
             negTop = std::max(marginInfo.negativeMargin(), negTop);
+            LayoutUnit logicalTop = posTop - negTop;
             if (child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
                 marginInfo.setMargin(posTop, negTop);
             } else {
+                hasOnlySelfCollapsing = false;
                 if (!marginInfo.atTopSideOfBlock() || !marginInfo.canCollapseWithMarginTop()) {
-                    LayoutUnit logicalTop = std::max(marginInfo.positiveMargin(), posTop)
-                        - std::max(marginInfo.negativeMargin(), negTop);
                     child->asFrameBox()->moveY(logicalTop);
                 }
                 marginInfo.setMargin(child->asFrameBox()->marginBottom());
@@ -110,6 +111,14 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
         }
 
         child = child->next();
+    }
+
+    if (isEstablishesBlockFormattingContext() && hasOnlySelfCollapsing) {
+        child = firstChild();
+        while (child) {
+            child->asFrameBox()->moveY(ctx.maxPositiveMarginTop() - ctx.maxNegativeMarginTop());
+            child = child->next();
+        }
     }
 
     // NOTE: At this point, ctx.max[P/N]MarginTop has the collapsed margin
