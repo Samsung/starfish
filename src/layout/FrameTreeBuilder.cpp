@@ -102,12 +102,6 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
     }
 
     bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
-    bool isNormalFlow = currentFrame->isNormalFlow();
-
-    if (!isNormalFlow) {
-        frameBlockBox->appendChild(currentFrame);
-        return;
-    }
 
     if (frameBlockBox->hasBlockFlow()) {
         if (isBlockChild) {
@@ -116,6 +110,24 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
         } else {
             // Block... + Inline case
             Frame* last = frameBlockBox->lastChild();
+            if (!last->isNormalFlow()) {
+                Frame* lastAnnyBlockBox = nullptr;
+
+                Frame* cur = last->previous();
+                while (cur) {
+                    STARFISH_ASSERT(cur->isFrameBlockBox());
+                    if (cur->isNormalFlow() && cur->node() == nullptr) {
+                        lastAnnyBlockBox = cur;
+                        break;
+                    }
+                    cur = cur->previous();
+                }
+
+                if (lastAnnyBlockBox) {
+                    lastAnnyBlockBox->appendChild(currentFrame);
+                    return;
+                }
+            }
             STARFISH_ASSERT(last->style()->display() == BlockDisplayValue);
 
             if (last->node()) {
@@ -169,7 +181,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 
         Frame* currentFrame;
         {
-            DisplayValue display = current->style()->display();
+            DisplayValue display = current->style()->originalDisplay();
             if (display == DisplayValue::BlockDisplayValue) {
                 if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();

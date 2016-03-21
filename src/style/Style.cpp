@@ -4478,19 +4478,6 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         }
     };
 
-    auto chkPseudoClass = [](CSSStyleRule* rule, Element* e) -> bool {
-        if (rule->m_pseudoClass == CSSStyleRule::None) {
-            return true;
-        }
-
-        bool chk = true;
-        if ((rule->m_pseudoClass & CSSStyleRule::Active) && ((e->state() & Node::NodeState::NodeStateActive) == 0)) {
-            chk = false;
-        }
-
-        return chk;
-    };
-
     // first sheet is must user-agent style sheet!
     for (unsigned i = 0; i < m_sheets.size(); i++) {
         CSSStyleSheet* sheet = m_sheets[i];

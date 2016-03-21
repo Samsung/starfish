@@ -31,6 +31,10 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
         FrameBox* f = boxes->at(k);
         if (f->isNormalFlow())
             hasNormalFlowContent = true;
+        else {
+            // out of flow boxes
+            f->asFrameBox()->setY(f->asFrameBox()->marginTop());
+        }
 
         if (f->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
@@ -82,9 +86,7 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                 maxDescender = std::min(dec, maxDescender);
             }
         } else {
-            // out of flow boxes
-            STARFISH_ASSERT(!f->isNormalFlow());
-            f->asFrameBox()->setY(f->asFrameBox()->marginTop());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
 
