@@ -345,8 +345,17 @@ public:
         if (heightLength.isAuto() || heightLength.isZero()) {
             // If the block is inline flow and has any line boxes,
             // this is not self-collapsing.
-            if (!hasBlockFlow())
-                return !m_lineBoxes.size();
+            if (!hasBlockFlow()) {
+                for (unsigned i = 0; i < m_lineBoxes.size(); i++) {
+                    for (unsigned j = 0; j < m_lineBoxes[i]->boxes().size(); j++) {
+                        if (!m_lineBoxes[i]->boxes()[j]->isNormalFlow())
+                            continue;
+                        if (!m_lineBoxes[i]->boxes()[j]->isSelfCollapsingBlock(ctx))
+                            return false;
+                    }
+                }
+                return true;
+            }
             Frame* child = firstChild();
             while (child) {
                 if (!child->isNormalFlow()) {
