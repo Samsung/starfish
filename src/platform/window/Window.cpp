@@ -91,14 +91,14 @@ public:
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         m_width = w;
         m_height = h;
-        STARFISH_LOG_INFO("create CanvasSurfaceEFL %p\n", m_image);
+        // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p\n", m_image);
 
         STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
     }
 
     ~CanvasSurfaceEFL()
     {
-        STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", m_image);
+        // STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", m_image);
         evas_object_hide(m_image);
         evas_object_del(m_image);
 

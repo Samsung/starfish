@@ -85,7 +85,8 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                         for (unsigned i = 0; i < tokens.size(); i++) {
                             const char* selectorText = tokens[i]->trim()->utf8Data();
                             CSSStyleRule::Kind kind;
-                            String* st;
+                            String** st;
+                            size_t stLen = 0;
                             std::string cSelectorText;
                             char* pcPos = strchr((char *)selectorText, ':');
                             if (pcPos) {
@@ -101,22 +102,42 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
 
                             if (selectorText[0] == '.') {
                                 kind = CSSStyleRule::Kind::ClassSelector;
-                                st = String::fromUTF8(&selectorText[1]);
+                                st = new(GC) String*[1];
+                                st[0] = String::fromUTF8(&selectorText[1]);
                             } else if (selectorText[0] == '#') {
                                 kind = CSSStyleRule::Kind::IdSelector;
-                                st = String::fromUTF8(&selectorText[1]);
+                                st = new(GC) String*[1];
+                                st[0] = String::fromUTF8(&selectorText[1]);
                             } else if (selectorText[0] == '*') {
+                                st = new(GC) String*[1];
                                 kind = CSSStyleRule::Kind::UniversalSelector;
+                            } else if (strchr(selectorText, '#')) {
+                                st = new(GC) String*[2];
+                                const char* p = strchr(selectorText, '#');
+                                std::string s1(&selectorText[0], p - selectorText);
+                                st[0] = String::fromUTF8(s1.data());
+                                std::string s2(p + 1);
+                                st[1] = String::fromUTF8(s2.data());
+                                kind = CSSStyleRule::Kind::TypeIdSelector;
+                            } else if (strchr(selectorText, '.')) {
+                                st = new(GC) String*[2];
+                                const char* p = strchr(selectorText, '.');
+                                std::string s1(&selectorText[0], p - selectorText);
+                                st[0] = String::fromUTF8(s1.data());
+                                std::string s2(p + 1);
+                                st[1] = String::fromUTF8(s2.data());
+                                kind = CSSStyleRule::Kind::TypeClassSelector;
                             } else {
+                                st = new(GC) String*[1];
                                 kind = CSSStyleRule::Kind::TypeSelector;
                                 if (selectorText[0] == '*') {
-                                    st = String::emptyString;
+                                    st[0] = String::emptyString;
                                 } else {
-                                    st = String::fromUTF8(selectorText);
+                                    st[0] = String::fromUTF8(selectorText);
                                 }
                             }
 
-                            CSSStyleRule* rule = new CSSStyleRule(kind, st, pc, document);
+                            CSSStyleRule* rule = new CSSStyleRule(kind, st, stLen, pc, document);
                             const tinyxml2::XMLAttribute* attr = e->FirstAttribute();
                             while (attr) {
                                 if (strcmp(attr->Name(), "selectorText") != 0) {

@@ -278,7 +278,9 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
 
     if (!m_matrix.isIdentity()) {
         SkMatrix invert;
-        STARFISH_RELEASE_ASSERT(m_matrix.invert(&invert));
+        if (!m_matrix.invert(&invert)) {
+            return nullptr;
+        }
 
         LayoutUnit ox = m_owner->width() / 2;
         LayoutUnit oy = m_owner->height() / 2;

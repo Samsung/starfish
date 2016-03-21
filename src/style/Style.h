@@ -1220,7 +1220,9 @@ public:
         UniversalSelector,
         TypeSelector,
         ClassSelector,
+        TypeClassSelector,
         IdSelector,
+        TypeIdSelector,
     };
 
     enum PseudoClass {
@@ -1229,15 +1231,20 @@ public:
         Hover,
     };
 
+    CSSStyleRule(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document)
+        : ScriptWrappable(this)
+        , m_document(document)
+    {
+        init(kind, ruleText, ruleTextLength, pc, document);
+    }
+
     CSSStyleRule(Kind kind, String* ruleText, PseudoClass pc, Document* document)
         : ScriptWrappable(this)
         , m_document(document)
     {
-        m_kind = kind;
-        m_ruleText = ruleText;
-        m_pseudoClass = pc;
-        initScriptWrappable(this);
-        m_styleDeclaration = new CSSStyleDeclaration(document);
+        String** rt =  new(GC) String*[1];
+        rt[0] = ruleText;
+        init(kind, rt, 1, pc, document);
     }
 
     CSSStyleDeclaration* styleDeclaration()
@@ -1251,8 +1258,19 @@ public:
     }
 
 protected:
+    void init(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document)
+    {
+        m_kind = kind;
+        m_ruleText = ruleText;
+        m_ruleTextLength = ruleTextLength;
+        m_pseudoClass = pc;
+        initScriptWrappable(this);
+        m_styleDeclaration = new CSSStyleDeclaration(document);
+    }
+
     Kind m_kind;
-    String* m_ruleText;
+    String** m_ruleText;
+    size_t m_ruleTextLength;
     PseudoClass m_pseudoClass;
     CSSStyleDeclaration* m_styleDeclaration;
     Document* m_document;

@@ -4506,7 +4506,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // type selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-                if (sheet->m_rules[j]->m_ruleText->equals(element->localName())) {
+                if (sheet->m_rules[j]->m_ruleText[0]->equals(element->localName())) {
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                     apply(cssValues, ret, parent);
                 }
@@ -4518,9 +4518,24 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::ClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
                 auto className = element->classNames();
                 for (unsigned f = 0; f < className.size(); f++) {
-                    if (className[f]->equals(sheet->m_rules[j]->m_ruleText)) {
+                    if (className[f]->equals(sheet->m_rules[j]->m_ruleText[0])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                         apply(cssValues, ret, parent);
+                    }
+                }
+            }
+        }
+
+        // type.class selector
+        for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
+            if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+                if (element->localName()->equals(sheet->m_rules[j]->m_ruleText[0])) {
+                    auto className = element->classNames();
+                    for (unsigned f = 0; f < className.size(); f++) {
+                        if (className[f]->equals(sheet->m_rules[j]->m_ruleText[1])) {
+                            auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
+                            apply(cssValues, ret, parent);
+                        }
                     }
                 }
             }
@@ -4529,9 +4544,21 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // id selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::IdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-                if (element->id()->equals(sheet->m_rules[j]->m_ruleText)) {
+                if (element->id()->equals(sheet->m_rules[j]->m_ruleText[0])) {
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                     apply(cssValues, ret, parent);
+                }
+            }
+        }
+
+        // type#id selector
+        for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
+            if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeIdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+                if (element->localName()->equals(sheet->m_rules[j]->m_ruleText[0])) {
+                    if (element->id()->equals(sheet->m_rules[j]->m_ruleText[1])) {
+                        auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
+                        apply(cssValues, ret, parent);
+                    }
                 }
             }
         }
@@ -4554,7 +4581,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         if ((element->state() & Node::NodeState::NodeStateActive)) {
             for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-                    if (sheet->m_rules[j]->m_ruleText->equals(element->localName())) {
+                    if (sheet->m_rules[j]->m_ruleText[0]->equals(element->localName())) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                         apply(cssValues, ret, parent);
                     }
@@ -4568,7 +4595,22 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::ClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
                     auto className = element->classNames();
                     for (unsigned f = 0; f < className.size(); f++) {
-                        if (className[f]->equals(sheet->m_rules[j]->m_ruleText)) {
+                        if (className[f]->equals(sheet->m_rules[j]->m_ruleText[0])) {
+                            auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
+                            apply(cssValues, ret, parent);
+                        }
+                    }
+                }
+            }
+        }
+
+        // type.class:active selector
+        for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
+            if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+                if (element->localName()->equals(sheet->m_rules[j]->m_ruleText[0])) {
+                    auto className = element->classNames();
+                    for (unsigned f = 0; f < className.size(); f++) {
+                        if (className[f]->equals(sheet->m_rules[j]->m_ruleText[1])) {
                             auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                             apply(cssValues, ret, parent);
                         }
@@ -4581,7 +4623,19 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         if ((element->state() & Node::NodeState::NodeStateActive)) {
             for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::IdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-                    if (element->id()->equals(sheet->m_rules[j]->m_ruleText)) {
+                    if (element->id()->equals(sheet->m_rules[j]->m_ruleText[0])) {
+                        auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
+                        apply(cssValues, ret, parent);
+                    }
+                }
+            }
+        }
+
+        // type#id:active selector
+        for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
+            if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeIdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+                if (element->localName()->equals(sheet->m_rules[j]->m_ruleText[0])) {
+                    if (element->id()->equals(sheet->m_rules[j]->m_ruleText[1])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                         apply(cssValues, ret, parent);
                     }
