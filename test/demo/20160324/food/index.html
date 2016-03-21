@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+   <head>
+      <style>
+            * {
+                  margin: 0;
+                  padding: 0;
+            }
+		body {
+			position:absolute;
+			top:0px;
+			left:0px;
+			width:360px;
+			height:360px;
+			font-size: 2.125em;
+			color: white;
+		}
+            p {
+                  color: white;
+                  font-size: 20pt;
+                  font-weight: bold;
+            }
+            #container {
+                  width: 100%;
+                  height: 100%;
+                  background-color: black;
+                  text-align: center;
+                  overflow: hidden;
+            }
+            #img_title,#img_title_next {
+                  width: 40%;
+                  height: 24%;
+                  margin: 6% 0 4% 0;
+            }
+            #div_progress {
+                  width: 68%;
+                  height: 8px;
+                  margin: 0 auto 2% auto;
+                  background-color: #333333;
+            }
+            #div_progress_bar, #div_progress_bar_next {
+                  width: 35%;
+                  height: 100%;
+                  background-color: #41CD8B;
+            }
+            #div_btn {
+                  width: 100%;
+                  height: 26%;
+                  background-color: #41CD8B;
+                  margin-top: 5%;
+                  position: relative;
+                  z-index: 3;
+            }
+            #div_btn:active {
+                  background-color: #40AD7A;
+            }
+            #text_title {
+                  color: #41CD8B;
+                  margin-bottom: 4%;
+                  font-size: 16pt;
+            }
+            #text_value, #text_value_next {
+                  font-size: 40pt;
+                  font-weight: bold;
+            }
+            #text_btn {
+                  font-size: 22pt;
+                  padding-top: 5%;
+            }
+            #next_layer {
+                  position: absolute;
+                  width: 100%;
+                  height: 74%;
+                  z-index: 1;
+                  background: black;
+            }
+            #current_layer {
+                  height: 74%;
+            }
+      </style>
+   </head>
+   <body>
+      <div id="container">
+         <div id="current_layer">
+             <img id="img_title" src="images/food0.png"/>
+             <p id="text_title">TODAY'S RECOMMENDED FOOD</p>
+             <div id="div_progress"><div id="div_progress_bar"></div></div>
+             <p id="text_value">700</p>
+             <p>kcal</p>
+         </div>
+         <div id="next_layer">
+             <img id="img_title_next" src="images/food0.png">
+             <p id="text_title">TODAY'S RECOMMENDED FOOD</p>
+             <div id="div_progress"><div id="div_progress_bar_next"></div></div>
+             <p id="text_value_next">700</p>         <p>kcal</p>
+         </div>
+         <div id="div_btn"><p id="text_btn">NEXT FOOD</p></div>
+      </div>
+
+   </body>
+   <script>
+      var num = 0;
+      var inAnimation = false;
+      var nextLayer = document.getElementById("next_layer");
+      var currentLayer = document.getElementById("current_layer");
+      var nlY = 0;
+      document.getElementById("div_btn").onclick = function() {
+         if (inAnimation) return;
+
+         var img = document.getElementById('img_title_next');
+         var txt = document.getElementById('text_value_next');
+         var pgb = document.getElementById('div_progress_bar_next');
+
+         num = (++num)%4;
+         switch(num){
+            case 0:
+               img.src = "images/food0.png";
+               txt.textContent = "700";
+               pgb.style.width = "70%"
+               break;
+            case 1:
+               img.src = "images/food1.png";
+               txt.textContent = "500";
+               pgb.style.width = "50%"
+               break;
+            case 2:
+               img.src = "images/food2.jpg";
+               txt.textContent = "400";
+               pgb.style.width = "40%"
+               break;
+            case 3:
+               img.src = "images/food3.png";
+               txt.textContent = "800";
+               pgb.style.width = "80%"
+               break;
+         }
+
+         nextLayer.style.transform = "translateY(0%)"
+         inAnimation = true;
+         window.requestAnimationFrame(ani)
+      };
+      function ani()
+      {
+          if (nlY > 100) {
+              inAnimation = false;
+              nlY = 0;
+              nextLayer.style.opacity = 1;
+              nextLayer.style.transform = "";
+              currentLayer.style.transform = ""
+              currentLayer.style.opacity = 1
+              document.getElementById('img_title').src = document.getElementById('img_title_next').src
+              document.getElementById('text_value').textContent = document.getElementById('text_value_next').textContent
+              document.getElementById('div_progress_bar').style.width = document.getElementById('div_progress_bar_next').style.width
+              return;
+          }
+          nlY+=2.5
+
+          var y = Math.sin((nlY / 100) * 90 * (Math.PI / 180))
+          var d = y * 100
+          nextLayer.style.opacity = y;
+          nextLayer.style.transform = "translateY(" + -d + "%)"
+          currentLayer.style.opacity = 1-y
+          currentLayer.style.transform = "scale(" + (1-y) + ")"
+          window.requestAnimationFrame(ani);
+      }
+   </script>
+</html>
