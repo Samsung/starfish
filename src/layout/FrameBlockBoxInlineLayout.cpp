@@ -53,13 +53,13 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                     // Placing a superscript is font and browser dependent.
                     // We place superscript above the baseline by 1/2 of ascender (following blink)
                     // (i.e, the baseline of superscript is aligned with 1/2 of the ascender)
-                    ib->setY(pascender/2 + ib->asInlineNonReplacedBox()->ascender());
+                    ib->setY(pascender / 2 + ib->asInlineNonReplacedBox()->ascender());
                 } else if (va == VerticalAlignValue::TopVAlignValue) {
                     ib->setY(ib->height() + ib->marginTop());
                 } else if (va == VerticalAlignValue::BottomVAlignValue) {
                     ib->setY(pdescender + ib->height() + ib->marginBottom());
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                    ib->setY(ib->height()/2 + ib->marginTop());
+                    ib->setY(ib->height() / 2 + ib->marginTop());
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                     ib->setY(pascender);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
@@ -124,7 +124,7 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                     } else if (va == VerticalAlignValue::SubVAlignValue) {
                         maxDescenderSoFar = std::min(pdescender + rb->decender(), maxDescenderSoFar);
                     } else if (va == VerticalAlignValue::SuperVAlignValue) {
-                        maxAscenderSoFar = std::max(pascender/2 + rb->ascender(), maxAscenderSoFar);
+                        maxAscenderSoFar = std::max(pascender / 2 + rb->ascender(), maxAscenderSoFar);
                     } else if (va == VerticalAlignValue::TopVAlignValue) {
                         maxAscenderSoFar = std::max(rb->height() + rb->marginTop(), maxAscenderSoFar);
                     } else if (va == VerticalAlignValue::BottomVAlignValue) {
