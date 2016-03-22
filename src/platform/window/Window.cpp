@@ -100,6 +100,7 @@ public:
     {
         // STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", m_image);
         evas_object_hide(m_image);
+        STARFISH_RELEASE_ASSERT(evas_object_ref_get(m_image) == 0);
         evas_object_del(m_image);
 
         auto iter = std::find(m_window->m_surfaceList.begin(), m_window->m_surfaceList.end(), m_image);
@@ -147,10 +148,6 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
     WindowImplEFL* wnd = (WindowImplEFL*)user_data;
     if (!wnd->inRendering())
         wnd->setNeedsLayout();
-}
-
-void dummyRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
-{
 }
 
 #ifndef STARFISH_TIZEN_WEARABLE
@@ -399,7 +396,7 @@ Window::Window(StarFish* starFish)
     setNeedsRendering();
 }
 
-// #define STARFISH_ENABLE_TIMER
+#define STARFISH_ENABLE_TIMER
 
 #ifdef STARFISH_ENABLE_TIMER
 static unsigned long getLongTickCount()
@@ -664,16 +661,6 @@ void Window::rendering()
 
     m_needsRendering = false;
     m_inRendering = false;
-
-    static int logCounter = 0;
-    logCounter++;
-    if (logCounter % 20 == 0) {
-#ifdef NDEBUG
-    STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
-#else
-    STARFISH_LOG_INFO("rendering end. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
-#endif
-    }
 }
 
 void Window::setNeedsRenderingSlowCase()
@@ -856,39 +843,39 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
     if (!m_isRunning)
         return;
 
-    Node* node = hitTest(x, y);
     if (kind == TouchEventDown) {
+        Node* node = hitTest(x, y);
         m_touchDownPoint = Location(x, y);
         setActiveNode(node);
-    } else {
-        if (kind == TouchEventMove) {
-            if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 15) || (abs(m_touchDownPoint.y() - y) > 15))) {
-                releaseActiveNode();
-                m_activeNodeWithTouchDown = nullptr;
-            }
-        } else if (kind == TouchEventUp) {
-            bool shouldCallOnClick = false;
-            if (m_activeNodeWithTouchDown == node) {
-                shouldCallOnClick = true;
-            }
-
-            Node* t = m_activeNodeWithTouchDown;
-
-            bool shouldDispatchEvent = shouldCallOnClick;
-            while (t) {
-                if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
-                    QualifiedName eventType = starFish()->staticStrings()->m_click;
-                    Event* e = new Event(eventType, EventInit(true, true));
-                    EventTarget::dispatchEvent(t->asNode(), e);
-                    shouldDispatchEvent = false;
-                }
-                t = t->parentNode();
-            }
-
+    } else if (kind == TouchEventMove) {
+        if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
-
             m_activeNodeWithTouchDown = nullptr;
         }
+    } else {
+        STARFISH_ASSERT(kind == TouchEventUp);
+        bool shouldCallOnClick = false;
+        Node* node = hitTest(x, y);
+        if (m_activeNodeWithTouchDown == node) {
+            shouldCallOnClick = true;
+        }
+
+        Node* t = m_activeNodeWithTouchDown;
+
+        bool shouldDispatchEvent = shouldCallOnClick;
+        while (t) {
+            if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
+                QualifiedName eventType = starFish()->staticStrings()->m_click;
+                Event* e = new Event(eventType, EventInit(true, true));
+                EventTarget::dispatchEvent(t->asNode(), e);
+                shouldDispatchEvent = false;
+            }
+            t = t->parentNode();
+        }
+
+        releaseActiveNode();
+
+        m_activeNodeWithTouchDown = nullptr;
     }
 }
 
@@ -934,7 +921,12 @@ void Window::resume()
 
     auto a = eflWindow->m_drawnImageList.begin();
     while (a != eflWindow->m_drawnImageList.end()) {
-        evas_object_unref((Evas_Object*)a->first->unwrap());
+        std::vector<std::pair<Evas_Object*, bool> > & vec = a->second;
+
+        for (size_t i = 0; i < vec.size(); i ++) {
+            Evas_Object* obj = vec[i].first;
+            evas_object_del(obj);
+        }
         a++;
     }
     eflWindow->m_drawnImageList.clear();

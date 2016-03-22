@@ -18,6 +18,16 @@ bool g_enablePixelTest = false;
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
     : m_staticStrings(this)
 {
+    GC_set_on_collection_event([](GC_EventType evtType) {
+        if (GC_EVENT_PRE_START_WORLD == evtType) {
+#ifdef NDEBUG
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
+#else
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
+#endif
+        }
+    });
+
     GC_set_free_space_divisor(64);
     STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
 
@@ -38,6 +48,16 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int w, int h)
     : m_staticStrings(this)
 {
+    GC_set_on_collection_event([](GC_EventType evtType) {
+        if (GC_EVENT_PRE_START_WORLD == evtType) {
+#ifdef NDEBUG
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
+#else
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
+#endif
+        }
+    });
+
     GC_set_free_space_divisor(64);
     STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
 
