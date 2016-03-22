@@ -3,7 +3,6 @@ test/reftest/csswg-test/css1/c15-ids-000.htm
 test/reftest/csswg-test/css1/c16-descendant-002.htm
 test/reftest/csswg-test/css1/c17-comments-000.htm
 test/reftest/csswg-test/css1/c17-comments-001.htm
-test/reftest/csswg-test/css1/c31-important-000.htm
 test/reftest/csswg-test/css1/c43-rpl-bbx-000.htm
 test/reftest/csswg-test/css1/c43-rpl-bbx-001.htm
 test/reftest/csswg-test/css1/c45-bg-canvas-000.htm

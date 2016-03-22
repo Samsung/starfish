@@ -55,10 +55,12 @@ function initialize() {
     stream.readLine();      // Title
     while (!stream.atEnd()) {
         var line = stream.readLine();
+        //console.log(line);
         if (line.startsWith("#")) continue;
         var tokens = line.split(",");
+        if (tokens.length <= 2) continue;
         var prop = tokens[2].trim();
-        if (prop != "") {           // property column exists
+        if (prop != "" && !acceptCSSList.includes(prop)) {           // property column exists
             acceptCSSList = acceptCSSList.concat(prop);
             preprop = prop;
         }
@@ -167,7 +169,8 @@ page.onLoadStarted = function() {
 };
 
 page.onLoadFinished = function() {
-    var result = page.evaluate(function() {
+    var result = page.evaluate(function(acceptCSSList, acceptTagList, includes) {
+        Array.prototype.includes = includes;
         var usedCSSList = {};
         var usedTagList = {};
         var styleTags = document.getElementsByTagName("style");
@@ -184,6 +187,10 @@ page.onLoadFinished = function() {
             var rules = styleTags[i].sheet.cssRules;
             for (var j = 0; j < rules.length; j++) {
                 if (rules[j].constructor != CSSStyleRule) return false;
+                if (rules[j].selectorText.indexOf(':') != -1 && !rules[j].selectorText.indexOf(':active') == -1)
+                    return false;
+                if (rules[j].style.cssText.indexOf('!important') != -1 || rules[j].style.cssText.indexOf('! important') != -1)
+                    return false;
                 for (var k = 0; k < rules[j].style.length; k++) {
                     var prop = rules[j].style[k].trim();
                     if ((prop == "background-attachment") || (prop == "background-clip")
@@ -194,12 +201,15 @@ page.onLoadFinished = function() {
                     }
                     var newprop = changePropName(prop, rules[j].style[k+1]);
                     if (prop != newprop) k++;
-                    usedCSSList[newprop] = 1;
+                    if (!acceptCSSList.includes(newprop))
+                        return ["CSS", newprop];
                 }
             }
         }
         var allTags = document.getElementsByTagName("*");
         for (var i = 0; i < allTags.length; i++) {
+            if (!acceptTagList.includes(allTags[i].localName))
+                return ["HTML", allTags[i].localName];
             if (allTags[i].hasAttribute("style")) {
                 var inlineStyleList = allTags[i].getAttribute("style").split(';').map(function(a) { return a.split(':'); });
                 for (var j = 0; j < inlineStyleList.length; j++) {
@@ -214,31 +224,24 @@ page.onLoadFinished = function() {
                         }
                         var newprop = changePropName(prop, inlineStyleList[j+1]? inlineStyleList[j+1][0] : undefined );
                         if (prop != newprop) j++;
-                        usedCSSList[newprop] = 1;
+                        if (!acceptCSSList.includes(newprop))
+                            return ["CSS", newprop];
                     }
                 }
             }
             usedTagList[allTags[i].localName] = 1;
         }
-        return [usedCSSList, usedTagList];
-    });
+        return true;
+    }, acceptCSSList, acceptTagList, Array.prototype.includes);
     //console.log(JSON.stringify(result));
     var check = function(res) {
         if (res == false) {
-            console.log("## [ETC] rule is NOT Supported");
+            console.log("## [ETC] rule or pseudo selector is NOT Supported");
             return false;
         }
-        for (var css in res[0]) {   // usedCSSList
-            if (!acceptCSSList.includes(css)) {
-                console.log("## [CSS] " + css + " is NOT Supported");
-                return false;
-            }
-        }
-        for (var tag in res[1]) {   // usedHTMLList
-            if (!(acceptTagList.includes(tag))) {
-                console.log("## [HTML] " + tag + " is not Supported");
-                return false;
-            }
+        if (res != true) {
+            console.log("## [" + res[0] + "] " + res[1] + " is NOT Supported");
+            return false;
         }
         return true;
     };
