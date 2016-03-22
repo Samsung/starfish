@@ -64,6 +64,14 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                     ib->setY(pascender);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                     ib->setY(pdescender + ib->height());
+                } else if (va == VerticalAlignValue::NumericVAlignValue) {
+                    Length len = f->style()->verticalAlignLength();
+                    LayoutUnit height = ib->asInlineNonReplacedBox()->ascender() - ib->asInlineNonReplacedBox()->decender();
+                    if (len.isPercent()) {
+                        ib->setY(ib->asInlineNonReplacedBox()->ascender() + height * len.percent());
+                    } else if (len.isFixed()) {
+                        ib->setY(ib->asInlineNonReplacedBox()->ascender() + LayoutUnit::fromPixel(len.fixed()));
+                    }
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
@@ -90,6 +98,13 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                 f->setY(pascender);
             } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                 f->setY(pdescender + f->height() + f->marginBottom());
+            } else if (va == VerticalAlignValue::NumericVAlignValue) {
+                Length len = f->style()->verticalAlignLength();
+                if (len.isPercent()) {
+                    f->setY(f->height() + f->height() * len.percent());
+                } else if (len.isFixed()) {
+                    f->setY(f->height() + LayoutUnit::fromPixel(len.fixed()));
+                }
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -103,7 +118,7 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
     // 2. find max ascender and descender
     LayoutUnit maxAscenderSoFar = pascender;
     LayoutUnit maxDescenderSoFar = pdescender;
-
+    // FIXME: step 2 can be reduced
     while (true) {
         LayoutUnit prevMaxAscenderSoFar = maxAscenderSoFar;
         LayoutUnit prevMaxDescenderSoFar = maxDescenderSoFar;
@@ -133,6 +148,9 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                         maxDescenderSoFar = std::min(pascender - rb->height(), maxDescenderSoFar);
                     } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                         maxAscenderSoFar = std::max(pdescender + rb->height(), maxAscenderSoFar);
+                    } else if (va == VerticalAlignValue::NumericVAlignValue) {
+                        maxAscenderSoFar = std::max(rb->y(), maxAscenderSoFar);
+                        maxDescenderSoFar = std::min(rb->y() - rb->height(), maxDescenderSoFar);
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
@@ -148,6 +166,9 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                     maxDescenderSoFar = std::min(pascender - box->height(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                     maxAscenderSoFar = std::max(pdescender + box->height(), maxAscenderSoFar);
+                } else if (va == VerticalAlignValue::NumericVAlignValue) {
+                    maxAscenderSoFar = std::max(box->y(), maxAscenderSoFar);
+                    maxDescenderSoFar = std::max(box->y() - box->height(), maxDescenderSoFar);
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
@@ -265,6 +286,8 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                     f->setY(maxAscender - f->y());
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
+                    f->setY(maxAscender - f->y());
+                } else if (va == VerticalAlignValue::NumericVAlignValue) {
                     f->setY(maxAscender - f->y());
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();

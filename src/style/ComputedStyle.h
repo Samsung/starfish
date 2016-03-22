@@ -888,11 +888,6 @@ public:
 
         if (m_background)
             m_background->checkComputed(baseFontSize, font());
-
-        // [vertical-align] : Update percentage value referring to the [line-height]
-        if (isNumericVerticalAlign() && verticalAlignLength().isPercent()) {
-            m_verticalAlignLength.percentToFixed(lineHeight().fixed());
-        }
     }
 
 protected:
