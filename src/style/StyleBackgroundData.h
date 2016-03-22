@@ -13,10 +13,8 @@ public:
         : m_image(String::emptyString)
         , m_imageData(NULL)
         , m_sizeType(BackgroundSizeType::SizeValue)
-        , m_sizeValue(NULL)
+        , m_sizeValue(new LengthSize())
     {
-        // FIXME (after paint framebox background, sizevalue setted but we don't want that
-        sizeValue();
     }
 
     ~StyleBackgroundData()
@@ -132,11 +130,7 @@ bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
     if (a.m_sizeType != b.m_sizeType)
         return false;
 
-    if (a.m_sizeValue == NULL && b.m_sizeValue == NULL) {
-
-    } else if (a.m_sizeValue == NULL || b.m_sizeValue == NULL) {
-        return false;
-    } else if (*a.m_sizeValue != *b.m_sizeValue) {
+    if (a.m_sizeType == BackgroundSizeType::SizeValue && *a.m_sizeValue != *b.m_sizeValue) {
         return false;
     }
 
