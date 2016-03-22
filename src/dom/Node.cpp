@@ -600,6 +600,13 @@ bool Node::dispatchEvent(Event* event)
     return EventTarget::dispatchEvent(this, event);
 }
 
+void Node::didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
+{
+    if (frame()) {
+        frame()->computeStyleFlags();
+    }
+}
+
 void Node::dumpStyle()
 {
     dump();

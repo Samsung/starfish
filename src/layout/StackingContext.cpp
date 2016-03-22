@@ -188,7 +188,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height());
 
         if (!m_matrix.isIdentity()) {
-            // TODO transform-origin
             /* printf("matrix [%f %f %f][%f %f %f][%f %f %f]\n"
                 , m_matrix.get(0), m_matrix.get(1), m_matrix.get(2)
                 , m_matrix.get(3), m_matrix.get(4), m_matrix.get(5)

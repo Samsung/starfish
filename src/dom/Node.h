@@ -445,7 +445,7 @@ public:
     Element* nextElementSibling();
     Element* previousElementSibling();
 
-    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle) { }
+    virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle);
     virtual void didNodeInserted() { }
 
     virtual bool dispatchEvent(Event* event) override;

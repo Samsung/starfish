@@ -266,8 +266,14 @@ public:
         m_flags.m_needsLayout = true;
 
         bool isRootElement = node && node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLHtmlElement();
-
         m_flags.m_isRootElement = isRootElement;
+
+        computeStyleFlags();
+    }
+
+    void computeStyleFlags()
+    {
+        bool isRootElement = m_flags.m_isRootElement;
 
         // TODO add condition
         m_flags.m_isEstablishesBlockFormattingContext = isRootElement;

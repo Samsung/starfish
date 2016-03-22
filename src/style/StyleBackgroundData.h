@@ -15,6 +15,8 @@ public:
         , m_sizeType(BackgroundSizeType::SizeValue)
         , m_sizeValue(NULL)
     {
+        // FIXME (after paint framebox background, sizevalue setted but we don't want that
+        sizeValue();
     }
 
     ~StyleBackgroundData()

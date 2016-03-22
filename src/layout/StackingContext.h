@@ -1,6 +1,8 @@
 #ifndef __StarFishStackingContext__
 #define __StarFishStackingContext__
 
+#include "platform/canvas/Canvas.h"
+
 namespace StarFish {
 class Node;
 class FrameBox;
@@ -36,6 +38,13 @@ public:
     {
         return m_needsOwnBuffer;
     }
+
+    void clearOwnBuffer()
+    {
+        delete m_buffer;
+        m_buffer = nullptr;
+    }
+
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
 
     void paintStackingContext(Canvas* canvas);

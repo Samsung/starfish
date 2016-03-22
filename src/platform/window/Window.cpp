@@ -913,12 +913,25 @@ void Window::pause()
 
 void Window::resume()
 {
-    STARFISH_LOG_INFO("onResume");
-    m_isRunning = true;
-    m_needsRendering = true;
-    m_needsPainting = true;
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
 
+    std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
+    {
+        ctx->clearOwnBuffer();
+        auto iter = ctx->childContexts().begin();
+        while (iter != ctx->childContexts().end()) {
+            auto iter2 = iter->second->begin();
+            while (iter2 != iter->second->end()) {
+                clearSC(*iter2);
+                iter2++;
+            }
+            iter++;
+        }
+    };
+
+    clearSC(ctx);
+
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     auto a = eflWindow->m_drawnImageList.begin();
     while (a != eflWindow->m_drawnImageList.end()) {
         std::vector<std::pair<Evas_Object*, bool> > & vec = a->second;
@@ -930,7 +943,15 @@ void Window::resume()
         a++;
     }
     eflWindow->m_drawnImageList.clear();
+
+
+    STARFISH_LOG_INFO("onResume");
+    m_isRunning = true;
+    m_needsRendering = true;
+    m_needsPainting = true;
     rendering();
+
+    evas_render(evas_object_evas_get(eflWindow->m_window));
 
     document()->setVisibleState(PageVisibilityState::PageVisibilityStateVisible);
     document()->visibilityStateChanged();
