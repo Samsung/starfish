@@ -607,12 +607,17 @@ public:
                             Rect rt(xx, y, h, h);
                             drawRect(rt);
                         } else {
+                            // To sync with phantom-webkit
+                            int ph = h * 0.2;
+                            drawRect(Rect(xx, y + h - ph, h, ph));
+                            /*
                             save();
                             clip(Rect(xx, y, h, h));
                             g_enablePixelTest = false;
                             drawText(xx, y, String::createASCIIString("p"));
                             g_enablePixelTest = true;
                             restore();
+                            */
                         }
                     }
                     xx += h;
