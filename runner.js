@@ -24,8 +24,8 @@ page.open("tool/html2xml/index.html", function() {
 		code.value = data;
 		onSubmit();
 		document.querySelector('iframe').src = absPath;
-                // console.log(absPath);
-	     	return "submit"
+		// console.log(absPath);
+		return "submit"
 	}, content, absPath, absPath.substring(0,absPath.lastIndexOf("/")+1))
 
 	setTimeout(function wait() {
@@ -33,9 +33,9 @@ page.open("tool/html2xml/index.html", function() {
 		var result = page.evaluate(function (absPath) {
 			var result = document.getElementById("result");
 			// console.log(result.value)
-     			return result.value
-      		});
-                fs.write("result.xml", result, "w");
+			return result.value
+		});
+		fs.write("result.xml", result, "w");
 		var wd = absPath.substring(0, absPath.lastIndexOf("/") + 1)
 
 		var process = require("child_process")
@@ -43,10 +43,10 @@ page.open("tool/html2xml/index.html", function() {
 		var execFile = process.execFile
 		var args = ["result.xml", "--working-directory="+wd];
 		var i;
-                for(i = 2; i < system.args.length; i ++) {
+		for(i = 2; i < system.args.length; i ++) {
 			args.push(system.args[i])
 		}
-		// console.log(args);
+			// console.log(args);
 		var child = spawn("./StarFish", args);
 
 		child.stdout.on("data", function (data) {
