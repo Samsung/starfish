@@ -55,7 +55,7 @@ for i in $tc ; do
 
     # Capture the screenshot
 #    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
-ELM_ENGINE="shot:" ./tool/pixel_test/bin/nodejs runner.js ${i} --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
+ELM_ENGINE="shot:" phantomjs --web-security=false --local-to-remote-url-access=true runner.js ${i} --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
 
     # Compare
     mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}

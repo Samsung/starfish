@@ -428,19 +428,8 @@ install_pixel_test_dep:
 	mkdir -p ~/.fonts
 	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
 	fc-cache -fv
-	select CONTINUE in nodejs node; \
-	do \
-		rm tool/pixel_test/bin/nodejs; \
-		ln -s `which $$CONTINUE` tool/pixel_test/bin/nodejs; \
-		ls -al tool/pixel_test/bin/nodejs; \
-		exit 0; \
-	done; \
-	@echo "..done"
 
 pixel_test:
-	if [[ ! -f tool/pixel_test/bin/nodejs ]]; then \
-		make install_pixel_test_dep; \
-	fi;
 	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
 pixel_test_css1:
 	make pixel_test tc=tool/pixel_test/css1.res screen=pc
@@ -467,9 +456,6 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
 regression_test:
-	if [[ ! -f tool/pixel_test/bin/nodejs ]]; then \
-		make install_pixel_test_dep; \
-	fi;
 	if [[ -f test/reftest/Regression/demo/20160115/*/*.png ]]; then \
 		rm test/reftest/Regression/demo/20160115/*/*.png_; \
 	fi;

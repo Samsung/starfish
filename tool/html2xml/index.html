@@ -147,7 +147,12 @@ asdf
 				iframe.srcdoc = code.value;
 				document.body.appendChild(iframe);
 
-				iframe.onload = function() {
+				iframe.load = function job() {
+					// console.log (iframe.contentDocument.body.childNodes.length)
+					if (iframe.contentDocument.body.childNodes.length == 0) {
+						window.setTimeout(iframe.load, 50);
+						return;
+					}
 					// console.log("onload");
 					var resCnt = 0;
 
@@ -181,23 +186,15 @@ asdf
 								// console.log(arguments[0])
 								// console.log(arguments[1])
 								// console.log(arguments[2])
-    							resCnt--;
-    						}});
+    								resCnt--;
+    							}});
 						}
 					}
+					// console.log(resCnt);
+					printResult()
 
-					// console.log("resCnt" + resCnt)
-					var iid =
-					window.setInterval(function () {
-						// console.log("interval")
-						// console.log("print result")
-						if (resCnt == 0) {
-							printResult();
-							window.clearInterval(iid)
-						} else {
-						}
-					}, 50)	;
 				}
+				window.setTimeout(iframe.load, 50);
 
 			}
 		</script>

@@ -35,6 +35,10 @@ page.open("tool/html2xml/index.html", function() {
 			// console.log(result.value)
 			return result.value
 		});
+		if (result.length == "") {
+			window.setTimeout(wait, 100);
+			return;
+		}
 		fs.write("result.xml", result, "w");
 		var wd = absPath.substring(0, absPath.lastIndexOf("/") + 1)
 
@@ -46,7 +50,6 @@ page.open("tool/html2xml/index.html", function() {
 		for(i = 2; i < system.args.length; i ++) {
 			args.push(system.args[i])
 		}
-			// console.log(args);
 		var child = spawn("./StarFish", args);
 
 		child.stdout.on("data", function (data) {
@@ -58,9 +61,9 @@ page.open("tool/html2xml/index.html", function() {
 		})
 
 		child.on("exit", function (code) {
-			console.log("EXIT:", code)
+			phantom.exit();
 		})
 
-	}, 500);
+	}, 100);
 });
 
