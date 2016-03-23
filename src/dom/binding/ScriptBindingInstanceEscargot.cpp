@@ -86,6 +86,7 @@ escargot::ESValue toJSString(String* v)
 
 void ScriptBindingInstance::initBinding(StarFish* sf)
 {
+
     escargot::ESValue v;
 
     escargot::ESObject* console = escargot::ESObject::create();
@@ -2439,6 +2440,34 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
 #ifdef TIZEN_DEVICE_API
     fetchData(this)->m_deviceAPIObject = new DeviceAPI::NativePluginManager(fetchData(this)->m_instance);
+#endif
+
+#ifdef TIZEN_DEVICE_API
+    {
+        escargot::ESValue loadFunction = fetchData(this)->m_instance->globalObject()->get(escargot::ESString::create("load"));
+        std::string path = "/opt/usr/apps/";
+        path += getenv("PACKAGE_NAME");
+        path += "/shared/test/deviceapi/";
+
+        std::string prefix = path;
+        path += "include.js";
+        fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("prefix"), false, false, false, escargot::ESString::create(prefix.data()));
+        escargot::ESValue pathValue = escargot::ESString::create(path.data());
+
+        ScriptValue result;
+        escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+
+        std::jmp_buf tryPosition;
+        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
+            result = escargot::ESFunctionObject::call(instance, loadFunction, escargot::ESValue(), &pathValue, 1, false);
+            instance->unregisterTryPos(&tryPosition);
+            STARFISH_LOG_INFO("Tizen device api load ok");
+        } else {
+            result = instance->getCatchedError();
+            STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
+        }
+    }
+
 #endif
 }
 
