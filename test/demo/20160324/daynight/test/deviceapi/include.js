@@ -18,18 +18,30 @@ function require(name) {
 }
 
 function loadPlugin(tizen, name) {
-    try {
-        load(prefix + name);
-        for (var it in module.exports) {
-            tizen[it] = module.exports[it]['value'];
-        }
-        print("Loaded plugin " + name);
-        gc();
-    } catch (e) {
-        print(e);
-        print("Failed to load plugin " + prefix + name);
-    }
-    return tizen;
+    Object.defineProperty(tizen, name, {
+        get: function() {
+            delete tizen[name];
+            try {
+                load(prefix + "tizen." + name + ".plugin");
+                var hasName = false;
+                for (var it in module.exports) {
+                    Object.defineProperty(tizen, it, module.exports[it]);
+                    if (it == name) hasName = true;
+                }
+                if (!hasName) {
+                    throw "Plugin code do not have name " + name;
+                }
+                gc();
+                print("Loaded plugin " + name);
+            } catch (e) {
+                print(e);
+                print("Failed to load plugin " + prefix + name);
+            }
+            return tizen[name];
+        },
+        enumerable: true,
+        configurable: true
+    });
 }
 
 function WebAPIException(type, msg) {
@@ -39,13 +51,13 @@ function WebAPIException(type, msg) {
 print("Initialize plugins ============================================");
 var start = new Date();
 var tizen = {};
-loadPlugin(tizen, "tizen.messageport.plugin");
+loadPlugin(tizen, "messageport");
 //loadPlugin(tizen, "tizen.filesystem.plugin");
-loadPlugin(tizen, "tizen.newfilesystem.plugin");
-tizen.filesystem = tizen.newfilesystem;
-loadPlugin(tizen, "tizen.sensorservice.plugin");
-loadPlugin(tizen, "tizen.application.plugin");
-loadPlugin(tizen, "tizen.systeminfo.plugin");
+loadPlugin(tizen, "newfilesystem");
+//tizen.filesystem = tizen.newfilesystem;
+loadPlugin(tizen, "sensorservice");
+loadPlugin(tizen, "application");
+loadPlugin(tizen, "systeminfo");
 var end = new Date();
 print("Plugin initialization took " + (end-start) + "ms");
 print("===============================================================");
