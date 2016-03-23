@@ -412,8 +412,17 @@ asm:
 	vi -O $(BIN).asm $(BIN).elf
 
 install_runner_dep:
-	sudo apt-get install nodejs phantomjs npm
-	npm install fs path phantom@0.8.4 slimerjs node-phantom-simple
+	sudo apt-get install phantomjs
+
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+# use the rest as arguments for "run"
+RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+# ...and turn them into do-nothing targets
+$(eval $(RUN_ARGS):;@:)
+endif
+
+run:
+	phantomjs --web-security=false --local-to-remote-url-access=true runner.js ${RUN_ARGS}
 
 install_pixel_test_dep:
 	mkdir -p ~/.fonts

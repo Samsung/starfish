@@ -62,7 +62,7 @@ asdf
 							into["@"].localName = node.localName;
 
 							if(node.localName == "style") {
-								console.log(node.textContent)
+								// console.log(node.textContent)
 								into.style = []
 
 								var parser = new CSSParser();
@@ -85,7 +85,7 @@ asdf
                                     st["@"] = {}
                                     st["@"].selectorText = selectorText
                                     for (var j = 0; j < rules[i].style.length; j ++) {
-                                         console.log(rules[i].style[j])
+                                         // console.log(rules[i].style[j])
                                         // console.log(rules[i].style[rules[i].style[j]]);
                                         var v = rules[i].style[rules[i].style[j]];
                                         if(v && v.substring(0,3).toLowerCase() == "url") {
@@ -123,7 +123,7 @@ asdf
 						}
 					}
 					process(iframe.contentDocument,result.node)
-					console.log(result);
+					// console.log(result);
 
 					var output = document.getElementById("result")
 					//var x2js = new X2JS();
@@ -148,7 +148,7 @@ asdf
 				document.body.appendChild(iframe);
 
 				iframe.onload = function() {
-					console.log("onload");
+					// console.log("onload");
 					var resCnt = 0;
 
 					var links = iframe.contentDocument.querySelectorAll("link")
@@ -158,8 +158,8 @@ asdf
 						if (links[i].getAttribute("rel") == "stylesheet") {
 							resCnt++;
 							function result(rr) {
-								console.log("ajax result")
-								console.log(rr)
+								// console.log("ajax result")
+								// console.log(rr)
 								links[arguments.callee.i].outerHTML = "<style>"
         						+ rr +
         						"</style>";
@@ -175,22 +175,22 @@ asdf
 								point = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + "/"
 							}
 							url = "file://" + point + url;
-							console.log(url)
+							// console.log(url)
 							$.ajax({async: false, type:"GET", url: url, success: result, error: function (error) {
-								console.log("ajax error")
-								console.log(arguments[0])
-								console.log(arguments[1])
-								console.log(arguments[2])
+								// console.log("ajax error")
+								// console.log(arguments[0])
+								// console.log(arguments[1])
+								// console.log(arguments[2])
     							resCnt--;
     						}});
 						}
 					}
 
-					console.log("resCnt" + resCnt)
+					// console.log("resCnt" + resCnt)
 					var iid =
 					window.setInterval(function () {
-						console.log("interval")
-						console.log("print result")
+						// console.log("interval")
+						// console.log("print result")
 						if (resCnt == 0) {
 							printResult();
 							window.clearInterval(iid)
