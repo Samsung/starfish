@@ -1,0 +1,15 @@
+(function() {
+	'use strict';
+
+	require('xwalk');
+	require('base64');
+	require('common');
+	require('file_stream');
+	require('file');
+	require('file_system_manager');
+
+	// Exports
+	module.exports = {
+		newfilesystem: { value: new FileSystemManager(), writable: false, enumerable: true}
+	};
+})();

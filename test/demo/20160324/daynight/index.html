@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+
+<body>
+    <div id="container">
+        <div id="day">
+        </div>
+        <div id="night">
+        </div>    
+        <div id="ground">
+        </div>
+        <div id="sun">
+        </div>
+    </div>
+    
+    <script>
+function run() {     
+    var textbox = document.getElementById('contents');
+
+    
+    // when back key is pushed, app is terminated
+
+    document.addEventListener('tizenhwkey', function(e) {
+        if (e.keyName === 'back') {
+            try {
+                tizen.application.getCurrentApplication().exit();
+            } catch (ignore) {
+            }
+        }
+    });
+
+    var daybg = document.getElementById('day');
+    var nightbg = document.getElementById('night');
+    var sun = document.getElementById('sun');
+    
+    
+    var DEVICEAPI = true;
+    if(DEVICEAPI == true) {
+        var lightSensor = tizen.sensorservice.getDefaultSensor("LIGHT");
+    } else { // if deviceAPI binding is not supported
+        var lightSensor = {};
+        lightSensor.currentLight = 0;
+        lightSensor.plusminus = 1;
+        lightSensor.getLightSensorData = function(s, f) {
+            var interval = 40;
+            if(lightSensor.plusminus == 1 && lightSensor.currentLight < (MAX_LIGHT - interval)){
+                lightSensor.currentLight += interval;   
+            } else if (lightSensor.plusminus == -1 && lightSensor.currentLight > interval) {
+                lightSensor.currentLight -= interval;
+            } else {
+                lightSensor.plusminus *= -1;
+            }
+
+            var sd = {};
+            sd.lightLevel = lightSensor.currentLight;
+            s(sd);
+        }
+        lightSensor.start = function(f){f();}
+    }
+
+
+    //// functions to draw with adjusting opacity ////
+    function adjustOpacity() {
+        currentDayOpacity = Math.round(daybg.style.opacity * MAX_LIGHT);
+        
+        var gap = (lightLevel - currentDayOpacity < 0) ? -5.0 : 5.0;
+        if (Math.abs(lightLevel - currentDayOpacity) < 5.0)
+            gap = 0;
+        daybg.style.opacity = (currentDayOpacity + gap) / MAX_LIGHT;
+        nightbg.style.opacity = 1 - (currentDayOpacity + gap) / MAX_LIGHT;
+        
+        // for sun movement
+        var sunX = currentDayOpacity * -0.3 + 330;
+        var sunY = (sunX * sunX) / 256.0 - (5 * sunX) / 4.0 + 160;
+        sunX -= 40; // because sun image is 80px*80px (use half)
+        sunY -= 40;
+        sun.style.transform = "translate(" + sunX + "px, " + sunY + "px)";
+        sun.style.opacity = (currentDayOpacity + gap) / MAX_LIGHT - 0.1;
+        if (visibility)
+            window.requestAnimationFrame(function inner(){adjustOpacity()});
+    }
+
+    //// end of drawing functions////
+
+
+    var visibility = true;
+    var lightLevel;
+    var MAX_LIGHT = 700.0; // const value
+    var SENSOR_READ_INTERVAL = 170; // milliseconds
+    if (visibility)
+        adjustOpacity();
+
+    function onGetSuccessCB(sensorData) {          
+        lightLevel = sensorData.lightLevel;
+        if (lightLevel > MAX_LIGHT) {
+            lightLevel = MAX_LIGHT;
+        }
+        console.log(lightLevel);
+
+        if (visibility)
+            window.setTimeout(function inner(){lightSensor.getLightSensorData(onGetSuccessCB, onerrorCB);}, SENSOR_READ_INTERVAL);
+    }
+
+    function onerrorCB(error) {
+        console.log("error occurs");
+    }
+    
+    function onsuccessCB() {
+        lightSensor.getLightSensorData(onGetSuccessCB, onerrorCB);
+    }
+
+    lightSensor.start(onsuccessCB);
+
+    function handleVisibilityChange() {
+        if (document.hidden) {
+            visibility = false;
+        } else  {
+            visibility = true;
+            adjustOpacity();
+            lightSensor.getLightSensorData(onGetSuccessCB, onerrorCB);
+        }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange, false);
+};
+
+run();
+    </script>
+</body>
+</html>
