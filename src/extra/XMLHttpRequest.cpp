@@ -13,6 +13,7 @@ XMLHttpRequest::XMLHttpRequest()
     m_method = UNKNOWN_METHOD;
     m_response_type = DEFAULT_RESPONSE;
     m_ready_state = UNSENT;
+    m_status = 0;
     m_url = nullptr;
     m_response_header = nullptr;
     m_timeout = 0;
@@ -118,7 +119,6 @@ void XMLHttpRequest::send(String* body)
                         int BUFF_SIZE = 2048;
                         char* buff = new char[BUFF_SIZE];
                         read( fd, buff, BUFF_SIZE);
-                        puts( buff);
                         close( fd);
 
                         res_code = 200;
@@ -146,6 +146,7 @@ void XMLHttpRequest::send(String* body)
 
                 }
 
+                xhrobj->setStatus(res_code);
                 if (((res_code == 200 || res_code == 201) && res == CURLE_OK )) {
                     xhrobj->setResponseHeader(String::fromUTF8(header.memory));
 
@@ -316,7 +317,9 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
         m_ready_state = DONE;
         ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
         if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
-            ScriptValue json_arg[1] = { escargot::ESValue(escargot::ESValue::ESNull) };
+            escargot::ESErrorObject* e = escargot::ESErrorObject::create();
+            e->defineDataProperty(escargot::ESString::create("target"), false, false, false, scriptValue());
+            ScriptValue json_arg[1] = { e };
             callScriptFunction(rsc, json_arg, 1, scriptValue());
         }
         ScriptValue en = getHandler(eventName, starfishInstance());

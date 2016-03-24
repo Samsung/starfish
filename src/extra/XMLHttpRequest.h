@@ -93,6 +93,16 @@ public:
         return m_ready_state;
     }
 
+    void setStatus(int status)
+    {
+        m_status = status;
+    }
+
+    int getStatus()
+    {
+        return m_status;
+    }
+
     void setTimeout(uint32_t timeout)
     {
         m_timeout = timeout;
@@ -249,6 +259,7 @@ protected:
     METHOD_TYPE m_method;
     RESPONSE_TYPE m_response_type;
     READY_STATE m_ready_state;
+    int m_status;
     uint32_t m_timeout;
     bool m_abort_flag;
     ScriptBindingInstance* m_bindingInstance;
