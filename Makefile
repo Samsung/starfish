@@ -416,9 +416,6 @@ asm:
 	readelf -a --wide $(BIN) | c++filt > $(BIN).elf
 	vi -O $(BIN).asm $(BIN).elf
 
-install_runner_dep:
-	sudo apt-get install phantomjs
-
 ifeq (run,$(firstword $(MAKECMDGOALS)))
 # use the rest as arguments for "run"
 RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))

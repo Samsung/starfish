@@ -55,7 +55,7 @@ for i in $tc ; do
 
     # Capture the screenshot
 #    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
-ELM_ENGINE="shot:" phantomjs --web-security=false --local-to-remote-url-access=true runner.js ${i} --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
+ELM_ENGINE="shot:" ./run.sh ${i} --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
 
     # Compare
     mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}
@@ -66,7 +66,7 @@ ELM_ENGINE="shot:" phantomjs --web-security=false --local-to-remote-url-access=t
     #echo $STARFISH_PNG
     #echo $DIFF_PNG
     if [ ! -f ${WEBKIT_PNG} ]; then
-        phantomjs tool/pixel_test/capture.js -f ${i} out/ $2 > /dev/null 2>&1
+        tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f ${i} out/ $2 > /dev/null 2>&1
         mv out/${file}_expected.png ${WEBKIT_PNG}
     fi
 

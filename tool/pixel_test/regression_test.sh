@@ -43,7 +43,7 @@ for i in $tc ; do
     dir=${dir%/*}
 
     # Capture the screenshot
-    ELM_ENGINE="shot:" phantomjs --web-security=false --local-to-remote-url-access=true runner.js $i --regression-test > /dev/null 2>&1
+    ELM_ENGINE="shot:" ./run.sh $i --regression-test > /dev/null 2>&1
     WEBKIT_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}.html.png"
     mv out.png result.png
     if [ -f ${WEBKIT_PNG} ]
@@ -68,7 +68,7 @@ for i in $tc ; do
             echo -e "${RED}[FAIL]${RESET}" $i "${YELLOW}(Unable to open html file)${RESET}"
         fi
     else
-        ELM_ENGINE="shot:" ./tool/pixel_test/bin/nodejs runner.js $i --regression-test > /dev/null 2>&1
+        ELM_ENGINE="shot:" ./run.sh $i --regression-test > /dev/null 2>&1
         mv out.png ${WEBKIT_PNG}_
         echo -e "${YELLOW}[UPDATE]${RESET}" $i "${YELLOW}(Screenshot is captured)${RESET}"
         UPDATE=`expr $UPDATE + 1`
