@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+
+<body>
+  <div id="idText">
+    div1
+  </div>
+  <div class="classText">
+    div2
+  </div>
+</body>
+
+<script type="text/javascript">
+  function run() {
+    console.log("*********** XHR onreadystatechange & onload *****************");
+
+    function handler () {
+      document.getElementById("idText").text = this.responseText;
+      console.log(this.responseText);
+    }
+	function cb_readystatechange() {
+	  console.log("cb_readystatechange");
+	}
+	function cb_onload() {
+	  console.log("cb_onload");
+	}
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", handler);
+	xhr.onreadystatechange = cb_readystatechange;
+	xhr.onload = cb_onload;
+	// You have to add option --working-directory=/home/(yourPath)/starfish/test/unittest/xhr
+    xhr.open("GET", "txt.txt");
+    xhr.send();
+
+    console.log("************* Done *******************");
+  }
+  run();
+</script>
+
+</html>
