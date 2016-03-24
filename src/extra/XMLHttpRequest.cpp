@@ -261,6 +261,16 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
     } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load")
         || eventName->equals("loadend")) {
         m_ready_state = DONE;
+        ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
+        if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
+            ScriptValue json_arg[1] = { escargot::ESValue(escargot::ESValue::ESNull) };
+            callScriptFunction(rsc, json_arg, 1, scriptValue());
+        }
+        ScriptValue le = getHandler(String::fromUTF8("loadend"), starfishInstance());
+        if (le.isObject() && le.asESPointer()->isESFunctionObject()) {
+            ScriptValue json_arg[1] = { escargot::ESValue(escargot::ESValue::ESNull) };
+            callScriptFunction(le, json_arg, 1, scriptValue());
+        }
     }
 
     if (isMainThread) {

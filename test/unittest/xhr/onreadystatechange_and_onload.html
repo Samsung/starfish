@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+
+<body>
+  <div id="idText">
+    div1
+  </div>
+  <div class="classText">
+    div2
+  </div>
+</body>
+
+<script type="text/javascript">
+  function run() {
+    console.log("*********** XHR onreadystatechange & onload *****************");
+
+    function handler () {
+	  console.log("handler");
+      document.getElementById("idText").text = this.responseText;
+      console.log(this.responseText);
+    }
+	function test1() {
+	  console.log("test1");
+	}
+	function test2() {
+	  console.log("test2");
+	}
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", handler);
+	xhr.onreadystatechange = test1;
+	xhr.onload = test2;
+    xhr.open("GET", "https://httpbin.org/get");
+    xhr.send();
+
+    console.log("************* Done *******************");
+  }
+  run();
+</script>
+
+</html>
