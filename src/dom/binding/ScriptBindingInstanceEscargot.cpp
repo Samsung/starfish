@@ -2400,6 +2400,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("abort"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("abort"), false, false, false, xhrAbortFunction);
 
+    escargot::ESFunctionObject* xhrSetRequestHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("setRequestHeader"), 1, false);
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setRequestHeader"), false, false, false, xhrSetRequestHeaderFunction);
+
     /* Blob */
     DEFINE_FUNCTION(Blob, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_blobElement = BlobFunction;

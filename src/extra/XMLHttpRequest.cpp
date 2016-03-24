@@ -122,19 +122,25 @@ void XMLHttpRequest::send(String* body)
                         close( fd);
 
                         res_code = 200;
+                        xhrobj->setStatus(res_code);
                         res = CURLE_OK;
                         header.memory = buff;
+
+                        ecore_thread_main_loop_begin();
+                        ecore_idler_add([](void *data)->Eina_Bool {
+                            XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
+                            this_obj->callEventHandler(String::fromUTF8("headersReceived"), true, 0, 0);
+                            this_obj->callEventHandler(String::fromUTF8("progress"), true, 0, 0);
+                            return ECORE_CALLBACK_CANCEL;
+                        }, xhrobj);
+                        ecore_thread_main_loop_end();
+
                         buffer.memory = buff;
                         header.contentType = buff;
 
-                        int size = BUFF_SIZE;
-                        for (int i = 0; i < BUFF_SIZE; i++) {
-                            if (buff[i] == '\n') {
-                                buff[i] = 0;
-                                size = i;
-                                break;
-                                }
-                            }
+                        int size = strlen(buff);
+                        if (buff[size - 1] == '\n')
+                            buff[size - 1] = 0;
 
                         buffer.size = size;
                         header.contentLength = size;
@@ -142,11 +148,11 @@ void XMLHttpRequest::send(String* body)
                         progressData.total = size;
                     } else {
                         res_code = 0;
+                        xhrobj->setStatus(res_code);
                       }
 
                 }
 
-                xhrobj->setStatus(res_code);
                 if (((res_code == 200 || res_code == 201) && res == CURLE_OK )) {
                     xhrobj->setResponseHeader(String::fromUTF8(header.memory));
 
@@ -310,11 +316,35 @@ String* XMLHttpRequest::getResponseTypeStr()
 void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total)
 {
 
-    if (eventName->equals("loadstart") || eventName->equals("progress")) {
+    if (eventName->equals("progress")) {
         m_ready_state = LOADING;
-    } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load")
-        || eventName->equals("loadend")) {
-        m_ready_state = DONE;
+        ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
+        if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
+           escargot::ESErrorObject* e = escargot::ESErrorObject::create();
+           e->defineDataProperty(escargot::ESString::create("target"), false, false, false, scriptValue());
+           ScriptValue json_arg[1] = { e };
+           callScriptFunction(rsc, json_arg, 1, scriptValue());
+        }
+       return;
+    } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load") || eventName->equals("loadend")) {
+        if (m_ready_state != DONE) {
+            m_ready_state = DONE;
+            ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
+            if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
+                escargot::ESErrorObject* e = escargot::ESErrorObject::create();
+                e->defineDataProperty(escargot::ESString::create("target"), false, false, false, scriptValue());
+                ScriptValue json_arg[1] = { e };
+                callScriptFunction(rsc, json_arg, 1, scriptValue());
+            }
+        }
+        ScriptValue en = getHandler(eventName, starfishInstance());
+        if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
+            ScriptValue json_arg[1] = { escargot::ESValue(escargot::ESValue::ESNull) };
+            callScriptFunction(en, json_arg, 1, scriptValue());
+        }
+        return;
+    } else if (eventName->equals("headersReceived")) {
+        m_ready_state = HEADERS_RECEIVED;
         ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
         if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
             escargot::ESErrorObject* e = escargot::ESErrorObject::create();
@@ -322,12 +352,8 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             ScriptValue json_arg[1] = { e };
             callScriptFunction(rsc, json_arg, 1, scriptValue());
         }
-        ScriptValue en = getHandler(eventName, starfishInstance());
-        if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
-            ScriptValue json_arg[1] = { escargot::ESValue(escargot::ESValue::ESNull) };
-            callScriptFunction(en, json_arg, 1, scriptValue());
-        }
-    }
+        return;
+     }
 
     if (isMainThread) {
         QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
