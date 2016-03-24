@@ -33,6 +33,8 @@ public:
         return m_height;
     }
 
+    bool isEmpty() const { return m_width <= 0 || m_height <= 0; }
+
 protected:
     float m_width, m_height;
 };
@@ -69,6 +71,11 @@ protected:
     float m_x, m_y;
 };
 
+inline Size operator-(const Location& a, const Location& b)
+{
+    return Size(a.x() - b.x(), a.y() - b.y());
+}
+
 class Rect {
 public:
     Rect(float x, float y, float w, float h)
@@ -79,6 +86,8 @@ public:
 
     float x() const { return m_location.x(); }
     float y() const { return m_location.y(); }
+    float maxX() const { return x() + width(); }
+    float maxY() const { return y() + height(); }
     float width() const { return m_size.width(); }
     float height() const { return m_size.height(); }
 
@@ -87,9 +96,27 @@ public:
     void setWidth(float width) { m_size.setWidth(width); }
     void setHeight(float height) { m_size.setHeight(height); }
 
+    bool isEmpty() const { return m_size.isEmpty(); }
+
     bool contains(float px, float py) const
     {
         return px >= x() && px < (x() + width()) && py >= y() && py < (y() + height());
+    }
+
+    void unite(const Rect& other)
+    {
+        if (other.isEmpty())
+            return;
+        if (isEmpty()) {
+            *this = other;
+            return;
+        }
+
+        Location newLocation(std::min(x(), other.x()), std::min(y(), other.y()));
+        Location newMaxPoint(std::max(maxX(), other.maxX()), std::max(maxY(), other.maxY()));
+
+        m_location = newLocation;
+        m_size = newMaxPoint - newLocation;
     }
 
 private:

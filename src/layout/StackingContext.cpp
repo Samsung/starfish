@@ -164,10 +164,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 
     if (m_needsOwnBuffer) {
 
-        if (owner()->style()->overflow() == OverflowValue::HiddenOverflow) {
-            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
-        }
-
         LayoutUnit minX = visibleRect.x();
         LayoutUnit maxX = visibleRect.maxX();
         LayoutUnit minY = visibleRect.y();
@@ -200,18 +196,20 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             }
             canvas->translate(ox, oy);
             canvas->postMatrix(m_matrix);
-            canvas->drawImage(m_buffer, Rect(minX - ox, minY - oy, bufferWidth, bufferHeight));
             canvas->translate(-ox, -oy);
+        }
 
-            // draw debug rect
-            // canvas->setColor(Color(255, 0, 0, 128));
-            // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
-        } else {
-            canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+        if (owner()->style()->overflow() == OverflowValue::HiddenOverflow) {
+            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
+        }
+        canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
 
-            // draw debug rect
-            // canvas->setColor(Color(255, 0, 0, 128));
-            // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
+        // draw debug rect
+        // canvas->setColor(Color(255, 0, 0, 128));
+        // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
+    } else {
+        if (owner()->style()->overflow() == OverflowValue::HiddenOverflow) {
+            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
         }
     }
 

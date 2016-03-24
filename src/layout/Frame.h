@@ -297,6 +297,10 @@ public:
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement);
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->opacity() != 1);
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->hasTransforms());
+
+            // FIXME
+            // this is not necessery but, we need to compute clip rect when composite used
+            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->overflow() != OverflowValue::VisibleOverflow);
         }
 
         if (style && style->width().isAuto()) {

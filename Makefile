@@ -223,6 +223,8 @@ CXXFLAGS += -Ithird_party/tinyxml2/
 #skia_matrix
 CXXFLAGS += -Ithird_party/skia_matrix/
 
+#clipper
+CXXFLAGS += -Ithird_party/clipper/cpp/
 
 #######################################################
 # SRCS & OBJS
@@ -258,6 +260,9 @@ SRC += third_party/skia_matrix/SkPoint.cpp
 SRC += third_party/skia_matrix/SkRect.cpp
 SRC += third_party/skia_matrix/SkMatrix.cpp
 SRC += third_party/skia_matrix/SkDebug.cpp
+
+# clipper
+SRC += third_party/clipper/cpp/clipper.cpp
 
 ifeq ($(TIZEN_DEVICE_API), true)
 	SRC += third_party/deviceapi/src/TizenDeviceAPILoaderForEscargot.cpp
