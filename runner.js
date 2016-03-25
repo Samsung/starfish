@@ -11,6 +11,7 @@ var content = fs.read(args[1], "utf8")
 
 var absPath = fs.absolute(args[1]);
 // console.log(absPath)
+var toolAbsPath = fs.absolute("./tool/html2xml/index.html")
 
 var page = require('webpage').create();
 page.onConsoleMessage = function(msg, lineNum, sourceId) {
@@ -22,8 +23,8 @@ page.open("tool/html2xml/index.html", function() {
 		window.point = point
 		var code = document.getElementById("code");
 		code.value = data;
+                code.url = absPath;
 		onSubmit();
-		document.querySelector('iframe').src = absPath;
 		// console.log(absPath);
 		return "submit"
 	}, content, absPath, absPath.substring(0,absPath.lastIndexOf("/")+1))

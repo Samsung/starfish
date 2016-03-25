@@ -12,6 +12,8 @@ public:
     {
 
     }
+
+    void addIdler(void (*fn)(void*), void* data);
 protected:
     void run();
 };

@@ -1,4 +1,3 @@
-"use strict";
 var page = require('webpage').create();
 console.log('The default user agent is ' + page.settings.userAgent);
 page.settings.userAgent = 'SpecialAgent';

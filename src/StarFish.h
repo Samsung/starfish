@@ -137,6 +137,11 @@ public:
         return &m_staticStrings;
     }
 
+    MessageLoop* messageLoop()
+    {
+        return m_messageLoop;
+    }
+
     StarFishStartUpFlag startUpFlag()
     {
         return (StarFishStartUpFlag)m_startUpFlag;

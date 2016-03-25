@@ -117,14 +117,6 @@ public:
     };
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
-    Node* onloadNode()
-    {
-        return m_onloadNode;
-    }
-    void setOnloadNode(Node* node)
-    {
-        m_onloadNode = node;
-    }
     void dispatchLoadEvent();
     void dispatchUnloadEvent();
 
@@ -199,7 +191,6 @@ protected:
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
     Location m_touchDownPoint;
-    Node* m_onloadNode;
 
     StarFish* m_starFish;
 

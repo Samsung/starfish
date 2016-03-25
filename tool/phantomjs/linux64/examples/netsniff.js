@@ -1,4 +1,3 @@
-"use strict";
 if (!Date.prototype.toISOString) {
     Date.prototype.toISOString = function () {
         function pad(n) { return n < 10 ? '0' + n : n; }

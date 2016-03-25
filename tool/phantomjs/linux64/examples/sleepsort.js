@@ -1,6 +1,4 @@
 // sleepsort.js - Sort integers from the commandline in a very ridiculous way: leveraging timeouts :P
-
-"use strict";
 var system = require('system');
 
 function sleepSort(array, callback) {
@@ -17,11 +15,11 @@ function sleepSort(array, callback) {
     }
 }
 
-if ( system.args.length < 2 ) {
+if ( system.args < 2 ) {
     console.log("Usage: phantomjs sleepsort.js PUT YOUR INTEGERS HERE SEPARATED BY SPACES");
     phantom.exit(1);
 } else {
-    sleepSort(system.args.slice(1), function() {
+    sleepSort(Array.prototype.slice.call(system.args, 1), function() {
         phantom.exit();
     });
 }

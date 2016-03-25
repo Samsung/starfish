@@ -62,6 +62,22 @@ public:
         setAttribute(document()->window()->starFish()->staticStrings()->m_height, String::fromInt(height));
     }
 
+    LayoutSize intrinsicSize()
+    {
+        if (m_imageData) {
+            int w = width() >= 0 ? width(): m_imageData->width();
+            int h = height() >= 0 ? height(): m_imageData->height();
+            return LayoutSize(w, h);
+        } else {
+            return LayoutSize(0, 0);
+        }
+    }
+
+    ImageData* imageData()
+    {
+        return m_imageData;
+    }
+
     /* Other methods (not in DOM API) */
 
     virtual bool isHTMLImageElement() const
@@ -72,7 +88,7 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
 
 private:
-
+    ImageData* m_imageData;
 };
 
 }

@@ -87,6 +87,7 @@ public:
     }
 
     HTMLHtmlElement* rootElement();
+    HTMLBodyElement* bodyElement();
 
     /* Page Visibility */
     bool hidden() const;

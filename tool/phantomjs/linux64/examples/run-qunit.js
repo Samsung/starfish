@@ -1,4 +1,3 @@
-"use strict";
 var system = require('system');
 
 /**

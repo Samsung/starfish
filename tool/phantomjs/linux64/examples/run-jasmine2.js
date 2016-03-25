@@ -1,4 +1,3 @@
-"use strict";
 var system = require('system');
 
 /**
@@ -38,7 +37,7 @@ function waitFor(testFx, onReady, timeOutMillis) {
 
 
 if (system.args.length !== 2) {
-    console.log('Usage: run-jasmine2.js URL');
+    console.log('Usage: run-jasmine.js URL');
     phantom.exit(1);
 }
 
@@ -56,17 +55,16 @@ page.open(system.args[1], function(status){
     } else {
         waitFor(function(){
             return page.evaluate(function(){
-                return (document.body.querySelector('.symbolSummary .pending') === null &&
-                        document.body.querySelector('.duration') !== null);
+                return document.body.querySelector('.symbolSummary .pending') === null
             });
         }, function(){
             var exitCode = page.evaluate(function(){
                 console.log('');
 
-                var title = 'Jasmine';
-                var version = document.body.querySelector('.version').innerText;
-                var duration = document.body.querySelector('.duration').innerText;
-                var banner = title + ' ' + version + ' ' + duration;
+                var el = document.body.querySelector('.banner');
+                var banner = el.querySelector('.title').innerText + " " +
+                             el.querySelector('.version').innerText + " " +
+                             el.querySelector('.duration').innerText;
                 console.log(banner);
 
                 var list = document.body.querySelectorAll('.results > .failures > .spec-detail.failed');
@@ -84,7 +82,7 @@ page.open(system.args[1], function(status){
                   }
                   return 1;
                 } else {
-                  console.log(document.body.querySelector('.alert > .bar.passed,.alert > .bar.skipped').innerText);
+                  console.log(document.body.querySelector('.alert > .bar.passed').innerText);
                   return 0;
                 }
             });

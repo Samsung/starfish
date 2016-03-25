@@ -5,6 +5,7 @@
 #include "dom/HTMLDocument.h"
 #include "layout/FrameTreeBuilder.h"
 #include "platform/canvas/font/Font.h"
+#include "platform/message_loop/MessageLoop.h"
 
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
@@ -301,7 +302,6 @@ Window::Window(StarFish* starFish)
     m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
-    m_onloadNode = nullptr;
 
     CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet;
 
@@ -885,21 +885,19 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 
 void Window::dispatchLoadEvent()
 {
-    QualifiedName eventType = starFish()->staticStrings()->m_load;
-    Event* e = new Event(eventType, EventInit(false, false));
-    if (onloadNode() != nullptr) {
-        EventTarget::dispatchEvent(onloadNode(), e);
-    }
+    starFish()->messageLoop()->addIdler([](void* data) {
+        Window* wnd = (Window*)data;
+        QualifiedName eventType = wnd->starFish()->staticStrings()->m_load;
+        Event* e = new Event(eventType, EventInit(false, false));
+        wnd->EventTarget::dispatchEvent(wnd->document()->bodyElement(), e);
+    }, this);
 }
 
 void Window::dispatchUnloadEvent()
 {
     QualifiedName eventType = starFish()->staticStrings()->m_unload;
     Event* e = new Event(eventType, EventInit(false, false));
-    // onunload event is supported for body tag
-    if (document() != nullptr) {
-        EventTarget::dispatchEvent(document()->asNode(), e);
-    }
+    EventTarget::dispatchEvent(document()->bodyElement(), e);
 }
 
 void Window::pause()

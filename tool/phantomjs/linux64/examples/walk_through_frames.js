@@ -1,4 +1,3 @@
-"use strict";
 var p = require("webpage").create();
 
 function pageTitle(page) {
@@ -71,3 +70,4 @@ p.open("../test/webpage-spec-frames/index.html", function(status) {
 
     phantom.exit();
 });
+

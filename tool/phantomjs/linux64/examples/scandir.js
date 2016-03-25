@@ -1,6 +1,4 @@
 // List all the files in a Tree of Directories
-
-"use strict";
 var system = require('system');
 
 if (system.args.length !== 2) {

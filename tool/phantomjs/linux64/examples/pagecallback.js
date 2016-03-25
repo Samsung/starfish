@@ -1,4 +1,3 @@
-"use strict";
 var p = require("webpage").create();
 
 p.onConsoleMessage = function(msg) { console.log(msg); };

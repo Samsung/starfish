@@ -90,15 +90,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESValue v;
 
     escargot::ESObject* console = escargot::ESObject::create();
-#ifndef STARFISH_TIZEN_WEARABLE
-    console->set(escargot::ESString::create("log"), fetchData(this)->m_instance->globalObject()->get(escargot::ESString::create("print")));
-#else
     console->set(escargot::ESString::create("log"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESString* msg = instance->currentExecutionContext()->readArgument(0).toString();
+#ifndef STARFISH_TIZEN_WEARABLE
+        STARFISH_LOG_INFO("%s\n", msg->utf8Data());
+#else
         STARFISH_LOG_INFO("console.log: %s\n", msg->utf8Data());
+#endif
+
         return escargot::ESValue();
     }, escargot::ESString::create("log"), 1, false));
-#endif
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
     DEFINE_FUNCTION(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
@@ -818,16 +819,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isDocument()) {
             Document* document = nd->asDocument();
-            Node* body = document->childMatchedBy(document, [](Node* nd) -> bool {
-                if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-                    return true;
-                }
-                return false;
-            });
+            HTMLBodyElement* body = document->bodyElement();
             if (body) {
-                // NOTE. this casting is not necessary. only needed for check its type for debug.
-                HTMLBodyElement* e = body->asElement()->asHTMLElement()->asHTMLBodyElement();
-                return e->scriptValue();
+                return body->scriptValue();
             }
         } else {
             THROW_ILLEGAL_INVOCATION();

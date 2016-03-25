@@ -1,4 +1,3 @@
-"use strict";
 var port, server, service,
     system = require('system');
 

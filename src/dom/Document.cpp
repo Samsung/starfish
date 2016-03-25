@@ -169,6 +169,20 @@ HTMLHtmlElement* Document::rootElement()
     return nullptr;
 }
 
+HTMLBodyElement* Document::bodyElement()
+{
+    Node* body = childMatchedBy(this, [](Node* nd) -> bool {
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            return true;
+        }
+        return false;
+    });
+    if (body) {
+        return body->asElement()->asHTMLElement()->asHTMLBodyElement();
+    }
+    return nullptr;
+}
+
 bool Document::hidden() const
 {
     return m_pageVisibilityState == PageVisibilityState::PageVisibilityStateHidden;

@@ -2,6 +2,7 @@
 #include "dom/Document.h"
 #include "HTMLScriptElement.h"
 
+#include "platform/message_loop/MessageLoop.h"
 
 namespace StarFish {
 
@@ -29,6 +30,13 @@ void HTMLScriptElement::executeScript()
 
                 free(fileContents);
                 fclose(fp);
+
+                document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
+                    HTMLScriptElement* element = (HTMLScriptElement*)data;
+                    QualifiedName eventType = element->document()->window()->starFish()->staticStrings()->m_load;
+                    Event* e = new Event(eventType, EventInit(false, false));
+                    element->EventTarget::dispatchEvent(element, e);
+                }, this);
             }
         }
         m_isAlreadyStarted = true;

@@ -1,5 +1,4 @@
 // echoToFile.js - Write in a given file all the parameters passed on the CLI
-"use strict";
 var fs = require('fs'),
     system = require('system');
 
@@ -13,7 +12,7 @@ if (system.args.length < 3) {
     for ( i= 2; i < system.args.length; ++i ) {
         content += system.args[i] + (i === system.args.length-1 ? '' : ' ');
     }
-
+    
     try {
         fs.write(system.args[1], content, 'w');
     } catch(e) {

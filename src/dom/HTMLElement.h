@@ -110,7 +110,6 @@ public:
         auto eventType = document()->window()->starFish()->staticStrings()->m_load;
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
-        document()->window()->setOnloadNode(this->asNode());
     }
 
     void clearOnload()
@@ -133,7 +132,6 @@ public:
         auto eventType = document()->window()->starFish()->staticStrings()->m_onunload;
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
-        document()->window()->setOnloadNode(this->asNode());
     }
 
     void clearOnunload()

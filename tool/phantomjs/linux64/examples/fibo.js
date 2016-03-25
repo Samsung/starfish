@@ -1,4 +1,3 @@
-"use strict";
 var fibs = [0, 1];
 var ticker = window.setInterval(function () {
     console.log(fibs[fibs.length - 1]);
