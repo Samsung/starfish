@@ -44,7 +44,8 @@ var args = system.args;
 var platformName = "linux";
 var testPath = "";
 var filelist = [];
-var acceptCSSList = [];
+// NOTE: font property is exceptionally considered for other property check.
+var acceptCSSList = ["font"];
 var acceptTagList = [];
 var acceptValues = {};
 var curpath = "tool/pixel_test/";
@@ -169,7 +170,7 @@ page.onLoadStarted = function() {
 };
 
 page.onLoadFinished = function() {
-    var result = page.evaluate(function(acceptCSSList, acceptTagList, includes) {
+    var result = page.evaluate(function(acceptCSSList, acceptTagList, acceptValues, includes) {
         Array.prototype.includes = includes;
         var usedCSSList = {};
         var usedTagList = {};
@@ -186,8 +187,8 @@ page.onLoadFinished = function() {
             if (!styleTags[i] || !styleTags[i].sheet) continue;
             var rules = styleTags[i].sheet.cssRules;
             for (var j = 0; j < rules.length; j++) {
-                if (rules[j].constructor != CSSStyleRule) return false;
-                if (rules[j].selectorText.indexOf(':') != -1 && !rules[j].selectorText.indexOf(':active') == -1)
+                if (!rules[j] || rules[j].constructor != CSSStyleRule) return false;
+                if (rules[j].selectorText.indexOf(':') != -1 && rules[j].selectorText.indexOf(':active') == -1)
                     return false;
                 if (rules[j].style.cssText.indexOf('!important') != -1 || rules[j].style.cssText.indexOf('! important') != -1)
                     return false;
@@ -203,6 +204,11 @@ page.onLoadFinished = function() {
                     if (prop != newprop) k++;
                     if (!acceptCSSList.includes(newprop))
                         return ["CSS", newprop];
+                    if (newprop in acceptValues) {
+                        var val = rules[j].style[prop];
+                        if (!acceptValues[newprop].includes(val))
+                            return ["CSS-Value", val];
+                    }
                 }
             }
         }
@@ -226,13 +232,18 @@ page.onLoadFinished = function() {
                         if (prop != newprop) j++;
                         if (!acceptCSSList.includes(newprop))
                             return ["CSS", newprop];
+                        if (newprop in acceptValues) {
+                            var val = inlineStyleList[j][1].trim();
+                            if (!acceptValues[newprop].includes(val))
+                                return ["CSS-Value", val];
+                        }
                     }
                 }
             }
             usedTagList[allTags[i].localName] = 1;
         }
         return true;
-    }, acceptCSSList, acceptTagList, Array.prototype.includes);
+    }, acceptCSSList, acceptTagList, acceptValues, Array.prototype.includes);
     //console.log(JSON.stringify(result));
     var check = function(res) {
         if (res == false) {

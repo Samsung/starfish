@@ -23,7 +23,6 @@ test/reftest/csswg-test/css-backgrounds-3/background-image-001.html
 test/reftest/csswg-test/css-backgrounds-3/background-image-002.html
 test/reftest/csswg-test/css-backgrounds-3/background-image-005.html
 test/reftest/csswg-test/css-backgrounds-3/background-image-006.html
-test/reftest/csswg-test/css-backgrounds-3/background-image-007.html
 TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
 
   file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-origin-001.html:19
@@ -294,42 +293,17 @@ test/reftest/csswg-test/css-backgrounds-3/border-image-4.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-7.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-8.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-9.html
-test/reftest/csswg-test/css-backgrounds-3/border-image-image-type-001.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-image-type-002.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-image-type-003.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-outset-001.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-outset-002.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-repeat-001.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-repeat-002.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-repeat-003.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-repeat-004.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-repeat-round.html
 ReferenceError: Can't find variable: async_test
 
   file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/border-image-repeat_repeatnegx_none_50px.html:25
-test/reftest/csswg-test/css-backgrounds-3/border-image-round-and-stretch.html
-test/reftest/csswg-test/css-backgrounds-3/border-image-shorthand-001.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-shorthand-002.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-shorthand-003.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-slice-004.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-slice-005.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-slice-006.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-slice-007.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-slice-percentage.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-space-001.html
-test/reftest/csswg-test/css-backgrounds-3/border-image-width-001.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-width-002.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-width-003.htm
-test/reftest/csswg-test/css-backgrounds-3/border-image-width-004.htm
 test/reftest/csswg-test/css-backgrounds-3/border-images.html
 test/reftest/csswg-test/css-backgrounds-3/css3-background-size-001.html
-test/reftest/csswg-test/css-backgrounds-3/css3-background-size-contain.html
 test/reftest/csswg-test/css-backgrounds-3/css3-border-image-repeat-repeat.html
 test/reftest/csswg-test/css-backgrounds-3/css3-border-image-repeat-stretch.html
 test/reftest/csswg-test/css-backgrounds-3/css3-border-image-source.html
 test/reftest/csswg-test/css-backgrounds-3/justfortest.html
 test/reftest/csswg-test/css-backgrounds-3/reference/60x60-green-background.html
-test/reftest/csswg-test/css-backgrounds-3/reference/background_clip_padding-box.html
 test/reftest/csswg-test/css-backgrounds-3/reference/box-shadow-inset-spread-without-border-radius.html
 test/reftest/csswg-test/css-backgrounds-3/reference/box-shadow-inset-without-border-radius.html
 test/reftest/csswg-test/css-backgrounds-3/reference/box-shadow-outset-spread-without-border-radius.html
@@ -337,9 +311,5 @@ test/reftest/csswg-test/css-backgrounds-3/reference/box-shadow-outset-without-bo
 test/reftest/csswg-test/css-backgrounds-3/reference/box-shadow-syntax-001.htm
 test/reftest/csswg-test/css-backgrounds-3/reference/css-border-radius-ref-002.html
 test/reftest/csswg-test/css-backgrounds-3/reference/ref-filled-black-96px-square.htm
-test/reftest/csswg-test/css-backgrounds-3/reference/reference.html
 test/reftest/csswg-test/css-backgrounds-3/ttwf-css3background-border-color-shorthand.htm
 test/reftest/csswg-test/css-backgrounds-3/ttwf-css3background-border-color.htm
-test/reftest/csswg-test/css-backgrounds-3/ttwf-css3background-border-style-double.htm
-test/reftest/csswg-test/css-backgrounds-3/ttwf-css3background-border-style-shorthand.htm
-test/reftest/csswg-test/css-backgrounds-3/ttwf-css3background-border-style.htm

@@ -19,7 +19,6 @@ TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
 
   file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-transforms-1/css-transform-property-existence.html:18
 test/reftest/csswg-test/css-transforms-1/css-transform-property-existence.html
-test/reftest/csswg-test/css-transforms-1/css-transform-scale-001.html
 test/reftest/csswg-test/css-transforms-1/css-transform-scale-002.html
 TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
 
@@ -46,11 +45,8 @@ test/reftest/csswg-test/css-transforms-1/transform-3d-rotateY-stair-above-001.ht
 test/reftest/csswg-test/css-transforms-1/transform-3d-rotateY-stair-below-001.htm
 test/reftest/csswg-test/css-transforms-1/transform-applies-to-001.htm
 test/reftest/csswg-test/css-transforms-1/transform-compound-001.html
-test/reftest/csswg-test/css-transforms-1/transform-compound-notref-1.html
 test/reftest/csswg-test/css-transforms-1/transform-compound-notref-2.html
 test/reftest/csswg-test/css-transforms-1/transform-display-001.html
-test/reftest/csswg-test/css-transforms-1/transform-display-002.html
-test/reftest/csswg-test/css-transforms-1/transform-display-003.html
 test/reftest/csswg-test/css-transforms-1/transform-display-notref.html
 test/reftest/csswg-test/css-transforms-1/transform-image-001.html
 test/reftest/csswg-test/css-transforms-1/transform-inline-001.html
@@ -73,21 +69,7 @@ test/reftest/csswg-test/css-transforms-1/transform-rotate-005.html
 test/reftest/csswg-test/css-transforms-1/transform-rotate-006.html
 test/reftest/csswg-test/css-transforms-1/transform-rotate-007-notref.html
 test/reftest/csswg-test/css-transforms-1/transform-rotate-007.html
-test/reftest/csswg-test/css-transforms-1/transform-table-008.html
-test/reftest/csswg-test/css-transforms-1/transform-table-010-notref.html
-test/reftest/csswg-test/css-transforms-1/transform-table-010.html
-test/reftest/csswg-test/css-transforms-1/transform-table-011-notref.html
-test/reftest/csswg-test/css-transforms-1/transform-table-011.html
 test/reftest/csswg-test/css-transforms-1/transform-transformable-inline-block.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-inline-table.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-list-item.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-table-caption.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-table-cell.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-table-footer-group.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-table-header-group.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-table-row-group.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-table-row.html
-test/reftest/csswg-test/css-transforms-1/transform-transformable-table.html
 test/reftest/csswg-test/css-transforms-1/transform-translate-001.html
 test/reftest/csswg-test/css-transforms-1/transform-translate-002.html
 test/reftest/csswg-test/css-transforms-1/transform-translate-003.html
@@ -104,37 +86,11 @@ test/reftest/csswg-test/css-transforms-1/transform-translatey-002.html
 test/reftest/csswg-test/css-transforms-1/transform-translatey-003.html
 test/reftest/csswg-test/css-transforms-1/transform-translatey-004.html
 test/reftest/csswg-test/css-transforms-1/transform-translatey-005.html
-test/reftest/csswg-test/css-transforms-1/transform3d-image-scale-001.html
-test/reftest/csswg-test/css-transforms-1/transform3d-image-scale-002.html
-test/reftest/csswg-test/css-transforms-1/transform3d-matrix3d-001.html
-test/reftest/csswg-test/css-transforms-1/transform3d-matrix3d-002.html
-test/reftest/csswg-test/css-transforms-1/transform3d-matrix3d-003.html
-test/reftest/csswg-test/css-transforms-1/transform3d-matrix3d-004.html
-test/reftest/csswg-test/css-transforms-1/transform3d-matrix3d-005.html
-test/reftest/csswg-test/css-transforms-1/transform3d-perspective-001.html
-test/reftest/csswg-test/css-transforms-1/transform3d-perspective-006.html
-test/reftest/csswg-test/css-transforms-1/transform3d-perspective-009.html
-test/reftest/csswg-test/css-transforms-1/transform3d-preserve3d-006.html
-test/reftest/csswg-test/css-transforms-1/transform3d-preserve3d-007.html
-test/reftest/csswg-test/css-transforms-1/transform3d-preserve3d-012.html
-test/reftest/csswg-test/css-transforms-1/transform3d-rotate3d-001.html
-test/reftest/csswg-test/css-transforms-1/transform3d-rotate3d-002.html
-test/reftest/csswg-test/css-transforms-1/transform3d-rotatex-001.html
-test/reftest/csswg-test/css-transforms-1/transform3d-rotatex-perspective-001.html
+      rotatex(45deg) scaley(1.41421356) is NOT Supported
+      rotatex(45deg) scaley(1.41421356) is NOT Supported
 test/reftest/csswg-test/css-transforms-1/transform3d-rotatex-perspective-003.html
 test/reftest/csswg-test/css-transforms-1/transform3d-rotatex-perspective-notref.html
-test/reftest/csswg-test/css-transforms-1/transform3d-rotatey-001.html
 test/reftest/csswg-test/css-transforms-1/transform3d-scale-001-notref.html
-test/reftest/csswg-test/css-transforms-1/transform3d-scale-001.html
-test/reftest/csswg-test/css-transforms-1/transform3d-scale-002.html
-test/reftest/csswg-test/css-transforms-1/transform3d-scale-003.html
-test/reftest/csswg-test/css-transforms-1/transform3d-scale-004.html
-test/reftest/csswg-test/css-transforms-1/transform3d-scale-005.html
-test/reftest/csswg-test/css-transforms-1/transform3d-scale-006.html
-test/reftest/csswg-test/css-transforms-1/transform3d-scale-007.html
-test/reftest/csswg-test/css-transforms-1/transform3d-sorting-003.html
-test/reftest/csswg-test/css-transforms-1/transform3d-translatez-001.html
-test/reftest/csswg-test/css-transforms-1/transform3d-translatez-notref.html
 TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
 
   file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-transforms-1/transform_translate.html:21

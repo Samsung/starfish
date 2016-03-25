@@ -85,10 +85,4 @@ CSS3-TRANSFORM   , 7         , transform             , none
                  , 7         , transform             , skew
                  , 7         , transform             , skewX
                  , 7         , transform             , skewY
-                 , 8         , transform-origin      , <percent>
-                 , 8         , transform-origin      , <length> 
-                 , 8         , transform-origin      , top
-                 , 8         , transform-origin      , right
-                 , 8         , transform-origin      , bottom
-                 , 8         , transform-origin      , left
-                 , 8         , transform-origin      , center
+                 , 8         , transform-origin
