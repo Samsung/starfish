@@ -34,6 +34,7 @@ public:
     const char* utf8Data();
 
     bool equals(const String* str) const;
+    bool equalsWithoutCase(const String* str) const;
     bool equals(const char* str)
     {
 #ifndef NDEBUG

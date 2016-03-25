@@ -321,5 +321,45 @@ bool String::equals(const String* str) const
     return false;
 }
 
+template <typename T>
+bool stringEqualWithoutCase(const T* s, const T* s1, const size_t& len)
+{
+    for (size_t i = 0; i < len; i ++) {
+        if (tolower(s[i]) != tolower(s1[i]))
+            return false;
+    }
+    return true;
+}
+
+bool stringEqualWithoutCase(const char32_t* s, const char* s1, const size_t& len)
+{
+    for (size_t i = 0; i < len ; i ++) {
+        if (towlower(s[i]) != towlower((unsigned char)s1[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool String::equalsWithoutCase(const String* str) const
+{
+    size_t lenA = length();
+    size_t lenB = str->length();
+    if (lenA == lenB) {
+        bool aa = isASCIIString();
+        bool bb = str->isASCIIString();
+        if (aa && bb) {
+            return stringEqualWithoutCase(asASCIIString()->data(), str->asASCIIString()->data(), lenA);
+        } else if (aa && !bb) {
+            return stringEqualWithoutCase(str->asUTF32String()->data(), asASCIIString()->data(), lenA);
+        } else if (!aa && bb) {
+            return stringEqualWithoutCase(asUTF32String()->data(), str->asASCIIString()->data(), lenA);
+        } else {
+            return stringEqualWithoutCase(asUTF32String()->data(), str->asUTF32String()->data(), lenA);
+        }
+    }
+    return false;
+}
+
 
 }
