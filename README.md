@@ -13,7 +13,7 @@ e.g. `make x64.exe.debug -j`
 
 ## Running
 
-Use `node runner.js [html_file_path]` to run StarFish
+Use `./run.sh [html_file_path]` to run StarFish
 
 ## Testing
 
@@ -51,13 +51,25 @@ If you want to capture the screenshot on the command line, use:
 
 ``` sh
 // StarFish
-ELM_ENGINE="shot:file=[capture.png]" node ./StarFish [filepath=*.html] --pixel-test
+ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test
 
 // WebKit
 phantomjs capture.js [category=css|dom|xhr]
 phantomjs capture.js -f [filepath=*.html]
 ```
 
+### Web Platform Tests
+
+We use the [Web Platform Tests](https://github.com/w3c/web-platform-tests). The Web Platform Tests Project is a W3C-coordinated attempt to build a cross-browser testsuite for the Web-platform stack.
+
+You can find these in `test/reftest/web-platform-tests/*`
+
+To run the Web Platform Tests, use:
+
+``` sh
+make wpt_test_*[dom | etc.]             // specific test suite
+make wpt_test [tc=xxx]                  // specific directory or file
+```
 
 [Wiki](http://10.113.64.203/StarFish/starfish/wikis/home)
 
