@@ -65,19 +65,24 @@ asdf
 								// console.log(node.textContent)
 								into.style = []
 								var parser = new CSSParser();
-                                var rules = parser.parse(node.textContent).cssRules;
-								var transformSelector, transformValue;
-								for(var i = 0; i < rules.length; i ++) {
-                                	for (var j = 0; rules[i].declarations && j < rules[i].declarations.length; j ++) {
-                                    	if (rules[i].declarations[j].property == "transform") {
-											transformSelector = rules[i].mSelectorText;
-                                        	transformValue = rules[i].declarations[j].valueText;
+                                var parseResult = parser.parse(node.textContent);
+                                if (parseResult) {
+                                    var rules = parseResult.cssRules;
+                                    var transformSelector, transformValue;
+                                    for(var i = 0; i < rules.length; i ++) {
+                                        for (var j = 0; rules[i].declarations && j < rules[i].declarations.length; j ++) {
+                                            if (rules[i].declarations[j].property == "transform") {
+                                                transformSelector = rules[i].mSelectorText;
+                                                transformValue = rules[i].declarations[j].valueText;
+                                            }
                                         }
                                     }
                                 }
 
                                 rules = node.sheet.cssRules;
                                 for(var i = 0; i < rules.length; i ++) {
+                                    if (!rules[i].style)
+                                        continue;
                                     var selectorText = rules[i].selectorText;
                                      //console.log(selectorText)
                                 	var st = {};

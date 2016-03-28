@@ -19,7 +19,7 @@ W=360
 H=360
 
 if [ "$1" = "" ]; then
-    tc=$(find test -name "*.html" | grep -v "csswg-test" | sort)
+    tc=$(find test -name "*.html" | grep -v "reftest" | sort)
 else
     tc=$1
 fi
@@ -35,7 +35,7 @@ if [[ "$tc" == *"reftest"* ]]; then
 fi
 
 if [[ "$tc" == *"/" ]]; then
-    tc=$(find $tc -name "*.htm*" | grep -v "csswg-test" | sort);
+    tc=$(find $tc -name "*.htm*" | grep -v "reftest" | sort);
 fi
 
 if [[ "$tc" == *".res" ]]; then
