@@ -444,6 +444,11 @@ pixel_test_css3_backgrounds:
 pixel_test_css3_transforms:
 	make pixel_test tc=tool/pixel_test/css-transforms-1.res screen=pc
 
+wpt_test:
+	./tool/reftest/wpt_test.sh $(tc)
+wpt_test_dom:
+	make wpt_test tc=tool/reftest/dom.res
+
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css1.res"

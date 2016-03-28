@@ -2226,16 +2226,6 @@ policies and contribution forms [3].
             return '';
         }
 
-        function sleep(time)
-        {
-            var now = new Date();
-            var stop = now.getTime() + time;
-            while(true) {
-                now = new Date();
-                if(now.getTime() > stop) return;
-            }
-        }
-
         // XXX
         //log.appendChild(document.createElementNS(xhtml_ns, "section"));
         log.appendChild(document.createElement("div"));
