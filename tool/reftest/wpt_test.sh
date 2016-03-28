@@ -20,8 +20,12 @@ else
     tc=$1
 fi
 
+if [[ "$tc" == *"/" ]]; then
+    tc=$(find $tc -name "*.htm*" | sort)
+fi
+
 if [[ "$tc" == *".res" ]]; then
-    tc=$(cat $tc)
+    tc=$(cat $tc | sort)
 fi
 
 echo -e "${BOLD}###### Web Platform Tests ######${RESET}\n"
