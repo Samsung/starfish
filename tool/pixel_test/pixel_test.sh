@@ -66,7 +66,7 @@ ELM_ENGINE="shot:" ./run.sh ${i} --pixel-test --width=${W} --height=${H} > /dev/
     #echo $STARFISH_PNG
     #echo $DIFF_PNG
     if [ ! -f ${WEBKIT_PNG} ]; then
-        tool/phantomjs/linux64/bin/phantomjs-1.9.8 tool/pixel_test/capture.js -f ${i} out/ $2 > /dev/null 2>&1
+        tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f ${i} out/ $2 > /dev/null 2>&1
         mv out/${file}_expected.png ${WEBKIT_PNG}
     fi
 
