@@ -4,3 +4,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dy
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dynamic-remove.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-nochild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElement-null.html
+test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild.html

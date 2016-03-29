@@ -761,6 +761,28 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("remove"), 0, false);
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
 
+    escargot::ESFunctionObject* getAttributeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        try {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+
+            auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+
+            if (argValue.isESString()) {
+                QualifiedName name = QualifiedName::fromString(sf, argValue.asESString()->utf8Data());
+                Element* elem = ((Node*)thisValue.asESPointer()->asESObject()->extraPointerData())->asElement();
+                if (elem != nullptr)
+                    return toJSString(elem->getAttribute(name));
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("getAttribute"), 0, false);
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getAttribute"), false, false, false, getAttributeFunction);
+
     auto styleGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         if (!((Node*)originalObj->extraPointerData())->isElement()) {
