@@ -9,6 +9,7 @@ class HTMLImageElement : public HTMLElement {
 public:
     HTMLImageElement(Document* document)
         : HTMLElement(document)
+        , m_imageData(nullptr)
     {
         initScriptWrappable(this);
     }

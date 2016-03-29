@@ -113,6 +113,8 @@ Element* Document::createElement(QualifiedName localName)
         return new HTMLStyleElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_scriptLocalName) {
         return new HTMLScriptElement(this);
+    } else if (localName == window()->starFish()->staticStrings()->m_linkLocalName) {
+        return new HTMLLinkElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_metaLocalName) {
         return new HTMLMetaElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_bodyLocalName) {

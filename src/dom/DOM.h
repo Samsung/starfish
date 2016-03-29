@@ -16,6 +16,7 @@
 #include "dom/HTMLHeadElement.h"
 #include "dom/HTMLScriptElement.h"
 #include "dom/HTMLStyleElement.h"
+#include "dom/HTMLLinkElement.h"
 #include "dom/HTMLMetaElement.h"
 #include "dom/HTMLBodyElement.h"
 #include "dom/HTMLDivElement.h"

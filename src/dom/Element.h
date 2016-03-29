@@ -124,10 +124,10 @@ public:
         return false;
     }
 
-    size_t hasAtttibute(QualifiedName name);
+    size_t hasAttribute(QualifiedName name);
     String* getAttribute(QualifiedName name)
     {
-        size_t siz = hasAtttibute(name);
+        size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX)
             return String::emptyString;
         return getAttribute(siz);

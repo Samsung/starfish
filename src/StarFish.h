@@ -22,6 +22,7 @@ public:
     QualifiedName m_htmlLocalName;
     QualifiedName m_headLocalName;
     QualifiedName m_styleLocalName;
+    QualifiedName m_linkLocalName;
     QualifiedName m_scriptLocalName;
     QualifiedName m_metaLocalName;
     QualifiedName m_bodyLocalName;
@@ -40,6 +41,9 @@ public:
     QualifiedName m_src;
     QualifiedName m_width;
     QualifiedName m_height;
+    QualifiedName m_rel;
+    QualifiedName m_href;
+    QualifiedName m_type;
 
     // Event Names
     QualifiedName m_click;

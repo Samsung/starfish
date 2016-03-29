@@ -11,6 +11,7 @@ namespace StarFish {
         F(Head) \
         F(Script) \
         F(Style) \
+        F(Link) \
         F(Meta) \
         F(Body) \
         F(Div) \
@@ -25,6 +26,7 @@ namespace StarFish {
         F(Head) \
         F(Script) \
         F(Style) \
+        F(Link) \
         F(Meta) \
         F(Body) \
         F(Div) \

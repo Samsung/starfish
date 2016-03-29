@@ -21,6 +21,7 @@ public:
     escargot::ESFunctionObject* m_htmlHeadElement;
     escargot::ESFunctionObject* m_htmlScriptElement;
     escargot::ESFunctionObject* m_htmlStyleElement;
+    escargot::ESFunctionObject* m_htmlLinkElement;
     escargot::ESFunctionObject* m_htmlBodyElement;
     escargot::ESFunctionObject* m_htmlDivElement;
     escargot::ESFunctionObject* m_htmlImageElement;

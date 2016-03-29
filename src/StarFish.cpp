@@ -133,6 +133,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_htmlLocalName = QualifiedName::fromString(sf, "html");
     m_headLocalName = QualifiedName::fromString(sf, "head");
     m_styleLocalName = QualifiedName::fromString(sf, "style");
+    m_linkLocalName = QualifiedName::fromString(sf, "link");
     m_scriptLocalName = QualifiedName::fromString(sf, "script");
     m_metaLocalName = QualifiedName::fromString(sf, "meta");
     m_bodyLocalName = QualifiedName::fromString(sf, "body");
@@ -150,6 +151,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_src = QualifiedName::fromString(sf, "src");
     m_width = QualifiedName::fromString(sf, "width");
     m_height = QualifiedName::fromString(sf, "height");
+    m_rel = QualifiedName::fromString(sf, "rel");
+    m_href = QualifiedName::fromString(sf, "href");
+    m_type = QualifiedName::fromString(sf, "type");
 
     m_click = QualifiedName::fromString(sf, "click");
     m_onclick = QualifiedName::fromString(sf, "onclick");

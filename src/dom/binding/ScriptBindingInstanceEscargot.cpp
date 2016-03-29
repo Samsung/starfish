@@ -1291,6 +1291,78 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(HTMLStyleElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlStyleElement = HTMLStyleElementFunction;
 
+    DEFINE_FUNCTION(HTMLLinkElement, HTMLElementFunction->protoType());
+    fetchData(this)->m_htmlLinkElement = HTMLLinkElementFunction;
+
+    HTMLLinkElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("href"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_href));
+            }
+            THROW_ILLEGAL_INVOCATION();
+            RELEASE_ASSERT_NOT_REACHED();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_href, toBrowserString(value.toString()));
+                return;
+            }
+            THROW_ILLEGAL_INVOCATION();
+        },
+        true, true, false);
+
+    HTMLLinkElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("rel"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_rel));
+            }
+            THROW_ILLEGAL_INVOCATION();
+            RELEASE_ASSERT_NOT_REACHED();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_rel, toBrowserString(value.toString()));
+                return;
+            }
+            THROW_ILLEGAL_INVOCATION();
+        },
+        true, true, false);
+
+    HTMLLinkElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("type"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_type));
+            }
+            THROW_ILLEGAL_INVOCATION();
+            RELEASE_ASSERT_NOT_REACHED();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_type, toBrowserString(value.toString()));
+                return;
+            }
+            THROW_ILLEGAL_INVOCATION();
+        },
+        true, true, false);
+
     DEFINE_FUNCTION(HTMLBodyElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBodyElement = HTMLBodyElementFunction;
 

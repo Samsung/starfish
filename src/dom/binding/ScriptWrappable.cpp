@@ -277,6 +277,20 @@ void ScriptWrappable::initScriptWrappable(HTMLBodyElement* ptr)
     scriptObject()->set__proto__(data->m_htmlBodyElement->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(HTMLStyleElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->m_htmlStyleElement->protoType());
+}
+
+void ScriptWrappable::initScriptWrappable(HTMLLinkElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->m_htmlLinkElement->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(HTMLScriptElement* ptr)
 {
     Node* node = (Node*)this;

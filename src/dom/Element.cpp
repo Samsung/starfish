@@ -20,7 +20,7 @@
 
 namespace StarFish {
 
-size_t Element::hasAtttibute(QualifiedName name)
+size_t Element::hasAttribute(QualifiedName name)
 {
     for (size_t i = 0; i < m_attributes.size(); i ++) {
         if (m_attributes[i].name() == name) {
@@ -37,7 +37,7 @@ String* Element::getAttribute(size_t pos)
 
 void Element::setAttribute(QualifiedName name, String* value)
 {
-    size_t idx = hasAtttibute(name);
+    size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
         m_attributes.push_back(Attribute(name, value));
         didAttributeChanged(name, String::emptyString, value);
@@ -50,7 +50,7 @@ void Element::setAttribute(QualifiedName name, String* value)
 
 void Element::removeAttribute(QualifiedName name)
 {
-    size_t idx = hasAtttibute(name);
+    size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
     } else {
         String* v = m_attributes[idx].value();

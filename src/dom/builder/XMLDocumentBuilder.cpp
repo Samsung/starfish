@@ -44,17 +44,10 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             QualifiedName qname = QualifiedName::fromString(document->window()->starFish(), name);
 
             newNode = document->createElement(qname);
-            if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-                if (parentNode) {
-                    parentNode->appendChildForParser(newNode);
-                }
 
-                tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
-                while (child) {
-                    fn(newNode, child);
-                    child = child->NextSiblingElement();
-                }
+            STARFISH_ASSERT(newNode);
 
+            if (newNode->isElement()) {
                 const tinyxml2::XMLAttribute* attr = xmlElement->FirstAttribute();
                 while (attr) {
                     if (strcmp(attr->Name(), "nodeType") == 0) {
@@ -65,7 +58,18 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                     newNode->asElement()->setAttribute(QualifiedName::fromString(document->window()->starFish(), attr->Name()), String::fromUTF8(attr->Value()));
                     attr = attr->Next();
                 }
+            }
 
+            if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+                if (parentNode) {
+                    parentNode->appendChildForParser(newNode);
+                }
+
+                tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
+                while (child) {
+                    fn(newNode, child);
+                    child = child->NextSiblingElement();
+                }
                 newNode->asElement()->asHTMLElement()->asHTMLScriptElement()->executeScript();
                 return;
             } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
@@ -76,26 +80,17 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                 }
                 newNode->asElement()->asHTMLElement()->asHTMLStyleElement()->generateStyleSheet();
                 return;
+            } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                if (parentNode) {
+                    parentNode->appendChild(newNode);
+                }
+                return;
             }
         } else {
             printf("invalid node type %d\n", type);
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
 
-        STARFISH_ASSERT(newNode);
-
-        if (newNode->isElement()) {
-            const tinyxml2::XMLAttribute* attr = xmlElement->FirstAttribute();
-            while (attr) {
-                if (strcmp(attr->Name(), "nodeType") == 0) {
-                    attr = attr->Next();
-                    continue;
-                }
-
-                newNode->asElement()->setAttribute(QualifiedName::fromString(document->window()->starFish(), attr->Name()), String::fromUTF8(attr->Value()));
-                attr = attr->Next();
-            }
-        }
 
         if (parentNode) {
             parentNode->appendChildForParser(newNode);

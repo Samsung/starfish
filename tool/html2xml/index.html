@@ -8,7 +8,6 @@
 	</head>
 	<body>
 		<h1>input html code you want</h1>
-		<h3> external links(.css, .js) are not supported.</h3>
 		<form onsubmit="onSubmit()" action="#" id="form">
 			<input type="submit">
 			<br>
@@ -109,44 +108,6 @@ asdf
 						window.setTimeout(iframe.load, 50);
 						return;
 					}
-					// console.log("onload");
-					var resCnt = 0;
-
-					var links = iframe.contentDocument.querySelectorAll("link")
-
-					for (var i = 0; i < links.length; i ++) {
-						// <link rel="stylesheet" href="/lib/w3.css">
-						if (links[i].getAttribute("rel") == "stylesheet") {
-							resCnt++;
-							function result(rr) {
-								// console.log("ajax result")
-								// console.log(rr)
-								links[arguments.callee.i].outerHTML = "<style>"
-        						+ rr +
-        						"</style>";
-        						resCnt--;
-							}
-							result.i = i;
-							var url = links[i].getAttribute("href");
-
-							var point;
-							if (window.point) {
-								point = window.point;
-							} else {
-								point = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + "/"
-							}
-							url = "file://" + point + url;
-							// console.log(url)
-							$.ajax({async: false, type:"GET", url: url, success: result, error: function (error) {
-								// console.log("ajax error")
-								// console.log(arguments[0])
-								// console.log(arguments[1])
-								// console.log(arguments[2])
-    								resCnt--;
-    							}});
-						}
-					}
-					// console.log(resCnt);
 					printResult()
 
 				}
