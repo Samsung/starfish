@@ -32,6 +32,17 @@ bool endsWithNumber(const char* str)
     return *lastCh >= '0' && *lastCh <= '9';
 }
 
+static String* mergeTokens(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() == 1)
+        return (*tokens)[0];
+    String* str = String::emptyString;
+    for (unsigned i = 0; i < tokens->size(); i++) {
+        str = str->concat(tokens->at(i));
+    }
+    return str;
+}
+
 #define VALUE_IS_STRING(str) \
     (strcmp(value, str)) == 0
 
@@ -231,14 +242,8 @@ void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*>
     } else if (VALUE_IS_INITIAL()) {
         m_valueKind = CSSStyleValuePair::ValueKind::Initial;
     } else {
-        // TODO check string has right color string
-        // TODO rgba
         m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        if (startsWith(value, "rgb(")) {
-            m_value.m_stringValue = tokens->at(0)->concat(tokens->at(1))->concat(tokens->at(2));
-        } else {
-            m_value.m_stringValue = String::fromUTF8(value);
-        }
+        m_value.m_stringValue = mergeTokens(tokens);
     }
 }
 
@@ -1652,338 +1657,6 @@ void CSSStyleValuePair::setValueVerticalAlign(std::vector<String*, gc_allocator<
     }
 }
 
-CSSStyleValuePair CSSStyleValuePair::fromString(const char* key, const char* value, bool& result)
-{
-    result = true;
-    CSSStyleValuePair ret;
-    std::vector<String*, gc_allocator<String*> > tokens;
-    DOMTokenList::tokenize(&tokens, String::fromUTF8(value));
-    if (strcmp(key, "display") == 0) {
-        ret.setValueDisplay(&tokens);
-    } else if (strcmp(key, "position") == 0) {
-        ret.setValuePosition(&tokens);
-    } else if (strcmp(key, "width") == 0) {
-        ret.setValueWidth(&tokens);
-    } else if (strcmp(key, "height") == 0) {
-        ret.setValueHeight(&tokens);
-    } else if (strcmp(key, "font-size") == 0) {
-        ret.setValueFontSize(&tokens);
-    } else if (strcmp(key, "font-weight") == 0) {
-        ret.setValueFontWeight(&tokens);
-    } else if (strcmp(key, "color") == 0) {
-        // color | inherit // initial value -> depends on user agent
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::Color;
-        ret.setValueColor(&tokens);
-    } else if (strcmp(key, "background-color") == 0) {
-        // color | <transparent> | inherit
-        // TODO add initial
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BackgroundColor;
-        if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else {
-            // TODO: Consider CSS Colors (Hexadecimal/etc. colors)
-            //       Check the value has right color strings
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-            ret.m_value.m_stringValue = String::fromUTF8(value);
-        }
-    } else if (strcmp(key, "background-image") == 0) {
-        // uri | <none> | inherit
-        ret.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
-        ret.setValueBackgroundImage(&tokens);
-    } else if (strcmp(key, "vertical-align") == 0) {
-        // <baseline> | sub | super | top | text-top | middle | bottom | text-bottom | percentage | length | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::VerticalAlign;
-        if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_STRING("baseline")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
-        } else if (VALUE_IS_STRING("sub")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::SubVAlignValue;
-        } else if (VALUE_IS_STRING("super")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::SuperVAlignValue;
-        } else if (VALUE_IS_STRING("top")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::TopVAlignValue;
-        } else if (VALUE_IS_STRING("text-top")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::TextTopVAlignValue;
-        } else if (VALUE_IS_STRING("middle")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::MiddleVAlignValue;
-        } else if (VALUE_IS_STRING("bottom")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::BottomVAlignValue;
-        } else if (VALUE_IS_STRING("text-bottom")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-            ret.m_value.m_verticalAlign = VerticalAlignValue::TextBottomVAlignValue;
-        } else {
-            parsePercentageOrLength(ret, value);
-        }
-    } else if (strcmp(key, "text-align") == 0) {
-        // left | right | center | justify | <inherit>
-        // TODO add initial
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::TextAlign;
-        ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_STRING("left")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-            ret.m_value.m_textAlign = TextAlignValue::LeftTextAlignValue;
-        } else if (VALUE_IS_STRING("center")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-            ret.m_value.m_textAlign = TextAlignValue::CenterTextAlignValue;
-        } else if (VALUE_IS_STRING("right")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-            ret.m_value.m_textAlign = TextAlignValue::RightTextAlignValue;
-        } else if (VALUE_IS_STRING("justify")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-            ret.m_value.m_textAlign = TextAlignValue::JustifyTextAlignValue;
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (strcmp(key, "text-decoration") == 0) {
-        ret.setValueTextDecoration(&tokens);
-    } else if (strcmp(key, "letter-spacing") == 0) {
-        // normal | length | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::LetterSpacing;
-        ret.setValueLetterSpacing(&tokens);
-    } else if (strcmp(key, "text-overflow") == 0) {
-        // <clip> | ellipsis | string
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::TextOverflow;
-        if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_STRING("clip")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::TextOverflowValueKind;
-            ret.m_value.m_textOverflow = TextOverflowValue::ClipTextOverflowValue;
-        } else if (VALUE_IS_STRING("ellipsis")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::TextOverflowValueKind;
-            ret.m_value.m_textOverflow = TextOverflowValue::EllipsisTextOverflowValue;
-        } else {
-            // string: not supported
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (strcmp(key, "white-space") == 0) {
-        // TODO
-    } else if (strcmp(key, "font-style") == 0) {
-        ret.setValueFontStyle(&tokens);
-    } else if (strcmp(key, "direction") == 0) {
-        ret.setValueDirection(&tokens);
-    } else if (strcmp(key, "background-size") == 0) {
-        ret.setValueBackgroundSize(&tokens);
-    } else if (strcmp(key, "background-repeat-x") == 0) {
-        // repeat | no-repeat | initial | inherit // initial value -> repeat
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BackgroundRepeatX;
-        ret.setValueBackgroundRepeatX(&tokens);
-    } else if (strcmp(key, "background-repeat-y") == 0) {
-        // repeat | no-repeat | initial | inherit // initial value -> repeat
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BackgroundRepeatY;
-        ret.setValueBackgroundRepeatY(&tokens);
-    } else if (strcmp(key, "top") == 0) {
-        ret.setValueTop(&tokens);
-    } else if (strcmp(key, "right") == 0) {
-        ret.setValueRight(&tokens);
-    } else if (strcmp(key, "bottom") == 0) {
-        ret.setValueBottom(&tokens);
-    } else if (strcmp(key, "left") == 0) {
-        ret.setValueLeft(&tokens);
-    } else if (strcmp(key, "border-top-color") == 0) {
-        // color | transparent | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderTopColor;
-        ret.setValueBorderTopColor(&tokens);
-    } else if (strcmp(key, "border-right-color") == 0) {
-        // color | transparent | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderRightColor;
-        ret.setValueBorderRightColor(&tokens);
-    } else if (strcmp(key, "border-bottom-color") == 0) {
-        // color | transparent | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderBottomColor;
-        ret.setValueBorderBottomColor(&tokens);
-    } else if (strcmp(key, "border-left-color") == 0) {
-        // color | transparent | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderLeftColor;
-        ret.setValueBorderLeftColor(&tokens);
-    } else if (strcmp(key, "border-image-repeat") == 0) {
-        ret.setValueBorderImageRepeat(&tokens);
-    } else if (strcmp(key, "border-image-width") == 0) {
-        ret.setValueBorderImageWidth(&tokens);
-    } else if (strcmp(key, "border-image-slice") == 0) {
-        ret.setValueBorderImageSlice(&tokens);
-    } else if (strcmp(key, "border-image-source") == 0) {
-        ret.setValueBorderImageSource(&tokens);
-    } else if (strcmp(key, "border-top-style") == 0) {
-        // border-style(<none> | solid) | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderTopStyle;
-        ret.setValueBorderTopStyle(&tokens);
-    } else if (strcmp(key, "border-right-style") == 0) {
-        // border-style(<none> | solid) | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderRightStyle;
-        ret.setValueBorderRightStyle(&tokens);
-    } else if (strcmp(key, "border-bottom-style") == 0) {
-        // border-style(<none> | solid) | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderBottomStyle;
-        ret.setValueBorderBottomStyle(&tokens);
-    } else if (strcmp(key, "border-left-style") == 0) {
-        // border-style(<none> | solid) | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderLeftStyle;
-        ret.setValueBorderLeftStyle(&tokens);
-    } else if (strcmp(key, "border-top-width") == 0) {
-        // border-width(thin | <medium> | thick) | length | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderTopWidth;
-        ret.setValueBorderTopWidth(&tokens);
-    } else if (strcmp(key, "border-right-width") == 0) {
-        // border-width(thin | <medium> | thick) | length | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderRightWidth;
-        ret.setValueBorderRightWidth(&tokens);
-    } else if (strcmp(key, "border-bottom-width") == 0) {
-        // border-width(thin | <medium> | thick) | length | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderBottomWidth;
-        ret.setValueBorderBottomWidth(&tokens);
-    } else if (strcmp(key, "border-left-width") == 0) {
-        // border-width(thin | <medium> | thick) | length | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::BorderLeftWidth;
-        ret.setValueBorderLeftWidth(&tokens);
-    } else if (strcmp(key, "line-height") == 0) {
-        // <normal> | number | length | percentage | inherit
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::LineHeight;
-        ret.setValueLineHeight(&tokens);
-    } else if (strcmp(key, "margin-top") == 0) {
-        // length | percentage | auto | inherit <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::MarginTop;
-        ret.setValueMarginTop(&tokens);
-    } else if (strcmp(key, "margin-bottom") == 0) {
-        // length | percentage | auto | inherit <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::MarginBottom;
-        ret.setValueMarginBottom(&tokens);
-    } else if (strcmp(key, "margin-left") == 0) {
-        // length | percentage | auto | inherit <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::MarginLeft;
-        ret.setValueMarginLeft(&tokens);
-    } else if (strcmp(key, "margin-right") == 0) {
-        // length | percentage | auto | inherit  <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::MarginRight;
-        ret.setValueMarginRight(&tokens);
-    } else if (strcmp(key, "padding-top") == 0) {
-        // length | percentage | inherit  <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::PaddingTop;
-        ret.setValuePaddingTop(&tokens);
-    } else if (strcmp(key, "padding-right") == 0) {
-        // length | percentage | inherit  <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::PaddingRight;
-        ret.setValuePaddingRight(&tokens);
-    } else if (strcmp(key, "padding-bottom") == 0) {
-        // length | percentage | inherit  <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::PaddingBottom;
-        ret.setValuePaddingBottom(&tokens);
-    } else if (strcmp(key, "padding-left") == 0) {
-        // length | percentage | inherit  <0>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::PaddingLeft;
-        ret.setValuePaddingLeft(&tokens);
-    } else if (strcmp(key, "opacity") == 0) {
-        // alphavalue | inherit <1>
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::Opacity;
-        ret.m_valueKind = CSSStyleValuePair::ValueKind::Number;
-
-        if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else {
-            sscanf(value, "%f%%", &ret.m_value.m_floatValue);
-        }
-    } else if (strcmp(key, "overflow") == 0 || strcmp(key, "overflow-x") == 0) {
-        // visible | hidden | scroll(X) | auto(X) | inherit // initial value -> visible
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::OverflowX;
-        ret.m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
-
-        if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_STRING("auto") || VALUE_IS_STRING("scroll")) {
-            // Not Supported!!
-        } else if (VALUE_IS_STRING("visible")) {
-            ret.m_value.m_overflowX = OverflowValue::VisibleOverflow;
-        } else if (VALUE_IS_STRING("hidden")) {
-            ret.m_value.m_overflowX = OverflowValue::HiddenOverflow;
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (strcmp(key, "overflow-y") == 0) {
-        result = false;
-        /*        // visible | hidden | scroll(X) | auto(X) | inherit // initial value -> visible
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::OverflowY;
-        ret.m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
-
-        if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_STRING("auto") || VALUE_IS_STRING("scroll")) {
-            // Not Supported!!
-        } else if (VALUE_IS_STRING("visible")) {
-            ret.m_value.m_overflowY = OverflowValue::VisibleOverflow;
-        } else if (VALUE_IS_STRING("hidden")) {
-            ret.m_value.m_overflowY = OverflowValue::HiddenOverflow;
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-*/
-    } else if (strcmp(key, "visibility") == 0) {
-        // visible | hidden | collapse | inherit // initial value -> visible
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::Visibility;
-        ret.m_valueKind = CSSStyleValuePair::ValueKind::VisibilityKind;
-
-        if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-        } else if (VALUE_IS_STRING("visible")) {
-            ret.m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
-        } else if (VALUE_IS_STRING("hidden")) {
-            ret.m_value.m_visibility = VisibilityValue::HiddenVisibilityValue;
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (strcmp(key, "z-index") == 0) {
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::ZIndex;
-        ret.m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-
-        if (VALUE_IS_INHERIT()) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-        } else if (VALUE_IS_INITIAL() || VALUE_IS_STRING("auto")) {
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-        } else {
-            char* pEnd;
-            double d = strtod(value, &pEnd);
-            STARFISH_ASSERT(pEnd == value + strlen(value));
-            ret.m_valueKind = CSSStyleValuePair::ValueKind::Number;
-            ret.m_value.m_floatValue = d;
-        }
-    } else if (strcmp(key, "transform") == 0) {
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::Transform;
-        ret.setValueTransform(&tokens);
-    } else if (strcmp(key, "transform-origin") == 0) {
-        ret.m_keyKind = CSSStyleValuePair::KeyKind::TransformOrigin;
-        ret.setValueTransformOrigin(&tokens);
-    } else {
-        STARFISH_LOG_ERROR("CSSStyleValuePair::fromString -> unsupport key = %s\n", key);
-        result = false;
-        // STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return ret;
-}
-
 String* CSSStyleValuePair::toString()
 {
     switch (keyKind()) {
@@ -2800,8 +2473,13 @@ void CSSStyleDeclaration::setPadding(const char* value)
 bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // color | percentage | <auto> | inherit
-    if (tokens->size() > 1)
-        return false;
+    if (tokens->size() > 1) {
+        String* str = String::emptyString;
+        for (unsigned i = 0; i < tokens->size(); i++) {
+            str = str->concat(tokens->at(i));
+        }
+        (*tokens)[0] = str;
+    }
     const char* token = tokens->at(0)->utf8Data();
     if (!(CSSPropertyParser::assureColor(token) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0))) {
         return false;
@@ -3031,7 +2709,7 @@ bool CSSStyleDeclaration::checkInputErrorMargin(std::vector<String*, gc_allocato
     // length | percentage | <auto> | inherit
     for (unsigned i = 0; i < tokens->size(); i++) {
         const char* token = tokens->at(i)->utf8Data();
-        if (!(CSSPropertyParser::assureLength(token, false) || CSSPropertyParser::assurePercent(token, false) || (strcmp(token, "auto") == 0) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0))) {
+        if (!(CSSPropertyParser::assureLength(token, true) || CSSPropertyParser::assurePercent(token, true) || (strcmp(token, "auto") == 0) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0))) {
             return false;
         }
     }
@@ -3098,6 +2776,9 @@ bool CSSStyleDeclaration::checkInputErrorFontSize(std::vector<String*, gc_alloca
 {
     if (tokens->size() == 1) {
         const char* token = (*tokens)[0]->toLower()->utf8Data();
+        if (CSSPropertyParser::assureLength(token, false))
+            return true;
+
         if ((strcmp(token, "xx-small") == 0) || (strcmp(token, "x-small") == 0) || (strcmp(token, "small") == 0) || (strcmp(token, "medium") == 0) || (strcmp(token, "large") == 0) || (strcmp(token, "x-large") == 0) || (strcmp(token, "xx-large") == 0) || (strcmp(token, "larger") == 0) || (strcmp(token, "smaller") == 0) || (strcmp(token, "inherit") == 0) || (strcmp(token, "init") == 0)) {
             return true;
         }
@@ -4702,12 +4383,12 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
     }
 }
 
-void StyleResolver::resolveDOMStyle(Document* document)
+void StyleResolver::resolveDOMStyle(Document* document, bool force)
 {
     Node* child = document->firstChild();
     while (child) {
         if (child->isElement()) {
-            resolveDOMStyleInner(this, child->asElement(), document->style());
+            resolveDOMStyleInner(this, child->asElement(), document->style(), force);
         }
         child = child->nextSibling();
     }

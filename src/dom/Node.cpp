@@ -388,6 +388,16 @@ bool Node::isInDocumentScope()
     return false;
 }
 
+void notifyNodeInsertedToDocumentTree(Node* node)
+{
+    node->didNodeInsertedToDocumenTree();
+    Node* child = node->firstChild();
+    while (child) {
+        notifyNodeInsertedToDocumentTree(child);
+        child = child->nextSibling();
+    }
+}
+
 Node* Node::appendChild(Node* child)
 {
     // spec does not say what to do when child is null
@@ -410,7 +420,9 @@ Node* Node::appendChild(Node* child)
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
 
-    child->didNodeInserted();
+    if (isInDocumentScope()) {
+        notifyNodeInsertedToDocumentTree(child);
+    }
 
     return child;
 }
@@ -466,7 +478,9 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
 
-    child->didNodeInserted();
+    if (isInDocumentScope()) {
+        notifyNodeInsertedToDocumentTree(child);
+    }
 
     return child;
 }
@@ -517,6 +531,16 @@ Node* Node::replaceChild(Node* child, Node* childToRemove)
     return n;
 }
 
+void notifyNodeRemoveFromDocumentTree(Node* node)
+{
+    node->didNodeRemovedFromDocumenTree();
+    Node* child = node->firstChild();
+    while (child) {
+        notifyNodeRemoveFromDocumentTree(child);
+        child = child->nextSibling();
+    }
+}
+
 Node* Node::removeChild(Node* child)
 {
     STARFISH_ASSERT(child);
@@ -545,6 +569,11 @@ Node* Node::removeChild(Node* child)
     child->setNextSibling(nullptr);
     child->setParentNode(nullptr);
     setNeedsFrameTreeBuild();
+
+    if (isInDocumentScope()) {
+        notifyNodeRemoveFromDocumentTree(child);
+    }
+
     return child;
 }
 

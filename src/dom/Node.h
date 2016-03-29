@@ -446,7 +446,8 @@ public:
     Element* previousElementSibling();
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle);
-    virtual void didNodeInserted() { }
+    virtual void didNodeInsertedToDocumenTree() { }
+    virtual void didNodeRemovedFromDocumenTree() { }
 
     virtual bool dispatchEvent(Event* event) override;
 

@@ -9,6 +9,7 @@ class HTMLStyleElement : public HTMLElement {
 public:
     HTMLStyleElement(Document* document)
         : HTMLElement(document)
+        , m_generatedSheet(nullptr)
     {
         initScriptWrappable(this);
     }
@@ -27,7 +28,14 @@ public:
         return true;
     }
 
+    virtual void didNodeInsertedToDocumenTree();
+    virtual void didNodeRemovedFromDocumenTree();
+
+    void generateStyleSheet();
+    void removeStyleSheet();
+
 protected:
+    CSSStyleSheet* m_generatedSheet;
 };
 
 }

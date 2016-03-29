@@ -69,96 +69,12 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                 newNode->asElement()->asHTMLElement()->asHTMLScriptElement()->executeScript();
                 return;
             } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
-                // resolve styles.
-                tinyxml2::XMLElement* e = xmlElement->FirstChildElement();
-                CSSStyleSheet* sheet = new CSSStyleSheet;
-                while (e) {
-                    if (strcmp(e->Value(), "style") == 0) {
-                        CSSStyleRule::PseudoClass pc = CSSStyleRule::PseudoClass::None;
-
-                        const char* selectorText1 = e->Attribute("selectorText");
-                        // Split comma separated selectors if and and duplicate style
-                        // e.g., #id1, #id2 { blah; } => #id1 { blah; } #id2 { blah; }
-                        String* str = String::fromUTF8(selectorText1);
-                        String::Vector tokens;
-                        str->split(',', tokens);
-                        for (unsigned i = 0; i < tokens.size(); i++) {
-                            const char* selectorText = tokens[i]->trim()->utf8Data();
-                            CSSStyleRule::Kind kind;
-                            String** st;
-                            size_t stLen = 0;
-                            std::string cSelectorText;
-                            char* pcPos = strchr((char *)selectorText, ':');
-                            if (pcPos) {
-                                cSelectorText = selectorText;
-                                cSelectorText[pcPos - selectorText] = '\0';
-                                selectorText = cSelectorText.data();
-                                if (strcmp(pcPos + 1, "active") == 0) {
-                                    pc = CSSStyleRule::PseudoClass::Active;
-                                } else if (strcmp(pcPos + 1, "hover") == 0) {
-                                    pc = CSSStyleRule::PseudoClass::Hover;
-                                }
-                            }
-
-                            if (selectorText[0] == '.') {
-                                kind = CSSStyleRule::Kind::ClassSelector;
-                                st = new(GC) String*[1];
-                                st[0] = String::fromUTF8(&selectorText[1]);
-                            } else if (selectorText[0] == '#') {
-                                kind = CSSStyleRule::Kind::IdSelector;
-                                st = new(GC) String*[1];
-                                st[0] = String::fromUTF8(&selectorText[1]);
-                            } else if (selectorText[0] == '*') {
-                                st = new(GC) String*[1];
-                                kind = CSSStyleRule::Kind::UniversalSelector;
-                            } else if (strchr(selectorText, '#')) {
-                                st = new(GC) String*[2];
-                                const char* p = strchr(selectorText, '#');
-                                std::string s1(&selectorText[0], p - selectorText);
-                                st[0] = String::fromUTF8(s1.data());
-                                std::string s2(p + 1);
-                                st[1] = String::fromUTF8(s2.data());
-                                kind = CSSStyleRule::Kind::TypeIdSelector;
-                            } else if (strchr(selectorText, '.')) {
-                                st = new(GC) String*[2];
-                                const char* p = strchr(selectorText, '.');
-                                std::string s1(&selectorText[0], p - selectorText);
-                                st[0] = String::fromUTF8(s1.data());
-                                std::string s2(p + 1);
-                                st[1] = String::fromUTF8(s2.data());
-                                kind = CSSStyleRule::Kind::TypeClassSelector;
-                            } else {
-                                st = new(GC) String*[1];
-                                kind = CSSStyleRule::Kind::TypeSelector;
-                                if (selectorText[0] == '*') {
-                                    st[0] = String::emptyString;
-                                } else {
-                                    st[0] = String::fromUTF8(selectorText);
-                                }
-                            }
-
-                            CSSStyleRule* rule = new CSSStyleRule(kind, st, stLen, pc, document);
-                            const tinyxml2::XMLAttribute* attr = e->FirstAttribute();
-                            while (attr) {
-                                if (strcmp(attr->Name(), "selectorText") != 0) {
-                                    const char* n = attr->Name();
-                                    const char* v = attr->Value();
-                                    bool result;
-                                    CSSStyleValuePair ret = CSSStyleValuePair::fromString(n, v, result);
-                                    if (result)
-                                        rule->styleDeclaration()->addValuePair(ret);
-                                }
-                                attr = attr->Next();
-                            }
-                            sheet->addRule(rule);
-                        }
-                    }
-                    e = e->NextSiblingElement();
+                tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
+                while (child) {
+                    fn(newNode, child);
+                    child = child->NextSiblingElement();
                 }
-
-                document->window()->styleResolver()->addSheet(sheet);
-
-                // TODO add child
+                newNode->asElement()->asHTMLElement()->asHTMLStyleElement()->generateStyleSheet();
                 return;
             }
         } else {

@@ -30,7 +30,7 @@ public:
 
     void executeScript();
 
-    virtual void didNodeInserted();
+    virtual void didNodeInsertedToDocumenTree();
 
 protected:
     bool m_isAlreadyStarted;

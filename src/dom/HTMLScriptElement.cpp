@@ -43,11 +43,10 @@ void HTMLScriptElement::executeScript()
     }
 }
 
-void HTMLScriptElement::didNodeInserted()
+void HTMLScriptElement::didNodeInsertedToDocumenTree()
 {
-    HTMLElement::didNodeInserted();
-    if (isInDocumentScope())
-        executeScript();
+    HTMLElement::didNodeInsertedToDocumenTree();
+    executeScript();
 }
 
 }

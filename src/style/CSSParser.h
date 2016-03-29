@@ -519,6 +519,40 @@ public:
     String* m_parsedString;
     String* m_parsedUrl;
 };
+
+
+class CSSToken;
+class CSSScanner;
+class CSSParser {
+public:
+    CSSParser(Document* document)
+        : m_document(document)
+    {
+    }
+    CSSStyleSheet* parseStyleSheet(String* str);
+protected:
+    CSSToken* getToken(bool aSkipWS, bool aSkipComment);
+    CSSToken* currentToken();
+    void ungetToken();
+    void preserveState();
+    void restoreState();
+    void forgetState();
+    CSSToken* lookAhead(bool aSkipWS, bool aSkipComment);
+    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule);
+    String* parseSelector(CSSToken* aToken, bool aParseSelectorOnly);
+    String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate);
+    String* parseDefaultPropertyValue(CSSToken* token);
+    void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
+
+    Document* m_document;
+    bool m_preserveWS;
+    bool m_preserveComments;
+    std::vector<CSSToken*, gc_allocator<CSSToken*> > m_preservedTokens;
+    CSSScanner* m_scanner;
+    CSSToken* m_lookAhead;
+    CSSToken* m_token;
+};
+
 }
 
 #endif

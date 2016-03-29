@@ -43,6 +43,8 @@ public:
         }
     }
 
+    void setWholeDocumentNeedsStyleRecalc();
+
     void setNeedsFrameTreeBuild()
     {
         if (!m_needsFrameTreeBuild) {
@@ -180,6 +182,7 @@ protected:
     bool m_inRendering;
     bool m_needsRendering;
     bool m_needsStyleRecalc;
+    bool m_needsStyleRecalcForWholeDocument;
     bool m_needsFrameTreeBuild;
     bool m_needsLayout;
     bool m_needsPainting;

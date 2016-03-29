@@ -844,7 +844,6 @@ public:
     friend void parseLength(CSSStyleValuePair& ret, const char* value);
     friend void parseUrl(const char* value);
     friend CSSLength parseCSSLength(const char* value);
-    static CSSStyleValuePair fromString(const char* key, const char* value, bool& result);
 
     union ValueData {
         float m_floatValue;
@@ -870,7 +869,12 @@ public:
         CSSTransformFunctions* m_transforms;
     };
 
-    ValueData& value()
+    void setValue(const ValueData& value)
+    {
+        m_value = value;
+    }
+
+    const ValueData& value()
     {
         return m_value;
     }
@@ -953,7 +957,7 @@ public:
             setLengthValue(value);
             break;
         default:
-            printf("error");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
 
@@ -1231,11 +1235,11 @@ public:
         Hover,
     };
 
-    CSSStyleRule(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document)
+    CSSStyleRule(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document, CSSStyleDeclaration* decl)
         : ScriptWrappable(this)
         , m_document(document)
     {
-        init(kind, ruleText, ruleTextLength, pc, document);
+        init(kind, ruleText, ruleTextLength, pc, document, decl);
     }
 
     CSSStyleRule(Kind kind, String* ruleText, PseudoClass pc, Document* document)
@@ -1244,7 +1248,7 @@ public:
     {
         String** rt =  new(GC) String*[1];
         rt[0] = ruleText;
-        init(kind, rt, 1, pc, document);
+        init(kind, rt, 1, pc, document, new CSSStyleDeclaration(document));
     }
 
     CSSStyleDeclaration* styleDeclaration()
@@ -1258,14 +1262,14 @@ public:
     }
 
 protected:
-    void init(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document)
+    void init(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document, CSSStyleDeclaration* decl)
     {
         m_kind = kind;
         m_ruleText = ruleText;
         m_ruleTextLength = ruleTextLength;
         m_pseudoClass = pc;
         initScriptWrappable(this);
-        m_styleDeclaration = new CSSStyleDeclaration(document);
+        m_styleDeclaration = decl;
     }
 
     Kind m_kind;
@@ -1291,13 +1295,19 @@ protected:
 
 class StyleResolver {
 public:
-    void addSheet(CSSStyleSheet* rule)
+    void addSheet(CSSStyleSheet* sheet)
     {
-        STARFISH_ASSERT(rule);
-        m_sheets.push_back(rule);
+        STARFISH_ASSERT(sheet);
+        m_sheets.push_back(sheet);
     }
 
-    void resolveDOMStyle(Document* document);
+    void removeSheet(CSSStyleSheet* sheet)
+    {
+        STARFISH_ASSERT(std::find(m_sheets.begin(), m_sheets.end(), sheet) != m_sheets.end());
+        m_sheets.erase(std::find(m_sheets.begin(), m_sheets.end(), sheet));
+    }
+
+    void resolveDOMStyle(Document* document, bool force = false);
     void dumpDOMStyle(Document* document);
     ComputedStyle* resolveDocumentStyle(StarFish* sf);
     friend Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data);

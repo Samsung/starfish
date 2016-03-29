@@ -146,6 +146,21 @@ String* String::createASCIIString(const char* str)
     return new StringDataASCII(str);
 }
 
+String* String::createUTF32String(char32_t* c)
+{
+    return new StringDataUTF32(c);
+}
+
+String* String::createUTF32String(char32_t c)
+{
+    if (c < 128) {
+        char s[2] = {(char)c, '\0'};
+        return new StringDataASCII(s);
+    }
+    char32_t s[2] = {c, '\0'};
+    return new StringDataUTF32(s);
+}
+
 const char* String::utf8Data()
 {
     if (m_isASCIIString) {
