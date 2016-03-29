@@ -76,7 +76,13 @@ void ScriptBindingInstance::exit()
 String* toBrowserString(const escargot::ESValue& v)
 {
     escargot::NullableUTF8String s = v.toString()->toNullableUTF8String();
-    return String::fromUTF8(s.m_buffer, s.m_bufferSize);
+    String* newStr = String::fromUTF8(s.m_buffer, s.m_bufferSize);
+    // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored as '\','n'
+    // The right way is, input string should already have '\n', and white spaces should be removed from here.
+    // For time being, we simply remove "\n" and other whitespaces strings.
+    newStr = newStr->replaceAll("\n", "");
+    newStr = newStr->replaceAll("\t", "");
+    return newStr;
 }
 
 escargot::ESValue toJSString(String* v)
@@ -823,12 +829,27 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (body) {
                 return body->scriptValue();
             }
-        } else {
-            THROW_ILLEGAL_INVOCATION();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        NULL, false, false, false);
+    }, NULL, false, false, false);
+
+
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("documentElement"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = (Node *)originalObj->extraPointerData();
+        if (nd->isDocument()) {
+            Document* document = nd->asDocument();
+            printf("asdf\n");
+            Element* docElem = document->documentElement();
+            printf("asdf\n");
+            if (docElem) {
+                printf("asdf\n");
+                return docElem->scriptValue();
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, NULL, false, false, false);
 
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("URL"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {

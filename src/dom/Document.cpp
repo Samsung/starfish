@@ -76,6 +76,7 @@ HTMLCollection* Document::getElementsByClassName(String* classNames)
                         isWhiteSpaceState = true;
 
                         String* tok = String::fromUTF8(str.data(), str.length());
+
                         if (!node->asElement()->hasClassName(tok))
                         return false;
 
@@ -167,6 +168,11 @@ HTMLHtmlElement* Document::rootElement()
     }
 
     return nullptr;
+}
+
+Element* Document::documentElement()
+{
+    return rootElement();
 }
 
 HTMLBodyElement* Document::bodyElement()
