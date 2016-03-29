@@ -245,7 +245,7 @@ policies and contribution forms [3].
     };
 
     WindowTestEnvironment.prototype.test_timeout = function() {
-        var metas = document.getElementsByTagName("meta");
+        /*var metas = document.getElementsByTagName("meta");
         for (var i = 0; i < metas.length; i++) {
             if (metas[i].name == "timeout") {
                 if (metas[i].content == "long") {
@@ -254,6 +254,7 @@ policies and contribution forms [3].
                 break;
             }
         }
+        */
         return settings.harness_timeout.normal;
     };
 
