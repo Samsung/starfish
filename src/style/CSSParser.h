@@ -411,10 +411,6 @@ public:
     {
         if (strcmp("transparent", token) == 0) {
             return true;
-        } else if (strstr(token, "rgba") == token) {
-            return true;
-        } else if (strstr(token, "rgb") == token) {
-            return true;
         } else if (strlen(token) == 9 && token[0] == '#') {
             return true;
         } else if (strlen(token) == 7 && token[0] == '#') {
@@ -431,6 +427,36 @@ public:
         NAMED_COLOR_FOR_EACH(PARSE_COLOR)
 #undef PARSE_COLOR
 
+        else if (strstr(token, "rgb") == token) {
+            CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+            if (parser->consumeString()) {
+                String* str = parser->parsedString();
+                int numcnt;
+                if (str->toLower()->equals("rgb") && parser->consumeIfNext('(')) {
+                    numcnt = 3;
+                } else if (str->toLower()->equals("rgba") && parser->consumeIfNext('(')) {
+                    numcnt = 4;
+                } else {
+                    return false;
+                }
+                bool isPercent = false;
+                for (int i = 0; i < numcnt; i++) {
+                    if (!parser->consumeNumber())
+                        return false;
+
+                    if (i == 0 && parser->consumeIfNext('%'))
+                        isPercent = true;
+                    else if (isPercent && !parser->consumeIfNext('%'))
+                        return false;
+
+                    if (i == numcnt - 1)
+                        parser->consumeIfNext(')');
+                    else
+                        parser->consumeIfNext(',');
+                }
+                return parser->isEnd();
+            }
+        }
         return false;
     }
 
