@@ -411,11 +411,21 @@ public:
     {
         if (strcmp("transparent", token) == 0) {
             return true;
-        } else if (strlen(token) == 9 && token[0] == '#') {
-            return true;
         } else if (strlen(token) == 7 && token[0] == '#') {
+            for (int i = 1; i < 7; i++) {
+                if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'a' && token[i] <= 'f')) {
+                } else {
+                    return false;
+                }
+            }
             return true;
         } else if (strlen(token) == 4 && token[0] == '#') {
+            for (int i = 1; i < 4; i++) {
+                if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'a' && token[i] <= 'f')) {
+                } else {
+                    return false;
+                }
+            }
             return true;
         }
 #define PARSE_COLOR(name, value)        \
@@ -432,9 +442,9 @@ public:
             if (parser->consumeString()) {
                 String* str = parser->parsedString();
                 int numcnt;
-                if (str->toLower()->equals("rgb") && parser->consumeIfNext('(')) {
+                if (str->equals("rgb") && parser->consumeIfNext('(')) {
                     numcnt = 3;
-                } else if (str->toLower()->equals("rgba") && parser->consumeIfNext('(')) {
+                } else if (str->equals("rgba") && parser->consumeIfNext('(')) {
                     numcnt = 4;
                 } else {
                     return false;

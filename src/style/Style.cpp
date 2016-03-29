@@ -2584,7 +2584,7 @@ bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator
     if (tokens->size() > 1) {
         String* str = String::emptyString;
         for (unsigned i = 0; i < tokens->size(); i++) {
-            str = str->concat(tokens->at(i));
+            str = str->concat(tokens->at(i)->toLower());
         }
         (*tokens)[0] = str;
     }
@@ -3091,7 +3091,7 @@ bool checkInputErrorBorderUnitColor(std::vector<String*, gc_allocator<String*> >
 {
     // color | transparent | inherit
     if (tokens->size() == 1) {
-        const char* token = tokens->at(0)->utf8Data();
+        const char* token = tokens->at(0)->toLower()->utf8Data();
         if (CSSPropertyParser::assureColor(token) || (strcmp(token, "transparent") == 0) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0)) {
             return true;
         }
