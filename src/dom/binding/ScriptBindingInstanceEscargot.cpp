@@ -1704,6 +1704,25 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("toggle"), 1, false);
     DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toggle"), false, false, false, domTokenListToggleFunction);
 
+    escargot::ESFunctionObject* domTokenListToStringFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
+        uint32_t len = ((DOMTokenList *) thisValue.asESPointer()->asESObject()->extraPointerData())->length();
+
+        String* str = String::emptyString;
+        for (uint32_t i = 0; i < len; i++) {
+            String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(i);
+            if (elem != nullptr) {
+                if (str == String::emptyString)
+                    str = str->concat(elem);
+                else
+                    str = str->concat(String::spaceString)->concat(elem);
+            }
+        }
+        return toJSString(str);
+    }, escargot::ESString::create("toString"), 1, false);
+    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, domTokenListToStringFunction);
+
     DEFINE_FUNCTION(DOMSettableTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_domSettableTokenList = DOMSettableTokenListFunction;
 
