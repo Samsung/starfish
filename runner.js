@@ -30,7 +30,7 @@ page.open("tool/html2xml/index.html", function() {
 	}, content, absPath, absPath.substring(0,absPath.lastIndexOf("/")+1))
 
 	setTimeout(function wait() {
-		page.render('result.png');
+		// page.render('result.png');
 		var result = page.evaluate(function (absPath) {
 			var result = document.getElementById("result");
 			// console.log(result.value)
