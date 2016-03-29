@@ -445,7 +445,7 @@ pixel_test_css3_transforms:
 	make pixel_test tc=tool/pixel_test/css-transforms-1.res screen=pc
 
 wpt_test:
-	./tool/reftest/wpt_test.sh $(tc)
+	./tool/reftest/wpt_test.sh $(tc) $(regression)
 wpt_test_dom:
 	make wpt_test tc=tool/reftest/dom.res
 
@@ -466,6 +466,7 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
 regression_test:
+	make wpt_test tc=tool/reftest/dom_regression.res regression=true
 	if [[ -f test/reftest/Regression/demo/20160115/*/*.png ]]; then \
 		rm test/reftest/Regression/demo/20160115/*/*.png_; \
 	fi;
