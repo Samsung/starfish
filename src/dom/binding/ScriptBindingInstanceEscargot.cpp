@@ -840,11 +840,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         Node* nd = (Node *)originalObj->extraPointerData();
         if (nd->isDocument()) {
             Document* document = nd->asDocument();
-            printf("asdf\n");
             Element* docElem = document->documentElement();
-            printf("asdf\n");
             if (docElem) {
-                printf("asdf\n");
                 return docElem->scriptValue();
             }
         }
