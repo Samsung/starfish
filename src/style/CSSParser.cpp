@@ -1012,7 +1012,7 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 return descriptor + ": " + value + ";";
                 */
                 if (descriptor->equals("opacity")) {
-                    declaration->setBackground(value->utf8Data());
+                    declaration->setOpacity(value->utf8Data());
                 }
 
 #define SET_ATTR(name, nameLower, nameCSSCase) \
@@ -1020,6 +1020,9 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                     declaration->set##name(value->utf8Data());\
                 }
                 FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                else {
+                    STARFISH_LOG_ERROR("unsupported property name(CSSParser) -> %s", descriptor->utf8Data());
+                }
                 return;
             }
         }

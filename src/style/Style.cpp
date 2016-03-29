@@ -1088,6 +1088,57 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, style, color);
 }
 
+String* CSSStyleDeclaration::BorderStyle()
+{
+    String* t = BorderTopStyle();
+    String* r = BorderLeftStyle();
+    String* b = BorderBottomStyle();
+    String* l = BorderLeftStyle();
+
+    if (t->equals(r) && r->equals(b) && b->equals(l)) {
+        return t;
+    } else if (t->equals(b) && l->equals(r) && !t->equals(l)) {
+        return t->concat(String::spaceString)->concat(l);
+    } else if (l->equals(r) && !l->equals(r) && !t->equals(b)) {
+        return t->concat(String::spaceString)->concat(l)->concat(String::spaceString)->concat(b);
+    }
+    return t->concat(String::spaceString)->concat(r)->concat(String::spaceString)->concat(b)->concat(String::spaceString)->concat(l);
+}
+
+String* CSSStyleDeclaration::BorderColor()
+{
+    String* t = BorderTopColor();
+    String* r = BorderLeftColor();
+    String* b = BorderBottomColor();
+    String* l = BorderLeftColor();
+
+    if (t->equals(r) && r->equals(b) && b->equals(l)) {
+        return t;
+    } else if (t->equals(b) && l->equals(r) && !t->equals(l)) {
+        return t->concat(String::spaceString)->concat(l);
+    } else if (l->equals(r) && !l->equals(r) && !t->equals(b)) {
+        return t->concat(String::spaceString)->concat(l)->concat(String::spaceString)->concat(b);
+    }
+    return t->concat(String::spaceString)->concat(r)->concat(String::spaceString)->concat(b)->concat(String::spaceString)->concat(l);
+}
+
+String* CSSStyleDeclaration::BorderWidth()
+{
+    String* t = BorderTopWidth();
+    String* r = BorderLeftWidth();
+    String* b = BorderBottomWidth();
+    String* l = BorderLeftWidth();
+
+    if (t->equals(r) && r->equals(b) && b->equals(l)) {
+        return t;
+    } else if (t->equals(b) && l->equals(r) && !t->equals(l)) {
+        return t->concat(String::spaceString)->concat(l);
+    } else if (l->equals(r) && !l->equals(r) && !t->equals(b)) {
+        return t->concat(String::spaceString)->concat(l)->concat(String::spaceString)->concat(b);
+    }
+    return t->concat(String::spaceString)->concat(r)->concat(String::spaceString)->concat(b)->concat(String::spaceString)->concat(l);
+}
+
 BorderShorthandValueType checkBorderValueType(const char* token)
 {
     if (CSSPropertyParser::assureBorderWidth(token)) {
@@ -1101,28 +1152,85 @@ BorderShorthandValueType checkBorderValueType(const char* token)
     }
 }
 
-void CSSStyleDeclaration::setBorderWidthData(const char* value)
+void CSSStyleDeclaration::setBorderWidth(const char* value)
 {
-    setBorderTopWidth(value);
-    setBorderRightWidth(value);
-    setBorderBottomWidth(value);
-    setBorderLeftWidth(value);
+    std::vector<String*, gc_allocator<String*> > tokens;
+    DOMTokenList::tokenize(&tokens, String::fromUTF8(value));
+    if (tokens.size() == 1) {
+        setBorderTopWidth(value);
+        setBorderRightWidth(value);
+        setBorderBottomWidth(value);
+        setBorderLeftWidth(value);
+    } else if (tokens.size() == 2) {
+        setBorderTopWidth(tokens[0]->utf8Data());
+        setBorderBottomWidth(tokens[0]->utf8Data());
+        setBorderLeftWidth(tokens[1]->utf8Data());
+        setBorderRightWidth(tokens[1]->utf8Data());
+    } else if (tokens.size() == 3) {
+        setBorderTopWidth(tokens[0]->utf8Data());
+        setBorderLeftWidth(tokens[1]->utf8Data());
+        setBorderRightWidth(tokens[1]->utf8Data());
+        setBorderBottomWidth(tokens[2]->utf8Data());
+    } else {
+        setBorderTopWidth(tokens[0]->utf8Data());
+        setBorderRightWidth(tokens[1]->utf8Data());
+        setBorderBottomWidth(tokens[2]->utf8Data());
+        setBorderLeftWidth(tokens[3]->utf8Data());
+    }
 }
 
-void CSSStyleDeclaration::setBorderStyleData(const char* value)
+void CSSStyleDeclaration::setBorderStyle(const char* value)
 {
-    setBorderTopStyle(value);
-    setBorderRightStyle(value);
-    setBorderBottomStyle(value);
-    setBorderLeftStyle(value);
+    std::vector<String*, gc_allocator<String*> > tokens;
+    DOMTokenList::tokenize(&tokens, String::fromUTF8(value));
+    if (tokens.size() == 1) {
+        setBorderTopStyle(value);
+        setBorderRightStyle(value);
+        setBorderBottomStyle(value);
+        setBorderLeftStyle(value);
+    } else if (tokens.size() == 2) {
+        setBorderTopStyle(tokens[0]->utf8Data());
+        setBorderBottomStyle(tokens[0]->utf8Data());
+        setBorderLeftStyle(tokens[1]->utf8Data());
+        setBorderRightStyle(tokens[1]->utf8Data());
+    } else if (tokens.size() == 3) {
+        setBorderTopStyle(tokens[0]->utf8Data());
+        setBorderLeftStyle(tokens[1]->utf8Data());
+        setBorderRightStyle(tokens[1]->utf8Data());
+        setBorderBottomStyle(tokens[2]->utf8Data());
+    } else {
+        setBorderTopStyle(tokens[0]->utf8Data());
+        setBorderRightStyle(tokens[1]->utf8Data());
+        setBorderBottomStyle(tokens[2]->utf8Data());
+        setBorderLeftStyle(tokens[3]->utf8Data());
+    }
 }
 
-void CSSStyleDeclaration::setBorderColorData(const char* value)
+void CSSStyleDeclaration::setBorderColor(const char* value)
 {
-    setBorderTopColor(value);
-    setBorderRightColor(value);
-    setBorderBottomColor(value);
-    setBorderLeftColor(value);
+    std::vector<String*, gc_allocator<String*> > tokens;
+    DOMTokenList::tokenize(&tokens, String::fromUTF8(value));
+    if (tokens.size() == 1) {
+        setBorderTopColor(value);
+        setBorderRightColor(value);
+        setBorderBottomColor(value);
+        setBorderLeftColor(value);
+    } else if (tokens.size() == 2) {
+        setBorderTopColor(tokens[0]->utf8Data());
+        setBorderBottomColor(tokens[0]->utf8Data());
+        setBorderLeftColor(tokens[1]->utf8Data());
+        setBorderRightColor(tokens[1]->utf8Data());
+    } else if (tokens.size() == 3) {
+        setBorderTopColor(tokens[0]->utf8Data());
+        setBorderLeftColor(tokens[1]->utf8Data());
+        setBorderRightColor(tokens[1]->utf8Data());
+        setBorderBottomColor(tokens[2]->utf8Data());
+    } else {
+        setBorderTopColor(tokens[0]->utf8Data());
+        setBorderRightColor(tokens[1]->utf8Data());
+        setBorderBottomColor(tokens[2]->utf8Data());
+        setBorderLeftColor(tokens[3]->utf8Data());
+    }
 }
 
 void CSSStyleDeclaration::setBorder(const char* value)
@@ -1131,9 +1239,9 @@ void CSSStyleDeclaration::setBorder(const char* value)
     DOMTokenList::tokenize(&tokens, String::fromUTF8(value));
     if (checkInputErrorBorder(&tokens)) {
         if (tokens.size() == 1 && VALUE_IS_INHERIT()) {
-            setBorderWidthData("inherit");
-            setBorderStyleData("inherit");
-            setBorderColorData("inherit");
+            setBorderWidth("inherit");
+            setBorderStyle("inherit");
+            setBorderColor("inherit");
             return;
         }
 
@@ -1141,15 +1249,15 @@ void CSSStyleDeclaration::setBorder(const char* value)
         for (unsigned i = 0; i < tokens.size(); i++) {
             switch (checkBorderValueType(tokens[i]->utf8Data())) {
             case BorderShorthandValueType::BWidth:
-                setBorderWidthData(tokens[i]->utf8Data());
+                setBorderWidth(tokens[i]->utf8Data());
                 hasWidth = true;
                 break;
             case BorderShorthandValueType::BStyle:
-                setBorderStyleData(tokens[i]->utf8Data());
+                setBorderStyle(tokens[i]->utf8Data());
                 hasStyle = true;
                 break;
             case BorderShorthandValueType::BColor:
-                setBorderColorData(tokens[i]->utf8Data());
+                setBorderColor(tokens[i]->utf8Data());
                 hasColor = true;
                 break;
             default:
@@ -1157,11 +1265,11 @@ void CSSStyleDeclaration::setBorder(const char* value)
             }
         }
         if (!hasWidth)
-            setBorderWidthData("initial");
+            setBorderWidth("initial");
         if (!hasStyle)
-            setBorderStyleData("initial");
+            setBorderStyle("initial");
         if (!hasColor)
-            setBorderColorData("initial");
+            setBorderColor("initial");
     }
 }
 

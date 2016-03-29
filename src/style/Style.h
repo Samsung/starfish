@@ -341,6 +341,9 @@ class CSSStyleDeclaration;
     F(TextDecoration, textDecoration, "text-decoration")           \
     F(Display, display, "display")                                 \
     F(Border, border, "border")                                    \
+    F(BorderStyle, borderStyle, "border-style")                    \
+    F(BorderWidth, borderWidth, "border-width")                    \
+    F(BorderColor, borderColor, "border-color")                    \
     F(BorderImageRepeat, borderImageRepeat, "border-image-repeat") \
     F(BorderImageSlice, borderImageSlice, "border-image-slice")    \
     F(BorderImageSource, borderImageSource, "border-image-source") \
@@ -362,7 +365,7 @@ class CSSStyleDeclaration;
     F(BorderBottomWidth, borderBottomWidth, "border-bottom-width") \
     F(BorderLeftWidth, borderLeftWidth, "border-left-width")       \
     F(TextAlign, textAlign, "text-align")                          \
-    F(Transform, transform, "transform")                  \
+    F(Transform, transform, "transform")                           \
     F(TransformOrigin, transformOrigin, "transform-origin")        \
     F(Visibility, visibility, "visibility")                        \
     F(OverflowX, overflow, "overflow")                             \
@@ -1177,15 +1180,18 @@ public:
     String* BorderRight();
     String* BorderBottom();
     String* BorderLeft();
+    String* BorderStyle();
+    String* BorderColor();
+    String* BorderWidth();
     void setMargin(const char* value);
     void setBorder(const char* value);
     void setBorderTop(const char* value);
     void setBorderRight(const char* value);
     void setBorderBottom(const char* value);
     void setBorderLeft(const char* value);
-    void setBorderWidthData(const char* value);
-    void setBorderStyleData(const char* value);
-    void setBorderColorData(const char* value);
+    void setBorderWidth(const char* value);
+    void setBorderStyle(const char* value);
+    void setBorderColor(const char* value);
 
     String* BackgroundRepeat();
     void setBackgroundRepeat(const char* value);
