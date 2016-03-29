@@ -2,3 +2,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-08.ht
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dynamic-add.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dynamic-remove.html
+test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-nochild.html
