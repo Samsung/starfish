@@ -15,7 +15,6 @@ b">
 // For some reasons, escargot cannot run the following functions defined in testharness.js
 // I copied them here, and it works fine
 function assert(expected_true, function_name, description, error, substitutions) {
-    console.log("asdf? "+ expected_true);
     if (expected_true !== true) {
         var msg = make_message(function_name, description,
                 error, substitutions);
@@ -24,8 +23,6 @@ function assert(expected_true, function_name, description, error, substitutions)
 }
 
 function same_value(x, y) {
-    console.log("x: "+x);
-    console.log("y: "+y);
     if (y !== y) {
         //NaN case
         return x !== x;
