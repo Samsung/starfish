@@ -78,8 +78,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
 
             if (rule.size() > 1) {
                 const char* key = rule[0]->trim()->utf8Data();
-                if (strcmp(key, "opacity") == 0) { \
-                    inlineStyle()->setOpacity(rule[1]->utf8Data());
+                if (!key) {
+                    STARFISH_LOG_INFO("nullptr key in Element::didAttributeChanged::style\n");
                 }
 #define SET_VALUE(name, nameLower, nameCSSCase) \
                 else if (strcmp(key, nameCSSCase) == 0) { \

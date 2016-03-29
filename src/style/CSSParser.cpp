@@ -1011,8 +1011,8 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 }
                 return descriptor + ": " + value + ";";
                 */
-                if (descriptor->equals("opacity")) {
-                    declaration->setOpacity(value->utf8Data());
+                if (!descriptor) {
+                    return;
                 }
 
 #define SET_ATTR(name, nameLower, nameCSSCase) \

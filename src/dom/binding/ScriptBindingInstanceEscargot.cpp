@@ -2192,27 +2192,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
-    /* Define css attributes that cannot use the template above */
-    CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("opacity"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject);
-
-            String* c = ((CSSStyleDeclaration*) originalObj->extraPointerData())->Opacity();
-            if (c != nullptr)
-                return toJSString(c);
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject);
-            if (v.isNumber()) {
-                ((CSSStyleDeclaration*)originalObj->extraPointerData())->setOpacity(std::to_string(v.toNumber()).c_str());
-            } else if (v.isESString()) {
-                ((CSSStyleDeclaration*)originalObj->extraPointerData())->setOpacity(v.asESString()->utf8Data());
-            }
-        },
-        false, false, false);
-
     DEFINE_FUNCTION(CSSStyleRule, CSSStyleRuleFunction->protoType());
     fetchData(this)->m_cssStyleRule = CSSStyleRuleFunction;
 

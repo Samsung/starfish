@@ -377,6 +377,7 @@ class CSSStyleDeclaration;
     F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x") \
     F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y") \
     F(Background, background, "background")                        \
+    F(Opacity, opacity, "opacity")                                 \
     F(FontWeight, fontWeight, "font-weight")
 
 
