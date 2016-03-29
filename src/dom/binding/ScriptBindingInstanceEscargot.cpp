@@ -932,22 +932,23 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("getElementById"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementById"), false, false, false, getElementByIdFunction);
 
-    escargot::ESFunctionObject* getDoctypeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-        if (obj->isDocument()) {
-            Node* docTypeNode = obj->firstChild();
-            if (docTypeNode->isDocumentType()) {
-                return docTypeNode->scriptValue();
+    auto doctypeGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+    {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)originalObj->extraPointerData());
+        if (nd->isDocument()) {
+            Node* docTypeNode = nd->firstChild();
+            while (docTypeNode) {
+                if (docTypeNode->isDocumentType()) {
+                    return docTypeNode->scriptValue();
+                } else {
+                    docTypeNode = docTypeNode->nextSibling();
+                }
             }
-        } else {
-            THROW_ILLEGAL_INVOCATION()
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("doctype"), 1, false);
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("doctype"), false, false, false, getDoctypeFunction);
+    };
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("doctype"), doctypeGetter, NULL, false, true, true);
 
     escargot::ESFunctionObject* createElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
