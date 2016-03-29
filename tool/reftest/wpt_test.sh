@@ -54,9 +54,13 @@ for i in $tc ; do
     TCFILE=`expr $TCFILE + 1`
 
     if [ $SUM -eq 0 ]; then
-        echo -e $i "(${YELLOW}CHECK: No results${RESET})"
+        echo -e "${YELLOW}[CHECK]${RESET}" $i "(${BOLD}No results${RESET})"
+    elif [ $FAIL -eq 0 ]; then
+        echo -e "${GREEN}[PASS]${RESET}" $i "(${GREEN}PASS:" $PASS"${RESET})"
+    elif [ $PASS -eq 0 ]; then
+        echo -e "${RED}[FAIL]${RESET}" $i "(${RED}FAIL:" $FAIL"${RESET})"
     else
-        echo -e $i "(${GREEN}PASS:" $PASS"${RESET}," "${RED}FAIL:" $FAIL"${RESET})"
+        echo -e "${RED}[FAIL]${RESET}" $i "(${GREEN}PASS:" $PASS"${RESET}," "${RED}FAIL:" $FAIL"${RESET})"
     fi
 done
 

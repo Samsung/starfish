@@ -449,6 +449,9 @@ wpt_test:
 wpt_test_dom:
 	make wpt_test tc=tool/reftest/dom.res
 
+wpt_regression_test_dom:
+	./tool/reftest/wpt_test.sh tool/reftest/dom_regression.res
+
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css1.res"
