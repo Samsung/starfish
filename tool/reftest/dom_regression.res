@@ -10,3 +10,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-nextElementSibling.h
 test/reftest/web-platform-tests/dom_converted/nodes/Element-previousElementSibling.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dynamic-add-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dynamic-remove-xhtml.xhtml
+test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-nochild-xhtml.xhtml
