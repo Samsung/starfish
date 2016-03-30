@@ -28,7 +28,6 @@ extern Evas* g_internalCanvas;
 #endif
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
-#endif
 
 #define PNG_SKIP_SETJMP_CHECK
 #include <png.h>
@@ -101,7 +100,7 @@ int writeImage(const char* filename, int width, int height, void *buffer)
 
     return code;
 }
-
+#endif
 
 
 namespace StarFish {
@@ -840,9 +839,9 @@ void Window::rendering()
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path)) {
-            // evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
+            evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
             // int writeImage(char* filename, int width, int height, void *buffer)
-            writeImage(path, width(), height(), evas_object_image_data_get(g_imgBufferForScreehShot, EINA_FALSE));
+            // writeImage(path, width(), height(), evas_object_image_data_get(g_imgBufferForScreehShot, EINA_FALSE));
             exit(0);
         }
     }
