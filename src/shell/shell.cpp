@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     // printf("%d", (int)sizeof (StarFish::ComputedStyle));
 
     const char* path = "";
+    std::string screenShot;
     int width = 360, height = 360;
     for (int i = 2; i < argc; i ++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -41,7 +42,15 @@ int main(int argc, char *argv[])
             height = std::atoi(argv[i] + strlen("--height="));
         } else if (strcmp(argv[i], "--regression-test") == 0) {
             flag |= StarFish::enableRegressionTest;
+        } else if (strstr(argv[i], "--screen-shot=") == argv[i]) {
+            screenShot = argv[i] + strlen("--screen-shot=");
         }
+    }
+
+    if (screenShot.length()) {
+        // screenShot = std::string("shot:delay=0.5:file=") + screenShot;
+        // setenv("ELM_ENGINE", screenShot.data(), 1);
+        setenv("SCREEN_SHOT", screenShot.data(), 1);
     }
 
     printf("running StarFish (working directory = %s)\n", path);

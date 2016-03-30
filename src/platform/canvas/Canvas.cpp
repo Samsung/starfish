@@ -1112,11 +1112,24 @@ public:
             ww = dst.width();
             hh = dst.height();
         }
-        Evas_Object* eo = (Evas_Object*)data->unwrap();
 
+        Evas_Object* eo = (Evas_Object*)data->unwrap();
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
         evas_object_raise(eo);
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+        if (evas_object_evas_get(eo) != m_canvas) {
+            eo = evas_object_image_add(m_canvas);
+            evas_object_move(eo, xx, yy);
+            evas_object_resize(eo, ww, hh);
+            evas_object_raise(eo);
+            evas_object_image_size_set(eo, data->width(), data->height());
+            evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get((Evas_Object*)data->unwrap()));
+            evas_object_image_filled_set(eo, EINA_TRUE);
+            evas_object_image_alpha_set(eo, EINA_TRUE);
+            evas_object_image_data_set(eo, evas_object_image_data_get((Evas_Object*)data->unwrap(), EINA_FALSE));
+        }
+#endif
 
         Evas_Object* clip = nullptr;
         if (lastState().m_hasPathClip) {
@@ -1146,7 +1159,8 @@ public:
 
         STARFISH_ASSERT(evas_object_visible_get(eo) == EINA_FALSE);
         evas_object_show(eo);
-        m_surfaceList->push_back(eo);
+        if (m_surfaceList)
+            m_surfaceList->push_back(eo);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

@@ -18,6 +18,12 @@ page.onConsoleMessage = function(msg, lineNum, sourceId) {
 	console.log('CONSOLE: ' + msg + '\n');
 };
 
+var resultXMLFolder=""
+if (args[2] && args[2].indexOf("--result-folder=") == 0) {
+	resultXMLFolder = args[2].slice("--result-folder=".length);
+	console.log(resultXMLFolder)
+}
+
 page.open("tool/html2xml/index.html", function() {
 	page.evaluate(function (data, absPath, point) {
 		window.point = point
@@ -40,17 +46,19 @@ page.open("tool/html2xml/index.html", function() {
 			window.setTimeout(wait, 100);
 			return;
 		}
-		fs.write("result.xml", result, "w");
+		var resultXML = resultXMLFolder + "./result.xml"
+		fs.write(resultXML, result, "w");
 		var wd = absPath.substring(0, absPath.lastIndexOf("/") + 1)
 
 		var process = require("child_process")
 		var spawn = process.spawn
 		var execFile = process.execFile
-		var args = ["result.xml", "--working-directory="+wd];
+		var args = [resultXML, "--working-directory="+wd];
 		var i;
 		for(i = 2; i < system.args.length; i ++) {
 			args.push(system.args[i])
 		}
+		console.log(args);
 		var child = spawn("./StarFish", args);
 
 		child.stdout.on("data", function (data) {

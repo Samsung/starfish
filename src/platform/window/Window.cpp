@@ -27,6 +27,83 @@ extern __thread Evas* g_internalCanvas;
 extern Evas* g_internalCanvas;
 #endif
 
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+#endif
+
+#define PNG_SKIP_SETJMP_CHECK
+#include <png.h>
+
+int writeImage(const char* filename, int width, int height, void *buffer)
+{
+    int code = 0;
+    FILE* fp = NULL;
+    png_structp png_ptr = NULL;
+    png_infop info_ptr = NULL;
+    png_bytep row = NULL;
+    uint32_t* buf = (uint32_t*)buffer;
+
+    // Open file for writing (binary mode)
+    fp = fopen(filename, "wb");
+    if (fp == NULL) {
+        fprintf(stderr, "Could not open file %s for writing\n", filename);
+        code = 1;
+        goto finalise;
+    }
+
+    // Initialize write structure
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (png_ptr == NULL) {
+        fprintf(stderr, "Could not allocate write struct\n");
+        code = 1;
+        goto finalise;
+    }
+
+    // Initialize info structure
+    info_ptr = png_create_info_struct(png_ptr);
+    if (info_ptr == NULL) {
+        fprintf(stderr, "Could not allocate info struct\n");
+        code = 1;
+        goto finalise;
+    }
+
+    // Setup Exception handling
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        fprintf(stderr, "Error during png creation\n");
+        code = 1;
+        goto finalise;
+    }
+
+    png_init_io(png_ptr, fp);
+
+    // Write header (8 bit colour depth)
+    png_set_IHDR(png_ptr, info_ptr, width, height,
+        8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
+        PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    png_write_info(png_ptr, info_ptr);
+
+    for (int y = 0; y < height; y ++) {
+        png_write_row(png_ptr, (unsigned char*)&buf[width * y]);
+    }
+
+    // End write
+    png_write_end(png_ptr, NULL);
+
+    finalise:
+    if (fp != NULL)
+        fclose(fp);
+    if (info_ptr != NULL)
+        png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+    if (png_ptr != NULL)
+        png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+    if (row != NULL)
+        free(row);
+
+    return code;
+}
+
+
+
 namespace StarFish {
 
 Evas* internalCanvas();
@@ -176,7 +253,17 @@ Window* Window::create(StarFish* sf, size_t w, size_t h)
 
     if (w != SIZE_MAX && h != SIZE_MAX)
         evas_object_resize(wnd->m_window, (int)w, (int)h);
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+    {
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path))
+            evas_object_hide(wnd->m_window);
+        else
+            evas_object_show(wnd->m_window);
+    }
+#else
     evas_object_show(wnd->m_window);
+#endif
     /*
     evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST, [](void *data, Evas *e, void *event_info) {
     }, wnd);
@@ -506,9 +593,22 @@ protected:
 #endif
 };
 
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+static Evas_Object* g_imgBufferForScreehShot;
+#endif
 
 Canvas* preparePainting(WindowImplEFL* eflWindow)
 {
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+    {
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path)) {
+            auto s = CanvasSurface::create(eflWindow, eflWindow->width(), eflWindow->height());
+            g_imgBufferForScreehShot = (Evas_Object*)s->unwrap();
+            return Canvas::create(s);
+        }
+    }
+#endif
     int width, height;
     evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
     Evas* evas = evas_object_evas_get(eflWindow->m_window);
@@ -569,6 +669,8 @@ void Window::paintWindowBackground(Canvas* canvas)
             canvas->clearColor(Color(255, 255, 255, 255));
     }
 }
+
+
 
 void Window::rendering()
 {
@@ -733,6 +835,19 @@ void Window::rendering()
 
     m_needsRendering = false;
     m_inRendering = false;
+
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+    {
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path)) {
+            // evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
+            // int writeImage(char* filename, int width, int height, void *buffer)
+            writeImage(path, width(), height(), evas_object_image_data_get(g_imgBufferForScreehShot, EINA_FALSE));
+            exit(0);
+        }
+    }
+
+#endif
 }
 
 void Window::setNeedsRenderingSlowCase()

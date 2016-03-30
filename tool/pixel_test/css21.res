@@ -1181,12 +1181,6 @@ test/reftest/csswg-test/css21/tables/table-anonymous-objects-173.htm
 test/reftest/csswg-test/css21/tables/table-anonymous-objects-174.htm
 test/reftest/csswg-test/css21/tables/table-anonymous-objects-175.htm
 test/reftest/csswg-test/css21/tables/table-anonymous-objects-176.htm
-ReferenceError: Can't find variable: dump
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css21/tables/table-anonymous-objects-207.htm:24
-ReferenceError: Can't find variable: dump
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css21/tables/table-anonymous-objects-208.htm:24
 test/reftest/csswg-test/css21/text/control-characters-002.htm
 test/reftest/csswg-test/css21/text/text-align-001.htm
 test/reftest/csswg-test/css21/text/text-align-002.htm
