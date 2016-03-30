@@ -1093,7 +1093,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (obj->isDocument()) {
                 Document* doc = obj->asDocument();
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-                if (argValue.isESString()) {
+                if (argValue.isUndefined()) {
+                    QualifiedName name = QualifiedName::fromString(doc->window()->starFish(), "undefined");
+                    Element* elem = doc->createElement(name);
+                    if (elem != nullptr)
+                        return elem->scriptValue();
+                } else if (argValue.isNull()) {
+                    QualifiedName name = QualifiedName::fromString(doc->window()->starFish(), "null");
+                    Element* elem = doc->createElement(name);
+                    if (elem != nullptr)
+                        return elem->scriptValue();
+                } else if (argValue.isESString()) {
                     escargot::ESString* argStr = argValue.asESString();
                     QualifiedName name = QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data());
                     Element* elem = doc->createElement(name);
@@ -2679,6 +2689,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
             DOMException* exception = (DOMException*)originalObj->extraPointerData();
             return toJSString(exception->message());
+        } else {
+            return escargot::ESValue();
+        }
+        },
+        NULL, false, false, false);
+
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("code"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
+            DOMException* exception = (DOMException*)originalObj->extraPointerData();
+            return escargot::ESValue(exception->code());
         } else {
             return escargot::ESValue();
         }

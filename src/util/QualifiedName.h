@@ -26,7 +26,7 @@ public:
         return QualifiedName(String::emptyString);
     }
 
-    static bool checkNameProductionRule(const char* str, unsigned length);
+    static bool checkNameProductionRule(String* str, unsigned length);
 
     bool operator==(const QualifiedName& src)
     {
@@ -51,9 +51,6 @@ public:
 protected:
     String* m_string;
     // TODO add namespace..
-private:
-    static bool checkNameProductionRuleStart_internal(char c);
-    static bool checkNameProductionRule_internal(char c);
 };
 }
 
