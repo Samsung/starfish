@@ -24,14 +24,11 @@ fi
 
 if [[ "$tc" == *"/" ]]; then
     tc=$(find $tc -name "*.htm*" | sort)
-fi
-
-if [[ "$tc" == *".res" ]]; then
+elif [[ "$tc" == *".res" ]]; then
     tc=$(cat $tc)
 fi
 
 if [ "$2" = true ]; then
-    echo "true"
     REGRESSION=true
 fi
 
@@ -85,31 +82,39 @@ rm $TMPFILE
 if [ "$REGRESSION" = true ]; then
     echo -e "${BOLD}###### Regression Test ######${RESET}\n"
 
-    if diff $PASSFILE $PASSFILENEW &> /dev/null ; then
+    diff=`diff -u $PASSFILE $PASSFILENEW`
+    if [ "$diff" = "" ] ; then
         echo -e "${GREEN}[PASSED] no change${RESET}\n"
     else
         echo -e "${RED}[CHECKED] some changes${RESET}\n"
+        diff -u $PASSFILE $PASSFILENEW
+        echo
 
+        # Update the regression lists
         cp $PASSFILENEW test/regression/reftest/web-platform-tests
-        cp -rf test/reftest/web-platform-tests/resources test/regression/reftest/web-platform-tests/
+
         # Copy the converted files
-        file=$(cat $PASSFILENEW | sort)
+        file=$(cat $PASSFILENEW)
         for i in $file ; do
             dest=test/regression/${i#*/}
             destdir=${dest%/*}
             mkdir -p $destdir
             cp $i $dest
         done
+
         # Copy the original files
         replace='s/dom_converted/dom/g'
         perl -i -pe $replace $PASSFILENEW
-        file=$(cat $PASSFILENEW | sort)
+        file=$(cat $PASSFILENEW)
         for i in $file ; do
             dest=test/regression/${i#*/}
             destdir=${dest%/*}
             mkdir -p $destdir
             cp $i $dest
         done
+
+        # Copy the resource files
+        cp -rf test/reftest/web-platform-tests/resources test/regression/reftest/web-platform-tests/
     fi
 
     # Remove temporary file
