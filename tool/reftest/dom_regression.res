@@ -18,3 +18,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild-na
 test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-lastElementChild-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-nextElementSibling-xhtml.xhtml
+test/reftest/web-platform-tests/dom_converted/nodes/Element-previousElementSibling-xhtml.xhtml
