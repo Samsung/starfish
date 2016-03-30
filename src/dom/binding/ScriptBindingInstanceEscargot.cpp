@@ -678,7 +678,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             Node* nd = ((Node *)originalObj->extraPointerData());
             if (nd->isElement()) {
                 // FIXME(JMP): We have to fix this to follow DOM spec after implementing Namespace
-                return toJSString(nd->asElement()->localName());
+                return toJSString(nd->asElement()->localName()->toUpper());
             } else {
                 THROW_ILLEGAL_INVOCATION();
             }
@@ -814,6 +814,30 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }, escargot::ESString::create("setAttribute"), 0, false)
+    );
+
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeAttribute"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            try {
+                escargot::ESValue nd = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(nd, ScriptWrappable::Type::NodeObject);
+
+                escargot::ESValue key = instance->currentExecutionContext()->readArgument(0);
+
+                if (key.isESString()) {
+                    auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
+                    QualifiedName attrKey = QualifiedName::fromString(sf, key.asESString()->utf8Data());
+                    Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
+                    if (elem) {
+                        elem->removeAttribute(attrKey);
+                    }
+                }
+                return escargot::ESValue(escargot::ESValue::ESNull);
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }, escargot::ESString::create("removeAttribute"), 0, false)
     );
 
     auto styleGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
@@ -1011,9 +1035,22 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+
             if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
+
+                if (*argStr == *(escargot::strings->emptyString.string()))
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+
                 Element* elem = doc->getElementById(toBrowserString(argStr));
+                if (elem != nullptr)
+                    return elem->scriptValue();
+            } else if (argValue.isNull()) {
+                Element* elem = doc->getElementById(toBrowserString(escargot::ESString::create("null")));
+                if (elem != nullptr)
+                    return elem->scriptValue();
+            } else if (argValue.isUndefined()) {
+                Element* elem = doc->getElementById(toBrowserString(escargot::ESString::create("undefined")));
                 if (elem != nullptr)
                     return elem->scriptValue();
             }
