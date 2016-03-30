@@ -603,8 +603,6 @@ public:
     {
         if (m_surround == nullptr) {
             m_surround = new StyleSurroundData();
-            // FIXME: need to cleanup
-            BorderValue();
         }
         return m_surround;
     }

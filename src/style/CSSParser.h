@@ -580,7 +580,8 @@ protected:
     String* parseDefaultPropertyValue(CSSToken* token);
     void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
     void addUnknownAtRule(CSSStyleSheet* aSheet, String* aString);
-
+    void reportError(const char *aMsg);
+    bool parseCharsetRule(CSSStyleSheet* aSheet);
     Document* m_document;
     bool m_preserveWS;
     bool m_preserveComments;
@@ -588,6 +589,7 @@ protected:
     CSSScanner* m_scanner;
     CSSToken* m_lookAhead;
     CSSToken* m_token;
+    String* m_error;
 };
 
 }

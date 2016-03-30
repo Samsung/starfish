@@ -2583,6 +2583,11 @@ bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator
     // color | percentage | <auto> | inherit
     if (tokens->size() >= 1) {
         String* str = String::emptyString;
+
+        if ((*tokens)[0]->charAt(0) == '#' && tokens->size() >= 2) {
+            return false;
+        }
+
         for (unsigned i = 0; i < tokens->size(); i++) {
             str = str->concat(tokens->at(i)->toLower());
         }
@@ -3339,22 +3344,79 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(StarFish* sf)
     return ret;
 }
 
+unsigned char parseColorFunctionPart(String* s)
+{
+    if (s->indexOf('%') == s->length() - 1) {
+        float f;
+        sscanf(s->utf8Data(), "%f%%", &f);
+        if (f < 0)
+            f = 0;
+        if (f > 100)
+            f = 100;
+        return 255 * f / 100;
+    }
+    float f;
+    sscanf(s->utf8Data(), "%f", &f);
+
+    if (f < 0)
+        f = 0;
+    if (f > 255)
+        f = 255;
+    return f;
+}
+
 Color parseColor(String* str)
 {
     const char* s = str->utf8Data();
     if (startsWith(s, "rgba")) {
-        float r, g, b, a;
-        sscanf(s, "rgba(%f,%f,%f,%f)", &r, &g, &b, &a);
-        r = (r > 255) ? 255 : (r < 0 ? 0 : r);
-        g = (g > 255) ? 255 : (g < 0 ? 0 : g);
-        b = (b > 255) ? 255 : (b < 0 ? 0 : b);
-        return Color(r, g, b, a * 255);
+        size_t s1 = str->indexOf('(');
+        size_t s2 = str->indexOf(')');
+
+        STARFISH_ASSERT(s1 != SIZE_MAX && s2 != SIZE_MAX && s1 < s2);
+        String* sub = str->substring(s1 + 1, s2 - s1 - 1);
+        String::Vector v;
+        sub->split(',', v);
+        STARFISH_ASSERT(v.size() == 4);
+
+        unsigned char r = parseColorFunctionPart(v[0]);
+        unsigned char g = parseColorFunctionPart(v[1]);
+        unsigned char b = parseColorFunctionPart(v[2]);
+
+        unsigned char a = 255;
+        String* s = v[3];
+        if (s->indexOf('%') == s->length() - 1) {
+            float f;
+            sscanf(s->utf8Data(), "%f%%", &f);
+            if (f < 0)
+                f = 0;
+            if (f > 100)
+                f = 100;
+            a = 255 * f / 100;
+        } else {
+            float f;
+            sscanf(s->utf8Data(), "%f", &f);
+
+            if (f < 0)
+                f = 0;
+            if (f > 1)
+                f = 1;
+            a = f * 255;
+        }
+        return Color(r, g, b, a);
     } else if (startsWith(s, "rgb")) {
-        float r, g, b;
-        sscanf(s, "rgb(%f,%f,%f)", &r, &g, &b);
-        r = (r > 255) ? 255 : (r < 0 ? 0 : r);
-        g = (g > 255) ? 255 : (g < 0 ? 0 : g);
-        b = (b > 255) ? 255 : (b < 0 ? 0 : b);
+
+        size_t s1 = str->indexOf('(');
+        size_t s2 = str->indexOf(')');
+
+        STARFISH_ASSERT(s1 != SIZE_MAX && s2 != SIZE_MAX && s1 < s2);
+        String* sub = str->substring(s1 + 1, s2 - s1 - 1);
+        String::Vector v;
+        sub->split(',', v);
+        STARFISH_ASSERT(v.size() == 3);
+
+        unsigned char r = parseColorFunctionPart(v[0]);
+        unsigned char g = parseColorFunctionPart(v[1]);
+        unsigned char b = parseColorFunctionPart(v[2]);
         return Color(r, g, b, 255);
     } else if (startsWith(s, "#") && (str->length() == 9)) {
         unsigned int r, g, b, a;

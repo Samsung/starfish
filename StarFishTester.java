@@ -135,7 +135,7 @@ public class StarFishTester {
 							// image diff
 							String testStatus="";
 							try {
-								String ss = "tool/pixel_test/bin/image_diff -f " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png";
+								String ss = "tool/pixel_test/bin/image_diff " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png";
 								// System.out.println(ss);
 								Process process = runtime.exec(ss);
 								process.waitFor();
@@ -154,6 +154,11 @@ public class StarFishTester {
 								} else {
 									outputString += "got error";
 									testStatus = "diff: 100.0% failed";
+								}
+								if (testStatus.contains("failed")) {
+									ss = "tool/pixel_test/bin/image_diff --diff " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png " + outFolder + caseName + "_diff.png";
+									process = runtime.exec(ss);
+									process.waitFor();
 								}
 							} catch (Exception e) {
 

@@ -1215,6 +1215,45 @@ void CSSParser::addUnknownRule(CSSStyleSheet* aSheet, String* aString, size_t aC
 }
 */
 
+void CSSParser::reportError(const char *aMsg)
+{
+    m_error = String::createASCIIString(aMsg);
+}
+
+bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
+{
+    CSSToken* token = getToken(false, false);
+    String* s = String::emptyString;
+    if (token->isAtRule(String::createASCIIString("@charset")) && token->m_value->equals("@charset")) { // lowercase check
+        s = token->m_value;
+        token = getToken(false, false);
+        s = s->concat(token->m_value);
+        if (token->isWhiteSpace(String::createASCIIString(" "))) {
+            token = getToken(false, false);
+            s = s->concat(token->m_value);
+            if (token->isString()) {
+                // String* encoding = token->m_value;
+                token = getToken(false, false);
+                s = s->concat(token->m_value);
+                if (token->isSymbol(';')) {
+                    // var rule = new jscsspCharsetRule();
+                    // rule.encoding = encoding;
+                    // rule.parsedCssText = s;
+                    // rule.parentStyleSheet = aSheet;
+                    // aSheet.cssRules.push(rule);
+                    return true;
+                } else
+                    reportError(kCHARSET_RULE_MISSING_SEMICOLON);
+            } else
+                reportError(kCHARSET_RULE_CHARSET_IS_STRING);
+        } else
+            reportError(kCHARSET_RULE_MISSING_WS);
+    }
+
+    addUnknownAtRule(aSheet, s);
+    return false;
+}
+
 CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString)
 {
     m_lookAhead = nullptr;
@@ -1230,9 +1269,7 @@ CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString)
         return sheet;
     if (token->isAtRule(String::createASCIIString("@charset"))) {
         ungetToken();
-        // TODO
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        // parseCharsetRule(sheet);
+        parseCharsetRule(sheet);
         token = getToken(false, false);
     }
 
