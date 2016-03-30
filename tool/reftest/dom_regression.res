@@ -13,3 +13,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dy
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-nochild-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElement-null-xhtml.xhtml
+test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild-entity-xhtml.xhtml
