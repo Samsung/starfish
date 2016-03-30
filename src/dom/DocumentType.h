@@ -36,7 +36,7 @@ public:
 
     virtual String* nodeValue()
     {
-        return String::emptyString;
+        return nullptr;
     }
 
     virtual String* textContent()

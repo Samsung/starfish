@@ -466,7 +466,6 @@ private:
 
     void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
-    Node* getDocTypeChild();
 
 protected:
     bool m_needsStyleRecalc : 1;
@@ -481,6 +480,9 @@ protected:
 
     Frame* m_frame;
     RareNodeMembers* m_rareNodeMembers;
+
+    Node* getDocTypeChild();
+
 private:
     Node* m_nextSibling;
     Node* m_previousSibling;

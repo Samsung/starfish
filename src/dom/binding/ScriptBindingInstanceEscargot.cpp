@@ -382,7 +382,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     auto nodeValueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
     {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        ((Node*)originalObj->extraPointerData())->setNodeValue(toBrowserString(v));
+        Node* node = (Node*)originalObj->extraPointerData();
+        if (v.isESString()) {
+            node->setNodeValue(toBrowserString(v));
+        } else if (v.isNull()) {
+            node->setNodeValue(nullptr);
+        }
     };
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeValue"), nodeValueGetter, nodeValueSetter, false, false, false);
 
@@ -1035,7 +1040,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     };
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("doctype"), doctypeGetter, NULL, false, true, true);
+    auto doctypeSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
+    {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
+        // Spec says do nothing
+    };
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("doctype"), doctypeGetter, doctypeSetter, false, true, true);
 
     escargot::ESFunctionObject* createElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
