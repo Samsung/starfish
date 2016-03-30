@@ -16,6 +16,7 @@ test/reftest/web-platform-tests/dom/events/EventTarget-addEventListener.html
 test/reftest/web-platform-tests/dom/events/EventTarget-dispatchEvent.html
 test/reftest/web-platform-tests/dom/events/EventTarget-dispatchEvent-returnvalue.html
 test/reftest/web-platform-tests/dom/events/EventTarget-removeEventListener.html
+test/reftest/web-platform-tests/dom/events/Event-type.html
 test/reftest/web-platform-tests/dom/events/ProgressEvent.html
 test/reftest/web-platform-tests/dom/interface-objects.html
 test/reftest/web-platform-tests/dom/lists/DOMTokenList-stringifier.html
