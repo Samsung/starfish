@@ -24,7 +24,6 @@ test/reftest/csswg-test/css1/c527-font-10.htm
 test/reftest/csswg-test/css1/c531-color-000.htm
 test/reftest/csswg-test/css1/c532-bgcolor-000.htm
 test/reftest/csswg-test/css1/c532-bgcolor-001.htm
-test/reftest/csswg-test/css1/c533-bgimage-000.htm
 test/reftest/csswg-test/css1/c533-bgimage-001.htm
 test/reftest/csswg-test/css1/c5501-imrgn-t-000.htm
 test/reftest/csswg-test/css1/c5502-mrgn-r-000.htm

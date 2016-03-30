@@ -29,12 +29,12 @@ bool EventTarget::addEventListener(const QualifiedName& eventType, EventListener
     }
     for (auto i = v->begin(); i != v->end(); i++) {
         if (listener->compare(*i)) {
-            STARFISH_LOG_INFO("EventTarget::addEventListener - Duplicated listener \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
+            // STARFISH_LOG_INFO("EventTarget::addEventListener - Duplicated listener \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
             return false;
         }
     }
     v->push_back(listener);
-    STARFISH_LOG_INFO("EventTarget::addEventListener - Added \"%s[%lu]\"\n", eventType.string()->utf8Data(), v->size() - 1);
+    // STARFISH_LOG_INFO("EventTarget::addEventListener - Added \"%s[%lu]\"\n", eventType.string()->utf8Data(), v->size() - 1);
     return true;
 }
 
@@ -44,19 +44,19 @@ bool EventTarget::removeEventListener(const QualifiedName& eventType, EventListe
         return false;
     auto pair = m_eventListeners.find(eventType);
     if (pair == m_eventListeners.end()) {
-        STARFISH_LOG_INFO("EventTarget::removeEventListener - No such listener \"%s\"\n", eventType.string()->utf8Data());
+        // STARFISH_LOG_INFO("EventTarget::removeEventListener - No such listener \"%s\"\n", eventType.string()->utf8Data());
         return false;
     }
     listener->setCapture(useCapture);
     EventListenerVector* v = pair->second;
     for (auto i = v->begin(); i != v->end(); i++) {
         if (listener->compare(*i)) {
-            STARFISH_LOG_INFO("EventTarget::removeEventListener - Removed \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
+            // STARFISH_LOG_INFO("EventTarget::removeEventListener - Removed \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
             v->erase(i);
             return true;
         }
     }
-    STARFISH_LOG_INFO("EventTarget::removeEventListener - No such listener \"%s\"\n", eventType.string()->utf8Data());
+    // STARFISH_LOG_INFO("EventTarget::removeEventListener - No such listener \"%s\"\n", eventType.string()->utf8Data());
     return false;
 }
 

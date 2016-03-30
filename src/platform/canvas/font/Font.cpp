@@ -69,7 +69,7 @@ public:
             int best = 0;
             loadFont(convertFromPxToPt(m_size) - 1);
             for (int i = convertFromPxToPt(m_size);; i++) {
-                STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
+                // STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
                 evas_object_text_font_set(m_text, m_fontFamily->utf8Data(), i);
                 evas_object_text_text_set(m_text, "gWAPpqfX");
                 Evas_Coord minw, minh;
@@ -83,10 +83,10 @@ public:
                 }
             }
             evas_font_cache_flush(evas_object_evas_get(m_text));
-            STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
+            // STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
             g_fontSizeAdjuesterInited = true;
             g_fontSizeAdjuester = best / size;
-            STARFISH_LOG_INFO("fontSizeAdjuester %f\n", (float)g_fontSizeAdjuester);
+            // STARFISH_LOG_INFO("fontSizeAdjuester %f\n", (float)g_fontSizeAdjuester);
         }
 
         loadFont(m_size * g_fontSizeAdjuester);

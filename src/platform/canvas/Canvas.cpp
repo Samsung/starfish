@@ -193,6 +193,7 @@ class CanvasEFL : public Canvas {
 public:
     CanvasEFL(void* data)
     {
+        m_imageCount = 0;
         m_image = NULL;
         m_buffer = NULL;
         m_directDraw = true;
@@ -225,6 +226,7 @@ public:
 
     CanvasEFL(CanvasSurface* data)
     {
+        m_imageCount = 0;
         m_objList = NULL;
         m_surfaceList = NULL;
         m_directDraw = false;
@@ -1035,27 +1037,48 @@ public:
             hh = dst.height();
         }
         Evas_Object* eo = nullptr;
-        eo = findPrevDrawnData(data);
+        bool shouldUseRecycleImageObject = false;
+        if (data->width() >= 64 && data->height() >= 64) {
+            shouldUseRecycleImageObject = true;
+        }
 
-        if (!eo) {
-            eo = evas_object_image_add(m_canvas);
-            if (!m_prevDrawnImageMap) {
-                if (m_objList)
-                    m_objList->push_back(eo);
+        if (shouldUseRecycleImageObject) {
+            eo = findPrevDrawnData(data);
+            if (!eo) {
+                eo = evas_object_image_add(m_canvas);
+                if (!m_prevDrawnImageMap) {
+                    if (m_objList)
+                        m_objList->push_back(eo);
+                }
+
+                Evas_Object* imgData = (Evas_Object*)data->unwrap();
+                void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
+                evas_object_image_data_set(imgData, imgBuf);
+
+                evas_object_image_size_set(eo, data->width(), data->height());
+                evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
+                evas_object_image_data_set(eo, imgBuf);
+                evas_object_image_filled_set(eo, EINA_TRUE);
+                evas_object_image_alpha_set(eo, EINA_TRUE);
+                // evas_object_anti_alias_set(eo, EINA_TRUE);
+
+                pushPrevDrawnData(data, eo);
             }
+        } else {
+            eo = evas_object_image_add(m_canvas);
+            if (m_objList)
+                m_objList->push_back(eo);
 
             Evas_Object* imgData = (Evas_Object*)data->unwrap();
-            void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
-            evas_object_image_data_set(imgData, imgBuf);
+            const char* buf;
+            evas_object_image_file_get(imgData, &buf, NULL);
+            evas_object_image_file_set(eo, buf, NULL);
 
             evas_object_image_size_set(eo, data->width(), data->height());
             evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
-            evas_object_image_data_set(eo, imgBuf);
             evas_object_image_filled_set(eo, EINA_TRUE);
             evas_object_image_alpha_set(eo, EINA_TRUE);
             // evas_object_anti_alias_set(eo, EINA_TRUE);
-
-            pushPrevDrawnData(data, eo);
         }
 
         evas_object_image_border_set(eo, l, r, t, b);
@@ -1072,6 +1095,11 @@ public:
         applyClippers(eo);
         applyEvasMapIfNeeded(eo, dst, true);
         evas_object_show(eo);
+
+        m_imageCount++;
+        if (m_imageCount == 101) {
+            STARFISH_LOG_ERROR("paint more than 100 image makes poor performance\n");
+        }
     }
 
     virtual void drawImage(ImageData* data, const Rect& dst)
@@ -1318,6 +1346,7 @@ protected:
     void* m_buffer;
     unsigned m_width;
     unsigned m_height;
+    size_t m_imageCount;
     std::vector<Evas_Object*>* m_objList;
     std::vector<Evas_Object*>* m_surfaceList;
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > >* m_prevDrawnImageMap;
