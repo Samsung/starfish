@@ -1126,6 +1126,22 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 HTMLCollection* result = doc->getElementsByClassName(toBrowserString(argStr));
                 if (result != nullptr)
                     return result->scriptValue();
+            } else if (argValue.isObject() && argValue.asESPointer()->isESArrayObject()) {
+                escargot::ESArrayObject* array = argValue.asESPointer()->asESArrayObject();
+                String* listSoFar = String::createASCIIString("");
+                for (int i = 0; array->length(); i++) {
+                    escargot::ESValue val = array->get(i);
+                    if (val.isESString()) {
+                        listSoFar = listSoFar->concat(toBrowserString(val.asESString()));
+                        listSoFar = listSoFar->concat(String::spaceString);
+                    } else {
+                        return escargot::ESValue(escargot::ESValue::ESNull);
+                    }
+                }
+                HTMLCollection* result = doc->getElementsByClassName(listSoFar);
+                if (result) {
+                    return result->scriptValue();
+                }
             }
         } else {
             THROW_ILLEGAL_INVOCATION()
