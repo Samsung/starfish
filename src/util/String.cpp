@@ -146,7 +146,7 @@ String* String::createASCIIString(const char* str)
     return new StringDataASCII(str);
 }
 
-String* String::createUTF32String(char32_t* c)
+String* String::createUTF32String(const char32_t* c)
 {
     return new StringDataUTF32(c);
 }
@@ -212,7 +212,7 @@ String* String::concat(String* str)
         return new StringDataASCII(std::move(s));
     } else {
         UTF32String a = toUTF32String();
-        UTF32String b = toUTF32String();
+        UTF32String b = str->toUTF32String();
         a = a + b;
         return new StringDataUTF32(std::move(a));
     }
@@ -256,7 +256,12 @@ void String::split(char delim, Vector& tokens)
             tokens.push_back(String::fromUTF8(item.c_str()));
         }
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        std::basic_stringstream<char32_t> ss;
+        ss << toUTF32String().data();
+        std::basic_string<char32_t> item;
+        while (std::getline(ss, item, (char32_t)delim)) {
+            tokens.push_back(String::createUTF32String(item.c_str()));
+        }
     }
 }
 

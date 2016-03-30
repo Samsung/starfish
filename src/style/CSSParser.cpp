@@ -1165,7 +1165,55 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
         return;
     }
     restoreState();
+    String* s = currentToken()->m_value;
+    addUnknownAtRule(aOwner, s);
 }
+
+void CSSParser::addUnknownAtRule(CSSStyleSheet* aSheet, String* aString)
+{
+    // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
+    std::vector<String*, gc_allocator<String*>> blocks;
+    CSSToken* token = getToken(false, false);
+    while (token->isNotNull()) {
+        aString = aString->concat(token->m_value);
+        if (token->isSymbol(';') && !blocks.size())
+            break;
+        else if (token->isSymbol('{')
+            || token->isSymbol('(')
+            || token->isSymbol('[')
+            || token->m_type == CSSToken::FUNCTION_TYPE) {
+            blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
+        } else if (token->isSymbol('}')
+            || token->isSymbol(')')
+            || token->isSymbol(']')) {
+            if (blocks.size()) {
+                String* ontop = blocks[blocks.size() - 1];
+                if ((token->isSymbol('}') && ontop->equals("{"))
+                    || (token->isSymbol(')') && ontop->equals("("))
+                    || (token->isSymbol(']') && ontop->equals("["))) {
+                    blocks.pop_back();
+                    if (!blocks.size() && token->isSymbol('}'))
+                        break;
+                }
+            }
+        }
+        token = getToken(false, false);
+    }
+
+    // addUnknownRule(aSheet, aString, currentLine);
+}
+
+/*
+void CSSParser::addUnknownRule(CSSStyleSheet* aSheet, String* aString, size_t aCurrentLine)
+{
+    String* errorMsg = consumeError();
+    // var rule = new jscsspErrorRule(errorMsg);
+    // rule.currentLine = aCurrentLine;
+    // rule.parsedCssText = aString;
+    // rule.parentStyleSheet = aSheet;
+    // aSheet.cssRules.push(rule);
+}
+*/
 
 CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString)
 {

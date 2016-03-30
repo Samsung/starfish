@@ -898,7 +898,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     /* 4.5 Interface Document */
 
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("head"),
-            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
             CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
             Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
             if (nd->isDocument()) {

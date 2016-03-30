@@ -579,6 +579,7 @@ protected:
     String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate);
     String* parseDefaultPropertyValue(CSSToken* token);
     void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
+    void addUnknownAtRule(CSSStyleSheet* aSheet, String* aString);
 
     Document* m_document;
     bool m_preserveWS;
