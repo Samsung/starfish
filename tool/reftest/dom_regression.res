@@ -17,3 +17,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild-en
 test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild-namespace-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-lastElementChild-xhtml.xhtml
+test/reftest/web-platform-tests/dom_converted/nodes/Element-nextElementSibling-xhtml.xhtml
