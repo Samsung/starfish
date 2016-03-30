@@ -2581,7 +2581,7 @@ void CSSStyleDeclaration::setPadding(const char* value)
 bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // color | percentage | <auto> | inherit
-    if (tokens->size() > 1) {
+    if (tokens->size() >= 1) {
         String* str = String::emptyString;
         for (unsigned i = 0; i < tokens->size(); i++) {
             str = str->concat(tokens->at(i)->toLower());
@@ -3089,12 +3089,12 @@ bool CSSStyleDeclaration::checkInputErrorBorderLeft(std::vector<String*, gc_allo
 
 bool checkInputErrorBorderUnitColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
+    (*tokens)[0] = mergeTokens(tokens);
+    tokens->resize(1);
     // color | transparent | inherit
-    if (tokens->size() == 1) {
-        const char* token = tokens->at(0)->toLower()->utf8Data();
-        if (CSSPropertyParser::assureColor(token) || (strcmp(token, "transparent") == 0) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0)) {
-            return true;
-        }
+    const char* token = tokens->at(0)->toLower()->utf8Data();
+    if (CSSPropertyParser::assureColor(token) || (strcmp(token, "transparent") == 0) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0)) {
+        return true;
     }
     return false;
 }
@@ -3345,10 +3345,16 @@ Color parseColor(String* str)
     if (startsWith(s, "rgba")) {
         float r, g, b, a;
         sscanf(s, "rgba(%f,%f,%f,%f)", &r, &g, &b, &a);
+        r = (r > 255) ? 255 : (r < 0 ? 0 : r);
+        g = (g > 255) ? 255 : (g < 0 ? 0 : g);
+        b = (b > 255) ? 255 : (b < 0 ? 0 : b);
         return Color(r, g, b, a * 255);
     } else if (startsWith(s, "rgb")) {
         float r, g, b;
         sscanf(s, "rgb(%f,%f,%f)", &r, &g, &b);
+        r = (r > 255) ? 255 : (r < 0 ? 0 : r);
+        g = (g > 255) ? 255 : (g < 0 ? 0 : g);
+        b = (b > 255) ? 255 : (b < 0 ? 0 : b);
         return Color(r, g, b, 255);
     } else if (startsWith(s, "#") && (str->length() == 9)) {
         unsigned int r, g, b, a;
