@@ -20,3 +20,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-lastElementChild-xht
 test/reftest/web-platform-tests/dom_converted/nodes/Element-nextElementSibling-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-previousElementSibling-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-siblingElement-null.html
+test/reftest/web-platform-tests/dom_converted/nodes/Element-siblingElement-null-xhtml.xhtml
