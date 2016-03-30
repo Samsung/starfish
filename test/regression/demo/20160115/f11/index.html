@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+   <head>
+      <link rel="stylesheet" type="text/css" href="style.css"/>
+   </head>
+   <body>
+      <div id="container">
+         <p id="text_title">BATTERY</p>
+         <div id="div_current">
+            <p id="text_current">95</p><div id="div_desc">
+               <p id="text_percent">%</p>
+               <p id="text_time">20H01M</p>
+            </div>
+         </div>
+         <div id="box_battery">
+            <div id="box_battery_full">
+               <div id="box_hide_bar"></div>
+            </div>
+         </div>
+      </div>
+   </body>
+   <script>
+   (function() {
+      var DECREASE_BATTERY_UNIT = 5;
+      var HIDE_BAR_WIDTH = 8;
+      var HIDE_BAR_TOTAL_COUNT = 20;
+      var status = 0;
+      eImgHideBar = document.getElementById("box_hide_bar");
+      eTextRemainPercent = document.getElementById("text_current");
+      eTextRemainTime = document.getElementById("text_time");
+      document.body.onclick = function() {
+         status++;
+         if (status == HIDE_BAR_TOTAL_COUNT) {
+            status = 0;
+            eImgHideBar.style.width = "0";
+            eTextRemainPercent.textContent = 95;
+            eTextRemainTime.textContent = HIDE_BAR_TOTAL_COUNT - 1 + "H01M";
+         } else {
+            eImgHideBar.style.width = ((status) * HIDE_BAR_WIDTH) + "px";
+            eTextRemainPercent.textContent = parseInt(eTextRemainPercent.textContent) - DECREASE_BATTERY_UNIT;
+            eTextRemainTime.textContent = HIDE_BAR_TOTAL_COUNT - 1 - status + "H01M";
+         }
+      };
+   })();
+   
+   </script>
+</html>

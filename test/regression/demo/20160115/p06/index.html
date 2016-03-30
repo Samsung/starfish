@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+   <head>
+      <style>
+         * {
+            margin: 0;
+            padding: 0;
+         }
+         body {
+            width: 360px;
+            height: 360px;
+         }
+         p {
+            color: white;
+            font-size: 24pt;
+            width: 100%;
+         }
+         div {
+            text-align: center;
+         }
+         .div_btn {
+            width: 70%;
+            height: 20%;
+            margin: 0 auto 3% auto;
+         }
+         .text_btn {
+            padding-top: 5%;
+         }
+         #container {
+            width: 100%;
+            height: 100%;
+            background-color: #172834;
+         }
+         #text_title {
+            padding-top: 16.4%;
+         }
+         #btn_save {
+            /*background-color: #4C63FF;*/
+            background-image: url("img/blue_button.png");
+            background-size: 100% 100%;
+            margin-top: 10%;
+         }
+         #btn_find {
+            /*background-color: #FE7474;*/
+            background-image: url("img/pink_button.png");
+            background-size: 100% 100%;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="container">
+         <p id="text_title">FIND MY CAR</p>
+         <div class="div_btn" id="btn_save"><p class="text_btn">SAVE</p></div>
+         <div class="div_btn" id="btn_find"><p class="text_btn">FIND</p></div>
+      </div>
+   </body>
+   <script>
+      document.getElementById("btn_save").onclick = function() {
+         print("clicked! [SAVE]");
+      };
+      document.getElementById("btn_find").onclick = function() {
+         print("clicked! [FIND]");
+      };
+   </script>
+</html>

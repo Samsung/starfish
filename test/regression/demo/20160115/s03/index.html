@@ -1,0 +1,89 @@
+<html>
+<head>
+    <title></title>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+            width:360px;
+            height:360px;
+            font-size: 24pt;
+            color: white;
+            background-color:#222;
+            //border: 3px solid red;
+        }
+        .txt {
+            position: relative;
+            margin: 0px;
+            padding: 0px;
+            top: 115px;
+            text-align: center;
+        }
+        #apps, #svoice, #buddy, #settings {
+            display: inline-block;
+            background-size: 100%;
+            width: 115px;
+            height: 115px;
+        }
+        #apps {
+            background-image: url("img/apps.png");
+        }
+        #c_block, #b_block {
+            top: -20px;
+        }
+        #t_block, #b_block {
+            text-align: center;
+            position: relative;
+        }
+        #svoice {
+            background-image: url("img/svoice.png");
+        }
+        #buddy {
+            margin-left: 110px;
+            background-image: url("img/buddy.png");
+        }
+        #settings {
+            background-image: url("img/settings.png");
+        }
+        #apps:active {
+            background-image: url("img/apps-active.png");
+        }
+        #svoice:active {
+            background-image: url("img/svoice-active.png");
+        }
+        #buddy:active {
+            background-image: url("img/buddy-active.png");
+        }
+        #settings:active {
+            background-image: url("img/settings-active.png");
+        }
+        #apps:active, #svoice:active, #buddy:active, #settings:active {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="t_block">
+        <div id="apps">
+            <p class="txt">Apps</p>
+        </div>
+    </div>
+
+    <div id="c_block">
+        <div id="svoice">
+            <p class="txt">S Voice</p>
+        </div>
+        <div id="buddy">
+            <p class="txt">Buddy</p>
+        </div>
+    </div>
+
+    <div id="b_block">
+        <div id="settings">
+            <p class="txt">Settings</p>
+        </div>
+    </div>
+
+</body>
+</html>

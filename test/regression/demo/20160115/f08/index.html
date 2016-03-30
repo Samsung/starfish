@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#viewport {
+    width: 360px;
+    height: 360px;
+    color: white;
+    font-size: 20pt;
+    background-color: black;
+}
+
+#t1 {
+    padding-top: 10%;
+    width: 100%;
+    text-align: center;
+}
+
+#i1 {
+    margin-top: 5%;
+    text-align: center;
+}
+
+#t2 {
+    margin-top: 5%;
+    font-size: 40pt;
+    text-align: center;
+}
+
+img {
+  width:80%;
+}
+
+
+</style>
+
+<script>
+function clicked(node) {
+  console.log("clicked");
+  console.log(node);
+}
+</script>
+</head>
+<body>
+  
+<div id="viewport" onclick="clicked(this)">
+
+<div id="t1">
+  <div>CHERRY BLOSSOM 2015</div>
+</div>
+
+<div id="i1">
+  <img src="images/starbucks.png"/>
+</div>
+
+<div id="t2">
+  <div>$218.60</div>
+</div>
+
+</div>
+
+</body>
+</html>

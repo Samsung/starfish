@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+#viewport {
+    width: 360px;
+    height: 360px;
+    background-color: white;
+    color: black;
+    text-align: center;
+    font-size: 24pt;
+    //border: 3px solid red;
+}
+img {
+  width: 100%;
+}
+#t1 {
+    height: 20%;
+}
+#t1_i1 {
+  width:100%;
+}
+#b {
+    margin-top: 5%;
+    display: block;
+}
+#b1 {
+    display: inline-block;
+    width: 48%;
+}
+#b2 {
+    display: inline-block;
+    width: 48%;
+}
+#b1_i1, #b2_i1 {
+    width: 100%;
+}
+#b1_t1, #b2_t1 {
+    width: 100%;
+    font-weight: bold;
+    font-size: 30pt;
+}
+#t2 {
+    margin-top: 2%;
+    font-size: 20pt;
+    color: gray;
+}
+#t3 {
+    font-size: 20pt;
+    color: gray;
+}
+
+</style>
+
+
+<script>
+function clickedLeft(node) {
+  console.log("clicked: left");
+  console.log(node);
+}
+
+// FIXME: having two functions here gives a esprima::rearrangeNode() error
+//function clickedRight(node) {
+//  console.log("clicked: right");
+//  console.log(node);
+//}
+</script>
+
+<body>
+
+<div id="viewport">
+
+<div id="t1">
+  <img id="t1_i1" src="images/background.jpg" />
+</div>
+
+<div id="b">
+  <div id="b1" onclick="clickedLeft(this)">
+    <div id="b1_i1">
+      <img id="i1" src="images/jazz.png" />
+    </div>
+    <div id="b1_t1">
+      <div>21-43</div>
+    </div>
+  </div>
+
+  <div id="b2" onclick="clickedRight(this)">
+    <div id="b2_i1">
+      <img id="i2" src="images/bulls.png" />
+    </div>
+    <div id="b2_t1">
+      <div>28-34</div>
+    </div>
+  </div>
+</div>
+
+<div id="t2">
+  <div>TUESDAY, Feb 3</div>
+</div>
+
+<div id="t3">
+  <div>7:00PM</div>
+</div>
+
+</div>
+
+</body>
+</html>

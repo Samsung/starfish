@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+   <head>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      body {
+        width: 360px;
+        height: 360px;
+        text-align: center;
+        color: white;
+      }
+      #box_main {
+        width: 100%;
+        height: 100%;
+      }
+      #img_button {
+        position: absolute;
+        top: 40px;
+        left: 120px;
+        width: 120px;
+        height: 120px;
+      }
+      #box_disc {
+        margin-top: -200px;
+      }
+      #p_distance {
+        font-size: 16px;
+        color: #7BC842;
+      }
+      #p_number {
+        line-height: 90px;
+        font-size: 90px;
+      }
+      #p_meter {
+        line-height: 20px;
+        font-size: 20px;
+      }
+    </style>
+   </head>
+   <body>
+      <img id="box_main" src="progress/1.png" />
+      <img id="img_button" src="progress/run.png" />
+      <div id="box_disc">
+        <p id="p_distance">DISTANCE</p>
+        <p id="p_number">0</p>
+        <p id="p_meter">METER</p>
+      </div>
+   </body>
+   <script>
+   (function() {
+    var MAX_RUN = 300;
+    var count = 0;
+    var eImg = document.getElementById("box_main");
+    var eButton = document.getElementById("img_button");
+    var eNumber = document.getElementById("p_number");
+    var stop = true;
+    var go = requestAnimationFrame.bind(null, function() {
+      count++;
+      if (stop) {
+        eButton.src = "progress/run.png";
+        return;
+      }
+      var total = parseInt(eNumber.textContent);
+      if (total > MAX_RUN) {
+        stop = true;
+        count = 0;
+        eNumber.textContent = 0;
+        eImg.src = "progress/1.png";
+        eButton.src = "progress/run.png";
+        return;
+      } else eNumber.textContent = total + 1;
+
+      if (count > 30) {
+        count = 1;
+      }
+      eImg.src = "progress/" + (count*2) + ".png";
+      go();
+    }, 20);
+    
+    eButton.onclick = function() {
+      if (stop) {
+        stop = false;
+        go();
+        eButton.src = "progress/run_active.png";
+      } else stop = true;
+    };  
+   })();
+   </script>
+</html>

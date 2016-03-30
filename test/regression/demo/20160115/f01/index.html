@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+   <head>
+      <meta charset="utf-8" />
+      <style>
+         * {
+            margin: 0;
+            padding: 0;
+         }
+         body {
+            width: 360px;
+            height: 360px;
+         }
+         p {
+            text-align: center;
+            color: white;
+         }
+         .regularFont {
+            font-size: 20pt;
+         }
+         .mediumFont {
+            font-size: 22pt;
+         }
+         .largeFont {
+            font-size: 46pt;
+         }
+         #container {
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            text-align: center;
+         }
+         #top_text {
+            padding-top: 8%;
+         }
+         #img_weather {
+            width: 166.7px;
+            height: 122.4px;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="container">
+         <p class="regularFont" id="top_text">11:45AM</p>
+         <p class="mediumFont">San Francisco, CA</p>
+         <img id="img_weather" src="img/weather_icon.png"/>
+         <p class="largeFont">17°C</p>
+         <p class="mediumFont">15°/27°</p>
+      </div>
+   </body>
+   <script>
+      document.getElementsByTagName("body").item(0).onclick = function() {
+         print("clicked!");
+      };
+   </script>
+</html>

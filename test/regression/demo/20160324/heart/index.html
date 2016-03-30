@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8"/>
+    <style>
+
+body {
+        width:360px;
+        height:360px;
+    font-size: 2.125rem;
+    color: white;
+        background-color: black;
+        margin:0;
+        overflow: hidden;
+}
+.titleIcon {
+        width: 100px;
+        position: relative; z-index:2;
+}
+.text {
+        top: 120px;
+        width: 100%;
+        height: 40px;
+        font-size: 30px;
+        text-align: center;
+}
+.bgImg {
+        position: relative;
+        top: -40px;
+        z-index: 1;
+        width: 200%;
+        height: 160px;
+}
+
+#loveHolder {
+        padding-top:70px;
+        text-align: center;
+}
+
+
+    </style>
+    <style>
+    .bgImg {
+        background: url("images/pulse.jpg");
+    }
+    </style>
+</head>
+<body>
+    <div id="loveHolder">
+	<img src="images/love.jpg" class="titleIcon"/>
+    </div>
+    <div class="bgImg">
+    </div>
+</body>
+
+<script>
+
+var inAnimation = false;
+var pX = 0;
+var totalTime = 5000;
+var startTime;
+var bgImage = document.getElementsByClassName("bgImg").item(0)
+var titleIcon = document.getElementsByClassName("titleIcon").item(0)
+
+console.log(bgImage);
+
+document.body.onclick = function() {
+
+if (inAnimation) return;
+
+console.log("startani")
+inAnimation = true;
+pX = 0;
+startTime = Date.now()
+ani();
+}
+
+function ani()
+{
+    var now = Date.now();
+    if ((now - startTime) > totalTime) {
+        inAnimation = false;
+        bgImage.style.transform = "";
+        titleIcon.style.transform = "";
+        return;
+    }
+
+    var diff = now - startTime;
+    titleIcon.style.transform = "scale(" + (1+Math.sin(180 / Math.PI * (diff/totalTime) / 2)/2)  +")"
+    bgImage.style.transform = "translateX("+ -diff/totalTime*50+"%)"
+
+    window.requestAnimationFrame(ani)
+}
+
+
+</script>
+
+
+</html>

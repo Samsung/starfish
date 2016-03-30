@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+}
+#viewport {
+    background-image: url("images/background.jpg");
+    color: white;
+    width: 360px;
+    height: 360px;
+    font-size: 24px;
+    background-color: black;
+    //border: 3px solid red;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    text-align: center;
+}
+#t1 {
+    padding-top: 5%;
+    width: 100%;
+    height: 10%;
+    font-weight: bold;
+}
+#b1 {
+    margin-top: 5%;
+    height: 30%;
+}
+#b1_i1 {
+    display: inline-block;
+    margin-left: 20%;
+}
+#i1 {
+    width: 100px;
+}
+#b2 {
+    display: inline-block;
+    margin-left: 5%;
+    height: 30%;
+    font-size: 26pt;
+}
+#t3 {
+    margin-top: 10%;
+    left: 0%;
+    width: 100%;
+    height: 20%;
+    font-size: 26pt;
+}
+#t4 {
+    left: 0%;
+    width: 100%;
+    height: 20%;
+    font-size: 26pt;
+}
+#d1 {
+  font-size: 20pt;
+  text-align: left;
+}
+#d2 {
+  font-size: 60pt;
+  text-align: left;
+  font-weight: bold;
+}
+
+</style>
+
+<script>
+function clicked(node) {
+  console.log("clicked");
+  console.log(node);
+}
+</script>
+
+<body>
+
+<div id="viewport" onclick="clicked(this)">
+
+  <div id="t1">
+    <div>SUNNY</div>
+  </div>
+
+  <div id="b1">
+    <div id="b1_i1">
+      <img id="i1" src="images/sun.jpg"></img>
+    </div>
+    <div id="b2">
+      <div id="d1">21&deg;/30&deg;</div>
+      <div id="d2">29&deg;</div>
+    </div>
+  </div>
+
+  <div id="t3">
+    <div>San Francisco, CA</div>
+  </div>
+
+  <div id="t4">
+    <div>1:10 PM<div>
+  </div>
+
+</div>
+
+</body>
+</html>

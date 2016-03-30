@@ -465,12 +465,28 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-transforms-1.res"
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
+regression_test_demo:
+	./tool/reftest/css_test.sh demo true
+
+regression_test_css1:
+	./tool/reftest/css_test.sh tool/pixel_test/css1.res true
+regression_test_css21:
+	./tool/reftest/css_test.sh tool/pixel_test/css21.res true
+regression_test_css3_color:
+	./tool/reftest/css_test.sh tool/pixel_test/css-color-3.res true
+regression_test_css3_backgrounds:
+	./tool/reftest/css_test.sh tool/pixel_test/css-backgrounds-3.res true
+regression_test_css3_transforms:
+	./tool/reftest/css_test.sh tool/pixel_test/css-transforms-1.res true
+
 regression_test:
 	make wpt_test tc=tool/reftest/dom_regression.res regression=true
-	if [[ -f test/reftest/Regression/demo/20160115/*/*.png ]]; then \
-		rm test/reftest/Regression/demo/20160115/*/*.png_; \
-	fi;
-	./tool/pixel_test/regression_test.sh $(tc)
+	make regression_test_demo
+	make regression_test_css1
+	make regression_test_css21
+	make regression_test_css3_color
+	make regression_test_css3_backgrounds
+	make regression_test_css3_transforms
 
 tidy:
 	./tool/tidy/check-webkit-style `find src/ -name "*.cpp" -o -name "*.h"`> error_report 2>& 1

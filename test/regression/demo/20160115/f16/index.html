@@ -1,0 +1,62 @@
+<html>
+<head>
+	<style>
+		body {
+			position:absolute;
+			margin: 0px;
+			top:0px;
+			left:0px;
+			width:360px;
+			height:360px;
+			font-size: 24px;
+			color: white;
+			background-color:#222;
+		}
+
+		.timer_blk {	
+			font-size: 30px;
+			margin-top: 15%;
+			text-align: center;
+			vertical-align: baseline;
+		}
+		
+		.timer {
+			margin-right: 9px;
+			font-size: 80px;
+			font-weight: bold;		
+		}
+		.day_blk {			
+			text-align: center;
+			font-size: 30px;
+		}
+		.col {
+			color:aqua;
+		}		
+		img {
+			margin-top: 8%;
+			width:120px;
+			height:120px;
+		}
+		.img_blk {
+			text-align: center
+		}	
+		
+	</style>
+</head>
+
+<body>
+	<div class="timer_blk">
+		<span class="timer">2:20</span>PM</div>
+	<div class="day_blk">
+		S M T W <span class="col">T F</span> S
+	</div>
+	<div class="img_blk" onclick="onClickBtn()">
+		<img src="img/timer.png">
+	</div>	
+	<script>
+		function onClickBtn() {
+			console.log("clicked");
+		}	
+	</script>
+</body>
+</html>
