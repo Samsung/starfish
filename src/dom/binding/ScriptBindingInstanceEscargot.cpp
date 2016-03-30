@@ -80,8 +80,10 @@ String* toBrowserString(const escargot::ESValue& v)
     // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored as '\','n'
     // The right way is, input string should already have '\n', and white spaces should be removed from here.
     // For time being, we simply remove "\n" and other whitespaces strings.
-    newStr = newStr->replaceAll("\n", "");
-    newStr = newStr->replaceAll("\t", "");
+    newStr = newStr->replaceAll("\n", " ");
+    newStr = newStr->replaceAll("\t", " ");
+    newStr = newStr->replaceAll("\f", " ");
+    newStr = newStr->replaceAll("\r", " ");
     return newStr;
 }
 
