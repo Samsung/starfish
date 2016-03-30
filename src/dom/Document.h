@@ -79,6 +79,7 @@ public:
     }
 
     HTMLHtmlElement* rootElement();
+    HTMLHeadElement* headElement();
     HTMLBodyElement* bodyElement();
 
     /* Page Visibility */

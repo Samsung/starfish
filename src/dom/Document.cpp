@@ -179,6 +179,20 @@ Element* Document::documentElement()
     return rootElement();
 }
 
+HTMLHeadElement* Document::headElement()
+{
+    Node* head = childMatchedBy(this, [](Node* nd) -> bool {
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLHeadElement()) {
+            return true;
+        }
+        return false;
+    });
+    if (head) {
+        return head->asElement()->asHTMLElement()->asHTMLHeadElement();
+    }
+    return nullptr;
+}
+
 HTMLBodyElement* Document::bodyElement()
 {
     Node* body = childMatchedBy(this, [](Node* nd) -> bool {
