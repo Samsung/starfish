@@ -8,3 +8,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild.ht
 test/reftest/web-platform-tests/dom_converted/nodes/Element-lastElementChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-nextElementSibling.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-previousElementSibling.html
+test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dynamic-add-xhtml.xhtml
