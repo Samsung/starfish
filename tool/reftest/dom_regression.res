@@ -7,3 +7,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-childElement-null.ht
 test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-lastElementChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-nextElementSibling.html
+test/reftest/web-platform-tests/dom_converted/nodes/Element-previousElementSibling.html
