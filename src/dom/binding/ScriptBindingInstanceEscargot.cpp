@@ -783,6 +783,32 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("getAttribute"), 0, false);
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getAttribute"), false, false, false, getAttributeFunction);
 
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setAttribute"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            try {
+                escargot::ESValue nd = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(nd, ScriptWrappable::Type::NodeObject);
+
+                escargot::ESValue key = instance->currentExecutionContext()->readArgument(0);
+                escargot::ESValue val = instance->currentExecutionContext()->readArgument(1);
+
+                if (key.isESString() && val.isESString()) {
+                    auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
+                    QualifiedName attrKey = QualifiedName::fromString(sf, key.asESString()->utf8Data());
+                    String* attrVal = toBrowserString(val.asESString());
+                    Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
+                    if (elem) {
+                        elem->setAttribute(attrKey, attrVal);
+                    }
+                }
+                return escargot::ESValue(escargot::ESValue::ESNull);
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }, escargot::ESString::create("setAttribute"), 0, false)
+    );
+
     auto styleGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         if (!((Node*)originalObj->extraPointerData())->isElement()) {
