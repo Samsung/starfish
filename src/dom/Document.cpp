@@ -54,6 +54,7 @@ HTMLCollection* Document::getElementsByTagName(String* qualifiedName)
     return new HTMLCollection(scriptBindingInstance(), this, filter);
 }
 
+/* Moved to Node as this is common to Document and Element
 HTMLCollection* Document::getElementsByClassName(String* classNames)
 {
     auto filter = [=](Node* node)
@@ -99,6 +100,7 @@ HTMLCollection* Document::getElementsByClassName(String* classNames)
     };
     return new HTMLCollection(scriptBindingInstance(), this, filter);
 }
+*/
 
 Element* Document::createElement(QualifiedName localName)
 {

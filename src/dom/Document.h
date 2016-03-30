@@ -29,7 +29,7 @@ public:
     Text* createTextNode(String* data);
     Comment* createComment(String* data);
     HTMLCollection* getElementsByTagName(String* qualifiedName);
-    HTMLCollection* getElementsByClassName(String* classNames);
+    // HTMLCollection* getElementsByClassName(String* classNames);
     Attr* createAttribute(QualifiedName localName);
 
     /* Other methods */

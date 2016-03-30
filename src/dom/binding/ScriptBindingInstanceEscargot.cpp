@@ -825,6 +825,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     };
     ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("style"), styleGetter, NULL, false, false, false);
 
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByClassName"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            if (obj->isElement()) {
+                Element* elem = obj->asElement();
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                if (argValue.isESString()) {
+                    escargot::ESString* argStr = argValue.asESString();
+                    HTMLCollection* result = elem->getElementsByClassName(toBrowserString(argStr));
+                    if (result) {
+                        return result->scriptValue();
+                    }
+                }
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("getElementsByClassName"), 1, false)
+    );
+
     DEFINE_FUNCTION(DocumentType, NodeFunction->protoType());
     fetchData(this)->m_documentType = DocumentTypeFunction;
 

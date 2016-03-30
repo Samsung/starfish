@@ -215,6 +215,11 @@ public:
     Node* replaceChild(Node* child, Node* childToRemove);
     Node* removeChild(Node* child);
 
+
+    /* 4.5. Interface Document */
+    HTMLCollection* getElementsByClassName(String* classNames);
+
+
     /* Other methods (not in Node Interface) */
     enum NodeState {
         NodeStateNormal,
