@@ -62,11 +62,10 @@ bool EventTarget::removeEventListener(const QualifiedName& eventType, EventListe
 
 bool EventTarget::dispatchEvent(Event* event)
 {
-    // TODO
-    return false;
+    return dispatchEvent(this, event);
 }
 
-bool EventTarget::dispatchEvent(Node* origin, Event* event)
+bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 {
     ASSERT(origin);
 
@@ -78,13 +77,25 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
     event->setTarget(origin);
 
     // 4. If event's target attribute value is participating in a tree, let event path be a static ordered list of all its ancestors in tree order, and let event path be the empty list otherwise.
-    std::vector<Node*, gc_allocator<Node*> > eventPath;
-    Node* node = origin->parentNode();
-    while (node) {
-        if (node->isDocument() || (node->isElement() && node->asElement()->isHTMLElement())) {
-            eventPath.push_back(node);
+    std::vector<EventTarget*, gc_allocator<EventTarget*> > eventPath;
+    EventTarget* eventTarget = origin;
+    while (eventTarget) {
+        if (eventTarget->isNode()) {
+            Node* node = eventTarget->asNode();
+            if (node->isElement() && node->asElement()->isHTMLElement()) {
+                eventPath.push_back(eventTarget);
+            } else if (node->isDocument()) {
+                eventPath.push_back(eventTarget);
+                eventPath.push_back(eventTarget->asNode()->asDocument()->window());
+                break;
+            }
+            eventTarget = node->parentNode();
+        } else if (eventTarget->isWindow()) {
+            eventPath.push_back(eventTarget);
+            break;
+        } else {
+            break;
         }
-        node = node->parentNode();
     }
 
     // 5. Initialize event's eventPhase attribute to CAPTURING_PHASE.
@@ -92,18 +103,18 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
     // 6. For each object in event path, invoke its event listeners with event event, as long as event's stop propagation flag is unset.
     if (!event->stopPropagation()) {
         event->setEventPhase(Event::CAPTURING_PHASE);
-        for (size_t i = eventPath.size(); i > 0; i--) {
-            Node* node = eventPath[i - 1];
-            EventListenerVector* listeners = node->getEventListeners(event->type());
+        for (size_t i = eventPath.size(); i > 1; i--) {
+            EventTarget* eventTarget = eventPath[i - 1];
+            EventListenerVector* listeners = eventTarget->getEventListeners(event->type());
             if (listeners) {
                 for (auto listener : *listeners) {
                     STARFISH_ASSERT(listener);
                     if (listener->capture()) {
                         STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                         // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", node->localName()->utf8Data());
-                        event->setCurrentTarget(node);
+                        event->setCurrentTarget(eventTarget);
                         ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-                        callScriptFunction(listener->scriptValue(), argv, 1, node->scriptValue());
+                        callScriptFunction(listener->scriptValue(), argv, 1, eventTarget->scriptValue());
                     }
                 }
             }
@@ -133,18 +144,18 @@ bool EventTarget::dispatchEvent(Node* origin, Event* event)
     // 3) For each object in event path, invoke its event listeners, with event event as long as event's stop propagation flag is unset.
     if (event->bubbles() && !event->stopPropagation()) {
         event->setEventPhase(Event::BUBBLING_PHASE);
-        for (size_t i = 0; i < eventPath.size(); i++) {
-            Node* node = eventPath[i];
-            EventListenerVector* listeners = node->getEventListeners(event->type());
+        for (size_t i = 1; i < eventPath.size(); i++) {
+            EventTarget* eventTarget = eventPath[i];
+            EventListenerVector* listeners = eventTarget->getEventListeners(event->type());
             if (listeners) {
                 for (auto listener : *listeners) {
                     STARFISH_ASSERT(listener);
                     if (!listener->capture()) {
                         STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                         // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s\n", node->localName()->utf8Data());
-                        event->setCurrentTarget(node);
+                        event->setCurrentTarget(eventTarget);
                         ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-                        callScriptFunction(listener->scriptValue(), argv, 1, node->scriptValue());
+                        callScriptFunction(listener->scriptValue(), argv, 1, eventTarget->scriptValue());
                     }
                 }
             }

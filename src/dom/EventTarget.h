@@ -87,7 +87,7 @@ public:
     bool addEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture = false);
     bool removeEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture = false);
     virtual bool dispatchEvent(Event* event);
-    bool dispatchEvent(Node* origin, Event* event);
+    bool dispatchEvent(EventTarget* origin, Event* event);
 
     bool setAttributeEventListener(const QualifiedName& eventType, EventListener* listener);
     EventListener* getAttributeEventListener(const QualifiedName& eventType);
