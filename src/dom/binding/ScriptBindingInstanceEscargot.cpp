@@ -2036,8 +2036,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
         if (elem != nullptr)
             return elem->scriptValue();
-        } else {
-            THROW_ILLEGAL_INVOCATION()
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("item"), 1, false);

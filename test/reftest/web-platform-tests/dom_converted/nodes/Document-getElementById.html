@@ -151,8 +151,7 @@
   }, "Modern browsers optimize this method with using internal id cache. " +
      "This test checks that their optimization should effect only append to `Document`, not append to `Node`.");
 
-/*
-  // FIXME: [Widget Engine] We should access attribute's value
+
   test(function() {
     var TEST_ID = "test7"
     var element = document.createElement("div");
@@ -162,13 +161,13 @@
     var target = document.getElementById(TEST_ID);
     assert_equals(target, element, "should return the element before changing the value");
 
-    element.attributes[0].value = TEST_ID + "-updated";
+    element.attributes.item(0).value = TEST_ID + "-updated";
     var target2 = document.getElementById(TEST_ID);
     assert_equals(target2, null, "should return null after updated id via Attr.value");
     var target3 = document.getElementById(TEST_ID + "-updated");
     assert_equals(target3, element, "should be equal to the updated element.");
   }, "changing attribute's value via `Attr` gotten from `Element.attribute`.");
-*/
+
 /*
   // FIXME: [Widget Engine] Not support innerHTML & outerHTML in our spec
   test(function() {
