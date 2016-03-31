@@ -54,6 +54,8 @@ void ScriptBindingInstance::exit()
     escargot::ESString* functionName##String = escargot::ESString::create(#functionName);                                                                                                                                  \
     escargot::ESFunctionObject* functionName##Function = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance*) -> escargot::ESValue      \
         {      \
+            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
+            STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
@@ -1762,6 +1764,23 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     DEFINE_FUNCTION(NodeList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_nodeList = NodeListFunction;
+
+    escargot::ESFunctionObject* NodeListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
+
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        if (argValue.isUInt32()) {
+            Node* node = ((NodeList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
+            if (node != nullptr) {
+                return node->scriptValue();
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("item"), 1, false);
+    NodeListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, NodeListItemFunction);
 
     DEFINE_FUNCTION(DOMTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_domTokenList = DOMTokenListFunction;
