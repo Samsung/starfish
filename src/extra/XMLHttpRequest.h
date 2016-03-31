@@ -128,11 +128,7 @@ public:
         return String::emptyString;
     }
 
-    void abort()
-    {
-        m_abort_flag = true;
-        m_ready_state = UNSENT;
-    }
+    void abort();
 
     bool checkAbort()
     {
@@ -263,6 +259,7 @@ protected:
     int m_status;
     uint32_t m_timeout;
     bool m_abort_flag;
+    bool m_send_flag;
     ScriptBindingInstance* m_bindingInstance;
     StarFish* m_starfish;
 };

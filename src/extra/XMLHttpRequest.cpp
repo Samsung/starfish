@@ -19,6 +19,7 @@ XMLHttpRequest::XMLHttpRequest()
     m_response_header = nullptr;
     m_timeout = 0;
     m_abort_flag = false;
+    m_send_flag = false;
     m_bindingInstance = nullptr;
 
     // init
@@ -27,13 +28,14 @@ XMLHttpRequest::XMLHttpRequest()
 
 void XMLHttpRequest::send(String* body)
 {
-    if (m_ready_state != OPENED) {
+    if (m_ready_state != OPENED || m_send_flag) {
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     }
 
     const char* url = m_url->utf8Data();
 
     // invoke loadstart Event.
+    m_send_flag = true;
     callEventHandler(String::fromUTF8("loadstart"), true, 0, 0);
 
     auto task =
@@ -292,9 +294,20 @@ void XMLHttpRequest::setOpen(const char* method, String* url)
             m_method = POST_METHOD;
         }
     }
+    m_send_flag = false;
     m_ready_state = OPENED;
     callEventHandler(String::fromUTF8("opened"), true, 0, 0, OPENED);
     m_url = url;
+}
+
+void XMLHttpRequest::abort()
+{
+    m_abort_flag = true;
+    if (!(((m_ready_state == UNSENT || m_ready_state == OPENED) && !m_send_flag) || m_ready_state == DONE)) {
+        m_ready_state = DONE;
+        callEventHandler(String::fromUTF8("loadend"), true, 0, 0);
+    }
+    m_ready_state = UNSENT;
 }
 
 String* XMLHttpRequest::getResponseTypeStr()
@@ -334,8 +347,10 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             callScriptFunction(rsc, json_arg, 1, scriptValue());
         }
         return;
-    } else if (readyState == 3) {
-        m_ready_state = LOADING;
+    } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load") || eventName->equals("loadend")) {
+        if (m_ready_state != DONE) {
+            m_ready_state = DONE;
+        }
         ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
         if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
             escargot::ESErrorObject* e = escargot::ESErrorObject::create();
@@ -343,18 +358,7 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             ScriptValue json_arg[1] = { e };
             callScriptFunction(rsc, json_arg, 1, scriptValue());
         }
-        return;
-    } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load") || eventName->equals("loadend")) {
-        if (m_ready_state != DONE) {
-            m_ready_state = DONE;
-            ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
-            if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
-                escargot::ESErrorObject* e = escargot::ESErrorObject::create();
-                e->defineDataProperty(escargot::ESString::create("target"), false, false, false, scriptValue());
-                ScriptValue json_arg[1] = { e };
-                callScriptFunction(rsc, json_arg, 1, scriptValue());
-            }
-        }
+
         ScriptValue en = getHandler(eventName, starfishInstance());
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
             ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
