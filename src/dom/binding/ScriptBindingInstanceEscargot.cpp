@@ -510,6 +510,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             return node->scriptValue();
         }, escargot::ESString::create("cloneNode"), 1, false));
 
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("hasChildNodes"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            bool result = obj->hasChildNodes();
+            return escargot::ESValue(result);
+        }, escargot::ESString::create("hasChildNodes"), 0, false));
+
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("isEqualNode"), false, false, false,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -1239,12 +1248,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            if (argValue.isESString()) {
+            Comment* elem = nullptr;
+            if (argValue.isUndefined()) {
+                elem = doc->createComment(String::fromUTF8("undefined"));
+            } else if (argValue.isNull()) {
+                elem = doc->createComment(String::fromUTF8("null"));
+            } else if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
-                Comment* elem = doc->createComment(toBrowserString(argStr));
-                if (elem != nullptr)
-                    return elem->scriptValue();
+                elem = doc->createComment(toBrowserString(argStr));
             }
+            if (elem != nullptr)
+                return elem->scriptValue();
         } else {
             THROW_ILLEGAL_INVOCATION()
         }
@@ -1393,6 +1407,19 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         THROW_ILLEGAL_INVOCATION();
         },
         true, true, false);
+
+    CharacterDataFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+        if (nd->isCharacterData()) {
+            return escargot::ESValue(nd->asCharacterData()->length());
+        }
+        THROW_ILLEGAL_INVOCATION();
+        RELEASE_ASSERT_NOT_REACHED();
+        }
+        , NULL, true, true, false);
 
     CharacterDataFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nextElementSibling"),
         nextElementChildGetter, NULL, false, false, false);
