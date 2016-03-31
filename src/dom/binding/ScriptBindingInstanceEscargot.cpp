@@ -1231,7 +1231,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (obj->isDocument()) {
                 Document* doc = obj->asDocument();
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-                if (argValue.isESString()) {
+                if (argValue.isUndefined()) {
+                    Attr* result = doc->createAttribute(QualifiedName::fromString(doc->window()->starFish(), "undefined"));
+                    if (result != nullptr)
+                        return result->scriptValue();
+                } else if (argValue.isNull()) {
+                    Attr* result = doc->createAttribute(QualifiedName::fromString(doc->window()->starFish(), "null"));
+                    if (result != nullptr)
+                        return result->scriptValue();
+                } else if (argValue.isESString()) {
                     escargot::ESString* argStr = argValue.asESString();
                     Attr* result = doc->createAttribute(QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data()));
                     if (result != nullptr)
@@ -2067,7 +2075,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(argValue, ScriptWrappable::Type::AttrObject);
 
         Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(((Attr*) argValue.asESPointer()->asESObject())->name());
-        Attr* toReturn = new Attr(((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), old->name(), old->value());
+        Attr* toReturn = new Attr(old->document(), ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), old->name(), old->value());
         ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->setNamedItem((Attr*) argValue.asESPointer()->asESObject());
         if (toReturn != nullptr)
             return toReturn->scriptValue();
@@ -2084,7 +2092,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             QualifiedName name = QualifiedName::fromString(((NamedNodeMap*) thisValue.asESPointer()->asESObject())->element()->document()->window()->starFish(),
                 argValue.asESString()->utf8Data());
             Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(name);
-            Attr* toReturn = new Attr(((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), name, old->value());
+            Attr* toReturn = new Attr(old->document(), ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), name, old->value());
             ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->removeNamedItem(name);
             if (toReturn != nullptr)
                 return toReturn->scriptValue();
@@ -2096,30 +2104,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* 4.8.2 Interface Attr */
     // FIXME Attr should inherit interface Node
-    DEFINE_FUNCTION(Attr, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION(Attr, NodeFunction->protoType());
     fetchData(this)->m_attr = AttrFunction;
 
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("name"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+    auto attrNameValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj,
+        escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
 
         String* n = ((Attr*) originalObj->extraPointerData())->name();
         if (n != nullptr)
             return toJSString(n);
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        NULL, false, false, false);
+    };
 
-    auto valueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+    auto attrValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
 
         String* value = ((Attr*) originalObj->extraPointerData())->value();
-        if (value != nullptr)
-            return toJSString(value);
-        return escargot::ESValue(escargot::ESValue::ESNull);
+        if (value == nullptr)
+            value = String::emptyString;
+        return toJSString(value);
     };
 
-    auto valueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
+    auto attrValueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
     {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
 
@@ -2128,9 +2135,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         // Because this need to many changes, we do the modification latter
     };
 
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("value"), valueGetter, valueSetter, false, false, false);
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeValue"), valueGetter, valueSetter, false, false, false);
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("textContent"), valueGetter, valueSetter, false, false, false);
+    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("name"), attrNameValueGetter, NULL, false, false, false);
+    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeName"), attrNameValueGetter, NULL, false, false, false);
+    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("value"), attrValueGetter, attrValueSetter, false, false, false);
+    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeValue"), attrValueGetter, attrValueSetter, false, false, false);
+    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("textContent"), attrValueGetter, attrValueSetter, false, false, false);
 
     AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ownerElement"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {

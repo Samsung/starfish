@@ -156,7 +156,7 @@ Attr* Document::createAttribute(QualifiedName localName)
     if (!QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
-    return new Attr(scriptBindingInstance(), localName);
+    return new Attr(this, scriptBindingInstance(), localName);
 }
 
 HTMLHtmlElement* Document::rootElement()

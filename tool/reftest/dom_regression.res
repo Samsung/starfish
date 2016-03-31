@@ -44,3 +44,4 @@ test/reftest/web-platform-tests/dom_converted/events/Event-propagation.html
 test/reftest/web-platform-tests/dom_converted/events/Event-type.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createElement.html
 test/reftest/web-platform-tests/dom_converted/events/Event-type-empty.html
+test/reftest/web-platform-tests/dom_converted/nodes/Document-createAttribute.html

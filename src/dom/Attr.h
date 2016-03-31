@@ -6,23 +6,26 @@
 namespace StarFish {
 
 class Element;
-class Attr : public ScriptWrappable {
+class Attr : public Node {
 public:
-    Attr(ScriptBindingInstance* instance, Element* element, QualifiedName name)
-        : ScriptWrappable(this), m_element(element), m_name(name), m_standAloneValue(nullptr)
+    Attr(Document* document, ScriptBindingInstance* instance, Element* element, QualifiedName name)
+        : Node(document), m_element(element), m_name(name), m_standAloneValue(nullptr)
     {
+        ScriptWrappable(this);
         initScriptWrappable(this, instance);
     }
 
-    Attr(ScriptBindingInstance* instance, QualifiedName name)
-        : ScriptWrappable(this), m_element(nullptr), m_name(name), m_standAloneValue(nullptr)
+    Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name)
+        : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(nullptr)
     {
+        ScriptWrappable(this);
         initScriptWrappable(this, instance);
     }
 
-    Attr(ScriptBindingInstance* instance, QualifiedName name, String* value)
-        : ScriptWrappable(this), m_element(nullptr), m_name(name), m_standAloneValue(value)
+    Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name, String* value)
+        : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(value)
     {
+        ScriptWrappable(this);
         initScriptWrappable(this, instance);
     }
 
@@ -47,6 +50,47 @@ public:
     }
 
     Element* ownerElement() { return m_element; }
+
+    /* 4.4 Interface Node */
+
+    virtual NodeType nodeType()
+    {
+        return ATTRIBUTE_NODE;
+    }
+
+    virtual String* nodeName()
+    {
+        return m_name.string();
+    }
+
+    virtual Element* parentElement()
+    {
+        return nullptr;
+    }
+
+    virtual String* localName()
+    {
+        return nullptr;
+    }
+
+    virtual String* nodeValue()
+    {
+        return nullptr;
+    }
+
+    virtual void setNodeValue(String* val) { }
+
+    virtual String* textContent()
+    {
+        return nullptr;
+    }
+
+    virtual void setTextContent(String* val) { }
+
+    virtual Node* clone()
+    {
+        return nullptr;
+    }
 
 private:
     Element* m_element;

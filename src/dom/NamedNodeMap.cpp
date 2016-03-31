@@ -17,14 +17,14 @@ Attr* NamedNodeMap::item(unsigned long index)
     // The localName is considered
     if (index < m_element->getAttributes()->size()) {
         Attribute attr = m_element->getAttributes()->at(index);
-        return new Attr(m_instance, m_element, attr.name());
+        return new Attr(m_element->document(), m_instance, m_element, attr.name());
     } else
         return nullptr;
 }
 Attr* NamedNodeMap::getNamedItem(QualifiedName name)
 {
     if (m_element->getAttribute(name) != String::emptyString)
-        return new Attr(m_instance, m_element, name);
+        return new Attr(m_element->document(), m_instance, m_element, name);
     return nullptr;
 }
 
