@@ -11,35 +11,66 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
 {
     size_t tRequiredSize = 0;
 
-    uc = 0x0000;
+    uc = 0x00000000;
 
     // ASCII byte
     if (0 == (UTF8[0] & 0x80)) {
         uc = UTF8[0];
         tRequiredSize = 1;
-    } else {
-        // Start byte for 2byte
+    } else // Start byte for 2byte
         if (0xC0 == (UTF8[0] & 0xE0)
             && 0x80 == (UTF8[1] & 0xC0)) {
             uc += (UTF8[0] & 0x1F) << 6;
             uc += (UTF8[1] & 0x3F) << 0;
             tRequiredSize = 2;
-        } else { // Start byte for 3byte
-            if (0xE0 == (UTF8[0] & 0xE0)
+        } else // Start byte for 3byte
+            if (0xE0 == (UTF8[0] & 0xF0)
                 && 0x80 == (UTF8[1] & 0xC0)
                 && 0x80 == (UTF8[2] & 0xC0)) {
-                uc += (UTF8[0] & 0x1F) << 12;
+                uc += (UTF8[0] & 0x0F) << 12;
                 uc += (UTF8[1] & 0x3F) << 6;
                 uc += (UTF8[2] & 0x3F) << 0;
                 tRequiredSize = 3;
-            } else {
-                // TODO implement 4-byte case
-                // Invalid case
-                tRequiredSize = 1;
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-        }
-    }
+            } else // Start byte for 4byte
+                if (0xF0 == (UTF8[0] & 0xF8)
+                    && 0x80 == (UTF8[1] & 0xC0)
+                    && 0x80 == (UTF8[2] & 0xC0)
+                    && 0x80 == (UTF8[3] & 0xC0)) {
+                    uc += (UTF8[0] & 0x07) << 18;
+                    uc += (UTF8[1] & 0xfF) << 12;
+                    uc += (UTF8[2] & 0x3F) << 6;
+                    uc += (UTF8[3] & 0x3F) << 0;
+                    tRequiredSize = 4;
+                } else // Start byte for 5byte
+                    if (0xF8 == (UTF8[0] & 0xFC)
+                        && 0x80 == (UTF8[1] & 0xC0)
+                        && 0x80 == (UTF8[2] & 0xC0)
+                        && 0x80 == (UTF8[3] & 0xC0)
+                        && 0x80 == (UTF8[4] & 0xC0)) {
+                        uc += (UTF8[0] & 0x03) << 24;
+                        uc += (UTF8[1] & 0x3F) << 18;
+                        uc += (UTF8[2] & 0x3F) << 12;
+                        uc += (UTF8[3] & 0x3F) << 6;
+                        uc += (UTF8[4] & 0x3F) << 0;
+                        tRequiredSize = 5;
+                    } else // Start byte for 6byte
+                        if (0xFC == (UTF8[0] & 0xFE)
+                            && 0x80 == (UTF8[1] & 0xC0)
+                            && 0x80 == (UTF8[2] & 0xC0)
+                            && 0x80 == (UTF8[3] & 0xC0)
+                            && 0x80 == (UTF8[4] & 0xC0)
+                            && 0x80 == (UTF8[5] & 0xC0)) {
+                            uc += (UTF8[0] & 0x01) << 30;
+                            uc += (UTF8[1] & 0x3F) << 24;
+                            uc += (UTF8[2] & 0x3F) << 18;
+                            uc += (UTF8[3] & 0x3F) << 12;
+                            uc += (UTF8[4] & 0x3F) << 6;
+                            uc += (UTF8[5] & 0x3F) << 0;
+                            tRequiredSize = 6;
+                        } else {
+                            tRequiredSize = 1;
+                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        }
 
     return tRequiredSize;
 }

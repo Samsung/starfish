@@ -1266,6 +1266,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 Text* elem = doc->createTextNode(toBrowserString(escargot::ESString::create("undefined")));
                 if (elem != nullptr)
                     return elem->scriptValue();
+            } else {
+                THROW_ILLEGAL_INVOCATION();
             }
 
         } else {
@@ -1436,6 +1438,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isCharacterData()) {
+            if (value.isNull()) {
+                nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("")));
+                return;
+            } else if (value.isUndefined()) {
+                nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("undefined")));
+                return;
+            }
             nd->asCharacterData()->setData(toBrowserString(value));
             return;
         }
