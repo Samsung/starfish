@@ -103,14 +103,9 @@ public class StarFishTester {
 
 							Date d = new Date();
 
-							String tempDir = "/tmp/StarFishTester/" + d.getTime() + (int)(Math.random()*1000) + "/";
-
-
 							String outputString = workItem + " ";
 
                             // System.out.println(tempDir);
-                            File desti = new File(tempDir);
-                            desti.mkdirs();
 
 							String folderName = outFolder + workItem;
 							folderName = folderName.substring(0, folderName.lastIndexOf('/'));
@@ -120,7 +115,16 @@ public class StarFishTester {
 
                             // excute runner
                             try {
-                                String ss = "./run.sh " + workItem + " --result-folder="  + tempDir + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + outFolder + caseName + "_result.png";
+
+								String resultXML = (outFolder+caseName+"/result.xml");
+								File xml = new File(resultXML);
+								String ss = "";
+								if (xml.exists()) {
+									ss = "./StarFish --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + outFolder + caseName + "_result.png";
+								} else {
+									ss = "./run.sh " + workItem + " --result-folder="  + (outFolder+caseName+"/") + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + outFolder + caseName + "_result.png";
+								}
+
 								// System.out.println(ss);
                                 Process process = runtime.exec(ss);
                                 process.waitFor();
@@ -130,10 +134,16 @@ public class StarFishTester {
 
                             // take webkit screen shot
 							try {
-								String ss = "tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f " + workItem + " " + folderName + " pc";
-								// System.out.println(ss);
-								Process process = runtime.exec(ss);
-								process.waitFor();
+
+								String ex = outFolder + caseName + "_expected.png";
+								File sc = new File(ex);
+
+								if (!sc.exists()) {
+									String ss = "tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f " + workItem + " " + folderName + " pc";
+									// System.out.println(ss);
+									Process process = runtime.exec(ss);
+									process.waitFor();
+								}
 							} catch (Exception e) {
 
 							}
