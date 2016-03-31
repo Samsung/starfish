@@ -15,6 +15,7 @@ PASSFILENEW="dom_regression.res"
 PASSTC=0
 FAILTC=0
 TCFILE=0
+PASSTCFILE=0
 
 if [ "$1" = "" ]; then
     tc=$(find test/reftest/web-platform-tests -name "*htm*")
@@ -60,6 +61,7 @@ for i in $tc ; do
     if [ $SUM -eq 0 ]; then
         echo -e "${YELLOW}[CHECK]${RESET}" $i "(${BOLD}No results${RESET})"
     elif [ $FAIL -eq 0 ]; then
+        PASSTCFILE=`expr $PASSTCFILE + 1`
         echo -e "${GREEN}[PASS]${RESET}" $i "(${GREEN}PASS:" $PASS"${RESET})"
         if [ "$REGRESSION" = true ]; then
             echo -e $i >> $PASSFILENEW
@@ -73,7 +75,7 @@ done
 
 # Print the summary
 echo -e "\n${BOLD}###### Summary ######${RESET}\n"
-echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed," $FAILTC "failed.${RESET}\n"
+echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
 
 # Remove temporary file
 rm $TMPFILE

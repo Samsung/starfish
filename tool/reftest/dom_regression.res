@@ -49,3 +49,4 @@ test/reftest/web-platform-tests/dom_converted/events/Event-type-empty.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createAttribute.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createComment.html
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-handlers-changed.html
+test/reftest/web-platform-tests/dom_converted/events/Event-constants.html
