@@ -124,7 +124,15 @@ public:
         return m_parentNode;
     }
 
-    virtual Element* parentElement() = 0;
+    virtual Element* parentElement()
+    {
+        Node* parent = parentNode();
+        if (parent && parent->nodeType() == ELEMENT_NODE) {
+            return parent->asElement();
+        } else {
+            return nullptr;
+        }
+    }
 
     virtual String* localName()
     {

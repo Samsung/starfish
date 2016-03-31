@@ -20,11 +20,6 @@ public:
 
     virtual NodeType nodeType() = 0;
 
-    virtual Element* parentElement()
-    {
-        return nullptr;
-    }
-
     virtual void setNodeValue(String* val)
     {
         String* d = val;

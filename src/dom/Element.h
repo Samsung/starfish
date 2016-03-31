@@ -42,16 +42,6 @@ public:
 
     virtual String* nodeName() = 0;
 
-    virtual Element* parentElement()
-    {
-        Node* parent = parentNode();
-        if (parent->nodeType() == ELEMENT_NODE) {
-            return parent->asElement();
-        } else {
-            return nullptr;
-        }
-    }
-
     virtual String* nodeValue()
     {
         return nullptr;
