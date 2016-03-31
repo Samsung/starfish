@@ -156,11 +156,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
         int argCount = instance->currentExecutionContext()->argumentCount();
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        bool ret = false;
         if (argCount == 1 && firstArg.isObject()) {
             Event* event = (Event*)firstArg.asESPointer()->asESObject()->extraPointerData();
-            ((EventTarget*)thisValue.asESPointer()->asESObject()->extraPointerData())->dispatchEvent(event);
+            ret = ((EventTarget*)thisValue.asESPointer()->asESObject()->extraPointerData())->dispatchEvent(event);
         }
-        return escargot::ESValue();
+        return escargot::ESValue(ret);
     }, escargot::ESString::create("dispatchEvent"), 1, false);
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("dispatchEvent"), false, false, false, fnDispatchEvent);
 
