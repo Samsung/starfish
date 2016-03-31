@@ -210,7 +210,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     NodeFunction->defineAccessorProperty(escargot::ESString::create("TEXT_NODE"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
             escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::ATTRIBUTE_NODE);
+            return escargot::ESValue(Node::TEXT_NODE);
             },
             NULL, false, false, false);
 
@@ -526,44 +526,74 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             return escargot::ESValue(found);
         }, escargot::ESString::create("isEqualNode"), 1, false));
 
+    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_DISCONNECTED"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        return escargot::ESValue(Node::DOCUMENT_POSITION_DISCONNECTED);
+        },
+        NULL, false, false, false);
+
+    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_PRECEDING"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        return escargot::ESValue(Node::DOCUMENT_POSITION_PRECEDING);
+        },
+        NULL, false, false, false);
+
+    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_FOLLOWING"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        return escargot::ESValue(Node::DOCUMENT_POSITION_FOLLOWING);
+        },
+        NULL, false, false, false);
+
+    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_CONTAINS"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        return escargot::ESValue(Node::DOCUMENT_POSITION_CONTAINS);
+        },
+        NULL, false, false, false);
+
+    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_CONTAINED_BY"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        return escargot::ESValue(Node::DOCUMENT_POSITION_CONTAINED_BY);
+        },
+        NULL, false, false, false);
+
+    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        return escargot::ESValue(Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+        },
+        NULL, false, false, false);
+
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_DISCONNECTED"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         return escargot::ESValue(Node::DOCUMENT_POSITION_DISCONNECTED);
         },
         NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_PRECEDING"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         return escargot::ESValue(Node::DOCUMENT_POSITION_PRECEDING);
         },
         NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_FOLLOWING"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         return escargot::ESValue(Node::DOCUMENT_POSITION_FOLLOWING);
         },
         NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_CONTAINS"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         return escargot::ESValue(Node::DOCUMENT_POSITION_CONTAINS);
         },
         NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_CONTAINED_BY"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         return escargot::ESValue(Node::DOCUMENT_POSITION_CONTAINED_BY);
         },
         NULL, false, false, false);
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         return escargot::ESValue(Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
         },
         NULL, false, false, false);
