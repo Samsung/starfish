@@ -61,6 +61,8 @@ CSSLength parseCSSLength(const char* value)
     if (endsWith(value, "px")) {
         sscanf(value, "%fpx", &f);
         return CSSLength(f);
+    } else if (strcmp(value, "0") == 0) {
+        return CSSLength(0.0);
     } else if (endsWith(value, "em")) {
         sscanf(value, "%fem", &f);
         return CSSLength(CSSLength::Kind::EM, f);
@@ -82,8 +84,6 @@ CSSLength parseCSSLength(const char* value)
     } else if (endsWith(value, "pc")) {
         sscanf(value, "%fpc", &f);
         return CSSLength(CSSLength::Kind::PC, f);
-    } else if (strcmp(value, "0")) {
-        return CSSLength(0.0);
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
