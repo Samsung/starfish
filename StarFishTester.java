@@ -141,7 +141,7 @@ public class StarFishTester {
 							// image diff
 							String testStatus="";
 							try {
-								String ss = "tool/pixel_test/bin/image_diff " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png";
+								String ss = "./tool/imgdiff/imgdiff " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png";
 								// System.out.println(ss);
 								Process process = runtime.exec(ss);
 								process.waitFor();
@@ -161,7 +161,7 @@ public class StarFishTester {
 									outputString += "got error";
 									testStatus = "diff: 100.0% failed";
 								}
-								if (testStatus.contains("failed")) {
+								if (testStatus.contains("failed") || testStatus.contains("not exactly same")) {
 									ss = "tool/pixel_test/bin/image_diff --diff " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png " + outFolder + caseName + "_diff.png";
 									process = runtime.exec(ss);
 									process.waitFor();
@@ -204,28 +204,17 @@ public class StarFishTester {
 
 			System.err.println("======== test result ==================");
 			int good = 0;
-			int check = 0;
 			int bad = 0;
 			for (int i = 0; i < testResult.size(); i ++) {
 				if (testResult.get(i).status.contains("passed"))
 					good++;
 				else {
-					String in = testResult.get(i).status;
-					in = in.substring(in.indexOf(' '), in.length());
-					// System.out.println(in);
-					in = in.substring(0, in.indexOf('%'));
-					// System.out.println(in);
-
-					float f = Float.parseFloat(in);
-					if (f < 1.0)
-						check++;
-					else
-						bad++;
+					bad++;
 				}
 				System.err.println(testResult.get(i).testName + " " + testResult.get(i).status);
 			}
 
-			System.err.println(" ====total : " + (good + check + bad) + " passed : " + good + " check : " + check + " failed : " + bad);
+			System.err.println(" ====total : " + (good + bad) + " passed : " + good + " failed : " + bad);
 
 		} catch(Exception e) {
 			System.out.println(e.toString());			

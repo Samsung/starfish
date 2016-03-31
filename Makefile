@@ -427,6 +427,8 @@ run:
 	phantomjs --web-security=false --local-to-remote-url-access=true runner.js ${RUN_ARGS}
 
 install_pixel_test_dep:
+	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
+	javac StarFishTester.java
 	mkdir -p ~/.fonts
 	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
 	fc-cache -fv
