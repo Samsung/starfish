@@ -50,3 +50,5 @@ test/reftest/web-platform-tests/dom_converted/nodes/Document-createAttribute.htm
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createComment.html
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-handlers-changed.html
 test/reftest/web-platform-tests/dom_converted/events/Event-constants.html
+test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-omitted-capture.html
+test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-propagation-stopped.html
