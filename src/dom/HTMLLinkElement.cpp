@@ -60,7 +60,7 @@ void HTMLLinkElement::loadStyleSheet()
         fclose(fp);
 
         CSSParser parser(document());
-        CSSStyleSheet* sheet = parser.parseStyleSheet(source);
+        CSSStyleSheet* sheet = parser.parseStyleSheet(source, URL(url));
         if (sheet) {
             m_generatedSheet = sheet;
             document()->window()->styleResolver()->addSheet(sheet);

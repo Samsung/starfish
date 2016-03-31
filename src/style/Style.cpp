@@ -1788,7 +1788,7 @@ String* CSSStyleValuePair::toString()
         } else if (m_valueKind == CSSStyleValuePair::ValueKind::Initial) {
             return String::fromUTF8("initial");
         } else if (m_valueKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
-            return urlValue();
+            return urlValue(URL());
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -2070,8 +2070,7 @@ String* CSSStyleValuePair::toString()
         switch (valueKind()) {
         case CSSStyleValuePair::ValueKind::UrlValueKind: {
             String* str = String::fromUTF8("url(\"");
-            if (urlValue())
-                str = str->concat(urlValue());
+            str = str->concat(urlValue(URL()));
             str = str->concat(String::fromUTF8("\")"));
             return str;
         }
@@ -3457,7 +3456,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 {
     ComputedStyle* ret = new ComputedStyle(parent);
 
-    auto apply = [](std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
+    auto apply = [](const URL& origin, std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
     {
         for (unsigned k = 0; k < cssValues.size(); k++) {
             switch (cssValues[k].keyKind()) {
@@ -3680,7 +3679,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundImage(parentStyle->backgroundImage());
                 } else {
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::UrlValueKind);
-                    style->setBackgroundImage(cssValues[k].urlValue());
+                    style->setBackgroundImage(cssValues[k].urlValue(origin));
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundSize:
@@ -3888,7 +3887,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderImageSource(String::emptyString);
                 } else {
                     STARFISH_ASSERT(CSSStyleValuePair::ValueKind::UrlValueKind == cssValues[k].valueKind());
-                    style->setBorderImageSource(cssValues[k].urlValue());
+                    style->setBorderImageSource(cssValues[k].urlValue(origin));
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BorderImageWidth:
@@ -4343,7 +4342,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::UniversalSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
                 auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                apply(cssValues, ret, parent);
+                apply(sheet->url(), cssValues, ret, parent);
             }
         }
 
@@ -4352,7 +4351,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
                 if (sheet->m_rules[j]->m_ruleText[0]->equals(element->localName())) {
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                    apply(cssValues, ret, parent);
+                    apply(sheet->url(), cssValues, ret, parent);
                 }
             }
         }
@@ -4364,7 +4363,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 for (unsigned f = 0; f < className.size(); f++) {
                     if (className[f]->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                        apply(cssValues, ret, parent);
+                        apply(sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -4378,7 +4377,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     for (unsigned f = 0; f < className.size(); f++) {
                         if (className[f]->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[1])) {
                             auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                            apply(cssValues, ret, parent);
+                            apply(sheet->url(), cssValues, ret, parent);
                         }
                     }
                 }
@@ -4390,7 +4389,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::IdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
                 if (element->id()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                    apply(cssValues, ret, parent);
+                    apply(sheet->url(), cssValues, ret, parent);
                 }
             }
         }
@@ -4401,7 +4400,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (element->localName()->equals(sheet->m_rules[j]->m_ruleText[0])) {
                     if (element->id()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[1])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                        apply(cssValues, ret, parent);
+                        apply(sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -4416,7 +4415,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::UniversalSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                    apply(cssValues, ret, parent);
+                    apply(sheet->url(), cssValues, ret, parent);
                 }
             }
         }
@@ -4427,7 +4426,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
                     if (sheet->m_rules[j]->m_ruleText[0]->equals(element->localName())) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                        apply(cssValues, ret, parent);
+                        apply(sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -4441,7 +4440,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     for (unsigned f = 0; f < className.size(); f++) {
                         if (className[f]->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                             auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                            apply(cssValues, ret, parent);
+                            apply(sheet->url(), cssValues, ret, parent);
                         }
                     }
                 }
@@ -4456,7 +4455,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     for (unsigned f = 0; f < className.size(); f++) {
                         if (className[f]->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[1])) {
                             auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                            apply(cssValues, ret, parent);
+                            apply(sheet->url(), cssValues, ret, parent);
                         }
                     }
                 }
@@ -4469,7 +4468,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::IdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
                     if (element->id()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                        apply(cssValues, ret, parent);
+                        apply(sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -4481,7 +4480,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (element->localName()->equals(sheet->m_rules[j]->m_ruleText[0])) {
                     if (element->id()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[1])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
-                        apply(cssValues, ret, parent);
+                        apply(sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -4489,9 +4488,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
     }
 
     // inline style
-    auto inline_cssValues = element->inlineStyle()->m_cssValues;
-    if (inline_cssValues.size() > 0)
-        apply(inline_cssValues, ret, parent);
+    auto inlineCssValues = element->inlineStyle()->m_cssValues;
+    apply(URL(), inlineCssValues, ret, parent);
 
     ret->loadResources(element->document()->window()->starFish());
     ret->arrangeStyleValues(parent);

@@ -151,6 +151,10 @@
 #define STARFISH_RELEASE_ASSERT(assertion) do { if (!(assertion)) { STARFISH_LOG_ERROR("RELEASE_ASSERT at %s (%d)\n", __FILE__, __LINE__); abort(); } } while (0);
 #define STARFISH_RELEASE_ASSERT_NOT_REACHED() do { STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED at %s (%d)\n", __FILE__, __LINE__); abort(); } while (0)
 
+#define STARFISH_MAKE_STACK_ALLOCATED() \
+    inline void* operator new(size_t size) = delete; \
+    inline void* operator new(size_t size, void* p) = delete;
+
 #if !defined(WARN_UNUSED_RETURN) && COMPILER(GCC)
 #define WARN_UNUSED_RETURN __attribute__((__warn_unused_result__))
 #endif
@@ -163,6 +167,7 @@
 
 #include "util/String.h"
 #include "util/QualifiedName.h"
+#include "util/URL.h"
 #include "style/Unit.h"
 
 #endif

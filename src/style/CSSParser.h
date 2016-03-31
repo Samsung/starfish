@@ -564,8 +564,9 @@ public:
     CSSParser(Document* document)
         : m_document(document)
     {
+        m_error = String::emptyString;
     }
-    CSSStyleSheet* parseStyleSheet(String* str);
+    CSSStyleSheet* parseStyleSheet(String* str, const URL& url = URL());
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment);
     CSSToken* currentToken();

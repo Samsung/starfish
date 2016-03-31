@@ -1254,14 +1254,14 @@ bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
     return false;
 }
 
-CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString)
+CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString, const URL& url)
 {
     m_lookAhead = nullptr;
     m_token = nullptr;
     m_preserveWS = false;
     m_preserveComments = false;
     m_scanner = new CSSScanner(sourceString);
-    CSSStyleSheet* sheet = new CSSStyleSheet();
+    CSSStyleSheet* sheet = new CSSStyleSheet(url);
 
     // @charset can only appear at first char of the stylesheet
     CSSToken* token = getToken(false, false);
@@ -1287,7 +1287,7 @@ CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString)
             // if (this.mPreserveComments)
             //     this.addComment(sheet, token.value);
         } else if (token->isAtRule()) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            addUnknownAtRule(sheet, token->m_value);
             /*
             if (token.isAtRule("@variables")) {
               if (!foundImportRules && !foundStyleRules)

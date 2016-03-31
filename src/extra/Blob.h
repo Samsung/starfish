@@ -3,8 +3,6 @@
 
 #include "dom/binding/ScriptWrappable.h"
 
-// "blob:http%3A//ohgyun.com/a9f2fd30-adf0-43dd-a413-9ee8423bec6e"
-
 namespace StarFish {
 
 class Blob : public ScriptWrappable {

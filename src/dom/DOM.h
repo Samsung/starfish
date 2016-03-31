@@ -35,6 +35,5 @@
 #include "dom/Attr.h"
 #include "extra/XMLHttpRequest.h"
 #include "extra/Blob.h"
-#include "dom/URL.h"
 
 #endif

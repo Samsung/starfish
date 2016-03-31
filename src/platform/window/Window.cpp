@@ -650,6 +650,11 @@ Canvas* preparePainting(WindowImplEFL* eflWindow)
 
 void Window::paintWindowBackground(Canvas* canvas)
 {
+    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
+        canvas->clearColor(Color(0, 0, 0, 255));
+    else
+        canvas->clearColor(Color(255, 255, 255, 255));
+
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int width, height;
@@ -661,11 +666,6 @@ void Window::paintWindowBackground(Canvas* canvas)
             FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), rt, rt);
         }
 
-    } else {
-        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
-            canvas->clearColor(Color(0, 0, 0, 255));
-        else
-            canvas->clearColor(Color(255, 255, 255, 255));
     }
 }
 

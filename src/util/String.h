@@ -87,6 +87,16 @@ public:
         return SIZE_MAX;
     }
 
+    size_t lastIndexOf(char32_t ch)
+    {
+        for (size_t i = length(); i > 0; i --) {
+            if (charAt(i - 1) == ch) {
+                return i - 1;
+            }
+        }
+        return SIZE_MAX;
+    }
+
     static inline bool isASCIISpace(char32_t c) { return c <= ' ' && (c == ' ' || (c <= 0xD && c >= 0x9)); }
     static inline bool isSpaceOrNewline(char32_t c)
     {

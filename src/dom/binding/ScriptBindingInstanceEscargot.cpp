@@ -2825,22 +2825,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(Blob, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_blobElement = BlobFunction;
 
-    /* URL */
-
-    DEFINE_FUNCTION(URL, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_urlElement = URLFunction;
-
-    escargot::ESFunctionObject* urlCreateObjectURLFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-        if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            String* result = URL::createObjectURL((Blob*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData(), sf);
-            return escargot::ESValue(escargot::ESString::create(result->utf8Data()));
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("createObjectURL"), 1, false);
-    URLFunction->defineDataProperty(escargot::ESString::create("createObjectURL"), false, false, false, urlCreateObjectURLFunction);
-
     /* DOM Exception */
     DEFINE_FUNCTION(DOMException, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_domException = DOMExceptionFunction;

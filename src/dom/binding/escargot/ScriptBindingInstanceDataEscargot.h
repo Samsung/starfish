@@ -44,7 +44,6 @@ public:
     escargot::ESFunctionObject* m_cssStyleRule;
     escargot::ESFunctionObject* m_xhrElement;
     escargot::ESFunctionObject* m_blobElement;
-    escargot::ESFunctionObject* m_urlElement;
     escargot::ESFunctionObject* m_domException;
 #ifdef TIZEN_DEVICE_API
     escargot::ESObject* m_deviceAPIObject;

@@ -786,10 +786,10 @@ public:
         return m_value.m_stringValue;
     }
 
-    String* urlValue()
+    String* urlValue(const URL& urlOfStyleSheet)
     {
         STARFISH_ASSERT(m_valueKind == UrlValueKind);
-        return m_value.m_stringValue;
+        return urlOfStyleSheet.path()->concat(m_value.m_stringValue);
     }
 
     void setStringValue(String* value)
@@ -1291,13 +1291,24 @@ class CSSStyleSheet : public gc {
     friend class StyleResolver;
 
 public:
+    CSSStyleSheet(const URL& url = URL())
+        : m_url(url)
+    {
+    }
+
     void addRule(CSSStyleRule* rule)
     {
         m_rules.push_back(rule);
     }
 
+    const URL& url()
+    {
+        return m_url;
+    }
+
 protected:
     std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> > m_rules;
+    URL m_url;
 };
 
 class StyleResolver {
