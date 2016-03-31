@@ -54,10 +54,18 @@ void ScriptBindingInstance::exit()
     escargot::ESString* functionName##String = escargot::ESString::create(#functionName);                                                                                                                                  \
     escargot::ESFunctionObject* functionName##Function = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance*) -> escargot::ESValue      \
         {      \
-            if (strcmp(#functionName, "Document") == 0) { \
-                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
-                STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
-            } \
+            return escargot::ESValue();           \
+        }, functionName##String, 0, true, false); \
+    functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(functionName##String, false, false, false, functionName##Function);                                                                                    \
+    functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
+
+#define DEFINE_FUNCTION_NOT_CONSTRUCTOR(functionName, parentName)                                                                                                                                                                          \
+    escargot::ESString* functionName##String = escargot::ESString::create(#functionName);                                                                                                                                  \
+    escargot::ESFunctionObject* functionName##Function = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance*) -> escargot::ESValue      \
+        {      \
+            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
+            STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
@@ -114,7 +122,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("log"), 1, false));
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
-    DEFINE_FUNCTION(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
 
     auto fnAddEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -169,7 +177,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("dispatchEvent"), 1, false);
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("dispatchEvent"), false, false, false, fnDispatchEvent);
 
-    DEFINE_FUNCTION(Window, EventTargetFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Window, EventTargetFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("window"), false, false, false, fetchData(this)->m_instance->globalObject());
     fetchData(this)->m_instance->globalObject()->set__proto__(WindowFunction->protoType());
     fetchData(this)->m_window = WindowFunction;
@@ -180,7 +188,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    DEFINE_FUNCTION(Node, EventTargetFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Node, EventTargetFunction->protoType());
     fetchData(this)->m_node = NodeFunction;
 
     /* 4.4 Interface Node */
@@ -687,7 +695,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }, escargot::ESString::create("insertBefore"), 2, false));
 
-    DEFINE_FUNCTION(Element, NodeFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Element, NodeFunction->protoType());
     fetchData(this)->m_element = ElementFunction;
 
     /* 4.8 Interface Element */
@@ -963,7 +971,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }, escargot::ESString::create("getElementsByClassName"), 1, false)
     );
 
-    DEFINE_FUNCTION(DocumentType, NodeFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentType, NodeFunction->protoType());
     fetchData(this)->m_documentType = DocumentTypeFunction;
 
     DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
@@ -1002,7 +1010,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    DEFINE_FUNCTION(Document, NodeFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Document, NodeFunction->protoType());
     fetchData(this)->m_document = DocumentFunction;
 
     /* 4.5 Interface Document */
@@ -1365,10 +1373,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    DEFINE_FUNCTION(HTMLDocument, DocumentFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLDocument, DocumentFunction->protoType());
     fetchData(this)->m_htmlDocument = HTMLDocumentFunction;
 
-    DEFINE_FUNCTION(CharacterData, NodeFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CharacterData, NodeFunction->protoType());
     fetchData(this)->m_characterData = CharacterDataFunction;
 
     /* 4.9 Interface CharacterData */
@@ -1416,7 +1424,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     CharacterDataFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
 
-    DEFINE_FUNCTION(Text, CharacterDataFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Text, CharacterDataFunction->protoType());
     fetchData(this)->m_text = TextFunction;
 
     /* 4.10 Interface Text */
@@ -1433,10 +1441,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    DEFINE_FUNCTION(Comment, CharacterDataFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Comment, CharacterDataFunction->protoType());
     fetchData(this)->m_comment = CommentFunction;
 
-    DEFINE_FUNCTION(HTMLElement, ElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLElement, ElementFunction->protoType());
     fetchData(this)->m_htmlElement = HTMLElementFunction;
 
     HTMLElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onclick"),
@@ -1526,13 +1534,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         true, true, true);
 
-    DEFINE_FUNCTION(HTMLHtmlElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLHtmlElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlHtmlElement = HTMLHtmlElementFunction;
 
-    DEFINE_FUNCTION(HTMLHeadElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLHeadElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlHeadElement = HTMLHeadElementFunction;
 
-    DEFINE_FUNCTION(HTMLScriptElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLScriptElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlScriptElement = HTMLScriptElementFunction;
 
     HTMLScriptElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("src"),
@@ -1558,10 +1566,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         true, true, false);
 
-    DEFINE_FUNCTION(HTMLStyleElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLStyleElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlStyleElement = HTMLStyleElementFunction;
 
-    DEFINE_FUNCTION(HTMLLinkElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLLinkElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlLinkElement = HTMLLinkElementFunction;
 
     HTMLLinkElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("href"),
@@ -1633,13 +1641,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         true, true, false);
 
-    DEFINE_FUNCTION(HTMLBodyElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBodyElement = HTMLBodyElementFunction;
 
-    DEFINE_FUNCTION(HTMLDivElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLDivElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlDivElement = HTMLDivElementFunction;
 
-    DEFINE_FUNCTION(HTMLImageElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLImageElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlImageElement = HTMLImageElementFunction;
 
     escargot::ESString* srcString = escargot::ESString::create("src");
@@ -1756,11 +1764,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         true, true, false);
 
-    DEFINE_FUNCTION(HTMLBRElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBRElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBrElement = HTMLBRElementFunction;
 
 #ifdef STARFISH_ENABLE_AUDIO
-    DEFINE_FUNCTION(HTMLAudioElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLAudioElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
 
     escargot::ESFunctionObject* audioPlayFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
@@ -1815,7 +1823,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         NULL, true, true, false);
 #endif
 
-    DEFINE_FUNCTION(HTMLCollection, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLCollection, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_htmlCollection = HTMLCollectionFunction;
 
     /* 4.2.7.2 Interface HTMLCollection */
@@ -1863,7 +1871,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("namedItem"), 1, false);
     HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("namedItem"), false, false, false, namedItemFunction);
 
-    DEFINE_FUNCTION(NodeList, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NodeList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_nodeList = NodeListFunction;
 
     NodeListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false,
@@ -1891,7 +1899,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             return escargot::ESValue(nodeList->length());
         }, NULL, false, false, false);
 
-    DEFINE_FUNCTION(DOMTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_domTokenList = DOMTokenListFunction;
 
     /* 7.1 Interface DOMTokenList */
@@ -2021,7 +2029,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("toString"), 1, false);
     DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, domTokenListToStringFunction);
 
-    DEFINE_FUNCTION(DOMSettableTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMSettableTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_domSettableTokenList = DOMSettableTokenListFunction;
 
     /* 7.2 Interface DOMSettableTokenList */
@@ -2150,7 +2158,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("value"), DOMSettableTokenListValueGetter, DOMSettableTokenListValueSetter, false, false, false);
 
-    DEFINE_FUNCTION(NamedNodeMap, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NamedNodeMap, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_namedNodeMap = NamedNodeMapFunction;
 
     /* 4.8.1 Interface NamedNodeMap */
@@ -2232,7 +2240,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* 4.8.2 Interface Attr */
     // FIXME Attr should inherit interface Node
-    DEFINE_FUNCTION(Attr, NodeFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Attr, NodeFunction->protoType());
     fetchData(this)->m_attr = AttrFunction;
 
     auto attrNameValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj,
@@ -2287,7 +2295,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    DEFINE_FUNCTION(HTMLUnknownElement, HTMLElementFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLUnknownElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlUnknownElement = HTMLUnknownElementFunction;
 
     /* 3.2 Interface Event */
@@ -2482,7 +2490,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* style-related getter/setter start here */
 
-    DEFINE_FUNCTION(CSSStyleDeclaration, CSSStyleDeclarationFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, CSSStyleDeclarationFunction->protoType());
     fetchData(this)->m_cssStyleDeclaration = CSSStyleDeclarationFunction;
 
 #define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
@@ -2506,7 +2514,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
-    DEFINE_FUNCTION(CSSStyleRule, CSSStyleRuleFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleRule, CSSStyleRuleFunction->protoType());
     fetchData(this)->m_cssStyleRule = CSSStyleRuleFunction;
 
     /* XMLHttpRequest */
