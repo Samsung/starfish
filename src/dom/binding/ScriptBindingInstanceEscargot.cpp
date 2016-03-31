@@ -1765,22 +1765,30 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION(NodeList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_nodeList = NodeListFunction;
 
-    escargot::ESFunctionObject* NodeListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
+    NodeListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
 
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isUInt32()) {
-            Node* node = ((NodeList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
-            if (node != nullptr) {
-                return node->scriptValue();
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            if (argValue.isUInt32()) {
+                NodeList* nodeList = (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
+                Node* nd = nodeList->item(argValue.asUInt32());
+                if (nd != nullptr) {
+                    return nd->scriptValue();
+                }
             }
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("item"), 1, false);
-    NodeListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, NodeListItemFunction);
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("item"), 1, false)
+    );
+
+    NodeListFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeListObject);
+            NodeList* nodeList = (NodeList*)originalObj->extraPointerData();
+            return escargot::ESValue(nodeList->length());
+        }, NULL, false, false, false);
 
     DEFINE_FUNCTION(DOMTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_domTokenList = DOMTokenListFunction;

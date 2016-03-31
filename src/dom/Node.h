@@ -55,6 +55,7 @@ protected:
 
         m_firstChild = nullptr;
         m_lastChild = nullptr;
+        m_childNodeList = nullptr;
 
         m_state = NodeStateNormal;
 
@@ -497,6 +498,7 @@ private:
     Node* m_firstChild;
     Node* m_lastChild;
     Node* m_parentNode;
+    NodeList* m_childNodeList;
     ComputedStyle* m_style;
 };
 }

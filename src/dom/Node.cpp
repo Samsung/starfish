@@ -23,10 +23,12 @@ Node::Node(Document* document)
 NodeList* Node::childNodes()
 {
     STARFISH_ASSERT(m_document);
-    NodeList* list = new NodeList(m_document->scriptBindingInstance(), this, [&](Node* node) {
-        return node->parentNode() == this? true: false;
-    });
-    return list;
+    if (m_childNodeList == nullptr) {
+        m_childNodeList = new NodeList(m_document->scriptBindingInstance(), this, [&](Node* node) {
+            return node->parentNode() == this? true: false;
+        });
+    }
+    return m_childNodeList;
 }
 
 Node* Node::cloneNode(bool deep)
