@@ -57,3 +57,4 @@ test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-reenter.html
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-target-removed.html
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-target-moved.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-constants.html
+test/reftest/web-platform-tests/dom_converted/nodes/case.html

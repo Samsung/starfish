@@ -126,7 +126,7 @@ public:
 
     String* toUpper();
     String* toLower();
-    String* replaceAll(const std::string& from, const std::string& to);
+    String* replaceAll(String* from, String* to);
     bool isASCIIString() const
     {
         return m_isASCIIString;

@@ -66,6 +66,10 @@ void ScriptBindingInstance::exit()
         {      \
             escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
             STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+            if (strcmp(#functionName, "Document") == 0) { \
+                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
+                STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+            } \
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
@@ -92,10 +96,10 @@ String* toBrowserString(const escargot::ESValue& v)
     // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored as '\','n'
     // The right way is, input string should already have '\n', and white spaces should be removed from here.
     // For time being, we simply remove "\n" and other whitespaces strings.
-    newStr = newStr->replaceAll("\n", " ");
-    newStr = newStr->replaceAll("\t", " ");
-    newStr = newStr->replaceAll("\f", " ");
-    newStr = newStr->replaceAll("\r", " ");
+    newStr = newStr->replaceAll(String::fromUTF8("\n"), String::spaceString);
+    newStr = newStr->replaceAll(String::fromUTF8("\t"), String::spaceString);
+    newStr = newStr->replaceAll(String::fromUTF8("\f"), String::spaceString);
+    newStr = newStr->replaceAll(String::fromUTF8("\r"), String::spaceString);
     return newStr;
 }
 

@@ -218,18 +218,30 @@ String* String::concat(String* str)
     }
 }
 
-String* String::replaceAll(const std::string& from, const std::string& to)
+String* String::replaceAll(String* from, String* to)
 {
     if (m_isASCIIString) {
         std::string str = std::string(utf8Data());
+        std::string from_str = std::string(from->utf8Data());
+        std::string to_str = std::string(to->utf8Data());
+
         size_t start_pos = 0;
-        while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-            str.replace(start_pos, from.length(), to);
-            start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+        while ((start_pos = str.find(from_str, start_pos)) != std::string::npos) {
+            str.replace(start_pos, from_str.length(), to_str);
+            start_pos += to_str.length(); // Handles case where 'to' is a substring of 'from'
         }
         return createASCIIString(str.c_str());
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        std::basic_string<char32_t> str(toUTF32String().data());
+        std::basic_string<char32_t> from_str(from->toUTF32String().data());
+        std::basic_string<char32_t> to_str(to->toUTF32String().data());
+
+        size_t start_pos = 0;
+        while ((start_pos = str.find(from_str, start_pos)) != std::string::npos) {
+            str.replace(start_pos, from_str.length(), to_str);
+            start_pos += to_str.length(); // Handles case where 'to' is a substring of 'from'
+        }
+        return createUTF32String(str.data());
     }
 }
 
