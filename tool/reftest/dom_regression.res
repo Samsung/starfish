@@ -37,6 +37,7 @@ test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-28.ht
 test/reftest/web-platform-tests/dom_converted/nodes/Node-appendChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-nodeName.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-nodeValue.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-parentNode.html
 test/reftest/web-platform-tests/dom_converted/events/Event-defaultPrevented.html
 test/reftest/web-platform-tests/dom_converted/events/Event-propagation.html
 test/reftest/web-platform-tests/dom_converted/events/Event-type.html
