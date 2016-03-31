@@ -54,8 +54,10 @@ void ScriptBindingInstance::exit()
     escargot::ESString* functionName##String = escargot::ESString::create(#functionName);                                                                                                                                  \
     escargot::ESFunctionObject* functionName##Function = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance*) -> escargot::ESValue      \
         {      \
-            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+            if (strcmp(#functionName, "Document")==0) { \
+                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
+                STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+            } \
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
