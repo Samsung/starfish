@@ -105,11 +105,13 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         event->setEventPhase(Event::CAPTURING_PHASE);
         for (size_t i = eventPath.size(); i > 1; i--) {
             EventTarget* eventTarget = eventPath[i - 1];
-            EventListenerVector* listeners = eventTarget->getEventListeners(event->type());
-            if (listeners) {
-                for (auto listener : *listeners) {
+            EventListenerVector* originals = eventTarget->getEventListeners(event->type());
+            if (originals) {
+                // Iterate Copied Vector : listeners can be removed during iteration
+                EventListenerVector copies = EventListenerVector(*originals);
+                for (auto listener : copies) {
                     STARFISH_ASSERT(listener);
-                    if (listener->capture()) {
+                    if (std::find(originals->begin(), originals->end(), listener) != originals->end() && listener->capture()) {
                         STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                         // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", node->localName()->utf8Data());
                         event->setCurrentTarget(eventTarget);
@@ -125,15 +127,20 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     event->setEventPhase(Event::AT_TARGET);
 
     // 8. Invoke the event listeners of event's target attribute value with event, if event's stop propagation flag is unset.
-    EventListenerVector* listeners = origin->getEventListeners(event->type());
-    if (listeners) {
+    EventListenerVector* originals = origin->getEventListeners(event->type());
+    if (originals) {
         if (!event->stopPropagation()) {
-            for (auto listener : *listeners) {
-                STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
-                // STARFISH_LOG_INFO("[AT_TARGET] node: %s\n", origin->localName()->utf8Data());
-                event->setCurrentTarget(origin);
-                ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-                callScriptFunction(listener->scriptValue(), argv, 1, origin->scriptValue());
+            // Iterate Copied Vector : listeners can be removed during iteration
+            EventListenerVector copies = EventListenerVector(*originals);
+            for (auto listener : copies) {
+                STARFISH_ASSERT(listener);
+                if (std::find(originals->begin(), originals->end(), listener) != originals->end()) {
+                    STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
+                    // STARFISH_LOG_INFO("[AT_TARGET] node: %s\n", origin->localName()->utf8Data());
+                    event->setCurrentTarget(origin);
+                    ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
+                    callScriptFunction(listener->scriptValue(), argv, 1, origin->scriptValue());
+                }
             }
         }
     }
@@ -146,11 +153,13 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         event->setEventPhase(Event::BUBBLING_PHASE);
         for (size_t i = 1; i < eventPath.size(); i++) {
             EventTarget* eventTarget = eventPath[i];
-            EventListenerVector* listeners = eventTarget->getEventListeners(event->type());
-            if (listeners) {
-                for (auto listener : *listeners) {
+            EventListenerVector* originals = eventTarget->getEventListeners(event->type());
+            if (originals) {
+                // Iterate Copied Vector : listeners can be removed during iteration
+                EventListenerVector copies = EventListenerVector(*originals);
+                for (auto listener : copies) {
                     STARFISH_ASSERT(listener);
-                    if (!listener->capture()) {
+                    if (std::find(originals->begin(), originals->end(), listener) != originals->end() && !listener->capture()) {
                         STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                         // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s\n", node->localName()->utf8Data());
                         event->setCurrentTarget(eventTarget);
