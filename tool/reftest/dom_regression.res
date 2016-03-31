@@ -55,3 +55,4 @@ test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-omitted-capt
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-propagation-stopped.html
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-reenter.html
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-target-removed.html
+test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-target-moved.html
