@@ -2,6 +2,7 @@
 #include "XMLHttpRequest.h"
 #include "dom/Event.h"
 #include "extra/Blob.h"
+#include "dom/DOMException.h"
 #include <future>
 #include <Elementary.h>
 #include <fcntl.h>
@@ -26,8 +27,9 @@ XMLHttpRequest::XMLHttpRequest()
 
 void XMLHttpRequest::send(String* body)
 {
-    if (m_ready_state != OPENED)
-        return;
+    if (m_ready_state != OPENED) {
+        throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
+    }
 
     const char* url = m_url->utf8Data();
 
@@ -130,8 +132,8 @@ void XMLHttpRequest::send(String* body)
                 ecore_thread_main_loop_begin();
                 ecore_idler_add([](void *data)->Eina_Bool {
                     XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
-                    this_obj->callEventHandler(String::fromUTF8("headersReceived"), true, 0, 0);
-                    this_obj->callEventHandler(String::fromUTF8("progress"), true, 0, 0);
+                    this_obj->callEventHandler(nullptr, true, 0, 0, 2);
+                    this_obj->callEventHandler(nullptr, true, 0, 0, 3);
                     return ECORE_CALLBACK_CANCEL;
                 }, xhrobj);
                 ecore_thread_main_loop_end();
@@ -291,6 +293,7 @@ void XMLHttpRequest::setOpen(const char* method, String* url)
         }
     }
     m_ready_state = OPENED;
+    callEventHandler(String::fromUTF8("opened"), true, 0, 0, OPENED);
     m_url = url;
 }
 
@@ -313,10 +316,25 @@ String* XMLHttpRequest::getResponseTypeStr()
     return String::emptyString;
 }
 
-void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total)
+void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total, int readyState)
 {
 
-    if (eventName->equals("progress")) {
+    if (readyState >= 0) {
+        if (readyState == 1)
+            m_ready_state = OPENED;
+        else if (readyState == 2)
+            m_ready_state = HEADERS_RECEIVED;
+        else if (readyState == 3)
+            m_ready_state = LOADING;
+        ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
+        if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
+            escargot::ESErrorObject* e = escargot::ESErrorObject::create();
+            e->defineDataProperty(escargot::ESString::create("target"), false, false, false, scriptValue());
+            ScriptValue json_arg[1] = { e };
+            callScriptFunction(rsc, json_arg, 1, scriptValue());
+        }
+        return;
+    } else if (readyState == 3) {
         m_ready_state = LOADING;
         ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
         if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
@@ -341,16 +359,6 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
             ScriptValue json_arg[1] = { escargot::ESValue(escargot::ESValue::ESNull) };
             callScriptFunction(en, json_arg, 1, scriptValue());
-        }
-        return;
-    } else if (eventName->equals("headersReceived")) {
-        m_ready_state = HEADERS_RECEIVED;
-        ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
-        if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
-            escargot::ESErrorObject* e = escargot::ESErrorObject::create();
-            e->defineDataProperty(escargot::ESString::create("target"), false, false, false, scriptValue());
-            ScriptValue json_arg[1] = { e };
-            callScriptFunction(rsc, json_arg, 1, scriptValue());
         }
         return;
     }

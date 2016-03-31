@@ -114,7 +114,7 @@ public:
     void setResponseType(const char* responseType);
     void setOpen(const char* method, String* url);
     void send(String* body);
-    void callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total);
+    void callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total, int readyState = -1);
 
     void setResponseHeader(String* responseHeader)
     {
@@ -131,6 +131,7 @@ public:
     void abort()
     {
         m_abort_flag = true;
+        m_ready_state = UNSENT;
     }
 
     bool checkAbort()
@@ -221,7 +222,7 @@ public:
 
             p_data->loaded = static_cast<uint32_t>(dlnow);
             p_data->total = static_cast<uint32_t>(dltotal);
-            this_obj->callEventHandler(String::fromUTF8("progress"), false, p_data->loaded, p_data->total);
+            this_obj->callEventHandler(nullptr, false, p_data->loaded, p_data->total, 3);
 
             // printf("TOTAL TIME: %f \r\n", curtime);
             // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T

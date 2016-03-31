@@ -2611,23 +2611,25 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("open"), false, false, false, xhrOpenFunction);
 
     escargot::ESFunctionObject* xhrSendFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-        if (v.isObject()) {
-            if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
-
-                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-                if (argValue.isESString()) {
-                    escargot::ESString* argStr = argValue.asESString();
-                    xhr->send(toBrowserString(argStr));
-                } else {
-                    xhr->send(String::emptyString);
+        try {
+            escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+            if (v.isObject()) {
+                if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
+                    XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
+                    escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                    if (argValue.isESString()) {
+                        escargot::ESString* argStr = argValue.asESString();
+                        xhr->send(toBrowserString(argStr));
+                    } else {
+                        xhr->send(String::emptyString);
+                    }
                 }
-
-
             }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("send"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("send"), false, false, false, xhrSendFunction);
 
