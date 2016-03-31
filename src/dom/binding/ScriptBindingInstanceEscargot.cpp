@@ -2341,9 +2341,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
         EventTarget* target = ((Event*) originalObj->extraPointerData())->target();
-        if (target && target->isNode()) {
-            Node* node = target->asNode();
-            return node->asElement()->scriptValue();
+        if (target && (target->isNode() || currentTarget->isWindow())) {
+            return target->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
         },
@@ -2353,9 +2352,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
         EventTarget* currentTarget = ((Event*) originalObj->extraPointerData())->currentTarget();
-        if (currentTarget && currentTarget->isNode()) {
-            Node* node = currentTarget->asNode();
-            return node->scriptValue();
+        if (currentTarget && (currentTarget->isNode() || currentTarget->isWindow())) {
+            return currentTarget->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
         },
