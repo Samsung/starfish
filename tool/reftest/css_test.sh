@@ -71,6 +71,11 @@ for i in $tc ; do
     ELM_ENGINE="shot:" ./run.sh $i --regression-test --width=${W} --height=${H} > /dev/null 2>&1
     mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}
     GOAL_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}_result.png"
+    if [[ "$1" != "demo" ]]; then
+        dir2=${dir//csswg-test/csswg-res}
+        mkdir -p ${EXPECTED_IMAGE_PATH}/${dir2}
+        GOAL_PNG=${GOAL_PNG//csswg-test/csswg-res}
+    fi
     updated=""
     if [ -f ${GOAL_PNG} ]
     then
