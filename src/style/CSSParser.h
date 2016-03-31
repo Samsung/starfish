@@ -567,6 +567,7 @@ public:
         m_error = String::emptyString;
     }
     CSSStyleSheet* parseStyleSheet(String* str, const URL& url = URL());
+    void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment);
     CSSToken* currentToken();

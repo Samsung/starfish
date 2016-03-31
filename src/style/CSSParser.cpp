@@ -1360,5 +1360,24 @@ CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString, const URL& url)
     return sheet;
 }
 
+void CSSParser::parseStyleDeclaration(String* str, CSSStyleDeclaration* declarations)
+{
+    m_lookAhead = nullptr;
+    m_token = nullptr;
+    m_preserveWS = false;
+    m_preserveComments = false;
+    m_scanner = new CSSScanner(str);
+    CSSToken* token = getToken(true, false);
+    bool valid = false;
+    while (true) {
+        if (!token->isNotNull()) {
+            valid = true;
+            break;
+        }
+        parseDeclaration(token, declarations);
+        token = getToken(true, false);
+    }
+}
+
 
 }

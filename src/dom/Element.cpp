@@ -5,6 +5,7 @@
 #include "Document.h"
 
 #include "style/Style.h"
+#include "style/CSSParser.h"
 
 #include "HTMLHtmlElement.h"
 #include "HTMLHeadElement.h"
@@ -68,30 +69,9 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         DOMTokenList::tokenize(&m_classNames, value);
         setNeedsStyleRecalc();
     } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
-        // TODO implement parse comment
         inlineStyle()->clear();
-        std::vector<String*, gc_allocator<String*>> tokens = value->tokenize(";", 1);
-
-        for (size_t i = 0; i < tokens.size(); i ++) {
-
-            std::vector<String*, gc_allocator<String*>> rule = tokens[i]->tokenize(":", 1);
-
-            if (rule.size() > 1) {
-                const char* key = rule[0]->trim()->utf8Data();
-                if (!key) {
-                    STARFISH_LOG_INFO("nullptr key in Element::didAttributeChanged::style\n");
-                }
-#define SET_VALUE(name, nameLower, nameCSSCase) \
-                else if (strcmp(key, nameCSSCase) == 0) { \
-                    inlineStyle()->set##name(rule[1]->utf8Data()); \
-                }
-                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_VALUE)
-#undef SET_VALUE
-                else {
-                    STARFISH_LOG_INFO("unknown key %s in Element::didAttributeChanged::style\n", key);
-                }
-            }
-        }
+        CSSParser parser(document());
+        parser.parseStyleDeclaration(value, inlineStyle());
     }
 }
 
