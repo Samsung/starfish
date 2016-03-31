@@ -357,7 +357,10 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
         }
         ScriptValue en = getHandler(eventName, starfishInstance());
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
-            ScriptValue json_arg[1] = { escargot::ESValue(escargot::ESValue::ESNull) };
+            ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
+            QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
+            pe->setType(eventType);
+            ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
             callScriptFunction(en, json_arg, 1, scriptValue());
         }
         return;
@@ -370,6 +373,7 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             for (unsigned i = 0; i < clickListeners->size(); i++) {
                 STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
                 ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
+                pe->setType(eventType);
                 ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
                 ScriptValue fn = clickListeners->at(i)->scriptValue();
                 if (fn != ScriptValue::ESNull)
