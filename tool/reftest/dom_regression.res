@@ -1,4 +1,5 @@
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-08.htm
+test/reftest/web-platform-tests/dom_converted/nodes/Document-createTextNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-doctype.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-getElementById.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount.html

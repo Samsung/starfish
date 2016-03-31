@@ -1228,7 +1228,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 Text* elem = doc->createTextNode(toBrowserString(argStr));
                 if (elem != nullptr)
                     return elem->scriptValue();
+            } else if (argValue.isNull()) {
+                Text* elem = doc->createTextNode(toBrowserString(escargot::ESString::create("null")));
+                if (elem != nullptr)
+                    return elem->scriptValue();
+            } else if (argValue.isUndefined()) {
+                Text* elem = doc->createTextNode(toBrowserString(escargot::ESString::create("undefined")));
+                if (elem != nullptr)
+                    return elem->scriptValue();
             }
+
         } else {
             THROW_ILLEGAL_INVOCATION()
         }
