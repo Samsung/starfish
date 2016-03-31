@@ -2341,7 +2341,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
         EventTarget* target = ((Event*) originalObj->extraPointerData())->target();
-        if (target && (target->isNode() || currentTarget->isWindow())) {
+        if (target && (target->isNode() || target->isWindow())) {
             return target->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
