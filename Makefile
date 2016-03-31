@@ -454,6 +454,13 @@ wpt_test_dom:
 wpt_regression_test_dom:
 	./tool/reftest/wpt_test.sh tool/reftest/dom_regression.res
 
+wpt_test_xhr:
+	make wpt_test tc=tool/reftest/xhr.res
+
+wpt_regression_test_xhr:
+	./tool/reftest/wpt_test.sh tool/reftest/xhr_regression.res
+
+
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css1.res"
