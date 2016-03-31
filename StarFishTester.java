@@ -32,7 +32,13 @@ public class StarFishTester {
 				testFile = "tool/pixel_test/css1.res";
 			} else if (args[0].equals("css21")) {
 				testFile = "tool/pixel_test/css21.res";
-			}
+			} else if (args[0].equals("css3_backgrounds")) {
+                testFile = "tool/pixel_test/css-backgrounds-3.res";
+			} else if (args[0].equals("css3_color")) {
+                testFile = "tool/pixel_test/css-color-3.res";
+			} else if (args[0].equals("css3_transforms")) {
+                testFile = "tool/pixel_test/css-transforms-1.res";
+            }
 
 			String fileContent = new String(Files.readAllBytes(Paths.get(testFile)));
 			
@@ -110,7 +116,7 @@ public class StarFishTester {
 							folderName = folderName.substring(0, folderName.lastIndexOf('/'));
 
 							String caseName = workItem;
-							caseName = caseName.substring(0, caseName.indexOf('.'));
+							caseName = caseName.substring(0, caseName.lastIndexOf('.'));
 
                             // excute runner
                             try {
@@ -219,7 +225,7 @@ public class StarFishTester {
 				System.err.println(testResult.get(i).testName + " " + testResult.get(i).status);
 			}
 
-			System.err.println("total : " + (good + check + bad) + " passed : " + good + " check : " + check + " failed : " + bad);
+			System.err.println(" ====total : " + (good + check + bad) + " passed : " + good + " check : " + check + " failed : " + bad);
 
 		} catch(Exception e) {
 			System.out.println(e.toString());			

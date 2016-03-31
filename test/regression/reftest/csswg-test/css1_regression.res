@@ -9,7 +9,6 @@ test/reftest/csswg-test/css1/c45-bg-canvas-000.htm
 test/reftest/csswg-test/css1/c531-color-000.htm
 test/reftest/csswg-test/css1/c532-bgcolor-000.htm
 test/reftest/csswg-test/css1/c532-bgcolor-001.htm
-test/reftest/csswg-test/css1/c533-bgimage-000.htm
 test/reftest/csswg-test/css1/c533-bgimage-001.htm
 test/reftest/csswg-test/css1/c5505-mrgn-002.htm
 test/reftest/csswg-test/css1/c5511-ibrdr-tw-000.htm
