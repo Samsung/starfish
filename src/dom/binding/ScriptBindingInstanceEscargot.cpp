@@ -2323,7 +2323,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             // FIXME: TypeError
             return escargot::ESValue();
         }
-    }, escargot::ESString::create("Event"), 1, true);
+    }, escargot::ESString::create("Event"), 1, true, false);
     eventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     eventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), false, false, false, eventFunction);
@@ -2360,6 +2360,30 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue(escargot::ESValue::ESNull);
         },
         NULL, false, false, false);
+
+    eventFunction->defineAccessorProperty(escargot::ESString::create("NONE"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+            return escargot::ESValue(Event::NONE);
+            },
+            NULL, false, false, false);
+
+    eventFunction->defineAccessorProperty(escargot::ESString::create("CAPTURING_PHASE"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+            return escargot::ESValue(Event::CAPTURING_PHASE);
+            },
+            NULL, false, false, false);
+
+    eventFunction->defineAccessorProperty(escargot::ESString::create("AT_TARGET"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+            return escargot::ESValue(Event::AT_TARGET);
+            },
+            NULL, false, false, false);
+
+    eventFunction->defineAccessorProperty(escargot::ESString::create("BUBBLING_PHASE"),
+            [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+            return escargot::ESValue(Event::BUBBLING_PHASE);
+            },
+            NULL, false, false, false);
 
     eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("NONE"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
@@ -2508,7 +2532,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         auto xhr = new XMLHttpRequest();
         xhr->initScriptWrappable(xhr);
         return xhr->scriptValue();
-    }, escargot::ESString::create("XMLHttpRequest"), 0, true);
+    }, escargot::ESString::create("XMLHttpRequest"), 0, true, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(EventTargetFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
