@@ -69,7 +69,7 @@ void ScriptBindingInstance::exit()
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(functionName##String, false, false, false, functionName##Function);                                                                                    \
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);                                                                                    \
     functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
 
 // TypeError: Illegal invocation
@@ -2378,7 +2378,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("Event"), 1, true, false);
     eventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     eventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), false, false, false, eventFunction);
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), true, false, true, eventFunction);
     fetchData(this)->m_event = eventFunction;
 
     eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("type"),
