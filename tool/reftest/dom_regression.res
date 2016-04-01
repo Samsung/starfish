@@ -61,3 +61,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Node-constants.html
 test/reftest/web-platform-tests/dom_converted/nodes/case.html
 test/reftest/web-platform-tests/dom_converted/events/EventTarget-addEventListener.html
 test/reftest/web-platform-tests/dom_converted/events/EventTarget-removeEventListener.html
+test/reftest/web-platform-tests/dom_converted/events/EventTarget-dispatchEvent-returnvalue.html

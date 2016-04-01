@@ -180,8 +180,8 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // 12. Initialize event's currentTarget attribute to null.
     event->setCurrentTarget(nullptr);
 
-    // 13. Return false if event's canceled flag is set, and true otherwise.
-    return event->cancelable() ? false : true;
+    // 13. Return false if event's defaultPrevent is set, and true otherwise.
+    return event->defaultPrevented() ? false : true;
 }
 
 bool EventTarget::setAttributeEventListener(const QualifiedName& eventType, EventListener* listener)
