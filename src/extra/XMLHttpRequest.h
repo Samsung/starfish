@@ -122,8 +122,17 @@ public:
         m_response_header = responseHeader;
     }
 
+    String* getResponseHeader(const char* header)
+    {
+        if (m_response_header != nullptr)
+            return m_response_header;
+        return nullptr;
+    }
+
     String* getAllResponseHeadersStr()
     {
+        if (m_ready_state == UNSENT || m_ready_state == OPENED)
+            return String::emptyString;
         if (m_response_header != nullptr)
             return m_response_header;
         return String::emptyString;

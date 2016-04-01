@@ -277,11 +277,13 @@ void XMLHttpRequest::send(String* body)
                 break;
             }
 
-            // invoke error event
-            xhrobj->callEventHandler(String::fromUTF8("error"), false, 0, 0);
-
-            // invoke loadend event
-            xhrobj->callEventHandler(String::fromUTF8("loadend"), false, 0, 0);
+            ecore_thread_main_loop_begin();
+            ecore_idler_add([](void *data)->Eina_Bool {
+                XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
+                this_obj->callEventHandler(String::fromUTF8("error"), false, 0, 0);
+                return ECORE_CALLBACK_CANCEL;
+            }, xhrobj);
+            ecore_thread_main_loop_end();
         }
         return false;
 
@@ -383,7 +385,7 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             callScriptFunction(rsc, json_arg, 1, scriptValue());
         }
         return;
-    } else if (eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load") || eventName->equals("loadend")) {
+    } else if (eventName->equals("progress") || eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load") || eventName->equals("loadend")) {
         ScriptValue en = getHandler(eventName, starfishInstance());
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
             ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);

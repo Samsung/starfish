@@ -2832,6 +2832,19 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
+    escargot::ESFunctionObject* xhrGetResponseHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isObject()) {
+            if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject && instance->currentExecutionContext()->argumentCount() == 1) {
+                String* res = ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->getResponseHeader(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data());
+                if (res)
+                    return toJSString(res);
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("getResponseHeader"), 1, false);
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getResponseHeader"), false, false, false, xhrGetResponseHeaderFunction);
+
     escargot::ESFunctionObject* xhrGetAllResponseHeadersFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
@@ -2907,6 +2920,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
     }, escargot::ESString::create("setRequestHeader"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setRequestHeader"), false, false, false, xhrSetRequestHeaderFunction);
+
 
     /* Blob */
     DEFINE_FUNCTION(Blob, fetchData(this)->m_instance->globalObject()->objectPrototype());
