@@ -255,7 +255,8 @@ Window* Window::create(StarFish* sf, size_t w, size_t h)
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path))
+        const char* hide = getenv("HIDE_WINDOW");
+        if ((path && strlen(path)) || (hide && strlen(hide)))
             evas_object_hide(wnd->m_window);
         else
             evas_object_show(wnd->m_window);

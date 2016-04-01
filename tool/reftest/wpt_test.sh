@@ -37,9 +37,9 @@ echo -e "${BOLD}###### Web Platform Tests ######${RESET}\n"
 
 for i in $tc ; do
     # Running the tests
-    ./run.sh $i > $TMPFILE &
-    sleep $TIMEOUT
-    killall StarFish
+    ./run.sh $i --hide-window > $TMPFILE
+    #sleep $TIMEOUT
+    #killall StarFish
 
     # Collect the result
     replace1='s/\\n"//g'

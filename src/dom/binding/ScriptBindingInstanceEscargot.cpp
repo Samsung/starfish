@@ -106,8 +106,14 @@ escargot::ESValue toJSString(String* v)
 
 void ScriptBindingInstance::initBinding(StarFish* sf)
 {
-
     escargot::ESValue v;
+
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("wptTestEnd"), false, false, false, escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        ::exit(0);
+        return escargot::ESValue();
+    }, escargot::ESString::create("wptTestEnd"), 1, false));
+#endif
 
     escargot::ESObject* console = escargot::ESObject::create();
     console->set(escargot::ESString::create("log"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {

@@ -44,6 +44,9 @@ int main(int argc, char *argv[])
             flag |= StarFish::enableRegressionTest;
         } else if (strstr(argv[i], "--screen-shot=") == argv[i]) {
             screenShot = argv[i] + strlen("--screen-shot=");
+        } else if (strcmp(argv[i], "--hide-window") == 0) {
+            // regression test, pixel test only
+            setenv("HIDE_WINDOW", "1", 1);
         }
     }
 
