@@ -465,6 +465,21 @@ void ScriptWrappable::initScriptWrappable(CSSStyleRule* ptr)
     scriptObject()->setExtraData(CSSStyleRuleObject);
 }
 
+static int utf32ToUtf16(char32_t i, char16_t *u)
+{
+    if (i < 0xffff) {
+        *u= (char16_t)(i & 0xffff);
+        return 1;
+    } else if(i < 0x10ffff) {
+        i-= 0x10000;
+        *u++= 0xd800 | (i >> 10);
+        *u= 0xdc00 | (i & 0x3ff);
+        return 2;
+    }
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+
 ScriptValue createScriptString(String* str)
 {
     if (str->isASCIIString()) {
@@ -474,7 +489,19 @@ ScriptValue createScriptString(String* str)
 
         for (size_t i = 0; i < str->length(); i++) {
             // TODO utf-16 two char
-            out.push_back(str->charAt(i));
+            char32_t src = str->charAt(i);
+            char16_t dst[2];
+            int ret = utf32ToUtf16(src, dst);
+
+            if (ret == 1) {
+                out.push_back(src);
+            } else if (ret == 2) {
+                out.push_back(dst[0]);
+                out.push_back(dst[1]);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+
         }
 
         return escargot::ESString::create(std::move(out));

@@ -1466,7 +1466,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
         Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
         if (nd->isCharacterData()) {
-            return escargot::ESValue(nd->asCharacterData()->length());
+            if (nd->asCharacterData()->data()->isASCIIString())
+                return escargot::ESValue(nd->asCharacterData()->length());
+            else {
+                // TODO: measure length without converting
+                return escargot::ESValue(toJSString(nd->asCharacterData()->data()).toString()->length());
+            }
         }
         THROW_ILLEGAL_INVOCATION();
         RELEASE_ASSERT_NOT_REACHED();

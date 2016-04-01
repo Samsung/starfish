@@ -37,7 +37,7 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
                     && 0x80 == (UTF8[2] & 0xC0)
                     && 0x80 == (UTF8[3] & 0xC0)) {
                     uc += (UTF8[0] & 0x07) << 18;
-                    uc += (UTF8[1] & 0xfF) << 12;
+                    uc += (UTF8[1] & 0x3F) << 12;
                     uc += (UTF8[2] & 0x3F) << 6;
                     uc += (UTF8[3] & 0x3F) << 0;
                     tRequiredSize = 4;
@@ -74,7 +74,6 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
 
     return tRequiredSize;
 }
-
 size_t utf32ToUtf8(char32_t uc, char* UTF8)
 {
     size_t tRequiredSize = 0;
@@ -100,6 +99,36 @@ size_t utf32ToUtf8(char32_t uc, char* UTF8)
             UTF8[3] = (char)'\0';
         }
         tRequiredSize = 3;
+    } else if (uc <= 0x1fffff) {
+        if( NULL != UTF8 ) {
+            UTF8[0] = (char)(0xf0 + uc / (0x01 <<18));
+            UTF8[1] = (char)(0x80 + uc / (0x01 <<12) % (0x01 <<12));
+            UTF8[2] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
+            UTF8[3] = (char)(0x80 + uc % (0x01 << 6));
+            UTF8[4] = (char) '\0';
+        }
+        tRequiredSize = 4;
+    } else if (uc <= 0x3ffffff) {
+        if( NULL != UTF8 ) {
+            UTF8[0] = (char)(0xf8 + uc / (0x01 <<24));
+            UTF8[1] = (char)(0x80 + uc / (0x01 <<18) % (0x01 <<18));
+            UTF8[2] = (char)(0x80 + uc / (0x01 <<12) % (0x01 <<12));
+            UTF8[3] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
+            UTF8[4] = (char)(0x80 + uc % (0x01 << 6));
+            UTF8[5] = (char) '\0';
+        }
+        tRequiredSize = 5;
+    } else if (uc <= 0x7fffffff) {
+        if( NULL != UTF8 ) {
+            UTF8[0] = (char)(0xfc + uc / (0x01 <<30));
+            UTF8[1] = (char)(0x80 + uc / (0x01 <<24) % (0x01 <<24));
+            UTF8[2] = (char)(0x80 + uc / (0x01 <<18) % (0x01 <<18));
+            UTF8[3] = (char)(0x80 + uc / (0x01 <<12) % (0x01 <<12));
+            UTF8[4] = (char)(0x80 + uc / (0x01 << 6) % (0x01 << 6));
+            UTF8[5] = (char)(0x80 + uc % (0x01 << 6));
+            UTF8[6] = (char) '\0';
+        }
+        tRequiredSize = 6;
     } else {
         // TODO
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -107,6 +136,7 @@ size_t utf32ToUtf8(char32_t uc, char* UTF8)
 
     return tRequiredSize;
 }
+
 
 const char* utf32ToUtf8(const char32_t* t, const size_t& len, size_t* bufferSize = NULL)
 {

@@ -58,7 +58,7 @@ function testNode(create, type) {
     assert_equals(node.length, 2)
   }, type + ".data = '--'")
 
-/*  test(function() {
+  test(function() {
     var node = create()
     assert_equals(node.data, "test")
 
@@ -75,7 +75,6 @@ function testNode(create, type) {
     assert_equals(node.data, "🌠 test 🌠 TEST")
     assert_equals(node.length, 15)  // Counting UTF-16 code units
   }, type + ".data = '🌠 test 🌠 TEST'")
-  */
 }
 
 testNode(function() { return document.createTextNode("test") }, "Text")
