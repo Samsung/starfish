@@ -131,7 +131,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
         escargot::ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
-        if (firstArg.isESString() && secondArg.asESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
+        if (firstArg.isESString() && secondArg.isESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
             // TODO: Verify valid event types (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
