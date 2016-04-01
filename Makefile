@@ -435,16 +435,18 @@ install_pixel_test_dep:
 
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
+pixel_test_css:
+	java StarFishTester $(tc)
 pixel_test_css1:
-	make pixel_test tc=tool/pixel_test/css1.res screen=pc
+	make pixel_test_css tc=css1
 pixel_test_css21:
-	make pixel_test tc=tool/pixel_test/css21.res screen=pc
+	make pixel_test_css tc=css21
 pixel_test_css3_color:
-	make pixel_test tc=tool/pixel_test/css-color-3.res screen=pc
+	make pixel_test_css tc=css3_color
 pixel_test_css3_backgrounds:
-	make pixel_test tc=tool/pixel_test/css-backgrounds-3.res screen=pc
+	make pixel_test_css tc=css3_backgrounds
 pixel_test_css3_transforms:
-	make pixel_test tc=tool/pixel_test/css-transforms-1.res screen=pc
+	make pixel_test_css tc=css3_transforms
 
 wpt_test:
 	./tool/reftest/wpt_test.sh $(tc) $(regression)

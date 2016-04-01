@@ -163,18 +163,19 @@ var idx = 0;
 var processing = false;
 var passcnt = 0;
 var failcnt = 0;
+page.onConsoleMessage = function(msg, lineNum, sourceId) {
+	console.log('#CONSOLE: ' + msg);
+};
 
 page.onLoadStarted = function() {
     processing = true;
 //    console.log('# [' + filelist[idx] + '] Loading Started...');
 };
 
+var resEvaluate;
 page.onLoadFinished = function() {
-    var result = page.evaluate(function(acceptCSSList, acceptTagList, acceptValues, includes) {
+    resEvaluate = page.evaluate(function(acceptCSSList, acceptTagList, acceptValues, includes) {
         Array.prototype.includes = includes;
-        var usedCSSList = {};
-        var usedTagList = {};
-        var styleTags = document.getElementsByTagName("style");
         var changePropName = function(prop, nextprop) {
             if (!nextprop) return prop;
             if (prop == "overflow-x" && nextprop.trim() == "overflow-y")
@@ -183,35 +184,7 @@ page.onLoadFinished = function() {
                 prop = "background-repeat";
             return prop;
         }
-        for (var i = 0; i < styleTags.length; i++) {
-            if (!styleTags[i] || !styleTags[i].sheet) continue;
-            var rules = styleTags[i].sheet.cssRules;
-            for (var j = 0; j < rules.length; j++) {
-                if (!rules[j] || rules[j].constructor != CSSStyleRule) return false;
-                if (rules[j].selectorText.indexOf(':') != -1 && rules[j].selectorText.indexOf(':active') == -1)
-                    return false;
-                if (rules[j].style.cssText.indexOf('!important') != -1 || rules[j].style.cssText.indexOf('! important') != -1)
-                    return false;
-                for (var k = 0; k < rules[j].style.length; k++) {
-                    var prop = rules[j].style[k].trim();
-                    if ((prop == "background-attachment") || (prop == "background-clip")
-                            || (prop == "background-origin") || (prop == "background-position")
-                       ) {
-                        if (rules[j].style[prop].trim() == "initial")
-                            continue;
-                    }
-                    var newprop = changePropName(prop, rules[j].style[k+1]);
-                    if (prop != newprop) k++;
-                    if (!acceptCSSList.includes(newprop))
-                        return ["CSS", newprop];
-                    if (newprop in acceptValues) {
-                        var val = rules[j].style[prop];
-                        if (!acceptValues[newprop].includes(val))
-                            return ["CSS-Value", val];
-                    }
-                }
-            }
-        }
+
         var allTags = document.getElementsByTagName("*");
         for (var i = 0; i < allTags.length; i++) {
             if (!acceptTagList.includes(allTags[i].localName))
@@ -240,43 +213,138 @@ page.onLoadFinished = function() {
                     }
                 }
             }
-            usedTagList[allTags[i].localName] = 1;
         }
-        return true;
+        var styleFiltering = function() {
+            var styleTags = document.getElementsByTagName("style");
+            for (var i = 0; i < styleTags.length; i++) {
+                if (!styleTags[i] || !styleTags[i].sheet) continue;
+                var rules = styleTags[i].sheet.cssRules;
+                for (var j = 0; j < rules.length; j++) {
+                    if (!rules[j] || rules[j].constructor != CSSStyleRule) return false;
+                    if (rules[j].selectorText.indexOf(':') != -1 && rules[j].selectorText.indexOf(':active') == -1)
+                        return false;
+                    if (rules[j].style.cssText.indexOf('!important') != -1 || rules[j].style.cssText.indexOf('! important') != -1)
+                        return false;
+                    for (var k = 0; k < rules[j].style.length; k++) {
+                        var prop = rules[j].style[k].trim();
+                        if ((prop == "background-attachment") || (prop == "background-clip")
+                                || (prop == "background-origin") || (prop == "background-position")
+                           ) {
+                            if (rules[j].style[prop].trim() == "initial")
+                                continue;
+                        }
+                        var newprop = changePropName(prop, rules[j].style[k+1]);
+                        if (prop != newprop) k++;
+                        if (!acceptCSSList.includes(newprop))
+                            return ["CSS", newprop];
+                        if (newprop in acceptValues) {
+                            var val = rules[j].style[prop];
+                            if (!acceptValues[newprop].includes(val))
+                                return ["CSS-Value", val];
+                        }
+                    }
+                }
+            }
+            return true;
+        };
+        // NOTE: COPY from html2xml/index.html
+        var d = document.createElement("script");
+        var res;
+        d.onload = function() {
+            var resCnt = 0;
+            var links = document.querySelectorAll("link")
+
+            for (var i = 0; i < links.length; i ++) {
+                // <link rel="stylesheet" href="/lib/w3.css">
+                if (links[i].getAttribute("rel") == "stylesheet") {
+                    resCnt++;
+                    function result(rr) {
+                        // console.log("ajax result")
+                        console.log("----------" + rr)
+                        links[arguments.callee.i].outerHTML = "<style>"
+                            + rr +
+                            "</style>";
+                        resCnt--;
+                    }
+                    result.i = i;
+                    var url = links[i].getAttribute("href");
+
+                    var point;
+                    if (window.point) {
+                        point = window.point;
+                    } else {
+                        point = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + "/"
+                    }
+                    url = "file://" + point + url;
+                    $.ajax({async: false, type:"GET", url: url, success: result, error: function (error) {
+                         console.log("ajax error")
+                        // console.log(arguments[0])
+                        // console.log(arguments[1])
+                        // console.log(arguments[2])
+                        resCnt--;
+                    }});
+                }
+            }
+            // console.log( document.getElementsByTagName("style").length );
+            document.result = styleFiltering();
+            console.log("(result)"+document.result);
+        }
+        d.src = "https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js";
+        document.body.appendChild(d);
+        document.result = undefined;
+
     }, acceptCSSList, acceptTagList, acceptValues, Array.prototype.includes);
     //console.log(JSON.stringify(result));
-    var check = function(res) {
-        if (res == false) {
-            console.log("## [ETC] rule or pseudo selector is NOT Supported");
-            return false;
-        }
-        if (res != true) {
-            console.log("## [" + res[0] + "] " + res[1] + " is NOT Supported");
-            return false;
-        }
-        return true;
-    };
-    if (check(result)) {
-        passcnt++;
-        console.log(filelist[idx]);
-    } else {
-        failcnt++;
-        console.log("# " + filelist[idx] + " Not Passed..");
-    }
-    idx++;
-    processing = false;
 };
 
+var check = function(res) {
+    if (res == false) {
+        console.log("## [ETC] rule or pseudo selector is NOT Supported");
+        return false;
+    }
+    if (res != true) {
+        console.log("## [" + res[0] + "] " + res[1] + " is NOT Supported");
+        return false;
+    }
+    return true;
+};
+var started = true;
 setInterval(function() {
+    if (resEvaluate == undefined) {
+        var $ = page.evaluate(function(){return window.$})
+        if ($) {
+            resEvaluate = page.evaluate(function(){ return document.result });
+        }
+    }
+
+    if (resEvaluate != undefined) {
+        if (check(resEvaluate)) {
+            passcnt++;
+            console.log(filelist[idx]);
+        } else {
+            failcnt++;
+            console.log("# " + filelist[idx] + " Not Passed..");
+        }
+        processing = false;
+        idx++;
+    }
+    
   if (!processing && idx < filelist.length) {
     var file = filelist[idx];
-//    console.log(file);
-    page.open(file);
+    if (started || resEvaluate != undefined) {
+//        console.log(file);
+        page.open(file);
+        started = false;
+    }
   } else if (idx == filelist.length) {
-    console.log(" ### Fail: " + failcnt + " tests");
-    console.log(" ### Pass: " + passcnt + " tests");
-    console.log(" ### TOTAL: " + (passcnt + failcnt) + " tests");
-    phantom.exit();
+//      console.log(resEvaluate);
+    if (resEvaluate || $) {
+        console.log(" ### Fail: " + failcnt + " tests");
+        console.log(" ### Pass: " + passcnt + " tests");
+        console.log(" ### TOTAL: " + (passcnt + failcnt) + " tests");
+        phantom.exit();
+    }
   }
-}, 250);
+  resEvaluate = undefined;
+}, 500);
 
