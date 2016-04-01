@@ -2256,6 +2256,11 @@ policies and contribution forms [3].
 
         }
         html += "</tbody></table>";
+        try {
+            wptTestEnd();
+        } catch(e) {
+            console.log(e)
+        }
         // XXX: skip below
         /*
         try {
