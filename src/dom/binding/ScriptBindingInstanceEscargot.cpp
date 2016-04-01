@@ -2361,19 +2361,46 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
         auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
 
-        if (argCount == 1 && firstArg.isESString()) {
-            auto event = new Event(QualifiedName::fromString(sf, firstArg.asESString()->utf8Data()));
-            return event->scriptValue();
-        } else if (argCount == 2 && firstArg.isESString() && secondArg.isObject()) {
-            auto bubbles = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("bubbles"));
-            auto cancelable = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("cancelable"));
-            auto canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : false;
-            auto canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : false;
-            auto event = new Event(QualifiedName::fromString(sf, firstArg.asESString()->utf8Data()), EventInit(canBubbles, canCancelable));
+        if (argCount == 0) {
+            auto msg = escargot::ESString::create("Failed to construct 'Event': 1 argument required, but only 0 present.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        } else if (argCount == 1) {
+            escargot::ESString* type;
+            if (firstArg.isESString()) {
+                type = firstArg.asESString();
+            } else if (firstArg.isNumber()) {
+                type = escargot::ESString::create(firstArg.asNumber());
+            } else if (firstArg.isBoolean()) {
+                type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
+            } else if (firstArg.isObject()) {
+                type = escargot::ESString::create("[object Object]");
+            }
+            auto event = new Event(QualifiedName::fromString(sf, type->utf8Data()));
             return event->scriptValue();
         } else {
-            // FIXME: TypeError
-            return escargot::ESValue();
+            if (secondArg.isObject()) {
+                escargot::ESString* type;
+                if (firstArg.isESString()) {
+                    type = firstArg.asESString();
+                } else if (firstArg.isNumber()) {
+                    type = escargot::ESString::create(firstArg.asNumber());
+                } else if (firstArg.isBoolean()) {
+                    type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
+                } else if (firstArg.isObject()) {
+                    type = escargot::ESString::create("[object Object]");
+                }
+                escargot::ESValue bubbles = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("bubbles"));
+                escargot::ESValue cancelable = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("cancelable"));
+                bool canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : false;
+                bool canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : false;
+                auto event = new Event(QualifiedName::fromString(sf, type->utf8Data()), EventInit(canBubbles, canCancelable));
+                return event->scriptValue();
+            } else {
+                escargot::ESString* msg = escargot::ESString::create("Failed to construct 'Event': parameter 2 ('eventInitDict') is not an object.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }
     }, escargot::ESString::create("Event"), 1, true, false);
     eventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
