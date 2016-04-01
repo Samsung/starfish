@@ -1480,7 +1480,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     CharacterDataFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Text, CharacterDataFunction->protoType());
+    DEFINE_FUNCTION(Text, CharacterDataFunction->protoType());
     fetchData(this)->m_text = TextFunction;
 
     /* 4.10 Interface Text */
@@ -1497,7 +1497,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Comment, CharacterDataFunction->protoType());
+    DEFINE_FUNCTION(Comment, CharacterDataFunction->protoType());
     fetchData(this)->m_comment = CommentFunction;
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLElement, ElementFunction->protoType());
