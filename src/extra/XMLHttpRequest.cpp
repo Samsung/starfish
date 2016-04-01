@@ -128,24 +128,24 @@ void XMLHttpRequest::send(String* body)
             int index = 0;
             for (int i = 0; i < maxLen; i++) {
                 if (path[i] == '?') {
-                  path[i] = 0;
-                  bool afterEqual = false;
-                  for (int j = i+1; j < maxLen; j++) {
-                     if (afterEqual) {
-                         if (path[j] != 32) {
-                             if (path[j] != 0) {
-                                 msValue[index] = path[j];
-                             } else {
-                                 break;
-                             }
-                         }
-                     } else if (path[j] == '=') {
-                         afterEqual = true;
-                     }
-                     path[j] = 0;
-                  }
-                  ms = atoi(msValue);
-                  break;
+                    path[i] = 0;
+                    bool afterEqual = false;
+                    for (int j = i+1; j < maxLen; j++) {
+                        if (afterEqual) {
+                            if (path[j] != 32) {
+                                if (path[j] != 0) {
+                                    msValue[index] = path[j];
+                                } else {
+                                    break;
+                                }
+                            }
+                        } else if (path[j] == '=') {
+                            afterEqual = true;
+                        }
+                        path[j] = 0;
+                    }
+                    ms = atoi(msValue);
+                    break;
                 }
             }
 
@@ -364,7 +364,8 @@ String* XMLHttpRequest::getResponseTypeStr()
     return String::emptyString;
 }
 
-void XMLHttpRequest::setRequestHeader(const char* header, const char* value) {
+void XMLHttpRequest::setRequestHeader(const char* header, const char* value)
+{
     if (m_ready_state != OPENED || m_send_flag) {
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     }

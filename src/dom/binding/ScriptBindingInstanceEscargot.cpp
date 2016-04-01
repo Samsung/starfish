@@ -2861,14 +2861,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 if (v.isObject()) {
                     if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject && instance->currentExecutionContext()->argumentCount() == 2) {
                         ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->setRequestHeader(
-                                instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(),
-                                instance->currentExecutionContext()->readArgument(1).toString()->utf8Data());
+                            instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(),
+                            instance->currentExecutionContext()->readArgument(1).toString()->utf8Data());
                     }
                 }
                 return escargot::ESValue(escargot::ESValue::ESNull);
             } catch(DOMException* e) {
-                        escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
     }, escargot::ESString::create("setRequestHeader"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setRequestHeader"), false, false, false, xhrSetRequestHeaderFunction);
