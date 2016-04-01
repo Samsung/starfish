@@ -472,17 +472,11 @@ public:
         }
     }
 
-    // DOMCharacterDataModified
     virtual void didCharacterDataModified(String* before, String* after) { }
-    // DOMNodeInserted
-    virtual void didNodeInserted() { }
-    // DOMNodeInsertedIntoDocument
+    virtual void didNodeInserted(Node* parent, Node* newChild) { }
     virtual void didNodeInsertedToDocumenTree() { }
-    // DOMNodeRemoved
-    virtual void didNodeRemoved() { }
-    // DOMNodeRemovedFromDocument
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) { }
     virtual void didNodeRemovedFromDocumenTree() { }
-    // DOMSubtreeModified
 
     virtual bool dispatchEvent(Event* event) override;
 

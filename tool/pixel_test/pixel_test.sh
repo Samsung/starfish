@@ -55,7 +55,8 @@ for i in $tc ; do
 
     # Capture the screenshot
 #    ELM_ENGINE="shot:" ./StarFish $i --pixel-test > /dev/null 2>&1
-ELM_ENGINE="shot:" ./run.sh ${i} --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
+#ELM_ENGINE="shot:" ./run.sh ${i} --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
+./run.sh ${i} --screen-shot=./out.png --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
 
     # Compare
     mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}

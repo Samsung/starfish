@@ -1,11 +1,22 @@
+<style id="s">
+body { color: red; }
+</style>
 <body>
 asdf
 </body>
 <script>
-document.body.setAttribute("style", ";;display:none")
-console.log(document.body.getAttribute("style"))
-document.body.style.display = "inline"
-console.log(document.body.getAttribute("style"))
-document.body.setAttribute("style", ";;display:block")
-console.log(document.body.getAttribute("style"))
+
+var s = document.getElementById("s")
+
+var style = document.createElement("style")
+style.textContent = "body{ color : blue }"
+
+s.appendChild(style)
+
+var div = document.createElement("div")
+div.textContent = "body{ color : yellow }"
+
+s.appendChild(div)
+
+
 </script>

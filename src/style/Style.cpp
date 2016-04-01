@@ -4715,8 +4715,8 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
                 if (node->asElement()->isHTMLElement()) {
                     if (node->asElement()->asHTMLElement()->isHTMLStyleElement()) {
                         if (node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet()) {
-                            auto sheet = node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet();
-                            auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
+                            auto sheet2 = node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet();
+                            auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet2);
                             STARFISH_ASSERT(iter != m_sheets.end());
                             m_sheets.insert(iter, sheet);
                             added = true;
@@ -4724,8 +4724,8 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
                         }
                     } else if (node->asElement()->asHTMLElement()->isHTMLLinkElement()) {
                         if (node->asElement()->asHTMLElement()->asHTMLLinkElement()->generatedSheet()) {
-                            auto sheet = node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet();
-                            auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
+                            auto sheet2 = node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet();
+                            auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet2);
                             STARFISH_ASSERT(iter != m_sheets.end());
                             m_sheets.insert(iter, sheet);
                             added = true;

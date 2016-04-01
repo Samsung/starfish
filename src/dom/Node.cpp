@@ -427,6 +427,10 @@ Node* Node::appendChild(Node* child)
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
 
+    notifyDOMEventToParentTree(parentNode(), [this, child](Node* parent) {
+        didNodeInserted(this, child);
+    });
+
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(child);
     }
@@ -484,6 +488,10 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     child->setNextSibling(childRef);
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
+
+    notifyDOMEventToParentTree(parentNode(), [this, child](Node* parent) {
+        didNodeInserted(this, child);
+    });
 
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(child);
@@ -593,6 +601,10 @@ Node* Node::removeChild(Node* child)
     if (isInDocumentScope()) {
         notifyNodeRemoveFromDocumentTree(child);
     }
+
+    notifyDOMEventToParentTree(parentNode(), [this, child](Node* parent) {
+        didNodeRemoved(this, child);
+    });
 
     return child;
 }

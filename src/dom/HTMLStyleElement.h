@@ -31,6 +31,8 @@ public:
     virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
+    virtual void didNodeInserted(Node* parent, Node* newChild);
+    virtual void didNodeRemoved(Node* parent, Node* oldChild);
 
     void generateStyleSheet();
     void removeStyleSheet();

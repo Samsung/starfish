@@ -1,7 +1,5 @@
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-08.htm
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createTextNode.html
-test/reftest/web-platform-tests/dom_converted/nodes/Document-doctype.html
-test/reftest/web-platform-tests/dom_converted/nodes/Document-getElementById.html
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-08.htm
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createTextNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-doctype.html
@@ -63,3 +61,8 @@ test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-target-remov
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-target-moved.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-constants.html
 test/reftest/web-platform-tests/dom_converted/nodes/case.html
+test/reftest/web-platform-tests/dom_converted/events/EventTarget-addEventListener.html
+test/reftest/web-platform-tests/dom_converted/events/EventTarget-removeEventListener.html
+test/reftest/web-platform-tests/dom_converted/events/EventTarget-dispatchEvent-returnvalue.html
+test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-bubbles-false.html
+test/reftest/web-platform-tests/dom_converted/interface-objects.html
