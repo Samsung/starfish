@@ -92,10 +92,10 @@ String* toBrowserString(const escargot::ESValue& v)
     // NOTE: input string contains whitecharacters as is, i.e., "\n" is stored as '\','n'
     // The right way is, input string should already have '\n', and white spaces should be removed from here.
     // For time being, we simply remove "\n" and other whitespaces strings.
-    newStr = newStr->replaceAll(String::fromUTF8("\n"), String::spaceString);
-    newStr = newStr->replaceAll(String::fromUTF8("\t"), String::spaceString);
-    newStr = newStr->replaceAll(String::fromUTF8("\f"), String::spaceString);
-    newStr = newStr->replaceAll(String::fromUTF8("\r"), String::spaceString);
+    // newStr = newStr->replaceAll(String::fromUTF8("\n"), String::spaceString);
+    // newStr = newStr->replaceAll(String::fromUTF8("\t"), String::spaceString);
+    // newStr = newStr->replaceAll(String::fromUTF8("\f"), String::spaceString);
+    // newStr = newStr->replaceAll(String::fromUTF8("\r"), String::spaceString);
     return newStr;
 }
 
@@ -1127,14 +1127,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("characterSet"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
+        return escargot::ESString::create("UTF-8");
         },
         NULL, false, false, false);
 
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("charset"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
+        return escargot::ESString::create("UTF-8");
         },
         NULL, false, false, false);
 

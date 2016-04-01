@@ -41,7 +41,7 @@ public:
 
     virtual String* textContent()
     {
-        return String::emptyString;
+        return nullptr;
     }
 
     /* 4.7 Interface DocumentType */

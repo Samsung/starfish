@@ -54,7 +54,9 @@ public:
         }
         String* str = String::createASCIIString("");
         for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
-            str = str->concat(child->textContent());
+            if (child->nodeType() != COMMENT_NODE) {
+                str = str->concat(child->textContent());
+            }
         }
         return str;
     }

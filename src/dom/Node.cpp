@@ -592,12 +592,12 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
             std::string str;
             for (size_t i = 0; i < length; i ++) {
                 if (isWhiteSpaceState) {
-                    if (data[i] != ' ') {
+                    if (data[i] != ' ' && data[i] != '\n' && data[i] != '\t' && data[i] != '\f' && data[i] != '\r') {
                         isWhiteSpaceState = false;
                         str += data[i];
                     }
                 } else {
-                    if (data[i] == ' ') {
+                    if (data[i] == ' ' || data[i] == '\n' || data[i] == '\t' || data[i] == '\f' || data[i] == '\r') {
                         isWhiteSpaceState = true;
 
                         String* tok = String::fromUTF8(str.data(), str.length());

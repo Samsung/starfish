@@ -65,3 +65,4 @@ test/reftest/web-platform-tests/dom_converted/events/EventTarget-removeEventList
 test/reftest/web-platform-tests/dom_converted/events/EventTarget-dispatchEvent-returnvalue.html
 test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-bubbles-false.html
 test/reftest/web-platform-tests/dom_converted/interface-objects.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-properties.html
