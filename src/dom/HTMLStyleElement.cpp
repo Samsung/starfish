@@ -6,6 +6,19 @@
 
 namespace StarFish {
 
+void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
+{
+    if (isInDocumentScope()) {
+        // FIXME
+        // parse style sheet every modified-time is bad idea
+        // should we parse stylesheet in rendering-time?
+        removeStyleSheet();
+        generateStyleSheet();
+    }
+
+
+}
+
 void HTMLStyleElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
@@ -20,11 +33,12 @@ void HTMLStyleElement::didNodeRemovedFromDocumenTree()
 
 void HTMLStyleElement::generateStyleSheet()
 {
+    STARFISH_ASSERT(isInDocumentScope());
     CSSParser parser(document());
-    CSSStyleSheet* sheet = parser.parseStyleSheet(textContent());
+    CSSStyleSheet* sheet = parser.parseStyleSheet(textContent(), this);
     if (sheet) {
         m_generatedSheet = sheet;
-        document()->window()->styleResolver()->addSheet(sheet);
+        document()->styleResolver()->addSheet(sheet);
         document()->window()->setWholeDocumentNeedsStyleRecalc();
     }
 }
@@ -32,7 +46,7 @@ void HTMLStyleElement::generateStyleSheet()
 void HTMLStyleElement::removeStyleSheet()
 {
     if (m_generatedSheet) {
-        document()->window()->styleResolver()->removeSheet(m_generatedSheet);
+        document()->styleResolver()->removeSheet(m_generatedSheet);
         document()->window()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }

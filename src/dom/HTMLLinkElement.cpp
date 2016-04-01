@@ -7,6 +7,16 @@
 
 namespace StarFish {
 
+URL HTMLLinkElement::href()
+{
+    size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
+    if (href != SIZE_MAX) {
+        String* url = getAttribute(href);
+        return URL(url);
+    }
+    return URL();
+}
+
 void HTMLLinkElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
@@ -60,10 +70,10 @@ void HTMLLinkElement::loadStyleSheet()
         fclose(fp);
 
         CSSParser parser(document());
-        CSSStyleSheet* sheet = parser.parseStyleSheet(source, URL(url));
+        CSSStyleSheet* sheet = parser.parseStyleSheet(source, this);
         if (sheet) {
             m_generatedSheet = sheet;
-            document()->window()->styleResolver()->addSheet(sheet);
+            document()->styleResolver()->addSheet(sheet);
             document()->window()->setWholeDocumentNeedsStyleRecalc();
         }
 
@@ -79,7 +89,7 @@ void HTMLLinkElement::loadStyleSheet()
 void HTMLLinkElement::unloadStyleSheetIfExists()
 {
     if (m_generatedSheet) {
-        document()->window()->styleResolver()->removeSheet(m_generatedSheet);
+        document()->styleResolver()->removeSheet(m_generatedSheet);
         document()->window()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }

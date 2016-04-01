@@ -47,6 +47,9 @@
 #include "StarFishConfig.h"
 #include "CSSParser.h"
 
+#include "dom/Element.h"
+#include "dom/Document.h"
+
 #include "Style.h"
 
 namespace StarFish {
@@ -1254,14 +1257,14 @@ bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
     return false;
 }
 
-CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString, const URL& url)
+CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString, Element* origin)
 {
     m_lookAhead = nullptr;
     m_token = nullptr;
     m_preserveWS = false;
     m_preserveComments = false;
     m_scanner = new CSSScanner(sourceString);
-    CSSStyleSheet* sheet = new CSSStyleSheet(url);
+    CSSStyleSheet* sheet = new CSSStyleSheet(origin);
 
     // @charset can only appear at first char of the stylesheet
     CSSToken* token = getToken(false, false);

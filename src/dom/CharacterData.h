@@ -44,9 +44,14 @@ public:
     void setData(String* data)
     {
         STARFISH_ASSERT(data);
+        String* oldData = m_data;
         m_data = data;
 
         setNeedsLayout();
+
+        notifyDOMEventToParentTree(parentNode(), [oldData, data](Node* parent) {
+            parent->didCharacterDataModified(oldData, data);
+        });
     }
 
     size_t length()
@@ -101,7 +106,7 @@ public:
         printf("data:%s ", str.data());
     }
 
-protected:
+private:
     String* m_data;
 };
 }

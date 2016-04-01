@@ -33,6 +33,7 @@
 #include "dom/DOMSettableTokenList.h"
 #include "dom/NamedNodeMap.h"
 #include "dom/Attr.h"
+#include "dom/Traverse.h"
 #include "extra/XMLHttpRequest.h"
 #include "extra/Blob.h"
 

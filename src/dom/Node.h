@@ -462,8 +462,27 @@ public:
     Element* previousElementSibling();
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle);
+
+    template <typename F>
+    void notifyDOMEventToParentTree(Node* parent, const F& fn)
+    {
+        while (parent) {
+            fn(parent);
+            parent = parent->parentNode();
+        }
+    }
+
+    // DOMCharacterDataModified
+    virtual void didCharacterDataModified(String* before, String* after) { }
+    // DOMNodeInserted
+    virtual void didNodeInserted() { }
+    // DOMNodeInsertedIntoDocument
     virtual void didNodeInsertedToDocumenTree() { }
+    // DOMNodeRemoved
+    virtual void didNodeRemoved() { }
+    // DOMNodeRemovedFromDocument
     virtual void didNodeRemovedFromDocumenTree() { }
+    // DOMSubtreeModified
 
     virtual bool dispatchEvent(Event* event) override;
 

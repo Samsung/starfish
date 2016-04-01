@@ -10,11 +10,10 @@ class Window;
 
 class HTMLDocument : public Document {
 public:
-    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance, ComputedStyle* style)
-        : Document(window, scriptBindingInstance, style)
+    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance)
+        : Document(window, scriptBindingInstance)
     {
         initScriptWrappable(this);
-        setStyle(style);
     }
 
 protected:

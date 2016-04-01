@@ -7,12 +7,171 @@
 
 namespace StarFish {
 
-Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, ComputedStyle* style)
+Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
     : Node(this, scriptBindingInstance)
+    , m_styleResolver(*this)
 {
     m_window = window;
     m_scriptBindingInstance = scriptBindingInstance;
-    setStyle(style);
+    setStyle(m_styleResolver.resolveDocumentStyle(window->starFish()));
+
+    CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet(this);
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("html"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("head"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::NoneDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("style"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::NoneDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("script"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::NoneDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("meta"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::NoneDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("body"), CSSStyleRule::PseudoClass::None, document());
+
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("8px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("8px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("8px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("8px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("div"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("p"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("span"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::InlineDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("img"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::InlineDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    m_styleResolver.addSheet(userAgentStyleSheet);
+
     auto df = new FrameDocument(this);
     setFrame(df);
 }
@@ -29,7 +188,7 @@ String* Document::localName()
 
 Node* Document::clone()
 {
-    return new Document(window(), scriptBindingInstance(), style());
+    return new Document(window(), scriptBindingInstance());
 }
 
 Element* Document::getElementById(String* id)

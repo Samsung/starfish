@@ -40,9 +40,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             return;
         } else if (type == 1) {
             const char* name = xmlElement->Attribute("localName");
-            // TODO use document.createElementMethod
             QualifiedName qname = QualifiedName::fromString(document->window()->starFish(), name);
-
             newNode = document->createElement(qname);
 
             STARFISH_ASSERT(newNode);
@@ -61,9 +59,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             }
 
             if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-                if (parentNode) {
-                    parentNode->appendChildForParser(newNode);
-                }
+                parentNode->appendChildForParser(newNode);
 
                 tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
                 while (child) {
@@ -73,6 +69,8 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
                 newNode->asElement()->asHTMLElement()->asHTMLScriptElement()->executeScript();
                 return;
             } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
+                parentNode->appendChildForParser(newNode);
+
                 tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
                 while (child) {
                     fn(newNode, child);

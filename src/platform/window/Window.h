@@ -135,11 +135,6 @@ public:
     void resume();
     void close();
 
-    StyleResolver* styleResolver()
-    {
-        return &m_styleResolver;
-    }
-
     bool hasRootElementBackground()
     {
         return m_hasRootElementBackground;
@@ -176,8 +171,6 @@ protected:
     Window(StarFish* starFish);
     void rendering();
     void paintWindowBackground(Canvas* canvas);
-
-    StyleResolver m_styleResolver;
 
     bool m_inRendering;
     bool m_needsRendering;

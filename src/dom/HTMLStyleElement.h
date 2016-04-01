@@ -28,11 +28,16 @@ public:
         return true;
     }
 
+    virtual void didCharacterDataModified(String* before, String* after);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
 
     void generateStyleSheet();
     void removeStyleSheet();
+    CSSStyleSheet* generatedSheet()
+    {
+        return m_generatedSheet;
+    }
 
 protected:
     CSSStyleSheet* m_generatedSheet;

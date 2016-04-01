@@ -5,9 +5,7 @@
 #include "ComputedStyle.h"
 #include "NamedColors.h"
 
-#include "dom/Element.h"
-#include "dom/Document.h"
-#include "dom/DOMTokenList.h"
+#include "dom/DOM.h"
 
 #include "layout/Frame.h"
 #include "layout/FrameTreeBuilder.h"
@@ -1160,6 +1158,16 @@ String* BorderString(String* width, String* style, String* color)
     }
 
     return sum;
+}
+
+URL CSSStyleSheet::url()
+{
+    if (m_origin) {
+        if (m_origin->isElement() && m_origin->asElement()->isHTMLElement() && m_origin->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+            return m_origin->asElement()->asHTMLElement()->asHTMLLinkElement()->href();
+        }
+    }
+    return URL();
 }
 
 String* CSSStyleDeclaration::generateCSSText()
@@ -4692,6 +4700,45 @@ void StyleResolver::resolveDOMStyle(Document* document, bool force)
         }
         child = child->nextSibling();
     }
+}
+
+void StyleResolver::addSheet(CSSStyleSheet* sheet)
+{
+    Node* origin = sheet->origin();
+    bool originFounded = false;
+    bool added = false;
+    Traverse::findDescendant(&m_document, [&](Node* node) -> bool {
+        if (!originFounded && node == origin) {
+            originFounded = true;
+        } else if (originFounded) {
+            if (node->isElement() && node->asElement()) {
+                if (node->asElement()->isHTMLElement()) {
+                    if (node->asElement()->asHTMLElement()->isHTMLStyleElement()) {
+                        if (node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet()) {
+                            auto sheet = node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet();
+                            auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
+                            STARFISH_ASSERT(iter != m_sheets.end());
+                            m_sheets.insert(iter, sheet);
+                            added = true;
+                            return true;
+                        }
+                    } else if (node->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+                        if (node->asElement()->asHTMLElement()->asHTMLLinkElement()->generatedSheet()) {
+                            auto sheet = node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet();
+                            auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet);
+                            STARFISH_ASSERT(iter != m_sheets.end());
+                            m_sheets.insert(iter, sheet);
+                            added = true;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    });
+    if (!added)
+        m_sheets.push_back(sheet);
 }
 
 void dump(Node* node, unsigned depth)

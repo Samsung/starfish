@@ -19,7 +19,7 @@ enum PageVisibilityState {
 
 class Document : public Node {
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, ComputedStyle* style);
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance);
 public:
     /* 4.2.2. Interface NonElementParentNode */
     Element* getElementById(String* id);
@@ -74,6 +74,11 @@ public:
         return m_window;
     }
 
+    StyleResolver* styleResolver()
+    {
+        return &m_styleResolver;
+    }
+
     ScriptBindingInstance* scriptBindingInstance()
     {
         return m_scriptBindingInstance;
@@ -90,6 +95,7 @@ public:
     void visibilityStateChanged();
 
 protected:
+    StyleResolver m_styleResolver;
     Window* m_window;
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;

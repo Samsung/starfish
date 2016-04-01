@@ -28,6 +28,8 @@ public:
         return true;
     }
 
+    URL href();
+
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
@@ -35,6 +37,10 @@ public:
     void checkLoadStyleSheet();
     void loadStyleSheet();
     void unloadStyleSheetIfExists();
+    CSSStyleSheet* generatedSheet()
+    {
+        return m_generatedSheet;
+    }
 protected:
     CSSStyleSheet* m_generatedSheet;
 };

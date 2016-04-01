@@ -1303,9 +1303,9 @@ class CSSStyleSheet : public gc {
     friend class StyleResolver;
 
 public:
-    CSSStyleSheet(const URL& url = URL())
-        : m_url(url)
+    CSSStyleSheet(Node* origin)
     {
+        m_origin = origin;
     }
 
     void addRule(CSSStyleRule* rule)
@@ -1313,24 +1313,24 @@ public:
         m_rules.push_back(rule);
     }
 
-    const URL& url()
+    URL url();
+    Node* origin()
     {
-        return m_url;
+        return m_origin;
     }
 
 protected:
     std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> > m_rules;
-    URL m_url;
+    Node* m_origin;
 };
 
 class StyleResolver {
 public:
-    void addSheet(CSSStyleSheet* sheet)
+    StyleResolver(Document& document)
+        : m_document(document)
     {
-        STARFISH_ASSERT(sheet);
-        m_sheets.push_back(sheet);
     }
-
+    void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
     {
         STARFISH_ASSERT(std::find(m_sheets.begin(), m_sheets.end(), sheet) != m_sheets.end());
@@ -1344,6 +1344,7 @@ public:
     ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
 
 protected:
+    Document& m_document;
     std::vector<CSSStyleSheet*, gc_allocator<CSSStyleSheet*> > m_sheets;
 };
 }

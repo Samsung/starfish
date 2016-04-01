@@ -374,7 +374,7 @@ Window::Window(StarFish* starFish)
 {
     STARFISH_ASSERT(m_starFish->scriptBindingInstance());
 
-    m_document = new HTMLDocument(this, m_starFish->scriptBindingInstance(), m_styleResolver.resolveDocumentStyle(m_starFish));
+    m_document = new HTMLDocument(this, m_starFish->scriptBindingInstance());
     initScriptWrappable(this);
     m_document->initScriptWrappable(m_document);
     m_timeoutCounter = 0;
@@ -390,163 +390,6 @@ Window::Window(StarFish* starFish)
     m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
-
-    CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet;
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("html"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::BlockDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("head"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::NoneDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("style"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::NoneDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("script"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::NoneDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("meta"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::NoneDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("body"), CSSStyleRule::PseudoClass::None, document());
-
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::BlockDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-
-        pair.setKeyKind(CSSStyleValuePair::MarginTop);
-        pair.setValueKind(CSSStyleValuePair::Length);
-        pair.setLengthValue("8px");
-        rule->styleDeclaration()->addValuePair(pair);
-
-        pair.setKeyKind(CSSStyleValuePair::MarginRight);
-        pair.setValueKind(CSSStyleValuePair::Length);
-        pair.setLengthValue("8px");
-        rule->styleDeclaration()->addValuePair(pair);
-
-        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
-        pair.setValueKind(CSSStyleValuePair::Length);
-        pair.setLengthValue("8px");
-        rule->styleDeclaration()->addValuePair(pair);
-
-        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
-        pair.setValueKind(CSSStyleValuePair::Length);
-        pair.setLengthValue("8px");
-        rule->styleDeclaration()->addValuePair(pair);
-
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("div"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::BlockDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("p"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::BlockDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-
-        pair.setKeyKind(CSSStyleValuePair::MarginTop);
-        pair.setValueKind(CSSStyleValuePair::Length);
-        pair.setLengthValue("1em");
-        rule->styleDeclaration()->addValuePair(pair);
-
-        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
-        pair.setValueKind(CSSStyleValuePair::Length);
-        pair.setLengthValue("1em");
-        rule->styleDeclaration()->addValuePair(pair);
-
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("span"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::InlineDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("img"), CSSStyleRule::PseudoClass::None, document());
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::Display);
-        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
-        CSSStyleValuePair::ValueData data = {0};
-        data.m_display = DisplayValue::InlineDisplayValue;
-        pair.setValue(data);
-        rule->styleDeclaration()->addValuePair(pair);
-        userAgentStyleSheet->addRule(rule);
-    }
-
-    m_styleResolver.addSheet(userAgentStyleSheet);
 
     if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme) {
         m_document->style()->setColor(Color(255, 255, 255, 255));
@@ -684,12 +527,12 @@ void Window::rendering()
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         // resolve style
         Timer t("resolve style");
-        m_styleResolver.resolveDOMStyle(m_document, m_needsStyleRecalcForWholeDocument);
+        document()->styleResolver()->resolveDOMStyle(m_document, m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
 
         if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
             // dump style
-            m_styleResolver.dumpDOMStyle(m_document);
+            document()->styleResolver()->dumpDOMStyle(m_document);
         }
     }
 
