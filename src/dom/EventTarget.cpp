@@ -69,6 +69,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 {
     ASSERT(origin);
 
+    // https://www.w3.org/TR/dom/#dispatching-events
     // 1. Let event be the event that is dispatched.
     // 2. Set event's dispatch flag.
     event->setIsDispatched(true);
@@ -180,8 +181,9 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // 12. Initialize event's currentTarget attribute to null.
     event->setCurrentTarget(nullptr);
 
-    // 13. Return false if event's defaultPrevent is set, and true otherwise.
-    return event->defaultPrevented() ? false : true;
+    // 13. Return false if event's canceled flag is set, and true otherwise.
+    //     Returns true if either event's cancelable attribute value is false or its preventDefault() method was not invoked, and false otherwise.
+    return (event->cancelable() && event->defaultPrevented()) ? false : true;
 }
 
 bool EventTarget::setAttributeEventListener(const QualifiedName& eventType, EventListener* listener)
