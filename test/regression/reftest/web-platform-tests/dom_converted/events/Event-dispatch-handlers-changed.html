@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<!--EDIT-->
+<!--title> Dispatch additional events inside an event listener </title-->
+<!--link rel="help" href="https://dom.spec.whatwg.org/#concept-event-dispatch"-->
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
+<style>
+  #table {
+    display: none;
+  }
+  .col {
+    display: inline-block;
+  }
+  .cell {
+    border: 1px solid black;
+    padding: 0;
+    margin: 1px;
+  }
+</style>
+<div id=log></div>
+
+<div id="table">
+  <div id="table-body">
+    <div class="col" id="parent">
+      <p class="cell">Shady Grove</p>
+      <p class="cell" id="target">Over the river, Charlie</p>
+    </div>
+    <div class="col">
+      <p class="cell">Aeolian</p>
+      <p class="cell">Dorian</p>
+    </div>
+  </div>
+</div>
+
+<script>
+async_test(function() {
+  var event_type = "bar";
+  var target = document.getElementById("target");
+  var parent = document.getElementById("parent");
+  var tbody = document.getElementById("table-body");
+  var table = document.getElementById("table");
+  var body = document.body;
+  var html = document.documentElement;
+  var targets = [window, document, html, body, table, tbody, parent, target];
+  var expected_targets = [
+    window,
+    document,
+    html,
+    body,
+    table,
+    tbody,
+    parent,
+    target,
+    target,
+    parent,
+    tbody,
+    table,
+    body,
+    html,
+    document,
+    window
+  ];
+  var expected_listeners = [0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1];
+
+  var actual_targets = [], actual_listeners = [];
+  var test_event_function = function(i) {
+    return this.step_func(function(evt) {
+      actual_targets.push(evt.currentTarget);
+      actual_listeners.push(i);
+
+      if (evt.eventPhase != evt.BUBBLING_PHASE && evt.currentTarget.foo != 1) {
+        evt.currentTarget.removeEventListener(event_type, event_handlers[0], true);
+        evt.currentTarget.addEventListener(event_type, event_handlers[2], true);
+        evt.currentTarget.foo = 1;
+      }
+
+      if (evt.eventPhase != evt.CAPTURING_PHASE && evt.currentTarget.foo != 3) {
+        evt.currentTarget.removeEventListener(event_type, event_handlers[0], false);
+        evt.currentTarget.addEventListener(event_type, event_handlers[3], false);
+        evt.currentTarget.foo = 3;
+      }
+    });
+  }.bind(this);
+  var event_handlers = [
+    test_event_function(0),
+    test_event_function(1),
+    test_event_function(2),
+    test_event_function(3),
+  ];
+
+  for (var i = 0; i < targets.length; ++i) {
+    targets[i].addEventListener(event_type, event_handlers[0], true);
+    targets[i].addEventListener(event_type, event_handlers[1], false);
+  }
+
+  // EDIT
+  // var evt = document.createEvent("Event");
+  // evt.initEvent(event_type, true, true);
+  var evt = new Event(event_type, {"bubbles":true, "cancelable":true});
+  
+  target.dispatchEvent(evt);
+
+  assert_array_equals(actual_targets, expected_targets, "actual_targets");
+  assert_array_equals(actual_listeners, expected_listeners, "actual_listeners");
+
+  this.done();
+});
+</script>
