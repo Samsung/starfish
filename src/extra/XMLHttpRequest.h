@@ -116,6 +116,7 @@ public:
     void send(String* body);
     void callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total, int readyState = -1);
 
+    void setRequestHeader(const char* header, const char* value);
     void setResponseHeader(String* responseHeader)
     {
         m_response_header = responseHeader;

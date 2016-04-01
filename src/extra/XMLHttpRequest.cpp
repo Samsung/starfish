@@ -114,10 +114,40 @@ void XMLHttpRequest::send(String* body)
             res_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
         } else {
-            char path[1000];
+            const int maxLen = 1000;
+            char path[maxLen];
             strcpy(path, xhrobj->m_starfish->currentPath()->utf8Data());
-            path[xhrobj->m_starfish->currentPath()->length()] = '/';
-            strcpy(path+xhrobj->m_starfish->currentPath()->length()+1, url);
+            int currentLen = xhrobj->m_starfish->currentPath()->length();
+            if (path[currentLen - 1] != '/') {
+                path[currentLen] = '/';
+                currentLen++;
+            }
+            strcpy(path+currentLen, url);
+            int ms = -1;
+            char msValue[100];
+            int index = 0;
+            for (int i = 0; i < maxLen; i++) {
+                if (path[i] == '?') {
+                  path[i] = 0;
+                  bool afterEqual = false;
+                  for (int j = i+1; j < maxLen; j++) {
+                     if (afterEqual) {
+                         if (path[j] != 32) {
+                             if (path[j] != 0) {
+                                 msValue[index] = path[j];
+                             } else {
+                                 break;
+                             }
+                         }
+                     } else if (path[j] == '=') {
+                         afterEqual = true;
+                     }
+                     path[j] = 0;
+                  }
+                  ms = atoi(msValue);
+                  break;
+                }
+            }
 
             int fd;
             if (0 < (fd = open(path, O_RDONLY))) {
@@ -327,6 +357,12 @@ String* XMLHttpRequest::getResponseTypeStr()
         return String::emptyString;
     }
     return String::emptyString;
+}
+
+void XMLHttpRequest::setRequestHeader(const char* header, const char* value) {
+    if (m_ready_state != OPENED || m_send_flag) {
+        throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
+    }
 }
 
 void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total, int readyState)
