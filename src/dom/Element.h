@@ -114,7 +114,16 @@ public:
         return false;
     }
 
+    // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
     size_t hasAttribute(QualifiedName name);
+    size_t attributeCount() const
+    {
+        return m_attributes.size();
+    }
+    QualifiedName getAttributeName(size_t t)
+    {
+        return m_attributes[t].name();
+    }
     String* getAttribute(QualifiedName name)
     {
         size_t siz = hasAttribute(name);
@@ -125,6 +134,12 @@ public:
     String* getAttribute(size_t pos);
     void setAttribute(QualifiedName name, String* value);
     void removeAttribute(QualifiedName name);
+
+    // DO NOT MODIFY ATTRIBUTE
+    const Attribute& attributeData(QualifiedName name)
+    {
+        return m_attributes[hasAttribute(name)];
+    }
 
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
 
@@ -142,8 +157,11 @@ public:
         printf("className:%s", className.data());
     }
 
-    std::vector<Attribute, gc_allocator<Attribute> >* getAttributes() { return &m_attributes; }
-
+    void notifyInlineStyleChanged()
+    {
+        setNeedsStyleRecalc();
+        m_didInlineStyleModifiedAfterAttributeSet = true;
+    }
 
     /* Other than DOM API */
     bool hasSameAttributes(Element* otherNode)
@@ -152,7 +170,7 @@ public:
             return false;
         }
 
-        for (Attribute& attr : *(otherNode->getAttributes())) {
+        for (const Attribute& attr : *(otherNode->getAttributes())) {
             if (!getAttribute(attr.name())->equals(attr.value())) {
                 return false;
             }
@@ -161,17 +179,19 @@ public:
     }
 
 protected:
+    // DO NOT MODIFY ATTRIBUTES.
+    const AttributeVector* getAttributes() { return (AttributeVector*)&m_attributes; }
     virtual Node* clone();
-
-    std::vector<Attribute, gc_allocator<Attribute> > m_attributes;
 
     String* m_id;
     String* m_className;
-    std::vector<String*, gc_allocator<String*> > m_classNames;
+    std::vector<String*, gc_allocator<String*>> m_classNames;
     String* m_namespace;
     String* m_namespacePrefix;
 
     CSSStyleDeclaration* m_inlineStyle;
+private:
+    AttributeVector m_attributes;
 };
 }
 

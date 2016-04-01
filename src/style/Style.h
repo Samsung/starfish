@@ -312,7 +312,6 @@ enum VisibilityValue {
 class ValueList;
 class CSSStyleDeclaration;
 
-// TODO add opacity
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
     F(Color, color, "color")                                       \
     F(Direction, direction, "direction")                           \
@@ -681,6 +680,8 @@ public:
         m_keyKind = kind;
     }
 
+    String* keyName();
+
     ValueKind valueKind()
     {
         return m_valueKind;
@@ -939,7 +940,7 @@ public:
         else if (kind == CSSStyleValuePair::ValueKind::StringValueKind)
             return data.m_stringValue;
         else
-            return nullptr;
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     String* toString();
@@ -1112,6 +1113,17 @@ public:
     {
         return m_document;
     }
+
+    CSSStyleDeclaration* clone(Document* document, Element* element)
+    {
+        CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(document, element);
+        newStyle->m_cssValues = m_cssValues;
+
+        return newStyle;
+    }
+
+    String* generateCSSText();
+
 
     void notifyNeedsStyleRecalc();
 

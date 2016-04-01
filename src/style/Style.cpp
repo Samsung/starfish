@@ -234,6 +234,120 @@ Length convertPercentOrNumberToLength(CSSStyleValuePair::ValueKind kind, CSSStyl
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
+String* CSSStyleValuePair::keyName()
+{
+    switch (m_keyKind) {
+    case Display:
+        return String::createASCIIString("display");
+    case Position:
+        return String::createASCIIString("position");
+    case Width:
+        return String::createASCIIString("width");
+    case Height:
+        return String::createASCIIString("height");
+    case Color:
+        return String::createASCIIString("color");
+    case FontSize:
+        return String::createASCIIString("font-size");
+    case FontStyle:
+        return String::createASCIIString("font-style");
+    case FontWeight:
+        return String::createASCIIString("font-weight");
+    case VerticalAlign:
+        return String::createASCIIString("vertical-align");
+    case TextAlign:
+        return String::createASCIIString("text-align");
+    case TextDecoration:
+        return String::createASCIIString("text-decoration");
+    case TextOverflow:
+        return String::createASCIIString("text-overflow");
+    case Transform:
+        return String::createASCIIString("transform");
+    case TransformOrigin:
+        return String::createASCIIString("transform-origin");
+    case LetterSpacing:
+        return String::createASCIIString("letter-spacing");
+    case Direction:
+        return String::createASCIIString("direction");
+    case BackgroundColor:
+        return String::createASCIIString("background-color");
+    case BackgroundImage:
+        return String::createASCIIString("background-image");
+    case BackgroundSize:
+        return String::createASCIIString("background-size");
+    case BackgroundRepeatX:
+        return String::createASCIIString("background-repeat-x");
+    case BackgroundRepeatY:
+        return String::createASCIIString("background-repeat-y");
+    case Top:
+        return String::createASCIIString("top");
+    case Right:
+        return String::createASCIIString("right");
+    case Bottom:
+        return String::createASCIIString("bottom");
+    case Left:
+        return String::createASCIIString("left");
+    case LineHeight:
+        return String::createASCIIString("line-height");
+    case BorderTopColor:
+        return String::createASCIIString("border-top-color");
+    case BorderRightColor:
+        return String::createASCIIString("border-right-color");
+    case BorderBottomColor:
+        return String::createASCIIString("border-bottom-color");
+    case BorderLeftColor:
+        return String::createASCIIString("border-left-color");
+    case BorderImageRepeat:
+        return String::createASCIIString("border-image-repeat");
+    case BorderImageSlice:
+        return String::createASCIIString("border-image-slice");
+    case BorderImageSource:
+        return String::createASCIIString("border-image-source");
+    case BorderImageWidth:
+        return String::createASCIIString("border-image-width");
+    case BorderTopStyle:
+        return String::createASCIIString("border-top-style");
+    case BorderRightStyle:
+        return String::createASCIIString("border-right-style");
+    case BorderBottomStyle:
+        return String::createASCIIString("border-bottom-style");
+    case BorderLeftStyle:
+        return String::createASCIIString("border-left-style");
+    case BorderTopWidth:
+        return String::createASCIIString("border-top-width");
+    case BorderRightWidth:
+        return String::createASCIIString("border-right-width");
+    case BorderBottomWidth:
+        return String::createASCIIString("border-bottom-width");
+    case MarginTop:
+        return String::createASCIIString("margin-top");
+    case MarginBottom:
+        return String::createASCIIString("margin-bottom");
+    case MarginRight:
+        return String::createASCIIString("margin-right");
+    case MarginLeft:
+        return String::createASCIIString("margin-left");
+    case PaddingTop:
+        return String::createASCIIString("padding-top");
+    case PaddingRight:
+        return String::createASCIIString("padding-right");
+    case PaddingBottom:
+        return String::createASCIIString("padding-bottom");
+    case PaddingLeft:
+        return String::createASCIIString("padding-left");
+    case Opacity:
+        return String::createASCIIString("opacity");
+    case OverflowX:
+        return String::createASCIIString("overflow");
+    case Visibility:
+        return String::createASCIIString("visibility");
+    case ZIndex:
+        return String::createASCIIString("z-index");
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
 void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
@@ -1046,6 +1160,18 @@ String* BorderString(String* width, String* style, String* color)
     }
 
     return sum;
+}
+
+String* CSSStyleDeclaration::generateCSSText()
+{
+    String* txt = String::emptyString;
+    for (size_t i = 0; i < m_cssValues.size(); i++) {
+        txt = txt->concat(m_cssValues[i].keyName());
+        txt = txt->concat(String::createASCIIString(":"));
+        txt = txt->concat(m_cssValues[i].toString());
+        txt = txt->concat(String::createASCIIString(";"));
+    }
+    return txt;
 }
 
 String* CSSStyleDeclaration::Border()
@@ -3328,7 +3454,7 @@ bool CSSStyleDeclaration::checkInputErrorTransformOrigin(std::vector<String*, gc
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
 {
     if (m_element)
-        m_element->setNeedsStyleRecalc();
+        m_element->notifyInlineStyleChanged();
 }
 
 ComputedStyle* StyleResolver::resolveDocumentStyle(StarFish* sf)

@@ -65,6 +65,8 @@ protected:
         m_needsFrameTreeBuild = true;
         m_childNeedsFrameTreeBuild = true;
 
+        m_didInlineStyleModifiedAfterAttributeSet = false;
+
         m_style = nullptr;
         m_frame = nullptr;
         m_baseUri = String::emptyString; // need to set by the parser
@@ -481,6 +483,9 @@ protected:
     bool m_childNeedsStyleRecalc : 1;
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;
+
+    // for element
+    bool m_didInlineStyleModifiedAfterAttributeSet : 1;
 
     Document* m_document;
     NodeState m_state;

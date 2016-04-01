@@ -9,18 +9,18 @@ namespace StarFish {
 
 unsigned long NamedNodeMap::length()
 {
-    return m_element->getAttributes()->size(); // The localName have to be excepted
+    return m_element->attributeCount(); // The localName have to be excepted
 }
 
 Attr* NamedNodeMap::item(unsigned long index)
 {
     // The localName is considered
-    if (index < m_element->getAttributes()->size()) {
-        Attribute attr = m_element->getAttributes()->at(index);
-        return new Attr(m_element->document(), m_instance, m_element, attr.name());
+    if (index < m_element->attributeCount()) {
+        return new Attr(m_element->document(), m_instance, m_element, m_element->getAttributeName(index));
     } else
         return nullptr;
 }
+
 Attr* NamedNodeMap::getNamedItem(QualifiedName name)
 {
     if (m_element->getAttribute(name) != String::emptyString)

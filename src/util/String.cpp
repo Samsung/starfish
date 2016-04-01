@@ -111,7 +111,7 @@ size_t utf32ToUtf8(char32_t uc, char* UTF8)
 const char* utf32ToUtf8(const char32_t* t, const size_t& len, size_t* bufferSize = NULL)
 {
     unsigned strLength = 0;
-    char buffer[MB_CUR_MAX];
+    char buffer[8];
     for (size_t i = 0; i < len; i++) {
         int length = utf32ToUtf8(t[i], buffer);
         strLength += length;

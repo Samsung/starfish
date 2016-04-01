@@ -69,9 +69,20 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         DOMTokenList::tokenize(&m_classNames, value);
         setNeedsStyleRecalc();
     } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
+        if (old->equals(String::emptyString)) {
+            attributeData(name).registerGetterCallback(this, [](Element* element, const Attribute * const attr) -> String* {
+                if (element->m_didInlineStyleModifiedAfterAttributeSet) {
+                    return element->inlineStyle()->generateCSSText();
+                } else {
+                    return attr->valueWithoutCheckGetter();
+                }
+                return String::emptyString;
+            });
+        }
         inlineStyle()->clear();
         CSSParser parser(document());
         parser.parseStyleDeclaration(value, inlineStyle());
+        m_didInlineStyleModifiedAfterAttributeSet = false;
     }
 }
 
@@ -113,7 +124,7 @@ Node* Element::clone()
 
     STARFISH_ASSERT(newNode);
 
-    for (Attribute& attr : m_attributes) {
+    for (const Attribute& attr : m_attributes) {
         newNode->setAttribute(attr.name(), attr.value());
     }
     newNode->m_id = m_id;
@@ -123,7 +134,7 @@ Node* Element::clone()
     }
     newNode->m_namespace = m_namespace;
     newNode->m_namespacePrefix = m_namespacePrefix;
-    newNode->m_inlineStyle = m_inlineStyle; // FIXME: need to dup inline style
+    newNode->m_inlineStyle = m_inlineStyle->clone(document(), newNode);
 
     return newNode;
 }
