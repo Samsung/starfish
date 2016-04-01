@@ -40,6 +40,8 @@ void Element::setAttribute(QualifiedName name, String* value)
 {
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
+        if (!QualifiedName::checkNameProductionRule(name.string(), name.string()->length()))
+            throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
         m_attributes.push_back(Attribute(name, value));
         didAttributeChanged(name, String::emptyString, value);
     } else {
