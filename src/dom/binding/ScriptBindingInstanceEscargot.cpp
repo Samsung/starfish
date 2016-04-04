@@ -2010,8 +2010,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
             if (elem != nullptr)
                 return toJSString(elem);
-        } else {
-            THROW_ILLEGAL_INVOCATION()
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("item"), 1, false);
@@ -2113,6 +2111,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                     str = str->concat(String::spaceString)->concat(elem);
             }
         }
+        if (str->length() == 0)
+            str = String::fromUTF8(" ");
         return toJSString(str);
     }, escargot::ESString::create("toString"), 1, false);
     DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, domTokenListToStringFunction);
