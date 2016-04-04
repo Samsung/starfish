@@ -31,6 +31,7 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-siblingElement-null-
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-01.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-02.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-03.htm
+test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-04.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-06.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-07.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-08.htm
