@@ -2020,12 +2020,19 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESString* argStr = nullptr;
         if (argValue.isESString()) {
-            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argValue.asESString()));
-            return escargot::ESValue(res);
+            argStr = argValue.asESString();
         } else {
-            THROW_ILLEGAL_INVOCATION()
+            argStr = argValue.toString();
         }
+        if (argStr->length() == 0) {
+            auto sbi = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish()->scriptBindingInstance();
+            escargot::ESVMInstance::currentInstance()->throwError((new DOMException(sbi, DOMException::SYNTAX_ERR))->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argStr));
+        return escargot::ESValue(res);
     }, escargot::ESString::create("contains"), 1, false);
     DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("contains"), false, false, false, domTokenListContainsFunction);
 
@@ -2037,12 +2044,19 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         int argCount = instance->currentExecutionContext()->argumentCount();
         for (int i = 0; i < argCount; i++) {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+            escargot::ESString* argStr = nullptr;
             if (argValue.isESString()) {
-                String* aa = toBrowserString(argValue.asESString());
-                tokens.push_back(aa);
+                argStr = argValue.asESString();
             } else {
-                THROW_ILLEGAL_INVOCATION()
+                argStr = argValue.toString();
             }
+            if (argStr->length() == 0) {
+                auto sbi = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish()->scriptBindingInstance();
+                escargot::ESVMInstance::currentInstance()->throwError((new DOMException(sbi, DOMException::SYNTAX_ERR))->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            String* aa = toBrowserString(argStr);
+            tokens.push_back(aa);
         }
         if (argCount > 0)
             ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->add(&tokens);
@@ -2058,12 +2072,19 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         int argCount = instance->currentExecutionContext()->argumentCount();
         for (int i = 0; i < argCount; i++) {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+            escargot::ESString* argStr = nullptr;
             if (argValue.isESString()) {
-                String* aa = toBrowserString(argValue.asESString());
-                tokens.push_back(aa);
+                argStr = argValue.asESString();
             } else {
-                THROW_ILLEGAL_INVOCATION()
+                argStr = argValue.toString();
             }
+            if (argStr->length() == 0) {
+                auto sbi = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish()->scriptBindingInstance();
+                escargot::ESVMInstance::currentInstance()->throwError((new DOMException(sbi, DOMException::SYNTAX_ERR))->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            String* aa = toBrowserString(argStr);
+            tokens.push_back(aa);
         }
         if (argCount > 0)
             ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
@@ -2080,13 +2101,24 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue forceValue;
         if (argCount >= 2)
             forceValue = instance->currentExecutionContext()->readArgument(1);
-        if (argCount > 0 && argValue.isESString()) {
+        if (argCount > 0) {
+            escargot::ESString* argStr = nullptr;
+            if (argValue.isESString()) {
+                argStr = argValue.asESString();
+            } else {
+                argStr = argValue.toString();
+            }
+            if (argStr->length() == 0) {
+                auto sbi = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish()->scriptBindingInstance();
+                escargot::ESVMInstance::currentInstance()->throwError((new DOMException(sbi, DOMException::SYNTAX_ERR))->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
             bool didAdd;
             if (argCount == 1) {
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), false, false);
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
             } else {
                 ASSERT(forceValue.isBoolean());
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), true, forceValue.asBoolean());
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), true, forceValue.asBoolean());
             }
             return escargot::ESValue(didAdd);
         } else {

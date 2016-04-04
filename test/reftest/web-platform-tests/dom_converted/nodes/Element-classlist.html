@@ -86,7 +86,6 @@ test(function () {
 test(function () {
   assert_throws( 'SYNTAX_ERR', function () { elem.classList.contains(''); } );
 }, '.contains(empty_string) must throw a SYNTAX_ERR');
-/*
 test(function () {
   assert_throws( 'SYNTAX_ERR', function () { elem.classList.add(''); } );
 }, '.add(empty_string) must throw a SYNTAX_ERR');
@@ -96,6 +95,7 @@ test(function () {
 test(function () {
   assert_throws( 'SYNTAX_ERR', function () { elem.classList.toggle(''); } );
 }, '.toggle(empty_string) must throw a SYNTAX_ERR');
+/*
 test(function () {
   assert_throws( 'INVALID_CHARACTER_ERR', function () { elem.classList.contains('a b'); } );
 }, '.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
