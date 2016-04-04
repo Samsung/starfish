@@ -72,6 +72,7 @@ bool Node::isEqualNode(Node* other)
             && thisNode->systemId()->equals(otherNode->systemId()))) {
             return false;
         }
+        break;
     }
     case ELEMENT_NODE: {
         Element* thisNode = asElement();
@@ -82,16 +83,20 @@ bool Node::isEqualNode(Node* other)
             && thisNode->hasSameAttributes(otherNode))) {
             return false;
         }
+        break;
     }
     case PROCESSING_INSTRUCTION_NODE:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        break;
     case TEXT_NODE:
     case COMMENT_NODE:
         if (!nodeValue()->equals(other->nodeValue())) {
             return false;
         }
+        break;
     default: {
         // for any other node, do nothing
+        break;
     }
     }
 

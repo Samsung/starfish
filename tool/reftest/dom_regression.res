@@ -50,6 +50,7 @@ test/reftest/web-platform-tests/dom_converted/nodes/Node-nodeValue.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-parentElement.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-parentNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-childNodes.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-isEqualNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-removeChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-replaceChild.html
 test/reftest/web-platform-tests/dom_converted/events/Event-defaultPrevented.html
