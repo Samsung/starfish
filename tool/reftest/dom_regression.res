@@ -24,6 +24,7 @@ test/reftest/web-platform-tests/dom_converted/nodes/Element-firstElementChild-xh
 test/reftest/web-platform-tests/dom_converted/nodes/Element-lastElementChild-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-nextElementSibling-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Element-previousElementSibling-xhtml.xhtml
+test/reftest/web-platform-tests/dom_converted/nodes/Element-remove.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-siblingElement-null.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-siblingElement-null-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-01.htm
