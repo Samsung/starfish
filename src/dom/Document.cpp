@@ -206,8 +206,12 @@ HTMLCollection* Document::getElementsByTagName(String* qualifiedName)
 {
     auto filter = [=](Node* node)
     {
-        if (node->isElement() && node->localName()->equals(qualifiedName))
-            return true;
+        if (node->isElement()){
+            if (node->localName()->equals(qualifiedName))
+                return true;
+            if (qualifiedName->isASCIIString()&&qualifiedName->equals("*"))
+                return true;
+        }
         return false;
     };
     return new HTMLCollection(scriptBindingInstance(), this, filter);
