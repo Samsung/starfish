@@ -3,6 +3,8 @@ test/reftest/web-platform-tests/dom_converted/nodes/CharacterData-data.html
 test/reftest/web-platform-tests/dom_converted/nodes/CharacterData-remove.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createTextNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-doctype.html
+test/reftest/web-platform-tests/dom_converted/nodes/DocumentType-literal.html
+test/reftest/web-platform-tests/dom_converted/nodes/DocumentType-literal-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Document-getElementById.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-childElementCount-dynamic-add.html
