@@ -494,9 +494,17 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
     if (!(isDocument() || isElement())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
     }
-    if (this == child) {
+
+    if (child == this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+    } else {
+        for(Node* c = child; c != nullptr; c = c->parentNode()) {
+            if (c == parentNode()) {
+                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+            }
+        }
     }
+
     if (childRef != nullptr && childRef->parentNode() != this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
     }
@@ -528,9 +536,14 @@ Node* Node::replaceChild(Node* child, Node* childToRemove)
     STARFISH_ASSERT(childToRemove);
     STARFISH_ASSERT(childToRemove->parentNode() == this);
 
-    insertBefore(child, childToRemove);
-    Node* n = removeChild(childToRemove);
-    return n;
+    if (child == childToRemove) {
+        return childToRemove;
+    }
+
+    Node* c = removeChild(child);
+    insertBefore(c, childToRemove);
+    Node* removed = removeChild(childToRemove);
+    return removed;
 }
 
 void notifyNodeRemoveFromDocumentTree(Node* node)
