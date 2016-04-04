@@ -72,7 +72,7 @@ public:
         }
         String* str = String::createASCIIString("");
         for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
-            if (child->nodeType() != COMMENT_NODE) {
+            if (child->nodeType() == TEXT_NODE || child->nodeType() == ELEMENT_NODE) {
                 str = str->concat(child->textContent());
             }
         }

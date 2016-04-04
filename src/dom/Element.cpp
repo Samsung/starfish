@@ -109,8 +109,9 @@ void Element::setTextContent(String* text)
     while (firstChild()) {
         removeChild(firstChild());
     }
-
-    appendChild(node);
+    if (text != nullptr) {
+        appendChild(node);
+    }
 }
 
 Node* Element::clone()

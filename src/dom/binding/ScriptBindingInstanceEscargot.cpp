@@ -522,7 +522,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return toJSString(s);
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        originalObj->setTextContent(toBrowserString(v));
+        String* arg_str = toBrowserString(v);
+        if (v == escargot::ESValue::ESNull || v == escargot::ESValue::ESUndefined || arg_str->equals(String::emptyString))
+            originalObj->setTextContent(nullptr);
+        else
+            originalObj->setTextContent(arg_str);
         return escargot::ESValue();
     });
 

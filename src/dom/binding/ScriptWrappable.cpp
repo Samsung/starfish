@@ -483,7 +483,8 @@ static int utf32ToUtf16(char32_t i, char16_t *u)
 ScriptValue createScriptString(String* str)
 {
     if (str->isASCIIString()) {
-        return escargot::ESString::create(str->utf8Data());
+        ASCIIString s(str->asASCIIString()->begin(), str->asASCIIString()->end());
+        return escargot::ESString::create(std::move(s));
     } else {
         escargot::UTF16String out;
 
