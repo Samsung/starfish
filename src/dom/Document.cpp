@@ -206,7 +206,7 @@ HTMLCollection* Document::getElementsByTagName(String* qualifiedName)
 {
     auto filter = [=](Node* node)
     {
-        if (node->isElement()){
+        if (node->isElement()) {
             if (node->localName()->equals(qualifiedName))
                 return true;
             if (qualifiedName->isASCIIString()&&qualifiedName->equals("*"))

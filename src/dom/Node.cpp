@@ -511,7 +511,7 @@ void Node::validateReplace(Node* child, Node* childToRemove) // node, child
     if (child == this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
     } else {
-        for(Node* p = this; p != nullptr; p = p->parentNode()) {
+        for (Node* p = this; p != nullptr; p = p->parentNode()) {
             if (p == child) {
                 throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
             }

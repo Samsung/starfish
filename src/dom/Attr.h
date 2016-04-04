@@ -9,14 +9,14 @@ class Element;
 class Attr : public Node {
 public:
     Attr(Document* document, ScriptBindingInstance* instance, Element* element, QualifiedName name)
-        : Node(document), m_element(element), m_name(name), m_standAloneValue(nullptr)
+        : Node(document), m_element(element), m_name(name), m_standAloneValue(String::emptyString)
     {
         ScriptWrappable(this);
         initScriptWrappable(this, instance);
     }
 
     Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name)
-        : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(nullptr)
+        : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(String::emptyString)
     {
         ScriptWrappable(this);
         initScriptWrappable(this, instance);

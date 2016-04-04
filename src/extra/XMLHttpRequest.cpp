@@ -407,7 +407,7 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
                 pe->setType(eventType);
                 ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
                 ScriptValue fn = clickListeners->at(i)->scriptValue();
-                if (fn != ScriptValue::ESNull)
+                if (!fn.isNull())
                     callScriptFunction(fn, json_arg, 1, scriptValue());
             }
         }
@@ -440,8 +440,8 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
                         ProgressEvent* pe = new ProgressEvent(this_obj->striptBindingInstance(), pass->loaded, pass->total);
                         ScriptValue json_arg[1] = {ScriptValue(pe->scriptObject())};
                         ScriptValue fn = clickListeners->at(i)->scriptValue();
-                        if (fn != ScriptValue::ESNull)
-                        callScriptFunction(fn, json_arg, 1, this_obj->scriptObject());
+                        if (!fn.isNull())
+                            callScriptFunction(fn, json_arg, 1, this_obj->scriptObject());
                     }
                 }
 

@@ -85,6 +85,33 @@ void ScriptBindingInstance::exit()
         }                                                                             \
     }
 
+#define GENERATE_THIS_AND_CHECK_TYPE(type, destType)                                                \
+    escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();        \
+    {                                                                                               \
+        escargot::ESValue v = thisValue;                                                            \
+        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) {               \
+            THROW_ILLEGAL_INVOCATION()                                                              \
+        }                                                                                           \
+    }                                                                                               \
+    destType* originalObj = (destType*)(thisValue.asESPointer()->asESObject()->extraPointerData()); \
+    escargot::ESValue v = instance->currentExecutionContext()->readArgument(0);                     \
+
+void defineNativeAccessorPropertyButNeedToGenerateJSFunction(escargot::ESObject* obj, escargot::ESString* propertyName,
+    escargot::NativeFunctionType getter, escargot::NativeFunctionType setter)
+{
+    bool isWritable = setter;
+    bool isEnumerable = true;
+    bool isConfigurable = true;
+
+    escargot::ESPropertyAccessorData* accData = new escargot::ESPropertyAccessorData();
+    accData->setJSGetter(escargot::ESFunctionObject::create(nullptr, getter, escargot::ESVMInstance::currentInstance()->strings().emptyString, 0, false, false));
+    if (setter) {
+        accData->setJSSetter(escargot::ESFunctionObject::create(nullptr, setter, escargot::ESVMInstance::currentInstance()->strings().emptyString, 1, false, false));
+    }
+    obj->defineAccessorProperty(propertyName, accData, isWritable, isEnumerable, isConfigurable);
+}
+
+
 String* toBrowserString(const escargot::ESValue& v)
 {
     escargot::NullableUTF8String s = v.toString()->toNullableUTF8String();
@@ -357,148 +384,147 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeType"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        unsigned short nodeType = ((Node *)originalObj->extraPointerData())->nodeType();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeType"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        unsigned short nodeType = originalObj->nodeType();
         return escargot::ESValue(nodeType);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeName"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* nodeName = ((Node *)originalObj->extraPointerData())->nodeName();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeName"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        String* nodeName = originalObj->nodeName();
         return toJSString(nodeName);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("baseURI"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* uri = ((Node *)originalObj->extraPointerData())->baseURI();
-        return toJSString(uri);
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("baseURI"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        String* nodeName = originalObj->baseURI();
+        return toJSString(nodeName);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ownerDocument"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Document* doc = ((Node *)originalObj->extraPointerData())->ownerDocument();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("ownerDocument"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Document* doc = originalObj->ownerDocument();
         if (doc == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
         return doc->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("parentNode"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* p = ((Node *)originalObj->extraPointerData())->parentNode();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("parentNode"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* p = originalObj->parentNode();
         if (p == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
         return p->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("parentElement"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Element* p = ((Node *)originalObj->extraPointerData())->parentElement();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("parentElement"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Element* p = originalObj->parentElement();
         if (p == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
         return p->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("childNodes"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        NodeList* list = ((Node *)originalObj->extraPointerData())->childNodes();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("childNodes"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        NodeList* list = originalObj->childNodes();
         STARFISH_ASSERT(list);
         return list->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    escargot::ESString* nextSiblingString = escargot::ESString::create("nextSibling");
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(nextSiblingString,
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->nextSibling();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nextSibling"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj->nextSibling();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
         return nd->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    escargot::ESString* prevSiblingString = escargot::ESString::create("previousSibling");
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(prevSiblingString,
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->previousSibling();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("previousSibling"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj->previousSibling();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
         return nd->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("firstChild"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->firstChild();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("firstChild"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj->firstChild();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
         return nd->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("lastChild"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->lastChild();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("lastChild"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj->lastChild();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
         return nd->scriptValue();
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    auto nodeValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((Node *)originalObj->extraPointerData())->nodeValue();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeValue"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        String* s = nd->nodeValue();
         if (s == nullptr)
             return escargot::ESValue(escargot::ESValue::ESNull);
         return toJSString(s);
-    };
-    auto nodeValueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* node = (Node*)originalObj->extraPointerData();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* node = originalObj;
         if (v.isESString()) {
             node->setNodeValue(toBrowserString(v));
         } else if (v.isNull()) {
             node->setNodeValue(nullptr);
         }
-    };
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeValue"), nodeValueGetter, nodeValueSetter, false, false, false);
+        return escargot::ESValue();
+    });
 
-    auto textContentGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((Node *)originalObj->extraPointerData())->textContent();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textContent"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        String* s = nd->textContent();
         if (s == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
         return toJSString(s);
-    };
-    auto textContentSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        ((Node *)originalObj->extraPointerData())->setTextContent(toBrowserString(v));
-    };
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("textContent"), textContentGetter, textContentSetter, false, false, false);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        originalObj->setTextContent(toBrowserString(v));
+        return escargot::ESValue();
+    });
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("cloneNode"), false, false, false,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -737,159 +763,137 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_element = ElementFunction;
 
     /* 4.8 Interface Element */
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("firstElementChild"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->firstElementChild() ? originalObj->firstElementChild()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
 
-    auto firstElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->firstElementChild();
-        if (nd == nullptr)
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        return nd->scriptValue();
-    };
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("lastElementChild"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->lastElementChild() ? originalObj->lastElementChild()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
 
-    auto lastElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->lastElementChild();
-        if (nd == nullptr)
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        return nd->scriptValue();
-    };
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nextElementSibling"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->nextElementSibling() ? originalObj->nextElementSibling()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
 
-    auto nextElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->nextElementSibling();
-        if (nd == nullptr)
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        return nd->scriptValue();
-    };
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("previousElementSibling"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->previousElementSibling() ? originalObj->previousElementSibling()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
 
-    auto previousElementChildGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData())->previousElementSibling();
-        if (nd == nullptr)
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        return nd->scriptValue();
-    };
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("childElementCount"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return escargot::ESValue(originalObj->childElementCount());
+    }, nullptr);
 
-    auto childElementCountGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESValue(((Node *)originalObj->extraPointerData())->childElementCount());
-    };
-
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("firstElementChild"),
-        firstElementChildGetter, NULL, false, false, false);
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("lastElementChild"),
-        lastElementChildGetter, NULL, false, false, false);
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nextElementSibling"),
-        nextElementChildGetter, NULL, false, false, false);
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("previousElementSibling"),
-        previousElementChildGetter, NULL, false, false, false);
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("childElementCount"),
-        childElementCountGetter, NULL, false, false, false);
-
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("localName"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("localName"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isElement()) {
             return toJSString(nd->asElement()->localName());
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
-        },
-        NULL, true, true, true);
+    }, nullptr);
 
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("tagName"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)originalObj->extraPointerData());
-            if (nd->isElement()) {
-                // FIXME(JMP): We have to fix this to follow DOM spec after implementing Namespace
-                return toJSString(nd->asElement()->localName()->toUpper());
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        NULL, true, true, true);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("tagName"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            // FIXME(JMP): We have to fix this to follow DOM spec after implementing Namespace
+            return toJSString(nd->asElement()->localName()->toUpper());
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, nullptr);
 
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("id"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)originalObj->extraPointerData());
-            if (nd->isElement()) {
-                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_id));
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)originalObj->extraPointerData());
-            if (nd->isElement()) {
-                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_id, toBrowserString(v));
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        true, true, true);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("id"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_id));
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_id, toBrowserString(v));
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
 
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("className"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)originalObj->extraPointerData());
-            if (nd->isElement()) {
-                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_class));
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)originalObj->extraPointerData());
-            if (nd->isElement()) {
-                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_class, toBrowserString(v));
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        true, true, true);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("className"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_class));
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_class, toBrowserString(v));
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
 
-    auto childrenGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        HTMLCollection* nd = ((Node *)originalObj->extraPointerData())->children();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("children"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        HTMLCollection* nd = originalObj->children();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESUndefined);
         return nd->scriptValue();
-    };
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("children"), childrenGetter, NULL, false, false, false);
+    }, nullptr);
 
-    auto classListGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        DOMTokenList* nd = ((Node *)originalObj->extraPointerData())->classList();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("classList"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        DOMTokenList* nd = originalObj->classList();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESUndefined);
         return nd->scriptValue();
-    };
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("classList"), classListGetter, NULL, false, false, false);
+    }, nullptr);
 
-    auto attributesGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        NamedNodeMap* nd = ((Node *)originalObj->extraPointerData())->attributes();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("attributes"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        NamedNodeMap* nd = originalObj->attributes();
         if (nd == nullptr)
             return escargot::ESValue(escargot::ESValue::ESUndefined);
         return nd->scriptValue();
-    };
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("attributes"), attributesGetter, NULL, false, false, false);
+    }, nullptr);
 
     escargot::ESFunctionObject* removeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -976,19 +980,20 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }, escargot::ESString::create("removeAttribute"), 0, false)
     );
 
-    auto styleGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        if (!((Node*)originalObj->extraPointerData())->isElement()) {
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("style"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (!originalObj->isElement()) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
-        CSSStyleDeclaration* s = ((Element *)originalObj->extraPointerData())->inlineStyle();
+        CSSStyleDeclaration* s = originalObj->asElement()->inlineStyle();
         if (s == nullptr) {
             return escargot::ESValue(escargot::ESValue::ESNull);
         } else {
             return s->scriptValue();
         }
-    };
-    ElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("style"), styleGetter, NULL, false, false, false);
+    }, nullptr);
 
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByClassName"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -1020,76 +1025,78 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* 4.7 Interface DocumentType */
 
-    DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("name"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* s = ((Node *)originalObj->extraPointerData())->nodeName();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentTypeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("name"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        String* s = originalObj->nodeName();
         return toJSString(s);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("publicId"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentTypeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("publicId"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (!nd->isDocumentType()) {
             THROW_ILLEGAL_INVOCATION();
         }
         String* s = nd->asDocumentType()->publicId();
         return toJSString(s);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("systemId"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentTypeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("systemId"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (!nd->isDocumentType()) {
             THROW_ILLEGAL_INVOCATION();
         }
-        String* s = nd->asDocumentType()->publicId();
+        String* s = nd->asDocumentType()->systemId();
         return toJSString(s);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Document, NodeFunction->protoType());
     fetchData(this)->m_document = DocumentFunction;
 
     /* 4.5 Interface Document */
 
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("head"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isDocument()) {
-                Document* document = nd->asDocument();
-                HTMLHeadElement* head = document->headElement();
-                if (head) {
-                    return head->scriptValue();
-                }
-            }
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        }, NULL, false, false, false);
-
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("body"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("head"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isDocument()) {
             Document* document = nd->asDocument();
-            HTMLBodyElement* body = document->bodyElement();
-            if (body) {
-                return body->scriptValue();
+            HTMLHeadElement* head = document->headElement();
+            if (head) {
+                return head->scriptValue();
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-    }, NULL, false, false, false);
+    }, nullptr);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("body"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            Document* document = nd->asDocument();
+            HTMLBodyElement* head = document->bodyElement();
+            if (head) {
+                return head->scriptValue();
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
 
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("documentElement"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = (Node *)originalObj->extraPointerData();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("documentElement"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isDocument()) {
             Document* document = nd->asDocument();
             Element* docElem = document->documentElement();
@@ -1098,8 +1105,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-    }, NULL, false, false, false);
+    }, nullptr);
 
+/*
+    // TODO implement this functions
+    // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("URL"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
@@ -1127,21 +1137,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESString::create("NOT supported yet!");
         },
         NULL, false, false, false);
-
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("characterSet"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("UTF-8");
-        },
-        NULL, false, false, false);
-
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("charset"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("UTF-8");
-        },
-        NULL, false, false, false);
-
     DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("inputEncoding"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
@@ -1155,13 +1150,49 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESString::create("NOT supported yet!");
         },
         NULL, false, false, false);
+*/
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("characterSet"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return escargot::ESString::create("UTF-8");
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
 
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("firstElementChild"),
-        firstElementChildGetter, NULL, false, false, false);
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("lastElementChild"),
-        lastElementChildGetter, NULL, false, false, false);
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("childElementCount"),
-        firstElementChildGetter, NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("charset"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return escargot::ESString::create("UTF-8");
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("firstElementChild"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->firstElementChild() ? originalObj->firstElementChild()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("lastElementChild"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->lastElementChild() ? originalObj->lastElementChild()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("childElementCount"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return escargot::ESValue(originalObj->childElementCount());
+    }, nullptr);
 
     escargot::ESFunctionObject* getElementByIdFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -1197,10 +1228,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("getElementById"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementById"), false, false, false, getElementByIdFunction);
 
-    auto doctypeGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("doctype"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isDocument()) {
             Node* docTypeNode = nd->firstChild();
             while (docTypeNode) {
@@ -1212,13 +1244,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-    };
-    auto doctypeSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
-        // Spec says do nothing
-    };
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("doctype"), doctypeGetter, doctypeSetter, false, true, true);
+    }, nullptr);
 
     escargot::ESFunctionObject* createElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
@@ -1407,24 +1433,38 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("createAttribute"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createAttribute"), false, false, false, createAttributeFunction);
 
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("children"), childrenGetter, NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("children"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isDocument()) {
+            return originalObj->children()->scriptValue();
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, nullptr);
 
     /* Page Visibility */
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("hidden"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        bool hidden = ((Document*) originalObj->extraPointerData())->hidden();
-        return escargot::ESValue(hidden);
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("hidden"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isDocument()) {
+            bool hidden = originalObj->asDocument()->hidden();
+            return escargot::ESValue(hidden);
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, nullptr);
 
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("visibilityState"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        String* visibilityState = ((Document*) originalObj->extraPointerData())->visibilityState();
-        return toJSString(visibilityState);
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("visibilityState"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isDocument()) {
+            String* visibilityState = originalObj->asDocument()->visibilityState();
+            return toJSString(visibilityState);
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, nullptr);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLDocument, DocumentFunction->protoType());
     fetchData(this)->m_htmlDocument = HTMLDocumentFunction;
@@ -1434,41 +1474,38 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* 4.9 Interface CharacterData */
 
-    CharacterDataFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("data"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("data"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isCharacterData()) {
             return toJSString(nd->asCharacterData()->data());
         }
         THROW_ILLEGAL_INVOCATION();
-        RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isCharacterData()) {
-            if (value.isNull()) {
+            if (v.isNull()) {
                 nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("")));
-                return;
-            } else if (value.isUndefined()) {
+                return escargot::ESValue();
+            } else if (v.isUndefined()) {
                 nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("undefined")));
-                return;
+                return escargot::ESValue();
             }
-            nd->asCharacterData()->setData(toBrowserString(value));
-            return;
+            nd->asCharacterData()->setData(toBrowserString(v));
+            return escargot::ESValue();
         }
         THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+        return escargot::ESValue();
+    });
 
-    CharacterDataFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isCharacterData()) {
             if (nd->asCharacterData()->data()->isASCIIString())
                 return escargot::ESValue(nd->asCharacterData()->length());
@@ -1478,14 +1515,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }
         THROW_ILLEGAL_INVOCATION();
-        RELEASE_ASSERT_NOT_REACHED();
-        }
-        , NULL, true, true, false);
-
-    CharacterDataFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nextElementSibling"),
-        nextElementChildGetter, NULL, false, false, false);
-    CharacterDataFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("previousElementSibling"),
-        previousElementChildGetter, NULL, false, false, false);
+    }, nullptr);
 
     CharacterDataFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
 
@@ -1494,17 +1524,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* 4.10 Interface Text */
 
-    TextFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("wholeText"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)originalObj->extraPointerData());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("wholeText"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (!nd->isText()) {
             THROW_ILLEGAL_INVOCATION();
         }
         String* text = (nd->asText())->wholeText();
         return toJSString(text);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Comment, CharacterDataFunction->protoType());
     fetchData(this)->m_comment = CommentFunction;
@@ -1512,92 +1542,86 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLElement, ElementFunction->protoType());
     fetchData(this)->m_htmlElement = HTMLElementFunction;
 
-    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onclick"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = (Node *)originalObj->extraPointerData();
-            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-                auto element = nd->asElement()->asHTMLElement();
-                return element->onclick();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onclick"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->onclick();
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+                element->setOnclick(v);
             } else {
-                THROW_ILLEGAL_INVOCATION();
+                element->clearOnClick();
             }
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = (Node *)originalObj->extraPointerData();
-            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-                auto element = nd->asElement()->asHTMLElement();
-                if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
-                    element->setOnclick(v);
-                } else {
-                    element->clearOnClick();
-                }
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        true, true, true);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
 
-    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onload"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = (Node *)originalObj->extraPointerData();
-            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-                auto element = nd->asElement()->asHTMLElement();
-                return element->onload();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->onclick();
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+                element->setOnload(v);
             } else {
-                THROW_ILLEGAL_INVOCATION();
+                element->clearOnload();
             }
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = (Node *)originalObj->extraPointerData();
-            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-                auto element = nd->asElement()->asHTMLElement();
-                if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
-                    element->setOnload(v);
-                } else {
-                    element->clearOnload();
-                }
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        true, true, true);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
 
-    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onunload"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = (Node *)originalObj->extraPointerData();
-            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-                auto element = nd->asElement()->asHTMLElement();
-                return element->onunload();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onunload"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->onclick();
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+                element->setOnload(v);
             } else {
-                THROW_ILLEGAL_INVOCATION();
+                element->clearOnunload();
             }
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = (Node *)originalObj->extraPointerData();
-            if (nd->isElement() && nd->asElement()->isHTMLElement()) {
-                auto element = nd->asElement()->asHTMLElement();
-                if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
-                    element->setOnunload(v);
-                } else {
-                    element->clearOnunload();
-                }
-            } else {
-                THROW_ILLEGAL_INVOCATION();
-            }
-        },
-        true, true, true);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLHtmlElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlHtmlElement = HTMLHtmlElementFunction;
@@ -1608,28 +1632,26 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLScriptElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlScriptElement = HTMLScriptElementFunction;
 
-    HTMLScriptElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("src"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_src));
-            }
-            THROW_ILLEGAL_INVOCATION();
-            RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_src, toBrowserString(value.toString()));
-                return;
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_src));
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_src, toBrowserString(v.toString()));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLStyleElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlStyleElement = HTMLStyleElementFunction;
@@ -1637,74 +1659,65 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLLinkElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlLinkElement = HTMLLinkElementFunction;
 
-    HTMLLinkElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("href"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_href));
-            }
-            THROW_ILLEGAL_INVOCATION();
-            RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_href, toBrowserString(value.toString()));
-                return;
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLLinkElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("href"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_href));
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_href, toBrowserString(v.toString()));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
 
-    HTMLLinkElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("rel"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_rel));
-            }
-            THROW_ILLEGAL_INVOCATION();
-            RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_rel, toBrowserString(value.toString()));
-                return;
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLLinkElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("rel"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_rel));
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_rel, toBrowserString(v.toString()));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
 
-    HTMLLinkElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("type"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_type));
-            }
-            THROW_ILLEGAL_INVOCATION();
-            RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-                nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_type, toBrowserString(value.toString()));
-                return;
-            }
-            THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLLinkElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_type));
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_type, toBrowserString(v.toString()));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBodyElement = HTMLBodyElementFunction;
@@ -1715,12 +1728,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLImageElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlImageElement = HTMLImageElementFunction;
 
-    escargot::ESString* srcString = escargot::ESString::create("src");
-    HTMLImageElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(srcString,
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLImageElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
@@ -1729,29 +1741,25 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }
         THROW_ILLEGAL_INVOCATION();
-        RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setSrc(toBrowserString(value));
-                    return;
+                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setSrc(toBrowserString(v));
+                    return escargot::ESValue();
                 }
             }
         }
-        THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+        return escargot::ESValue();
+    });
 
-    HTMLImageElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("width"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLImageElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("width"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
@@ -1765,34 +1773,31 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }
         THROW_ILLEGAL_INVOCATION();
-        RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
 
-        if (!(value.isESString() && value.asESString()->hasOnlyDigit())) {
-            return;
+        if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
+            return escargot::ESValue();
         }
 
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setWidth(value.toInt32());
-                    return;
+                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setWidth(v.toInt32());
+                    return escargot::ESValue();
                 }
             }
         }
         THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+        return escargot::ESValue();
+    });
 
-    HTMLImageElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("height"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLImageElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("height"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
@@ -1806,33 +1811,31 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }
         THROW_ILLEGAL_INVOCATION();
-        RELEASE_ASSERT_NOT_REACHED();
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const ::escargot::ESValue& value)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
 
-        if (!(value.isESString() && value.asESString()->hasOnlyDigit())) {
-            return;
+        if (!(v.isESString() && v.asESString()->hasOnlyDigit())) {
+            return escargot::ESValue();
         }
 
         if (nd->isElement()) {
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setHeight(value.toInt32());
-                    return;
+                    nd->asElement()->asHTMLElement()->asHTMLImageElement()->setHeight(v.toInt32());
+                    return escargot::ESValue();
                 }
             }
         }
         THROW_ILLEGAL_INVOCATION();
-        },
-        true, true, false);
+        return escargot::ESValue();
+    });
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBRElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlBrElement = HTMLBRElementFunction;
 
 #ifdef STARFISH_ENABLE_AUDIO
+    // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLAudioElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
 
@@ -1892,16 +1895,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_htmlCollection = HTMLCollectionFunction;
 
     /* 4.2.7.2 Interface HTMLCollection */
-
-    HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::HTMLCollectionObject);
-
-            uint32_t len = ((HTMLCollection *)originalObj->extraPointerData())->length();
-            return escargot::ESValue(len);
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLCollectionFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HTMLCollectionObject, HTMLCollection);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
 
     escargot::ESFunctionObject* itemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
     {
@@ -1957,26 +1957,26 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }, escargot::ESString::create("item"), 1, false)
     );
 
-    NodeListFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeListObject);
-            NodeList* nodeList = (NodeList*)originalObj->extraPointerData();
-            return escargot::ESValue(nodeList->length());
-        }, NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeListObject, NodeList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_domTokenList = DOMTokenListFunction;
 
     /* 7.1 Interface DOMTokenList */
 
-    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMTokenListObject);
-
-        uint32_t len = ((DOMTokenList *)originalObj->extraPointerData())->length();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMTokenListObject, DOMTokenList);
+        uint32_t len = originalObj->length();
         return escargot::ESValue(len);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     escargot::ESFunctionObject* domTokenListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -2099,14 +2099,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* 7.2 Interface DOMSettableTokenList */
 
-    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        uint32_t len = ((DOMTokenList *)originalObj->extraPointerData())->length();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
+        uint32_t len = originalObj->length();
         return escargot::ESValue(len);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     escargot::ESFunctionObject* domSettableTokenListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -2205,37 +2204,31 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("toggle"), 1, false);
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toggle"), false, false, false, domSettableTokenListToggleFunction);
 
-    auto DOMSettableTokenListValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        String* value = ((DOMSettableTokenList*) originalObj->extraPointerData())->value();
-        if (value != nullptr)
-            return toJSString(value);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
+        String* value = originalObj->value();
+        return toJSString(value);
         return escargot::ESValue(escargot::ESValue::ESNull);
-    };
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
+        originalObj->setValue(toBrowserString(v));
+        return escargot::ESValue();
+    });
 
-    auto DOMSettableTokenListValueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-    {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        ((DOMSettableTokenList*) originalObj->extraPointerData())->setValue(toBrowserString(v));
-    };
-
-    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("value"), DOMSettableTokenListValueGetter, DOMSettableTokenListValueSetter, false, false, false);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(NamedNodeMap, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_namedNodeMap = NamedNodeMapFunction;
 
     /* 4.8.1 Interface NamedNodeMap */
-
-    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("length"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NamedNodeMapObject);
-
-        uint32_t len = ((NamedNodeMap *)originalObj->extraPointerData())->length();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NamedNodeMapFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("NamedNodeMapFunction"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NamedNodeMapObject, NamedNodeMap);
+        uint32_t len = originalObj->length();
         return escargot::ESValue(len);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     escargot::ESFunctionObject* NamedNodeMapItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -2308,39 +2301,32 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Attr, NodeFunction->protoType());
     fetchData(this)->m_attr = AttrFunction;
 
-    auto attrNameValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj,
-        escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
-
-        String* n = ((Attr*) originalObj->extraPointerData())->name();
-        if (n != nullptr)
-            return toJSString(n);
-        return escargot::ESValue(escargot::ESValue::ESNull);
+    auto attrNameValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::AttrObject, Attr);
+        String* n = originalObj->name();
+        return toJSString(n);
     };
 
-    auto attrValueGetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
-
-        String* value = ((Attr*) originalObj->extraPointerData())->value();
-        if (value == nullptr)
-            value = String::emptyString;
+    auto attrValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::AttrObject, Attr);
+        String* value = originalObj->value();
         return toJSString(value);
     };
 
-    auto attrValueSetter = [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
+    auto attrValueSetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue
     {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
-
-        ((Attr*) originalObj->extraPointerData())->setValue(toBrowserString(v));
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::AttrObject, Attr);
+        originalObj->setValue(toBrowserString(v));
         // FIXME(JMP): Actually this function have to return old Attr's value but we have to modify 'typedef void (*ESNativeSetter)(...)' in escargot/src/runtime/ESValue.h
         // Because this need to many changes, we do the modification latter
+        return escargot::ESValue();
     };
 
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("name"), attrNameValueGetter, NULL, false, false, false);
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeName"), attrNameValueGetter, NULL, false, false, false);
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("value"), attrValueGetter, attrValueSetter, false, false, false);
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("nodeValue"), attrValueGetter, attrValueSetter, false, false, false);
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("textContent"), attrValueGetter, attrValueSetter, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("name"), attrNameValueGetter, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeName"), attrNameValueGetter, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"), attrValueGetter, attrValueSetter);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeValue"), attrValueGetter, attrValueSetter);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textContent"), attrValueGetter, attrValueSetter);
 
     AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ownerElement"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
@@ -2417,35 +2403,35 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), true, false, true, eventFunction);
     fetchData(this)->m_event = eventFunction;
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("type"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        String* type = ((Event*) originalObj->extraPointerData())->type().string();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        String* type = originalObj->type().string();
         return toJSString(type);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("target"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        EventTarget* target = ((Event*) originalObj->extraPointerData())->target();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("target"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        EventTarget* target = originalObj->target();
         if (target && (target->isNode() || target->isWindow())) {
             return target->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("currentTarget"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        EventTarget* currentTarget = ((Event*) originalObj->extraPointerData())->currentTarget();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("currentTarget"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        EventTarget* currentTarget = originalObj->currentTarget();
         if (currentTarget && (currentTarget->isNode() || currentTarget->isWindow())) {
             return currentTarget->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     eventFunction->defineAccessorProperty(escargot::ESString::create("NONE"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
@@ -2495,13 +2481,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         },
         NULL, false, false, false);
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("eventPhase"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        unsigned short eventPhase = ((Event*) originalObj->extraPointerData())->eventPhase();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("eventPhase"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        unsigned short eventPhase = originalObj->eventPhase();
         return escargot::ESValue(eventPhase);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     auto stopPropagationFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -2525,21 +2511,21 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("stopImmediatePropagation"), 0, false);
     eventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("stopImmediatePropagation"), false, false, false, stopImmediatePropagationFunction);
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("bubbles"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        bool bubbles = ((Event*) originalObj->extraPointerData())->bubbles();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("bubbles"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        bool bubbles = originalObj->bubbles();
         return escargot::ESValue(bubbles);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("cancelable"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        bool cancelable = ((Event*) originalObj->extraPointerData())->cancelable();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("cancelable"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        bool cancelable = originalObj->cancelable();
         return escargot::ESValue(cancelable);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     auto preventDefaultFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -2552,21 +2538,21 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("preventDefault"), 0, false);
     eventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("preventDefault"), false, false, false, preventDefaultFunction);
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("defaultPrevented"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        bool defaultPrevented = ((Event*) originalObj->extraPointerData())->defaultPrevented();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("defaultPrevented"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        bool defaultPrevented = originalObj->defaultPrevented();
         return escargot::ESValue(defaultPrevented);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("timeStamp"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::EventObject);
-        DOMTimeStamp timeStamp = ((Event*) originalObj->extraPointerData())->timeStamp();
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("timeStamp"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        DOMTimeStamp timeStamp = originalObj->timeStamp();
         return escargot::ESValue(timeStamp);
-        },
-        NULL, false, false, false);
+    }, nullptr);
 
     /* UI Events */
     DEFINE_FUNCTION(UIEvent, eventFunction->protoType());
@@ -2582,7 +2568,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* style-related getter/setter start here */
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, CSSStyleDeclarationFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_cssStyleDeclaration = CSSStyleDeclarationFunction;
 
 #define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
@@ -2606,7 +2592,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleRule, CSSStyleRuleFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleRule, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_cssStyleRule = CSSStyleRuleFunction;
 
     /* XMLHttpRequest */
@@ -2620,226 +2606,195 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
     fetchData(this)->m_xhrElement = xhrElementFunction;
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("responseType"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        String* c = ((XMLHttpRequest*) originalObj->extraPointerData())->getResponseTypeStr();
-        if (c != nullptr)
-            return toJSString(c);
-        return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        if (v.isESString()) {
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setResponseType(v.asESString()->utf8Data());
-        }
-        },
-        false, false, false);
-
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onloadstart"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("loadstart"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseType"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        String* c = originalObj->getResponseTypeStr();
+        return toJSString(c);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onprogress"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("progress"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onloadstart"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("loadstart"), originalObj->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        if (v.isObject()) {
+            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
+            auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
+            originalObj->setHandler(eventTypeName, v);
+        }
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onprogress"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("progress"), originalObj->starfishInstance());
+        if (c.isObject())
+            return c;
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "progress");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onabort"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("abort"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onabort"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("abort"), originalObj->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "abort");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onerror"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("error"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onerror"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("error"), originalObj->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "error");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onload"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("load"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("load"), originalObj->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "load");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ontimeout"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("timeout"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("ontimeout"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("timeout"), originalObj->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "timeout");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onloadend"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("loadend"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onloadend"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("loadend"), originalObj->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "loadend");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("onreadystatechange"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-
-        escargot::ESValue c = ((XMLHttpRequest*) originalObj->extraPointerData())->getHandler(String::fromUTF8("readystatechange"), ((XMLHttpRequest*)originalObj->extraPointerData())->starfishInstance());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onreadystatechange"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("readystatechange"), originalObj->starfishInstance());
         if (c.isObject())
             return c;
         return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
             auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
             auto eventTypeName = QualifiedName::fromString(sf, "readystatechange");
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setHandler(eventTypeName, v);
+            originalObj->setHandler(eventTypeName, v);
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("timeout"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        uint32_t c = ((XMLHttpRequest*) originalObj->extraPointerData())->getTimeout();
-            return escargot::ESValue(c);
-        return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& v)
-        {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("timeout"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        uint32_t c = originalObj->getTimeout();
+        return escargot::ESValue(c);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isNumber()) {
-            ((XMLHttpRequest*)originalObj->extraPointerData())->setTimeout(v.toInt32());
+            originalObj->setTimeout(v.toInt32());
         }
-        },
-        false, false, false);
+        return escargot::ESValue();
+    });
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("readyState"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        int c = ((XMLHttpRequest*) originalObj->extraPointerData())->getReadyState();
-            return escargot::ESValue(c);
-        return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("readyState"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        int c = originalObj->getReadyState();
+        return escargot::ESValue(c);
+    }, nullptr);
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("status"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::XMLHttpRequestObject);
-        int c = ((XMLHttpRequest*) originalObj->extraPointerData())->getStatus();
-            return escargot::ESValue(c);
-        return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("status"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        int c = originalObj->getStatus();
+        return escargot::ESValue(c);
+    }, nullptr);
 
     escargot::ESFunctionObject* xhrGetResponseHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
@@ -2940,38 +2895,26 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_domException = DOMExceptionFunction;
     DOMExceptionFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(this)->m_instance->globalObject()->errorPrototype());
 
-    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(fetchData(this)->m_instance->strings().name,
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
-            DOMException* exception = (DOMException*)originalObj->extraPointerData();
-            return escargot::ESString::create(exception->name());
-        } else {
-            return escargot::ESValue();
-        }
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMExceptionFunction->protoType().asESPointer()->asESObject(), fetchData(this)->m_instance->strings().name,
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject, DOMException);
+        return escargot::ESString::create(originalObj->name());
+    }, nullptr);
 
-    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(fetchData(this)->m_instance->strings().message,
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
-            DOMException* exception = (DOMException*)originalObj->extraPointerData();
-            return toJSString(exception->message());
-        } else {
-            return escargot::ESValue();
-        }
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMExceptionFunction->protoType().asESPointer()->asESObject(), fetchData(this)->m_instance->strings().message,
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject, DOMException);
+        return toJSString(originalObj->message());
+    }, nullptr);
 
-    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("code"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        if (originalObj->extraData() == ScriptWrappable::Type::DOMExceptionObject) {
-            DOMException* exception = (DOMException*)originalObj->extraPointerData();
-            return escargot::ESValue(exception->code());
-        } else {
-            return escargot::ESValue();
-        }
-        },
-        NULL, false, false, false);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMExceptionFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("code"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject, DOMException);
+        return escargot::ESValue(originalObj->code());
+    }, nullptr);
 
 #ifdef TIZEN_DEVICE_API
     fetchData(this)->m_deviceAPIObject = new DeviceAPI::NativePluginManager(fetchData(this)->m_instance);
