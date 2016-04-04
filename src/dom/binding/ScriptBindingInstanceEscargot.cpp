@@ -1018,6 +1018,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }, escargot::ESString::create("getElementsByClassName"), 1, false)
     );
 
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByTagName"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            if (obj->isElement()) {
+                Element* elem = obj->asElement();
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                if (argValue.isESString()) {
+                    escargot::ESString* argStr = argValue.asESString();
+                    HTMLCollection* result = elem->getElementsByTagName(toBrowserString(argStr));
+                    if (result) {
+                        return result->scriptValue();
+                    }
+                }
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("getElementsByTagName"), 1, false)
+    );
+
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentType, NodeFunction->protoType());
     fetchData(this)->m_documentType = DocumentTypeFunction;
 
@@ -1918,7 +1941,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("item"), 1, false);
-    HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, itemFunction);
+    HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), true, true, true, itemFunction);
 
     escargot::ESFunctionObject* namedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -1934,7 +1957,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("namedItem"), 1, false);
-    HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("namedItem"), false, false, false, namedItemFunction);
+    HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("namedItem"), true, true, true, namedItemFunction);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(NodeList, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_nodeList = NodeListFunction;

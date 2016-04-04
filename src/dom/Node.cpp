@@ -600,6 +600,21 @@ Node* Node::removeChild(Node* child)
     return child;
 }
 
+HTMLCollection* Node::getElementsByTagName(String* qualifiedName)
+{
+    auto filter = [=](Node* node)
+    {
+        if (node->isElement()){
+            if (node->localName()->equals(qualifiedName))
+                return true;
+            if (qualifiedName->isASCIIString()&&qualifiedName->equals("*"))
+                return true;
+        }
+        return false;
+    };
+    return new HTMLCollection(document()->scriptBindingInstance(), this, filter);
+}
+
 HTMLCollection* Node::getElementsByClassName(String* classNames)
 {
     auto filter = [=](Node* node)

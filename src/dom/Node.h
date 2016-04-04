@@ -238,6 +238,7 @@ public:
 
 
     /* 4.5. Interface Document */
+    HTMLCollection* getElementsByTagName(String* qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
 
 

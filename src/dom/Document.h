@@ -30,7 +30,8 @@ public:
     Element* createElement(QualifiedName localName);
     Text* createTextNode(String* data);
     Comment* createComment(String* data);
-    HTMLCollection* getElementsByTagName(String* qualifiedName);
+    // Moved to Node as it is common to Document and Element
+    // HTMLCollection* getElementsByTagName(String* qualifiedName);
     // HTMLCollection* getElementsByClassName(String* classNames);
     Attr* createAttribute(QualifiedName localName);
 

@@ -202,69 +202,6 @@ Element* Document::getElementById(String* id)
     });
 }
 
-HTMLCollection* Document::getElementsByTagName(String* qualifiedName)
-{
-    auto filter = [=](Node* node)
-    {
-        if (node->isElement()) {
-            if (node->localName()->equals(qualifiedName))
-                return true;
-            if (qualifiedName->isASCIIString()&&qualifiedName->equals("*"))
-                return true;
-        }
-        return false;
-    };
-    return new HTMLCollection(scriptBindingInstance(), this, filter);
-}
-
-/* Moved to Node as this is common to Document and Element
-HTMLCollection* Document::getElementsByClassName(String* classNames)
-{
-    auto filter = [=](Node* node)
-    {
-        if (node->isElement() && node->asElement()->classNames().size() > 0) {
-
-            const char* data = classNames->utf8Data();
-            size_t length = classNames->length();
-            bool isWhiteSpaceState = true;
-
-            std::string str;
-            for (size_t i = 0; i < length; i ++) {
-                if (isWhiteSpaceState) {
-                    if (data[i] != ' ') {
-                        isWhiteSpaceState = false;
-                        str += data[i];
-                    }
-                } else {
-                    if (data[i] == ' ') {
-                        isWhiteSpaceState = true;
-
-                        String* tok = String::fromUTF8(str.data(), str.length());
-
-                        if (!node->asElement()->hasClassName(tok))
-                        return false;
-
-                        str.clear();
-                    } else {
-                        str += data[i];
-                    }
-                }
-            }
-
-            if (str.length()) {
-                String* tok = String::fromUTF8(str.data(), str.length());
-                if (!node->asElement()->hasClassName(tok))
-                return false;
-            }
-
-            return true;
-        }
-        return false;
-    };
-    return new HTMLCollection(scriptBindingInstance(), this, filter);
-}
-*/
-
 Element* Document::createElement(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
