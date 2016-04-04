@@ -277,7 +277,7 @@ page.onLoadFinished = function() {
                     }
                     url = "file://" + point + url;
                     $.ajax({async: false, type:"GET", url: url, success: result, error: function (error) {
-                         console.log("ajax error")
+                         console.log("ajax error (" + url + ") : " + error)
                         // console.log(arguments[0])
                         // console.log(arguments[1])
                         // console.log(arguments[2])
