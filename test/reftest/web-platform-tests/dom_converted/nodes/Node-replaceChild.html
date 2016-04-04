@@ -324,8 +324,6 @@ test(function() {
   assert_array_equals(doc.childNodes, [doc.doctype, a]);
 }, "Replacing the document element with a single element should work.");
 */
-/*
- * This is to be tested when addEventListener is done
 test(function() {
   document.addEventListener("DOMNodeRemoved", function(e) {
     document.body.appendChild(document.createElement("x"));
@@ -336,7 +334,6 @@ test(function() {
   assert_equals(a.firstChild, c);
   assert_equals(c.parentNode, a);
 }, "replaceChild should work in the presence of mutation events.")
-*/
 /*
 test(function() {
   var TEST_ID = "findme";
