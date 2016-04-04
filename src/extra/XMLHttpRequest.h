@@ -60,6 +60,17 @@ public:
         DONE
     };
 
+    enum PROG_STATE {
+        LOADSTART,
+        PROGRESS,
+        LOAD,
+        LOADEND,
+        ERROR,
+        ABORT,
+        TIMEOUT,
+        NONE
+    };
+
     struct Buffer {
         char* memory;
         size_t size;
@@ -114,28 +125,28 @@ public:
     void setResponseType(const char* responseType);
     void setOpen(const char* method, String* url);
     void send(String* body);
-    void callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total, int readyState = -1);
+    void callEventHandler(PROG_STATE progState, bool isMainThread, uint32_t loaded, uint32_t total, int readyState = -1);
 
     void setRequestHeader(const char* header, const char* value);
-    void setResponseHeader(String* responseHeader)
+    void setResponseHeader(char* responseHeader)
     {
         m_response_header = responseHeader;
     }
 
-    String* getResponseHeader(const char* header)
+    char* getResponseHeader(const char* header)
     {
         if (m_response_header != nullptr)
             return m_response_header;
         return nullptr;
     }
 
-    String* getAllResponseHeadersStr()
+    char* getAllResponseHeadersStr()
     {
         if (m_ready_state == UNSENT || m_ready_state == OPENED)
-            return String::emptyString;
+            return nullptr;
         if (m_response_header != nullptr)
             return m_response_header;
-        return String::emptyString;
+        return nullptr;
     }
 
     void abort();
@@ -229,7 +240,7 @@ public:
             p_data->loaded = static_cast<uint32_t>(dlnow);
             p_data->total = static_cast<uint32_t>(dltotal);
             this_obj->m_ready_state = LOADING;
-            this_obj->callEventHandler(nullptr, false, p_data->loaded, p_data->total, this_obj->m_ready_state);
+            this_obj->callEventHandler(NONE, false, p_data->loaded, p_data->total, this_obj->m_ready_state);
 
             // printf("TOTAL TIME: %f \r\n", curtime);
             // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
@@ -263,7 +274,7 @@ public:
 
 protected:
     String* m_url;
-    String* m_response_header;
+    char* m_response_header;
     METHOD_TYPE m_method;
     RESPONSE_TYPE m_response_type;
     READY_STATE m_ready_state;

@@ -36,15 +36,16 @@ void XMLHttpRequest::send(String* body)
 
     // invoke loadstart Event.
     m_send_flag = true;
-    callEventHandler(String::fromUTF8("loadstart"), true, 0, 0);
+    callEventHandler(LOADSTART, true, 0, 0);
 
+    GC_add_roots(this, this + sizeof(XMLHttpRequest*));
     auto task =
     [](XMLHttpRequest* xhrobj, const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body, uint32_t timeout) -> bool {
         bool fromOnline = false;
         char tmp[4];
         for (int i = 0; i < 4; i++)
             tmp[i] = url[i];
-        if (String::fromUTF8(tmp)->equals("http"))
+        if (strcmp(tmp, "http") == 0)
             fromOnline = true;
 
         CURL* curl;
@@ -66,28 +67,15 @@ void XMLHttpRequest::send(String* body)
         progressData.obj = xhrobj;
         progressData.lastruntime = 0;
 
-        if (fromOnline && !curl)
+        if (fromOnline && !curl) {
+            GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
             return false;
-
-        // for error handle
-        // char errbuf[1024];
-        // curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
-        // errbuf[0] = 0;
+        }
 
         long res_code;
         if (fromOnline) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
-
-            // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-
-            // for SEC
-            // curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
-
-            // for MSEC
             curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(timeout));
-
-            // curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION, progress_callback_old);
-            // curl_easy_setopt(curl, CURLOPT_PROGRESSDATA, &progressData);
             curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
             curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progressData);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
@@ -105,7 +93,8 @@ void XMLHttpRequest::send(String* body)
                 printf("XMLHttpRequest UnSupportted method!!  \n");
 
                 // invoke loadend event
-                xhrobj->callEventHandler(String::fromUTF8("loadend"), false, progressData.loaded, progressData.total);
+                xhrobj->callEventHandler(LOADEND, false, progressData.loaded, progressData.total);
+                GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
                 return false;
             }
 
@@ -165,9 +154,9 @@ void XMLHttpRequest::send(String* body)
                 ecore_idler_add([](void *data)->Eina_Bool {
                     XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
                     this_obj->m_ready_state = HEADERS_RECEIVED;
-                    this_obj->callEventHandler(nullptr, true, 0, 0, this_obj->m_ready_state);
+                    this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_ready_state);
                     this_obj->m_ready_state = LOADING;
-                    this_obj->callEventHandler(nullptr, true, 0, 0, this_obj->m_ready_state);
+                    this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_ready_state);
                     return ECORE_CALLBACK_CANCEL;
                 }, xhrobj);
                 ecore_thread_main_loop_end();
@@ -191,13 +180,15 @@ void XMLHttpRequest::send(String* body)
         }
 
         if (((res_code == 200 || res_code == 201) && res == CURLE_OK )) {
-            xhrobj->setResponseHeader(String::fromUTF8(header.memory));
+            xhrobj->setResponseHeader(header.memory);
 
             if (fromOnline)
                 curl_easy_cleanup(curl);
 
-            if (buffer.size == 0)
+            if (buffer.size == 0) {
+                GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
                 return false;
+            }
 
             struct Pass {
                 XMLHttpRequest* obj;
@@ -232,12 +223,6 @@ void XMLHttpRequest::send(String* body)
                         script_obj->set(createScriptString(String::fromUTF8("response")), ret);
                     }
                     break;
-                case BLOB_RESPONSE:
-                    {
-                        auto blob = new Blob(pass->contentSize, String::fromUTF8(pass->header_contentType), pass->buf);
-                        script_obj->set(createScriptString(String::fromUTF8("response")), blob->scriptValue());
-                    }
-                    break;
 
                 case TEXT_RESPONSE:
                 default:
@@ -246,31 +231,27 @@ void XMLHttpRequest::send(String* body)
 
                 }
                 this_obj->m_ready_state = DONE;
-                this_obj->callEventHandler(nullptr, true, 0, 0, this_obj->m_ready_state);
-                this_obj->callEventHandler(String::fromUTF8("progress"), true, pass->loaded, pass->total);
-                this_obj->callEventHandler(String::fromUTF8("load"), true, pass->loaded, pass->total);
-                this_obj->callEventHandler(String::fromUTF8("loadend"), true, pass->loaded, pass->total);
+                this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_ready_state);
+                this_obj->callEventHandler(PROGRESS, true, pass->loaded, pass->total);
+                this_obj->callEventHandler(LOAD, true, pass->loaded, pass->total);
+                this_obj->callEventHandler(LOADEND, true, pass->loaded, pass->total);
 
                 delete pass;
                 delete pass->buf;
                 return ECORE_CALLBACK_CANCEL;
             }, pass);
             ecore_thread_main_loop_end();
+            GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
             return true;
 
         } else {
-            // printf("!!! Response code: %ld\n", res_code);
-            // printf("!!! CURLcode code: %d\n", res);
-            // printf("ERROR buffer : %s\n", errbuf);
-
             switch (res) {
             case CURLE_OPERATION_TIMEDOUT:
-                // invoke timeout event
-                xhrobj->callEventHandler(String::fromUTF8("timeout"), false, 0, 0);
+                xhrobj->callEventHandler(TIMEOUT, false, 0, 0);
                 break;
 
             case CURLE_ABORTED_BY_CALLBACK:
-                xhrobj->callEventHandler(String::fromUTF8("abort"), false, 0, 0);
+                xhrobj->callEventHandler(ABORT, false, 0, 0);
                 break;
 
             default:
@@ -280,16 +261,15 @@ void XMLHttpRequest::send(String* body)
             ecore_thread_main_loop_begin();
             ecore_idler_add([](void *data)->Eina_Bool {
                 XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
-                this_obj->callEventHandler(String::fromUTF8("error"), false, 0, 0);
+                this_obj->callEventHandler(ERROR, false, 0, 0);
                 return ECORE_CALLBACK_CANCEL;
             }, xhrobj);
             ecore_thread_main_loop_end();
         }
+        GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
         return false;
 
     };
-
-    // std::future<bool> runTask = std::async(std::launch::async, task);
 
     std::thread(task, this, url, m_method, body->utf8Data(), m_timeout).detach();
 }
@@ -330,7 +310,7 @@ void XMLHttpRequest::setOpen(const char* method, String* url)
     }
     m_send_flag = false;
     m_ready_state = OPENED;
-    callEventHandler(String::fromUTF8("opened"), true, 0, 0, OPENED);
+    callEventHandler(NONE, true, 0, 0, OPENED);
     m_url = url;
 }
 
@@ -339,10 +319,10 @@ void XMLHttpRequest::abort()
     m_abort_flag = true;
     if (!(((m_ready_state == UNSENT || m_ready_state == OPENED) && !m_send_flag) || m_ready_state == DONE)) {
         m_ready_state = DONE;
-        callEventHandler(nullptr, true, 0, 0, m_ready_state);
-        callEventHandler(String::fromUTF8("progress"), true, 0, 0);
-        callEventHandler(String::fromUTF8("abort"), true, 0, 0);
-        callEventHandler(String::fromUTF8("loadend"), true, 0, 0);
+        callEventHandler(NONE, true, 0, 0, m_ready_state);
+        callEventHandler(PROGRESS, true, 0, 0);
+        callEventHandler(ABORT, true, 0, 0);
+        callEventHandler(LOADEND, true, 0, 0);
     }
     m_ready_state = UNSENT;
 }
@@ -373,9 +353,9 @@ void XMLHttpRequest::setRequestHeader(const char* header, const char* value)
     }
 }
 
-void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint32_t loaded, uint32_t total, int readyState)
+void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, uint32_t loaded, uint32_t total, int readyState)
 {
-
+    String* eventName = nullptr;
     if (readyState >= 0) {
         ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
         if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
@@ -385,7 +365,20 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             callScriptFunction(rsc, json_arg, 1, scriptValue());
         }
         return;
-    } else if (eventName->equals("progress") || eventName->equals("error") || eventName->equals("abort") || eventName->equals("timeout") || eventName->equals("load") || eventName->equals("loadend")) {
+    } else if (progState == PROGRESS)
+        eventName = String::fromUTF8("progress");
+    else if (progState == ERROR)
+        eventName = String::fromUTF8("error");
+    else if (progState == ABORT)
+        eventName = String::fromUTF8("abort");
+    else if (progState == TIMEOUT)
+        eventName = String::fromUTF8("timeout");
+    else if (progState == LOAD)
+        eventName = String::fromUTF8("load");
+    else if (progState == LOADEND)
+        eventName = String::fromUTF8("loadend");
+
+    if (eventName) {
         ScriptValue en = getHandler(eventName, starfishInstance());
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
             ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
@@ -395,6 +388,8 @@ void XMLHttpRequest::callEventHandler(String* eventName, bool isMainThread, uint
             callScriptFunction(en, json_arg, 1, scriptValue());
         }
         return;
+    } else {
+        eventName = String::fromUTF8("loadstart");
     }
 
     if (isMainThread) {

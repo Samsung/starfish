@@ -2864,9 +2864,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject && instance->currentExecutionContext()->argumentCount() == 1) {
-                String* res = ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->getResponseHeader(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data());
-                if (res)
-                    return toJSString(res);
+                char* rh = ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->getResponseHeader(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data());
+                if (rh)
+                    toJSString(String::fromUTF8(rh));
+                else
+                    toJSString(String::emptyString);
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
@@ -2878,7 +2880,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (v.isObject()) {
             if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
                 XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
-                return toJSString(xhr->getAllResponseHeadersStr());
+                char* arh = xhr->getAllResponseHeadersStr();
+                if (arh)
+                    return toJSString(String::fromUTF8(xhr->getAllResponseHeadersStr()));
+                else
+                    return toJSString(String::emptyString);
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
