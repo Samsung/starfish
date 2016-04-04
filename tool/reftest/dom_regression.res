@@ -1,5 +1,6 @@
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-08.htm
 test/reftest/web-platform-tests/dom_converted/nodes/CharacterData-data.html
+test/reftest/web-platform-tests/dom_converted/nodes/CharacterData-remove.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-createTextNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-doctype.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-getElementById.html
