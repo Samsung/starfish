@@ -16,7 +16,7 @@ Attr* NamedNodeMap::item(unsigned long index)
 {
     // The localName is considered
     if (index < m_element->attributeCount()) {
-        return new Attr(m_element->document(), m_instance, m_element, m_element->getAttributeName(index));
+        return m_element->ensureAttr(m_element->getAttributeName(index));
     } else
         return nullptr;
 }

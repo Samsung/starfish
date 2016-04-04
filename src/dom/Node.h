@@ -20,18 +20,28 @@ class CharacterData;
 class Element;
 class Frame;
 class NodeList;
+class RareNodeMembers;
+class RareElementMembers;
 
 class RareNodeMembers : public gc {
 public:
     RareNodeMembers()
         : m_children(nullptr)
         , m_domTokenList(nullptr)
-        , m_namedNodeMap(nullptr)
     {
+    }
+
+    virtual bool isRareElementMembers()
+    {
+        return false;
+    }
+    RareElementMembers* asRareElementMembers()
+    {
+        STARFISH_ASSERT(isRareElementMembers());
+        return (RareElementMembers*)(this);
     }
     HTMLCollection* m_children;
     DOMTokenList* m_domTokenList;
-    NamedNodeMap* m_namedNodeMap;
 };
 
 class Node : public EventTarget {
@@ -456,7 +466,7 @@ public:
 
     HTMLCollection* children();
     DOMTokenList* classList();
-    NamedNodeMap* attributes();
+    virtual NamedNodeMap* attributes();
 
     Element* nextElementSibling();
     Element* previousElementSibling();
@@ -479,6 +489,16 @@ public:
     virtual void didNodeRemovedFromDocumenTree() { }
 
     virtual bool dispatchEvent(Event* event) override;
+
+    bool hasRareMembers()
+    {
+        return m_rareNodeMembers != nullptr;
+    }
+    RareNodeMembers* rareMembers()
+    {
+        return m_rareNodeMembers;
+    }
+    virtual RareNodeMembers* ensureRareMembers();
 
 private:
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);

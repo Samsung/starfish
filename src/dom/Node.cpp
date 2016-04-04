@@ -299,8 +299,8 @@ String* Node::lookupPrefix(String* namespaceUri)
 
 HTMLCollection* Node::children()
 {
-    if (!m_rareNodeMembers) {
-        m_rareNodeMembers = new RareNodeMembers();
+    if (!hasRareMembers()) {
+        ensureRareMembers();
     } else if (!m_rareNodeMembers->m_children)
         return m_rareNodeMembers->m_children;
 
@@ -317,8 +317,8 @@ HTMLCollection* Node::children()
 DOMTokenList* Node::classList()
 {
     if (isElement()) {
-        if (!m_rareNodeMembers) {
-            m_rareNodeMembers = new RareNodeMembers();
+        if (!hasRareMembers()) {
+            ensureRareMembers();
         } else if (!m_rareNodeMembers->m_domTokenList)
             return m_rareNodeMembers->m_domTokenList;
 
@@ -331,15 +331,6 @@ DOMTokenList* Node::classList()
 
 NamedNodeMap* Node::attributes()
 {
-    if (isElement()) {
-        if (!m_rareNodeMembers) {
-            m_rareNodeMembers = new RareNodeMembers();
-        } else if (!m_rareNodeMembers->m_namedNodeMap)
-            return m_rareNodeMembers->m_namedNodeMap;
-
-        m_rareNodeMembers->m_namedNodeMap = new NamedNodeMap(m_document->scriptBindingInstance(), asElement());
-        return m_rareNodeMembers->m_namedNodeMap;
-    }
     return nullptr;
 }
 
@@ -712,6 +703,14 @@ void Node::didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newSt
     if (frame()) {
         frame()->computeStyleFlags();
     }
+}
+
+RareNodeMembers* Node::ensureRareMembers()
+{
+    STARFISH_ASSERT(!isElement());
+    if (m_rareNodeMembers == nullptr)
+        m_rareNodeMembers = new RareNodeMembers();
+    return m_rareNodeMembers;
 }
 
 void Node::dumpStyle()

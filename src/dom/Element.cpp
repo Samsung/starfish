@@ -17,7 +17,7 @@
 #ifdef STARFISH_ENABLE_AUDIO
 #include "HTMLAudioElement.h"
 #endif
-
+#include "dom/Attr.h"
 
 namespace StarFish {
 
@@ -58,6 +58,20 @@ void Element::removeAttribute(QualifiedName name)
     } else {
         String* v = m_attributes[idx].value();
         m_attributes.erase(m_attributes.begin() + idx);
+        Attr* attrNode = attr(name);
+        if (attrNode) {
+            attrNode->detachFromElement(v);
+            STARFISH_ASSERT(hasRareMembers());
+            STARFISH_ASSERT(rareMembers()->isRareElementMembers());
+            STARFISH_ASSERT(rareMembers()->asRareElementMembers()->m_attrList);
+            AttrList* attrList = rareMembers()->asRareElementMembers()->m_attrList;
+            for (unsigned i = 0, size = attrList->size(); i < size; i++) {
+                if (attrList->at(i) == attrNode) {
+                    attrList->erase(attrList->begin() + i);
+                    break;
+                }
+            }
+        }
         didAttributeChanged(name, v, String::emptyString);
     }
 }
@@ -139,6 +153,59 @@ Node* Element::clone()
     newNode->m_inlineStyle = m_inlineStyle->clone(document(), newNode);
 
     return newNode;
+}
+
+NamedNodeMap* Element::attributes()
+{
+    if (hasRareMembers()) {
+        STARFISH_ASSERT(rareMembers()->isRareElementMembers());
+        if (!rareMembers()->asRareElementMembers()->m_namedNodeMap)
+            return nullptr;
+    }
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    if (!rareMembers->m_namedNodeMap)
+        rareMembers->m_namedNodeMap = new NamedNodeMap(m_document->scriptBindingInstance(), this);
+    return rareMembers->m_namedNodeMap;
+}
+
+RareNodeMembers* Element::ensureRareMembers()
+{
+    if (!hasRareMembers())
+        m_rareNodeMembers = new RareElementMembers();
+    return m_rareNodeMembers;
+}
+
+RareElementMembers* Element::ensureRareElementMembers()
+{
+    return ensureRareMembers()->asRareElementMembers();
+}
+
+Attr* Element::attr(QualifiedName name)
+{
+    if (hasRareMembers() && rareMembers()->asRareElementMembers()->m_attrList) {
+        AttrList* attrList = rareMembers()->asRareElementMembers()->m_attrList;
+        for (Attr* item : *attrList) {
+            STARFISH_ASSERT(item);
+            if (item->name() == name) {
+                return item;
+            }
+        }
+    }
+    return nullptr;
+}
+
+Attr* Element::ensureAttr(QualifiedName name)
+{
+    STARFISH_ASSERT(hasAttribute(name) != SIZE_MAX);
+    Attr* returnAttr = attr(name);
+    if (!returnAttr) {
+        RareElementMembers* rareMembers = ensureRareElementMembers();
+        if (!rareMembers->m_attrList)
+            rareMembers->m_attrList = new (GC) AttrList();
+        returnAttr = new Attr(m_document, m_document->scriptBindingInstance(), this, name);
+        rareMembers->m_attrList->push_back(returnAttr);
+    }
+    return returnAttr;
 }
 
 }

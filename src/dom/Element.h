@@ -9,6 +9,24 @@ namespace StarFish {
 class HTMLElement;
 class CSSStyleDeclaration;
 
+typedef std::vector<Attr*, gc_allocator<Attr*>> AttrList;
+
+class RareElementMembers : public RareNodeMembers {
+public:
+    RareElementMembers()
+        : RareNodeMembers()
+        , m_namedNodeMap(nullptr)
+        , m_attrList(nullptr)
+    {
+    }
+    bool isRareElementMembers() override
+    {
+        return true;
+    }
+    NamedNodeMap* m_namedNodeMap;
+    AttrList* m_attrList;
+};
+
 class Element : public Node {
 public:
 
@@ -179,6 +197,14 @@ public:
         }
         return true;
     }
+
+    NamedNodeMap* attributes() override;
+
+    RareNodeMembers* ensureRareMembers() override;
+    RareElementMembers* ensureRareElementMembers();
+
+    Attr* attr(QualifiedName name);
+    Attr* ensureAttr(QualifiedName name);
 
 protected:
     // DO NOT MODIFY ATTRIBUTES.

@@ -92,6 +92,12 @@ public:
         return nullptr;
     }
 
+    void detachFromElement(String* value)
+    {
+        m_standAloneValue = value;
+        m_element = nullptr;
+    }
+
 private:
     Element* m_element;
     QualifiedName m_name;
