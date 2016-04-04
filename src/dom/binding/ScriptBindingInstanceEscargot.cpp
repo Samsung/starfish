@@ -895,8 +895,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
         Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+        Node* p = obj->parentNode();
+        if (p == nullptr) {
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }
         obj->remove();
-        return escargot::ESValue(escargot::ESValue::ESNull);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("remove"), 0, false);
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
 
