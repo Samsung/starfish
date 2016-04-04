@@ -85,3 +85,5 @@ test/reftest/web-platform-tests/dom_converted/nodes/Node-properties.html
 test/reftest/web-platform-tests/dom_converted/nodes/CharacterData-appendChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/ProcessingInstruction-literal-1.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/attributes.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-textContent.html
+test/reftest/web-platform-tests/dom_converted/nodes/Document-getElementsByTagName.html
