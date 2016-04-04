@@ -21,7 +21,7 @@
 var XML = "http://www.w3.org/XML/1998/namespace"
 var XMLNS = "http://www.w3.org/2000/xmlns/"
 
-// EDIT: Remove this test since attribute can also be a node and support node methods
+// // EDIT: Remove this test since attribute can also be a node and support node methods
 // AttrExodus
 // test(function() {
 //   document.body.setAttribute("abc", "pass")
@@ -64,7 +64,7 @@ test(function() {
 test(function() {
   var el = document.createElement("div")
   el.setAttribute("ALIGN", "left");
-  // EDIT: Does not support getAttributeNS()
+  // // EDIT: Does not support getAttributeNS()
   // assert_equals(el.getAttributeNS("", "ALIGN"), null)
   // assert_equals(el.getAttributeNS("", "align"), "left")
   assert_equals(el.getAttribute("align"), "left")
@@ -73,7 +73,7 @@ test(function() {
 test(function() {
   var el = document.createElement("div")
   el.setAttribute("CHEEseCaKe", "tasty")
-  // EDIT: Does not support getAttributeNS()
+  // // EDIT: Does not support getAttributeNS()
   // assert_equals(el.getAttributeNS("", "CHEEseCaKe"), null)
   // assert_equals(el.getAttributeNS("", "cheesecake"), "tasty")
   assert_equals(el.getAttribute("cheesecake"), "tasty")
@@ -109,7 +109,7 @@ test(function() {
                       ["c", "4"]])
 }, "setAttribute should not change the order of previously set attributes.")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   var el = document.createElement("baz")
 //   el.setAttributeNS("ab", "attr", "fail")
@@ -119,7 +119,7 @@ test(function() {
 //                       ["attr", "pass", "kl"]])
 // }, "setAttribute should set the first attribute with the given name")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   // Based on a test by David Flanagan.
 //   var el = document.createElement("baz")
@@ -131,7 +131,7 @@ test(function() {
 //   attr_is(el.attributes[0], "2", "bar", "foo", "foo", "foo:bar")
 // }, "setAttribute should set the attribute with the given qualified name")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // setAttributeNS exhaustive tests
 // // Step 1
 // test(function() {
@@ -143,7 +143,7 @@ test(function() {
 // }, "When qualifiedName does not match the Name production, an " +
 //    "INVALID_CHARACTER_ERR exception is to be thrown. (setAttributeNS)")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   var el = document.getElementById("test2")
 //   for (var i = 0; i < el.children.length; i++) {
@@ -155,7 +155,7 @@ test(function() {
 //    "INVALID_CHARACTER_ERR exception is to be thrown, even if the attribute " +
 //    "is already present. (setAttributeNS)")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // Step 2
 // test(function() {
 //   var el = document.createElement("foo")
@@ -167,7 +167,7 @@ test(function() {
 // }, "When qualifiedName does not match the QName production, an " +
 //    "NAMESPACE_ERR exception is to be thrown.")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // Step 3
 // test(function() {
 //   var el = document.createElement("foo")
@@ -177,7 +177,7 @@ test(function() {
 //                       ["xx", "bb"]])
 // }, "null and the empty string should result in a null namespace.")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // Step 4
 // test(function() {
 //   var el = document.createElement("foo")
@@ -187,7 +187,7 @@ test(function() {
 //                 function() { el.setAttributeNS(null, "aa:bb", "fail") })
 // }, "A namespace is required to use a prefix.")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // Step 5
 // test(function() {
 //   var el = document.createElement("foo")
@@ -195,7 +195,7 @@ test(function() {
 //                 function() { el.setAttributeNS("a", "xml:bb", "fail") })
 // }, "The xml prefix should not be allowed for arbitrary namespaces")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   var el = document.createElement("foo")
 //   el.setAttributeNS(XML, "a:bb", "pass")
@@ -203,7 +203,7 @@ test(function() {
 //   attr_is(el.attributes[0], "pass", "bb", XML, "a", "a:bb")
 // }, "XML-namespaced attributes don't need an xml prefix")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // Step 6
 // test(function() {
 //   var el = document.createElement("foo")
@@ -211,14 +211,14 @@ test(function() {
 //                 function() { el.setAttributeNS("a", "xmlns:bb", "fail") })
 // }, "The xmlns prefix should not be allowed for arbitrary namespaces")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   var el = document.createElement("foo")
 //   assert_throws("NAMESPACE_ERR",
 //                 function() { el.setAttributeNS("a", "xmlns", "fail") })
 // }, "The xmlns qualified name should not be allowed for arbitrary namespaces")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   var el = document.createElement("foo")
 //   el.setAttributeNS("ns", "a:xmlns", "pass")
@@ -226,7 +226,7 @@ test(function() {
 //   attr_is(el.attributes[0], "pass", "xmlns", "ns", "a", "a:xmlns")
 // }, "xmlns should be allowed as local name")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // Step 7
 // test(function() {
 //   var el = document.createElement("foo")
@@ -236,7 +236,7 @@ test(function() {
 //                 function() { el.setAttributeNS(XMLNS, "b:foo", "fail") })
 // }, "The XMLNS namespace should require xmlns as prefix or qualified name")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   var el = document.createElement("foo")
 //   el.setAttributeNS(XMLNS, "xmlns:a", "pass")
@@ -244,7 +244,7 @@ test(function() {
 //   attr_is(el.attributes[0], "pass", "a", XMLNS, "xmlns", "xmlns:a")
 // }, "xmlns should be allowed as prefix in the XMLNS namespace")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // test(function() {
 //   var el = document.createElement("foo")
 //   el.setAttributeNS(XMLNS, "xmlns", "pass")
@@ -252,7 +252,7 @@ test(function() {
 //   attr_is(el.attributes[0], "pass", "xmlns", XMLNS, null, "xmlns")
 // }, "xmlns should be allowed as qualified name in the XMLNS namespace")
 
-// EDIT: Does not support setAttributeNS
+// // EDIT: Does not support setAttributeNS
 // // Step 8-9
 // test(function() {
 //   var el = document.createElement("foo")
@@ -273,7 +273,7 @@ test(function() {
   assert_equals(el.getAttribute("src"), "file:///home")
 }, "setAttribute should not throw even if a load is not allowed")
 
-// EDIT: Does not support createDocumentFragment()
+// // EDIT: Does not support createDocumentFragment()
 // test(function() {
 //   var docFragment = document.createDocumentFragment()
 //   var newOne = document.createElement("newElement")
@@ -297,467 +297,499 @@ test(function() {
   var el = document.getElementsByTagName("span").item(0)
   attr_is(el.attributes.item(0), "test1", "id", null, null, "id")
 }, "Specified attributes should be accessible.")
-/*
+
 test(function() {
-  var el = document.getElementsByTagName("span")[1]
-  attr_is(el.attributes[0], "&<>foo", "class", null, null, "class")
+  var el = document.getElementsByTagName("span").item(1)
+  attr_is(el.attributes.item(0), "&<>foo", "class", null, null, "class")
 }, "Entities in attributes should have been expanded while parsing.")
 
-test(function() {
-  var el = document.createElement("div")
-  assert_equals(el.hasAttribute("bar"), false)
-  assert_equals(el.hasAttributeNS(null, "bar"), false)
-  assert_equals(el.hasAttributeNS("", "bar"), false)
-  assert_equals(el.getAttribute("bar"), null)
-  assert_equals(el.getAttributeNS(null, "bar"), null)
-  assert_equals(el.getAttributeNS("", "bar"), null)
-}, "Unset attributes return null")
-test(function() {
-  var el = document.createElement("div")
-  el.setAttributeNS("ab", "attr", "t1")
-  el.setAttributeNS("kl", "attr", "t2")
-  assert_equals(el.hasAttribute("attr"), true)
-  assert_equals(el.hasAttributeNS("ab", "attr"), true)
-  assert_equals(el.hasAttributeNS("kl", "attr"), true)
-  assert_equals(el.getAttribute("attr"), "t1")
-  assert_equals(el.getAttributeNS("ab", "attr"), "t1")
-  assert_equals(el.getAttributeNS("kl", "attr"), "t2")
-  assert_equals(el.getAttributeNS(null, "attr"), null)
-  assert_equals(el.getAttributeNS("", "attr"), null)
-}, "First set attribute is returned by getAttribute")
-test(function() {
-  var el = document.createElement("div")
-  el.setAttribute("style", "color:#fff;")
-  assert_equals(el.hasAttribute("style"), true)
-  assert_equals(el.hasAttributeNS(null, "style"), true)
-  assert_equals(el.hasAttributeNS("", "style"), true)
-  assert_equals(el.getAttribute("style"), "color:#fff;")
-  assert_equals(el.getAttributeNS(null, "style"), "color:#fff;")
-  assert_equals(el.getAttributeNS("", "style"), "color:#fff;")
-}, "Style attributes are not normalized")
-test(function() {
-  var el = document.createElement("div")
-  el.setAttributeNS("", "ALIGN", "left")
-  assert_equals(el.hasAttribute("ALIGN"), false)
-  assert_equals(el.hasAttribute("align"), false)
-  assert_equals(el.hasAttributeNS(null, "ALIGN"), true)
-  assert_equals(el.hasAttributeNS(null, "align"), false)
-  assert_equals(el.hasAttributeNS("", "ALIGN"), true)
-  assert_equals(el.hasAttributeNS("", "align"), false)
-  assert_equals(el.getAttribute("ALIGN"), null)
-  assert_equals(el.getAttribute("align"), null)
-  assert_equals(el.getAttributeNS(null, "ALIGN"), "left")
-  assert_equals(el.getAttributeNS("", "ALIGN"), "left")
-  assert_equals(el.getAttributeNS(null, "align"), null)
-  assert_equals(el.getAttributeNS("", "align"), null)
-  el.removeAttributeNS("", "ALIGN")
-}, "Only lowercase attributes are returned on HTML elements (upper case attribute)")
-test(function() {
-  var el = document.createElement("div")
-  el.setAttributeNS("", "CHEEseCaKe", "tasty")
-  assert_equals(el.hasAttribute("CHEESECAKE"), false)
-  assert_equals(el.hasAttribute("CHEEseCaKe"), false)
-  assert_equals(el.hasAttribute("cheesecake"), false)
-  assert_equals(el.hasAttributeNS("", "CHEESECAKE"), false)
-  assert_equals(el.hasAttributeNS("", "CHEEseCaKe"), true)
-  assert_equals(el.hasAttributeNS("", "cheesecake"), false)
-  assert_equals(el.hasAttributeNS(null, "CHEESECAKE"), false)
-  assert_equals(el.hasAttributeNS(null, "CHEEseCaKe"), true)
-  assert_equals(el.hasAttributeNS(null, "cheesecake"), false)
-  assert_equals(el.getAttribute("CHEESECAKE"), null)
-  assert_equals(el.getAttribute("CHEEseCaKe"), null)
-  assert_equals(el.getAttribute("cheesecake"), null)
-  assert_equals(el.getAttributeNS(null, "CHEESECAKE"), null)
-  assert_equals(el.getAttributeNS("", "CHEESECAKE"), null)
-  assert_equals(el.getAttributeNS(null, "CHEEseCaKe"), "tasty")
-  assert_equals(el.getAttributeNS("", "CHEEseCaKe"), "tasty")
-  assert_equals(el.getAttributeNS(null, "cheesecake"), null)
-  assert_equals(el.getAttributeNS("", "cheesecake"), null)
-  el.removeAttributeNS("", "CHEEseCaKe")
-}, "Only lowercase attributes are returned on HTML elements (mixed case attribute)")
-test(function() {
-  var el = document.createElement("div")
-  document.body.appendChild(el)
-  el.setAttributeNS("", "align", "left")
-  el.setAttributeNS("xx", "align", "right")
-  el.setAttributeNS("", "foo", "left")
-  el.setAttributeNS("xx", "foo", "right")
-  assert_equals(el.hasAttribute("align"), true)
-  assert_equals(el.hasAttribute("foo"), true)
-  assert_equals(el.hasAttributeNS("xx", "align"), true)
-  assert_equals(el.hasAttributeNS(null, "foo"), true)
-  assert_equals(el.getAttribute("align"), "left")
-  assert_equals(el.getAttribute("foo"), "left")
-  assert_equals(el.getAttributeNS("xx", "align"), "right")
-  assert_equals(el.getAttributeNS(null, "foo"), "left")
-  assert_equals(el.getAttributeNS("", "foo"), "left")
-  el.removeAttributeNS("", "align")
-  el.removeAttributeNS("xx", "align")
-  el.removeAttributeNS("", "foo")
-  el.removeAttributeNS("xx", "foo")
-  document.body.removeChild(el)
-}, "First set attribute is returned with mapped attribute set first")
-test(function() {
-  var el = document.createElement("div")
-  el.setAttributeNS("xx", "align", "right")
-  el.setAttributeNS("", "align", "left")
-  el.setAttributeNS("xx", "foo", "right")
-  el.setAttributeNS("", "foo", "left")
-  assert_equals(el.hasAttribute("align"), true)
-  assert_equals(el.hasAttribute("foo"), true)
-  assert_equals(el.hasAttributeNS("xx", "align"), true)
-  assert_equals(el.hasAttributeNS(null, "foo"), true)
-  assert_equals(el.getAttribute("align"), "right")
-  assert_equals(el.getAttribute("foo"), "right")
-  assert_equals(el.getAttributeNS("xx", "align"), "right")
-  assert_equals(el.getAttributeNS(null, "foo"), "left")
-  assert_equals(el.getAttributeNS("", "foo"), "left")
-  el.removeAttributeNS("", "align")
-  el.removeAttributeNS("xx", "align")
-  el.removeAttributeNS("", "foo")
-  el.removeAttributeNS("xx", "foo")
-}, "First set attribute is returned with mapped attribute set later")
+// // EDIT: Does not support hasAttributeNS(), getAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   assert_equals(el.hasAttribute("bar"), false)
+//   assert_equals(el.hasAttributeNS(null, "bar"), false)
+//   assert_equals(el.hasAttributeNS("", "bar"), false)
+//   assert_equals(el.getAttribute("bar"), null)
+//   assert_equals(el.getAttributeNS(null, "bar"), null)
+//   assert_equals(el.getAttributeNS("", "bar"), null)
+// }, "Unset attributes return null")
 
-test(function() {
-  var el = document.createElementNS("http://www.example.com", "foo")
-  el.setAttribute("A", "test")
-  assert_equals(el.hasAttribute("A"), true, "hasAttribute()")
-  assert_equals(el.hasAttributeNS("", "A"), true, "el.hasAttributeNS(\"\")")
-  assert_equals(el.hasAttributeNS(null, "A"), true, "el.hasAttributeNS(null)")
-  assert_equals(el.hasAttributeNS(undefined, "A"), true, "el.hasAttributeNS(undefined)")
-  assert_equals(el.hasAttributeNS("foo", "A"), false, "el.hasAttributeNS(\"foo\")")
+// // EDIT: Does not support hasAttributeNS(), getAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttributeNS("ab", "attr", "t1")
+//   el.setAttributeNS("kl", "attr", "t2")
+//   assert_equals(el.hasAttribute("attr"), true)
+//   assert_equals(el.hasAttributeNS("ab", "attr"), true)
+//   assert_equals(el.hasAttributeNS("kl", "attr"), true)
+//   assert_equals(el.getAttribute("attr"), "t1")
+//   assert_equals(el.getAttributeNS("ab", "attr"), "t1")
+//   assert_equals(el.getAttributeNS("kl", "attr"), "t2")
+//   assert_equals(el.getAttributeNS(null, "attr"), null)
+//   assert_equals(el.getAttributeNS("", "attr"), null)
+// }, "First set attribute is returned by getAttribute")
 
-  assert_equals(el.getAttribute("A"), "test", "getAttribute()")
-  assert_equals(el.getAttributeNS("", "A"), "test", "el.getAttributeNS(\"\")")
-  assert_equals(el.getAttributeNS(null, "A"), "test", "el.getAttributeNS(null)")
-  assert_equals(el.getAttributeNS(undefined, "A"), "test", "el.getAttributeNS(undefined)")
-  assert_equals(el.getAttributeNS("foo", "A"), null, "el.getAttributeNS(\"foo\")")
-}, "Non-HTML element with upper-case attribute")
+// // EDIT: Does not support hasAttributeNS(), getAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttribute("style", "color:#fff;")
+//   assert_equals(el.hasAttribute("style"), true)
+//   assert_equals(el.hasAttributeNS(null, "style"), true)
+//   assert_equals(el.hasAttributeNS("", "style"), true)
+//   assert_equals(el.getAttribute("style"), "color:#fff;")
+//   assert_equals(el.getAttributeNS(null, "style"), "color:#fff;")
+//   assert_equals(el.getAttributeNS("", "style"), "color:#fff;")
+// }, "Style attributes are not normalized")
 
-test(function() {
-  var el = document.createElement("div")
-  el.setAttribute("pre:fix", "value 1")
-  el.setAttribute("fix", "value 2")
+// // EDIT: Does not support hasAttributeNS(), getAttributeNS(), setAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttributeNS("", "ALIGN", "left")
+//   assert_equals(el.hasAttribute("ALIGN"), false)
+//   assert_equals(el.hasAttribute("align"), false)
+//   assert_equals(el.hasAttributeNS(null, "ALIGN"), true)
+//   assert_equals(el.hasAttributeNS(null, "align"), false)
+//   assert_equals(el.hasAttributeNS("", "ALIGN"), true)
+//   assert_equals(el.hasAttributeNS("", "align"), false)
+//   assert_equals(el.getAttribute("ALIGN"), null)
+//   assert_equals(el.getAttribute("align"), null)
+//   assert_equals(el.getAttributeNS(null, "ALIGN"), "left")
+//   assert_equals(el.getAttributeNS("", "ALIGN"), "left")
+//   assert_equals(el.getAttributeNS(null, "align"), null)
+//   assert_equals(el.getAttributeNS("", "align"), null)
+//   el.removeAttributeNS("", "ALIGN")
+// }, "Only lowercase attributes are returned on HTML elements (upper case attribute)")
 
-  var prefixed = el.attributes[0]
-  assert_equals(prefixed.localName, "pre:fix", "prefixed local name")
-  assert_equals(prefixed.namespaceURI, null, "prefixed namespace")
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttributeNS("", "CHEEseCaKe", "tasty")
+//   assert_equals(el.hasAttribute("CHEESECAKE"), false)
+//   assert_equals(el.hasAttribute("CHEEseCaKe"), false)
+//   assert_equals(el.hasAttribute("cheesecake"), false)
+//   assert_equals(el.hasAttributeNS("", "CHEESECAKE"), false)
+//   assert_equals(el.hasAttributeNS("", "CHEEseCaKe"), true)
+//   assert_equals(el.hasAttributeNS("", "cheesecake"), false)
+//   assert_equals(el.hasAttributeNS(null, "CHEESECAKE"), false)
+//   assert_equals(el.hasAttributeNS(null, "CHEEseCaKe"), true)
+//   assert_equals(el.hasAttributeNS(null, "cheesecake"), false)
+//   assert_equals(el.getAttribute("CHEESECAKE"), null)
+//   assert_equals(el.getAttribute("CHEEseCaKe"), null)
+//   assert_equals(el.getAttribute("cheesecake"), null)
+//   assert_equals(el.getAttributeNS(null, "CHEESECAKE"), null)
+//   assert_equals(el.getAttributeNS("", "CHEESECAKE"), null)
+//   assert_equals(el.getAttributeNS(null, "CHEEseCaKe"), "tasty")
+//   assert_equals(el.getAttributeNS("", "CHEEseCaKe"), "tasty")
+//   assert_equals(el.getAttributeNS(null, "cheesecake"), null)
+//   assert_equals(el.getAttributeNS("", "cheesecake"), null)
+//   el.removeAttributeNS("", "CHEEseCaKe")
+// }, "Only lowercase attributes are returned on HTML elements (mixed case attribute)")
 
-  var unprefixed = el.attributes[1]
-  assert_equals(unprefixed.localName, "fix", "unprefixed local name")
-  assert_equals(unprefixed.namespaceURI, null, "unprefixed namespace")
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   document.body.appendChild(el)
+//   el.setAttributeNS("", "align", "left")
+//   el.setAttributeNS("xx", "align", "right")
+//   el.setAttributeNS("", "foo", "left")
+//   el.setAttributeNS("xx", "foo", "right")
+//   assert_equals(el.hasAttribute("align"), true)
+//   assert_equals(el.hasAttribute("foo"), true)
+//   assert_equals(el.hasAttributeNS("xx", "align"), true)
+//   assert_equals(el.hasAttributeNS(null, "foo"), true)
+//   assert_equals(el.getAttribute("align"), "left")
+//   assert_equals(el.getAttribute("foo"), "left")
+//   assert_equals(el.getAttributeNS("xx", "align"), "right")
+//   assert_equals(el.getAttributeNS(null, "foo"), "left")
+//   assert_equals(el.getAttributeNS("", "foo"), "left")
+//   el.removeAttributeNS("", "align")
+//   el.removeAttributeNS("xx", "align")
+//   el.removeAttributeNS("", "foo")
+//   el.removeAttributeNS("xx", "foo")
+//   document.body.removeChild(el)
+// }, "First set attribute is returned with mapped attribute set first")
 
-  el.removeAttributeNS(null, "pre:fix")
-  assert_equals(el.attributes[0], unprefixed)
-}, "Attribute with prefix in local name")
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttributeNS("xx", "align", "right")
+//   el.setAttributeNS("", "align", "left")
+//   el.setAttributeNS("xx", "foo", "right")
+//   el.setAttributeNS("", "foo", "left")
+//   assert_equals(el.hasAttribute("align"), true)
+//   assert_equals(el.hasAttribute("foo"), true)
+//   assert_equals(el.hasAttributeNS("xx", "align"), true)
+//   assert_equals(el.hasAttributeNS(null, "foo"), true)
+//   assert_equals(el.getAttribute("align"), "right")
+//   assert_equals(el.getAttribute("foo"), "right")
+//   assert_equals(el.getAttributeNS("xx", "align"), "right")
+//   assert_equals(el.getAttributeNS(null, "foo"), "left")
+//   assert_equals(el.getAttributeNS("", "foo"), "left")
+//   el.removeAttributeNS("", "align")
+//   el.removeAttributeNS("xx", "align")
+//   el.removeAttributeNS("", "foo")
+//   el.removeAttributeNS("xx", "foo")
+// }, "First set attribute is returned with mapped attribute set later")
+
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElementNS("http://www.example.com", "foo")
+//   el.setAttribute("A", "test")
+//   assert_equals(el.hasAttribute("A"), true, "hasAttribute()")
+//   assert_equals(el.hasAttributeNS("", "A"), true, "el.hasAttributeNS(\"\")")
+//   assert_equals(el.hasAttributeNS(null, "A"), true, "el.hasAttributeNS(null)")
+//   assert_equals(el.hasAttributeNS(undefined, "A"), true, "el.hasAttributeNS(undefined)")
+//   assert_equals(el.hasAttributeNS("foo", "A"), false, "el.hasAttributeNS(\"foo\")")
+
+//   assert_equals(el.getAttribute("A"), "test", "getAttribute()")
+//   assert_equals(el.getAttributeNS("", "A"), "test", "el.getAttributeNS(\"\")")
+//   assert_equals(el.getAttributeNS(null, "A"), "test", "el.getAttributeNS(null)")
+//   assert_equals(el.getAttributeNS(undefined, "A"), "test", "el.getAttributeNS(undefined)")
+//   assert_equals(el.getAttributeNS("foo", "A"), null, "el.getAttributeNS(\"foo\")")
+// }, "Non-HTML element with upper-case attribute")
+
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttribute("pre:fix", "value 1")
+//   el.setAttribute("fix", "value 2")
+
+//   var prefixed = el.attributes[0]
+//   assert_equals(prefixed.localName, "pre:fix", "prefixed local name")
+//   assert_equals(prefixed.namespaceURI, null, "prefixed namespace")
+
+//   var unprefixed = el.attributes[1]
+//   assert_equals(unprefixed.localName, "fix", "unprefixed local name")
+//   assert_equals(unprefixed.namespaceURI, null, "unprefixed namespace")
+
+//   el.removeAttributeNS(null, "pre:fix")
+//   assert_equals(el.attributes[0], unprefixed)
+// }, "Attribute with prefix in local name")
 
 test(function() {
   var el = document.createElement("div")
   el.setAttribute("foo", "bar")
-  var attr = el.attributes[0]
+  var attr = el.attributes.item(0)
   assert_equals(attr.ownerElement, el)
   el.removeAttribute("foo")
   assert_equals(attr.ownerElement, null)
 }, "Attribute loses its owner when removed")
 
-test(function() {
-  var el = document.createElement("div")
-  el.setAttribute("foo", "bar")
-  var attr = el.attributes[0]
-  var attrNode = el.getAttributeNode("foo");
-  var attrNodeNS = el.getAttributeNodeNS("", "foo");
-  assert_equals(attr, attrNode);
-  assert_equals(attr, attrNodeNS);
-  el.setAttributeNS("x", "foo2", "bar2");
-  var attr2 = el.attributes[1];
-  var attrNodeNS2 = el.getAttributeNodeNS("x", "foo2");
-  assert_equals(attr2, attrNodeNS2);
-}, "Basic functionality of getAttributeNode/getAttributeNodeNS")
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttribute("foo", "bar")
+//   var attr = el.attributes[0]
+//   var attrNode = el.getAttributeNode("foo");
+//   var attrNodeNS = el.getAttributeNodeNS("", "foo");
+//   assert_equals(attr, attrNode);
+//   assert_equals(attr, attrNodeNS);
+//   el.setAttributeNS("x", "foo2", "bar2");
+//   var attr2 = el.attributes[1];
+//   var attrNodeNS2 = el.getAttributeNodeNS("x", "foo2");
+//   assert_equals(attr2, attrNodeNS2);
+// }, "Basic functionality of getAttributeNode/getAttributeNodeNS")
 
-test(function() {
-  var el = document.createElement("div")
-  el.setAttribute("foo", "bar")
-  var attrNode = el.getAttributeNode("foo");
-  var attrNodeNS = el.getAttributeNodeNS("", "foo");
-  assert_equals(attrNode, attrNodeNS);
-  el.removeAttribute("foo");
-  var el2 = document.createElement("div");
-  el2.setAttributeNode(attrNode);
-  assert_equals(attrNode, el2.getAttributeNode("foo"));
-  assert_equals(attrNode, el2.attributes[0]);
-  assert_equals(attrNode.ownerElement, el2);
-  assert_equals(attrNode.value, "bar");
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttribute("foo", "bar")
+//   var attrNode = el.getAttributeNode("foo");
+//   var attrNodeNS = el.getAttributeNodeNS("", "foo");
+//   assert_equals(attrNode, attrNodeNS);
+//   el.removeAttribute("foo");
+//   var el2 = document.createElement("div");
+//   el2.setAttributeNode(attrNode);
+//   assert_equals(attrNode, el2.getAttributeNode("foo"));
+//   assert_equals(attrNode, el2.attributes[0]);
+//   assert_equals(attrNode.ownerElement, el2);
+//   assert_equals(attrNode.value, "bar");
 
-   var el3 = document.createElement("div");
-   el2.removeAttribute("foo");
-   el3.setAttribute("foo", "baz");
-   el3.setAttributeNode(attrNode);
-   assert_equals(el3.getAttribute("foo"), "bar");
-}, "Basic functionality of setAttributeNode")
+//    var el3 = document.createElement("div");
+//    el2.removeAttribute("foo");
+//    el3.setAttribute("foo", "baz");
+//    el3.setAttributeNode(attrNode);
+//    assert_equals(el3.getAttribute("foo"), "bar");
+// }, "Basic functionality of setAttributeNode")
 
-test(function() {
-  var el = document.createElement("div")
-  el.setAttributeNS("x", "foo", "bar")
-  var attrNode = el.getAttributeNodeNS("x", "foo");
-  el.removeAttribute("foo");
-  var el2 = document.createElement("div");
-  el2.setAttributeNS("x", "foo", "baz");
-  el2.setAttributeNodeNS(attrNode);
-  assert_equals(el2.getAttributeNS("x", "foo"), "bar");
-}, "Basic functionality of setAttributeNodeNS")
+// // EDIT: Does not support XXXAttributeNS()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttributeNS("x", "foo", "bar")
+//   var attrNode = el.getAttributeNodeNS("x", "foo");
+//   el.removeAttribute("foo");
+//   var el2 = document.createElement("div");
+//   el2.setAttributeNS("x", "foo", "baz");
+//   el2.setAttributeNodeNS(attrNode);
+//   assert_equals(el2.getAttributeNS("x", "foo"), "bar");
+// }, "Basic functionality of setAttributeNodeNS")
 
-test(function() {
-  var el = document.createElement("div");
-  var other = document.createElement("div");
-  attr = document.createAttribute("foo");
-  assert_equals(el.setAttributeNode(attr), null);
-  assert_equals(attr.ownerElement, el);
-  assert_throws("INUSE_ATTRIBUTE_ERR",
-                  function() { other.setAttributeNode(attr) },
-                  "Attribute already associated with el")
-}, "If attr’s element is neither null nor element, throw an InUseAttributeError.");
+// // EDIT: Does not support XXXAttributeNode()
+// test(function() {
+//   var el = document.createElement("div");
+//   var other = document.createElement("div");
+//   attr = document.createAttribute("foo");
+//   assert_equals(el.setAttributeNode(attr), null);
+//   assert_equals(attr.ownerElement, el);
+//   assert_throws("INUSE_ATTRIBUTE_ERR",
+//                   function() { other.setAttributeNode(attr) },
+//                   "Attribute already associated with el")
+// }, "If attr’s element is neither null nor element, throw an InUseAttributeError.");
 
-test(function() {
-  var el = document.createElement("div");
-  attr = document.createAttribute("foo");
-  assert_equals(el.setAttributeNode(attr), null);
-  el.setAttribute("bar", "qux");
-  assert_equals(el.setAttributeNode(attr), attr);
-  assert_equals(el.attributes[0], attr);
-}, "Replacing an attr by itself");
+// // EDIT: Does not support XXXAttributeNode()
+// test(function() {
+//   var el = document.createElement("div");
+//   attr = document.createAttribute("foo");
+//   assert_equals(el.setAttributeNode(attr), null);
+//   el.setAttribute("bar", "qux");
+//   assert_equals(el.setAttributeNode(attr), attr);
+//   assert_equals(el.attributes[0], attr);
+// }, "Replacing an attr by itself");
 
-test(function() {
-  var el = document.createElement("div")
-  el.setAttribute("foo", "bar")
-  var attrNode = el.getAttributeNode("foo");
-  el.removeAttributeNode(attrNode);
-  var el2 = document.createElement("div");
-  el2.setAttributeNode(attrNode);
-  assert_equals(el2.attributes[0], attrNode);
-  assert_equals(el.attributes.length, 0);
-}, "Basic functionality of removeAttributeNode")
+// // EDIT: Does not support XXXAttributeNode()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttribute("foo", "bar")
+//   var attrNode = el.getAttributeNode("foo");
+//   el.removeAttributeNode(attrNode);
+//   var el2 = document.createElement("div");
+//   el2.setAttributeNode(attrNode);
+//   assert_equals(el2.attributes[0], attrNode);
+//   assert_equals(el.attributes.length, 0);
+// }, "Basic functionality of removeAttributeNode")
 
-test(function() {
-  var el = document.createElement("div")
-  el.setAttribute("foo", "bar")
-  var attrNode = el.getAttributeNode("foo");
-  var el2 = document.createElement("div");
-  assert_throws("INUSE_ATTRIBUTE_ERR", function(){el2.setAttributeNode(attrNode)});
-}, "setAttributeNode on bound attribute should throw InUseAttributeError")
+// // EDIT: Does not support XXXAttributeNode()
+// test(function() {
+//   var el = document.createElement("div")
+//   el.setAttribute("foo", "bar")
+//   var attrNode = el.getAttributeNode("foo");
+//   var el2 = document.createElement("div");
+//   assert_throws("INUSE_ATTRIBUTE_ERR", function(){el2.setAttributeNode(attrNode)});
+// }, "setAttributeNode on bound attribute should throw InUseAttributeError")
 
+// // EDIT: Does not support XXXAttributeNode()
 // Have to use an async_test to see what a DOMAttrModified listener sees,
 // because otherwise the event dispatch code will swallow our exceptions.  And
 // we want to make sure this test always happens, even when no mutation events
 // run.
-var setAttributeNode_mutation_test = async_test("setAttributeNode, if it fires mutation events, should fire one with the new node when resetting an existing attribute");
+// var setAttributeNode_mutation_test = async_test("setAttributeNode, if it fires mutation events, should fire one with the new node when resetting an existing attribute");
 
-test(function(){
-  var el = document.createElement("div")
-  var attrNode1 = document.createAttribute("foo");
-  attrNode1.value = "bar";
-  el.setAttributeNode(attrNode1);
-  var attrNode2 = document.createAttribute("foo");
-  attrNode2.value = "baz";
+// test(function(){
+//   var el = document.createElement("div")
+//   var attrNode1 = document.createAttribute("foo");
+//   attrNode1.value = "bar";
+//   el.setAttributeNode(attrNode1);
+//   var attrNode2 = document.createAttribute("foo");
+//   attrNode2.value = "baz";
 
-  el.addEventListener("DOMAttrModified", function(e) {
-    // If this never gets called, that's OK, I guess.  But if it gets called, it
-    // better represent a single modification with attrNode2 as the relatedNode.
-    // We have to do an inner test() call here, because otherwise the exceptions
-    // our asserts trigger will get swallowed by the event dispatch code.
-    setAttributeNode_mutation_test.step(function() {
-      assert_equals(e.attrName, "foo");
-      assert_equals(e.attrChange, MutationEvent.MODIFICATION);
-      assert_equals(e.prevValue, "bar");
-      assert_equals(e.newValue, "baz");
-      assert_equals(e.relatedNode, attrNode2);
-    });
-  });
+//   el.addEventListener("DOMAttrModified", function(e) {
+//     // If this never gets called, that's OK, I guess.  But if it gets called, it
+//     // better represent a single modification with attrNode2 as the relatedNode.
+//     // We have to do an inner test() call here, because otherwise the exceptions
+//     // our asserts trigger will get swallowed by the event dispatch code.
+//     setAttributeNode_mutation_test.step(function() {
+//       assert_equals(e.attrName, "foo");
+//       assert_equals(e.attrChange, MutationEvent.MODIFICATION);
+//       assert_equals(e.prevValue, "bar");
+//       assert_equals(e.newValue, "baz");
+//       assert_equals(e.relatedNode, attrNode2);
+//     });
+//   });
 
-  var oldNode = el.setAttributeNode(attrNode2);
-  assert_equals(oldNode, attrNode1,
-                "Must return the old attr node from a setAttributeNode call");
-}, "setAttributeNode, if it fires mutation events, should fire one with the new node when resetting an existing attribute (outer shell)");
-setAttributeNode_mutation_test.done();
+//   var oldNode = el.setAttributeNode(attrNode2);
+//   assert_equals(oldNode, attrNode1,
+//                 "Must return the old attr node from a setAttributeNode call");
+// }, "setAttributeNode, if it fires mutation events, should fire one with the new node when resetting an existing attribute (outer shell)");
+// setAttributeNode_mutation_test.done();
 
-test(function(){
-  var el = document.createElement("div")
-  el.setAttribute("a", "b");
-  el.setAttribute("c", "d");
+// // EDIT: Does not support XXXAttributeNode()
+// test(function(){
+//   var el = document.createElement("div")
+//   el.setAttribute("a", "b");
+//   el.setAttribute("c", "d");
 
-  assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.name }),
-                      ["a", "c"]);
-  assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.value }),
-                      ["b", "d"]);
+//   assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.name }),
+//                       ["a", "c"]);
+//   assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.value }),
+//                       ["b", "d"]);
 
-  var attrNode = document.createAttribute("a");
-  attrNode.value = "e";
-  el.setAttributeNode(attrNode);
+//   var attrNode = document.createAttribute("a");
+//   attrNode.value = "e";
+//   el.setAttributeNode(attrNode);
 
-  assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.name }),
-                      ["a", "c"]);
-  assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.value }),
-                      ["e", "d"]);
-}, "setAttributeNode called with an Attr that has the same name as an existing one should not change attribute order");
+//   assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.name }),
+//                       ["a", "c"]);
+//   assert_array_equals(Array.prototype.map.call(el.attributes, function(a) { return a.value }),
+//                       ["e", "d"]);
+// }, "setAttributeNode called with an Attr that has the same name as an existing one should not change attribute order");
 
-test(function() {
-  var el = document.createElement("div");
-  el.setAttribute("foo", "bar");
-  assert_equals(el.getAttributeNames().length, 1);
-  assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
-  assert_equals(el.getAttributeNames()[0], "foo");
+// // EDIT: Does not support XXXAttributeNames()
+// test(function() {
+//   var el = document.createElement("div");
+//   el.setAttribute("foo", "bar");
+//   assert_equals(el.getAttributeNames().length, 1);
+//   assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
+//   assert_equals(el.getAttributeNames()[0], "foo");
 
-  el.removeAttribute("foo");
-  assert_equals(el.getAttributeNames().length, 0);
+//   el.removeAttribute("foo");
+//   assert_equals(el.getAttributeNames().length, 0);
 
-  el.setAttribute("foo", "bar");
-  el.setAttributeNS("", "FOO", "bar");
-  el.setAttributeNS("dummy1", "foo", "bar");
-  el.setAttributeNS("dummy2", "dummy:foo", "bar");
-  assert_equals(el.getAttributeNames().length, 4);
-  assert_equals(el.getAttributeNames()[0], "foo");
-  assert_equals(el.getAttributeNames()[1], "FOO");
-  assert_equals(el.getAttributeNames()[2], "foo");
-  assert_equals(el.getAttributeNames()[3], "dummy:foo");
-  assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
-  assert_equals(el.getAttributeNames()[1], el.attributes[1].name);
-  assert_equals(el.getAttributeNames()[2], el.attributes[2].name);
-  assert_equals(el.getAttributeNames()[3], el.attributes[3].name);
+//   el.setAttribute("foo", "bar");
+//   el.setAttributeNS("", "FOO", "bar");
+//   el.setAttributeNS("dummy1", "foo", "bar");
+//   el.setAttributeNS("dummy2", "dummy:foo", "bar");
+//   assert_equals(el.getAttributeNames().length, 4);
+//   assert_equals(el.getAttributeNames()[0], "foo");
+//   assert_equals(el.getAttributeNames()[1], "FOO");
+//   assert_equals(el.getAttributeNames()[2], "foo");
+//   assert_equals(el.getAttributeNames()[3], "dummy:foo");
+//   assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
+//   assert_equals(el.getAttributeNames()[1], el.attributes[1].name);
+//   assert_equals(el.getAttributeNames()[2], el.attributes[2].name);
+//   assert_equals(el.getAttributeNames()[3], el.attributes[3].name);
 
-  el.removeAttributeNS("", "FOO");
-  assert_equals(el.getAttributeNames().length, 3);
-  assert_equals(el.getAttributeNames()[0], "foo");
-  assert_equals(el.getAttributeNames()[1], "foo");
-  assert_equals(el.getAttributeNames()[2], "dummy:foo");
-  assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
-  assert_equals(el.getAttributeNames()[1], el.attributes[1].name);
-  assert_equals(el.getAttributeNames()[2], el.attributes[2].name);
-}, "getAttributeNames tests");
+//   el.removeAttributeNS("", "FOO");
+//   assert_equals(el.getAttributeNames().length, 3);
+//   assert_equals(el.getAttributeNames()[0], "foo");
+//   assert_equals(el.getAttributeNames()[1], "foo");
+//   assert_equals(el.getAttributeNames()[2], "dummy:foo");
+//   assert_equals(el.getAttributeNames()[0], el.attributes[0].name);
+//   assert_equals(el.getAttributeNames()[1], el.attributes[1].name);
+//   assert_equals(el.getAttributeNames()[2], el.attributes[2].name);
+// }, "getAttributeNames tests");
 
-function getEnumerableOwnProps1(obj) {
-  var arr = [];
-  for (var prop in obj) {
-    if (obj.hasOwnProperty(prop)) {
-      arr.push(prop);
-    }
-  }
-  return arr;
-}
+// function getEnumerableOwnProps1(obj) {
+//   var arr = [];
+//   for (var prop in obj) {
+//     if (obj.hasOwnProperty(prop)) {
+//       arr.push(prop);
+//     }
+//   }
+//   return arr;
+// }
 
-function getEnumerableOwnProps2(obj) {
-  return Object.getOwnPropertyNames(obj).filter(
-    function (name) { return Object.getOwnPropertyDescriptor(obj, name).enumerable; })
-}
+// function getEnumerableOwnProps2(obj) {
+//   return Object.getOwnPropertyNames(obj).filter(
+//     function (name) { return Object.getOwnPropertyDescriptor(obj, name).enumerable; })
+// }
 
-test(function() {
-  var el = document.createElement("div");
-  el.setAttribute("a", "");
-  el.setAttribute("b", "");
-  assert_array_equals(getEnumerableOwnProps1(el.attributes),
-                      ["0", "1"])
-  assert_array_equals(getEnumerableOwnProps2(el.attributes),
-                      ["0", "1"])
-  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
-                      ["0", "1", "a", "b"])
-}, "Own property correctness with basic attributes");
+// // EDIT: Invalid Test
+// test(function() {
+//   var el = document.createElement("div");
+//   el.setAttribute("a", "");
+//   el.setAttribute("b", "");
+//   assert_array_equals(getEnumerableOwnProps1(el.attributes),
+//                       ["0", "1"])
+//   assert_array_equals(getEnumerableOwnProps2(el.attributes),
+//                       ["0", "1"])
+//   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+//                       ["0", "1", "a", "b"])
+// }, "Own property correctness with basic attributes");
 
-test(function() {
-  var el = document.createElement("div");
-  el.setAttributeNS("", "a", "");
-  el.setAttribute("b", "");
-  el.setAttributeNS("foo", "a", "");
-  assert_array_equals(getEnumerableOwnProps1(el.attributes),
-                      ["0", "1", "2"])
-  assert_array_equals(getEnumerableOwnProps2(el.attributes),
-                      ["0", "1", "2"])
-  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
-                      ["0", "1", "2", "a", "b"])
-  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
-    assert_true(el.attributes[propName] instanceof Attr,
-                "el.attributes has an Attr for property name " + propName);
-  }
-}, "Own property correctness with non-namespaced attribute before same-name namespaced one");
+// // EDIT: Invalid Test
+// test(function() {
+//   var el = document.createElement("div");
+//   el.setAttributeNS("", "a", "");
+//   el.setAttribute("b", "");
+//   el.setAttributeNS("foo", "a", "");
+//   assert_array_equals(getEnumerableOwnProps1(el.attributes),
+//                       ["0", "1", "2"])
+//   assert_array_equals(getEnumerableOwnProps2(el.attributes),
+//                       ["0", "1", "2"])
+//   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+//                       ["0", "1", "2", "a", "b"])
+//   for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+//     assert_true(el.attributes[propName] instanceof Attr,
+//                 "el.attributes has an Attr for property name " + propName);
+//   }
+// }, "Own property correctness with non-namespaced attribute before same-name namespaced one");
 
-test(function() {
-  var el = document.createElement("div");
-  el.setAttributeNS("foo", "a", "");
-  el.setAttribute("b", "");
-  el.setAttributeNS("", "a", "");
-  assert_array_equals(getEnumerableOwnProps1(el.attributes),
-                      ["0", "1", "2"])
-  assert_array_equals(getEnumerableOwnProps2(el.attributes),
-                      ["0", "1", "2"])
-  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
-                      ["0", "1", "2", "a", "b"])
-  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
-    assert_true(el.attributes[propName] instanceof Attr,
-                "el.attributes has an Attr for property name " + propName);
-  }
-}, "Own property correctness with namespaced attribute before same-name non-namespaced one");
+// // EDIT: Invalid Test
+// test(function() {
+//   var el = document.createElement("div");
+//   el.setAttributeNS("foo", "a", "");
+//   el.setAttribute("b", "");
+//   el.setAttributeNS("", "a", "");
+//   assert_array_equals(getEnumerableOwnProps1(el.attributes),
+//                       ["0", "1", "2"])
+//   assert_array_equals(getEnumerableOwnProps2(el.attributes),
+//                       ["0", "1", "2"])
+//   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+//                       ["0", "1", "2", "a", "b"])
+//   for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+//     assert_true(el.attributes[propName] instanceof Attr,
+//                 "el.attributes has an Attr for property name " + propName);
+//   }
+// }, "Own property correctness with namespaced attribute before same-name non-namespaced one");
 
-test(function() {
-  var el = document.createElement("div");
-  el.setAttributeNS("foo", "a:b", "");
-  el.setAttributeNS("foo", "c:d", "");
-  el.setAttributeNS("bar", "a:b", "");
-  assert_array_equals(getEnumerableOwnProps1(el.attributes),
-                      ["0", "1", "2"])
-  assert_array_equals(getEnumerableOwnProps2(el.attributes),
-                      ["0", "1", "2"])
-  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
-                      ["0", "1", "2", "a:b", "c:d"])
-  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
-    assert_true(el.attributes[propName] instanceof Attr,
-                "el.attributes has an Attr for property name " + propName);
-  }
-}, "Own property correctness with two namespaced attributes with the same name-with-prefix");
+// // EDIT: Invalid Test
+// test(function() {
+//   var el = document.createElement("div");
+//   el.setAttributeNS("foo", "a:b", "");
+//   el.setAttributeNS("foo", "c:d", "");
+//   el.setAttributeNS("bar", "a:b", "");
+//   assert_array_equals(getEnumerableOwnProps1(el.attributes),
+//                       ["0", "1", "2"])
+//   assert_array_equals(getEnumerableOwnProps2(el.attributes),
+//                       ["0", "1", "2"])
+//   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+//                       ["0", "1", "2", "a:b", "c:d"])
+//   for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+//     assert_true(el.attributes[propName] instanceof Attr,
+//                 "el.attributes has an Attr for property name " + propName);
+//   }
+// }, "Own property correctness with two namespaced attributes with the same name-with-prefix");
 
-test(function() {
-  var el = document.createElement("div");
-  el.setAttributeNS("foo", "A:B", "");
-  el.setAttributeNS("bar", "c:D", "");
-  el.setAttributeNS("baz", "e:F", "");
-  el.setAttributeNS("qux", "g:h", "");
-  el.setAttributeNS("", "I", "");
-  el.setAttributeNS("", "j", "");
-  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
-                      ["0", "1", "2", "3", "4", "5", "g:h", "j"])
-  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
-    assert_true(el.attributes[propName] instanceof Attr,
-                "el.attributes has an Attr for property name " + propName);
-  }
-}, "Own property names should only include all-lowercase qualified names for an HTML element in an HTML document");
+// // EDIT: Invalid Test
+// test(function() {
+//   var el = document.createElement("div");
+//   el.setAttributeNS("foo", "A:B", "");
+//   el.setAttributeNS("bar", "c:D", "");
+//   el.setAttributeNS("baz", "e:F", "");
+//   el.setAttributeNS("qux", "g:h", "");
+//   el.setAttributeNS("", "I", "");
+//   el.setAttributeNS("", "j", "");
+//   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+//                       ["0", "1", "2", "3", "4", "5", "g:h", "j"])
+//   for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+//     assert_true(el.attributes[propName] instanceof Attr,
+//                 "el.attributes has an Attr for property name " + propName);
+//   }
+// }, "Own property names should only include all-lowercase qualified names for an HTML element in an HTML document");
 
-test(function() {
-  var el = document.createElementNS("", "div");
-  el.setAttributeNS("foo", "A:B", "");
-  el.setAttributeNS("bar", "c:D", "");
-  el.setAttributeNS("baz", "e:F", "");
-  el.setAttributeNS("qux", "g:h", "");
-  el.setAttributeNS("", "I", "");
-  el.setAttributeNS("", "j", "");
-  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
-                      ["0", "1", "2", "3", "4", "5", "A:B", "c:D", "e:F", "g:h", "I", "j"])
-  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
-    assert_true(el.attributes[propName] instanceof Attr,
-                "el.attributes has an Attr for property name " + propName);
-  }
-}, "Own property names should include all qualified names for a non-HTML element in an HTML document");
+// // EDIT: Invalid Test
+// test(function() {
+//   var el = document.createElementNS("", "div");
+//   el.setAttributeNS("foo", "A:B", "");
+//   el.setAttributeNS("bar", "c:D", "");
+//   el.setAttributeNS("baz", "e:F", "");
+//   el.setAttributeNS("qux", "g:h", "");
+//   el.setAttributeNS("", "I", "");
+//   el.setAttributeNS("", "j", "");
+//   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+//                       ["0", "1", "2", "3", "4", "5", "A:B", "c:D", "e:F", "g:h", "I", "j"])
+//   for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+//     assert_true(el.attributes[propName] instanceof Attr,
+//                 "el.attributes has an Attr for property name " + propName);
+//   }
+// }, "Own property names should include all qualified names for a non-HTML element in an HTML document");
 
-test(function() {
-  var doc = document.implementation.createDocument(null, "");
-  assert_equals(doc.contentType, "application/xml");
-  var el = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
-  el.setAttributeNS("foo", "A:B", "");
-  el.setAttributeNS("bar", "c:D", "");
-  el.setAttributeNS("baz", "e:F", "");
-  el.setAttributeNS("qux", "g:h", "");
-  el.setAttributeNS("", "I", "");
-  el.setAttributeNS("", "j", "");
-  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
-                      ["0", "1", "2", "3", "4", "5", "A:B", "c:D", "e:F", "g:h", "I", "j"])
-  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
-    assert_true(el.attributes[propName] instanceof Attr,
-                "el.attributes has an Attr for property name " + propName);
-  }
-}, "Own property names should include all qualified names for an HTML element in a non-HTML document");*/
+// // EDIT: Invalid Test
+// test(function() {
+//   var doc = document.implementation.createDocument(null, "");
+//   assert_equals(doc.contentType, "application/xml");
+//   var el = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+//   el.setAttributeNS("foo", "A:B", "");
+//   el.setAttributeNS("bar", "c:D", "");
+//   el.setAttributeNS("baz", "e:F", "");
+//   el.setAttributeNS("qux", "g:h", "");
+//   el.setAttributeNS("", "I", "");
+//   el.setAttributeNS("", "j", "");
+//   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+//                       ["0", "1", "2", "3", "4", "5", "A:B", "c:D", "e:F", "g:h", "I", "j"])
+//   for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+//     assert_true(el.attributes[propName] instanceof Attr,
+//                 "el.attributes has an Attr for property name " + propName);
+//   }
+// }, "Own property names should include all qualified names for an HTML element in a non-HTML document");
 </script>
