@@ -68,3 +68,4 @@ test/reftest/web-platform-tests/dom_converted/events/Event-dispatch-bubbles-fals
 test/reftest/web-platform-tests/dom_converted/interface-objects.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-properties.html
 test/reftest/web-platform-tests/dom_converted/nodes/CharacterData-appendChild.html
+test/reftest/web-platform-tests/dom_converted/nodes/ProcessingInstruction-literal-1.xhtml
