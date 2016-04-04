@@ -553,9 +553,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
+
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+
+            if (argValue.isUndefinedOrNull())
+                return escargot::ESValue(false);
+
             Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+            Node* node = (Node*)argValue.asESPointer()->asESObject()->extraPointerData();
             bool found = obj->isEqualNode(node);
             return escargot::ESValue(found);
         }, escargot::ESString::create("isEqualNode"), 1, false));
