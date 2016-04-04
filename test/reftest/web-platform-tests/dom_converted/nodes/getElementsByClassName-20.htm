@@ -14,7 +14,7 @@
             </div>
             <b class="text">text</b>
         </div>
-        <!-- table-related tags not supported
+        <!-- table-related tags are not supported
         <table>
             <caption class="text caption">text caption</caption>
             <thead>
@@ -71,25 +71,25 @@
             {
                 var collection = document.getElementsByClassName("text");
                 assert_equals(collection.length, 4);
-                // innerHTML is not supported
-                /*
                 var newDiv = document.createElement("div");
                 newDiv.setAttribute("class", "text");
-                newDiv.innerHTML = "text newDiv";
-                document.getElementsByTagName("table")[0].tBodies[0].rows[0].cells[0].appendChild(newDiv);
-
+                // innerHTML is not supported
+                // newDiv.innerHTML = "text newDiv";
+                // document.getElementsByTagName("table")[0].tBodies[0].rows[0].cells[0].appendChild(newDiv);
+                document.body.appendChild(newDiv);
                 assert_equals(collection.length, 5);
+                /*
                 assert_equals(collection[0].parentNode.nodeName, "DIV");
                 assert_equals(collection[1].parentNode.nodeName, "DIV");
                 assert_equals(collection[2].parentNode.nodeName, "TABLE");
                 assert_equals(collection[3].parentNode.nodeName, "TD");
                 assert_equals(collection[4].parentNode.nodeName, "TR");
                 */
-                assert_equals(collection.length, 4);
                 assert_equals(collection.item(0).parentNode.nodeName, "DIV");
                 assert_equals(collection.item(1).parentNode.nodeName, "DIV");
                 assert_equals(collection.item(2).parentNode.nodeName, "DIV");
                 assert_equals(collection.item(3).parentNode.nodeName, "DIV");
+                assert_equals(collection.item(4).parentNode.nodeName, "BODY");
             }, "get elements in document then add element to collection");
         </script>
 </body></html>
