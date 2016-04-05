@@ -97,7 +97,7 @@ test(function () {
 test(function () {
   assert_throws( 'INVALID_CHARACTER_ERR', function () { elem.classList.contains('a b'); } );
 }, '.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
-// NOTE(20/18/0/2)
+// NOTE(20/17/0/3)
 test(function () {
   assert_throws( 'INVALID_CHARACTER_ERR', function () { elem.classList.add('a b'); } );
 }, '.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
@@ -156,7 +156,7 @@ test(function () {
 test(function () {
   assert_equals( elem.classList[1], 'FOO' );
 }, 'classList[index] must return case-sensitive strings and preserve token order');
-// NOTE(35/28/2/5)
+// NOTE(35/30/0/5)
 test(function () {
   //  the normative part of the spec states that:
   // "The object's supported property indices are the numbers in the range zero to the number of tokens in tokens minus one"
@@ -184,7 +184,7 @@ test(function () {
   assert_equals( elem.classList + '', 'foo FOO', 'implicit' );
   assert_equals( elem.classList.toString(), 'foo FOO', 'explicit' );
 }, 'classList.remove removes arguments passed, if they are present.');
-// NOTE(40/33/2/5)
+// NOTE(40/35/0/5)
 test(function () {
   elem.classList.remove('foo');
   assert_equals( elem.classList.length, 1 );
@@ -215,7 +215,7 @@ test(function () {
 //   assert_equals( secondelem.classList + '', 'token1', 'implicit' );
 //   assert_equals( secondelem.classList.toString(), 'token1', 'explicit' );
 // }, 'classList.remove must collapse whitespaces around each token');
-// NOTE(45/36/2/7)
+// NOTE(45/38/0/7)
 // // EDIT : Chrome fail
 // test(function () {
 //   secondelem.className = '  token1  token2  token1  ';
@@ -246,7 +246,7 @@ test(function () {
 // test(function () {
 //   assert_equals( getComputedStyle(elem,null).fontStyle, 'italic' );
 // }, 'classList.toggle must not break case-sensitive CSS selector matching');
-// NOTE(50/39/2/9)
+// NOTE(50/40/0/10)
 test(function () {
   assert_false(elem.classList.toggle('foo'));
 }, 'classList.toggle must be able to remove tokens');
@@ -267,7 +267,7 @@ test(function () {
   assert_equals( elem.classList + '', '', 'implicit' );
   assert_equals( elem.classList.toString(), '', 'explicit' );
 }, 'classList must stringify to an empty string when all classes have been removed');
-// NOTE(50/39/2/9)
+// NOTE(55/44/0/11)
 test(function () {
   assert_equals( elem.classList.item(0), null );
 }, 'classList.item(0) must return null when all classes have been removed');
@@ -286,34 +286,35 @@ test(function () {
   foo.classList.add('b');
   assert_equals(foo.className,'a b');
 }, 'classList.add should treat " " as a space');
-// // EDIT : Chrome fail & Safari
+// // EDIT : Chrome & Safari fail
 // test(function () {
 //   var foo = document.createElement('div');
 //   foo.className = 'a\t';
 //   foo.classList.add('b');
 //   assert_equals(foo.className,'a b');
 // }, 'classList.add should treat \\t as a space');
-// // EDIT : Chrome fail & Safari
+// // EDIT : Chrome & Safari fail
 // test(function () {
 //   var foo = document.createElement('div');
 //   foo.className = 'a\r';
 //   foo.classList.add('b');
 //   assert_equals(foo.className,'a b');
 // }, 'classList.add should treat \\r as a space');
-/*
-// NOTE(50/39/2/9)
-test(function () {
-  var foo = document.createElement('div');
-  foo.className = 'a\n';
-  foo.classList.add('b');
-  assert_equals(foo.className,'a b');
-}, 'classList.add should treat \\n as a space');
-test(function () {
-  var foo = document.createElement('div');
-  foo.className = 'a\f';
-  foo.classList.add('b');
-  assert_equals(foo.className,'a b');
-}, 'classList.add should treat \\f as a space');
+// NOTE(60/47/0/13)
+// // EDIT : Chrome & Safari fail
+// test(function () {
+//   var foo = document.createElement('div');
+//   foo.className = 'a\n';
+//   foo.classList.add('b');
+//   assert_equals(foo.className,'a b');
+// }, 'classList.add should treat \\n as a space');
+// // EDIT : Chrome & Safari fail
+// test(function () {
+//   var foo = document.createElement('div');
+//   foo.className = 'a\f';
+//   foo.classList.add('b');
+//   assert_equals(foo.className,'a b');
+// }, 'classList.add should treat \\f as a space');
 test(function () {
   //WebIDL and ECMAScript 5 - a readonly property has a getter but not a setter
   //ES5 makes [[Put]] fail but not throw
@@ -327,14 +328,15 @@ test(function () {
   assert_equals(secondelem.classList.length,1);
   assert_false(failed,'an error was thrown');
 }, 'classList.length must be read-only');
-test(function () {
-  var realList = secondelem.classList;
-  secondelem.classList = 'foo bar';
-  assert_equals(secondelem.classList,realList);
-  assert_equals(secondelem.classList.length,2);
-  assert_equals(secondelem.classList[0],'foo');
-  assert_equals(secondelem.classList[1],'bar');
-}, 'classList must have [PutForwards=value]');
-*/
+// // EDIT : Chrome & Safari fail
+// test(function () {
+//   var realList = secondelem.classList;
+//   secondelem.classList = 'foo bar';
+//   assert_equals(secondelem.classList,realList);
+//   assert_equals(secondelem.classList.length,2);
+//   assert_equals(secondelem.classList[0],'foo');
+//   assert_equals(secondelem.classList[1],'bar');
+// }, 'classList must have [PutForwards=value]');
+// NOTE(64/48/0/16)
     </script>
 </html>
