@@ -25,6 +25,9 @@ class HTMLBodyElement;
 class HTMLDivElement;
 class HTMLImageElement;
 class HTMLBRElement;
+class HTMLMetaElement;
+class HTMLParagraphElement;
+class HTMLSpanElement;
 #ifdef STARFISH_ENABLE_AUDIO
 class HTMLAudioElement;
 #endif
@@ -111,6 +114,9 @@ public:
     void initScriptWrappable(HTMLImageElement* ptr);
     void initScriptWrappable(HTMLBRElement* ptr);
     void initScriptWrappable(HTMLDivElement* ptr);
+    void initScriptWrappable(HTMLMetaElement* ptr);
+    void initScriptWrappable(HTMLParagraphElement* ptr);
+    void initScriptWrappable(HTMLSpanElement* ptr);
     void initScriptWrappable(HTMLUnknownElement* ptr);
 #ifdef STARFISH_ENABLE_AUDIO
     void initScriptWrappable(HTMLAudioElement* ptr);

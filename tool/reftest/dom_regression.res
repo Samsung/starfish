@@ -88,3 +88,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/ProcessingInstruction-litera
 test/reftest/web-platform-tests/dom_converted/nodes/attributes.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-textContent.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-getElementsByTagName.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-cloneNode.html

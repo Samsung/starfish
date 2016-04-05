@@ -14,6 +14,11 @@
 #include "HTMLImageElement.h"
 #include "HTMLScriptElement.h"
 #include "HTMLStyleElement.h"
+#include "HTMLBRElement.h"
+#include "HTMLLinkElement.h"
+#include "HTMLMetaElement.h"
+#include "HTMLParagraphElement.h"
+#include "HTMLSpanElement.h"
 #ifdef STARFISH_ENABLE_AUDIO
 #include "HTMLAudioElement.h"
 #endif
@@ -132,6 +137,16 @@ Node* Element::clone()
             newNode = new HTMLScriptElement(document());
         } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_styleLocalName)) {
             newNode = new HTMLStyleElement(document());
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_brLocalName)) {
+            newNode = new HTMLBRElement(document());
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_linkLocalName)) {
+            newNode = new HTMLLinkElement(document());
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_metaLocalName)) {
+            newNode = new HTMLMetaElement(document());
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_pLocalName)) {
+            newNode = new HTMLParagraphElement(document());
+        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_spanLocalName)) {
+            newNode = new HTMLSpanElement(document());
         } else {
             STARFISH_RELEASE_ASSERT(false);
         }

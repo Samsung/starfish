@@ -1760,6 +1760,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLImageElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlImageElement = HTMLImageElementFunction;
 
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLMetaElement, HTMLElementFunction->protoType());
+    fetchData(this)->m_htmlMetaElement = HTMLMetaElementFunction;
+
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLParagraphElement, HTMLElementFunction->protoType());
+    fetchData(this)->m_htmlParagraphElement = HTMLParagraphElementFunction;
+
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLSpanElement, HTMLElementFunction->protoType());
+    fetchData(this)->m_htmlSpanElement = HTMLSpanElementFunction;
+
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {

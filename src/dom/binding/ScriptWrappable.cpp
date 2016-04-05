@@ -319,6 +319,27 @@ void ScriptWrappable::initScriptWrappable(HTMLBRElement* ptr)
     scriptObject()->set__proto__(data->m_htmlBrElement->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(HTMLMetaElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->m_htmlMetaElement->protoType());
+}
+
+void ScriptWrappable::initScriptWrappable(HTMLParagraphElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->m_htmlParagraphElement->protoType());
+}
+
+void ScriptWrappable::initScriptWrappable(HTMLSpanElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->m_htmlSpanElement->protoType());
+}
+
 #ifdef STARFISH_ENABLE_AUDIO
 void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
 {
