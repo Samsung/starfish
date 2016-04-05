@@ -4622,8 +4622,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
     }
 
     // inline style
-    auto inlineCssValues = element->inlineStyle()->m_cssValues;
-    apply(URL(), inlineCssValues, ret, parent);
+    if (element->inlineStyleWithoutCreation()) {
+        auto inlineCssValues = element->inlineStyleWithoutCreation()->m_cssValues;
+        apply(URL(), inlineCssValues, ret, parent);
+    }
 
     ret->loadResources(element->document()->window()->starFish());
     ret->arrangeStyleValues(parent);

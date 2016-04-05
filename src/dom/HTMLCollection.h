@@ -7,6 +7,7 @@ namespace StarFish {
 
 class Node;
 class Element;
+
 class HTMLCollection : public ScriptWrappable {
 public:
     HTMLCollection(ScriptBindingInstance* instance, Node* root, std::function<bool(Node*)> filter)

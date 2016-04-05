@@ -36,7 +36,7 @@ fi
 echo -e "${BOLD}###### Web Platform Tests ######${RESET}\n"
 
 cnt=-1
-ROTATE=4
+ROTATE="$(nproc)"
 filenames=()
 array=( $tc )
 pos=$(( ${#array[*]} - 1 ))

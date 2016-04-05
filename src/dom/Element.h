@@ -36,7 +36,7 @@ public:
         , m_className(String::emptyString)
         , m_namespace(String::emptyString)
         , m_namespacePrefix(String::emptyString)
-        , m_inlineStyle(new CSSStyleDeclaration(document, this))
+        , m_inlineStyle(nullptr)
     {
         initScriptWrappable(this, instance);
     }
@@ -47,7 +47,7 @@ public:
         , m_className(String::emptyString)
         , m_namespace(String::emptyString)
         , m_namespacePrefix(String::emptyString)
-        , m_inlineStyle(new CSSStyleDeclaration(document, this))
+        , m_inlineStyle(nullptr)
     {
         initScriptWrappable(this);
     }
@@ -108,8 +108,16 @@ public:
         return m_namespacePrefix;
     }
 
+    CSSStyleDeclaration* inlineStyleWithoutCreation()
+    {
+        return m_inlineStyle;
+    }
+
     CSSStyleDeclaration* inlineStyle()
     {
+        if (m_inlineStyle == nullptr) {
+            m_inlineStyle = new CSSStyleDeclaration(document(), this);
+        }
         return m_inlineStyle;
     }
 

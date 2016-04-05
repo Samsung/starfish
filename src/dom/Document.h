@@ -48,6 +48,14 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
+    virtual void didNodeInserted(Node* parent, Node* newChild)
+    {
+        updateDOMVersion();
+    }
+    virtual void didNodeRemoved(Node* parent, Node* oldChild)
+    {
+        updateDOMVersion();
+    }
 
     Element* documentElement();
 
@@ -88,11 +96,17 @@ public:
     void setVisibleState(PageVisibilityState visibilityState);
     void visibilityStateChanged();
 
+    void updateDOMVersion()
+    {
+        m_domVersion++;
+    }
+
 protected:
     StyleResolver m_styleResolver;
     Window* m_window;
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;
+    size_t m_domVersion;
 };
 
 void Node::setNeedsStyleRecalc()

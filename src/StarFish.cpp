@@ -18,7 +18,6 @@ bool g_enablePixelTest = false;
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
     : m_staticStrings(this)
 {
-    /*
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
 #ifdef NDEBUG
@@ -28,7 +27,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
 #endif
         }
     });
-    */
 
     GC_set_free_space_divisor(64);
     // STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());

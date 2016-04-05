@@ -88,6 +88,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         setNeedsStyleRecalc();
     } else if (name == document()->window()->starFish()->staticStrings()->m_class) {
         DOMTokenList::tokenize(&m_classNames, value);
+        document()->updateDOMVersion();
         setNeedsStyleRecalc();
     } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
         if (old->equals(String::emptyString)) {
@@ -166,7 +167,7 @@ Node* Element::clone()
     }
     newNode->m_namespace = m_namespace;
     newNode->m_namespacePrefix = m_namespacePrefix;
-    newNode->m_inlineStyle = m_inlineStyle->clone(document(), newNode);
+    newNode->m_inlineStyle = inlineStyle()->clone(document(), newNode);
 
     return newNode;
 }

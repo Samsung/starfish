@@ -1002,11 +1002,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             return escargot::ESValue(escargot::ESValue::ESNull);
         }
         CSSStyleDeclaration* s = originalObj->asElement()->inlineStyle();
-        if (s == nullptr) {
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        } else {
-            return s->scriptValue();
-        }
+        return s->scriptValue();
     }, nullptr);
 
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByClassName"), false, false, false,
@@ -2670,25 +2666,23 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, fetchData(this)->m_instance->globalObject()->objectPrototype());
     fetchData(this)->m_cssStyleDeclaration = CSSStyleDeclarationFunction;
 
-#define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \
-    CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create(#nameLower),                                                                                                                                                                                                                                                                                                                                                                                                            \
-        [](::escargot::ESObject * obj, ::escargot::ESObject * originalObj, escargot::ESString * name) -> escargot::ESValue { \
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject); \
-    \
-        String* c = ((CSSStyleDeclaration*) originalObj->extraPointerData())->name(); \
-        STARFISH_ASSERT(c); \
-        return toJSString(c);                                                                                                                                                                        \
-        },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
-        [](::escargot::ESObject * obj, ::escargot::ESObject * originalObj, escargot::ESString * name, const escargot::ESValue& v) { \
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::CSSStyleDeclarationObject); \
-        if (v.isESString()) { \
-            ((CSSStyleDeclaration*) originalObj->extraPointerData())->set##name(v.asESString()->utf8Data()); \
-        } else if (v.isNumber()) { \
-            ((CSSStyleDeclaration*) originalObj->extraPointerData())->set##name(std::to_string(v.toNumber()).c_str()); \
-        } \
-        },                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \
-        false, false, false);
-
+#define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                 \
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(                                                                     \
+        CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create(#nameLower),            \
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {                                                              \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CSSStyleDeclarationObject, CSSStyleDeclaration);                     \
+        String* c = originalObj->name();                                                                                         \
+        STARFISH_ASSERT(c);                                                                                                      \
+        return toJSString(c);                                                                                                    \
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {                                                               \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CSSStyleDeclarationObject, CSSStyleDeclaration);                     \
+        if (v.isESString()) {                                                                                                    \
+            originalObj->set##name(v.asESString()->utf8Data());                                                                  \
+        } else if (v.isNumber()) {                                                                                               \
+            originalObj->set##name(std::to_string(v.toNumber()).c_str());                                                        \
+        }                                                                                                                        \
+        return escargot::ESValue();                                                                                              \
+    });
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleRule, fetchData(this)->m_instance->globalObject()->objectPrototype());

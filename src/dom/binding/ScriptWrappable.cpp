@@ -461,6 +461,25 @@ void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* 
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->m_nodeList->protoType());
     scriptObject()->setExtraData(NodeListObject);
+
+    scriptObject()->setPropetyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
+        NodeList* self = (NodeList*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        if (idx < self->length()) {
+            return true;
+        }
+        return false;
+    }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
+        return escargot::ESValueVector(0);
+    }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
+        NodeList* self = (NodeList*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        ASSERT(idx < self->length());
+        return self->item(idx)->scriptValue();
+    });
 }
 
 void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstance* instance)
