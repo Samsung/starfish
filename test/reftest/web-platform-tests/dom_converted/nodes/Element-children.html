@@ -8,11 +8,11 @@
 setup(function() {
   // Add some non-HTML elements in there to test what happens with those.
   var container = document.getElementById("test");
-  var child = document.createElementNS("", "img");
+  var child = document.createElement("img");
   child.setAttribute("id", "baz");
   container.appendChild(child);
 
-  child = document.createElementNS("", "img");
+  child = document.createElement("img");
   child.setAttribute("name", "qux");
   container.appendChild(child);
 });

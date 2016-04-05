@@ -1974,13 +1974,22 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::HTMLCollectionObject);
         HTMLCollection* self = (HTMLCollection*)(thisValue.asESPointer()->asESObject()->extraPointerData());
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        uint32_t idx = argValue.toIndex();
-        if (idx < self->length()) {
-            Element* elem = self->item(idx);
-            return elem->scriptValue();
+
+        size_t count = instance->currentExecutionContext()->argumentCount();
+        if (count > 0) {
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            uint32_t idx = argValue.toIndex();
+            idx = (idx != escargot::ESValue::ESInvalidIndexValue) ? idx : 0;
+            if (idx < self->length()) {
+                Element* elem = self->item(idx);
+                return elem->scriptValue();
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } else {
+            auto msg = escargot::ESString::create("Failed to execute 'hasAttribute' on Element: 1 argument required, but only 0 present.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("item"), 1, false);
     HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), true, true, true, itemFunction);
 
