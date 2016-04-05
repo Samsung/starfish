@@ -514,6 +514,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
+        if (nd->isDocumentType()||nd->isDocument()) {
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }
         return toJSString(nd->textContent());
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
