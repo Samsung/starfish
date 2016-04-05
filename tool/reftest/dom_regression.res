@@ -96,3 +96,4 @@ test/reftest/web-platform-tests/dom_converted/nodes/Node-textContent.html
 test/reftest/web-platform-tests/dom_converted/nodes/Document-getElementsByTagName.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-cloneNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-classlist.html
+test/reftest/web-platform-tests/dom_converted/events/ProgressEvent.html
