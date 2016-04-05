@@ -411,6 +411,11 @@ Node* Node::appendChild(Node* child)
 
     validatePreinsert(child, nullptr);
 
+    if (child->parentNode()) {
+        Node* p = child->parentNode();
+        child = p->removeChild(child);
+    }
+
     STARFISH_ASSERT(child->parentNode() == nullptr);
     STARFISH_ASSERT(child->nextSibling() == nullptr);
     STARFISH_ASSERT(child->previousSibling() == nullptr);
