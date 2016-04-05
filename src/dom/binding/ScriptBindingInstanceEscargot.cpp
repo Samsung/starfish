@@ -2664,8 +2664,105 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_mouseEvent = MouseEventFunction;
 
     /* Progress Events */
-    DEFINE_FUNCTION(ProgressEvent, eventFunction->protoType());
-    fetchData(this)->m_progressEvent = ProgressEventFunction;
+    auto progressEventFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+        auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
+
+        if (argCount == 0) {
+            auto msg = escargot::ESString::create("Failed to construct 'ProgressEvent': 1 argument required, but only 0 present.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        } else if (argCount == 1) {
+            escargot::ESString* type;
+            if (firstArg.isESString()) {
+                type = firstArg.asESString();
+            } else if (firstArg.isNumber()) {
+                type = escargot::ESString::create(firstArg.asNumber());
+            } else if (firstArg.isBoolean()) {
+                type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
+            } else if (firstArg.isObject()) {
+                type = escargot::ESString::create("[object Object]");
+            }
+            auto event = new ProgressEvent(QualifiedName::fromString(sf, type->utf8Data()));
+            return event->scriptValue();
+        } else {
+            if (secondArg.isObject()) {
+                escargot::ESString* type;
+                if (firstArg.isESString()) {
+                    type = firstArg.asESString();
+                } else if (firstArg.isNumber()) {
+                    type = escargot::ESString::create(firstArg.asNumber());
+                } else if (firstArg.isBoolean()) {
+                    type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
+                } else if (firstArg.isObject()) {
+                    type = escargot::ESString::create("[object Object]");
+                }
+                escargot::ESObject* obj = secondArg.asESPointer()->asESObject();
+                escargot::ESValue bubbles = obj->get(escargot::ESString::create("bubbles"));
+                escargot::ESValue cancelable = obj->get(escargot::ESString::create("cancelable"));
+                escargot::ESValue lengthComputable = obj->get(escargot::ESString::create("lengthComputable"));
+                escargot::ESValue loaded = obj->get(escargot::ESString::create("loaded"));
+                escargot::ESValue total = obj->get(escargot::ESString::create("total"));
+                bool canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : false;
+                bool canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : false;
+                bool canLengthComputable = lengthComputable.isBoolean() ? lengthComputable.asBoolean() : false;
+                unsigned long long loadedValue = loaded.isNumber() ? loaded.asNumber() : 0;
+                unsigned long long totalValue = total.isNumber() ? total.asNumber() : 0;
+
+                auto event = new ProgressEvent(QualifiedName::fromString(sf, type->utf8Data()), ProgressEventInit(canBubbles, canCancelable, canLengthComputable, loadedValue, totalValue));
+                return event->scriptValue();
+            } else {
+                escargot::ESString* msg = escargot::ESString::create("Failed to construct 'ProgressEvent': parameter 2 ('eventInitDict') is not an object.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }
+    }, escargot::ESString::create("ProgressEvent"), 1, true, false);
+    progressEventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    progressEventFunction->protoType().asESPointer()->asESObject()->set__proto__(eventFunction->protoType());
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("ProgressEvent"), true, false, true, progressEventFunction);
+    fetchData(this)->m_progressEvent = progressEventFunction;
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+            progressEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("lengthComputable"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        Event* e = originalObj;
+        if (e->isProgressEvent()) {
+            bool lengthComputable = e->asProgressEvent()->lengthComputable();
+            return escargot::ESValue(lengthComputable);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+            progressEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("loaded"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        Event* e = originalObj;
+        if (e->isProgressEvent()) {
+            unsigned long long loaded = e->asProgressEvent()->loaded();
+            return escargot::ESValue(loaded);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+            progressEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("total"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        Event* e = originalObj;
+        if (e->isProgressEvent()) {
+            unsigned long long total = e->asProgressEvent()->total();
+            return escargot::ESValue(total);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, nullptr);
 
     /* style-related getter/setter start here */
 

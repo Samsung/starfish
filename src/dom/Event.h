@@ -30,6 +30,8 @@ public:
     Event();
     Event(QualifiedName eventType, const EventInit& init = EventInit(false, false));
 
+    virtual ~Event() { }
+
     const QualifiedName type() const { return m_type; }
     void setType(QualifiedName type) { m_type = type; }
 
@@ -65,6 +67,15 @@ public:
     bool isDispatched() const { return m_isDispatched; }
     void setIsDispatched(bool isDispatched) { m_isDispatched = isDispatched; }
 
+    /* Other methods (not in Event interface) */
+    virtual bool isProgressEvent() const { return false; }
+
+    ProgressEvent* asProgressEvent()
+    {
+        STARFISH_ASSERT(isProgressEvent());
+        return (ProgressEvent*)this;
+    }
+
 private:
     bool m_isInitialized { false }; // initialized flag
 
@@ -97,9 +108,30 @@ public:
     MouseEvent(ScriptBindingInstance* instance);
 };
 
+struct ProgressEventInit : public EventInit {
+    ProgressEventInit();
+    ProgressEventInit(bool bubbles, bool cancelable, bool lengthComputable, unsigned long long loaded, unsigned long long total);
+
+    bool lengthComputable;
+    unsigned long long loaded;
+    unsigned long long total;
+};
+
 class ProgressEvent : public Event {
 public:
-    ProgressEvent(ScriptBindingInstance* instance, uint32_t loaded, uint32_t total);
+    ProgressEvent(QualifiedName eventType, const ProgressEventInit& init = ProgressEventInit(false, false, false, 0, 0));
+
+    bool lengthComputable() const { return m_lengthComputable; }
+    unsigned long long loaded() const { return m_loaded; }
+    unsigned long long total() const { return m_total; }
+
+    /* Other methods (not in ProgressEvent interface) */
+    virtual bool isProgressEvent() const { return true; }
+
+private:
+    bool m_lengthComputable { false };
+    unsigned long long m_loaded { 0 };
+    unsigned long long m_total { 0 };
 };
 
 }

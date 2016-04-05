@@ -125,7 +125,7 @@ public:
     void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr, ScriptBindingInstance*);
     void initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance*);
-    void initScriptWrappable(ProgressEvent* ptr, ScriptBindingInstance* instance, uint32_t loaded, uint32_t total);
+    void initScriptWrappable(ProgressEvent* ptr);
     void initScriptWrappable(HTMLCollection* ptr, ScriptBindingInstance*);
     void initScriptWrappable(NodeList* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstance*);

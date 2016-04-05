@@ -392,9 +392,8 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
     if (eventName) {
         ScriptValue en = getHandler(eventName, starfishInstance());
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
-            ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
             QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
-            pe->setType(eventType);
+            ProgressEvent* pe = new ProgressEvent(eventType, ProgressEventInit(false, false, false, loaded, total));
             ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
             callScriptFunction(en, json_arg, 1, scriptValue());
         }
@@ -409,8 +408,7 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
         if (clickListeners) {
             for (unsigned i = 0; i < clickListeners->size(); i++) {
                 STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                ProgressEvent* pe = new ProgressEvent(striptBindingInstance(), loaded, total);
-                pe->setType(eventType);
+                ProgressEvent* pe = new ProgressEvent(eventType, ProgressEventInit(false, false, false, loaded, total));
                 ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
                 ScriptValue fn = clickListeners->at(i)->scriptValue();
                 if (!fn.isNull())
@@ -443,7 +441,7 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
                 if (clickListeners) {
                     for (unsigned i = 0; i < clickListeners->size(); i++) {
                         STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                        ProgressEvent* pe = new ProgressEvent(this_obj->striptBindingInstance(), pass->loaded, pass->total);
+                        ProgressEvent* pe = new ProgressEvent(QualifiedName::emptyQualifiedName(), ProgressEventInit(false, false, false, pass->loaded, pass->total));
                         ScriptValue json_arg[1] = {ScriptValue(pe->scriptObject())};
                         ScriptValue fn = clickListeners->at(i)->scriptValue();
                         if (!fn.isNull())

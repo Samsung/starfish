@@ -416,18 +416,13 @@ void ScriptWrappable::initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance
     scriptObject()->set__proto__(data->m_mouseEvent->protoType());
 }
 
-void ScriptWrappable::initScriptWrappable(ProgressEvent* ptr, ScriptBindingInstance* instance, uint32_t loaded, uint32_t total)
+void ScriptWrappable::initScriptWrappable(ProgressEvent* ptr)
 {
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->m_progressEvent->protoType());
-
-    bool lengthComputable = false;
-    if (total > 0)
-        lengthComputable = true;
-
-    scriptObject()->defineDataProperty(escargot::ESString::create("lengthComputable"), false, false, false, escargot::ESValue(lengthComputable));
-    scriptObject()->defineDataProperty(escargot::ESString::create("loaded"), false, false, false, escargot::ESValue(loaded));
-    scriptObject()->defineDataProperty(escargot::ESString::create("total"), false, false, false, escargot::ESValue(total));
+    scriptObject()->setExtraData(EventObject);
 }
 
 void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInstance* instance)

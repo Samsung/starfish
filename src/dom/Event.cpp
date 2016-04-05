@@ -57,10 +57,28 @@ MouseEvent::MouseEvent(ScriptBindingInstance* instance)
     initScriptWrappable(this, instance);
 }
 
-ProgressEvent::ProgressEvent(ScriptBindingInstance* instance, uint32_t loaded, uint32_t total)
-    : Event()
+ProgressEventInit::ProgressEventInit()
+    : lengthComputable(false)
+    , loaded(0)
+    , total(0)
 {
-    initScriptWrappable(this, instance, loaded, total);
+}
+
+ProgressEventInit::ProgressEventInit(bool b, bool c, bool lengthComputable, unsigned long long loaded, unsigned long long total)
+    : EventInit(b, c)
+    , lengthComputable(lengthComputable)
+    , loaded(loaded)
+    , total(total)
+{
+}
+
+ProgressEvent::ProgressEvent(QualifiedName eventType, const ProgressEventInit& init)
+    : Event(eventType, init)
+    , m_lengthComputable(init.lengthComputable)
+    , m_loaded(init.loaded)
+    , m_total(init.total)
+{
+    initScriptWrappable(this);
 }
 
 }
