@@ -114,7 +114,7 @@ void Element::setTextContent(String* text)
     while (firstChild()) {
         removeChild(firstChild());
     }
-    if (text != nullptr) {
+    if (!text->equals(String::emptyString)) {
         appendChild(node);
     }
 }
