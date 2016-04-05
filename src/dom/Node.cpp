@@ -24,9 +24,9 @@ NodeList* Node::childNodes()
 {
     STARFISH_ASSERT(m_document);
     if (m_childNodeList == nullptr) {
-        m_childNodeList = new NodeList(m_document->scriptBindingInstance(), this, [&](Node* node) {
-            return node->parentNode() == this? true: false;
-        });
+        m_childNodeList = new NodeList(m_document->scriptBindingInstance(), this, [](Node* node, void* data) {
+            return node->parentNode() == (Node *)data? true: false;
+        }, this);
     }
     return m_childNodeList;
 }

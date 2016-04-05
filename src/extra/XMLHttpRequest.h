@@ -95,13 +95,13 @@ public:
 
     RESPONSE_TYPE getResponseType()
     {
-        return m_response_type;
+        return m_responseType;
     }
 
     String* getResponseTypeStr();
     int getReadyState()
     {
-        return m_ready_state;
+        return m_readyState;
     }
 
     void setStatus(int status)
@@ -116,8 +116,8 @@ public:
 
     String* getStatusText()
     {
-        if (m_ready_state == UNSENT || m_ready_state == OPENED || m_status == 0)
-             return String::emptyString;
+        if (m_readyState == UNSENT || m_readyState == OPENED || m_status == 0)
+            return String::emptyString;
         return String::emptyString;
     }
 
@@ -125,8 +125,8 @@ public:
 
     String* getResponseXML()
     {
-        if (m_ready_state != DONE)
-             return String::emptyString;
+        if (m_readyState != DONE)
+            return String::emptyString;
         return String::emptyString;
     }
 
@@ -146,22 +146,22 @@ public:
     void setRequestHeader(const char* header, const char* value);
     void setResponseHeader(char* responseHeader)
     {
-        m_response_header = responseHeader;
+        m_responseHeader = responseHeader;
     }
 
     char* getResponseHeader(const char* header)
     {
-        if (m_response_header != nullptr)
-            return m_response_header;
+        if (m_responseHeader != nullptr)
+            return m_responseHeader;
         return nullptr;
     }
 
     char* getAllResponseHeadersStr()
     {
-        if (m_ready_state == UNSENT || m_ready_state == OPENED)
+        if (m_readyState == UNSENT || m_readyState == OPENED)
             return nullptr;
-        if (m_response_header != nullptr)
-            return m_response_header;
+        if (m_responseHeader != nullptr)
+            return m_responseHeader;
         return nullptr;
     }
 
@@ -169,8 +169,8 @@ public:
 
     bool checkAbort()
     {
-        if (m_abort_flag) {
-            m_abort_flag = false;
+        if (m_abortFlag) {
+            m_abortFlag = false;
             return true;
         }
         return false;
@@ -255,8 +255,8 @@ public:
 
             p_data->loaded = static_cast<uint32_t>(dlnow);
             p_data->total = static_cast<uint32_t>(dltotal);
-            this_obj->m_ready_state = LOADING;
-            this_obj->callEventHandler(NONE, false, p_data->loaded, p_data->total, this_obj->m_ready_state);
+            this_obj->m_readyState = LOADING;
+            this_obj->callEventHandler(NONE, false, p_data->loaded, p_data->total, this_obj->m_readyState);
 
             // printf("TOTAL TIME: %f \r\n", curtime);
             // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
@@ -284,20 +284,16 @@ public:
     //                   (curl_off_t)ulnow);
     // }
 
-    virtual void paint(Canvas* canvas)
-    {
-    }
-
 protected:
     String* m_url;
-    char* m_response_header;
+    char* m_responseHeader;
     METHOD_TYPE m_method;
-    RESPONSE_TYPE m_response_type;
-    READY_STATE m_ready_state;
+    RESPONSE_TYPE m_responseType;
+    READY_STATE m_readyState;
     int m_status;
     uint32_t m_timeout;
-    bool m_abort_flag;
-    bool m_send_flag;
+    bool m_abortFlag;
+    bool m_sendFlag;
     ScriptBindingInstance* m_bindingInstance;
     StarFish* m_starfish;
 };

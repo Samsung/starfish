@@ -92,8 +92,7 @@ String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_alloca
                 return src->concat(token);
             else
                 return src->concat(String::spaceString)->concat(token);
-        }
-        else
+        } else
             return src->concat(token);
     }
     return src;
@@ -216,7 +215,10 @@ void DOMTokenList::validateToken(String* token)
     std::string stdToken = token->utf8Data();
     if (stdToken.length() == 0)
         throw new DOMException(m_element->document()->scriptBindingInstance(), DOMException::Code::SYNTAX_ERR);
-    auto f = [] (char c) { return std::isspace(static_cast<unsigned char>(c)); };
+    auto f = [] (char c)
+    {
+        return std::isspace(static_cast<unsigned char>(c));
+    };
     if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end())
         throw new DOMException(m_element->document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR);
 }

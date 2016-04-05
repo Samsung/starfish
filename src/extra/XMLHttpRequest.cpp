@@ -12,14 +12,14 @@ namespace StarFish {
 XMLHttpRequest::XMLHttpRequest()
 {
     m_method = UNKNOWN_METHOD;
-    m_response_type = DEFAULT_RESPONSE;
-    m_ready_state = UNSENT;
+    m_responseType = DEFAULT_RESPONSE;
+    m_readyState = UNSENT;
     m_status = 0;
     m_url = nullptr;
-    m_response_header = nullptr;
+    m_responseHeader = nullptr;
     m_timeout = 0;
-    m_abort_flag = false;
-    m_send_flag = false;
+    m_abortFlag = false;
+    m_sendFlag = false;
     m_bindingInstance = nullptr;
 
     // init
@@ -28,14 +28,14 @@ XMLHttpRequest::XMLHttpRequest()
 
 void XMLHttpRequest::send(String* body)
 {
-    if (m_ready_state != OPENED || m_send_flag) {
+    if (m_readyState != OPENED || m_sendFlag) {
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     }
 
     const char* url = m_url->utf8Data();
 
     // invoke loadstart Event.
-    m_send_flag = true;
+    m_sendFlag = true;
     callEventHandler(LOADSTART, true, 0, 0);
 
     GC_add_roots(this, this + sizeof(XMLHttpRequest*));
@@ -153,10 +153,10 @@ void XMLHttpRequest::send(String* body)
                 ecore_thread_main_loop_begin();
                 ecore_idler_add([](void *data)->Eina_Bool {
                     XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
-                    this_obj->m_ready_state = HEADERS_RECEIVED;
-                    this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_ready_state);
-                    this_obj->m_ready_state = LOADING;
-                    this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_ready_state);
+                    this_obj->m_readyState = HEADERS_RECEIVED;
+                    this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
+                    this_obj->m_readyState = LOADING;
+                    this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
                     return ECORE_CALLBACK_CANCEL;
                 }, xhrobj);
                 ecore_thread_main_loop_end();
@@ -230,8 +230,8 @@ void XMLHttpRequest::send(String* body)
                     script_obj->set(createScriptString(String::fromUTF8("responseText")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
 
                 }
-                this_obj->m_ready_state = DONE;
-                this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_ready_state);
+                this_obj->m_readyState = DONE;
+                this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
                 this_obj->callEventHandler(PROGRESS, true, pass->loaded, pass->total);
                 this_obj->callEventHandler(LOAD, true, pass->loaded, pass->total);
                 this_obj->callEventHandler(LOADEND, true, pass->loaded, pass->total);
@@ -276,23 +276,23 @@ void XMLHttpRequest::send(String* body)
 
 void XMLHttpRequest::setResponseType(const char* responseType)
 {
-    if (m_ready_state == LOADING || m_ready_state == DONE)
-            throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
+    if (m_readyState == LOADING || m_readyState == DONE)
+        throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     if (responseType) {
         std::string data = responseType;
         std::transform(data.begin(), data.end(), data.begin(), ::tolower);
         String* lowerName = String::fromUTF8(data.c_str());
 
         if (lowerName->equals("text")) {
-            m_response_type = TEXT_RESPONSE;
+            m_responseType = TEXT_RESPONSE;
         } else if (lowerName->equals("arraybuffer")) {
-            m_response_type = ARRAY_BUFFER_RESPONSE;
+            m_responseType = ARRAY_BUFFER_RESPONSE;
         } else if (lowerName->equals("blob")) {
-            m_response_type = BLOB_RESPONSE;
+            m_responseType = BLOB_RESPONSE;
         } else if (lowerName->equals("document")) {
-            m_response_type = DOCUMENT_RESPONSE;
+            m_responseType = DOCUMENT_RESPONSE;
         } else if (lowerName->equals("json")) {
-            m_response_type = JSON_RESPONSE;
+            m_responseType = JSON_RESPONSE;
         }
     }
 }
@@ -310,28 +310,28 @@ void XMLHttpRequest::setOpen(const char* method, String* url)
             m_method = POST_METHOD;
         }
     }
-    m_send_flag = false;
-    m_ready_state = OPENED;
+    m_sendFlag = false;
+    m_readyState = OPENED;
     callEventHandler(NONE, true, 0, 0, OPENED);
     m_url = url;
 }
 
 void XMLHttpRequest::abort()
 {
-    m_abort_flag = true;
-    if (!(((m_ready_state == UNSENT || m_ready_state == OPENED) && !m_send_flag) || m_ready_state == DONE)) {
-        m_ready_state = DONE;
-        callEventHandler(NONE, true, 0, 0, m_ready_state);
+    m_abortFlag = true;
+    if (!(((m_readyState == UNSENT || m_readyState == OPENED) && !m_sendFlag) || m_readyState == DONE)) {
+        m_readyState = DONE;
+        callEventHandler(NONE, true, 0, 0, m_readyState);
         callEventHandler(PROGRESS, true, 0, 0);
         callEventHandler(ABORT, true, 0, 0);
         callEventHandler(LOADEND, true, 0, 0);
     }
-    m_ready_state = UNSENT;
+    m_readyState = UNSENT;
 }
 
 String* XMLHttpRequest::getResponseTypeStr()
 {
-    switch (m_response_type) {
+    switch (m_responseType) {
     case TEXT_RESPONSE:
         return String::fromUTF8("text");
     case ARRAY_BUFFER_RESPONSE:
@@ -350,16 +350,16 @@ String* XMLHttpRequest::getResponseTypeStr()
 
 String* XMLHttpRequest::getResponseText()
 {
-    if (!(m_response_type == DEFAULT_RESPONSE || m_response_type == TEXT_RESPONSE))
+    if (!(m_responseType == DEFAULT_RESPONSE || m_responseType == TEXT_RESPONSE))
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
-    if (m_ready_state != LOADING && m_ready_state != DONE)
-         return String::emptyString;
+    if (m_readyState != LOADING && m_readyState != DONE)
+        return String::emptyString;
     return String::emptyString;
 }
 
 void XMLHttpRequest::setRequestHeader(const char* header, const char* value)
 {
-    if (m_ready_state != OPENED || m_send_flag) {
+    if (m_readyState != OPENED || m_sendFlag) {
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     }
 }
