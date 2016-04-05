@@ -1435,7 +1435,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                     escargot::ESValue val = array->get(i);
                     if (val.isESString()) {
                         listSoFar = listSoFar->concat(toBrowserString(val.asESString()));
-                        listSoFar = listSoFar->concat(String::spaceString);
+                        if (i < array->length()-1) {
+                            listSoFar = listSoFar->concat(String::createASCIIString(","));
+                        }
                     } else {
                         return escargot::ESValue(escargot::ESValue::ESNull);
                     }
