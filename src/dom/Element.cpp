@@ -173,16 +173,20 @@ RareNodeMembers* Element::ensureRareMembers()
 {
     if (!hasRareMembers())
         m_rareNodeMembers = new RareElementMembers();
+    STARFISH_ASSERT(m_rareNodeMembers->isRareElementMembers());
     return m_rareNodeMembers;
 }
 
 RareElementMembers* Element::ensureRareElementMembers()
 {
-    return ensureRareMembers()->asRareElementMembers();
+    RareNodeMembers* rareMembers =  ensureRareMembers();
+    STARFISH_ASSERT(rareMembers->isRareElementMembers());
+    return rareMembers->asRareElementMembers();
 }
 
 Attr* Element::attr(QualifiedName name)
 {
+    STARFISH_ASSERT((hasRareMembers() && rareMembers()->isRareElementMembers()) || !hasRareMembers());
     if (hasRareMembers() && rareMembers()->asRareElementMembers()->m_attrList) {
         AttrList* attrList = rareMembers()->asRareElementMembers()->m_attrList;
         for (Attr* item : *attrList) {
@@ -201,6 +205,7 @@ Attr* Element::ensureAttr(QualifiedName name)
     Attr* returnAttr = attr(name);
     if (!returnAttr) {
         RareElementMembers* rareMembers = ensureRareElementMembers();
+        STARFISH_ASSERT(rareMembers->isRareElementMembers());
         if (!rareMembers->m_attrList)
             rareMembers->m_attrList = new (GC) AttrList();
         returnAttr = new Attr(m_document, m_document->scriptBindingInstance(), this, name);

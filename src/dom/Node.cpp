@@ -725,6 +725,7 @@ RareNodeMembers* Node::ensureRareMembers()
     STARFISH_ASSERT(!isElement());
     if (m_rareNodeMembers == nullptr)
         m_rareNodeMembers = new RareNodeMembers();
+    STARFISH_ASSERT(!m_rareNodeMembers->isRareElementMembers());
     return m_rareNodeMembers;
 }
 
