@@ -57,6 +57,7 @@ test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-26.ht
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-27.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-28.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-29.htm
+test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-30.htm
 test/reftest/web-platform-tests/dom_converted/nodes/Node-appendChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-nodeName.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-nodeValue.html
