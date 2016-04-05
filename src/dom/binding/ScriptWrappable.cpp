@@ -435,6 +435,25 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->m_htmlCollection->protoType());
     scriptObject()->setExtraData(HTMLCollectionObject);
+
+    scriptObject()->setPropetyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
+        HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        if (idx < self->length()) {
+            return true;
+        }
+        return false;
+    }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
+        return escargot::ESValueVector(0);
+    }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
+        HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        ASSERT(idx < self->length());
+        return self->item(idx)->scriptValue();
+    });
 }
 
 void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* instance)

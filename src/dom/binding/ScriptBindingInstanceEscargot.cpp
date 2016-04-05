@@ -1948,14 +1948,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::HTMLCollectionObject);
-
+        HTMLCollection* self = (HTMLCollection*)(thisValue.asESPointer()->asESObject()->extraPointerData());
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isUInt32()) {
-            Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
-            if (elem != nullptr)
-                return elem->scriptValue();
-        } else {
-            THROW_ILLEGAL_INVOCATION()
+        uint32_t idx = argValue.toIndex();
+        if (idx < self->length()) {
+            Element* elem = self->item(idx);
+            return elem->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("item"), 1, false);
@@ -1985,14 +1983,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
+            NodeList* nodeList = (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            if (argValue.isUInt32()) {
-                NodeList* nodeList = (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            uint32_t idx = argValue.toIndex();
+            if (idx < nodeList->length()) {
                 Node* nd = nodeList->item(argValue.asUInt32());
-                if (nd != nullptr) {
-                    return nd->scriptValue();
-                }
+                return nd->scriptValue();
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
         }, escargot::ESString::create("item"), 1, false)
