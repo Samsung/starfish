@@ -1435,7 +1435,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             } else if (argValue.isObject() && argValue.asESPointer()->isESArrayObject()) {
                 escargot::ESArrayObject* array = argValue.asESPointer()->asESArrayObject();
                 String* listSoFar = String::createASCIIString("");
-                for (int i = 0; array->length(); i++) {
+                for (unsigned i = 0; i < array->length(); i++) {
                     escargot::ESValue val = array->get(i);
                     if (val.isESString()) {
                         listSoFar = listSoFar->concat(toBrowserString(val.asESString()));
