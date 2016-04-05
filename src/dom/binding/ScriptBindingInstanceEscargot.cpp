@@ -2869,6 +2869,35 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue(c);
     }, nullptr);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("statusText"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        String* c = originalObj->getStatusText();
+        return toJSString(c);
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseText"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        try {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+            String* c = originalObj->getResponseText();
+            return toJSString(c);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseXML"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        String* c = originalObj->getResponseXML();
+        return toJSString(c);
+    }, nullptr);
+
     escargot::ESFunctionObject* xhrGetResponseHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {

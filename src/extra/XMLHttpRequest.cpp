@@ -276,6 +276,8 @@ void XMLHttpRequest::send(String* body)
 
 void XMLHttpRequest::setResponseType(const char* responseType)
 {
+    if (m_ready_state == LOADING || m_ready_state == DONE)
+            throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     if (responseType) {
         std::string data = responseType;
         std::transform(data.begin(), data.end(), data.begin(), ::tolower);
@@ -343,6 +345,15 @@ String* XMLHttpRequest::getResponseTypeStr()
     case DEFAULT_RESPONSE:
         return String::emptyString;
     }
+    return String::emptyString;
+}
+
+String* XMLHttpRequest::getResponseText()
+{
+    if (!(m_response_type == DEFAULT_RESPONSE || m_response_type == TEXT_RESPONSE))
+        throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
+    if (m_ready_state != LOADING && m_ready_state != DONE)
+         return String::emptyString;
     return String::emptyString;
 }
 

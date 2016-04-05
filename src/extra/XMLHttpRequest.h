@@ -114,6 +114,22 @@ public:
         return m_status;
     }
 
+    String* getStatusText()
+    {
+        if (m_ready_state == UNSENT || m_ready_state == OPENED || m_status == 0)
+             return String::emptyString;
+        return String::emptyString;
+    }
+
+    String* getResponseText();
+
+    String* getResponseXML()
+    {
+        if (m_ready_state != DONE)
+             return String::emptyString;
+        return String::emptyString;
+    }
+
     void setTimeout(uint32_t timeout)
     {
         m_timeout = timeout;

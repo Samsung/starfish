@@ -15,3 +15,4 @@ test/reftest/web-platform-tests/XMLHttpRequest/open-after-abort.htm
 test/reftest/web-platform-tests/XMLHttpRequest/open-during-abort.htm
 test/reftest/web-platform-tests/XMLHttpRequest/setrequestheader-after-send.htm
 test/reftest/web-platform-tests/XMLHttpRequest/setrequestheader-before-open.htm
+test/reftest/web-platform-tests/XMLHttpRequest/xmlhttprequest-basic.htm
