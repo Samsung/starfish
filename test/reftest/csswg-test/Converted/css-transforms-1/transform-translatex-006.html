@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html><head>
+    <title>CSS Transforms Test: transform property with translateX function</title>
+    <link rel="author" title="Serena Wales" href="mailto:serena@codeforamerica.org">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#transform-property">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#two-d-transform-functions">
+    <link rel="match" href="transform-translatex-ref.html">
+    <meta name="assert" content="This tests that translateX(50px) translates a box by 50 pixels in the X direction.">
+    
+<style>.convertedClass1 {  
+  position: absolute;
+}
+.convertedClass2 {  
+  position: absolute;  
+  top: 0;  
+  left: 0;  
+  width: 100px;  
+  height: 100px;  
+  background-color: green;  
+  transform: translateX(50px);  
+  -webkit-transform: translateX(50px);
+}
+.convertedClass3 {  
+  position: absolute;  
+  width: 100px;  
+  height: 100px;  
+  background-color: red;  
+  top: 0px;  
+  left: 50px;
+}
+</style></head>
+<body>
+    <p>The test passes if there is a green square and no red.</p>
+    <div class="container convertedClass1">
+        <!-- This is the square that should not be visible if the test passes -->
+        <div class="redSquare convertedClass3"></div>
+        <!-- This is the square being tested with the transform -->
+        <div class="greenSquare convertedClass2"></div>
+    </div>
+
+
+</body></html>

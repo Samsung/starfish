@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head>
+    <title>CSS Transforms Test: transform property with scale function and move its origin</title>
+    <link rel="author" title="Chris Sanborn" href="mailto:granimalcracker@gmail.com">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#transform-property">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#transform-origin-property">
+    <link rel="help" href="https://drafts.csswg.org/css-transforms-1/#transform-functions">
+    <link rel="match" href="reference/css-transform-scale-ref-002.html">
+    <meta name="assert" content="The transform scales the element to twice its size in both the X and Y directions and moves its origin to the top left corner.">
+    
+<style>.convertedClass1 {  
+  position: absolute;
+}
+.convertedClass2 {  
+  position: absolute;  
+  top: 0;  
+  left: 0;  
+  width: 100px;  
+  height: 100px;  
+  background-color: green;  -o-transform-origin: 0 0;
+  -webkit-transform-origin: 0 0;
+  transform-origin: 0 0;  
+  transform: scale(2);  
+  -webkit-transform: scale(2);
+}
+.convertedClass3 {  
+  position: absolute;  
+  width: 98px;  
+  height: 98px;  
+  background-color: red;  
+  left: 100px;  
+  top: 100px;
+}
+</style></head>
+<body>
+    <p>The test passes if the green square completely covers the red square.</p>
+    <div class="container convertedClass1">
+        <!-- This is the square that should not be visible if the test passes -->
+        <div class="redSquare convertedClass3"></div>
+        <!-- This is the square being tested with the transform -->
+        <div class="greenSquare convertedClass2"></div>
+    </div>
+
+
+</body></html>

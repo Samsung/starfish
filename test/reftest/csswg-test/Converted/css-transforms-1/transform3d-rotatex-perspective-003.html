@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head>
+    <title>CSS Test (Transforms): 'perspective' and 'opacity'</title>
+    <link rel="author" title="Matt Woodrow" href="mailto:mwoodrow@mozilla.com">
+    <link rel="author" title="Aryeh Gregor" href="mailto:ayg@aryeh.name">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#perspective-property">
+    <meta name="assert" content="This tests for a real-world implementation
+    bug: see &lt;https://bugzilla.mozilla.org/show_bug.cgi?id=707563&gt;.  The only
+    difference between the test and reference is 'opacity: 0.9999', which should
+    not affect anything in the test.">
+    <link rel="match" href="transform3d-rotatex-perspective-ref.html">
+    <link rel="mismatch" href="transform3d-rotatex-perspective-notref.html">
+    
+  <style>.convertedClass1 {  
+  position: relative;  
+  height: 300px;  
+  width: 300px;  
+  margin-top: 50px;  
+  margin-right: 100px;  
+  margin-bottom: 50px;  
+  margin-left: 100px;  
+  border-top-width: 2px;  
+  border-top-style: solid;  
+  border-top-color: blue;  
+  border-right-width: 2px;  
+  border-right-style: solid;  
+  border-right-color: blue;  
+  border-bottom-width: 2px;  
+  border-bottom-style: solid;  
+  border-bottom-color: blue;  
+  border-left-width: 2px;  
+  border-left-style: solid;  
+  border-left-color: blue;  -webkit-perspective: 500px;
+  perspective: 500px;  -webkit-opacity: 0.9999;
+  opacity: 0.9999;
+}
+.convertedClass2 {  
+  margin-top: 10px;  
+  margin-right: 10px;  
+  margin-bottom: 10px;  
+  margin-left: 10px;  
+  width: 280px;  
+  height: 280px;  
+  background-color: #844BCA;  
+  transform: rotateY(40deg);  
+  -webkit-transform: rotateY(40deg);
+}
+</style></head>
+  <body>
+    <div id="container" class="convertedClass1">
+      <div id="parent" class="convertedClass2"></div>
+    </div>
+  
+
+</body></html>

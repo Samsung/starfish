@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head>
+  <title>CSS Test: rotateY with perspective produces a trapezoid</title>
+  <link rel="author" title="Apple Inc." href="http://www.apple.com/">
+  <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#3d-transform-rendering">
+  <link rel="match" href="reftest/transform-3d-rotateY-stair-above-ref-001.xht">
+  <meta name="flags" content="">
+  <meta name="assert" content="A rotateY transform with perspective   should result in a trapezoid.">
+  
+ <style>.convertedClass1 {  
+  height: 150px;  
+  width: 150px;
+}
+.convertedClass2 {  
+  background-color: green;  
+  height: 200px;  
+  width: 200px;
+}
+.convertedClass3 {  
+  position: absolute;  
+  top: 20px;  
+  left: 0;  -webkit-perspective: 500px;
+  perspective: 500px;
+}
+.convertedClass4 {  
+  background-color: red;  
+  transform: rotateY(50deg);  
+  -webkit-transform: rotateY(50deg);
+}
+.convertedClass5 {  
+  background-color: green;  
+  position: absolute;
+}
+.convertedClass6 {  
+  width: 33px;  
+  height: 170px;  
+  top: 10px;  
+  left: 20px;
+}
+.convertedClass7 {  
+  width: 33px;  
+  height: 158px;  
+  top: 16px;  
+  left: 53px;
+}
+.convertedClass8 {  
+  width: 33px;  
+  height: 147px;  
+  top: 21px;  
+  left: 86px;
+}
+.convertedClass9 {  
+  height: 180px;
+}
+</style></head>
+ <body>
+<div class="background convertedClass1 convertedClass2">
+<div class="container convertedClass1 convertedClass3">
+  <div class="transformed convertedClass1 convertedClass4"></div>
+</div>
+<div class="stairs convertedClass1 convertedClass9">
+  <div id="one" class="stair convertedClass1 convertedClass5 convertedClass6"></div>
+  <div id="two" class="stair convertedClass1 convertedClass5 convertedClass7"></div>
+  <div id="three" class="stair convertedClass1 convertedClass5 convertedClass8"></div>
+</div>
+</div>
+<p>You should see a green box. There should be no red.</p>
+
+</body></html>

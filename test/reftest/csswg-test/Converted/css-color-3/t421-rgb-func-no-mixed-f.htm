@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html><head>
+		<title>CSS Test: no mixed rgb() values</title>
+		<link rel="author" title="L. David Baron" href="http://dbaron.org/">
+		<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/">
+		<link rel="help" href="http://www.w3.org/TR/css3-color/#rgb-color">
+		<link rel="match" href="t422-rgba-func-no-mixed-f-ref.html">
+		<meta name="flags" content="invalid">
+		<meta name="assert" content="Test that rgb() values are only accepted when all integers or all percentages.">
+		
+	<style>.convertedClass1 {  
+  color: green;
+}
+.convertedClass2 {  
+  color: rgb(255, 0, 0%);
+}
+.convertedClass3 {  
+  color: rgb(100%, 0%, 0);
+}
+.convertedClass4 {  
+  color: rgb(100%, 1, 0);
+}
+.convertedClass5 {  
+  color: rgb(255, 1%, 0%);
+}
+.convertedClass6 {  
+  color: rgb(99%, 0%, 0);
+}
+.convertedClass7 {  
+  color: rgb(0%, 0, 0%);
+}
+.convertedClass8 {  
+  color: rgb(0, 0%, 0%);
+}
+.convertedClass9 {  
+  color: rgb(254, 255%, 0);
+}
+</style></head>
+	<body>
+		<p class="convertedClass1 convertedClass2 convertedClass3 convertedClass4 convertedClass5 convertedClass6 convertedClass7 convertedClass8 convertedClass9">This text should be green.</p>
+
+		<div>Note: the rules tested by this test may be changed in
+		future levels of the CSS Color Module.</div>
+	
+</body></html>

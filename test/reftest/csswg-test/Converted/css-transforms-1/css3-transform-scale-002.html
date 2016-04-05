@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head>
+    <title>CSS Transforms Test: transform property with scale function</title>
+    <link rel="author" title="Noah Lu" href="mailto:codedancerhua@gmail.com">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#transform-property">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#funcdef-scale">
+    <link rel="match" href="css3-transform-scale-ref-002.html">
+    <meta name="assert" content="box width and height will be twice larger if transform scale(2) applied">
+    
+<style>.convertedClass1 {  
+  width: 100px;  
+  height: 100px;  
+  background-color: green;  
+  position: absolute;  
+  top: 150px;  
+  left: 150px;  
+  z-index: 10;
+}
+.convertedClass2 {  
+  background-color: red;  
+  width: 200px;  
+  height: 200px;  
+  left: 100px;  
+  top: 100px;  
+  z-index: 9;
+}
+.convertedClass3 {  
+  transform: scale(2);  
+  -webkit-transform: scale(2);
+}
+</style></head>
+<body>
+    <p>The test passes if there is a green square and no red.</p>
+    <div class="red convertedClass1 convertedClass2"></div>
+    <div class="green convertedClass1 convertedClass3"></div>
+
+
+</body></html>

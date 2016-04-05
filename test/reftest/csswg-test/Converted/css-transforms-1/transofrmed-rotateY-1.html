@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html><head>
+    <title>CSS Transforms API Test: transform rotateY</title>
+    <link rel="author" title="loveky" href="mailto:ylzcylx@gmail.com">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#transform-property">
+    <link rel="match" href="reference/transofrmed-rotateY-1-ref.html">
+    <meta name="assert" content="The transformed div should rotate 90 degrees">
+    
+  <style>.convertedClass1 {  
+  height: 150px;  
+  width: 150px;
+}
+.convertedClass2 {  
+  border-top-width: 1px;  
+  border-top-style: solid;  
+  border-top-color: black;  
+  border-right-width: 1px;  
+  border-right-style: solid;  
+  border-right-color: black;  
+  border-bottom-width: 1px;  
+  border-bottom-style: solid;  
+  border-bottom-color: black;  
+  border-left-width: 1px;  
+  border-left-style: solid;  
+  border-left-color: black;  
+  background-color: green;
+}
+.convertedClass3 {  
+  transform: rotateY(90deg);  
+  background-color: red;  
+  -webkit-transform: rotateY(90deg);
+}
+</style></head>
+
+  <body>
+    <p>You should only see a GREEN box if this test passes!</p>
+    <div class="container convertedClass1 convertedClass2">
+      <div class="transformed convertedClass1 convertedClass3"></div>
+    </div>
+  
+</body></html>

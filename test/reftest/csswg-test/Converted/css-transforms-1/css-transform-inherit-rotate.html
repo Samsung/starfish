@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html class="convertedClass1"><head class="convertedClass1">
+    <title class="convertedClass1">CSS Transforms Test: CSS transforms rotate inheritance on div element</title>
+    <link rel="author" title="Delong Gao" href="mailto:gaodl@uw.edu" class="convertedClass1">
+    <link rel="reviewer" title="Rebecca Hauck" href="mailto:rhauck@adobe.com" class="convertedClass1">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#transform-property" class="convertedClass1">
+    <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#two-d-transform-functions" class="convertedClass1">
+    <!--<link rel="match" href="reference/ttwf-reftest-tutorial-ref.html">
+	<meta name="flags" content="svg">-->
+    <meta name="assert" content="Rotation on parent element will not be inherited by child element, unless declared. The test is passed if there is a green square and no red. And it is rotated 45 degree." class="convertedClass1">
+    
+<style>.convertedClass1 {  
+  margin-top: 0;  
+  margin-right: 0;  
+  margin-bottom: 0;  
+  margin-left: 0;  
+  padding-top: 0;  
+  padding-right: 0;  
+  padding-bottom: 0;  
+  padding-left: 0;
+}
+.convertedClass2 {  
+  position: absolute;  
+  top: 100px;  
+  left: 100px;  
+  width: 100px;  
+  height: 100px;  
+  background-color: green;  
+  z-index: 2;
+}
+.convertedClass3 {  
+  position: absolute;  
+  top: 50px;  
+  left: 50px;  
+  width: 200px;  
+  height: 200px;  
+  transform: rotate(45deg);  
+  background-color: green;  
+  -webkit-transform: rotate(45deg);
+}
+.convertedClass4 {  
+  position: absolute;  
+  top: 50px;  
+  left: 50px;  
+  width: 100px;  
+  height: 100px;  
+  background-color: red;  
+  transform: ;  
+  -webkit-transform: ;
+}
+.convertedClass5 {  
+  position: absolute;  
+  top: 300px;
+}
+</style></head>
+<body class="convertedClass1">
+    <p class="convertedClass1 convertedClass5">The test passes if there is a green square and no red. And it is rotated 45 degree.</p>
+	<div class="flag convertedClass1 convertedClass2"></div>
+	<div class="parentSquare convertedClass1 convertedClass3">
+		<div class="childSquare convertedClass1 convertedClass4"></div>
+	</div>
+
+</body></html>

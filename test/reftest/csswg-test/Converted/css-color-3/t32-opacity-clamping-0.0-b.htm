@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head>
+		<title>CSS Test: opacity</title>
+		<link rel="author" title="L. David Baron" href="http://dbaron.org/">
+		<link rel="author" title="Mozilla Corporation" href="http://mozilla.com/">
+		<link rel="help" href="http://www.w3.org/TR/css3-color/#transparency">
+		<meta name="flags" content="">
+		<meta name="assert" content="Opacity values less than 0.0 are clamped to 0.0">
+		
+	<style>.convertedClass1 {  -webkit-opacity: -0.0;
+  opacity: -0.0;
+}
+.convertedClass2 {  -webkit-opacity: -0.1;
+  opacity: -0.1;
+}
+.convertedClass3 {  -webkit-opacity: -0.9;
+  opacity: -0.9;
+}
+.convertedClass4 {  -webkit-opacity: -30;
+  opacity: -30;
+}
+.convertedClass5 {  -webkit-opacity: -7439.79;
+  opacity: -7439.79;
+}
+</style></head>
+	<body>
+		<p id="one">This should be the only text visible on this page.</p>
+		<p id="two" class="convertedClass1">This text should NOT be visible.</p>
+		<p id="three" class="convertedClass2">This text should NOT be visible.</p>
+		<p id="four" class="convertedClass3">This text should NOT be visible.</p>
+		<p id="five" class="convertedClass4">This text should NOT be visible.</p>
+		<p id="six" class="convertedClass5">This text should NOT be visible.</p>
+	
+</body></html>

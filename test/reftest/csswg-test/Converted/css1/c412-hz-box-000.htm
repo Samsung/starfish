@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head>
+  <title>CSS Test: Horizontal Formatting</title>
+  <link rel="help" href="http://www.w3.org/TR/REC-CSS1#horizontal-formatting">
+  <link rel="author" title="CSS1 Test Suite Contributors" href="http://www.w3.org/Style/CSS/Test/CSS1/current/tsack.html">
+  <link rel="author" title="Ian Hickson" href="mailto:ian@hixie.ch">
+  <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+  <link rel="match" href="c412-hz-box-000-ref.xht">
+
+  <meta name="flags" content="ahem">
+
+  
+  <link rel="help" href="http://www.w3.org/TR/CSS21/box.html#box-dimensions" title="8.1 Box dimensions">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/box.html#border-properties" title="8.5 Border properties">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/box.html#padding-properties" title="8.4 Padding properties: 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', and 'padding'">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/box.html#margin-properties" title="8.3 Margin properties: 'margin-top',  'margin-right',  'margin-bottom', 'margin-left', and 'margin'">
+ <style>.convertedClass1 {  
+  font-style: normal;  
+  font-variant: normal;  
+  font-weight: normal;  
+  font-size: 40px;  
+  line-height: 1;  
+  font-family: Ahem;  
+  width: 360px;  
+  background-color: aqua;  
+  color: blue;  
+  border-top-style: solid;  
+  border-right-style: solid;  
+  border-bottom-style: solid;  
+  border-left-style: solid;  
+  border-top-color: fuchsia;  
+  border-right-color: fuchsia;  
+  border-bottom-color: fuchsia;  
+  border-left-color: fuchsia;  
+  border-top-width: 0px;  
+  border-right-width: 40px;  
+  border-bottom-width: 0px;  
+  border-left-width: 40px;  
+  padding-top: 0px;  
+  padding-right: 40px;  
+  padding-bottom: 0px;  
+  padding-left: 40px;  
+  margin-top: 0px;  
+  margin-right: 40px;  
+  margin-bottom: 0px;  
+  margin-left: 40px;
+}
+</style></head>
+ <body>
+  <p>The two diagrams below should be identical.</p>
+  <div class="test">
+   <p id="ruled" class="convertedClass1">X X X X X</p>
+   <p id="control">
+    <img src="support/css1test412a.png" alt="The diagram above should be as described here: A 40px white      square (which will appear as a 40px indent from the left margin),      a 40px fuchsia square, six 40px aqua squares separated by five      40px blue squares, and a final fuchsia square.">
+   </p>
+  </div>
+ 
+</body></html>

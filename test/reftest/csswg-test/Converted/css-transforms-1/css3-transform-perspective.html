@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html><head>
+  <title>CSS Test: rotateX 90 degrees with perspective make it invisible</title>
+  <link rel="author" title="caoqixing" href="mailto:robin.webkit@gmail.com">
+  <link rel="reviewer" title="Dayang Shen" href="mailto:shendayang@baidu.com"> <!-- 2013-09-03 -->
+  <link rel="help" href="http://www.w3.org/TR/css-transforms-1/#propdef-perspective">
+  <link rel="match" href="reference/css3-transform-perspective-ref.html">
+  <meta name="assert" content="Test passes if rotateX 90 degrees with perspective make it invisible">
+  
+<style>.convertedClass1 {  
+  width: 200px;  
+  height: 200px;
+}
+.convertedClass2 {  
+  position: relative;  
+  background-color: green;  -webkit-perspective: 1000px;
+  perspective: 1000px;
+}
+.convertedClass3 {  
+  background-color: red;  
+  transform: rotateX(90deg);  
+  -webkit-transform: rotateX(90deg);
+}
+</style></head>
+<body>
+  <p>The test passes if there is a green square and no red.</p>
+  <div id="container" class="convertedClass1 convertedClass2">
+    <div id="rotated" class="convertedClass1 convertedClass3"></div>
+  </div>
+
+
+</body></html>

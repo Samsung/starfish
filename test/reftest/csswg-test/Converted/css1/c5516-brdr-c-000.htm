@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head>
+  <title>CSS Test: border-color</title>
+  <link rel="help" href="http://www.w3.org/TR/REC-CSS1#border-color">
+  <link rel="author" title="CSS1 Test Suite Contributors" href="http://www.w3.org/Style/CSS/Test/CSS1/current/tsack.html">
+  <link rel="author" title="Ian Hickson" href="mailto:ian@hixie.ch">
+  <link rel="match" href="c5516-brdr-c-000-ref.xht">
+
+  
+  <link rel="help" href="http://www.w3.org/TR/CSS21/box.html#border-properties" title="8.5 Border properties">
+ <style>.convertedClass1 {  
+  border-top-color: green;  
+  border-right-color: green;  
+  border-bottom-color: green;  
+  border-left-color: green;  
+  border-top-style: solid;  
+  border-right-style: solid;  
+  border-bottom-style: solid;  
+  border-left-style: solid;
+}
+.convertedClass2 {  
+  border-top-color: green;  
+  border-right-color: green;  
+  border-bottom-color: green;  
+  border-left-color: green;  
+  border-top-width: medium;  
+  border-right-width: medium;  
+  border-bottom-width: medium;  
+  border-left-width: medium;  
+  border-top-style: solid;  
+  border-right-style: solid;  
+  border-bottom-style: solid;  
+  border-left-style: solid;
+}
+.convertedClass3 {  
+  border-top-color: purple;  
+  border-right-color: green;  
+  border-bottom-color: blue;  
+  border-left-color: yellow;  
+  border-top-width: 2em;  
+  border-right-width: 2em;  
+  border-bottom-width: 2em;  
+  border-left-width: 2em;  
+  border-top-style: solid;  
+  border-right-style: solid;  
+  border-bottom-style: solid;  
+  border-left-style: solid;
+}
+</style></head>
+ <body>
+  <p class="one convertedClass1">
+   This box should have a green border.
+  </p>
+  <p class="two convertedClass2">
+   This box should have an identical green border.
+  </p>
+  <p class="three convertedClass3">
+   Clockwise from top, the borders should be: PURPLE, GREEN, BLUE, YELLOW.
+  </p>
+ 
+</body></html>
