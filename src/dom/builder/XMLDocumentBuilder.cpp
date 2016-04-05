@@ -30,7 +30,9 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             newNode = document;
         } else if (type == 10) {
             newNode = new DocumentType(document);
-        } else if (type == 3) {
+            parentNode->appendChildForParser(newNode);
+            return;
+         } else if (type == 3) {
             newNode = new Text(document, String::fromUTF8(xmlElement->FirstChildElement()->FirstChild()->Value()));
             parentNode->appendChildForParser(newNode);
             return;

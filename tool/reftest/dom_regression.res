@@ -61,6 +61,7 @@ test/reftest/web-platform-tests/dom_converted/nodes/Node-isEqualNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-isEqualNode-xhtml.xhtml
 test/reftest/web-platform-tests/dom_converted/nodes/Node-removeChild.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-replaceChild.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-insertBefore.html
 test/reftest/web-platform-tests/dom_converted/events/Event-defaultPrevented.html
 test/reftest/web-platform-tests/dom_converted/events/Event-propagation.html
 test/reftest/web-platform-tests/dom_converted/events/Event-type.html

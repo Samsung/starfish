@@ -344,31 +344,39 @@ Node* Node::getDocTypeChild()
     return nullptr;
 }
 
-void Node::validatePreinsert(Node* child, Node* childRef) // (node, child)
+void Node::validatePreinsert(Node* node, Node* child) // (node, child)
 {
     // 4.2.1 pre-insertion validity
     if (!(isDocument() || isElement())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
     }
-    if (this == child) {
+
+    if (node == this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+    } else {
+        for (Node* p = this; p != nullptr; p = p->parentNode()) {
+            if (p == node) {
+                throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is a host-including inclusive ancestor of parent.");
+            }
+        }
     }
-    if (childRef != nullptr && childRef->parentNode() != this) {
+
+    if (child != nullptr && child->parentNode() != this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
     }
-    if (!(child->isDocumentType() || child->isElement() || child->isText() || child->isComment())) {
+    if (!(node->isDocumentType() || node->isElement() || node->isText() || node->isComment())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is not a DocumentFragment, DocumentType, Element, Text, ProcessingInstruction, or Comment.");
     }
-    if ((child->isText() && isDocument()) || (child->isDocumentType() && !isDocument())) {
+    if ((node->isText() && isDocument()) || (node->isDocumentType() && !isDocument())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Either node is a Text node and parent is a document, or node is a doctype and parent is not a document.");
     }
     if (isDocument()) {
-        if (child->isElement()) {
-            if ((firstElementChild() != nullptr) || (childRef != nullptr && childRef->isElement()) || (childRef != nullptr && childRef->nextSibling() != nullptr && childRef->nextSibling()->isDocumentType())) {
+        if (node->isElement()) {
+            if ((firstElementChild() != nullptr) || (child != nullptr && child->isElement()) || (child != nullptr && child->nextSibling() != nullptr && child->nextSibling()->isDocumentType())) {
                 throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has an element child, child is a doctype, or child is not null and a doctype is following child.");
             }
-        } else if (child->isDocumentType()) {
-            if (getDocTypeChild() || (childRef != nullptr && childRef->previousSibling() != nullptr && childRef->previousSibling()->isElement()) || (childRef == nullptr && firstElementChild() != nullptr)) {
+        } else if (node->isDocumentType()) {
+            if (getDocTypeChild() || (child != nullptr && child->previousSibling() != nullptr && child->previousSibling()->isElement()) || (child == nullptr && firstElementChild() != nullptr)) {
                 throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "parent has a doctype child, child is non-null and an element is preceding child, or child is null and parent has an element child.");
             }
         }
@@ -450,14 +458,19 @@ Node* Node::appendChildForParser(Node* child)
 
 Node* Node::insertBefore(Node* child, Node* childRef)
 {
-    // spec does not say what to do when child is null
-    STARFISH_ASSERT(child);
-
-    if (!childRef) {
-        return appendChild(child);
+    // Spec does not say what to do when node is null
+    if (child == nullptr) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is null.");
     }
 
     validatePreinsert(child, childRef);
+
+    if (childRef == nullptr) {
+        return appendChild(child);
+    }
+    if (child == childRef) {
+        return child;
+    }
 
     STARFISH_ASSERT(child->parentNode() == nullptr);
     STARFISH_ASSERT(child->nextSibling() == nullptr);

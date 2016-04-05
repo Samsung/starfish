@@ -753,16 +753,23 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             try {
                 escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
                 CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
-                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(1), ScriptWrappable::Type::NodeObject);
                 Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
                 Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
-                Node* child = (Node*)instance->currentExecutionContext()->readArgument(1).asESPointer()->asESObject()->extraPointerData();
+
+                escargot::ESValue arg2 = instance->currentExecutionContext()->readArgument(1);
+                Node* child = nullptr;
+                if (!arg2.isNull()) {
+                    CHECK_TYPEOF(arg2, ScriptWrappable::Type::NodeObject);
+                    child = (Node*)arg2.asESPointer()->asESObject()->extraPointerData();
+                }
+
                 Node* n = obj->insertBefore(node, child);
                 return n->scriptValue();
             } catch(DOMException* e) {
                 escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                return escargot::ESValue(escargot::ESValue::ESNull);
             }
         }, escargot::ESString::create("insertBefore"), 2, false));
 
@@ -1264,13 +1271,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isDocument()) {
-            Node* docTypeNode = nd->firstChild();
-            while (docTypeNode) {
-                if (docTypeNode->isDocumentType()) {
-                    return docTypeNode->scriptValue();
-                } else {
-                    docTypeNode = docTypeNode->nextSibling();
-                }
+            DocumentType* docType = nd->asDocument()->docType();
+            if (docType != nullptr) {
+                return docType->scriptValue();
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
