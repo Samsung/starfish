@@ -1060,6 +1060,30 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
 
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("hasAttribute"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+
+            int count = instance->currentExecutionContext()->argumentCount();
+            if (count == 1) {
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                if (argValue.isESString()) {
+                    auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
+                    QualifiedName name = QualifiedName::fromString(sf, argValue.asESString()->utf8Data());
+                    size_t res = ((Element*) thisValue.asESPointer()->asESObject()->extraPointerData())->hasAttribute(name);
+                    return res != SIZE_MAX ? escargot::ESValue(true) : escargot::ESValue(false);
+                } else {
+                    return escargot::ESValue(false);
+                }
+            } else {
+                auto msg = escargot::ESString::create("Failed to execute 'hasAttribute' on Element: 1 argument required, but only 0 present.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }, escargot::ESString::create("hasAttribute"), 1, false)
+    );
+
     /* 4.7 Interface DocumentType */
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -2302,8 +2326,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isUInt32()) {
             Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
-        if (elem != nullptr)
-            return elem->scriptValue();
+            if (elem != nullptr)
+                return elem->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("item"), 1, false);
