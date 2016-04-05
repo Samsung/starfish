@@ -10,6 +10,7 @@ namespace StarFish {
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
     : Node(this, scriptBindingInstance)
     , m_styleResolver(*this)
+    , m_pageVisibilityState(PageVisibilityStateVisible)
 {
     m_window = window;
     m_scriptBindingInstance = scriptBindingInstance;
