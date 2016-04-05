@@ -2898,6 +2898,18 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return toJSString(c);
     }, nullptr);
 
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("UNSENT"), false, false, false, escargot::ESValue(0));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("OPENED"), false, false, false, escargot::ESValue(1));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HEADERS_RECEIVED"), false, false, false, escargot::ESValue(2));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, false, false, escargot::ESValue(3));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, false, false, escargot::ESValue(4));
+
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("UNSENT"), false, false, false, escargot::ESValue(0));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("OPENED"), false, false, false, escargot::ESValue(1));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("HEADERS_RECEIVED"), false, false, false, escargot::ESValue(2));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, false, false, escargot::ESValue(3));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, false, false, escargot::ESValue(4));
+
     escargot::ESFunctionObject* xhrGetResponseHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isObject()) {
