@@ -48,10 +48,15 @@ public:
             }
         }
 #endif
-        if (*asASCIIString() == str) {
-            return true;
+        size_t srcLen = strlen(str);
+        if (srcLen != length())
+            return false;
+        for (size_t i = 0; i < length() ; i ++) {
+            if (charAt(i) != (char32_t)str[i]) {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     size_t length() const

@@ -304,13 +304,13 @@ HTMLCollection* Node::children()
     } else if (!m_rareNodeMembers->m_children)
         return m_rareNodeMembers->m_children;
 
-    auto filter = [&](Node* node)
+    auto filter = [](Node* node, void* data) -> bool
     {
-        if (node->parentNode() == this && node->isElement())
+        if (node->parentNode() == ((Node*)data) && node->isElement())
             return true;
         return false;
     };
-    m_rareNodeMembers->m_children = new HTMLCollection(m_document->scriptBindingInstance(), this, filter);
+    m_rareNodeMembers->m_children = new HTMLCollection(m_document->scriptBindingInstance(), this, filter, this);
     return m_rareNodeMembers->m_children;
 }
 
@@ -620,23 +620,25 @@ Node* Node::removeChild(Node* child)
 
 HTMLCollection* Node::getElementsByTagName(String* qualifiedName)
 {
-    auto filter = [=](Node* node)
+    auto filter = [](Node* node, void* data)
     {
+        String* qualifiedName = (String*)data;
         if (node->isElement()) {
             if (node->localName()->equals(qualifiedName))
                 return true;
-            if (qualifiedName->isASCIIString()&&qualifiedName->equals("*"))
+            if (qualifiedName->equals("*"))
                 return true;
         }
         return false;
     };
-    return new HTMLCollection(document()->scriptBindingInstance(), this, filter);
+    return new HTMLCollection(document()->scriptBindingInstance(), this, filter, qualifiedName);
 }
 
 HTMLCollection* Node::getElementsByClassName(String* classNames)
 {
-    auto filter = [=](Node* node)
+    auto filter = [](Node* node, void* data) -> bool
     {
+        String* classNames = (String*)data;
         if (node->isElement() && node->asElement()->classNames().size() > 0) {
 
             const char* data = classNames->utf8Data();
@@ -676,7 +678,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
         }
         return false;
     };
-    return new HTMLCollection(document()->scriptBindingInstance(), this, filter);
+    return new HTMLCollection(document()->scriptBindingInstance(), this, filter, classNames);
 }
 
 void Node::setNeedsFrameTreeBuild()

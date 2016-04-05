@@ -8,10 +8,12 @@ namespace StarFish {
 class Node;
 class Element;
 
+typedef bool (*HTMLCollectionFilterFunction)(Node*, void*);
+
 class HTMLCollection : public ScriptWrappable {
 public:
-    HTMLCollection(ScriptBindingInstance* instance, Node* root, std::function<bool(Node*)> filter)
-        : ScriptWrappable(this), m_root(root), m_filter(filter)
+    HTMLCollection(ScriptBindingInstance* instance, Node* root, HTMLCollectionFilterFunction filter, void* data)
+        : ScriptWrappable(this), m_root(root), m_filter(filter), m_data(data)
     {
         initScriptWrappable(this, instance);
     }
@@ -20,7 +22,8 @@ public:
     Element* namedItem(String* name);
 private:
     Node* m_root;
-    std::function<bool(Node*)> m_filter;
+    HTMLCollectionFilterFunction m_filter;
+    void* m_data;
 };
 
 }

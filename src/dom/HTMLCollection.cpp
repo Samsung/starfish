@@ -6,17 +6,34 @@
 
 namespace StarFish {
 
+template<typename Func>
+static void getherDescendant(std::vector<Node*, gc_allocator<Node*>>* collection, Node* root, Func filter)
+{
+    Node* child = root->firstChild();
+    while (child) {
+        if (filter(child))
+            collection->push_back(child);
+
+        getherDescendant(collection, child, filter);
+        child = child->nextSibling();
+    }
+}
+
 unsigned long HTMLCollection::length() const
 {
     std::vector<Node*, gc_allocator<Node*>> collection;
-    Traverse::getherDescendant(&collection, m_root, m_filter);
+    getherDescendant(&collection, m_root, [this](Node* child) -> bool {
+        return m_filter(child, this->m_data);
+    });
     return collection.size();
 }
 
 Element* HTMLCollection::item(unsigned long index)
 {
     std::vector<Node*, gc_allocator<Node*>> collection;
-    Traverse::getherDescendant(&collection, m_root, m_filter);
+    getherDescendant(&collection, m_root, [this](Node* child) -> bool {
+        return m_filter(child, this->m_data);
+    });
     if (index < collection.size()) {
         return collection.at(index)->asElement();
     }
@@ -26,7 +43,9 @@ Element* HTMLCollection::item(unsigned long index)
 Element* HTMLCollection::namedItem(String* key)
 {
     std::vector<Node*, gc_allocator<Node*>> collection;
-    Traverse::getherDescendant(&collection, m_root, m_filter);
+    getherDescendant(&collection, m_root, [this](Node* child) -> bool {
+        return m_filter(child, this->m_data);
+    });
     for (unsigned i = 0; i < collection.size(); i++) {
         Element* elem = collection.at(i)->asElement();
         if (elem->id()->equals(key))
