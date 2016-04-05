@@ -53,6 +53,8 @@ public:
 #endif
 };
 
+String* toBrowserString(const escargot::ESValue& v);
+
 }
 
 #endif

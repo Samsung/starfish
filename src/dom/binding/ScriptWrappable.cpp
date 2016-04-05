@@ -431,14 +431,15 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
     scriptObject()->set__proto__(data->m_htmlCollection->protoType());
     scriptObject()->setExtraData(HTMLCollectionObject);
 
-    scriptObject()->setPropetyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
         HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
         uint32_t idx = key.toIndex();
         if (idx < self->length()) {
             return true;
         }
-        return false;
+        Element* e = self->namedItem(toBrowserString(key));
+        return e;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
         return escargot::ESValueVector(0);
@@ -446,8 +447,11 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
         HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
         uint32_t idx = key.toIndex();
-        ASSERT(idx < self->length());
-        return self->item(idx)->scriptValue();
+        if (idx < self->length())
+            return self->item(idx)->scriptValue();
+        Element* e = self->namedItem(toBrowserString(key));
+        STARFISH_ASSERT(e);
+        return e->scriptValue();
     });
 }
 
@@ -457,7 +461,7 @@ void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* 
     scriptObject()->set__proto__(data->m_nodeList->protoType());
     scriptObject()->setExtraData(NodeListObject);
 
-    scriptObject()->setPropetyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
         NodeList* self = (NodeList*)obj->extraPointerData();
         uint32_t idx = key.toIndex();
@@ -483,7 +487,7 @@ void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstan
     scriptObject()->set__proto__(data->m_domTokenList->protoType());
     scriptObject()->setExtraData(DOMTokenListObject);
 
-    scriptObject()->setPropetyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::DOMTokenListObject);
         DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
         uint32_t idx = key.toIndex();
