@@ -149,6 +149,7 @@ public:
 
     virtual String* localName()
     {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 
@@ -179,7 +180,11 @@ public:
         return m_nextSibling;
     }
 
-    virtual String* nodeValue() = 0;
+    virtual String* nodeValue()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return nullptr;
+    }
 
     virtual void setNodeValue(String* val) { };
 

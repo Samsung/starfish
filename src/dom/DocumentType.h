@@ -34,11 +34,6 @@ public:
         return nullptr;
     }
 
-    virtual String* nodeValue()
-    {
-        return nullptr;
-    }
-
     virtual String* textContent()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

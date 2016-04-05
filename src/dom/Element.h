@@ -59,12 +59,6 @@ public:
     }
 
     virtual String* nodeName() = 0;
-
-    virtual String* nodeValue()
-    {
-        return nullptr;
-    }
-
     virtual String* textContent()
     {
         if ((nodeType() == TEXT_NODE) || (nodeType() == DOCUMENT_FRAGMENT_NODE)) {

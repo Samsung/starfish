@@ -34,6 +34,11 @@ public:
         setNodeValue(val);
     }
 
+    virtual String* nodeValue()
+    {
+        return data();
+    }
+
     /* 4.9. Interface CharacterData */
 
     String* data()

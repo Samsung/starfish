@@ -20,14 +20,7 @@ public:
     }
 
     virtual String* nodeName();
-
     virtual String* localName();
-
-    virtual String* nodeValue()
-    {
-        return data();
-    }
-
     virtual String* textContent()
     {
         return data();

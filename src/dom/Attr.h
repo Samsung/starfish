@@ -70,11 +70,7 @@ public:
 
     virtual String* localName()
     {
-        return nullptr;
-    }
-
-    virtual String* nodeValue()
-    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 
@@ -82,6 +78,7 @@ public:
 
     virtual String* textContent()
     {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
 

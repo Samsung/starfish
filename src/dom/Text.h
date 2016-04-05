@@ -24,11 +24,6 @@ public:
 
     virtual String* localName();
 
-    virtual String* nodeValue()
-    {
-        return data();
-    }
-
     virtual String* textContent()
     {
         return data();
