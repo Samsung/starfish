@@ -447,11 +447,14 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
         HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
         uint32_t idx = key.toIndex();
-        if (idx < self->length())
+        if (idx == escargot::ESValue::ESInvalidIndexValue) {
+            Element* e = self->namedItem(toBrowserString(key));
+            if (e != nullptr)
+                return e->scriptValue();
+        } else if (idx < self->length()) {
             return self->item(idx)->scriptValue();
-        Element* e = self->namedItem(toBrowserString(key));
-        STARFISH_ASSERT(e);
-        return e->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
     });
 }
 
