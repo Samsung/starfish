@@ -95,10 +95,10 @@ test(function () {
 test(function () {
   assert_throws( 'SYNTAX_ERR', function () { elem.classList.toggle(''); } );
 }, '.toggle(empty_string) must throw a SYNTAX_ERR');
-/*
 test(function () {
   assert_throws( 'INVALID_CHARACTER_ERR', function () { elem.classList.contains('a b'); } );
 }, '.contains(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+// NOTE(20/18/2)
 test(function () {
   assert_throws( 'INVALID_CHARACTER_ERR', function () { elem.classList.add('a b'); } );
 }, '.add(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
@@ -108,6 +108,7 @@ test(function () {
 test(function () {
   assert_throws( 'INVALID_CHARACTER_ERR', function () { elem.classList.toggle('a b'); } );
 }, '.toggle(string_with_spaces) must throw an INVALID_CHARACTER_ERR');
+/*
 elem.className = 'foo';
 test(function () {
   assert_equals( getComputedStyle(elem,null).fontStyle, 'italic', 'critical test; required by the testsuite' );

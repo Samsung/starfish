@@ -65,6 +65,8 @@ String* DOMTokenList::item(unsigned long index)
 
 bool DOMTokenList::contains(String* token)
 {
+    validateToken(token);
+
     std::vector<String*, gc_allocator<String*> > tokens;
     String* src = m_element->getAttribute(m_localName);
     tokenize(&tokens, src);
@@ -99,6 +101,7 @@ void DOMTokenList::add(std::vector<String*, gc_allocator<String*> >* tokensToAdd
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenize(&tokens, str);
     for (unsigned i = 0; i < tokensToAdd->size(); i++) {
+        validateToken(tokensToAdd->at(i));
         str = addSingleToken(str, &tokens, tokensToAdd->at(i));
     }
     m_element->setAttribute(m_localName, str);
@@ -151,6 +154,7 @@ void DOMTokenList::remove(std::vector<String*, gc_allocator<String*> >* tokensTo
     bool* matchFlags = new bool[tokens.size()];
     int matchCount = 0;
     for (unsigned i = 0; i < tokensToRemove->size(); i++) {
+        validateToken(tokensToRemove->at(i));
         matchCount += checkMatchedTokens(matchFlags, &tokens, tokensToRemove->at(i));
     }
 
@@ -172,6 +176,7 @@ void DOMTokenList::remove(std::vector<String*, gc_allocator<String*> >* tokensTo
 
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
 {
+    validateToken(token);
     std::vector<String*, gc_allocator<String*> > tokens;
     String* str = m_element->getAttribute(m_localName);
     tokenize(&tokens, str);
@@ -193,5 +198,16 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
     } else
         remove(token);
     return needAdd;
+}
+
+// Throw Exceptions
+void DOMTokenList::validateToken(String* token)
+{
+    std::string stdToken = token->utf8Data();
+    if (stdToken.length() == 0)
+        throw new DOMException(m_element->document()->scriptBindingInstance(), DOMException::Code::SYNTAX_ERR);
+    auto f = [] (char c) { return std::isspace(static_cast<unsigned char>(c)); };
+    if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end())
+        throw new DOMException(m_element->document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR);
 }
 }
