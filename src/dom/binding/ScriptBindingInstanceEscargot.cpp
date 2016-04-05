@@ -49,6 +49,14 @@ void ScriptBindingInstance::exit()
     }
     m_enterCount--;
 }
+#define INVALID_INDEX (escargot::ESValue::ESInvalidIndexValue)
+#define TO_INDEX_UINT32(argValue, idx) \
+    uint32_t idx; \
+    idx = argValue.toIndex(); \
+    if (idx == INVALID_INDEX) { \
+        double __number = argValue.toNumber(); \
+        idx = __number < 0 ? INVALID_INDEX : (std::isnan(__number) ? 0 : (uint32_t)__number); \
+    }
 
 #define DEFINE_FUNCTION(functionName, parentName)                                                                                                                                                                          \
     escargot::ESString* functionName##String = escargot::ESString::create(#functionName);                                                                                                                                  \
@@ -1993,10 +2001,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         size_t count = instance->currentExecutionContext()->argumentCount();
         if (count > 0) {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            uint32_t idx = argValue.toIndex();
-            idx = (idx != escargot::ESValue::ESInvalidIndexValue) ? idx : 0;
-            if (idx < self->length()) {
+            TO_INDEX_UINT32(argValue, idx);
+            if (idx != INVALID_INDEX && idx < self->length()) {
                 Element* elem = self->item(idx);
+                STARFISH_ASSERT(elem != nullptr);
                 return elem->scriptValue();
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
@@ -2013,13 +2021,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::HTMLCollectionObject);
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString()) {
-            Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject()->extraPointerData())->namedItem(toBrowserString(argValue.asESString()));
-            if (elem != nullptr)
-                return elem->scriptValue();
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
+        escargot::ESString* argStr = argValue.toString();
+        Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject()->extraPointerData())->namedItem(toBrowserString(argStr));
+        if (elem != nullptr)
+            return elem->scriptValue();
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("namedItem"), 1, false);
     HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("namedItem"), true, true, true, namedItemFunction);
@@ -2035,8 +2040,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             NodeList* nodeList = (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            uint32_t idx = argValue.toIndex();
-            if (idx < nodeList->length()) {
+            TO_INDEX_UINT32(argValue, idx);
+            if (idx != INVALID_INDEX && idx < nodeList->length()) {
                 Node* nd = nodeList->item(argValue.asUInt32());
                 return nd->scriptValue();
             }
@@ -2071,8 +2076,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         DOMTokenList* self = (DOMTokenList*)(thisValue.asESPointer()->asESObject()->extraPointerData());
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        uint32_t idx = argValue.toIndex();
-        if (idx < self->length()) {
+        TO_INDEX_UINT32(argValue, idx);
+        if (idx != INVALID_INDEX && idx < self->length()) {
             String* elem = self->item(idx);
             return toJSString(elem);
         }
@@ -2085,12 +2090,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
         try {
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            escargot::ESString* argStr = nullptr;
-            if (argValue.isESString()) {
-                argStr = argValue.asESString();
-            } else {
-                argStr = argValue.toString();
-            }
+            escargot::ESString* argStr = argValue.toString();
             bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argStr));
             return escargot::ESValue(res);
         } catch(DOMException* e) {
@@ -2108,12 +2108,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             int argCount = instance->currentExecutionContext()->argumentCount();
             for (int i = 0; i < argCount; i++) {
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-                escargot::ESString* argStr = nullptr;
-                if (argValue.isESString()) {
-                    argStr = argValue.asESString();
-                } else {
-                    argStr = argValue.toString();
-                }
+                escargot::ESString* argStr = argValue.toString();
                 String* aa = toBrowserString(argStr);
                 tokens.push_back(aa);
             }
@@ -2135,12 +2130,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             int argCount = instance->currentExecutionContext()->argumentCount();
             for (int i = 0; i < argCount; i++) {
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-                escargot::ESString* argStr = nullptr;
-                if (argValue.isESString()) {
-                    argStr = argValue.asESString();
-                } else {
-                    argStr = argValue.toString();
-                }
+                escargot::ESString* argStr = argValue.toString();
                 String* aa = toBrowserString(argStr);
                 tokens.push_back(aa);
             }
@@ -2164,12 +2154,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (argCount >= 2)
                 forceValue = instance->currentExecutionContext()->readArgument(1);
             if (argCount > 0) {
-                escargot::ESString* argStr = nullptr;
-                if (argValue.isESString()) {
-                    argStr = argValue.asESString();
-                } else {
-                    argStr = argValue.toString();
-                }
+                escargot::ESString* argStr = argValue.toString();
                 bool didAdd;
                 if (argCount == 1) {
                     didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
@@ -2211,14 +2196,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* domSettableTokenListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
+        DOMTokenList* self = (DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData();
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isUInt32()) {
-            String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
-            if (elem != nullptr)
-                return toJSString(elem);
-        } else {
-            THROW_ILLEGAL_INVOCATION()
+        TO_INDEX_UINT32(argValue, idx);
+        if (idx != INVALID_INDEX && idx < self->length()) {
+            String* elem = self->item(argValue.asUInt32());
+            return toJSString(elem);
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("item"), 1, false);
@@ -2334,10 +2317,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* NamedNodeMapItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
-
+        NamedNodeMap* self = (NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData();
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isUInt32()) {
-            Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(argValue.asUInt32());
+        TO_INDEX_UINT32(argValue, idx);
+        if (idx != INVALID_INDEX && idx < self->length()) {
+            Attr* elem = self->item(argValue.asUInt32());
             if (elem != nullptr)
                 return elem->scriptValue();
         }

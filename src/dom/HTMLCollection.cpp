@@ -42,14 +42,17 @@ Element* HTMLCollection::item(unsigned long index)
 
 Element* HTMLCollection::namedItem(String* key)
 {
-    std::vector<Node*, gc_allocator<Node*>> collection;
-    getherDescendant(&collection, m_root, [this](Node* child) -> bool {
-        return m_filter(child, this->m_data);
-    });
-    for (unsigned i = 0; i < collection.size(); i++) {
-        Element* elem = collection.at(i)->asElement();
-        if (elem->id()->equals(key))
-            return elem;
+    if (key->length() != 0) {
+        std::vector<Node*, gc_allocator<Node*>> collection;
+        getherDescendant(&collection, m_root, [this](Node* child) -> bool {
+            return m_filter(child, this->m_data);
+        });
+        for (unsigned i = 0; i < collection.size(); i++) {
+            Element* elem = collection.at(i)->asElement();
+            fprintf(stderr, "id: %s\n\n", elem->id()->utf8Data());
+            if (elem->id()->equals(key))
+                return elem;
+        }
     }
     return nullptr;
 }
