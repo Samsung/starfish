@@ -1014,12 +1014,29 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (obj->isElement()) {
                 Element* elem = obj->asElement();
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-                if (argValue.isESString()) {
-                    escargot::ESString* argStr = argValue.asESString();
-                    HTMLCollection* result = elem->getElementsByClassName(toBrowserString(argStr));
-                    if (result) {
-                        return result->scriptValue();
-                    }
+                 if (argValue.isESString()) {
+                     escargot::ESString* argStr = argValue.asESString();
+                     HTMLCollection* result = elem->getElementsByClassName(toBrowserString(argStr));
+                     if (result != nullptr)
+                         return result->scriptValue();
+                 } else if (argValue.isObject() && argValue.asESPointer()->isESArrayObject()) {
+                     escargot::ESArrayObject* array = argValue.asESPointer()->asESArrayObject();
+                     String* listSoFar = String::createASCIIString("");
+                     for (unsigned i = 0; i < array->length(); i++) {
+                         escargot::ESValue val = array->get(i);
+                         if (val.isESString()) {
+                             listSoFar = listSoFar->concat(toBrowserString(val.asESString()));
+                             if (i < array->length()-1) {
+                                 listSoFar = listSoFar->concat(String::createASCIIString(","));
+                             }
+                         } else {
+                             return escargot::ESValue(escargot::ESValue::ESNull);
+                         }
+                     }
+                     HTMLCollection* result = elem->getElementsByClassName(listSoFar);
+                     if (result) {
+                         return result->scriptValue();
+                     }
                 }
             } else {
                 THROW_ILLEGAL_INVOCATION()
