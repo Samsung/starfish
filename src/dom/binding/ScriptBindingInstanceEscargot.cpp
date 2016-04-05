@@ -2173,20 +2173,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* domTokenListToStringFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
-        uint32_t len = ((DOMTokenList *) thisValue.asESPointer()->asESObject()->extraPointerData())->length();
-
-        String* str = String::emptyString;
-        for (uint32_t i = 0; i < len; i++) {
-            String* elem = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->item(i);
-            if (elem != nullptr) {
-                if (str == String::emptyString)
-                    str = str->concat(elem);
-                else
-                    str = str->concat(String::spaceString)->concat(elem);
-            }
-        }
-        if (str->length() == 0)
-            str = String::fromUTF8(" ");
+        String* str = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toString();
         return toJSString(str);
     }, escargot::ESString::create("toString"), 1, false);
     DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, domTokenListToStringFunction);

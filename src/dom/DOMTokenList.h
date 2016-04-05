@@ -24,6 +24,7 @@ public:
     void remove(String* token);
     void remove(std::vector<String*, gc_allocator<String*>>* tokens);
     bool toggle(String* token, bool isForced, bool forceValue);
+    String* toString();
     void validateToken(String* token); // Throw Exceptions
 private:
     Element* m_element;

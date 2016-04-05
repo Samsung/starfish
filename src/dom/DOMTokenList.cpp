@@ -60,7 +60,7 @@ String* DOMTokenList::item(unsigned long index)
     tokenize(&tokens, src);
     if (index < tokens.size())
         return tokens.at(index);
-    return nullptr;
+    return String::emptyString;
 }
 
 bool DOMTokenList::contains(String* token)
@@ -87,8 +87,12 @@ String* DOMTokenList::addSingleToken(String* src, std::vector<String*, gc_alloca
         }
     }
     if (!matched) {
-        if (src->length() > 0)
-            return src->concat(String::spaceString)->concat(token);
+        if (src->length() > 0) {
+            if (src->charAt(src->length() - 1) == ' ')
+                return src->concat(token);
+            else
+                return src->concat(String::spaceString)->concat(token);
+        }
         else
             return src->concat(token);
     }
@@ -114,6 +118,8 @@ int DOMTokenList::checkMatchedTokens(bool* matchFlags, std::vector<String*, gc_a
         if (tokens->at(i)->equals(token)) {
             matchFlags[i] = true;
             count++;
+        } else {
+            matchFlags[i] = false;
         }
     }
     return count;
@@ -122,7 +128,7 @@ int DOMTokenList::checkMatchedTokens(bool* matchFlags, std::vector<String*, gc_a
 void DOMTokenList::remove(String* token)
 {
     String* src = m_element->getAttribute(m_localName);
-    String* dst;
+    String* dst = String::createASCIIString("");
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenize(&tokens, src);
 
@@ -148,7 +154,7 @@ void DOMTokenList::remove(String* token)
 void DOMTokenList::remove(std::vector<String*, gc_allocator<String*> >* tokensToRemove)
 {
     String* src = m_element->getAttribute(m_localName);
-    String* dst;
+    String* dst = String::createASCIIString("");
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenize(&tokens, src);
     bool* matchFlags = new bool[tokens.size()];
@@ -157,7 +163,6 @@ void DOMTokenList::remove(std::vector<String*, gc_allocator<String*> >* tokensTo
         validateToken(tokensToRemove->at(i));
         matchCount += checkMatchedTokens(matchFlags, &tokens, tokensToRemove->at(i));
     }
-
     if (matchCount > 0) {
         bool isEmpty = true;
         for (unsigned i = 0; i < tokens.size(); i++) {
@@ -198,6 +203,11 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
     } else
         remove(token);
     return needAdd;
+}
+
+String* DOMTokenList::toString()
+{
+    return m_element->getAttribute(m_localName);
 }
 
 // Throw Exceptions
