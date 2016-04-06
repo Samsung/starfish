@@ -442,7 +442,13 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
         return e;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
-        return escargot::ESValueVector(0);
+        HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
+        size_t len = self->length();
+        escargot::ESValueVector v(len);
+        for (size_t i = 0; i < len; i ++) {
+            v.push_back(escargot::ESValue(i));
+        }
+        return v;
     }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
         HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
@@ -474,7 +480,13 @@ void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* 
         return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
-        return escargot::ESValueVector(0);
+        NodeList* self = (NodeList*)obj->extraPointerData();
+        size_t len = self->length();
+        escargot::ESValueVector v(len);
+        for (size_t i = 0; i < len; i ++) {
+            v.push_back(escargot::ESValue(i));
+        }
+        return v;
     }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
         NodeList* self = (NodeList*)obj->extraPointerData();
@@ -500,7 +512,13 @@ void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstan
         return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::DOMTokenListObject);
-        return escargot::ESValueVector(0);
+        DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
+        size_t len = self->length();
+        escargot::ESValueVector v(len);
+        for (size_t i = 0; i < len; i ++) {
+            v.push_back(escargot::ESValue(i));
+        }
+        return v;
     }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::DOMTokenListObject);
         DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
