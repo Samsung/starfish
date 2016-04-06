@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <title>CSS Test: font and fallbacks</title>
+  <link rel="author" title="Ian Hickson" href="mailto:ian@hixie.ch">
+  <link rel="alternate" href="http://www.hixie.ch/tests/adhoc/css/fonts/006.html" type="text/html">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/fonts.html#algorithm">
+  <link rel="help" href="http://www.w3.org/TR/css-fonts-3/#font-matching-algorithm">
+  <link rel="match" href="fonts-013-ref.xht">
+
+  <meta name="flags" content="ahem">
+  
+ <style>
+   
+p {  
+  color: navy;
+}
+
+   
+.convertedClass1 {  
+  font: ;
+}
+
+   
+.convertedClass2 {  
+  font: ;
+}
+
+   
+.convertedClass3 {  
+  font: ;
+}
+
+   
+.convertedClass4 {  
+  font: ;
+}
+
+   
+.convertedClass5 {  
+  font: ;
+}
+
+   
+.convertedClass6 {  
+  font: ;
+}
+
+  
+</style></head>
+ <body>
+  <div>In each of the three lines below, the two words should look identical.</div>
+  <p class="a">
+   <span class="test convertedClass1">Å¢Ä™ÅŸÅ£</span>
+   —
+   <span class="control convertedClass2">Å¢Ä™ÅŸÅ£</span>
+  </p>
+  <p class="b">
+   <span class="test convertedClass3">Å¢Ä™ÅŸÅ£</span>
+   —
+   <span class="control convertedClass4">Å¢Ä™ÅŸÅ£</span>
+  </p>
+  <p class="c">
+   <span class="test convertedClass5">Å¢Ä™ÅŸÅ£</span>
+   —
+   <span class="control convertedClass6">Å¢Ä™ÅŸÅ£</span>
+  </p>
+ 
+</body></html>

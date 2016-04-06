@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head>
+    <title>CSS Test Reference: background-size:cover</title>
+    <link rel="author" title="Jeffrey Carl Faden" href="http://www.jeffreyatw.com/">
+    
+  <style>
+      
+      
+div {  
+  background-color: red;  
+  height: 200px;  
+  width: 200px;  
+  overflow: hidden;
+}
+
+      
+.convertedClass1 {  
+  height: 200px;  
+  width: 320px;
+}
+
+      
+    
+</style></head>
+  <body>
+    <p><img src="support/rectangle-96x60.png" alt="Image download support must be enabled"></p>
+    <p>Test passes if a scaled portion of above image appears inside the below square.</p>
+    <p>Test fails if any red area is seen outside of the image.</p>
+    <div>
+      <img src="support/rectangle-96x60.png" alt="Image download support must be enabled" class="convertedClass1">
+    </div>
+  
+</body></html>

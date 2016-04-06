@@ -29,15 +29,15 @@ public class StarFishTester {
 		try {
 			String testFile="";
 			if (args[0].equals("css1")) {
-				testFile = "tool/pixel_test/css1_converted.res";
+				testFile = "tool/reftest/converter/css1_converted.res";
 			} else if (args[0].equals("css21")) {
-				testFile = "tool/pixel_test/css21.res";
+				testFile = "tool/reftest/converter/css21_converted.res";
 			} else if (args[0].equals("css3_backgrounds")) {
-                testFile = "tool/pixel_test/css-backgrounds-3.res";
+                testFile = "tool/reftest/converter/css-backgrounds-3_converted.res";
 			} else if (args[0].equals("css3_color")) {
-                testFile = "tool/pixel_test/css-color-3_converted.res";
+                testFile = "tool/reftest/converter/css-color-3_converted.res";
 			} else if (args[0].equals("css3_transforms")) {
-                testFile = "tool/pixel_test/css-transforms-1_converted.res";
+                testFile = "tool/reftest/converter/css-transforms-1_converted.res";
             }
 
 			String fileContent = new String(Files.readAllBytes(Paths.get(testFile)));

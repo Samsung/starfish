@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html><head>
+
+  <title>CSS Test: padding - inherit applied on padding percentage</title>
+
+  <link rel="author" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="help" title="8.4 Padding properties" href="http://www.w3.org/TR/CSS21/box.html#padding-properties">
+  <link rel="help" title="6.2.1 The 'inherit' value" href="http://www.w3.org/TR/CSS21/cascade.html#value-def-inherit">
+  <link rel="match" href="padding-percentage-inherit-001-ref.xht">
+
+  <meta content="A padding percentage is calculated with respect to the width of the generated box's containing block. When inherit keyword is used, the property takes the same computed value - a percentage value in this testcase - as the property for the element's parent." name="assert">
+  <meta content="image" name="flags">
+
+  
+
+ <style>
+  
+body {  
+  margin: 8px;
+}
+
+
+  
+p {  
+  font: ;  
+  margin: 1em 0em;
+}
+
+
+  
+.convertedClass1 {  
+  width: 300px;
+}
+
+
+  
+.convertedClass2 {  
+  background-color: green;  
+  height: 150px;  
+  padding: 20%;  /* 20% of 300px == 60px; */  
+  width: 150px;
+}
+
+
+  
+.convertedClass3 {  
+  padding: ;  /*
+  computes to 20% which is then applied
+  on #child's containing block width: 20% of 150px == 30px
+  */
+}
+
+
+  
+.convertedClass4 {  
+  left: 98px;  /*
+       8px (body's margin-left)
+    +
+      60px (#parent's padding-left)
+   +
+      30px (#child's padding-left)
+  ==================
+      98px
+  */  
+  position: absolute;  
+  top: 162px;
+}
+
+
+  
+/*
+      max(8px, 16px) (margin collapsing between body's margin-top and p's margin-top)
+   +
+      20px (first line)
+   +
+      20px (second line)
+   +
+      16px (p's margin-bottom)
+   +
+      60px (#parent's padding-top)
+   +
+      30px (#child's padding-top)
+  ==================
+     162px
+  */
+
+  
+</style></head>
+
+ <body>
+
+  <p>Test passes if there is a filled<br>
+  green square and no red.</p>
+
+  <div id="grand-parent" class="convertedClass1">
+    <div id="parent" class="convertedClass2">
+      <div id="child" class="convertedClass3"><img src="support/100x100-red.png" alt="Image download support must be enabled"></div>
+    </div>
+  </div>
+
+  <div id="abs-pos-overlapping-green" class="convertedClass4"><img src="support/swatch-green.png" width="100" height="100" alt="Image download support must be enabled"></div>
+
+ 
+</body></html>

@@ -1,0 +1,3390 @@
+test/reftest/csswg-test/css1/c12-grouping-000.htm
+test/reftest/csswg-test_converted/css1/c12-grouping-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,10c7
+<   <style type="text/css">
+<    .one, .two, .three { color: green; }
+<   </style>
+---
+>   
+14c11,18
+<  </head>
+---
+>  <style>
+>    
+> .convertedClass1 {  
+>   color: green;
+> }
+> 
+>   
+> </style></head>
+16,20c20,24
+<   <p class="one"> This sentence should be green. </p>
+<   <p class="two"> This sentence should be green. </p>
+<   <p class="three"> This sentence should be green. </p>
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>   <p class="one convertedClass1"> This sentence should be green. </p>
+>   <p class="two convertedClass1"> This sentence should be green. </p>
+>   <p class="three convertedClass1"> This sentence should be green. </p>
+>  
+> </body></html>
+\ No newline at end of file
+0
+test/reftest/csswg-test/css1/c15-ids-000.htm
+test/reftest/csswg-test_converted/css1/c15-ids-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,15c9
+<   <style type="text/css">
+<    body {color: red;}
+<    #test1 {color: green;}
+<    #test2 {color: green;}
+<    p#test3 {color: green;}
+<   </style>
+---
+>   
+17c11,33
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: red;
+> }
+> 
+>    
+> #test1 {  
+>   color: green;
+> }
+> 
+>    
+> #test2 {  
+>   color: green;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: green;
+> }
+> 
+>   
+> </style></head>
+21,23c37,39
+<   <p id="test3"> This sentence should be green. </p>
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>   <p id="test3" class="convertedClass1"> This sentence should be green. </p>
+>  
+> </body></html>
+\ No newline at end of file
+1
+test/reftest/csswg-test/css1/c16-descendant-002.htm
+test/reftest/csswg-test_converted/css1/c16-descendant-002.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    p {color: green;}
+<    html body div {color: red;}
+<   </style>
+---
+>   
+15c11,23
+<  </head>
+---
+>  <style>
+>    
+> p {  
+>   color: green;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: red;
+> }
+> 
+>   
+> </style></head>
+17,19c25,27
+<   <div><p> This text should be green. </p></div>
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>   <div class="convertedClass1"><p> This text should be green. </p></div>
+>  
+> </body></html>
+\ No newline at end of file
+2
+test/reftest/csswg-test/css1/c17-comments-000.htm
+test/reftest/csswg-test_converted/css1/c17-comments-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,14c9,28
+<   <style type="text/css">
+<    body { color: red; }
+<    /* This is a CSS comment. */
+<    .one {color: green;} /* Another comment */
+<    /* The following should not be used:
+---
+>   
+>   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#comments" title="4.1.9 Comments">
+>  <style>
+>    
+> body {  
+>   color: red;
+> }
+> 
+>    
+> /* This is a CSS comment. */
+> 
+>    
+> .one {  
+>   color: green;
+> }
+>  
+> /* Another comment */
+> 
+>    
+> /* The following should not be used:
+16,17c30,37
+<    .three {color: green; /* color: red; */}
+<    /**
+---
+> 
+>    
+> .three {  
+>   color: green;  /* color: red; */
+> }
+> 
+>    
+> /**
+19,28c39,70
+<    .five {color: green;}
+<    /**/
+<    .six {color: green;}
+<    /*********/
+<    .seven {color: green;}
+<    /* a comment **/
+<    .eight {color: green;}
+<   </style>
+<   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#comments" title="4.1.9 Comments">
+<  </head>
+---
+> 
+>    
+> .five {  
+>   color: green;
+> }
+> 
+>    
+> /**/
+> 
+>    
+> .six {  
+>   color: green;
+> }
+> 
+>    
+> /*********/
+> 
+>    
+> .seven {  
+>   color: green;
+> }
+> 
+>    
+> /* a comment **/
+> 
+>    
+> .eight {  
+>   color: green;
+> }
+> 
+>   
+> </style></head>
+48,49c90,91
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+3
+test/reftest/csswg-test/css1/c17-comments-001.htm
+test/reftest/csswg-test_converted/css1/c17-comments-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,14c9,28
+<   <style type="text/css">
+<    body { color: green; }
+<    /* This is a CSS comment. */
+<    .one {color: green;} /* Another comment */
+<    /* The following should not be used:
+---
+>   
+>   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#comments" title="4.1.9 Comments">
+>  <style>
+>    
+> body {  
+>   color: green;
+> }
+> 
+>    
+> /* This is a CSS comment. */
+> 
+>    
+> .one {  
+>   color: green;
+> }
+>  
+> /* Another comment */
+> 
+>    
+> /* The following should not be used:
+16,17c30,37
+<    .three {color: green; /* color: red; */}
+<    /**
+---
+> 
+>    
+> .three {  
+>   color: green;  /* color: red; */
+> }
+> 
+>    
+> /**
+19,28c39,70
+<    .five {color: green;}
+<    /**/
+<    .six {color: green;}
+<    /*********/
+<    .seven {color: green;}
+<    /* a comment **/
+<    .eight {color: green;}
+<   </style>
+<   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#comments" title="4.1.9 Comments">
+<  </head>
+---
+> 
+>    
+> .five {  
+>   color: green;
+> }
+> 
+>    
+> /**/
+> 
+>    
+> .six {  
+>   color: green;
+> }
+> 
+>    
+> /*********/
+> 
+>    
+> .seven {  
+>   color: green;
+> }
+> 
+>    
+> /* a comment **/
+> 
+>    
+> .eight {  
+>   color: green;
+> }
+> 
+>   
+> </style></head>
+36,37c78,79
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+4
+test/reftest/csswg-test/css1/c412-hz-box-000.htm
+test/reftest/csswg-test_converted/css1/c412-hz-box-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8c7
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+13,22c12
+<   <style type="text/css">
+<    p#ruled {
+<      font: 40px/1 Ahem;
+<      width: 360px; background-color: aqua; color: blue;
+<      border-style: solid; border-color: fuchsia;
+<      border-top-width: 0px; border-right-width: 40px; border-bottom-width: 0px; border-left-width: 40px;
+<      padding-top: 0px; padding-right: 40px; padding-bottom: 0px; padding-left: 40px;
+<      margin-top: 0px; margin-right: 40px; margin-bottom: 0px; margin-left: 40px;
+<    }
+<   </style>
+---
+>   
+27c17,41
+<  </head>
+---
+>  <style>
+>    
+> .convertedClass1 {  
+>   font: ;  
+>   width: 360px;  
+>   background-color: aqua;  
+>   color: blue;  
+>   border-style: solid;  
+>   border-color: fuchsia;  
+>   border-top-width: 0px;  
+>   border-right-width: 40px;  
+>   border-bottom-width: 0px;  
+>   border-left-width: 40px;  
+>   padding-top: 0px;  
+>   padding-right: 40px;  
+>   padding-bottom: 0px;  
+>   padding-left: 40px;  
+>   margin-top: 0px;  
+>   margin-right: 40px;  
+>   margin-bottom: 0px;  
+>   margin-left: 40px;
+> }
+> 
+>   
+> </style></head>
+31c45
+<    <p id="ruled">X X X X X</p>
+---
+>    <p id="ruled" class="convertedClass1">X X X X X</p>
+36,37c50,51
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+5
+test/reftest/csswg-test/css1/c43-rpl-bbx-000.htm
+test/reftest/csswg-test_converted/css1/c43-rpl-bbx-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html class="convertedClass1"><head>
+8c7
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-30 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-30 -->
+15,21c14,35
+<   <style type="text/css">
+<    html, body, p { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+<    img { display: block; margin-right: auto; margin-left: auto; width: 50%; }
+<   </style>
+<  </head>
+<  <body>
+<   <p>
+---
+>   
+>  <style>
+>    
+> .convertedClass1 {  
+>   margin-left: 0;  
+>   margin-right: 0;  
+>   padding-left: 0;  
+>   padding-right: 0;
+> }
+> 
+>    
+> img {  
+>   display: block;  
+>   margin-right: auto;  
+>   margin-left: auto;  
+>   width: 50%;
+> }
+> 
+>   
+> </style></head>
+>  <body class="convertedClass1">
+>   <p class="convertedClass1">
+24,26c38,40
+<   <p><img src="support/swatch-blue.png" alt="FAIL: Images required for this test."></p>
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>   <p class="convertedClass1"><img src="support/swatch-blue.png" alt="FAIL: Images required for this test."></p>
+>  
+> </body></html>
+\ No newline at end of file
+6
+test/reftest/csswg-test/css1/c43-rpl-bbx-001.htm
+test/reftest/csswg-test_converted/css1/c43-rpl-bbx-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html class="convertedClass1"><head>
+8c7
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-30 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-30 -->
+15,22c14,36
+<   <style type="text/css">
+<    html, body, p { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+<    img { display: block; margin-right: 0; margin-left: auto; width: 50%; }
+<   </style>
+<  </head>
+<  <body>
+<   <p>
+<   Test passes if there is a big blue square half the width of the window and aligned flush with the right hand side (⇨).
+---
+>   
+>  <style>
+>    
+> .convertedClass1 {  
+>   margin-left: 0;  
+>   margin-right: 0;  
+>   padding-left: 0;  
+>   padding-right: 0;
+> }
+> 
+>    
+> img {  
+>   display: block;  
+>   margin-right: 0;  
+>   margin-left: auto;  
+>   width: 50%;
+> }
+> 
+>   
+> </style></head>
+>  <body class="convertedClass1">
+>   <p class="convertedClass1">
+>   Test passes if there is a big blue square half the width of the window and aligned flush with the right hand side (â‡¨).
+24,26c38,40
+<   <p><img src="support/swatch-blue.png" alt="FAIL: Images required for this test."></p>
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>   <p class="convertedClass1"><img src="support/swatch-blue.png" alt="FAIL: Images required for this test."></p>
+>  
+> </body></html>
+\ No newline at end of file
+7
+test/reftest/csswg-test/css1/c45-bg-canvas-000.htm
+test/reftest/csswg-test_converted/css1/c45-bg-canvas-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    html { background-color: purple; }
+<    body { background-color: navy; background-image: none; margin: 25px; color: white; }
+<   </style>
+---
+>   
+16c12,27
+<  </head>
+---
+>  <style>
+>    
+> html {  
+>   background-color: purple;
+> }
+> 
+>    
+> body {  
+>   background-color: navy;  
+>   background-image: none;  
+>   margin: 25px;  
+>   color: white;
+> }
+> 
+>   
+> </style></head>
+20,21c31,32
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+8
+test/reftest/csswg-test/css1/c526-font-sz-000.htm
+test/reftest/csswg-test_converted/css1/c526-font-sz-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,19c7
+<   <style type="text/css">
+<    p { color: navy; margin: 10px; }
+<    .one {font-size: medium;}
+<    .two {font-size: larger;}
+<    .three {font-size: smaller;}
+<    .four {font-size: xx-small;}
+<    .five {font-size: x-small;}
+<    .six {font-size: small;}
+<    .seven {font-size: large;}
+<    .eight {font-size: x-large;}
+<    .nine {font-size: xx-large;}
+<   </style>
+---
+>   
+22c10,63
+<  </head>
+---
+>  <style>
+>    
+> p {  
+>   color: navy;  
+>   margin: 10px;
+> }
+> 
+>    
+> .one {  
+>   font-size: medium;
+> }
+> 
+>    
+> .two {  
+>   font-size: larger;
+> }
+> 
+>    
+> .three {  
+>   font-size: smaller;
+> }
+> 
+>    
+> .four {  
+>   font-size: xx-small;
+> }
+> 
+>    
+> .five {  
+>   font-size: x-small;
+> }
+> 
+>    
+> .six {  
+>   font-size: small;
+> }
+> 
+>    
+> .seven {  
+>   font-size: large;
+> }
+> 
+>    
+> .eight {  
+>   font-size: x-large;
+> }
+> 
+>    
+> .nine {  
+>   font-size: xx-large;
+> }
+> 
+>   
+> </style></head>
+52,53c93,94
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+9
+test/reftest/csswg-test/css1/c526-font-sz-001.htm
+test/reftest/csswg-test_converted/css1/c526-font-sz-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+7c6
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-27 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-27 -->
+15,24c14,54
+<   <style type="text/css">
+<    div { color: blue; font: 3.75em/1 Ahem; margin: 0 2em; }
+<    .a {font-size: 0.625in;}
+<    .b {font-size: 1.5875cm;}
+<    .c {font-size: 15.875mm;}
+<    .d {font-size: 45pt;}
+<    .e {font-size: 3.75pc;}
+<    .h {font-size: 60px;}
+<   </style>
+<  </head>
+---
+>   
+>  <style>
+>    
+> div {  
+>   color: blue;  
+>   font: ;  
+>   margin: 0 2em;
+> }
+> 
+>    
+> .a {  
+>   font-size: 0.625in;
+> }
+> 
+>    
+> .b {  
+>   font-size: 1.5875cm;
+> }
+> 
+>    
+> .c {  
+>   font-size: 15.875mm;
+> }
+> 
+>    
+> .d {  
+>   font-size: 45pt;
+> }
+> 
+>    
+> .e {  
+>   font-size: 3.75pc;
+> }
+> 
+>    
+> .h {  
+>   font-size: 60px;
+> }
+> 
+>   
+> </style></head>
+33,34c63,64
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+10
+test/reftest/csswg-test/css1/c526-font-sz-002.htm
+test/reftest/csswg-test_converted/css1/c526-font-sz-002.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+7c6
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-27 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-06-27 -->
+14,20c13,37
+<   <style type="text/css">
+<    .ahem { font: 1.25em/1 Ahem; color: blue; }
+<    .f {font-size: 2em;}
+<    .g {font-size: 2.5ex;}
+<    .i {font-size: 200%;}
+<   </style>
+<  </head>
+---
+>   
+>  <style>
+>    
+> .ahem {  
+>   font: ;  
+>   color: blue;
+> }
+> 
+>    
+> .f {  
+>   font-size: 2em;
+> }
+> 
+>    
+> .g {  
+>   font-size: 2.5ex;
+> }
+> 
+>    
+> .i {  
+>   font-size: 200%;
+> }
+> 
+>   
+> </style></head>
+28,29c45,46
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+11
+test/reftest/csswg-test/css1/c527-font-000.htm
+test/reftest/csswg-test_converted/css1/c527-font-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .one {font: italic small-caps 13px Helvetica;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+23c18,36
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .one {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+27c40
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+36,37c49,50
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+12
+test/reftest/csswg-test/css1/c527-font-001.htm
+test/reftest/csswg-test_converted/css1/c527-font-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .two {font: 150%/150% serif;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+18c13,31
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .two {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+23c36
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+32,33c45,46
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+13
+test/reftest/csswg-test/css1/c527-font-002.htm
+test/reftest/csswg-test_converted/css1/c527-font-002.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .three {font: 150%/150% sans-serif;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+20c15,33
+<   </head>
+---
+>   <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .three {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+25c38
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+34,35c47,48
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+14
+test/reftest/csswg-test/css1/c527-font-003.htm
+test/reftest/csswg-test_converted/css1/c527-font-003.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .four {font: small/200% cursive;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+21c16,34
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .four {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+25c38
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+34,35c47,48
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+15
+test/reftest/csswg-test/css1/c527-font-004.htm
+test/reftest/csswg-test_converted/css1/c527-font-004.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .five {font: italic small-caps 900 150%/150% sans-serif;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+26c21,39
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .five {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+31c44
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+40,41c53,54
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+16
+test/reftest/csswg-test/css1/c527-font-005.htm
+test/reftest/csswg-test_converted/css1/c527-font-005.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,14c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .six {font: italic small-caps 100 150%/300% sans-serif;}
+<    span.dummy {color: silver;}
+<    span.color {background-color: silver;}
+<    span.color span.dummy {color: gray;}
+<   </style>
+---
+>   
+29c22,50
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .six {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>    
+> .convertedClass2 {  
+>   background-color: silver;
+> }
+> 
+>    
+> .convertedClass3 {  
+>   color: gray;
+> }
+> 
+>   
+> </style></head>
+34c55
+<   <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>   <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+43,44c64,65
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+17
+test/reftest/csswg-test/css1/c527-font-006.htm
+test/reftest/csswg-test_converted/css1/c527-font-006.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .seven {font: italic small-caps 900 150%/2em monospace;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+26c21,39
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .seven {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+30c43
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+39,40c52,53
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+18
+test/reftest/csswg-test/css1/c527-font-007.htm
+test/reftest/csswg-test_converted/css1/c527-font-007.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .eight {font: italic small-caps 500 150%/1in sans-serif;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+24c19,37
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .eight {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+29c42
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+38,39c51,52
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+19
+test/reftest/csswg-test/css1/c527-font-008.htm
+test/reftest/csswg-test_converted/css1/c527-font-008.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 12px; color: navy;}
+<    .nine {font: oblique normal 700 18px/200% sans-serif;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+26c21,39
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;  
+>   color: navy;
+> }
+> 
+>    
+> .nine {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+31c44
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+40,41c53,54
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+20
+test/reftest/csswg-test/css1/c527-font-009.htm
+test/reftest/csswg-test_converted/css1/c527-font-009.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    body {font-size: 16px; color: navy;}
+<    .ten {font: normal 400 75%/2.5 sans-serif;}
+<    span.dummy {color: silver;}
+<   </style>
+---
+>   
+22c17,35
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 16px;  
+>   color: navy;
+> }
+> 
+>    
+> .ten {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   color: silver;
+> }
+> 
+>   
+> </style></head>
+27c40
+<    <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>    <span class="dummy convertedClass1"> dummy text dummy text dummy text dummy text dummy text dummy
+36,37c49,50
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+21
+test/reftest/csswg-test/css1/c527-font-10.htm
+test/reftest/csswg-test_converted/css1/c527-font-10.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,13c7
+<   <style type="text/css">
+<    body {font-size: 12px;}
+<    .eleven {font: italic small-caps 100 150%/300% sans-serif;}
+<    span.color {background-color: navy; color: white; }
+<    span.dummy {color: blue;}
+<   </style>
+---
+>   
+27c21,44
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   font-size: 12px;
+> }
+> 
+>    
+> .eleven {  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   background-color: navy;  
+>   color: white;
+> }
+> 
+>    
+> .convertedClass2 {  
+>   color: blue;
+> }
+> 
+>   
+> </style></head>
+30c47
+<    <span class="color">
+---
+>    <span class="color convertedClass1">
+35c52
+<     <span class="dummy"> dummy text dummy text dummy text dummy text dummy text dummy
+---
+>     <span class="dummy convertedClass2"> dummy text dummy text dummy text dummy text dummy text dummy
+45,46c62,63
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+22
+test/reftest/csswg-test/css1/c531-color-000.htm
+test/reftest/csswg-test_converted/css1/c531-color-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,12c9
+<   <style type="text/css">
+<    .one {color: green;}
+<   </style>
+---
+>   
+14c11,18
+<  </head>
+---
+>  <style>
+>    
+> .one {  
+>   color: green;
+> }
+> 
+>   
+> </style></head>
+22,23c26,27
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+23
+test/reftest/csswg-test/css1/c532-bgcolor-000.htm
+test/reftest/csswg-test_converted/css1/c532-bgcolor-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,14c9
+<   <style type="text/css">
+<    p {background-color: lime;}
+<    .one {background-color: #AAFFAA;}
+<    .two {background-color: transparent;}
+<   </style>
+---
+>   
+16c11,28
+<  </head>
+---
+>  <style>
+>    
+> p {  
+>   background-color: lime;
+> }
+> 
+>    
+> .one {  
+>   background-color: #AAFFAA;
+> }
+> 
+>    
+> .two {  
+>   background-color: transparent;
+> }
+> 
+>   
+> </style></head>
+21,22c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+24
+test/reftest/csswg-test/css1/c532-bgcolor-001.htm
+test/reftest/csswg-test_converted/css1/c532-bgcolor-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,14c9
+<   <style type="text/css">
+<    body { color: green; }
+<    p {background-color: red;}
+<    .two {background-color: transparent;}
+<   </style>
+---
+>   
+16c11,28
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: green;
+> }
+> 
+>    
+> p {  
+>   background-color: red;
+> }
+> 
+>    
+> .two {  
+>   background-color: transparent;
+> }
+> 
+>   
+> </style></head>
+21,22c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+25
+test/reftest/csswg-test/css1/c533-bgimage-001.htm
+test/reftest/csswg-test_converted/css1/c533-bgimage-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,15c10
+<   <style type="text/css">
+<    body { color: green; }
+<    p {background-image: url(support/1x1-red.png);}
+<    .two {background-image: none;}
+<   </style>
+---
+>   
+17c12,29
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: green;
+> }
+> 
+>    
+> p {  
+>   background-image: url(support/1x1-red.png);
+> }
+> 
+>    
+> .two {  
+>   background-image: none;
+> }
+> 
+>   
+> </style></head>
+22,23c34,35
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+26
+test/reftest/csswg-test/css1/c5501-imrgn-t-000.htm
+test/reftest/csswg-test_converted/css1/c5501-imrgn-t-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8c7
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+13,18c12
+<   <style type="text/css">
+<    .test { background-color: yellow; color: orange; margin: 1em 0; width: 10em; font: 20px/1 Ahem; }
+<    .one { margin-top: 25px; background-color: lime; }
+<    .two { margin-top: -10px; background-color: lime; }
+<    img.b { border: 20px yellow; border-style: solid none; }
+<   </style>
+---
+>   
+20c14,43
+<  </head>
+---
+>  <style>
+>    
+> .test {  
+>   background-color: yellow;  
+>   color: orange;  
+>   margin: 1em 0;  
+>   width: 10em;  
+>   font: ;
+> }
+> 
+>    
+> .one {  
+>   margin-top: 25px;  
+>   background-color: lime;
+> }
+> 
+>    
+> .two {  
+>   margin-top: -10px;  
+>   background-color: lime;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   border: 20px yellow;  
+>   border-style: solid none;
+> }
+> 
+>   
+> </style></head>
+26c49
+<      <img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-lime.png" alt="Image download support must be enabled" height="20" width="20" class="b"><img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-yellow.png" alt="Image download support must be enabled" height="60" width="60">
+---
+>      <img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-lime.png" alt="Image download support must be enabled" height="20" width="20" class="b convertedClass1"><img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-yellow.png" alt="Image download support must be enabled" height="60" width="60">
+28,29c51,52
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+27
+test/reftest/csswg-test/css1/c5502-mrgn-r-000.htm
+test/reftest/csswg-test_converted/css1/c5502-mrgn-r-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,20c10
+<   <style type="text/css">
+<    body { color: navy; }
+<    div { font: 10px/1 Ahem; width: 200px; color: orange; }
+<    img { vertical-align: bottom; }
+<    .zero {margin-right: 0; text-align: right; background-color: maroon;}
+<    .one {margin-right: 0.5in; text-align: right; background-color: maroon;}
+<    .two {margin-right: 48px; text-align: right; background-color: maroon;}
+<    .three {margin-right: 4.8em; text-align: right; background-color: maroon;}
+<    .four {margin-right: 24%; text-align: right; background-color: maroon;}
+<   </style>
+---
+>   
+23c13,67
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: navy;
+> }
+> 
+>    
+> div {  
+>   font: ;  
+>   width: 200px;  
+>   color: orange;
+> }
+> 
+>    
+> img {  
+>   vertical-align: bottom;
+> }
+> 
+>    
+> .zero {  
+>   margin-right: 0;  
+>   text-align: right;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .one {  
+>   margin-right: 0.5in;  
+>   text-align: right;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .two {  
+>   margin-right: 48px;  
+>   text-align: right;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .three {  
+>   margin-right: 4.8em;  
+>   text-align: right;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .four {  
+>   margin-right: 24%;  
+>   text-align: right;  
+>   background-color: maroon;
+> }
+> 
+>   
+> </style></head>
+43,44c87,88
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+28
+test/reftest/csswg-test/css1/c5503-imrgn-b-000.htm
+test/reftest/csswg-test_converted/css1/c5503-imrgn-b-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+9c8
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+12,17c11
+<   <style type="text/css">
+<    .test { background-color: yellow; color: orange; margin: 1em 0; width: 10em; font: 20px/1 Ahem; }
+<    .one { margin-bottom: 25px; background-color: lime; }
+<    .two { margin-bottom: -10px; background-color: lime; }
+<    img.b { border: 20px yellow; border-style: solid none; }
+<   </style>
+---
+>   
+19c13,42
+<  </head>
+---
+>  <style>
+>    
+> .test {  
+>   background-color: yellow;  
+>   color: orange;  
+>   margin: 1em 0;  
+>   width: 10em;  
+>   font: ;
+> }
+> 
+>    
+> .one {  
+>   margin-bottom: 25px;  
+>   background-color: lime;
+> }
+> 
+>    
+> .two {  
+>   margin-bottom: -10px;  
+>   background-color: lime;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   border: 20px yellow;  
+>   border-style: solid none;
+> }
+> 
+>   
+> </style></head>
+25c48
+<      <img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-lime.png" alt="Image download support must be enabled" height="20" width="20" class="b"><img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-yellow.png" alt="Image download support must be enabled" height="60" width="60">
+---
+>      <img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-lime.png" alt="Image download support must be enabled" height="20" width="20" class="b convertedClass1"><img src="support/swatch-orange.png" alt="Image download support must be enabled" height="60" width="60"><img src="support/swatch-yellow.png" alt="Image download support must be enabled" height="60" width="60">
+27,28c50,51
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+29
+test/reftest/csswg-test/css1/c5504-mrgn-l-000.htm
+test/reftest/csswg-test_converted/css1/c5504-mrgn-l-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,20c10
+<   <style type="text/css">
+<    body { color: navy; }
+<    div { font: 10px/1 Ahem; width: 200px; color: orange; }
+<    img { vertical-align: bottom; }
+<    .zero {margin-left: 0; text-align: left; background-color: maroon;}
+<    .one {margin-left: 0.5in; text-align: left; background-color: maroon;}
+<    .two {margin-left: 48px; text-align: left; background-color: maroon;}
+<    .three {margin-left: 4.8em; text-align: left; background-color: maroon;}
+<    .four {margin-left: 24%; text-align: left; background-color: maroon;}
+<   </style>
+---
+>   
+23c13,67
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: navy;
+> }
+> 
+>    
+> div {  
+>   font: ;  
+>   width: 200px;  
+>   color: orange;
+> }
+> 
+>    
+> img {  
+>   vertical-align: bottom;
+> }
+> 
+>    
+> .zero {  
+>   margin-left: 0;  
+>   text-align: left;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .one {  
+>   margin-left: 0.5in;  
+>   text-align: left;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .two {  
+>   margin-left: 48px;  
+>   text-align: left;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .three {  
+>   margin-left: 4.8em;  
+>   text-align: left;  
+>   background-color: maroon;
+> }
+> 
+>    
+> .four {  
+>   margin-left: 24%;  
+>   text-align: left;  
+>   background-color: maroon;
+> }
+> 
+>   
+> </style></head>
+43,44c87,88
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+30
+test/reftest/csswg-test/css1/c5505-mrgn-002.htm
+test/reftest/csswg-test_converted/css1/c5505-mrgn-002.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    html { margin: 0; padding: 8px; }
+<    body { margin: 0; padding: 0; }
+<    .five { margin: -10px; color: navy; }
+<   </style>
+---
+>   
+14c9,29
+<  </head>
+---
+>  <style>
+>    
+> html {  
+>   margin: 0;  
+>   padding: 8px;
+> }
+> 
+>    
+> body {  
+>   margin: 0;  
+>   padding: 0;
+> }
+> 
+>    
+> .five {  
+>   margin: -10px;  
+>   color: navy;
+> }
+> 
+>   
+> </style></head>
+17,18c32,33
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+31
+test/reftest/csswg-test/css1/c5506-ipadn-t-000.htm
+test/reftest/csswg-test_converted/css1/c5506-ipadn-t-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,15c10
+<   <style type="text/css">
+<    div { font: 20px/1 Ahem; width: 6em; color: white; }
+<    .red { color: red; }
+<    .one { padding-top: 20px; background-color: green; }
+<   </style>
+---
+>   
+17c12,32
+<  </head>
+---
+>  <style>
+>    
+> div {  
+>   font: ;  
+>   width: 6em;  
+>   color: white;
+> }
+> 
+>    
+> .red {  
+>   color: red;
+> }
+> 
+>    
+> .one {  
+>   padding-top: 20px;  
+>   background-color: green;
+> }
+> 
+>   
+> </style></head>
+23,24c38,39
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+32
+test/reftest/csswg-test/css1/c5506-ipadn-t-001.htm
+test/reftest/csswg-test_converted/css1/c5506-ipadn-t-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,15c10
+<   <style type="text/css">
+<    div { font: 20px/1 Ahem; width: 6em; color: white; }
+<    .green { color: green; }
+<    .two { padding-top: -20px; background-color: red; }
+<   </style>
+---
+>   
+17c12,32
+<  </head>
+---
+>  <style>
+>    
+> div {  
+>   font: ;  
+>   width: 6em;  
+>   color: white;
+> }
+> 
+>    
+> .green {  
+>   color: green;
+> }
+> 
+>    
+> .two {  
+>   padding-top: -20px;  
+>   background-color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c38,39
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+33
+test/reftest/csswg-test/css1/c5506-ipadn-t-002.htm
+test/reftest/csswg-test_converted/css1/c5506-ipadn-t-002.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,15c10
+<   <style type="text/css">
+<    p { margin-bottom: 3em; }
+<    div { font: 20px/1 Ahem; width: 6em; color: white; }
+<    .one { padding-top: 20px; background-color: green; }
+<   </style>
+---
+>   
+17c12,32
+<  </head>
+---
+>  <style>
+>    
+> p {  
+>   margin-bottom: 3em;
+> }
+> 
+>    
+> div {  
+>   font: ;  
+>   width: 6em;  
+>   color: white;
+> }
+> 
+>    
+> .one {  
+>   padding-top: 20px;  
+>   background-color: green;
+> }
+> 
+>   
+> </style></head>
+23,24c38,39
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+34
+test/reftest/csswg-test/css1/c5507-padn-r-000.htm
+test/reftest/csswg-test_converted/css1/c5507-padn-r-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+9c8
+<   <link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+---
+>   <link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-03-29 -->
+12,21c11
+<   <style type="text/css">
+<    body { color: navy; }
+<    div { font: 10px/1 Ahem; width: 106px; color: blue; }
+<    img { vertical-align: bottom; }
+<    .zero {padding-right: 0; text-align: center; background-color: navy;}
+<    .one {padding-right: 0.5in; text-align: right; background-color: navy;}
+<    .two {padding-right: 48px; text-align: right; background-color: navy;}
+<    .three {padding-right: 4.8em; text-align: right; background-color: navy;}
+<    .four {padding-right: 45.3%; text-align: right; background-color: navy;}
+<   </style>
+---
+>   
+24c14,68
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: navy;
+> }
+> 
+>    
+> div {  
+>   font: ;  
+>   width: 106px;  
+>   color: blue;
+> }
+> 
+>    
+> img {  
+>   vertical-align: bottom;
+> }
+> 
+>    
+> .zero {  
+>   padding-right: 0;  
+>   text-align: center;  
+>   background-color: navy;
+> }
+> 
+>    
+> .one {  
+>   padding-right: 0.5in;  
+>   text-align: right;  
+>   background-color: navy;
+> }
+> 
+>    
+> .two {  
+>   padding-right: 48px;  
+>   text-align: right;  
+>   background-color: navy;
+> }
+> 
+>    
+> .three {  
+>   padding-right: 4.8em;  
+>   text-align: right;  
+>   background-color: navy;
+> }
+> 
+>    
+> .four {  
+>   padding-right: 45.3%;  
+>   text-align: right;  
+>   background-color: navy;
+> }
+> 
+>   
+> </style></head>
+44,45c88,89
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+35
+test/reftest/csswg-test/css1/c5508-ipadn-b-000.htm
+test/reftest/csswg-test_converted/css1/c5508-ipadn-b-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,15c10
+<   <style type="text/css">
+<    div { font: 20px/1 Ahem; width: 6em; color: white; }
+<    .green { color: green; }
+<    .one { padding-bottom: 20px; background-color: red; }
+<   </style>
+---
+>   
+17c12,32
+<  </head>
+---
+>  <style>
+>    
+> div {  
+>   font: ;  
+>   width: 6em;  
+>   color: white;
+> }
+> 
+>    
+> .green {  
+>   color: green;
+> }
+> 
+>    
+> .one {  
+>   padding-bottom: 20px;  
+>   background-color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c38,39
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+36
+test/reftest/csswg-test/css1/c5508-ipadn-b-001.htm
+test/reftest/csswg-test_converted/css1/c5508-ipadn-b-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,15c10
+<   <style type="text/css">
+<    div { font: 20px/1 Ahem; width: 6em; color: white; }
+<    .green { color: green; }
+<    .two { padding-bottom: -20px; background-color: red; }
+<   </style>
+---
+>   
+17c12,32
+<  </head>
+---
+>  <style>
+>    
+> div {  
+>   font: ;  
+>   width: 6em;  
+>   color: white;
+> }
+> 
+>    
+> .green {  
+>   color: green;
+> }
+> 
+>    
+> .two {  
+>   padding-bottom: -20px;  
+>   background-color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c38,39
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+37
+test/reftest/csswg-test/css1/c5508-ipadn-b-002.htm
+test/reftest/csswg-test_converted/css1/c5508-ipadn-b-002.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,14c10
+<   <style type="text/css">
+<    div { font: 20px/1 Ahem; width: 6em; color: white; }
+<    .one { padding-bottom: 20px; background-color: green; }
+<   </style>
+---
+>   
+16c12,27
+<  </head>
+---
+>  <style>
+>    
+> div {  
+>   font: ;  
+>   width: 6em;  
+>   color: white;
+> }
+> 
+>    
+> .one {  
+>   padding-bottom: 20px;  
+>   background-color: green;
+> }
+> 
+>   
+> </style></head>
+22,23c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+38
+test/reftest/csswg-test/css1/c5509-padn-l-000.htm
+test/reftest/csswg-test_converted/css1/c5509-padn-l-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,20c10
+<   <style type="text/css">
+<    body { color: navy; }
+<    div { font: 10px/1 Ahem; width: 106px; color: blue; }
+<    img { vertical-align: bottom; }
+<    .zero {padding-left: 0; text-align: center; background-color: navy;}
+<    .one {padding-left: 0.5in; text-align: left; background-color: navy;}
+<    .two {padding-left: 48px; text-align: left; background-color: navy;}
+<    .three {padding-left: 4.8em; text-align: left; background-color: navy;}
+<    .four {padding-left: 45.3%; text-align: left; background-color: navy;}
+<   </style>
+---
+>   
+24c14,68
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: navy;
+> }
+> 
+>    
+> div {  
+>   font: ;  
+>   width: 106px;  
+>   color: blue;
+> }
+> 
+>    
+> img {  
+>   vertical-align: bottom;
+> }
+> 
+>    
+> .zero {  
+>   padding-left: 0;  
+>   text-align: center;  
+>   background-color: navy;
+> }
+> 
+>    
+> .one {  
+>   padding-left: 0.5in;  
+>   text-align: left;  
+>   background-color: navy;
+> }
+> 
+>    
+> .two {  
+>   padding-left: 48px;  
+>   text-align: left;  
+>   background-color: navy;
+> }
+> 
+>    
+> .three {  
+>   padding-left: 4.8em;  
+>   text-align: left;  
+>   background-color: navy;
+> }
+> 
+>    
+> .four {  
+>   padding-left: 45.3%;  
+>   text-align: left;  
+>   background-color: navy;
+> }
+> 
+>   
+> </style></head>
+44,45c88,89
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+39
+test/reftest/csswg-test/css1/c5510-padn-000.htm
+test/reftest/csswg-test_converted/css1/c5510-padn-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,20c10
+<   <style type="text/css">
+<    body { color: navy; }
+<    div { font: 10px/1 Ahem; width: 138px; color: orange; }
+<    img { vertical-align: bottom; }
+<    .zero {padding: 0; border: solid 24px yellow; background-color: red;}
+<    .one {padding: 0.25in; background-color: yellow;}
+<    .two {padding: 24px; background-color: yellow;}
+<    .three {padding: 2.4em; background-color: yellow;}
+<    .four {padding: 17.391%; background-color: yellow;}
+<   </style>
+---
+>   
+23c13,63
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: navy;
+> }
+> 
+>    
+> div {  
+>   font: ;  
+>   width: 138px;  
+>   color: orange;
+> }
+> 
+>    
+> img {  
+>   vertical-align: bottom;
+> }
+> 
+>    
+> .zero {  
+>   padding: 0;  
+>   border: solid 24px yellow;  
+>   background-color: red;
+> }
+> 
+>    
+> .one {  
+>   padding: 0.25in;  
+>   background-color: yellow;
+> }
+> 
+>    
+> .two {  
+>   padding: 24px;  
+>   background-color: yellow;
+> }
+> 
+>    
+> .three {  
+>   padding: 2.4em;  
+>   background-color: yellow;
+> }
+> 
+>    
+> .four {  
+>   padding: 17.391%;  
+>   background-color: yellow;
+> }
+> 
+>   
+> </style></head>
+43,44c83,84
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+40
+test/reftest/csswg-test/css1/c5511-brdr-tw-003.htm
+test/reftest/csswg-test_converted/css1/c5511-brdr-tw-003.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .zero { color: navy; }
+<    .zero div { border-top-width: 0; border-style: solid; }
+<   </style>
+---
+>   
+15c11,24
+<  </head>
+---
+>  <style>
+>    
+> .zero {  
+>   color: navy;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   border-top-width: 0;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+18c27
+<    <div>
+---
+>    <div class="convertedClass1">
+22,23c31,32
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+41
+test/reftest/csswg-test/css1/c5511-ibrdr-tw-000.htm
+test/reftest/csswg-test_converted/css1/c5511-ibrdr-tw-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .two {border-top-width: thin; border-style: solid;}
+<    .three {border-top-width: 25px; color: red;}
+<   </style>
+---
+>   
+15c11,25
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-top-width: thin;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-top-width: 25px;  
+>   color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+42
+test/reftest/csswg-test/css1/c5512-brdr-rw-000.htm
+test/reftest/csswg-test_converted/css1/c5512-brdr-rw-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    .two {border-right-width: thick; border-style: solid;}
+<    .three {border-right-width: medium; border-style: solid;}
+<    .four {border-right-width: thin; border-style: solid;}
+<   </style>
+---
+>   
+14c9,29
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-right-width: thick;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-right-width: medium;  
+>   border-style: solid;
+> }
+> 
+>    
+> .four {  
+>   border-right-width: thin;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+26,27c41,42
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+43
+test/reftest/csswg-test/css1/c5512-brdr-rw-003.htm
+test/reftest/csswg-test_converted/css1/c5512-brdr-rw-003.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .zero { color: navy; }
+<    .zero div { border-right-width: 0; border-style: solid; }
+<   </style>
+---
+>   
+15c11,24
+<  </head>
+---
+>  <style>
+>    
+> .zero {  
+>   color: navy;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   border-right-width: 0;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+18c27
+<    <div>
+---
+>    <div class="convertedClass1">
+22,23c31,32
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+44
+test/reftest/csswg-test/css1/c5512-ibrdr-rw-000.htm
+test/reftest/csswg-test_converted/css1/c5512-ibrdr-rw-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .two {border-right-width: thin; border-style: solid;}
+<    .three {border-right-width: 25px; color: red;}
+<   </style>
+---
+>   
+15c11,25
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-right-width: thin;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-right-width: 25px;  
+>   color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+45
+test/reftest/csswg-test/css1/c5513-brdr-bw-003.htm
+test/reftest/csswg-test_converted/css1/c5513-brdr-bw-003.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .zero { color: navy; }
+<    .zero div { border-bottom-width: 0; border-style: solid; }
+<   </style>
+---
+>   
+15c11,24
+<  </head>
+---
+>  <style>
+>    
+> .zero {  
+>   color: navy;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   border-bottom-width: 0;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+18c27
+<    <div>
+---
+>    <div class="convertedClass1">
+22,23c31,32
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+46
+test/reftest/csswg-test/css1/c5513-ibrdr-bw-000.htm
+test/reftest/csswg-test_converted/css1/c5513-ibrdr-bw-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .two {border-bottom-width: thin; border-style: solid;}
+<    .three {border-bottom-width: 25px; color: red;}
+<   </style>
+---
+>   
+15c11,25
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-bottom-width: thin;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-bottom-width: 25px;  
+>   color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+47
+test/reftest/csswg-test/css1/c5514-brdr-lw-000.htm
+test/reftest/csswg-test_converted/css1/c5514-brdr-lw-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    .two {border-left-width: thick; border-style: solid;}
+<    .three {border-left-width: medium; border-style: solid;}
+<    .four {border-left-width: thin; border-style: solid;}
+<   </style>
+---
+>   
+14c9,29
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-left-width: thick;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-left-width: medium;  
+>   border-style: solid;
+> }
+> 
+>    
+> .four {  
+>   border-left-width: thin;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+26,27c41,42
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+48
+test/reftest/csswg-test/css1/c5514-brdr-lw-003.htm
+test/reftest/csswg-test_converted/css1/c5514-brdr-lw-003.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .zero { color: navy; }
+<    .zero div { border-left-width: 0; border-style: solid; }
+<   </style>
+---
+>   
+15c11,24
+<  </head>
+---
+>  <style>
+>    
+> .zero {  
+>   color: navy;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   border-left-width: 0;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+18c27
+<    <div>
+---
+>    <div class="convertedClass1">
+22,23c31,32
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+49
+test/reftest/csswg-test/css1/c5514-ibrdr-lw-000.htm
+test/reftest/csswg-test_converted/css1/c5514-ibrdr-lw-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .two {border-left-width: thin; border-style: solid;}
+<    .three {border-left-width: 25px; color: red;}
+<   </style>
+---
+>   
+15c11,25
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-left-width: thin;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-left-width: 25px;  
+>   color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+50
+test/reftest/csswg-test/css1/c5515-brdr-w-000.htm
+test/reftest/csswg-test_converted/css1/c5515-brdr-w-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+8,12c7
+<   <style type="text/css">
+<    .two {border-width: thick; border-style: solid;}
+<    .three {border-width: medium; border-style: solid;}
+<    .four {border-width: thin; border-style: solid;}
+<   </style>
+---
+>   
+14c9,29
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-width: thick;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-width: medium;  
+>   border-style: solid;
+> }
+> 
+>    
+> .four {  
+>   border-width: thin;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+26,27c41,42
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+51
+test/reftest/csswg-test/css1/c5515-ibrdr-000.htm
+test/reftest/csswg-test_converted/css1/c5515-ibrdr-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9
+<   <style type="text/css">
+<    .two {border-width: thin; border-style: solid;}
+<    .three {border-width: 25px; color: red;}
+<   </style>
+---
+>   
+15c11,25
+<  </head>
+---
+>  <style>
+>    
+> .two {  
+>   border-width: thin;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-width: 25px;  
+>   color: red;
+> }
+> 
+>   
+> </style></head>
+23,24c33,34
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+52
+test/reftest/csswg-test/css1/c5516-brdr-c-000.htm
+test/reftest/csswg-test_converted/css1/c5516-brdr-c-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,14c9
+<   <style type="text/css">
+<    .one {border-color: green; border-style: solid;}
+<    .two {border-color: green; border-width: medium; border-style: solid;}
+<    .three {border-color: purple green blue yellow; border-width: 2em; border-style: solid;}
+<   </style>
+---
+>   
+16c11,33
+<  </head>
+---
+>  <style>
+>    
+> .one {  
+>   border-color: green;  
+>   border-style: solid;
+> }
+> 
+>    
+> .two {  
+>   border-color: green;  
+>   border-width: medium;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-color: purple green blue yellow;  
+>   border-width: 2em;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+27,28c44,45
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+53
+test/reftest/csswg-test/css1/c5516-ibrdr-c-000.htm
+test/reftest/csswg-test_converted/css1/c5516-ibrdr-c-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,16c9
+<   <style type="text/css">
+<    p { margin: 3em; }
+<    .one {border-color: green; border-style: solid;}
+<    .two {border-color: green; border-width: medium; border-style: solid;}
+<    .three {border-color: purple green blue yellow; border-width: 2em; border-style: solid;
+<            line-height: 6em;}
+<   </style>
+---
+>   
+18c11,39
+<  </head>
+---
+>  <style>
+>    
+> p {  
+>   margin: 3em;
+> }
+> 
+>    
+> .one {  
+>   border-color: green;  
+>   border-style: solid;
+> }
+> 
+>    
+> .two {  
+>   border-color: green;  
+>   border-width: medium;  
+>   border-style: solid;
+> }
+> 
+>    
+> .three {  
+>   border-color: purple green blue yellow;  
+>   border-width: 2em;  
+>   border-style: solid;  
+>   line-height: 6em;
+> }
+> 
+>   
+> </style></head>
+31,32c52,53
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+54
+test/reftest/csswg-test/css1/c63-color-000.htm
+test/reftest/csswg-test_converted/css1/c63-color-000.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,26c10
+<   <style type="text/css">
+<    body {color: blue;}
+<    span {vertical-align: bottom; font: 15px/1 Ahem;}
+<    img {vertical-align: bottom; color: red;}
+<    .one {color: #0f0;}
+<    .two {color: #00ff00;}
+<    .three {color: rgb(0,255,0);}
+<    .four {color: rgb(0%,100%,0%);}
+<    .five {color: rgb(0.0%,100.0%,0.0%);}
+<    .six {color: lime;}
+<    .seven {color: invalidValue;}
+<    .eight {color: rgb(1280,165,0);}
+<    .nine {color: rgb(255,165,0);}
+<    .ten {color: rgb(100%,64.7%,-500%);}
+<    .eleven {color: rgb(100%,64.7%,0%);}
+<   </style>
+---
+>   
+28c12,86
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: blue;
+> }
+> 
+>    
+> span {  
+>   vertical-align: bottom;  
+>   font: ;
+> }
+> 
+>    
+> img {  
+>   vertical-align: bottom;  
+>   color: red;
+> }
+> 
+>    
+> .one {  
+>   color: #0f0;
+> }
+> 
+>    
+> .two {  
+>   color: #00ff00;
+> }
+> 
+>    
+> .three {  
+>   color: rgb(0,255,0);
+> }
+> 
+>    
+> .four {  
+>   color: rgb(0%,100%,0%);
+> }
+> 
+>    
+> .five {  
+>   color: rgb(0.0%,100.0%,0.0%);
+> }
+> 
+>    
+> .six {  
+>   color: lime;
+> }
+> 
+>    
+> .seven {  
+>   color: invalidValue;
+> }
+> 
+>    
+> .eight {  
+>   color: rgb(1280,165,0);
+> }
+> 
+>    
+> .nine {  
+>   color: rgb(255,165,0);
+> }
+> 
+>    
+> .ten {  
+>   color: rgb(100%,64.7%,-500%);
+> }
+> 
+>    
+> .eleven {  
+>   color: rgb(100%,64.7%,0%);
+> }
+> 
+>   
+> </style></head>
+40,41c98,99
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+55
+test/reftest/csswg-test/css1/c71-fwd-parsing-001.htm
+test/reftest/csswg-test_converted/css1/c71-fwd-parsing-001.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,17c10
+<   <style type="text/css">
+<    body { color: navy; }
+<    p.sixa {border-width: medium; border-style: solid;}
+<    p.sixb {border-width: funny; border-style: solid;}
+<    p.sixc {border-width: 50zu; border-style: solid;}
+<    p.sixd {border-width: px; border-style: solid;}
+<   </style>
+---
+>   
+19c12,43
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: navy;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   border-width: medium;  
+>   border-style: solid;
+> }
+> 
+>    
+> .convertedClass2 {  
+>   border-width: funny;  
+>   border-style: solid;
+> }
+> 
+>    
+> .convertedClass3 {  
+>   border-width: 50zu;  
+>   border-style: solid;
+> }
+> 
+>    
+> .convertedClass4 {  
+>   border-width: px;  
+>   border-style: solid;
+> }
+> 
+>   
+> </style></head>
+22,27c46,51
+<   <p class="sixa">Text sample</p>
+<   <p class="sixb">Text sample</p>
+<   <p class="sixc">Text sample</p>
+<   <p class="sixd">Text sample</p>
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>   <p class="sixa convertedClass1">Text sample</p>
+>   <p class="sixb convertedClass2">Text sample</p>
+>   <p class="sixc convertedClass3">Text sample</p>
+>   <p class="sixd convertedClass4">Text sample</p>
+>  
+> </body></html>
+\ No newline at end of file
+56
+test/reftest/csswg-test/css1/c71-fwd-parsing-003.htm
+test/reftest/csswg-test_converted/css1/c71-fwd-parsing-003.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+<  <head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,18c10
+<   <style type="text/css">
+<    body { color: navy; }
+<    p.eighteena {text-decoration: underline overline line-through diagonal;
+<                font: bold highlighted 100% sans-serif;}
+<    p.eighteenb {text-decoration: underline overline line-through diagonal;
+<                font: bold highlighted 100% serif;}
+<    em, p.nineteena ! em, strong {font-size: 200%; }
+<   </style>
+---
+>   
+20c12,34
+<  </head>
+---
+>  <style>
+>    
+> body {  
+>   color: navy;
+> }
+> 
+>    
+> .convertedClass1 {  
+>   text-decoration: underline overline line-through diagonal;  
+>   font: ;
+> }
+> 
+>    
+> .convertedClass2 {  
+>   text-decoration: underline overline line-through diagonal;  
+>   font: ;
+> }
+> 
+>    
+> em, p.nineteena ! em, strong {font-size: 200%; }
+> 
+>   
+> </style></head>
+23c37
+<   <p class="eighteena">
+---
+>   <p class="eighteena convertedClass1">
+26c40
+<   <p class="eighteenb">
+---
+>   <p class="eighteenb convertedClass2">
+32,33c46,47
+<  </body>
+< </html>
+\ No newline at end of file
+---
+>  
+> </body></html>
+\ No newline at end of file
+57

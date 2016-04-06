@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="convertedClass1"><head class="convertedClass1">
+        <title class="convertedClass1">CSS Test: Parser error handling with invalid at-rules: @ invalid selector with a number</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/" class="convertedClass1">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#parsing-errors" class="convertedClass1">
+        <link rel="match" href="../reference/filler-text-below-green.xht" class="convertedClass1">
+        <meta name="flags" content="invalid" class="convertedClass1">
+        <meta name="assert" content="At-Rules are ignored if they start with an at-keyword (@ followed immediately by an identifier)." class="convertedClass1">
+        
+    <style>
+            
+@1import "support/at-rule-red.css";
+
+            
+div {  
+  color: red;
+}
+
+            
+.convertedClass1 {  
+  color: green;
+}
+
+            
+p {  
+  color: black;
+}
+
+        
+</style></head>
+    <body class="convertedClass1">
+        <p class="convertedClass1">Test passes if the "Filler Text" below is green.</p>
+        <div class="convertedClass1">Filler Text</div>
+    
+</body></html>

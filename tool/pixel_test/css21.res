@@ -760,16 +760,6 @@ test/reftest/csswg-test/css21/cascade/specificity-007.htm
 test/reftest/csswg-test/css21/cascade/support/html-attribute-017-frame.htm
 test/reftest/csswg-test/css21/cascade/support/html-attribute-021-frame.htm
 test/reftest/csswg-test/css21/cascade/support/html-attribute-022-frame.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-003.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-004.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-005.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-006.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-007.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-008.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-009.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-010.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-011.htm
-test/reftest/csswg-test/css21/cascade-import/cascade-import-012.htm
 test/reftest/csswg-test/css21/cascade-import/cascade-import-dynamic-001.htm
 test/reftest/csswg-test/css21/cascade-import/cascade-import-dynamic-002.htm
 test/reftest/csswg-test/css21/cascade-import/cascade-import-dynamic-003.htm

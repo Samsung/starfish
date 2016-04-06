@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head>
+  <title>CSS Test: vertical-align: top</title>
+  <link rel="author" title="Ian Hickson" href="mailto:ian@hixie.ch">
+  <link rel="alternate" href="http://www.hixie.ch/tests/adhoc/css/box/inline/vertical-align/001.html" type="text/html">
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#line-height">
+  <link rel="match" href="vertical-align-121-ref.xht">
+
+  <meta name="flags" content="ahem">
+  
+ <style>
+   
+div {  
+  color: navy;  
+  text-align: center;  
+  width: 6em;  
+  font: ;
+}
+
+   
+span {  
+  font-size: 2em;
+}
+
+   
+.bottom {  
+  border-bottom: solid blue;
+}
+
+   
+.convertedClass1 {  
+  vertical-align: bottom;
+}
+
+   
+.convertedClass2 {  
+  vertical-align: top;
+}
+
+  
+</style></head>
+ <body>
+
+  <p>There should be a plus sign with a blue line traversing through its middle.</p>
+  <div class="bottom">x<span class="convertedClass1">X</span>x</div>
+  <div class="top">x<span class="convertedClass2">X</span>x</div>
+ 
+</body></html>

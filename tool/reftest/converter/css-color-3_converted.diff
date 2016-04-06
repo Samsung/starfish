@@ -1,0 +1,556 @@
+test/reftest/csswg-test/css-color-3/t31-color-currentColor-b.htm
+test/reftest/csswg-test_converted/css-color-3/t31-color-currentColor-b.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+12,17c11,29
+< 		<style type="text/css">
+< 			#one { color: green; }
+< 			#two { color: red; }
+< 			#two { color: currentColor; }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> #one {  
+>   color: green;
+> }
+> 
+> 			
+> #two {  
+>   color: red;
+> }
+> 
+> 			
+> #two {  
+>   color: currentColor;
+> }
+> 
+> 		
+> </style></head>
+20,21c32,33
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+0
+test/reftest/csswg-test/css-color-3/t31-color-text-a.htm
+test/reftest/csswg-test_converted/css-color-3/t31-color-text-a.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9,17
+< 		<style type="text/css">
+< 			#one { color: green; }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> #one {  
+>   color: green;
+> }
+> 
+> 		
+> </style></head>
+16,17c20,21
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+1
+test/reftest/csswg-test/css-color-3/t32-opacity-basic-0.0-a.htm
+test/reftest/csswg-test_converted/css-color-3/t32-opacity-basic-0.0-a.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9,17
+< 		<style type="text/css">
+< 			#two { opacity: 0.0; }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> #two {  -webkit-opacity: 0.0;
+>   opacity: 0.0;
+> }
+> 
+> 		
+> </style></head>
+17,18c21,22
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+2
+test/reftest/csswg-test/css-color-3/t32-opacity-basic-1.0-a.htm
+test/reftest/csswg-test_converted/css-color-3/t32-opacity-basic-1.0-a.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,13c9,17
+< 		<style type="text/css">
+< 			#two { opacity: 1.0; }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> #two {  -webkit-opacity: 1.0;
+>   opacity: 1.0;
+> }
+> 
+> 		
+> </style></head>
+17,18c21,22
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+3
+test/reftest/csswg-test/css-color-3/t32-opacity-clamping-0.0-b.htm
+test/reftest/csswg-test_converted/css-color-3/t32-opacity-clamping-0.0-b.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,17c9,37
+< 		<style type="text/css">
+< 			#two { opacity: -0.0; }
+< 			#three { opacity: -0.1; }
+< 			#four { opacity: -0.9; }
+< 			#five { opacity: -30; }
+< 			#six { opacity: -7439.79; }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> #two {  -webkit-opacity: -0.0;
+>   opacity: -0.0;
+> }
+> 
+> 			
+> #three {  -webkit-opacity: -0.1;
+>   opacity: -0.1;
+> }
+> 
+> 			
+> #four {  -webkit-opacity: -0.9;
+>   opacity: -0.9;
+> }
+> 
+> 			
+> #five {  -webkit-opacity: -30;
+>   opacity: -30;
+> }
+> 
+> 			
+> #six {  -webkit-opacity: -7439.79;
+>   opacity: -7439.79;
+> }
+> 
+> 		
+> </style></head>
+25,26c45,46
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+4
+test/reftest/csswg-test/css-color-3/t32-opacity-clamping-1.0-b.htm
+test/reftest/csswg-test_converted/css-color-3/t32-opacity-clamping-1.0-b.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+10,20c9,46
+< 		<style type="text/css">
+< 			/* make sure clamped rather than a parser error */
+< 			#two, #three, #four, #five, #six { opacity: 0.0; }
+< 
+< 			#two { opacity: 1.0; }
+< 			#three { opacity: 1.1; }
+< 			#four { opacity: 1.9; }
+< 			#five { opacity: 30; }
+< 			#six { opacity: 7439.79; }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> /* make sure clamped rather than a parser error */
+> 
+> 			
+> .convertedClass1 {  -webkit-opacity: 0.0;
+>   opacity: 0.0;
+> }
+> 
+> 
+> 			
+> #two {  -webkit-opacity: 1.0;
+>   opacity: 1.0;
+> }
+> 
+> 			
+> #three {  -webkit-opacity: 1.1;
+>   opacity: 1.1;
+> }
+> 
+> 			
+> #four {  -webkit-opacity: 1.9;
+>   opacity: 1.9;
+> }
+> 
+> 			
+> #five {  -webkit-opacity: 30;
+>   opacity: 30;
+> }
+> 
+> 			
+> #six {  -webkit-opacity: 7439.79;
+>   opacity: 7439.79;
+> }
+> 
+> 		
+> </style></head>
+23,29c49,55
+< 		<p id="two">There should be six lines of text on this page, all the same color. [2 of 6]</p>
+< 		<p id="three">There should be six lines of text on this page, all the same color. [3 of 6]</p>
+< 		<p id="four">There should be six lines of text on this page, all the same color. [4 of 6]</p>
+< 		<p id="five">There should be six lines of text on this page, all the same color. [5 of 6]</p>
+< 		<p id="six">There should be six lines of text on this page, all the same color. [6 of 6]</p>
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 		<p id="two" class="convertedClass1">There should be six lines of text on this page, all the same color. [2 of 6]</p>
+> 		<p id="three" class="convertedClass1">There should be six lines of text on this page, all the same color. [3 of 6]</p>
+> 		<p id="four" class="convertedClass1">There should be six lines of text on this page, all the same color. [4 of 6]</p>
+> 		<p id="five" class="convertedClass1">There should be six lines of text on this page, all the same color. [5 of 6]</p>
+> 		<p id="six" class="convertedClass1">There should be six lines of text on this page, all the same color. [6 of 6]</p>
+> 	
+> </body></html>
+\ No newline at end of file
+5
+test/reftest/csswg-test/css-color-3/t421-rgb-func-no-mixed-f.htm
+test/reftest/csswg-test_converted/css-color-3/t421-rgb-func-no-mixed-f.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,22c10,58
+< 		<style type="text/css">
+< 			p { color: green; }
+< 			p { color: rgb(255, 0, 0%); }
+< 			p { color: rgb(100%, 0%, 0); }
+< 			p { color: rgb(100%, 1, 0); }
+< 			p { color: rgb(255, 1%, 0%); }
+< 			p { color: rgb(99%, 0%, 0); }
+< 			p { color: rgb(0%, 0, 0%); }
+< 			p { color: rgb(0, 0%, 0%); }
+< 			p { color: rgb(254, 255%, 0); }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> p {  
+>   color: green;
+> }
+> 
+> 			
+> p {  
+>   color: rgb(255, 0, 0%);
+> }
+> 
+> 			
+> p {  
+>   color: rgb(100%, 0%, 0);
+> }
+> 
+> 			
+> p {  
+>   color: rgb(100%, 1, 0);
+> }
+> 
+> 			
+> p {  
+>   color: rgb(255, 1%, 0%);
+> }
+> 
+> 			
+> p {  
+>   color: rgb(99%, 0%, 0);
+> }
+> 
+> 			
+> p {  
+>   color: rgb(0%, 0, 0%);
+> }
+> 
+> 			
+> p {  
+>   color: rgb(0, 0%, 0%);
+> }
+> 
+> 			
+> p {  
+>   color: rgb(254, 255%, 0);
+> }
+> 
+> 		
+> </style></head>
+28,29c64,65
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+6
+test/reftest/csswg-test/css-color-3/t421-rgb-hex-parsing-f.htm
+test/reftest/csswg-test_converted/css-color-3/t421-rgb-hex-parsing-f.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,20c10,42
+< 		<style type="text/css">
+< 			p { color: green; }
+< 			p { color: #f; }
+< 			p { color: #ff; }
+< 			p { color: #ff000; }
+< 			p { color: #ff00000; }
+< 			p { color: #ff0000000; }
+< 			p { color: #ff00000000; }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> p {  
+>   color: green;
+> }
+> 
+> 			
+> p {
+> }
+> 
+> 			
+> p {
+> }
+> 
+> 			
+> p {
+> }
+> 
+> 			
+> p {
+> }
+> 
+> 			
+> p {
+> }
+> 
+> 			
+> p {
+> }
+> 
+> 		
+> </style></head>
+26,27c48,49
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+7
+test/reftest/csswg-test/css-color-3/t422-rgba-func-no-mixed-f.htm
+test/reftest/csswg-test_converted/css-color-3/t422-rgba-func-no-mixed-f.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,22c10,58
+< 		<style type="text/css">
+< 			p { color: green; }
+< 			p { color: rgba(255, 0, 0%, 1.0); }
+< 			p { color: rgba(100%, 0%, 0, 1.0); }
+< 			p { color: rgba(100%, 1, 0, 1.0); }
+< 			p { color: rgba(255, 1%, 0%, 1.0); }
+< 			p { color: rgba(99%, 0%, 0, 1.0); }
+< 			p { color: rgba(0%, 0, 0%, 1.0); }
+< 			p { color: rgba(0, 0%, 0%, 1.0); }
+< 			p { color: rgba(254, 255%, 0, 1.0); }
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 			
+> p {  
+>   color: green;
+> }
+> 
+> 			
+> p {  
+>   color: rgba(255, 0, 0%, 1.0);
+> }
+> 
+> 			
+> p {  
+>   color: rgba(100%, 0%, 0, 1.0);
+> }
+> 
+> 			
+> p {  
+>   color: rgba(100%, 1, 0, 1.0);
+> }
+> 
+> 			
+> p {  
+>   color: rgba(255, 1%, 0%, 1.0);
+> }
+> 
+> 			
+> p {  
+>   color: rgba(99%, 0%, 0, 1.0);
+> }
+> 
+> 			
+> p {  
+>   color: rgba(0%, 0, 0%, 1.0);
+> }
+> 
+> 			
+> p {  
+>   color: rgba(0, 0%, 0%, 1.0);
+> }
+> 
+> 			
+> p {  
+>   color: rgba(254, 255%, 0, 1.0);
+> }
+> 
+> 		
+> </style></head>
+28,29c64,65
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+8
+test/reftest/csswg-test/css-color-3/t44-currentcolor-border-b.htm
+test/reftest/csswg-test_converted/css-color-3/t44-currentcolor-border-b.htm
+1,3c1,2
+< <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+< <html>
+< 	<head>
+---
+> <!DOCTYPE html>
+> <html><head>
+11,23c10,27
+< 		<style type="text/css">
+< 		#one {
+< 			color: green;
+< 			border: medium solid red;
+< 			border: medium solid currentColor;
+< 		}
+< 		#two {
+< 			color: green;
+< 			border: medium solid red;
+< 			border-color: currentcolor;
+< 		}
+< 		</style>
+< 	</head>
+---
+> 		
+> 	<style>
+> 		
+> #one {  
+>   color: green;  
+>   border: medium solid red;  
+>   border: medium solid currentColor;
+> }
+> 
+> 		
+> #two {  
+>   color: green;  
+>   border: medium solid red;  
+>   border-color: currentcolor;
+> }
+> 
+> 		
+> </style></head>
+27,28c31,32
+< 	</body>
+< </html>
+\ No newline at end of file
+---
+> 	
+> </body></html>
+\ No newline at end of file
+9

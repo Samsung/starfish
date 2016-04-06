@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html><head>
+    <title>CSS Test Reference: background-repeat:repeat-x</title>
+    <link rel="author" title="Jeffrey Carl Faden" href="http://www.jeffreyatw.com/">
+    
+  <style>
+      
+      
+div {  
+  background-color: grey;  
+  height: 150px;  
+  width: 240px;  
+  position: relative;  
+  overflow: hidden;
+}
+
+      
+.convertedClass1 {  
+  position: absolute;  
+  top: 0;
+}
+
+      
+.convertedClass2 {  
+  left: 0;
+}
+
+      
+.convertedClass3 {  
+  left: 96px;
+}
+
+      
+.convertedClass4 {  
+  left: 192px;
+}
+
+      
+    
+</style></head>
+  <body>
+    <p><img src="support/rectangle-96x60.png" alt="Image download support must be enabled"></p>
+    <p>Test passes if the above image repeats horizontally in the below rectangle 2½ times exactly. There should be a grey area below the images, but not to their right.</p>
+    <div>
+      <img src="support/rectangle-96x60.png" alt="Image download support must be enabled" class="first convertedClass1 convertedClass2">
+      <img src="support/rectangle-96x60.png" alt="Image download support must be enabled" class="second convertedClass1 convertedClass3">
+      <img src="support/rectangle-96x60.png" alt="Image download support must be enabled" class="third convertedClass1 convertedClass4">
+    </div>
+  
+</body></html>

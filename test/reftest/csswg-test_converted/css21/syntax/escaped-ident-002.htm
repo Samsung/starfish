@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head>
+        <title>CSS Test: Parsing escaped special CSS characters</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#characters">
+        <link rel="match" href="../reference/filler-text-below-green.xht">
+        <meta name="flags" content="">
+        <meta name="assert" content="Escaped special CSS characters are no longer meaningful.">
+        
+    <style>
+            
+.1st'Class' {  
+  color: green;
+}
+
+        
+</style></head>
+    <body>
+        <p>Test passes if the "Filler Text" below is green.</p>
+        <div class="1st'Class'">Filler Text</div>
+    
+</body></html>

@@ -1,31 +1,10 @@
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-331.html:26
 test/reftest/csswg-test/css-backgrounds-3/background-331.html
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-332.html:26
 test/reftest/csswg-test/css-backgrounds-3/background-332.html
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-333.html:26
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-335.html:26
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-336.html:26
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-clip-001.html:19
 test/reftest/csswg-test/css-backgrounds-3/background-clip-001.html
 test/reftest/csswg-test/css-backgrounds-3/background-image-001.html
 test/reftest/csswg-test/css-backgrounds-3/background-image-002.html
 test/reftest/csswg-test/css-backgrounds-3/background-image-005.html
 test/reftest/csswg-test/css-backgrounds-3/background-image-006.html
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-origin-001.html:19
 test/reftest/csswg-test/css-backgrounds-3/background-origin-001.html
 test/reftest/csswg-test/css-backgrounds-3/background-paint-order-001.html
 test/reftest/csswg-test/css-backgrounds-3/background-repeat/background-repeat-no-repeat.htm
@@ -275,9 +254,6 @@ test/reftest/csswg-test/css-backgrounds-3/background-size/vector/zero-width-rati
 test/reftest/csswg-test/css-backgrounds-3/background-size/vector/zero-width-ratio-auto-auto.html
 test/reftest/csswg-test/css-backgrounds-3/background-size/vector/zero-width-ratio-contain.html
 test/reftest/csswg-test/css-backgrounds-3/background-size/vector/zero-width-ratio-cover.html
-TypeError: '[object HTMLDivElement]' is not a function (evaluating 'test')
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/background-size-001.html:19
 test/reftest/csswg-test/css-backgrounds-3/background-size-001.html
 test/reftest/csswg-test/css-backgrounds-3/border-color_transparent.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-1.html
@@ -293,9 +269,6 @@ test/reftest/csswg-test/css-backgrounds-3/border-image-4.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-7.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-8.html
 test/reftest/csswg-test/css-backgrounds-3/border-image-9.html
-ReferenceError: Can't find variable: async_test
-
-  file:///home/june0cho/webTF/starfish/test/reftest/csswg-test/css-backgrounds-3/border-image-repeat_repeatnegx_none_50px.html:25
 test/reftest/csswg-test/css-backgrounds-3/border-image-space-001.html
 test/reftest/csswg-test/css-backgrounds-3/border-images.html
 test/reftest/csswg-test/css-backgrounds-3/css3-background-size-001.html
