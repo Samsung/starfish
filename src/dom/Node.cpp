@@ -12,6 +12,47 @@
 
 namespace StarFish {
 
+HTMLCollection* RareNodeMembers::hasQueryInActiveHtmlCollectionList(ActiveHTMLCollectionList* list, String* query)
+{
+    for (size_t i = 0; i < list->size(); i ++) {
+        if (list->at(i).first->equals(query)) {
+            return list->at(i).second;
+        }
+    }
+    return nullptr;
+}
+
+void RareNodeMembers::putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list, String* query, HTMLCollection* coll)
+{
+    STARFISH_ASSERT(!hasQueryInActiveHtmlCollectionList(list, query));
+    STARFISH_ASSERT(query);
+    STARFISH_ASSERT(coll);
+    list->push_back(std::make_pair(query, coll));
+}
+
+void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
+{
+    if (m_children) {
+        m_children->activeNodeList().invalidateCache();
+    }
+
+    if (m_activeHtmlCollectionListsForTagName) {
+        for (size_t i = 0; i < m_activeHtmlCollectionListsForTagName->size(); i ++) {
+            m_activeHtmlCollectionListsForTagName->at(i).second->activeNodeList().invalidateCache();
+        }
+    }
+
+    if (m_activeHtmlCollectionListsForClassName) {
+        for (size_t i = 0; i < m_activeHtmlCollectionListsForClassName->size(); i ++) {
+            m_activeHtmlCollectionListsForClassName->at(i).second->activeNodeList().invalidateCache();
+        }
+    }
+
+    if (m_childNodeList) {
+        m_childNodeList->activeNodeList().invalidateCache();
+    }
+}
+
 Node::Node(Document* document)
     : EventTarget()
 {
@@ -23,23 +64,20 @@ Node::Node(Document* document)
 NodeList* Node::childNodes()
 {
     STARFISH_ASSERT(m_document);
-    if (m_childNodeList == nullptr) {
-        m_childNodeList = new NodeList(m_document->scriptBindingInstance(), this, [](Node* node, void* data) {
+    auto rareData = ensureRareMembers();
+    if (rareData->m_childNodeList == nullptr) {
+        rareData->m_childNodeList = new NodeList(m_document->scriptBindingInstance(), this, [](Node* node, void* data) {
             return node->parentNode() == (Node *)data? true: false;
-        }, this);
+        }, this, true);
     }
-    return m_childNodeList;
+    return rareData->m_childNodeList;
 }
 
 Node* Node::cloneNode(bool deep)
 {
     Node* newNode = clone();
     STARFISH_ASSERT(newNode);
-    newNode->m_state = m_state;
     newNode->m_baseUri = m_baseUri;
-    newNode->m_frame = m_frame;
-    newNode->m_rareNodeMembers = m_rareNodeMembers; // FIXME: what is this?
-    newNode->m_style = m_style; // FIXME: need to clone
 
     if (deep) {
         for (Node* child = firstChild(); child; child = child->nextSibling()) {
@@ -319,7 +357,7 @@ HTMLCollection* Node::children()
             return true;
         return false;
     };
-    m_rareNodeMembers->m_children = new HTMLCollection(m_document->scriptBindingInstance(), this, filter, this);
+    m_rareNodeMembers->m_children = new HTMLCollection(m_document->scriptBindingInstance(), this, filter, this, true);
     return m_rareNodeMembers->m_children;
 }
 
@@ -440,8 +478,8 @@ Node* Node::appendChild(Node* child)
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
 
-    notifyDOMEventToParentTree(parentNode(), [this, child](Node* parent) {
-        didNodeInserted(this, child);
+    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+        parent->didNodeInserted(this, child);
     });
 
     if (isInDocumentScope()) {
@@ -507,8 +545,8 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
 
-    notifyDOMEventToParentTree(parentNode(), [this, child](Node* parent) {
-        didNodeInserted(this, child);
+    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+        parent->didNodeInserted(this, child);
     });
 
     if (isInDocumentScope()) {
@@ -620,8 +658,8 @@ Node* Node::removeChild(Node* child)
         notifyNodeRemoveFromDocumentTree(child);
     }
 
-    notifyDOMEventToParentTree(parentNode(), [this, child](Node* parent) {
-        didNodeRemoved(this, child);
+    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+        parent->didNodeRemoved(this, child);
     });
 
     return child;
@@ -646,7 +684,7 @@ HTMLCollection* Node::getElementsByTagName(String* qualifiedName)
         }
         return false;
     };
-    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, qualifiedName);
+    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, qualifiedName, true);
     rareData->putActiveHtmlCollectionListWithQuery(activeLists, qualifiedName, list);
     return list;
 }
@@ -702,7 +740,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
         return false;
     };
 
-    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, classNames);
+    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, classNames, true);
     rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames, list);
     return list;
 }
@@ -766,6 +804,20 @@ void Node::didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newSt
     }
 }
 
+void Node::didNodeInserted(Node* parent, Node* newChild)
+{
+    if (hasRareMembers()) {
+        m_rareNodeMembers->invalidateActiveActiveNodeListCacheIfNeeded();
+    }
+}
+
+void Node::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    if (hasRareMembers()) {
+        m_rareNodeMembers->invalidateActiveActiveNodeListCacheIfNeeded();
+    }
+}
+
 RareNodeMembers* Node::ensureRareMembers()
 {
     STARFISH_ASSERT(!isElement());
@@ -773,6 +825,17 @@ RareNodeMembers* Node::ensureRareMembers()
         m_rareNodeMembers = new RareNodeMembers();
     STARFISH_ASSERT(!m_rareNodeMembers->isRareElementMembers());
     return m_rareNodeMembers;
+}
+
+void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
+{
+    if (hasRareMembers()) {
+        if (m_rareNodeMembers->m_activeHtmlCollectionListsForClassName) {
+            for (size_t i = 0; i < m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->size(); i ++) {
+                m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->at(i).second->activeNodeList().invalidateCache();
+            }
+        }
+    }
 }
 
 void Node::dumpStyle()

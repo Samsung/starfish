@@ -30,6 +30,7 @@ class RareNodeMembers : public gc {
 public:
     RareNodeMembers()
         : m_children(nullptr)
+        , m_childNodeList(nullptr)
         , m_domTokenList(nullptr)
         , m_activeHtmlCollectionListsForTagName(nullptr)
         , m_activeHtmlCollectionListsForClassName(nullptr)
@@ -63,25 +64,12 @@ public:
         return m_activeHtmlCollectionListsForClassName;
     }
 
-    HTMLCollection* hasQueryInActiveHtmlCollectionList(ActiveHTMLCollectionList* list, String* query)
-    {
-        for (size_t i = 0; i < list->size(); i ++) {
-            if (list->at(i).first->equals(query)) {
-                return list->at(i).second;
-            }
-        }
-        return nullptr;
-    }
-
-    void putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list, String* query, HTMLCollection* coll)
-    {
-        STARFISH_ASSERT(!hasQueryInActiveHtmlCollectionList(list, query));
-        STARFISH_ASSERT(query);
-        STARFISH_ASSERT(coll);
-        list->push_back(std::make_pair(query, coll));
-    }
+    HTMLCollection* hasQueryInActiveHtmlCollectionList(ActiveHTMLCollectionList* list, String* query);
+    void putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list, String* query, HTMLCollection* coll);
+    void invalidateActiveActiveNodeListCacheIfNeeded();
 
     HTMLCollection* m_children;
+    NodeList* m_childNodeList;
     DOMTokenList* m_domTokenList;
 
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForTagName;
@@ -109,7 +97,6 @@ protected:
 
         m_firstChild = nullptr;
         m_lastChild = nullptr;
-        m_childNodeList = nullptr;
 
         m_state = NodeStateNormal;
 
@@ -533,9 +520,9 @@ public:
     }
 
     virtual void didCharacterDataModified(String* before, String* after) { }
-    virtual void didNodeInserted(Node* parent, Node* newChild) { }
+    virtual void didNodeInserted(Node* parent, Node* newChild);
+    virtual void didNodeRemoved(Node* parent, Node* oldChild);
     virtual void didNodeInsertedToDocumenTree() { }
-    virtual void didNodeRemoved(Node* parent, Node* oldChild) { }
     virtual void didNodeRemovedFromDocumenTree() { }
 
     virtual bool dispatchEvent(Event* event) override;
@@ -550,6 +537,7 @@ public:
     }
     virtual RareNodeMembers* ensureRareMembers();
 
+    void invalidateNodeListCacheDueToChangeClassNameOfDescendant();
 private:
     String* lookupNamespacePrefix(String* namespaceUri, Element* element);
     virtual String* prefix()
@@ -586,7 +574,6 @@ private:
     Node* m_firstChild;
     Node* m_lastChild;
     Node* m_parentNode;
-    NodeList* m_childNodeList;
     ComputedStyle* m_style;
 };
 }

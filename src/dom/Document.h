@@ -50,10 +50,12 @@ public:
     }
     virtual void didNodeInserted(Node* parent, Node* newChild)
     {
+        Node::didNodeInserted(parent, newChild);
         updateDOMVersion();
     }
     virtual void didNodeRemoved(Node* parent, Node* oldChild)
     {
+        Node::didNodeRemoved(parent, oldChild);
         updateDOMVersion();
     }
 

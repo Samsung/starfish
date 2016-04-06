@@ -11,14 +11,18 @@ class Element;
 
 class HTMLCollection : public ScriptWrappable {
 public:
-    HTMLCollection(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data)
-        : ScriptWrappable(this), m_activeNodeList(root, filter, data)
+    HTMLCollection(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data, bool canCache = false)
+        : ScriptWrappable(this), m_activeNodeList(root, filter, data, canCache)
     {
         initScriptWrappable(this, instance);
     }
     unsigned long length() const;
     Element* item(unsigned long index);
     Element* namedItem(String* name);
+    ActiveNodeList& activeNodeList()
+    {
+        return m_activeNodeList;
+    }
 private:
     ActiveNodeList m_activeNodeList;
 };

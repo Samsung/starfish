@@ -86,8 +86,14 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         setNeedsStyleRecalc();
     } else if (name == document()->window()->starFish()->staticStrings()->m_class) {
         DOMTokenList::tokenize(&m_classNames, value);
-        document()->updateDOMVersion();
         setNeedsStyleRecalc();
+
+        // propagate invalidate nodeList cache(getElementsByClassName) damage to parent tree
+        Node* parent = parentNode();
+        while (parent) {
+            parent->invalidateNodeListCacheDueToChangeClassNameOfDescendant();
+            parent = parent->parentNode();
+        }
     } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
         if (old->equals(String::emptyString)) {
             attributeData(name).registerGetterCallback(this, [](Element* element, const Attribute * const attr) -> String* {

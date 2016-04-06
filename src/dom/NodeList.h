@@ -10,15 +10,18 @@ class Node;
 
 class NodeList : public ScriptWrappable {
 public:
-    NodeList(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data)
+    NodeList(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data, bool canCache = false)
         : ScriptWrappable(this)
-        , m_activeNodeList(root, filter, data)
+        , m_activeNodeList(root, filter, data, canCache)
     {
         initScriptWrappable(this, instance);
     }
     unsigned long length() const;
     Node* item(unsigned long index);
-
+    ActiveNodeList& activeNodeList()
+    {
+        return m_activeNodeList;
+    }
 private:
     ActiveNodeList m_activeNodeList;
 };

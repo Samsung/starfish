@@ -20,6 +20,10 @@ static void getherDescendant(std::vector<Node*, gc_allocator<Node*>>* collection
 
 unsigned long ActiveNodeList::length() const
 {
+    if (m_canCache) {
+        fillCacheIfNeed();
+        return m_cachedNodeList.size();
+    }
     std::vector<Node*, gc_allocator<Node*>> collection;
     getherDescendant(&collection, m_root, [this](Node* child) -> bool {
         return m_filter(child, this->m_data);
@@ -29,6 +33,10 @@ unsigned long ActiveNodeList::length() const
 
 Node* ActiveNodeList::item(unsigned long index)
 {
+    if (m_canCache) {
+        fillCacheIfNeed();
+        return m_cachedNodeList[index];
+    }
     std::vector<Node*, gc_allocator<Node*>> collection;
     getherDescendant(&collection, m_root, [this](Node* child) -> bool {
         return m_filter(child, this->m_data);
@@ -37,6 +45,18 @@ Node* ActiveNodeList::item(unsigned long index)
         return collection.at(index);
     }
     return nullptr;
+}
+
+void ActiveNodeList::fillCacheIfNeed() const
+{
+    STARFISH_ASSERT(m_canCache);
+    if (!m_isCacheValid) {
+        getherDescendant(&m_cachedNodeList, m_root, [this](Node* child) -> bool {
+            return m_filter(child, this->m_data);
+        });
+        m_isCacheValid = true;
+    }
+
 }
 
 }
