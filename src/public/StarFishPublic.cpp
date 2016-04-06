@@ -10,6 +10,24 @@
 
 using namespace StarFish;
 
+namespace StarFish{
+
+typedef FILE * (*sfopen_cb) (const char * filename);
+typedef int (*sfseek_cb) (FILE * fp, long int offset, int origin);
+typedef long int (*sftell_cb) (FILE* stream);
+typedef void (*sfrewind_cb) (FILE* stream);
+typedef size_t (*sfread_cb) (void * buf, size_t size, size_t count, FILE * fp);
+typedef int (*sfclose_cb) (FILE * fp);
+
+extern sfopen_cb open_cb;
+extern sfseek_cb seek_cb;
+extern sftell_cb tell_cb;
+extern sfrewind_cb rewind_cb;
+extern sfread_cb read_cb;
+extern sfclose_cb close_cb;
+
+}
+
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 
 extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* workingDirectory)

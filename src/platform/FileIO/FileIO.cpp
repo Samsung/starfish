@@ -2,6 +2,7 @@
 
 namespace StarFish {
 
+#ifndef STARFISH_TIZEN_WEARABLE
 class FileIOPosix : public FileIO {
 public:
     FileIOPosix() {}
@@ -18,6 +19,11 @@ public:
 private:
     FILE* m_fp;
 };
+#endif
+
+
+
+#ifdef STARFISH_TIZEN_WEARABLE
 
 typedef FILE * (*sfopen_cb) (const char * filename);
 typedef int (*sfseek_cb) (FILE * fp, long int offset, int origin);
@@ -81,6 +87,7 @@ public:
     }
     FILE* m_fp;
 };
+#endif
 
 FileIO* FileIO::create() {
 #ifdef STARFISH_TIZEN_WEARABLE
