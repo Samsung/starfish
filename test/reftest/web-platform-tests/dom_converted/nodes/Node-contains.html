@@ -12,7 +12,6 @@ testNodes.forEach(function(referenceName) {
   var reference = eval(referenceName);
 
   test(function() {
-    console.log("MONG:");
     assert_false(reference.contains(null));
   }, referenceName + ".contains(null)");
 
