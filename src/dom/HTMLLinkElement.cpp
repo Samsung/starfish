@@ -4,6 +4,7 @@
 
 #include "platform/message_loop/MessageLoop.h"
 #include "style/CSSParser.h"
+#include "platform/FileIO/FileIO.h"
 
 namespace StarFish {
 
@@ -55,19 +56,19 @@ void HTMLLinkElement::loadStyleSheet()
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
 
     String* url = getAttribute(href);
-    FILE* fp = fopen(document()->window()->starFish()->makeResourcePath(url)->utf8Data(), "r");
-    if (fp) {
-        fseek(fp, 0, SEEK_END);
-        size_t siz = ftell(fp);
-        rewind(fp);
+    FileIO* fio = FileIO::create();
+    if (fio->open(document()->window()->starFish()->makeResourcePath(url)->utf8Data())) {
+        fio->seek(0, SEEK_END);
+        size_t siz = fio->tell();
+        fio->Rewind();
 
         char* fileContents = (char*)malloc(siz + 1);
-        fread(fileContents, sizeof(char), siz, fp);
+        fio->read(fileContents, sizeof(char), siz);
 
         fileContents[siz] = 0;
         String* source = String::fromUTF8(fileContents);
         free(fileContents);
-        fclose(fp);
+        fio->close();
 
         CSSParser parser(document());
         CSSStyleSheet* sheet = parser.parseStyleSheet(source, this);

@@ -22,6 +22,13 @@ STARFISH_EXPORT void starfishNotifyResume(StarFishInstance* instance);
 STARFISH_EXPORT void starfishGCAddRoots(void* start, void* end);
 STARFISH_EXPORT void starfishGCRemoveRoots(void* start, void* end);
 
+STARFISH_EXPORT void registerFileOpenCB(FILE * (*cb) ( const char * filename));
+STARFISH_EXPORT void registerFileSeekCB(int (*cb) (FILE * fp, long int offset, int origin));
+STARFISH_EXPORT void registerFileTellCB(long int (*cb) (FILE* stream));
+STARFISH_EXPORT void registerFileRewindCB(void (*cb) (FILE* stream));
+STARFISH_EXPORT void registerFileReadCB(size_t (*cb) (void * buf, size_t size, size_t count, FILE * fp));
+STARFISH_EXPORT void registerFileCloseCB(int (*cb) (FILE * fp));
+
 
 #ifdef __cplusplus
 }
