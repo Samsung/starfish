@@ -104,3 +104,4 @@ test/reftest/web-platform-tests/dom_converted/lists/DOMTokenList-stringifier.htm
 test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-empty-name.html
 test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-supported-property-indices.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-contains.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-compareDocumentPosition.html

@@ -200,20 +200,21 @@ unsigned long Node::childElementCount()
     });
 }
 
-bool isPreceding(const Node* node, const Node* isPrec, const Node* refNode)
+unsigned short isPreceding(const Node* node, const Node* isPrec, const Node* refNode)
 {
     if (node == isPrec) {
-        return true;
+        return Node::DOCUMENT_POSITION_PRECEDING;
     } else if (node == refNode) {
-        return false;
+        return Node::DOCUMENT_POSITION_FOLLOWING;
     }
 
     for (Node* child = node->firstChild(); child != nullptr; child = child->nextSibling()) {
-        if (isPreceding(child, isPrec, refNode)) {
-            return true;
+        unsigned short result = isPreceding(child, isPrec, refNode);
+        if (result != 0) {
+            return result;
         }
     }
-    return false;
+    return 0;
 }
 
 unsigned short Node::compareDocumentPosition(const Node* other)
@@ -225,9 +226,18 @@ unsigned short Node::compareDocumentPosition(const Node* other)
     if (this == other) {
         return 0;
     }
-    STARFISH_ASSERT(!isDocument());
-    if (ownerDocument() != other->ownerDocument()) {
-        return DOCUMENT_POSITION_DISCONNECTED + DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC + DOCUMENT_POSITION_PRECEDING;
+
+    Node* root = nullptr;
+    if (isDocument()) {
+        root = this;
+    } else if (other->isDocument()) {
+        root = ownerDocument();
+    } else {
+        root = ownerDocument();
+        if (ownerDocument() != other->ownerDocument()) {
+            STARFISH_ASSERT_NOT_REACHED();
+            return DOCUMENT_POSITION_DISCONNECTED + DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC + DOCUMENT_POSITION_PRECEDING;
+        }
     }
 
     for (Node* p = parentNode(); p != nullptr; p = p->parentNode()) {
@@ -242,12 +252,11 @@ unsigned short Node::compareDocumentPosition(const Node* other)
         }
     }
 
-    Node* root = ownerDocument();
-    if (isPreceding(root, other, this)) {
-        return DOCUMENT_POSITION_PRECEDING;
-    } else {
-        return DOCUMENT_POSITION_FOLLOWING;
+    unsigned short result = isPreceding(root, other, this);
+    if (result == 0) {
+        result = DOCUMENT_POSITION_FOLLOWING;
     }
+    return result;
 }
 
 String* Node::lookupNamespacePrefix(String* namespaceUri, Element* element)
