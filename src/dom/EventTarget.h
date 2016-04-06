@@ -82,20 +82,20 @@ public:
         return (Node*)this;
     }
 
-    EventListenerVector* getEventListeners(const QualifiedName& eventType);
+    EventListenerVector* getEventListeners(const String* eventType);
 
-    bool addEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture = false);
-    bool removeEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture = false);
+    bool addEventListener(const String* eventType, EventListener* listener, bool useCapture = false);
+    bool removeEventListener(const String* eventType, EventListener* listener, bool useCapture = false);
     virtual bool dispatchEvent(Event* event);
     bool dispatchEvent(EventTarget* origin, Event* event);
 
-    bool setAttributeEventListener(const QualifiedName& eventType, EventListener* listener);
-    EventListener* getAttributeEventListener(const QualifiedName& eventType);
-    bool clearAttributeEventListener(const QualifiedName& eventType);
+    bool setAttributeEventListener(const String* eventType, EventListener* listener);
+    EventListener* getAttributeEventListener(const String* eventType);
+    bool clearAttributeEventListener(const String* eventType);
 
 protected:
-    std::unordered_map<QualifiedName, EventListenerVector*, std::hash<QualifiedName>, std::equal_to<QualifiedName>,
-        gc_allocator<std::pair<QualifiedName, EventListenerVector*>>> m_eventListeners;
+    std::unordered_map<String*, EventListenerVector*, std::hash<String*>, std::equal_to<String*>,
+        gc_allocator<std::pair<String*, EventListenerVector*>>> m_eventListeners;
 };
 
 }

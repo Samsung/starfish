@@ -176,8 +176,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (firstArg.isESString() && secondArg.isESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
             // TODO: Verify valid event types (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
+            auto eventTypeName = String::fromUTF8(argStr->utf8Data());
             auto listener = new EventListener(secondArg);
             bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
             ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->addEventListener(eventTypeName, listener, capture);
@@ -195,8 +194,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (firstArg.isESString() && secondArg.isESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
             // TODO: Verify valid event type. (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, argStr->utf8Data());
+            auto eventTypeName = String::fromUTF8(argStr->utf8Data());
             auto listener = new EventListener(secondArg);
             bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
             ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->removeEventListener(eventTypeName, listener, capture);
@@ -2441,7 +2439,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         int argCount = instance->currentExecutionContext()->argumentCount();
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-        auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
 
         if (argCount == 0) {
             auto msg = escargot::ESString::create("Failed to construct 'Event': 1 argument required, but only 0 present.");
@@ -2458,7 +2455,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             } else if (firstArg.isObject()) {
                 type = escargot::ESString::create("[object Object]");
             }
-            auto event = new Event(QualifiedName::fromString(sf, type->utf8Data()));
+            auto event = new Event(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
         } else {
             if (secondArg.isObject()) {
@@ -2472,11 +2469,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 } else if (firstArg.isObject()) {
                     type = escargot::ESString::create("[object Object]");
                 }
+
                 escargot::ESValue bubbles = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("bubbles"));
                 escargot::ESValue cancelable = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("cancelable"));
                 bool canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : false;
                 bool canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : false;
-                auto event = new Event(QualifiedName::fromString(sf, type->utf8Data()), EventInit(canBubbles, canCancelable));
+
+                auto event = new Event(String::fromUTF8(type->utf8Data()), EventInit(canBubbles, canCancelable));
                 return event->scriptValue();
             } else {
                 escargot::ESString* msg = escargot::ESString::create("Failed to construct 'Event': parameter 2 ('eventInitDict') is not an object.");
@@ -2494,7 +2493,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-        String* type = originalObj->type().string();
+        String* type = const_cast<String*>(originalObj->type());
         return toJSString(type);
     }, nullptr);
 
@@ -2654,7 +2653,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         int argCount = instance->currentExecutionContext()->argumentCount();
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
-        auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
 
         if (argCount == 0) {
             auto msg = escargot::ESString::create("Failed to construct 'ProgressEvent': 1 argument required, but only 0 present.");
@@ -2671,7 +2669,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             } else if (firstArg.isObject()) {
                 type = escargot::ESString::create("[object Object]");
             }
-            auto event = new ProgressEvent(QualifiedName::fromString(sf, type->utf8Data()));
+            auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
         } else {
             if (secondArg.isObject()) {
@@ -2685,6 +2683,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 } else if (firstArg.isObject()) {
                     type = escargot::ESString::create("[object Object]");
                 }
+
                 escargot::ESObject* obj = secondArg.asESPointer()->asESObject();
                 escargot::ESValue bubbles = obj->get(escargot::ESString::create("bubbles"));
                 escargot::ESValue cancelable = obj->get(escargot::ESString::create("cancelable"));
@@ -2697,7 +2696,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 unsigned long long loadedValue = loaded.isNumber() ? loaded.asNumber() : 0;
                 unsigned long long totalValue = total.isNumber() ? total.asNumber() : 0;
 
-                auto event = new ProgressEvent(QualifiedName::fromString(sf, type->utf8Data()), ProgressEventInit(canBubbles, canCancelable, canLengthComputable, loadedValue, totalValue));
+                auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()), ProgressEventInit(canBubbles, canCancelable, canLengthComputable, loadedValue, totalValue));
                 return event->scriptValue();
             } else {
                 escargot::ESString* msg = escargot::ESString::create("Failed to construct 'ProgressEvent': parameter 2 ('eventInitDict') is not an object.");
@@ -2797,9 +2796,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("loadstart");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2815,9 +2813,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "loadstart");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("loadstart");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2833,9 +2830,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "progress");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("progress");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2851,9 +2847,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "abort");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("abort");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2869,9 +2864,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "error");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("error");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2887,9 +2881,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "load");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("load");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2905,9 +2898,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "timeout");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("timeout");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2923,9 +2915,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "loadend");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("loadend");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });
@@ -2941,9 +2932,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         if (v.isObject()) {
-            auto sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
-            auto eventTypeName = QualifiedName::fromString(sf, "readystatechange");
-            originalObj->setHandler(eventTypeName, v);
+            String* eventType = String::fromUTF8("readystatechange");
+            originalObj->setHandler(eventType, v);
         }
         return escargot::ESValue();
     });

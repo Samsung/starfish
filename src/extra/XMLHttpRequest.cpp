@@ -403,8 +403,7 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
     if (eventName) {
         ScriptValue en = getHandler(eventName, starfishInstance());
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
-            QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
-            ProgressEvent* pe = new ProgressEvent(eventType, ProgressEventInit(false, false, false, loaded, total));
+            ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, false, loaded, total));
             ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
             callScriptFunction(en, json_arg, 1, scriptValue());
         }
@@ -414,18 +413,55 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
     }
 
     if (isMainThread) {
-        QualifiedName eventType = QualifiedName::fromString(starfishInstance(), eventName);
-        auto clickListeners = getEventListeners(eventType);
+        auto clickListeners = getEventListeners(eventName);
         if (clickListeners) {
             for (unsigned i = 0; i < clickListeners->size(); i++) {
                 STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                ProgressEvent* pe = new ProgressEvent(eventType, ProgressEventInit(false, false, false, loaded, total));
+                ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, false, loaded, total));
                 ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
                 ScriptValue fn = clickListeners->at(i)->scriptValue();
                 if (!fn.isNull())
                     callScriptFunction(fn, json_arg, 1, scriptValue());
             }
         }
+    } else {
+
+        struct Pass {
+            XMLHttpRequest* obj;
+            String* buf;
+            uint32_t loaded;
+            uint32_t total;
+        };
+
+        Pass* pass = new Pass;
+        pass->buf = eventName;
+        pass->obj = this;
+        pass->loaded = loaded;
+        pass->total = total;
+
+        ecore_thread_main_loop_begin();
+        ecore_idler_add(
+            [](void* data) -> Eina_Bool {
+                Pass* pass = (Pass*)data;
+                XMLHttpRequest* this_obj = pass->obj;
+
+                auto clickListeners = this_obj->getEventListeners(pass->buf);
+                if (clickListeners) {
+                    for (unsigned i = 0; i < clickListeners->size(); i++) {
+                        STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
+                        ProgressEvent* pe = new ProgressEvent(String::emptyString, ProgressEventInit(false, false, false, pass->loaded, pass->total));
+                        ScriptValue json_arg[1] = {ScriptValue(pe->scriptObject())};
+                        ScriptValue fn = clickListeners->at(i)->scriptValue();
+                        if (!fn.isNull())
+                            callScriptFunction(fn, json_arg, 1, this_obj->scriptObject());
+                    }
+                }
+
+                delete pass;
+                return ECORE_CALLBACK_CANCEL;
+            },
+            pass);
+        ecore_thread_main_loop_end();
     }
 }
 }

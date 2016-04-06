@@ -901,7 +901,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         bool shouldDispatchEvent = shouldCallOnClick;
         while (t) {
             if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
-                QualifiedName eventType = starFish()->staticStrings()->m_click;
+                String* eventType = starFish()->staticStrings()->m_click.string();
                 Event* e = new Event(eventType, EventInit(true, true));
                 EventTarget::dispatchEvent(t->asNode(), e);
                 shouldDispatchEvent = false;
@@ -923,7 +923,7 @@ void Window::dispatchLoadEvent()
 {
     starFish()->messageLoop()->addIdler([](void* data) {
         Window* wnd = (Window*)data;
-        QualifiedName eventType = wnd->starFish()->staticStrings()->m_load;
+        String* eventType = wnd->starFish()->staticStrings()->m_load.string();
         Event* e = new Event(eventType, EventInit(false, false));
         wnd->EventTarget::dispatchEvent(wnd->document()->bodyElement(), e);
     }, this);
@@ -931,7 +931,7 @@ void Window::dispatchLoadEvent()
 
 void Window::dispatchUnloadEvent()
 {
-    QualifiedName eventType = starFish()->staticStrings()->m_unload;
+    String* eventType = starFish()->staticStrings()->m_unload.string();
     Event* e = new Event(eventType, EventInit(false, false));
     EventTarget::dispatchEvent(document()->bodyElement(), e);
 }

@@ -6,27 +6,38 @@
 
 namespace StarFish {
 
-EventListenerVector* EventTarget::getEventListeners(const QualifiedName& eventType)
+EventListenerVector* EventTarget::getEventListeners(const String* eventType)
 {
-    auto pair = m_eventListeners.find(eventType);
-    if (pair == m_eventListeners.end())
-        return nullptr;
-    return pair->second;
+    for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
+        if (it->first->equals(eventType)) {
+            return it->second;
+        }
+    }
+    return nullptr;
 }
 
-bool EventTarget::addEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture)
+bool EventTarget::addEventListener(const String* eventType, EventListener* listener, bool useCapture)
 {
     if (!listener)
         return false;
+
     listener->setCapture(useCapture);
-    auto pair = m_eventListeners.find(eventType);
+
+    String* type = const_cast<String*>(eventType);
     EventListenerVector* v;
-    if (pair == m_eventListeners.end()) {
-        v = new (GC) EventListenerVector();
-        m_eventListeners.insert(std::make_pair(eventType, v));
-    } else {
-        v = pair->second;
+    bool hasEvent = false;
+    for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
+        if (it->first->equals(eventType)) {
+            v = it->second;
+            hasEvent = true;
+            break;
+        }
     }
+    if (!hasEvent) {
+        v = new (GC) EventListenerVector();
+        m_eventListeners.insert(std::make_pair(type, v));
+    }
+
     for (auto i = v->begin(); i != v->end(); i++) {
         if (listener->compare(*i)) {
             // STARFISH_LOG_INFO("EventTarget::addEventListener - Duplicated listener \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
@@ -38,17 +49,26 @@ bool EventTarget::addEventListener(const QualifiedName& eventType, EventListener
     return true;
 }
 
-bool EventTarget::removeEventListener(const QualifiedName& eventType, EventListener* listener, bool useCapture)
+bool EventTarget::removeEventListener(const String* eventType, EventListener* listener, bool useCapture)
 {
     if (!listener)
         return false;
-    auto pair = m_eventListeners.find(eventType);
-    if (pair == m_eventListeners.end()) {
+
+    EventListenerVector* v;
+    bool hasEvent = false;
+    for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
+        if (it->first->equals(eventType)) {
+            listener->setCapture(useCapture);
+            v = it->second;
+            hasEvent = true;
+            break;
+        }
+    }
+    if (!hasEvent) {
         // STARFISH_LOG_INFO("EventTarget::removeEventListener - No such listener \"%s\"\n", eventType.string()->utf8Data());
         return false;
     }
-    listener->setCapture(useCapture);
-    EventListenerVector* v = pair->second;
+
     for (auto i = v->begin(); i != v->end(); i++) {
         if (listener->compare(*i)) {
             // STARFISH_LOG_INFO("EventTarget::removeEventListener - Removed \"%s[%lu]\"\n", eventType.string()->utf8Data(), i - v->begin());
@@ -186,20 +206,28 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     return (event->cancelable() && event->defaultPrevented()) ? false : true;
 }
 
-bool EventTarget::setAttributeEventListener(const QualifiedName& eventType, EventListener* listener)
+bool EventTarget::setAttributeEventListener(const String* eventType, EventListener* listener)
 {
     STARFISH_ASSERT(listener->isAttribute());
     clearAttributeEventListener(eventType);
     return addEventListener(eventType, listener, false);
 }
 
-EventListener* EventTarget::getAttributeEventListener(const QualifiedName& eventType)
+EventListener* EventTarget::getAttributeEventListener(const String* eventType)
 {
-    auto pair = m_eventListeners.find(eventType);
-    if (pair == m_eventListeners.end()) {
+    EventListenerVector* v;
+    bool hasEvent = false;
+    for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
+        if (it->first->equals(eventType)) {
+            v = it->second;
+            hasEvent = true;
+            break;
+        }
+    }
+    if (!hasEvent) {
         return nullptr;
     }
-    EventListenerVector* v = pair->second;
+
     for (auto i = v->begin(); i != v->end(); i++) {
         if ((*i)->isAttribute()) {
             return (*i);
@@ -208,9 +236,10 @@ EventListener* EventTarget::getAttributeEventListener(const QualifiedName& event
     return nullptr;
 }
 
-bool EventTarget::clearAttributeEventListener(const QualifiedName& eventType)
+bool EventTarget::clearAttributeEventListener(const String* eventType)
 {
     auto listener = getAttributeEventListener(eventType);
     return removeEventListener(eventType, listener, false);
 }
+
 }

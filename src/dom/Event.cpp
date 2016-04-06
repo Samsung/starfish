@@ -31,7 +31,7 @@ Event::Event()
     m_timeStamp = (BILLION * time.tv_sec + time.tv_nsec) / MILLION;
 }
 
-Event::Event(QualifiedName eventType, const EventInit& init)
+Event::Event(String* eventType, const EventInit& init)
     : ScriptWrappable(this)
     , m_isInitialized(true)
     , m_type(eventType)
@@ -72,7 +72,7 @@ ProgressEventInit::ProgressEventInit(bool b, bool c, bool lengthComputable, unsi
 {
 }
 
-ProgressEvent::ProgressEvent(QualifiedName eventType, const ProgressEventInit& init)
+ProgressEvent::ProgressEvent(String* eventType, const ProgressEventInit& init)
     : Event(eventType, init)
     , m_lengthComputable(init.lengthComputable)
     , m_loaded(init.loaded)

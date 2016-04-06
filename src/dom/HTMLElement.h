@@ -78,7 +78,7 @@ public:
 
     ScriptValue onclick()
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_click;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_click.string();
         EventListener* l = getAttributeEventListener(eventType);
         if (!l)
             return ScriptValueNull;
@@ -87,20 +87,20 @@ public:
 
     void setOnclick(ScriptValue f)
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_click;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_click.string();
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
     }
 
     void clearOnClick()
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_click;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_click.string();
         clearAttributeEventListener(eventType);
     }
 
     ScriptValue onload()
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_load;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_load.string();
         EventListener* l = getAttributeEventListener(eventType);
         if (!l)
             return ScriptValueNull;
@@ -109,20 +109,20 @@ public:
 
     void setOnload(ScriptValue f)
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_load;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_load.string();
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
     }
 
     void clearOnload()
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_load;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_load.string();
         clearAttributeEventListener(eventType);
     }
 
     ScriptValue onunload()
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload.string();
         EventListener* l = getAttributeEventListener(eventType);
         if (!l)
             return ScriptValueNull;
@@ -131,14 +131,14 @@ public:
 
     void setOnunload(ScriptValue f)
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload.string();
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
     }
 
     void clearOnunload()
     {
-        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload;
+        auto eventType = document()->window()->starFish()->staticStrings()->m_onunload.string();
         clearAttributeEventListener(eventType);
     }
 

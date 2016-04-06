@@ -28,13 +28,11 @@ public:
     };
 
     Event();
-    Event(QualifiedName eventType, const EventInit& init = EventInit(false, false));
+    Event(String* eventType, const EventInit& init = EventInit(false, false));
 
     virtual ~Event() { }
 
-    const QualifiedName type() const { return m_type; }
-    void setType(QualifiedName type) { m_type = type; }
-
+    const String* type() const { return m_type; }
     EventTarget* target() const { return m_target; }
     void setTarget(EventTarget* target) { m_target = target; }
 
@@ -79,7 +77,7 @@ public:
 private:
     bool m_isInitialized { false }; // initialized flag
 
-    QualifiedName m_type { QualifiedName::emptyQualifiedName() };
+    String* m_type { String::emptyString };
     EventTarget* m_target;
     EventTarget* m_currentTarget;
 
@@ -119,7 +117,7 @@ struct ProgressEventInit : public EventInit {
 
 class ProgressEvent : public Event {
 public:
-    ProgressEvent(QualifiedName eventType, const ProgressEventInit& init = ProgressEventInit(false, false, false, 0, 0));
+    ProgressEvent(String* eventType, const ProgressEventInit& init = ProgressEventInit(false, false, false, 0, 0));
 
     bool lengthComputable() const { return m_lengthComputable; }
     unsigned long long loaded() const { return m_loaded; }

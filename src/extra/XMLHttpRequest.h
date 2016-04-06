@@ -18,7 +18,7 @@ public:
     {
     }
 
-    bool setHandler(QualifiedName& eventType, const ScriptValue& f)
+    bool setHandler(String* eventType, const ScriptValue& f)
     {
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
@@ -27,8 +27,7 @@ public:
 
     ScriptValue getHandler(String* keyName, StarFish* starfish)
     {
-        auto eventType = QualifiedName::fromString(starfish, keyName->utf8Data());
-        EventListener* l = getAttributeEventListener(eventType);
+        EventListener* l = getAttributeEventListener(keyName);
         if (!l)
             return ScriptValue::ESNull;
         return l->scriptValue();

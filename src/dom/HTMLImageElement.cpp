@@ -33,7 +33,7 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
 
         document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
             HTMLImageElement* element = (HTMLImageElement*)data;
-            QualifiedName eventType = element->document()->window()->starFish()->staticStrings()->m_load;
+            String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.string();
             Event* e = new Event(eventType, EventInit(false, false));
             element->EventTarget::dispatchEvent(element, e);
         }, this);
