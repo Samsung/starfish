@@ -939,8 +939,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (argValue.isESString()) {
                 QualifiedName name = QualifiedName::fromString(sf, argValue.asESString()->utf8Data());
                 Element* elem = ((Node*)thisValue.asESPointer()->asESObject()->extraPointerData())->asElement();
-                if (elem != nullptr)
-                    return toJSString(elem->getAttribute(name));
+                size_t idx = elem->hasAttribute(name);
+                if (idx == SIZE_MAX)
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+                else
+                    return toJSString(elem->getAttribute(idx));
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
         } catch(DOMException* e) {
@@ -961,7 +964,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
                 if (key.isESString() && val.isESString()) {
                     auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
+                    // Validate key string
                     QualifiedName attrKey = QualifiedName::fromString(sf, key.asESString()->utf8Data());
+                    if (!QualifiedName::checkNameProductionRule(attrKey.string(), attrKey.string()->length()))
+                        throw new DOMException(sf->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+
                     String* attrVal = toBrowserString(val.asESString());
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
                     if (elem) {
