@@ -106,3 +106,4 @@ test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-support
 test/reftest/web-platform-tests/dom_converted/nodes/Node-contains.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-compareDocumentPosition.html
 test/reftest/web-platform-tests/dom_converted/events/Event-constructors.html
+test/reftest/web-platform-tests/dom_converted/events/EventTarget-dispatchEvent.html
