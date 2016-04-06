@@ -310,7 +310,7 @@ HTMLCollection* Node::children()
 {
     if (!hasRareMembers()) {
         ensureRareMembers();
-    } else if (!m_rareNodeMembers->m_children)
+    } else if (m_rareNodeMembers->m_children)
         return m_rareNodeMembers->m_children;
 
     auto filter = [](Node* node, void* data) -> bool
@@ -629,6 +629,12 @@ Node* Node::removeChild(Node* child)
 
 HTMLCollection* Node::getElementsByTagName(String* qualifiedName)
 {
+    RareNodeMembers* rareData = ensureRareMembers();
+    ActiveHTMLCollectionList* activeLists = rareData->ensureActiveHtmlCollectionListForTagName();
+    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(activeLists, qualifiedName);
+    if (list)
+        return list;
+
     auto filter = [](Node* node, void* data)
     {
         String* qualifiedName = (String*)data;
@@ -640,11 +646,19 @@ HTMLCollection* Node::getElementsByTagName(String* qualifiedName)
         }
         return false;
     };
-    return new HTMLCollection(document()->scriptBindingInstance(), this, filter, qualifiedName);
+    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, qualifiedName);
+    rareData->putActiveHtmlCollectionListWithQuery(activeLists, qualifiedName, list);
+    return list;
 }
 
 HTMLCollection* Node::getElementsByClassName(String* classNames)
 {
+    auto rareData = ensureRareMembers();
+    auto activeLists = rareData->ensureActiveHtmlCollectionListForClassName();
+    auto list = rareData->hasQueryInActiveHtmlCollectionList(activeLists, classNames);
+    if (list)
+        return list;
+
     auto filter = [](Node* node, void* data) -> bool
     {
         String* classNames = (String*)data;
@@ -687,7 +701,10 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
         }
         return false;
     };
-    return new HTMLCollection(document()->scriptBindingInstance(), this, filter, classNames);
+
+    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, classNames);
+    rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames, list);
+    return list;
 }
 
 void Node::setNeedsFrameTreeBuild()

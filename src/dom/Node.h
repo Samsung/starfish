@@ -23,11 +23,16 @@ class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
 
+// TODO use weak reference for activeHtmlCollectionLists
+typedef std::vector<std::pair<String*, HTMLCollection*>, gc_allocator<std::pair<String*, HTMLCollection*>>> ActiveHTMLCollectionList;
+
 class RareNodeMembers : public gc {
 public:
     RareNodeMembers()
         : m_children(nullptr)
         , m_domTokenList(nullptr)
+        , m_activeHtmlCollectionListsForTagName(nullptr)
+        , m_activeHtmlCollectionListsForClassName(nullptr)
     {
     }
 
@@ -35,13 +40,52 @@ public:
     {
         return false;
     }
+
     RareElementMembers* asRareElementMembers()
     {
         STARFISH_ASSERT(isRareElementMembers());
         return (RareElementMembers*)(this);
     }
+
+    ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForTagName()
+    {
+        if (m_activeHtmlCollectionListsForTagName == nullptr) {
+            m_activeHtmlCollectionListsForTagName = new(GC) ActiveHTMLCollectionList;
+        }
+        return m_activeHtmlCollectionListsForTagName;
+    }
+
+    ActiveHTMLCollectionList* ensureActiveHtmlCollectionListForClassName()
+    {
+        if (m_activeHtmlCollectionListsForClassName == nullptr) {
+            m_activeHtmlCollectionListsForClassName = new(GC) ActiveHTMLCollectionList;
+        }
+        return m_activeHtmlCollectionListsForClassName;
+    }
+
+    HTMLCollection* hasQueryInActiveHtmlCollectionList(ActiveHTMLCollectionList* list, String* query)
+    {
+        for (size_t i = 0; i < list->size(); i ++) {
+            if (list->at(i).first->equals(query)) {
+                return list->at(i).second;
+            }
+        }
+        return nullptr;
+    }
+
+    void putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionList* list, String* query, HTMLCollection* coll)
+    {
+        STARFISH_ASSERT(!hasQueryInActiveHtmlCollectionList(list, query));
+        STARFISH_ASSERT(query);
+        STARFISH_ASSERT(coll);
+        list->push_back(std::make_pair(query, coll));
+    }
+
     HTMLCollection* m_children;
     DOMTokenList* m_domTokenList;
+
+    ActiveHTMLCollectionList* m_activeHtmlCollectionListsForTagName;
+    ActiveHTMLCollectionList* m_activeHtmlCollectionListsForClassName;
 };
 
 class Node : public EventTarget {

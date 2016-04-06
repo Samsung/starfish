@@ -892,8 +892,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         HTMLCollection* nd = originalObj->children();
-        if (nd == nullptr)
-            return escargot::ESValue(escargot::ESValue::ESUndefined);
         return nd->scriptValue();
     }, nullptr);
 

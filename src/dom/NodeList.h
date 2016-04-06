@@ -2,20 +2,17 @@
 #define __StarFishNodeList__
 
 #include "dom/binding/ScriptWrappable.h"
+#include "dom/ActiveNodeList.h"
 
 namespace StarFish {
 
 class Node;
 
-typedef bool (*NodeListFilterFunction)(Node*, void*);
-
 class NodeList : public ScriptWrappable {
 public:
-    NodeList(ScriptBindingInstance* instance, Node* root, NodeListFilterFunction filter, void* data)
+    NodeList(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data)
         : ScriptWrappable(this)
-        , m_root(root)
-        , m_filter(filter)
-        , m_data(data)
+        , m_activeNodeList(root, filter, data)
     {
         initScriptWrappable(this, instance);
     }
@@ -23,9 +20,7 @@ public:
     Node* item(unsigned long index);
 
 private:
-    Node* m_root;
-    NodeListFilterFunction m_filter;
-    void* m_data;
+    ActiveNodeList m_activeNodeList;
 };
 }
 
