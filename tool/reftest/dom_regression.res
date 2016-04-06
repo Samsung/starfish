@@ -102,3 +102,4 @@ test/reftest/web-platform-tests/dom_converted/events/ProgressEvent.html
 test/reftest/web-platform-tests/dom_converted/lists/DOMTokenList-stringifier.html
 test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-empty-name.html
 test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-supported-property-indices.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-contains.html
