@@ -21,6 +21,7 @@ XMLHttpRequest::XMLHttpRequest()
     m_abortFlag = false;
     m_sendFlag = false;
     m_bindingInstance = nullptr;
+    m_sync = false;
 
     // init
     initScriptWrappable(this);
@@ -297,8 +298,10 @@ void XMLHttpRequest::setResponseType(const char* responseType)
     }
 }
 
-void XMLHttpRequest::setOpen(const char* method, String* url)
+void XMLHttpRequest::setOpen(const char* method, String* url, bool async)
 {
+    if (!async && m_timeout != 0)
+        throw new DOMException(m_bindingInstance, DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
     if (method) {
         std::string data = method;
         std::transform(data.begin(), data.end(), data.begin(), ::tolower);
@@ -310,6 +313,7 @@ void XMLHttpRequest::setOpen(const char* method, String* url)
             m_method = POST_METHOD;
         }
     }
+    m_sync = !async;
     m_sendFlag = false;
     m_readyState = OPENED;
     callEventHandler(NONE, true, 0, 0, OPENED);
@@ -362,6 +366,13 @@ void XMLHttpRequest::setRequestHeader(const char* header, const char* value)
     if (m_readyState != OPENED || m_sendFlag) {
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     }
+}
+
+void XMLHttpRequest::setTimeout(uint32_t timeout)
+{
+    if (m_sync == true)
+        throw new DOMException(m_bindingInstance, DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
+   m_timeout = timeout;
 }
 
 void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, uint32_t loaded, uint32_t total, int readyState)

@@ -2955,11 +2955,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         uint32_t c = originalObj->getTimeout();
         return escargot::ESValue(c);
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isNumber()) {
-            originalObj->setTimeout(v.toInt32());
-        }
-        return escargot::ESValue();
+       try{
+           GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+
+           if (v.isNumber()) {
+               originalObj->setTimeout(v.toInt32());
+           }
+           return escargot::ESValue();
+       } catch(DOMException* e) {
+           escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+           STARFISH_RELEASE_ASSERT_NOT_REACHED();
+       }
     });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -3051,14 +3057,23 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getAllResponseHeaders"), false, false, false, xhrGetAllResponseHeadersFunction);
 
     escargot::ESFunctionObject* xhrOpenFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-        if (v.isObject()) {
-            if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
-                xhr->setOpen(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(), String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()));
+        try {
+            escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+            if (v.isObject()) {
+                if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
+                    XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
+                    if (instance->currentExecutionContext()->argumentCount() == 2)
+                        xhr->setOpen(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(), String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()), true);
+                    else if (instance->currentExecutionContext()->argumentCount() >= 3)
+                        if (instance->currentExecutionContext()->readArgument(2).isBoolean())
+                            xhr->setOpen(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(), String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()), instance->currentExecutionContext()->readArgument(2).toBoolean());
+                }
             }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("open"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("open"), false, false, false, xhrOpenFunction);
 

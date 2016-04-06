@@ -130,16 +130,14 @@ public:
         return String::emptyString;
     }
 
-    void setTimeout(uint32_t timeout)
-    {
-        m_timeout = timeout;
-    }
+    void setTimeout(uint32_t timeout);
+
     uint32_t getTimeout()
     {
         return m_timeout;
     }
     void setResponseType(const char* responseType);
-    void setOpen(const char* method, String* url);
+    void setOpen(const char* method, String* url, bool async);
     void send(String* body);
     void callEventHandler(PROG_STATE progState, bool isMainThread, uint32_t loaded, uint32_t total, int readyState = -1);
 
@@ -296,6 +294,7 @@ protected:
     bool m_sendFlag;
     ScriptBindingInstance* m_bindingInstance;
     StarFish* m_starfish;
+    bool m_sync;
 };
 }
 
