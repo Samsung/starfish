@@ -446,7 +446,7 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
         size_t len = self->length();
         escargot::ESValueVector v(len);
         for (size_t i = 0; i < len; i ++) {
-            v.push_back(escargot::ESValue(i));
+            v[i] = escargot::ESValue(i);
         }
         return v;
     }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
@@ -484,7 +484,7 @@ void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* 
         size_t len = self->length();
         escargot::ESValueVector v(len);
         for (size_t i = 0; i < len; i ++) {
-            v.push_back(escargot::ESValue(i));
+            v[i] = escargot::ESValue(i);
         }
         return v;
     }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
@@ -516,7 +516,7 @@ void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstan
         size_t len = self->length();
         escargot::ESValueVector v(len);
         for (size_t i = 0; i < len; i ++) {
-            v.push_back(escargot::ESValue(i));
+            v[i] = escargot::ESValue(i);
         }
         return v;
     }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
