@@ -52,6 +52,7 @@ test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-20.ht
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-21.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-22.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-23.htm
+test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-24.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-25.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-26.htm
 test/reftest/web-platform-tests/dom_converted/nodes/getElementsByClassName-27.htm
@@ -100,3 +101,9 @@ test/reftest/web-platform-tests/dom_converted/nodes/Node-cloneNode.html
 test/reftest/web-platform-tests/dom_converted/nodes/Element-classlist.html
 test/reftest/web-platform-tests/dom_converted/events/ProgressEvent.html
 test/reftest/web-platform-tests/dom_converted/lists/DOMTokenList-stringifier.html
+test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-empty-name.html
+test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-supported-property-indices.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-contains.html
+test/reftest/web-platform-tests/dom_converted/nodes/Node-compareDocumentPosition.html
+test/reftest/web-platform-tests/dom_converted/events/Event-constructors.html
+test/reftest/web-platform-tests/dom_converted/events/EventTarget-dispatchEvent.html
