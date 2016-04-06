@@ -105,3 +105,4 @@ test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-empty-n
 test/reftest/web-platform-tests/dom_converted/collections/HTMLCollection-supported-property-indices.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-contains.html
 test/reftest/web-platform-tests/dom_converted/nodes/Node-compareDocumentPosition.html
+test/reftest/web-platform-tests/dom_converted/events/Event-constructors.html
