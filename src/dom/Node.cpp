@@ -641,35 +641,35 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
         String* classNames = (String*)data;
         if (node->isElement() && node->asElement()->classNames().size() > 0) {
 
-            const char* data = classNames->utf8Data();
             size_t length = classNames->length();
             bool isWhiteSpaceState = true;
 
-            std::string str;
+            UTF32String str;
             for (size_t i = 0; i < length; i ++) {
+                char32_t ch = classNames->charAt(i);
                 if (isWhiteSpaceState) {
-                    if (data[i] != ' ' && data[i] != '\n' && data[i] != '\t' && data[i] != '\f' && data[i] != '\r') {
+                    if (ch != ' ' && ch != '\n' && ch != '\t' && ch != '\f' && ch != '\r') {
                         isWhiteSpaceState = false;
-                        str += data[i];
+                        str += ch;
                     }
                 } else {
-                    if (data[i] == ' ' || data[i] == '\n' || data[i] == '\t' || data[i] == '\f' || data[i] == '\r') {
+                    if (ch == ' ' || ch == '\n' || ch == '\t' || ch == '\f' || ch == '\r') {
                         isWhiteSpaceState = true;
 
-                        String* tok = String::fromUTF8(str.data(), str.length());
+                        String* tok = new StringDataUTF32(std::move(str));
 
                         if (!node->asElement()->hasClassName(tok))
                         return false;
 
                         str.clear();
                     } else {
-                        str += data[i];
+                        str += ch;
                     }
                 }
             }
 
             if (str.length()) {
-                String* tok = String::fromUTF8(str.data(), str.length());
+                String* tok = new StringDataUTF32(std::move(str));
                 if (!node->asElement()->hasClassName(tok))
                 return false;
             }
