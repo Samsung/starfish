@@ -4,7 +4,7 @@
 
 #include "platform/message_loop/MessageLoop.h"
 #include "style/CSSParser.h"
-#include "platform/FileIO/FileIO.h"
+#include "platform/file_io/FileIO.h"
 
 namespace StarFish {
 
@@ -60,7 +60,7 @@ void HTMLLinkElement::loadStyleSheet()
     if (fio->open(document()->window()->starFish()->makeResourcePath(url)->utf8Data())) {
         fio->seek(0, SEEK_END);
         size_t siz = fio->tell();
-        fio->Rewind();
+        fio->rewind();
 
         char* fileContents = (char*)malloc(siz + 1);
         fio->read(fileContents, sizeof(char), siz);

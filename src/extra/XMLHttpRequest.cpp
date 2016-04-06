@@ -372,7 +372,7 @@ void XMLHttpRequest::setTimeout(uint32_t timeout)
 {
     if (m_sync == true)
         throw new DOMException(m_bindingInstance, DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
-   m_timeout = timeout;
+    m_timeout = timeout;
 }
 
 void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, uint32_t loaded, uint32_t total, int readyState)

@@ -10,7 +10,7 @@
 
 using namespace StarFish;
 
-namespace StarFish{
+namespace StarFish {
 
 typedef FILE * (*sfopen_cb) (const char * filename);
 typedef int (*sfseek_cb) (FILE * fp, long int offset, int origin);
@@ -73,32 +73,32 @@ extern "C" STARFISH_EXPORT void starfishGCRemoveRoots(void* start, void* end)
     GC_remove_roots(start, end);
 }
 
-extern "C" STARFISH_EXPORT void registerFileOpenCB(FILE * (*cb) ( const char * filename))
+extern "C" STARFISH_EXPORT void registerFileOpenCB(FILE* (*cb)(const char * filename))
 {
     open_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileSeekCB(int (*cb) (FILE * fp, long int offset, int origin))
+extern "C" STARFISH_EXPORT void registerFileSeekCB(int (*cb)(FILE* fp, long int offset, int origin))
 {
     seek_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileTellCB(long int (*cb) (FILE* stream))
+extern "C" STARFISH_EXPORT void registerFileTellCB(long int (*cb)(FILE* stream))
 {
     tell_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileRewindCB(void (*cb) (FILE* stream))
+extern "C" STARFISH_EXPORT void registerFileRewindCB(void (*cb)(FILE* stream))
 {
     rewind_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileReadCB(size_t (*cb) (void * buf, size_t size, size_t count, FILE * fp))
+extern "C" STARFISH_EXPORT void registerFileReadCB(size_t (*cb)(void * buf, size_t size, size_t count, FILE * fp))
 {
     read_cb = cb;
 }
 
-extern "C" STARFISH_EXPORT void registerFileCloseCB(int (*cb) (FILE * fp))
+extern "C" STARFISH_EXPORT void registerFileCloseCB(int (*cb)(FILE * fp))
 {
     close_cb = cb;
 }

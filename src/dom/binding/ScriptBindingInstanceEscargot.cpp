@@ -2950,17 +2950,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         uint32_t c = originalObj->getTimeout();
         return escargot::ESValue(c);
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-       try{
-           GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        try {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
 
-           if (v.isNumber()) {
-               originalObj->setTimeout(v.toInt32());
-           }
-           return escargot::ESValue();
-       } catch(DOMException* e) {
-           escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-           STARFISH_RELEASE_ASSERT_NOT_REACHED();
-       }
+            if (v.isNumber()) {
+                originalObj->setTimeout(v.toInt32());
+            }
+            return escargot::ESValue();
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
