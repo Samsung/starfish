@@ -229,12 +229,23 @@ var global = this;
 
                     // Add attributes
                     var lengthExcludingAttributes = Object.keys(object[property]).length;
+                    var otherAttrs = "";
+                    var otherAttrsLength = 0;
                     if (Object.prototype.toString.call(object[property][attributeString]) === "[object Object]") {
                         lengthExcludingAttributes -= 1;
                         for (var attribute in object[property][attributeString]) {
                             if (object[property][attributeString].hasOwnProperty(attribute)) {
-                                xml += " " + attribute + "=\"" +
-                                    toString(object[property][attributeString][attribute], true) + "\"";
+                                if (attribute == "nodeType" || attribute == "localName") {
+                                    var attrValue = toString(object[property][attributeString][attribute], true);
+                                    xml += " " + attribute + "=\"" + attrValue + "\"";
+                                } else {
+                                    var attrValue = object[property][attributeString][attribute]; // No need to use toString() since CDATA wrapping it
+                                    otherAttrsLength++;
+                                    otherAttrs += addBreak(addIndent("<attr>", level + 2));
+                                    otherAttrs += addBreak(addIndent("<name><![CDATA[" + attribute + "]]></name>", level + 3));
+                                    otherAttrs += addBreak(addIndent("<value><![CDATA[" + attrValue + "]]></value>", level + 3));
+                                    otherAttrs += addBreak(addIndent("</attr>", level + 2));
+                                }
                             }
                         }
                     }
@@ -246,18 +257,26 @@ var global = this;
                         lengthExcludingAttributes -= 1;
                     }
 
-                    if (lengthExcludingAttributes === 0) { // Empty object
+                    if (otherAttrsLength != 0) {
+                        otherAttrs = addBreak(addIndent("<attributes size=\"" + otherAttrsLength + "\">", level + 1)) + otherAttrs;
+                        otherAttrs += addBreak(addIndent("</attributes>", level + 1));
+                    }
+
+                    if (lengthExcludingAttributes === 0 && otherAttrsLength == 0) { // Empty object
                         xml += addBreak("/>");
                     }
                     else if ((lengthExcludingAttributes === 1 ||
                         (lengthExcludingAttributes === 2 && aliasString in object[property])) &&
                         valueString in object[property]) { // Value string only
-                        xml += addBreak(">" + toString(object[property][valueString], false) + "</" + elementName +
-                            ">");
+                        // xml += addBreak(">" + toString(object[property][valueString], false) + "</" + elementName +
+                        //     ">");
+                        xml += addBreak(">");
+                        xml += otherAttrs;
+                        xml += addBreak(toString(object[property][valueString], false) + "</" + elementName + ">");
                     }
                     else { // Object with properties
                         xml += addBreak(">");
-
+                        xml += otherAttrs;
                         // Create separate object for each property and pass to this function
                         for (var subProperty in object[property]) {
                             if (object[property].hasOwnProperty(subProperty) && subProperty !== attributeString &&

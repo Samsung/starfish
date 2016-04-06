@@ -48,14 +48,26 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             STARFISH_ASSERT(newNode);
 
             if (newNode->isElement()) {
-                const tinyxml2::XMLAttribute* attr = xmlElement->FirstAttribute();
-                while (attr) {
-                    if (strcmp(attr->Name(), "nodeType") == 0 || strcmp(attr->Name(), "localName") == 0) {
-                        attr = attr->Next();
-                        continue;
+                tinyxml2::XMLElement* firstChild = xmlElement->FirstChildElement();
+                if (firstChild && strcmp(firstChild->Name(), "attributes") == 0) {
+                    tinyxml2::XMLElement* attr = firstChild->FirstChildElement();
+                    while (attr) {
+                        STARFISH_ASSERT(strcmp(attr->Name(), "attr") == 0);
+                        tinyxml2::XMLElement* nameElement = attr->FirstChildElement();
+                        tinyxml2::XMLElement* valueElement = nameElement->NextSiblingElement();
+                        STARFISH_ASSERT(nameElement && valueElement);
+                        STARFISH_ASSERT(strcmp(nameElement->Name(), "name") == 0);
+                        STARFISH_ASSERT(strcmp(valueElement->Name(), "value") == 0);
+                        STARFISH_ASSERT(nameElement->FirstChild() && valueElement->FirstChild());
+                        // STARFISH_ASSERT(attr->FirstAttribute() && strcmp(attr->FirstAttribute()->Name(), "value") == 0);
+                        // STARFISH_ASSERT(attr->FirstChild());
+                        // QualifiedName name = QualifiedName::fromString(document->window()->starFish(), attr->FirstChild()->Value());
+                        // String* value = String::fromUTF8(attr->FirstAttribute()->Value());
+                        QualifiedName name = QualifiedName::fromString(document->window()->starFish(), nameElement->FirstChild()->Value());
+                        String* value = String::fromUTF8(valueElement->FirstChild()->Value());
+                        newNode->asElement()->setAttribute(name, value);
+                        attr = attr->NextSiblingElement();
                     }
-                    newNode->asElement()->setAttribute(QualifiedName::fromString(document->window()->starFish(), attr->Name()), String::fromUTF8(attr->Value()));
-                    attr = attr->Next();
                 }
             }
 
