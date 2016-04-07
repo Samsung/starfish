@@ -102,7 +102,12 @@ public:
     {
         if (close_cb)
             return close_cb(m_fp);
-        return fclose(m_fp);
+        if (m_fp) {
+            int res = fclose(m_fp);
+            m_fp = NULL;
+            return res;
+        }
+        return -1;
     }
 
     const char* matchLocation(const char* fileName)

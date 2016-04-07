@@ -20,11 +20,12 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
         len = fio->length();
         fileContents = (char*)malloc(len + 1);
         fio->read(fileContents, sizeof(char), len);
+        fileContents[len] = 0;
+        doc.Parse(fileContents, len);
+        free(fileContents);
         fio->close();
     } else
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
-
-    doc.Parse(fileContents, len);
 
     if (doc.Error()) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
