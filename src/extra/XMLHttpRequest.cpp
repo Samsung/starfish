@@ -6,6 +6,7 @@
 #include <future>
 #include <Elementary.h>
 #include <fcntl.h>
+#include "platform/file_io/FileIO.h"
 
 namespace StarFish {
 
@@ -139,12 +140,12 @@ void XMLHttpRequest::send(String* body)
                 }
             }
 
-            int fd;
-            if (0 < (fd = open(path, O_RDONLY))) {
-                int BUFF_SIZE = 2048;
+            FileIO* fio = FileIO::create();
+            if (fio->open(path)) {
+                long int BUFF_SIZE = fio->length();
                 char* buff = new char[BUFF_SIZE];
-                read(fd, buff, BUFF_SIZE);
-                close(fd);
+                fio->read(buff, sizeof(char), BUFF_SIZE);
+                fio->close();
 
                 res_code = 200;
                 xhrobj->setStatus(res_code);
@@ -177,6 +178,7 @@ void XMLHttpRequest::send(String* body)
                 res_code = 0;
                 xhrobj->setStatus(res_code);
             }
+            delete fio;
 
         }
 

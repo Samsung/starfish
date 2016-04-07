@@ -1,5 +1,6 @@
 #include "StarFishConfig.h"
 #include "ImageData.h"
+#include "platform/file_io/FileIO.h"
 
 #include <Elementary.h>
 
@@ -12,7 +13,8 @@ public:
     ImageDataEFL(String* imageSrc)
     {
         m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_file_set(m_image, imageSrc->utf8Data(), NULL);
+        FileIO* fio = FileIO::create();
+        evas_object_image_file_set(m_image, fio->matchLocation(imageSrc->utf8Data()), NULL);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         int w, h;
         evas_object_image_size_get(m_image, &w, &h);

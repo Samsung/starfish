@@ -20,9 +20,12 @@ public:
             return true;
         return false;
     }
-    int seek(long int offset, int origin) { return fseek(m_fp, offset, origin); }
-    long int tell() { return ftell(m_fp); }
-    void rewind() { ::rewind(m_fp); }
+    long int length() {
+        fseek(m_fp, 0, 2);
+        long int len = ftell(m_fp);
+        rewind(m_fp);
+        return len;
+    }
     size_t read(void* buf, size_t size, size_t count) { return fread(buf, size, count, m_fp); }
     int close()
     {
@@ -33,6 +36,9 @@ public:
         }
         return ret;
     }
+    const char* matchLocation(const char* fileName) {
+        return fileName;
+    }
 private:
     FILE* m_fp;
 };
@@ -40,19 +46,17 @@ private:
 
 #ifdef STARFISH_TIZEN_WEARABLE
 
-typedef FILE* (*sfopen_cb)(const char* filename);
-typedef int (*sfseek_cb)(FILE* fp, long int offset, int origin);
-typedef long int (*sftell_cb)(FILE* stream);
-typedef void (*sfrewind_cb)(FILE* stream);
+typedef FILE* (*sfopen_cb)(const char* fileName);
+typedef long int (*sflength_cb)(FILE* fp);
 typedef size_t (*sfread_cb)(void* buf, size_t size, size_t count, FILE* fp);
 typedef int (*sfclose_cb)(FILE* fp);
+typedef const char* (*sfmatchLocation_cb) (const char* fileName);
 
 sfopen_cb open_cb = nullptr;
-sfseek_cb seek_cb = nullptr;
-sftell_cb tell_cb = nullptr;
-sfrewind_cb rewind_cb = nullptr;
+sflength_cb length_cb = nullptr;
 sfread_cb read_cb = nullptr;
 sfclose_cb close_cb = nullptr;
+sfmatchLocation_cb matchLocation_cb = nullptr;
 
 class FileIOTizen : public FileIO {
 public:
@@ -68,6 +72,7 @@ public:
 
     bool open(const char* fileName)
     {
+        close();
         if (open_cb)
             m_fp = open_cb(fileName);
         else
@@ -77,45 +82,37 @@ public:
         return false;
     }
 
-    int seek(long int offset, int origin)
-    {
-        if (seek_cb)
-            return seek_cb(m_fp, offset, origin);
-        else
-            return fseek(m_fp, offset, origin);
-    }
-
-    long int tell()
-    {
-        if (tell_cb)
-            return tell_cb(m_fp);
-        else
-            return ftell(m_fp);
-    }
-
-    void rewind()
-    {
-        if (rewind_cb)
-            rewind_cb(m_fp);
-        else
-            ::rewind(m_fp);
+    long int length() {
+        if (length_cb)
+            return length_cb(m_fp);
+        fseek(m_fp, 0, 2);
+        long int len = ftell(m_fp);
+        rewind(m_fp);
+        return len;
     }
 
     size_t read(void* buf, size_t size, size_t count)
     {
         if (read_cb)
             return read_cb(buf, size, count, m_fp);
-        else
-            return fread(buf, size, count, m_fp);
+        return fread(buf, size, count, m_fp);
     }
 
     int close()
     {
         if (close_cb)
             return close_cb(m_fp);
-        else
-            return fclose(m_fp);
+        return fclose(m_fp);
     }
+
+    const char* matchLocation(const char* fileName)
+    {
+        if (matchLocation_cb)
+            return matchLocation_cb(fileName);
+        return fileName;
+    }
+
+private:
     FILE* m_fp;
 };
 #endif

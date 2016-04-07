@@ -58,9 +58,7 @@ void HTMLLinkElement::loadStyleSheet()
     String* url = getAttribute(href);
     FileIO* fio = FileIO::create();
     if (fio->open(document()->window()->starFish()->makeResourcePath(url)->utf8Data())) {
-        fio->seek(0, SEEK_END);
-        size_t siz = fio->tell();
-        fio->rewind();
+        size_t siz = fio->length();
 
         char* fileContents = (char*)malloc(siz + 1);
         fio->read(fileContents, sizeof(char), siz);
