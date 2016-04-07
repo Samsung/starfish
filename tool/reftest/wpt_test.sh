@@ -10,8 +10,8 @@ RESET='\033[0m'
 # Variables
 TIMEOUT=3
 #TMPFILE="tmp"
-PASSFILE="test/regression/reftest/web-platform-tests/dom_regression.res"
-PASSFILENEW="dom_regression.res"
+PASSFILE="test/regression/reftest/web-platform-tests/wpt_dom_regression.res"
+PASSFILENEW="wpt_dom_regression.res"
 PASSTC=0
 FAILTC=0
 TCFILE=0

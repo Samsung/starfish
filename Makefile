@@ -452,10 +452,10 @@ pixel_test_css3_transforms:
 wpt_test:
 	./tool/reftest/wpt_test.sh $(tc) $(regression)
 wpt_test_dom:
-	make wpt_test tc=tool/reftest/dom.res
+	make wpt_test tc=tool/reftest/wpt_dom.res
 
 wpt_regression_test_dom:
-	./tool/reftest/wpt_test.sh tool/reftest/dom_regression.res
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res
 
 wpt_test_xhr:
 	make wpt_test tc=tool/reftest/xhr.res
@@ -492,7 +492,7 @@ regression_test_css3_transforms:
 	./tool/reftest/css_test.sh tool/pixel_test/css-transforms-1.res true
 
 regression_test:
-	make wpt_test tc=tool/reftest/dom_regression.res regression=true
+	make wpt_test tc=tool/reftest/wpt_dom_regression.res regression=true
 	make regression_test_demo
 	make regression_test_css1
 	make regression_test_css21
