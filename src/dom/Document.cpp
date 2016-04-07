@@ -5,6 +5,10 @@
 #include "layout/FrameDocument.h"
 #include "dom/Attribute.h"
 
+#ifdef STARFISH_EXP
+#include "dom/DOMImplementation.h"
+#endif
+
 namespace StarFish {
 
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
@@ -176,6 +180,10 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
 
     auto df = new FrameDocument(this);
     setFrame(df);
+
+#ifdef STARFISH_EXP
+    m_domImplementation = new DOMImplementation(m_window, m_scriptBindingInstance);
+#endif
 }
 
 String* Document::nodeName()

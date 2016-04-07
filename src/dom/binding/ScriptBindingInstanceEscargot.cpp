@@ -1194,6 +1194,23 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, nullptr);
 
+#ifdef STARFISH_EXP
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("implementation"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            Document* document = nd->asDocument();
+            DOMImplementation* impl = document->domImplementation();
+            if (impl) {
+                return impl->scriptValue();
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
+#endif
+
 /*
     // TODO implement this functions
     // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
@@ -1550,6 +1567,27 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         THROW_ILLEGAL_INVOCATION()
     }, nullptr);
+
+
+    /* 4.5.1 Interface DOMImplementation */
+#ifdef STARFISH_EXP
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMImplementation, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    fetchData(this)->m_domImplementation = DOMImplementationFunction;
+
+    DOMImplementationFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createHTMLDocument"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMImplementationObject, DOMImplementation);
+            DOMImplementation* impl = originalObj;
+            if (impl) {
+                Document* doc = impl->createHTMLDocument();
+                if (doc) {
+                    return doc->scriptValue();
+                }
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        },
+    escargot::ESString::create("createHTMLDocument"), 2, false));
+#endif
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLDocument, DocumentFunction->protoType());
     fetchData(this)->m_htmlDocument = HTMLDocumentFunction;

@@ -8,6 +8,9 @@ namespace StarFish {
 
 class Window;
 class Attribute;
+#ifdef STARFISH_EXP
+class DOMImplementation;
+#endif
 
 /* Page Visibility */
 enum PageVisibilityState {
@@ -18,6 +21,9 @@ enum PageVisibilityState {
 };
 
 class Document : public Node {
+#ifdef STARFISH_EXP
+friend DOMImplementation;
+#endif
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance);
 public:
@@ -34,6 +40,13 @@ public:
     // HTMLCollection* getElementsByTagName(String* qualifiedName);
     // HTMLCollection* getElementsByClassName(String* classNames);
     Attr* createAttribute(QualifiedName localName);
+
+#ifdef STARFISH_EXP
+    DOMImplementation* domImplementation()
+    {
+        return m_domImplementation;
+    }
+#endif
 
     /* Other methods */
     virtual NodeType nodeType()
@@ -109,6 +122,11 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;
     size_t m_domVersion;
+
+#ifdef STARFISH_EXP
+private:
+    DOMImplementation* m_domImplementation;
+#endif
 };
 
 void Node::setNeedsStyleRecalc()

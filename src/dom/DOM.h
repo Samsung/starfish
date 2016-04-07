@@ -38,4 +38,8 @@
 #include "extra/XMLHttpRequest.h"
 #include "extra/Blob.h"
 
+#ifdef STARFISH_EXP
+#include "dom/DOMImplementation.h"
+#endif
+
 #endif

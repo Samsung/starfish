@@ -9,12 +9,21 @@ class DocumentType : public Node {
 public:
     DocumentType(Document* document)
         : Node(document)
+        // FIXME: should be given by the parser
+        , m_name(String::createASCIIString("html"))
+        , m_publicId(String::emptyString)
+        , m_systemId(String::emptyString)
     {
         initScriptWrappable(this);
-        // FIXME: should be given by the parser
-        m_name = String::createASCIIString("html");
-        m_publicId = String::emptyString;
-        m_systemId = String::emptyString;
+    }
+
+    DocumentType(Document* document, String* name, String* publicId, String* systemId)
+        : Node(document)
+        , m_name(name)
+        , m_publicId(publicId)
+        , m_systemId(systemId)
+    {
+        initScriptWrappable(this);
     }
 
     /* 4.4 Interface Node */

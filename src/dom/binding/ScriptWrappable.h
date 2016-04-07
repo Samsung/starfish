@@ -48,7 +48,9 @@ class XMLHttpRequest;
 class Blob;
 class URL;
 class DOMException;
-
+#ifdef STARFISH_EXP
+class DOMImplementation;
+#endif
 class ScriptBindingInstance;
 
 typedef escargot::ESValue ScriptValue;
@@ -80,6 +82,9 @@ public:
 #ifdef TIZEN_DEVICE_API
         NativePluginManagerObject = 1 << 16,
 #endif
+#ifdef STARFISH_EXP
+        DOMImplementationObject = 1 << 17,
+#endif
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -104,6 +109,9 @@ public:
     void initScriptWrappable(CharacterData* ptr);
     void initScriptWrappable(Text* ptr);
     void initScriptWrappable(Comment* ptr);
+#ifdef STARFISH_EXP
+    void initScriptWrappable(DOMImplementation* ptr, ScriptBindingInstance*);
+#endif
     void initScriptWrappable(HTMLElement* ptr);
     void initScriptWrappable(HTMLHtmlElement* ptr);
     void initScriptWrappable(HTMLHeadElement* ptr);

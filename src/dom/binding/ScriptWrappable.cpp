@@ -221,6 +221,15 @@ void ScriptWrappable::initScriptWrappable(Document*)
     scriptObject()->set__proto__(data->m_document->protoType());
 }
 
+#ifdef STARFISH_EXP
+void ScriptWrappable::initScriptWrappable(DOMImplementation* ptr, ScriptBindingInstance* instance)
+{
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->m_domImplementation->protoType());
+    scriptObject()->setExtraData(DOMImplementationObject);
+}
+#endif
+
 void ScriptWrappable::initScriptWrappable(HTMLDocument*)
 {
     Node* node = (Node*)this;
