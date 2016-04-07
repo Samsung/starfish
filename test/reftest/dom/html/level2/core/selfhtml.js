@@ -546,21 +546,15 @@ function setResult(resultType, message) {
 
    console.log("Test: " + testName);
    if (resultType == null) {
-       console.log("Status: Pass");
+       console.log("Status: Success");
    } else if (resultType == "skip") {
        console.log("Status: Skipped");
    } else {
-       console.log("Status: Fail(" + resultType + ")");
+       console.log("Status: " + resultType);
    }   
    if (message != null) {
        console.log("message: " + message);
    }   
-
-   try {
-       wptTestEnd();
-   } catch(e) {
-       console.log(e);
-   }
 }
 
 function checkInitialization(buildr, testname) {
