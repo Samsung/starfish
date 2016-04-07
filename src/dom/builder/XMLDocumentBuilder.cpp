@@ -4,6 +4,7 @@
 
 #include "dom/DOM.h"
 #include "dom/binding/ScriptBindingInstance.h"
+#include "platform/file_io/FileIO.h"
 
 namespace StarFish {
 
@@ -12,7 +13,18 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
     document->setFirstChild(nullptr);
 
     tinyxml2::XMLDocument doc;
-    doc.LoadFile(filePath->utf8Data());
+    char* fileContents;
+    long int len;
+    FileIO* fio = FileIO::create();
+    if (fio->open(filePath->utf8Data())) {
+        len = fio->length();
+        fileContents = (char*)malloc(len + 1);
+        fio->read(fileContents, sizeof(char), len);
+        fio->close();
+    } else
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+
+    doc.Parse(fileContents, len);
 
     if (doc.Error()) {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
