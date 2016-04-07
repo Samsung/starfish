@@ -19,7 +19,7 @@ W=360
 H=360
 
 if [ "$1" = "" ]; then
-    tc=$(find test -name "*.html" | grep -v "reftest" | sort)
+    tc=$(find test -name "*.html" | grep -v "reftest" | grep -v "test/regression" | sort)
 else
     tc=$1
 fi

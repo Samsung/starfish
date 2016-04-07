@@ -120,7 +120,12 @@ public class StarFishTester {
 								File xml = new File(resultXML);
 								String ss = "";
 								if (xml.exists()) {
-									ss = "./StarFish --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + outFolder + caseName + "_result.png";
+                                    String pngFile = outFolder + caseName + "_result.png";
+                                    File png = new File(pngFile);
+                                    if (png.exists()) {
+                                        png.delete();
+                                    }
+									ss = "./StarFish " + resultXML + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + pngFile;
 								} else {
 									ss = "./run.sh " + workItem + " --result-folder="  + (outFolder+caseName+"/") + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + outFolder + caseName + "_result.png";
 								}
