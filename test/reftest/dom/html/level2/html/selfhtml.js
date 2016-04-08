@@ -555,6 +555,12 @@ function setResult(resultType, message) {
    if (message != null) {
        console.log("message: " + message);
    }
+
+   try {
+       wptTestEnd();
+   } catch(e) {
+       console.log(e);
+   }
 }
 
 function checkInitialization(buildr, testname) {

@@ -455,16 +455,11 @@ wpt_test:
 	./tool/reftest/wpt_test.sh $(tc) $(regression)
 wpt_test_dom:
 	make wpt_test tc=tool/reftest/wpt_dom.res
-
-wpt_regression_test_dom:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res
-
 wpt_test_xhr:
 	make wpt_test tc=tool/reftest/xhr.res
 
-wpt_regression_test_xhr:
-	./tool/reftest/wpt_test.sh tool/reftest/xhr_regression.res
-
+dom_test:
+	./tool/reftest/wpt_test.sh $(tc) $(regression)
 
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
@@ -478,6 +473,14 @@ wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css-transforms-1
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-transforms-1.res"
 	@echo "[wpt_syntax_checker] COMPLETE.."
+
+regression_test_wpt_dom:
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res true
+regression_test_wpt_xhr:
+	./tool/reftest/wpt_test.sh tool/reftest/xhr_regression.res
+
+regression_test_dom:
+	./tool/reftest/dom_test.sh tool/reftest/dom_regression.res true
 
 regression_test_demo:
 	./tool/reftest/css_test.sh demo true
@@ -494,7 +497,9 @@ regression_test_css3_transforms:
 	./tool/reftest/css_test.sh tool/pixel_test/css-transforms-1.res true
 
 regression_test:
-	make wpt_test tc=tool/reftest/wpt_dom_regression.res regression=true
+	make regression_test_wpt_dom
+	make regression_test_wpt_xhr
+	make regression_test_dom
 	make regression_test_demo
 	make regression_test_css1
 	make regression_test_css21
