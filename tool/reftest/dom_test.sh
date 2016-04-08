@@ -86,12 +86,15 @@ for i in $tc ; do
                 echo -e ${filenames[$c]} >> $PASSFILENEW
             fi
 
-            # Copy the passed filef to converted dir
+            # Copy the passed files to converted dir
             tc=${filenames[$c]}
             dest=${tc%%/html*}"/html_converted"${tc#*html}
             dir=${dest%/*}
             mkdir -p $dir
             cp $tc $dest
+            tc=${tc%.*}
+            dest=${dest%.*}
+            cp $tc".js" $dest".js" 
         else 
             FAILTC=`expr $FAILTC + 1`
             echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
