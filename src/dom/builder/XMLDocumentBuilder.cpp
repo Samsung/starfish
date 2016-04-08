@@ -16,7 +16,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
     char* fileContents;
     long int len;
     FileIO* fio = FileIO::create();
-    if (fio->open(filePath->utf8Data())) {
+    if (fio->open(filePath)) {
         len = fio->length();
         fileContents = (char*)malloc(len + 1);
         fio->read(fileContents, sizeof(char), len);

@@ -12,15 +12,16 @@ public:
     {
         close();
     }
-    bool open(const char* fileName)
+    bool open(const char* filePath)
     {
         close();
-        m_fp = fopen(fileName, "r");
+        m_fp = fopen(filePath, "r");
         if (m_fp)
             return true;
         return false;
     }
-    long int length() {
+    long int length()
+    {
         fseek(m_fp, 0, 2);
         long int len = ftell(m_fp);
         rewind(m_fp);
@@ -36,12 +37,14 @@ public:
         }
         return ret;
     }
-    const char* matchLocation(const char* fileName) {
-        return fileName;
-    }
 private:
     FILE* m_fp;
 };
+
+String* PathResolver::matchLocation(String* filePath)
+{
+    return filePath;
+}
 
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -82,7 +85,8 @@ public:
         return false;
     }
 
-    long int length() {
+    long int length()
+    {
         if (length_cb)
             return length_cb(m_fp);
         fseek(m_fp, 0, 2);
@@ -110,16 +114,22 @@ public:
         return -1;
     }
 
-    const char* matchLocation(const char* fileName)
-    {
-        if (matchLocation_cb)
-            return matchLocation_cb(fileName);
-        return fileName;
-    }
-
 private:
     FILE* m_fp;
 };
+
+String* PathResolver::matchLocation(String* filePath)
+{
+    if (!sfmatchLocation_cb)
+        return filePath;
+
+    // FIXME change type from const char* into char*
+    const char* ret = sfmatchLocation_cb(filePath->utf8Data());
+    String* r = String::fromUTF8(ret);
+    free((char*)ret);
+    return r;
+}
+
 #endif
 
 FileIO* FileIO::create()
@@ -128,6 +138,16 @@ FileIO* FileIO::create()
     FileIOTizen* fio = new FileIOTizen();
 #else
     FileIOPosix* fio = new FileIOPosix();
+#endif
+    return fio;
+}
+
+FileIO* FileIO::createInNonGCArea()
+{
+#ifdef STARFISH_TIZEN_WEARABLE
+    FileIOTizen* fio = new(malloc(sizeof (FileIOTizen))) FileIOTizen();
+#else
+    FileIOPosix* fio = new(malloc(sizeof (FileIOPosix))) FileIOPosix();
 #endif
     return fio;
 }

@@ -17,7 +17,7 @@ void HTMLScriptElement::executeScript()
         } else {
             String* url = getAttribute(idx);
             FileIO* fio = FileIO::create();
-            if (fio->open(document()->window()->starFish()->makeResourcePath(url)->utf8Data())) {
+            if (fio->open(document()->window()->starFish()->makeResourcePath(url))) {
                 size_t siz = fio->length();
 
                 char* fileContents = (char*)malloc(siz + 1);

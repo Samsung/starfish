@@ -34,7 +34,8 @@ void XMLHttpRequest::send(String* body)
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     }
 
-    const char* url = m_url->utf8Data();
+    std::string url = m_url->utf8Data();
+    std::string bodyString = body->utf8Data();
 
     // invoke loadstart Event.
     m_sendFlag = true;
@@ -42,12 +43,9 @@ void XMLHttpRequest::send(String* body)
 
     GC_add_roots(this, this + sizeof(XMLHttpRequest*));
     auto task =
-    [](XMLHttpRequest* xhrobj, const char* url, XMLHttpRequest::METHOD_TYPE methodType, const char* body, uint32_t timeout) -> bool {
+    [](XMLHttpRequest* xhrobj, std::string url, XMLHttpRequest::METHOD_TYPE methodType, std::string body, uint32_t timeout) -> bool {
         bool fromOnline = false;
-        char tmp[4];
-        for (int i = 0; i < 4; i++)
-            tmp[i] = url[i];
-        if (strcmp(tmp, "http") == 0)
+        if (strncmp(url.data(), "http", 4) == 0)
             fromOnline = true;
 
         CURL* curl;
@@ -76,7 +74,7 @@ void XMLHttpRequest::send(String* body)
 
         long res_code;
         if (fromOnline) {
-            curl_easy_setopt(curl, CURLOPT_URL, url);
+            curl_easy_setopt(curl, CURLOPT_URL, url.data());
             curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(timeout));
             curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progress_callback);
             curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progressData);
@@ -88,7 +86,7 @@ void XMLHttpRequest::send(String* body)
             curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, WriteHeaderCallback);
 
             if (methodType == POST_METHOD) {
-                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body);
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.data());
             } else if (methodType == GET_METHOD) {
 
             } else {
@@ -105,27 +103,22 @@ void XMLHttpRequest::send(String* body)
             res_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
         } else {
-            const int maxLen = 1000;
-            char path[maxLen];
-            strcpy(path, xhrobj->m_starfish->currentPath()->utf8Data());
-            int currentLen = xhrobj->m_starfish->currentPath()->length();
-            if (path[currentLen - 1] != '/') {
-                path[currentLen] = '/';
-                currentLen++;
+            std::string path = xhrobj->m_starfish->currentPath()->utf8Data();
+            if (path.back() != '/') {
+                path += '/';
             }
-            strcpy(path+currentLen, url);
+            path += url;
             int ms = -1;
-            char msValue[100];
-            int index = 0;
-            for (int i = 0; i < maxLen; i++) {
+            std::string msValue;
+            for (size_t i = 0; i < path.length(); i++) {
                 if (path[i] == '?') {
                     path[i] = 0;
                     bool afterEqual = false;
-                    for (int j = i+1; j < maxLen; j++) {
+                    for (size_t j = i + 1; j < path.length(); j++) {
                         if (afterEqual) {
                             if (path[j] != 32) {
                                 if (path[j] != 0) {
-                                    msValue[index] = path[j];
+                                    msValue.push_back(path[j]);
                                 } else {
                                     break;
                                 }
@@ -135,13 +128,13 @@ void XMLHttpRequest::send(String* body)
                         }
                         path[j] = 0;
                     }
-                    ms = atoi(msValue);
+                    ms = atoi(msValue.data());
                     break;
                 }
             }
 
-            FileIO* fio = FileIO::create();
-            if (fio->open(path)) {
+            FileIO* fio = FileIO::createInNonGCArea();
+            if (fio->open(path.data())) {
                 long int BUFF_SIZE = fio->length();
                 char* buff = new char[BUFF_SIZE];
                 fio->read(buff, sizeof(char), BUFF_SIZE);
@@ -178,8 +171,11 @@ void XMLHttpRequest::send(String* body)
                 res_code = 0;
                 xhrobj->setStatus(res_code);
             }
-            delete fio;
 
+            fio->close();
+            free(fio);
+            // FIXME
+            // delete fio;
         }
 
         if (((res_code == 200 || res_code == 201) && res == CURLE_OK )) {
@@ -239,8 +235,8 @@ void XMLHttpRequest::send(String* body)
                 this_obj->callEventHandler(LOAD, true, pass->loaded, pass->total);
                 this_obj->callEventHandler(LOADEND, true, pass->loaded, pass->total);
 
+                delete []pass->buf;
                 delete pass;
-                delete pass->buf;
                 return ECORE_CALLBACK_CANCEL;
             }, pass);
             ecore_thread_main_loop_end();
@@ -274,7 +270,7 @@ void XMLHttpRequest::send(String* body)
 
     };
 
-    std::thread(task, this, url, m_method, body->utf8Data(), m_timeout).detach();
+    std::thread(task, this, std::move(url), m_method, std::move(bodyString), m_timeout).detach();
 }
 
 void XMLHttpRequest::setResponseType(const char* responseType)
