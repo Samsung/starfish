@@ -11,7 +11,7 @@ typedef struct StarFishInstance {
     void* m_starfish;
 } StarFishInstance;
 
-STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* workingDirectory);
+STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* workingDirectory, const char* locale);
 STARFISH_EXPORT void starfishRemove(StarFishInstance* instance);
 
 STARFISH_EXPORT void starfishLoadXMLDocument(StarFishInstance* instance, const char* xmlPath);

@@ -62,8 +62,8 @@ endif
 
 ifeq ($(HOST), linux)
   OUTDIR=out/$(ARCH)/$(TYPE)/$(MODE)
-  CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig)
-  LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig)
+  CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc)
+  LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc)
 else ifeq ($(HOST), tizen_arm)
   OUTDIR=out/tizen_$(ARCH)/$(TYPE)/$(MODE)
   	TIZEN_INCLUDE = elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
@@ -98,6 +98,7 @@ else ifeq ($(HOST), tizen_wearable_arm)
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
 	CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
+	CXXFLAGS += -Ideps/tizen/include
 
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
 	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
@@ -117,6 +118,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
 	CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
+	CXXFLAGS += -Ideps/tizen/include
  
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
 	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group

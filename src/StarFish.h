@@ -74,13 +74,17 @@ enum StarFishDeviceKind {
     deviceKindUseTouchScreen = 1 << 0,
 };
 
-class StarFish : public gc {
+class StarFish : public gc_cleanup {
 public:
 #ifndef STARFISH_TIZEN_WEARABLE
-    StarFish(StarFishStartUpFlag flag, String* currentPath = String::createASCIIString(""), int w = 360, int h = 360);
+    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h);
 #else
-    StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int w = 360, int h = 360);
+    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h);
 #endif
+    ~StarFish()
+    {
+        delete m_lineBreaker;
+    }
     void run();
 
     Window* window()
@@ -96,12 +100,6 @@ public:
     String* currentPath()
     {
         return m_currentPath;
-    }
-
-    size_t posPrefix(std::string str, std::string prefix)
-    {
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-        return str.find(prefix);
     }
 
     String* makeResourcePath(String* src)
@@ -154,7 +152,28 @@ public:
     {
         return m_deviceKind;
     }
+
+    const icu::Locale& locale()
+    {
+        return m_locale;
+    }
+
+    icu::BreakIterator* lineBreaker()
+    {
+        return m_lineBreaker;
+    }
+
 protected:
+    void init(int w, int h);
+    size_t posPrefix(std::string str, std::string prefix)
+    {
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        return str.find(prefix);
+    }
+
+    StaticStrings m_staticStrings;
+    icu::Locale m_locale;
+    icu::BreakIterator* m_lineBreaker;
     unsigned int m_startUpFlag;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
@@ -164,7 +183,6 @@ protected:
     std::unordered_map<std::string, ImageData*, std::hash<std::string>, std::equal_to<std::string>,
         gc_allocator<std::pair<std::string, ImageData*>>> m_imageCache;
     FontSelector m_fontSelector;
-    StaticStrings m_staticStrings;
 };
 
 extern bool g_enablePixelTest;

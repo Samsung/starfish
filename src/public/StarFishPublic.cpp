@@ -28,12 +28,12 @@ extern sfmatchLocation_cb matchLocation_cb;
 
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 
-extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* workingDirectory)
+extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* workingDirectory, const char* locale)
 {
     starfishGCAddRoots(String::emptyString, String::emptyString + sizeof(String*));
     starfishGCAddRoots(String::spaceString, String::spaceString + sizeof(String*));
     StarFishInstance* instance = (StarFishInstance*)malloc(sizeof(StarFishInstance));
-    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, String::fromUTF8(workingDirectory), window);
+    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, String::fromUTF8(workingDirectory), locale, window, 360, 360);
     starfishGCAddRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
     return instance;
 }

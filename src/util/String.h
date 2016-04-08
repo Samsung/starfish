@@ -143,6 +143,25 @@ public:
     // token is only 1-byte char now.
     std::vector<String*, gc_allocator<String*>> tokenize(const char* tokens, size_t tokensLength);
 
+    icu::UnicodeString toUnicodeString()
+    {
+        if (isASCIIString()) {
+            return icu::UnicodeString(asASCIIString()->data(), asASCIIString()->length(), US_INV);
+        } else {
+            return icu::UnicodeString::fromUTF32((const UChar32*)asUTF32String()->data(), asUTF32String()->length());
+        }
+    }
+
+    icu::UnicodeString toUnicodeString(size_t start, size_t end)
+    {
+        size_t len = end - start;
+        if (isASCIIString()) {
+            return icu::UnicodeString(asASCIIString()->data() + start, len, US_INV);
+        } else {
+            return icu::UnicodeString::fromUTF32((const UChar32*)asUTF32String()->data() + start, len);
+        }
+    }
+
 protected:
     template <typename T>
     static bool stringEqual(const T* s, const T* s1, const size_t& len)

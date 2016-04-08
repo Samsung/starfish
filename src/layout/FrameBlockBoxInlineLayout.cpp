@@ -382,7 +382,7 @@ void LineFormattingContext::breakLine(bool dueToBr)
 }
 
 template <typename fn>
-void textDividerForLayout(String* txt, fn f)
+void textDividerForLayout(StarFish* sf, String* txt, fn f)
 {
     // TODO consider white-space
     unsigned offset = 0;
@@ -400,19 +400,21 @@ void textDividerForLayout(String* txt, fn f)
             while (nextOffset < txt->length() && String::isSpaceOrNewline((*txt)[nextOffset])) {
                 nextOffset++;
             }
+            f(offset, nextOffset, isWhiteSpace);
         } else {
+            size_t start = offset;
             while (nextOffset < txt->length() && !String::isSpaceOrNewline((*txt)[nextOffset])) {
-                // https://www.w3.org/TR/css-text-3/#soft-wrap-opportunity
-                // TODO use icu for other language (or can we implement these things?)
-                bool willBreak = (*txt)[nextOffset] == '-';
                 nextOffset++;
-                if (willBreak) {
-                    break;
-                }
+            }
+
+            auto breaker = sf->lineBreaker();
+            breaker->setText(txt->toUnicodeString(start, nextOffset));
+            size_t c, prev = 0;
+            while ((c = breaker->next()) != icu::BreakIterator::DONE) {
+                f(prev + start, c + start, isWhiteSpace);
+                prev = c;
             }
         }
-
-        f(offset, nextOffset, isWhiteSpace);
         offset = nextOffset;
     }
 }
@@ -444,7 +446,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
         if (f->isFrameText()) {
             String* txt = f->asFrameText()->text();
-            textDividerForLayout(txt, [&](size_t offset, size_t nextOffset, bool isWhiteSpace) {
+            textDividerForLayout(ctx.starFish(), txt, [&](size_t offset, size_t nextOffset, bool isWhiteSpace) {
                 textAppendRetry:
                 if (isWhiteSpace) {
                     if (offset == 0 && f == origin->firstChild()) {
@@ -885,7 +887,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
             if (f->isFrameText()) {
                 String* s = f->asFrameText()->text();
-                textDividerForLayout(s, [&](size_t offset, size_t nextOffset, bool isWhiteSpace) {
+                textDividerForLayout(ctx.layoutContext().starFish(), s, [&](size_t offset, size_t nextOffset, bool isWhiteSpace) {
                     if (isWhiteSpace) {
                         if (offset == 0 && f == f->parent()->firstChild()) {
                             return;

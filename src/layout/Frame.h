@@ -39,7 +39,8 @@ class MarginInfo;
 
 class LayoutContext {
 public:
-    LayoutContext()
+    LayoutContext(StarFish* starFish)
+        : m_starFish(starFish)
     {
         establishBlockFormattingContext(true);
     }
@@ -49,6 +50,11 @@ public:
         STARFISH_ASSERT(m_blockFormattingContextInfo.size() == 1);
         STARFISH_ASSERT(m_absolutePositionedFrames.size() == 0);
         STARFISH_ASSERT(m_relativePositionedFrames.size() == 0);
+    }
+
+    StarFish* starFish()
+    {
+        return m_starFish;
     }
 
     void establishBlockFormattingContext(bool isNormalFlow)
@@ -212,6 +218,7 @@ private:
         LayoutUnit m_maxNegativeMarginBottom;
         LineBox* m_lastLineBox;
     };
+    StarFish* m_starFish;
 
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;

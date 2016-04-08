@@ -15,8 +15,10 @@ bool g_enablePixelTest = false;
 #endif
 
 #ifndef STARFISH_TIZEN_WEARABLE
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
+StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h)
     : m_staticStrings(this)
+    , m_locale(icu::Locale::createFromName(locale))
+    , m_lineBreaker(nullptr)
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
@@ -30,23 +32,20 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, int w, int h)
 
     GC_set_free_space_divisor(64);
     // STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
-
     m_deviceKind = deviceKindUseMouse;
     m_startUpFlag = flag;
     m_currentPath = currentPath;
-    GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
-    GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
-    // STARFISH_LOG_INFO("dpi... %d\n", ecore_x_dpi_get());
-    m_messageLoop = new MessageLoop();
-    m_scriptBindingInstance = new ScriptBindingInstance();
-    m_scriptBindingInstance->initBinding(this);
+
+    init(w, h);
     m_window = Window::create(this, w, h);
 }
 #else
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int w, int h)
+StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h)
     : m_staticStrings(this)
+    , m_locale(icu::Locale::createFromName(locale))
+    , m_lineBreaker(nullptr)
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
@@ -57,21 +56,28 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, void* win, int
 #endif
         }
     });
-
     GC_set_free_space_divisor(64);
-    STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
-
+    // STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
     m_currentPath = currentPath;
+
+    init(w, h);
+    m_window = Window::create(this, w, h, win);
+}
+#endif
+
+void StarFish::init(int w, int h)
+{
+    UErrorCode code;
+    m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
+    STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     m_messageLoop = new MessageLoop();
     m_scriptBindingInstance = new ScriptBindingInstance();
     m_scriptBindingInstance->initBinding(this);
-    m_window = Window::create(this, w, h, win);
 }
-#endif
 
 void StarFish::run()
 {

@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     }
 
     printf("running StarFish (working directory = %s)\n", path);
-    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path), width, height);
+    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path), "en-us", width, height);
     if (argc == 1) {
         puts("please specify xml path");
         return -1;

@@ -566,7 +566,7 @@ void Window::rendering()
             box->clearStackingContextIfNeeds();
         });
 
-        LayoutContext ctx;
+        LayoutContext ctx(starFish());
         m_document->frame()->layout(ctx);
         {
             Timer t("computeStackingContextProperties");
