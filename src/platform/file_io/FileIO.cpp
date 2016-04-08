@@ -41,10 +41,12 @@ private:
     FILE* m_fp;
 };
 
+#ifndef STARFISH_TIZEN_WEARABLE
 String* PathResolver::matchLocation(String* filePath)
 {
     return filePath;
 }
+#endif
 
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -121,11 +123,11 @@ private:
 
 String* PathResolver::matchLocation(String* filePath)
 {
-    if (!sfmatchLocation_cb)
+    if (!matchLocation_cb)
         return filePath;
 
     // FIXME change type from const char* into char*
-    const char* ret = sfmatchLocation_cb(filePath->utf8Data());
+    const char* ret = matchLocation_cb(filePath->utf8Data());
     String* r = String::fromUTF8(ret);
     free((char*)ret);
     return r;

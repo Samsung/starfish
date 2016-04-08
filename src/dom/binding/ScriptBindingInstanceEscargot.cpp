@@ -3235,7 +3235,7 @@ void ScriptBindingInstance::evaluate(String* str)
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
     } else {
         escargot::ESValue err = fetchData(this)->m_instance->getCatchedError();
-        printf("Uncaught %s\n", err.toString()->utf8Data());
+        STARFISH_LOG_ERROR("Uncaught %s\n", err.toString()->utf8Data());
     }
 }
 }
