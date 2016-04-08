@@ -104,14 +104,15 @@ public:
 
     int close()
     {
-        if (close_cb)
-            return close_cb(m_fp);
+        int res = -1;
         if (m_fp) {
-            int res = fclose(m_fp);
+            if (close_cb)
+                res = close_cb(m_fp);
+            else
+                res = fclose(m_fp);
             m_fp = NULL;
-            return res;
         }
-        return -1;
+        return res;
     }
 
 private:
