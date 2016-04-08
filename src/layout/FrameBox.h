@@ -197,21 +197,17 @@ public:
                 float imgR = id->width() / (float)id->height();
                 if (boxR > imgR) {
                     float start = bh * (float)id->width() / (float)id->height();
-                    canvas->drawImage(id, Rect(0, 0, start, bh));
-
                     if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        for (float s = start; s < bw; s += start) {
-                            canvas->drawImage(id, Rect(s, 0, start, bh));
-                        }
+                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw - start*2, bh);
+                    } else {
+                        canvas->drawImage(id, Rect(0, start, bw - start*2, bh));
                     }
                 } else {
                     float start = bw * (float)id->height() / (float)id->width();
-                    canvas->drawImage(id, Rect(0, 0, bw, start));
-
-                    if (style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        for (float s = start; s < bw; s += start) {
-                            canvas->drawImage(id, Rect(0, s, bw, start));
-                        }
+                    if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
+                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bh - start*2);
+                    } else {
+                        canvas->drawImage(id, Rect(start, 0, bw, bh - start*2));
                     }
                 }
 
@@ -232,30 +228,23 @@ public:
                     h = style->bgSizeValue()->height().specifiedValue(bh);
                 }
 
-                canvas->drawImage(id, Rect(0, 0, w, h));
-                if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                    if (style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        for (float x = 0; x < bw; x += w) {
-                            for (float y = 0; y < bh; y += h) {
-                                canvas->drawImage(id, Rect(x, y, w, h));
-                            }
-                        }
-                    } else {
-                        for (float x = 0; x < bw; x += w) {
-                            canvas->drawImage(id, Rect(x, 0, w, h));
-                        }
-                    }
+                auto repeatX = style->backgroundRepeatX();
+                auto repeatY = style->backgroundRepeatY();
+                if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+                    canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), w, h);
+                } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+                    canvas->drawRepeatImage(id, Rect(0, 0, w, bh), w, h);
+                } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
+                    canvas->drawRepeatImage(id, Rect(0, 0, bw, h), w, h);
                 } else {
-                    if (style->backgroundRepeatY() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        for (float y = 0; y < bh; y += h) {
-                            canvas->drawImage(id, Rect(0, y, w, h));
-                        }
-                    }
+                    canvas->drawImage(id, Rect(0, 0, w, h));
                 }
+
             } else {
                 STARFISH_ASSERT(style->bgSizeType() == BackgroundSizeType::SizeNone);
                 STARFISH_ASSERT_NOT_REACHED();
             }
+
             canvas->restore();
         }
     }

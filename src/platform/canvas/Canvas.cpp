@@ -1112,6 +1112,63 @@ public:
         drawImageInner(data, dst, l, t, r, b, scale, fill);
     }
 
+    virtual void drawRepeatImage(ImageData* data, const Rect& dst, float imageWidth, float imageHeight)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(
+                SkFloatToScalar((float)dst.x()),
+                SkFloatToScalar((float)dst.y()),
+                SkFloatToScalar((float)dst.width()),
+                SkFloatToScalar((float)dst.height()));
+            if (!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            xx = dst.x();
+            yy = dst.y();
+            if (!shouldApplyEvasMap()) {
+                xx = lastState().m_baseX + dst.x();
+                yy = lastState().m_baseY + dst.y();
+            }
+            ww = dst.width();
+            hh = dst.height();
+        }
+        Evas_Object* eo = nullptr;
+        eo = evas_object_image_add(m_canvas);
+        if (m_objList)
+            m_objList->push_back(eo);
+
+        Evas_Object* imgData = (Evas_Object*)data->unwrap();
+        const char* buf;
+        evas_object_image_file_get(imgData, &buf, NULL);
+        evas_object_image_file_set(eo, buf, NULL);
+        evas_object_image_filled_set(eo, EINA_FALSE);
+        evas_object_image_fill_set(eo, 0, 0, imageWidth, imageHeight);
+        evas_object_image_alpha_set(eo, EINA_TRUE);
+        // evas_object_anti_alias_set(eo, EINA_TRUE);
+        // evas_object_image_size_set(eo, imageWidth, imageHeight);
+
+        evas_object_move(eo, xx, yy);
+        evas_object_resize(eo, ww, hh);
+
+        applyClippers(eo);
+        applyEvasMapIfNeeded(eo, dst, true);
+        evas_object_show(eo);
+
+        m_imageCount++;
+        if (m_imageCount == 101) {
+            STARFISH_LOG_ERROR("paint more than 100 image makes poor performance\n");
+        }
+    }
+
     void drawImage(CanvasSurface* data, const Rect& dst)
     {
         if (!lastState().m_visible) {
