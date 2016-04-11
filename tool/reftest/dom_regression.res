@@ -123,3 +123,4 @@ test/reftest/dom/html_converted/level2/events/initEvent03.html
 test/reftest/dom/html_converted/level2/events/initEvent04.html
 test/reftest/dom/html_converted/level2/events/initEvent05.html
 test/reftest/dom/html_converted/level2/events/initEvent06.html
+test/reftest/dom/html_converted/level1/core/hc_elementretrieveallattributes.html

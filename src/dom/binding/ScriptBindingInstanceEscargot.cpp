@@ -2369,7 +2369,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     /* 4.8.1 Interface NamedNodeMap */
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NamedNodeMapFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("NamedNodeMapFunction"),
+        NamedNodeMapFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NamedNodeMapObject, NamedNodeMap);
         uint32_t len = originalObj->length();
