@@ -31,7 +31,14 @@ public:
     Element* getElementById(String* id);
 
     /* 4.5. Interface Document */
-    DocumentType* docType() { return getDocTypeChild()->asDocumentType(); }
+    DocumentType* docType()
+    {
+        Node* node = getDocTypeChild();
+        if (node != nullptr) {
+            return node->asDocumentType();
+        }
+        return nullptr;
+    }
 
     Element* createElement(QualifiedName localName);
     Text* createTextNode(String* data);
