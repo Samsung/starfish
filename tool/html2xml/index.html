@@ -62,6 +62,8 @@ asdf
 							}
 						} else if (node.nodeType == 3) {
 							into["text"] = {"#":node.data};
+						} else if (node.nodeType == 8) {
+							into["text"] = {"#":node.nodeValue};
 						}
 
 						into.node = [];
@@ -98,7 +100,7 @@ asdf
 				iframe.height = "360"
                                 if (code.url)
                                     iframe.src = code.url
-                                else 
+                                else
 				    iframe.srcdoc = code.value;
 				document.body.appendChild(iframe);
 

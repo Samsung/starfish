@@ -50,7 +50,7 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             parentNode->appendChildForParser(newNode);
             return;
         } else if (type == 8) {
-            newNode = new Comment(document, String::emptyString);
+            newNode = new Comment(document, String::fromUTF8(xmlElement->FirstChildElement()->FirstChild()->Value()));
             parentNode->appendChildForParser(newNode);
             return;
         } else if (type == 1) {
