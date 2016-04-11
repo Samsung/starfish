@@ -1774,7 +1774,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLScriptElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlScriptElement = HTMLScriptElementFunction;
 
-
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -1789,6 +1788,26 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
             nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_src, toBrowserString(v.toString()));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_type));
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_type, toBrowserString(v.toString()));
             return escargot::ESValue();
         }
         THROW_ILLEGAL_INVOCATION();
