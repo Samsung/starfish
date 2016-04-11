@@ -547,7 +547,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("cloneNode"), false, false, false,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            CHECK_TYPEOF(thisValue, (ScriptWrappable::Type::NodeObject | ScriptWrappable::Type::AttrObject));
             Node* obj = (Node*) thisValue.asESPointer()->asESObject()->extraPointerData();
             escargot::ESValue arg = instance->currentExecutionContext()->readArgument(0);
             bool deepClone = false;

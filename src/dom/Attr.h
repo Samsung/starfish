@@ -86,7 +86,7 @@ public:
 
     virtual Node* clone()
     {
-        return nullptr;
+        return (Node*)(new Attr(m_document, m_document->scriptBindingInstance(), m_name, value()));
     }
 
     void detachFromElement(String* value)
