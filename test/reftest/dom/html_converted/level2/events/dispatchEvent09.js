@@ -100,15 +100,16 @@ function dispatchEvent09() {
       }
       doc = load(docRef, "doc", "hc_staff");
       doc.addEventListener("foo", monitor.handleEvent, true);
-      evt = doc.createEvent("Events");
-      evt.initEvent("foo",true,false);
+      evt = new Event("foo", {bubbles: true, cancelable: false});
+      // evt = doc.createEvent("Events");
+      // evt.initEvent("foo",true,false);
       preventDefault = doc.dispatchEvent(evt);
       atEvents = monitor.atEvents;
-assertSize("atCount",0,atEvents);
-bubbledEvents = monitor.bubbledEvents;
-assertSize("bubbleCount",0,bubbledEvents);
-capturedEvents = monitor.capturedEvents;
-assertSize("captureCount",0,capturedEvents);
+      assertSize("atCount",0,atEvents);
+      bubbledEvents = monitor.bubbledEvents;
+      assertSize("bubbleCount",0,bubbledEvents);
+      capturedEvents = monitor.capturedEvents;
+      assertSize("captureCount",0,capturedEvents);
 
 }
 
