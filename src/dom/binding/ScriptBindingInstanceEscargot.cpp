@@ -84,6 +84,13 @@ void ScriptBindingInstance::exit()
     escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal invocation")))); \
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
+#define THROW_DOM_EXCEPTION(instance, errcode) \
+    { \
+        auto __sf = ((Window*)instance->globalObject()->extraPointerData())->starFish(); \
+        auto __err = new DOMException(__sf->scriptBindingInstance(), errcode, nullptr); \
+        escargot::ESVMInstance::currentInstance()->throwError(__err->scriptValue()); \
+    }
+
 #define CHECK_TYPEOF(thisValue, type)                                                 \
     {                                                                                 \
         escargot::ESValue v = thisValue;                                              \
@@ -96,9 +103,7 @@ void ScriptBindingInstance::exit()
     { \
         escargot::ESValue v = thisValue; \
         if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) { \
-            auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish(); \
-            auto err = new DOMException(sf->scriptBindingInstance(), errcode, nullptr); \
-            escargot::ESVMInstance::currentInstance()->throwError(err->scriptValue()); \
+            THROW_DOM_EXCEPTION(instance, errcode); \
         } \
     }
 
@@ -218,6 +223,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
         int argCount = instance->currentExecutionContext()->argumentCount();
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        if (firstArg.isUndefinedOrNull()) {
+            THROW_DOM_EXCEPTION(instance, DOMException::INVALID_STATE_ERR);
+        }
         bool ret = false;
         if (argCount == 1 && firstArg.isObject()) {
             Event* event = (Event*)firstArg.asESPointer()->asESObject()->extraPointerData();
