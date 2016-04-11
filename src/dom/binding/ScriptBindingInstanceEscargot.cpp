@@ -92,6 +92,16 @@ void ScriptBindingInstance::exit()
         }                                                                             \
     }
 
+#define CHECK_TYPEOF_WIDH_ERRCODE(thisValue, type, instance, errcode) \
+    { \
+        escargot::ESValue v = thisValue; \
+        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) { \
+            auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish(); \
+            auto err = new DOMException(sf->scriptBindingInstance(), errcode, nullptr); \
+            escargot::ESVMInstance::currentInstance()->throwError(err->scriptValue()); \
+        } \
+    }
+
 #define GENERATE_THIS_AND_CHECK_TYPE(type, destType)                                                \
     escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();        \
     {                                                                                               \
@@ -707,8 +717,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     escargot::ESFunctionObject* appendChildFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
+
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            CHECK_TYPEOF_WIDH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject, instance, DOMException::HIERARCHY_REQUEST_ERR);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
             Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
             Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
