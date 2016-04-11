@@ -19,6 +19,7 @@ test/reftest/dom/html_converted/level1/core/hc_documentinvalidcharacterexception
 test/reftest/dom/html_converted/level1/core/hc_documentinvalidcharacterexceptioncreateelement.html
 test/reftest/dom/html_converted/level1/core/hc_documentinvalidcharacterexceptioncreateelement1.html
 test/reftest/dom/html_converted/level1/core/hc_elementaddnewattribute.html
+test/reftest/dom/html_converted/level1/core/hc_elementassociatedattribute.html
 test/reftest/dom/html_converted/level1/core/hc_elementchangeattributevalue.html
 test/reftest/dom/html_converted/level1/core/hc_elementgetelementsbytagname.html
 test/reftest/dom/html_converted/level1/core/hc_elementgetelementsbytagnameaccessnodelist.html
@@ -29,6 +30,7 @@ test/reftest/dom/html_converted/level1/core/hc_elementinvalidcharacterexception.
 test/reftest/dom/html_converted/level1/core/hc_elementinvalidcharacterexception1.html
 test/reftest/dom/html_converted/level1/core/hc_elementretrieveattrvalue.html
 test/reftest/dom/html_converted/level1/core/hc_elementretrievetagname.html
+test/reftest/dom/html_converted/level1/core/hc_namednodemapreturnnull.html
 test/reftest/dom/html_converted/level1/core/hc_nodeappendchild.html
 test/reftest/dom/html_converted/level1/core/hc_nodeappendchildchildexists.html
 test/reftest/dom/html_converted/level1/core/hc_nodeappendchildgetnodename.html
