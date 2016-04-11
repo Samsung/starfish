@@ -100,6 +100,7 @@ test/reftest/dom/html_converted/level2/html/HTMLElement120.html
 test/reftest/dom/html_converted/level2/html/HTMLImageElement05.html
 test/reftest/dom/html_converted/level2/html/HTMLImageElement09.html
 test/reftest/dom/html_converted/level2/html/HTMLScriptElement04.html
+test/reftest/dom/html_converted/level2/html/HTMLStyleElement03.html
 test/reftest/dom/html_converted/level1/core/documentgetdoctypenodtd.html
 test/reftest/dom/html_converted/level1/core/hc_attrgetvalue1.html
 test/reftest/dom/html_converted/level1/core/hc_attrappendchild2.html

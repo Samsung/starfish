@@ -1798,6 +1798,26 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLStyleElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlStyleElement = HTMLStyleElementFunction;
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLStyleElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
+            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_type));
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLStyleElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_type, toBrowserString(v.toString()));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
+
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLLinkElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlLinkElement = HTMLLinkElementFunction;
 
