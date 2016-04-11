@@ -1,5 +1,6 @@
 test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode.html
 test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode2.html
+test/reftest/dom/html_converted/level1/core/hc_attreffectivevalue.html
 test/reftest/dom/html_converted/level1/core/hc_characterdatagetdata.html
 test/reftest/dom/html_converted/level1/core/hc_characterdatagetlength.html
 test/reftest/dom/html_converted/level1/core/hc_documentgetelementsbytagnametotallength.html

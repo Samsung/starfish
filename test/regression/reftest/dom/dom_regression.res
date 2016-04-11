@@ -1,11 +1,6 @@
 test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode.html
 test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode2.html
-test/reftest/dom/html_converted/level1/core/hc_characterdatagetdata.html
-test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode.html
-test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode2.html
-test/reftest/dom/html_converted/level1/core/hc_characterdatagetdata.html
-test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode.html
-test/reftest/dom/html_converted/level1/core/hc_attrcreatetextnode2.html
+test/reftest/dom/html_converted/level1/core/hc_attreffectivevalue.html
 test/reftest/dom/html_converted/level1/core/hc_characterdatagetdata.html
 test/reftest/dom/html_converted/level1/core/hc_characterdatagetlength.html
 test/reftest/dom/html_converted/level1/core/hc_documentgetelementsbytagnametotallength.html
@@ -101,3 +96,5 @@ test/reftest/dom/html_converted/level2/html/HTMLElement120.html
 test/reftest/dom/html_converted/level2/html/HTMLImageElement05.html
 test/reftest/dom/html_converted/level2/html/HTMLImageElement09.html
 test/reftest/dom/html_converted/level2/html/HTMLScriptElement04.html
+test/reftest/dom/html_converted/level1/core/documentgetdoctypenodtd.html
+test/reftest/dom/html_converted/level1/core/hc_attrgetvalue1.html
