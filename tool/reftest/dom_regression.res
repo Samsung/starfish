@@ -105,6 +105,7 @@ test/reftest/dom/html_converted/level1/core/hc_attrgetvalue1.html
 test/reftest/dom/html_converted/level1/core/hc_attrappendchild2.html
 test/reftest/dom/html_converted/level1/core/hc_attrclonenode1.html
 test/reftest/dom/html_converted/level1/core/hc_commentgetcomment.html
+test/reftest/dom/html_converted/level2/events/EventTargetCast01.html
 test/reftest/dom/html_converted/level2/events/createEvent01.html
 test/reftest/dom/html_converted/level2/events/createEvent02.html
 test/reftest/dom/html_converted/level2/events/createEvent03.html
