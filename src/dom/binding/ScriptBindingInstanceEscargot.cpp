@@ -2379,7 +2379,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
             Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(
-            QualifiedName::fromString(((NamedNodeMap*) thisValue.asESPointer()->asESObject())->element()->document()->window()->starFish(), argValue.asESString()->utf8Data()));
+            QualifiedName::fromString(((Window*)instance->globalObject()->extraPointerData())->starFish(), argValue.asESString()->utf8Data()));
         if (elem != nullptr)
             return elem->scriptValue();
         } else {
