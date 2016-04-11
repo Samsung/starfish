@@ -21,14 +21,10 @@ test/reftest/dom/html/level1/core/hc_commentgetcomment.html
 test/reftest/dom/html/level1/core/hc_documentcreatecomment.html
 test/reftest/dom/html/level1/core/hc_documentcreateelement.html
 test/reftest/dom/html/level1/core/hc_documentgetelementsbytagnamelength.html
-test/reftest/dom/html/level1/core/hc_documentcreateelement.html
 test/reftest/dom/html/level1/core/hc_documentcreatetextnode.html
-test/reftest/dom/html/level1/core/hc_documentgetelementsbytagnamelength.html
-test/reftest/dom/html/level1/core/hc_documentgetelementsbytagnametotallength.html
 test/reftest/dom/html/level1/core/hc_documentgetelementsbytagnamevalue.html
 test/reftest/dom/html/level1/core/hc_documentgetrootnode.html
 test/reftest/dom/html/level1/core/hc_documentinvalidcharacterexceptioncreateattribute1.html
-test/reftest/dom/html/level1/core/hc_documentgetelementsbytagnametotallength.html
 test/reftest/dom/html/level1/core/hc_documentinvalidcharacterexceptioncreateelement1.html
 test/reftest/dom/html/level1/core/hc_elementaddnewattribute.html
 test/reftest/dom/html/level1/core/hc_elementassociatedattribute.html

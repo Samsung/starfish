@@ -87,14 +87,15 @@ for i in $tc ; do
             fi
 
             # Copy the passed files to converted dir
-            tc=${filenames[$c]}
-            dest=${tc%%/html*}"/html_converted"${tc#*html}
-            dir=${dest%/*}
-            mkdir -p $dir
-            cp $tc $dest
-            tc=${tc%.*}
-            dest=${dest%.*}
-            cp $tc".js" $dest".js" 
+            #tc=${filenames[$c]}
+            #dest=${tc%%/html*}"/html_converted"${tc#*html}
+            #dir=${dest%/*}
+            #mkdir -p $dir
+            #cp $tc $dest
+            #tc=${tc%.*}
+            #dest=${dest%.*}
+            #cp $tc".js" $dest".js"
+            #cp $tc"-expected.txt" $dest"-expected.txt"
         else 
             FAILTC=`expr $FAILTC + 1`
             echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
@@ -134,7 +135,11 @@ if [ "$REGRESSION" = true ]; then
             dest=test/regression/${i#*/}
             destdir=${dest%/*}
             mkdir -p $destdir
-            cp $i $dest
+            tc=${i%.*}
+            dest=${dest%.*}
+            cp $tc".html" $dest".html"
+            cp $tc".js" $dest".js"
+            cp $tc"-expected.txt" $dest"-expected.txt"
         done
 
         # Copy the original files
@@ -145,7 +150,11 @@ if [ "$REGRESSION" = true ]; then
             dest=test/regression/${i#*/}
             destdir=${dest%/*}
             mkdir -p $destdir
-            cp $i $dest
+            tc=${i%.*}
+            dest=${dest%.*}
+            cp $tc".html" $dest".html"
+            cp $tc".js" $dest".js"
+            cp $tc"-expected.txt" $dest"-expected.txt"
         done
 
         # Copy the resource files
