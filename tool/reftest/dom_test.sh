@@ -58,7 +58,7 @@ for i in $tc ; do
         TMPFILE="tmp"$c
 
         # Expected result
-        EXPECTED_FILE=${i%.*}"-expected.txt"
+        EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
         EXPECTED=$(cat $EXPECTED_FILE)
         EXPECTED=${EXPECTED##*Status:}
 
