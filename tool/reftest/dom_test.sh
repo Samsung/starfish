@@ -61,6 +61,7 @@ for i in $tc ; do
         EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
         EXPECTED=$(cat $EXPECTED_FILE)
         EXPECTED=${EXPECTED##*Status:}
+        EXPECTED=${EXPECTED%Detail*}
 
         # Collect the result
         replace1='s/\\n"//g'
