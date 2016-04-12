@@ -224,7 +224,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         int argCount = instance->currentExecutionContext()->argumentCount();
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         if (firstArg.isUndefinedOrNull()) {
-            THROW_DOM_EXCEPTION(instance, DOMException::INVALID_STATE_ERR);
+            escargot::ESString* msg = escargot::ESString::create("Failed to execute 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         bool ret = false;
         if (argCount == 1 && firstArg.isObject()) {
@@ -725,7 +727,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     escargot::ESFunctionObject* appendChildFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
-
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
             CHECK_TYPEOF_WIDH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject, instance, DOMException::HIERARCHY_REQUEST_ERR);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
