@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html><head>
+        <title>CSS Test: Font-weight set to 'lighter' decreasing value below '100'</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/fonts.html#font-boldness">
+        <link rel="help" href="http://www.w3.org/TR/css-fonts-3/#font-weight-prop">
+        <link rel="match" href="font-weight-normal-ref.html">
+        <meta name="flags" content="">
+        <meta name="assert" content="A font weight of 'lighter' selects the next lighter weight compared to its parent's weight.">
+        
+    <style>
+            
+.convertedClass1 {  
+  font-weight: 100;
+}
+
+            
+.convertedClass2 {  
+  font-weight: lighter;
+}
+
+        
+</style></head>
+    <body>
+        <p>Test passes if the lines of "Filler Text" below match.</p>
+        <div id="reference" class="convertedClass1">Filler Text</div>
+        <div id="parent" class="convertedClass1">
+            <div class="convertedClass2">Filler Text</div>
+        </div>
+    
+</body></html>

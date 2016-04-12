@@ -26,12 +26,11 @@ if [ "$1" = "demo" ]; then
     tc=$(find test/demo/20160* -name "*.htm*" | sort)
     PASSFILE="test/regression/demo/demo_regression.res"
     file=DEMO
-elif [[ "$1" == *".res" ]]; then
-    # FIXME: use converted folder
-    tc=$(cat $1 | grep -v "file:///" | grep -v "Error" | sort);
+elif [[ "$1" == "css"* ]]; then
+    tc=$(cat tool/reftest/converter/$1_converted.res | grep -v "file:///" | grep -v "Error" | sort);
     file=${1##*/}
     file=${file%.*}
-    PASSFILE="test/regression/reftest/csswg-test/"$file"_regression.res"
+    PASSFILE="test/regression/reftest/csswg-test/"$1"_regression.res"
     screen=pc
     W=800
     H=600
@@ -62,17 +61,18 @@ for i in $tc ; do
     fi
     cnt=`expr $cnt + 1`
     html=$i
+    i=${i//csswg-test_converted/csswg-test}
     dir=${i%.*}
     file=${dir##*/}
     dir=${dir#*/}
     dir=${dir%/*}
 
     # Capture the screenshot
-    ELM_ENGINE="shot:" ./run.sh $i --regression-test --width=${W} --height=${H} > /dev/null 2>&1
+    ELM_ENGINE="shot:" ./run.sh $html --regression-test --width=${W} --height=${H} > /dev/null 2>&1
     mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}
     GOAL_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}_result.png"
     if [[ "$1" != "demo" ]]; then
-        dir2=${dir//csswg-test/csswg-test\/csswg-res}
+        dir2=${dir//csswg-test_converted/csswg-test\/csswg-res}
         mkdir -p ${EXPECTED_IMAGE_PATH}/${dir2}
         GOAL_PNG=${GOAL_PNG//csswg-test/csswg-test\/csswg-res}
     fi
@@ -95,7 +95,7 @@ for i in $tc ; do
             result="error"
         else
             mv out.png result.png
-            ELM_ENGINE="shot:" ./run.sh $i --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
+            ELM_ENGINE="shot:" ./run.sh $html --pixel-test --width=${W} --height=${H} > /dev/null 2>&1
             sleep 1
             diff=`tool/pixel_test/bin/image_diff ${WEBKIT_PNG} out.png`
             result=${diff##* }
@@ -103,7 +103,6 @@ for i in $tc ; do
             updated="${YELLOW}(updated)${RESET}"
             DIFF_PNG=${WEBKIT_PNG}
         fi
-        UPDATE=`expr $UPDATE + 1`
     fi
 
     # Print the result
@@ -113,18 +112,18 @@ for i in $tc ; do
         FAIL=`expr $FAIL + 1`
         STARFISH_PNG="${OUTDIR}/${dir}/${file}_result.png"
         mv result.png ${STARFISH_PNG}
-        echo -e "${RED}[FAIL]${RESET}" $i "${RED}(${ratio})${RESET}"
+        echo -e "${RED}[FAIL]${RESET}" $html "${RED}(${ratio})${RESET}"
     elif [ "${result}" = "passed" ]; then
         PASS=`expr $PASS + 1`
-        echo -e "${GREEN}[PASS]${RESET}" $i $updated
+        echo -e "${GREEN}[PASS]${RESET}" $html $updated
         if [ ! -f ${GOAL_PNG} ]
         then
             mv result.png ${GOAL_PNG}
         fi
-        echo $i >> ${RESULTFILE}
+        echo $html >> ${RESULTFILE}
     else
         FAIL=`expr $FAIL + 1`
-        echo -e "${RED}[FAIL]${RESET}" $i "${YELLOW}(Unable to open html file)${RESET}"
+        echo -e "${RED}[FAIL]${RESET}" $html "${YELLOW}(Unable to open html file)${RESET}"
     fi
 done
 
@@ -133,7 +132,7 @@ done
 
 # Print the summary
 echo -e "\n${BOLD}###### Summary ######${RESET}\n"
-echo -e "${YELLOW}Run" `expr $PASS + $UPDATE + $FAIL` "test cases:" $PASS "passed," $FAIL "failed," $UPDATE "need to check.${RESET}\n"
+echo -e "${YELLOW}Run" `expr $PASS + $FAIL` "test cases:" $PASS "passed," $FAIL "failed.${RESET}\n"
 
 
 
@@ -151,22 +150,28 @@ if [ "$REGRESSION" = true ]; then
         file=$(cat $RESULTFILE | sort)
         for i in $file ; do
             dest=test/regression/${i#*/}
+            dest=${dest//csswg-test_converted/csswg-test\/converted}
             destdir=${dest%/*}
             mkdir -p $destdir
+            path=${i%/*}
+            cp -rf $path/support $destdir/
+            echo $i"====>"$dest > regression_test_log
             cp $i $dest
         done
 
         # Copy the original files
-        if [ "$1" = "csswg-test" ]; then
+        if [[ "$1" == "css"* ]]; then
             replace='s/_converted//g'
             perl -i -pe $replace $RESULTFILE
             file=$(cat $RESULTFILE | sort)
             for i in $file ; do
                 dest=test/regression/${i#*/}
+                dest=${dest//csswg-test/csswg-test\/original}
                 destdir=${dest%/*}
                 mkdir -p $destdir
                 path=${i%/*}
                 cp -rf $path/support $destdir/
+                echo $i"====>"$dest > regression_test_log
                 cp $i $dest
             done
         fi

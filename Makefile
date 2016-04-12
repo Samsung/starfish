@@ -486,15 +486,15 @@ regression_test_demo:
 	./tool/reftest/css_test.sh demo true
 
 regression_test_css1:
-	./tool/reftest/css_test.sh tool/pixel_test/css1.res true
+	./tool/reftest/css_test.sh css1 true
 regression_test_css21:
-	./tool/reftest/css_test.sh tool/pixel_test/css21.res true
+	./tool/reftest/css_test.sh css21 true
 regression_test_css3_color:
-	./tool/reftest/css_test.sh tool/pixel_test/css-color-3.res true
+	./tool/reftest/css_test.sh css-color-3 true
 regression_test_css3_backgrounds:
-	./tool/reftest/css_test.sh tool/pixel_test/css-backgrounds-3.res true
+	./tool/reftest/css_test.sh css-backgrounds-3 true
 regression_test_css3_transforms:
-	./tool/reftest/css_test.sh tool/pixel_test/css-transforms-1.res true
+	./tool/reftest/css_test.sh css-transforms-1 true
 
 regression_test:
 	make regression_test_wpt_dom
