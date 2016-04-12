@@ -157,3 +157,5 @@ test/reftest/dom/html_converted/level1/core/hc_nodecloneattributescopied.html
 test/reftest/dom/html_converted/level1/core/hc_nodeclonefalsenocopytext.html
 test/reftest/dom/html_converted/level1/core/hc_nodeclonenodetrue.html
 test/reftest/dom/html_converted/level1/core/hc_nodeclonetruecopytext.html
+test/reftest/dom/html_converted/level1/core/hc_attrspecifiedvalue.html
+test/reftest/dom/html_converted/level1/core/hc_attrspecifiedvaluechanged.html
