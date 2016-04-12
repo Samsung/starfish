@@ -142,3 +142,4 @@ test/reftest/dom/html_converted/level1/core/hc_noderemovechildnode.html
 test/reftest/dom/html_converted/level1/core/hc_noderemovechildoldchildnonexistent.html
 test/reftest/dom/html_converted/level1/core/hc_nodeparentnode.html
 test/reftest/dom/html_converted/level1/core/hc_nodeparentnodenull.html
+test/reftest/dom/html_converted/level1/core/hc_namednodemapnotfounderr.html

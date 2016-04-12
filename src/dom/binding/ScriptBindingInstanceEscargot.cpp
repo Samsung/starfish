@@ -2490,13 +2490,21 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
-            QualifiedName name = QualifiedName::fromString(((NamedNodeMap*) thisValue.asESPointer()->asESObject())->element()->document()->window()->starFish(),
-                argValue.asESString()->utf8Data());
-            Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(name);
-            Attr* toReturn = new Attr(old->document(), ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), name, old->value());
-            ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->removeNamedItem(name);
-            if (toReturn != nullptr)
-                return toReturn->scriptValue();
+            try {
+                QualifiedName name = QualifiedName::fromString(((Window*)instance->globalObject()->extraPointerData())->starFish(),
+                    argValue.asESString()->utf8Data());
+                Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(name);
+                if (old == nullptr)
+                    throw new DOMException(((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, nullptr);
+                Attr* toReturn = new Attr(old->document(), ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), name, old->value());
+                ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->removeNamedItem(name);
+                if (toReturn != nullptr)
+                    return toReturn->scriptValue();
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+
         } else
             THROW_ILLEGAL_INVOCATION()
         return escargot::ESValue(escargot::ESValue::ESNull);
