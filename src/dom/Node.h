@@ -319,6 +319,11 @@ public:
         return false;
     }
 
+    virtual bool isAttr() const
+    {
+        return false;
+    }
+
     CharacterData* asCharacterData()
     {
         STARFISH_ASSERT(isCharacterData());

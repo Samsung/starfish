@@ -557,7 +557,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("cloneNode"), false, false, false,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, (ScriptWrappable::Type::NodeObject | ScriptWrappable::Type::AttrObject));
+            CHECK_TYPEOF(thisValue, (ScriptWrappable::Type::NodeObject));
             Node* obj = (Node*) thisValue.asESPointer()->asESObject()->extraPointerData();
             escargot::ESValue arg = instance->currentExecutionContext()->readArgument(0);
             bool deepClone = false;
@@ -2475,9 +2475,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         STARFISH_ASSERT(namedNodeMap->element());
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        CHECK_TYPEOF(argValue, ScriptWrappable::Type::AttrObject);
+        CHECK_TYPEOF(argValue, ScriptWrappable::Type::NodeObject);
+        if (!((Node*) argValue.asESPointer()->asESObject()->extraPointerData())->isAttr()) {
+            THROW_ILLEGAL_INVOCATION()
+        }
         Attr* passedAttr = (Attr*) argValue.asESPointer()->asESObject()->extraPointerData();
-
         Attr* toReturn = namedNodeMap->setNamedItem(passedAttr);
         if (toReturn)
             return toReturn->scriptValue();
@@ -2519,41 +2521,37 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_attr = AttrFunction;
 
     auto attrNameValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::AttrObject, Attr);
-        String* n = originalObj->name();
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        String* n = ((Attr*)originalObj)->name();
         return toJSString(n);
     };
 
-    auto attrNodeTypeGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::AttrObject, Attr);
-        return escargot::ESValue(originalObj->nodeType());
-    };
-
     auto attrValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::AttrObject, Attr);
-        String* value = originalObj->value();
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        String* value = ((Attr*)originalObj)->value();
         return toJSString(value);
     };
 
     auto attrValueSetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue
     {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::AttrObject, Attr);
-        originalObj->setValue(toBrowserString(v));
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        ((Attr*)originalObj)->setValue(toBrowserString(v));
         // FIXME(JMP): Actually this function have to return old Attr's value but we have to modify 'typedef void (*ESNativeSetter)(...)' in escargot/src/runtime/ESValue.h
         // Because this need to many changes, we do the modification latter
         return escargot::ESValue();
     };
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("name"), attrNameValueGetter, nullptr);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeName"), attrNameValueGetter, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"), attrValueGetter, attrValueSetter);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeValue"), attrValueGetter, attrValueSetter);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textContent"), attrValueGetter, attrValueSetter);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeType"), attrNodeTypeGetter, nullptr);
 
     AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ownerElement"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        if (!((Node*) originalObj->extraPointerData())->isAttr()) {
+            THROW_ILLEGAL_INVOCATION()
+        }
 
         Element* elem = ((Attr*) originalObj->extraPointerData())->ownerElement();
         if (elem != nullptr)
@@ -2564,7 +2562,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("specified"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::AttrObject);
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        if (!((Node*) originalObj->extraPointerData())->isAttr()) {
+            THROW_ILLEGAL_INVOCATION()
+        }
         return escargot::ESValue(true);
         },
         NULL, false, false, false);

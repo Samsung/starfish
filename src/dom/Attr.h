@@ -89,6 +89,11 @@ public:
         return (Node*)(new Attr(m_document, m_document->scriptBindingInstance(), m_name, value()));
     }
 
+    virtual bool isAttr() const
+    {
+        return true;
+    }
+
     void detachFromElement(String* value)
     {
         m_standAloneValue = value;

@@ -72,18 +72,17 @@ public:
         DOMTokenListObject = 1 << 6,
         DOMSettableTokenListObject = 1 << 7,
         NamedNodeMapObject = 1 << 8,
-        AttrObject = 1 << 9,
-        CSSStyleDeclarationObject = 1 << 10,
-        CSSStyleRuleObject = 1 << 11,
-        XMLHttpRequestObject = 1 << 12 | EventTargetObject,
-        BlobObject = 1 << 13,
-        URLObject = 1 << 14,
-        DOMExceptionObject = 1 << 15,
+        CSSStyleDeclarationObject = 1 << 9,
+        CSSStyleRuleObject = 1 << 10,
+        XMLHttpRequestObject = 1 << 11 | EventTargetObject,
+        BlobObject = 1 << 12,
+        URLObject = 1 << 13,
+        DOMExceptionObject = 1 << 14,
 #ifdef TIZEN_DEVICE_API
-        NativePluginManagerObject = 1 << 16,
+        NativePluginManagerObject = 1 << 15,
 #endif
 #ifdef STARFISH_EXP
-        DOMImplementationObject = 1 << 17,
+        DOMImplementationObject = 1 << 16,
 #endif
     };
     ScriptWrappable(void* extraPointerData);

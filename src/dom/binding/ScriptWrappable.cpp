@@ -555,7 +555,7 @@ void ScriptWrappable::initScriptWrappable(Attr* ptr, ScriptBindingInstance* inst
 {
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->m_attr->protoType());
-    scriptObject()->setExtraData(AttrObject);
+    scriptObject()->setExtraData(NodeObject);
 }
 
 void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
