@@ -523,6 +523,9 @@ Node* Node::insertBefore(Node* child, Node* childRef)
     if (child == childRef) {
         return child;
     }
+    if (child->parentNode()) {
+        child->parentNode()->removeChild(child);
+    }
 
     STARFISH_ASSERT(child->parentNode() == nullptr);
     STARFISH_ASSERT(child->nextSibling() == nullptr);
