@@ -44,7 +44,7 @@ fi
 
 echo -e "${BOLD}###### CSS Pixel Test ######${RESET}\n"
 for i in $tc ; do
-    if [[ $i == *"demo/poc"* ]]
+    if [[ $i == *"demo/poc"* || $i == "."*".swp" ]]
     then
         continue;
     fi

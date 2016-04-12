@@ -125,7 +125,7 @@ public class StarFishTester {
                                     if (png.exists()) {
                                         png.delete();
                                     }
-									ss = "./StarFish " + resultXML + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + pngFile;
+									ss = "./StarFish " + resultXML + " --pixel-test --width=" + 800 + " --height=" + 600 + " --working-directory=" + caseName.substring(0, caseName.lastIndexOf('/') + 1) + " --screen-shot=" + pngFile;
 								} else {
 									ss = "./run.sh " + workItem + " --result-folder="  + (outFolder+caseName+"/") + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + outFolder + caseName + "_result.png";
 								}
