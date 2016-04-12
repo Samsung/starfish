@@ -1815,6 +1815,26 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue();
     });
 
+    // TODO : Implement setter
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("charset"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            QualifiedName name = QualifiedName::fromString(nd->document()->window()->starFish(), "charset");
+            size_t idx = nd->asElement()->hasAttribute(name);
+            if (idx == SIZE_MAX)
+                return escargot::ESString::create("");
+            else {
+                String* value = nd->asElement()->getAttribute(idx);
+                // STARFISH_ASSERT(value.equals("UTF-8"));
+                return toJSString(value);
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLStyleElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlStyleElement = HTMLStyleElementFunction;
 
