@@ -136,3 +136,9 @@ test/reftest/dom/html_converted/level2/html/HTMLLinkElement08.html
 test/reftest/dom/html_converted/level2/html/HTMLScriptElement02.html
 test/reftest/dom/html_converted/level1/core/hc_nodereplacechild.html
 test/reftest/dom/html_converted/level1/core/hc_nodereplacechildnodename.html
+test/reftest/dom/html_converted/level1/core/hc_noderemovechild.html
+test/reftest/dom/html_converted/level1/core/hc_noderemovechildgetnodename.html
+test/reftest/dom/html_converted/level1/core/hc_noderemovechildnode.html
+test/reftest/dom/html_converted/level1/core/hc_noderemovechildoldchildnonexistent.html
+test/reftest/dom/html_converted/level1/core/hc_nodeparentnode.html
+test/reftest/dom/html_converted/level1/core/hc_nodeparentnodenull.html
