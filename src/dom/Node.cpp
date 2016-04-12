@@ -608,9 +608,10 @@ Node* Node::replaceChild(Node* child, Node* childToRemove)
     if (child == childToRemove) {
         return childToRemove;
     }
-
-    Node* c = removeChild(child);
-    insertBefore(c, childToRemove);
+    if (child->parentNode()) {
+        child->parentNode()->removeChild(child);
+    }
+    insertBefore(child, childToRemove);
     Node* removed = removeChild(childToRemove);
     return removed;
 }
