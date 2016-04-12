@@ -95,7 +95,7 @@ function HTMLLinkElement06() {
       testNode = nodeList.item(0);
       vrel = testNode.rel;
 
-      assertEquals("relLink","Glossary",vrel);
+      assertEquals("relLink","stylesheet",vrel);
 
 }
 

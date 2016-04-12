@@ -133,3 +133,4 @@ test/reftest/dom/html_converted/level1/core/hc_namednodemapgetnameditem.html
 test/reftest/dom/html_converted/level2/html/HTMLLinkElement03.html
 test/reftest/dom/html_converted/level2/html/HTMLLinkElement06.html
 test/reftest/dom/html_converted/level2/html/HTMLLinkElement08.html
+test/reftest/dom/html_converted/level2/html/HTMLScriptElement02.html
