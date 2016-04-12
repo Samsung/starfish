@@ -64,7 +64,7 @@ public:
     {
     }
 
-    bool consumeNumber()
+    bool consumeNumber(bool* hasPoint)
     {
         float res = 0;
         bool sign = true; // +
@@ -82,7 +82,9 @@ public:
         }
         if (cur == m_curPos)
             return false;
+
         if (*cur == '.' && cur < m_endPos) {
+            *hasPoint = true;
             cur++;
             int pt = 10;
             while (CSSTokenizer::isDigit(*cur) && cur < m_endPos) {
@@ -97,6 +99,20 @@ public:
             res *= (-1);
         m_parsedNumber = res;
         return true;
+    }
+
+    bool consumeNumber()
+    {
+        bool t;
+        return consumeNumber(&t);
+    }
+
+    bool consumeInteger()
+    {
+        bool t = false;
+        if (!consumeNumber(&t))
+            return false;
+        return !t;
     }
 
     float parsedNumber() { return m_parsedNumber; }
@@ -399,7 +415,7 @@ public:
     static bool assureInteger(const char* token, bool allowNegative)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber())
+        if (!parser->consumeInteger())
             return false;
         float num = parser->parsedNumber();
         if (num != std::floor(num))
@@ -451,12 +467,16 @@ public:
                 }
                 bool isPercent = false;
                 for (int i = 0; i < numcnt; i++) {
-                    if (!parser->consumeNumber())
+                    bool hasPoint = false;
+                    if (!parser->consumeNumber(&hasPoint))
                         return false;
 
                     if (i == 0 && parser->consumeIfNext('%'))
                         isPercent = true;
                     else if (isPercent && !parser->consumeIfNext('%'))
+                        return false;
+
+                    if (!isPercent && hasPoint)
                         return false;
 
                     if (i == numcnt - 1)
