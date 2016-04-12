@@ -746,7 +746,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             try {
                 escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-                CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+                CHECK_TYPEOF_WIDH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject, instance, DOMException::NOT_FOUND_ERR);
                 CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
                 Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
                 Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
