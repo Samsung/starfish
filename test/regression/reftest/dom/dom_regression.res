@@ -115,6 +115,7 @@ test/reftest/dom/html_converted/level2/events/createEvent04.html
 test/reftest/dom/html_converted/level2/events/createEvent05.html
 test/reftest/dom/html_converted/level2/events/dispatchEvent01.html
 test/reftest/dom/html_converted/level2/events/dispatchEvent08.html
+test/reftest/dom/html_converted/level2/events/dispatchEvent09.html
 test/reftest/dom/html_converted/level2/events/dispatchEvent10.html
 test/reftest/dom/html_converted/level2/events/dispatchEvent11.html
 test/reftest/dom/html_converted/level2/events/dispatchEvent12.html
@@ -129,3 +130,4 @@ test/reftest/dom/html_converted/level1/core/hc_elementretrieveallattributes.html
 test/reftest/dom/html_converted/level1/core/hc_elementremoveattribute.html
 test/reftest/dom/html_converted/level1/core/hc_namednodemapchildnoderange.html
 test/reftest/dom/html_converted/level1/core/hc_namednodemapgetnameditem.html
+test/reftest/dom/html_converted/level2/html/HTMLLinkElement03.html
