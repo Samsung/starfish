@@ -148,3 +148,8 @@ test/reftest/dom/html_converted/level1/core/hc_namednodemapremovenameditem.html
 test/reftest/dom/html_converted/level1/core/hc_namednodemapreturnfirstitem.html
 test/reftest/dom/html_converted/level1/core/hc_namednodemapreturnlastitem.html
 test/reftest/dom/html_converted/level1/core/hc_namednodemapreturnattrnode.html
+test/reftest/dom/html_converted/level1/core/hc_nodeinsertbeforenewchildexists.html
+test/reftest/dom/html_converted/level1/core/hc_nodeelementnodeattributes.html
+test/reftest/dom/html_converted/level1/core/hc_nodecommentnodevalue.html
+test/reftest/dom/html_converted/level1/core/hc_namednodemapsetnameditemthatexists.html
+test/reftest/dom/html_converted/level1/core/hc_namednodemapsetnameditemwithnewvalue.html
