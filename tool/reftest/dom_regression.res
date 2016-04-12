@@ -161,3 +161,5 @@ test/reftest/dom/html_converted/level1/core/hc_attrspecifiedvalue.html
 test/reftest/dom/html_converted/level1/core/hc_attrspecifiedvaluechanged.html
 test/reftest/dom/html_converted/level1/core/hc_attrremovechild2.html
 test/reftest/dom/html_converted/level1/core/hc_attrnextsiblingnull.html
+test/reftest/dom/html_converted/level1/core/hc_attrparentnodenull.html
+test/reftest/dom/html_converted/level1/core/hc_attrprevioussiblingnull.html
