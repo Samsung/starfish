@@ -19,6 +19,7 @@
 #include "HTMLMetaElement.h"
 #include "HTMLParagraphElement.h"
 #include "HTMLSpanElement.h"
+#include "HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_AUDIO
 #include "HTMLAudioElement.h"
 #endif
@@ -152,6 +153,8 @@ Node* Element::clone()
             newNode = new HTMLParagraphElement(document());
         } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_spanLocalName)) {
             newNode = new HTMLSpanElement(document());
+        } else if (isHTMLElement() && asHTMLElement()->isHTMLUnknownElement()) {
+            newNode = new HTMLUnknownElement(document(), asHTMLElement()->asHTMLUnknownElement()->localName());
         } else {
             STARFISH_RELEASE_ASSERT(false);
         }

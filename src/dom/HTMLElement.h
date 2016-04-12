@@ -19,6 +19,7 @@ namespace StarFish {
         F(Image) \
         F(Span) \
         F(BR) \
+        F(Unknown) \
         F(Audio)
 #else
 #define FOR_EACH_HTML_ELEMENT_OP(F) \
@@ -33,6 +34,7 @@ namespace StarFish {
         F(Paragraph) \
         F(Image) \
         F(Span) \
+        F(Unknown) \
         F(BR)
 #endif
 

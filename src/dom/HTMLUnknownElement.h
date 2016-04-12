@@ -21,6 +21,12 @@ public:
         return m_localName;
     }
 
+    /* Other methods (not in DOM API) */
+    virtual bool isHTMLUnknownElement() const
+    {
+        return true;
+    }
+
 protected:
     String* m_localName;
 };
