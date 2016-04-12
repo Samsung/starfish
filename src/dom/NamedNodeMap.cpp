@@ -23,9 +23,11 @@ Attr* NamedNodeMap::item(unsigned long index)
 
 Attr* NamedNodeMap::getNamedItem(QualifiedName name)
 {
-    if (m_element->getAttribute(name) != String::emptyString)
-        return new Attr(m_element->document(), m_instance, m_element, name);
-    return nullptr;
+    size_t index = m_element->hasAttribute(name);
+    if (index < m_element->attributeCount()) {
+        return m_element->ensureAttr(name);
+    } else
+        return nullptr;
 }
 
 void NamedNodeMap::setNamedItem(Attr* attr)

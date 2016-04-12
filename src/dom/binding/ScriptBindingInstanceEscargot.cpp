@@ -2471,16 +2471,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESFunctionObject* NamedNodeMapSetNamedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+        NamedNodeMap* namedNodeMap = (NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData();
+        STARFISH_ASSERT(namedNodeMap->element());
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         CHECK_TYPEOF(argValue, ScriptWrappable::Type::AttrObject);
+        Attr* passedAttr = (Attr*) argValue.asESPointer()->asESObject()->extraPointerData();
 
-        Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(((Attr*) argValue.asESPointer()->asESObject())->name());
-        Attr* toReturn = new Attr(old->document(), ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), old->name(), old->value());
-        ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->setNamedItem((Attr*) argValue.asESPointer()->asESObject());
-        if (toReturn != nullptr)
-            return toReturn->scriptValue();
-        return escargot::ESValue(escargot::ESValue::ESNull);
+        namedNodeMap->setNamedItem(passedAttr);
+        Attr* toReturn = namedNodeMap->getNamedItem(passedAttr->name());
+        STARFISH_ASSERT(toReturn);
+        return toReturn->scriptValue();
     }, escargot::ESString::create("setNamedItem"), 1, false);
     NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setNamedItem"), false, false, false, NamedNodeMapSetNamedItemFunction);
 
