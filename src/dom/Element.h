@@ -205,6 +205,7 @@ public:
     RareNodeMembers* ensureRareMembers() override;
     RareElementMembers* ensureRareElementMembers();
 
+    void addAttr(Attr* attr);
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);
 

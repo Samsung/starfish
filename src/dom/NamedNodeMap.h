@@ -17,7 +17,7 @@ public:
     unsigned long length();
     Attr* item(unsigned long index);
     Attr* getNamedItem(QualifiedName name);
-    void setNamedItem(Attr* attr);
+    Attr* setNamedItem(Attr* attr);
     void removeNamedItem(QualifiedName name);
     ScriptBindingInstance* striptBindingInstance() { return m_instance; }
     Element* element() { return m_element; }

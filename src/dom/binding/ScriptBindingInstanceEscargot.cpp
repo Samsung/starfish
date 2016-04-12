@@ -2478,10 +2478,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         CHECK_TYPEOF(argValue, ScriptWrappable::Type::AttrObject);
         Attr* passedAttr = (Attr*) argValue.asESPointer()->asESObject()->extraPointerData();
 
-        namedNodeMap->setNamedItem(passedAttr);
-        Attr* toReturn = namedNodeMap->getNamedItem(passedAttr->name());
-        STARFISH_ASSERT(toReturn);
-        return toReturn->scriptValue();
+        Attr* toReturn = namedNodeMap->setNamedItem(passedAttr);
+        if (toReturn)
+            return toReturn->scriptValue();
+        else
+            return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("setNamedItem"), 1, false);
     NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setNamedItem"), false, false, false, NamedNodeMapSetNamedItemFunction);
 

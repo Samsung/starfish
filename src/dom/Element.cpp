@@ -204,6 +204,16 @@ RareElementMembers* Element::ensureRareElementMembers()
     return rareMembers->asRareElementMembers();
 }
 
+void Element::addAttr(Attr* attr)
+{
+    RareElementMembers* rareMembers = ensureRareElementMembers();
+    STARFISH_ASSERT(rareMembers->isRareElementMembers());
+    if (!rareMembers->m_attrList)
+        rareMembers->m_attrList = new (GC) AttrList();
+    STARFISH_ASSERT(this->attr(attr->name()) == nullptr);
+    rareMembers->m_attrList->push_back(attr);
+}
+
 Attr* Element::attr(QualifiedName name)
 {
     STARFISH_ASSERT((hasRareMembers() && rareMembers()->isRareElementMembers()) || !hasRareMembers());

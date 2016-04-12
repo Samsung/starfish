@@ -30,9 +30,13 @@ Attr* NamedNodeMap::getNamedItem(QualifiedName name)
         return nullptr;
 }
 
-void NamedNodeMap::setNamedItem(Attr* attr)
+Attr* NamedNodeMap::setNamedItem(Attr* attr)
 {
     m_element->setAttribute(attr->name(), attr->value());
+    Attr* storedAttr = m_element->attr(attr->name());
+    if (!storedAttr)
+        m_element->addAttr(attr);
+    return storedAttr;
 }
 
 void NamedNodeMap::removeNamedItem(QualifiedName name)
