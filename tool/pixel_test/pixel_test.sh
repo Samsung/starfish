@@ -75,9 +75,15 @@ for i in $tc ; do
         result="error"
     else
         mv out.png "${STARFISH_PNG}"
-        diff=`tool/pixel_test/bin/image_diff ${WEBKIT_PNG} ${STARFISH_PNG}`
+        diff=`tool/imgdiff/imgdiff ${WEBKIT_PNG} ${STARFISH_PNG}`
         result=${diff##* }
         ratio=${diff#* }
+        if [[ "${diff}" == *"passed"* ]]; then
+            if [[ "${result}" != "passed" ]]; then
+                msg="**${ratio}"
+            fi
+            result="passed"
+        fi
     fi
 
     # Print the result
@@ -92,7 +98,7 @@ for i in $tc ; do
         fi
     elif [ "${result}" = "passed" ]; then
         PASS=`expr $PASS + 1`
-        echo -e "${GREEN}[PASS]${RESET}" $i
+        echo -e "${GREEN}[PASS]${RESET}" $i "${YELLOW}${msg}${RESET}"
     else
         FAIL=`expr $FAIL + 1`
         echo -e "${RED}[FAIL]${RESET}" $i "${YELLOW}(Unable to open html file)${RESET}"

@@ -3022,7 +3022,7 @@ bool CSSStyleDeclaration::checkInputErrorFontSize(std::vector<String*, gc_alloca
 {
     if (tokens->size() == 1) {
         const char* token = (*tokens)[0]->toLower()->utf8Data();
-        if (CSSPropertyParser::assureLength(token, false))
+        if (CSSPropertyParser::assureLength(token, false) || CSSPropertyParser::assurePercent(token, false))
             return true;
 
         if ((strcmp(token, "xx-small") == 0) || (strcmp(token, "x-small") == 0) || (strcmp(token, "small") == 0) || (strcmp(token, "medium") == 0) || (strcmp(token, "large") == 0) || (strcmp(token, "x-large") == 0) || (strcmp(token, "xx-large") == 0) || (strcmp(token, "larger") == 0) || (strcmp(token, "smaller") == 0) || (strcmp(token, "inherit") == 0) || (strcmp(token, "init") == 0)) {

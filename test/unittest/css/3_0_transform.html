@@ -7,6 +7,7 @@ div {
         height: 100px;
         background-color: yellow;
         transform: matrix(0.866,0.5,-0.5,0.866,0,0);
+        -webkit-transform: matrix(0.866,0.5,-0.5,0.866,0,0);
 }
 </style>
 </head>
@@ -19,9 +20,13 @@ div {
 
 <script>
 var d = document.getElementById("tr");
-d.style.transform = "scaleY(1.5) TRanslate(30px, 10%) rotate(1.8turn) skewX(30deg";
+var trans = "scaleY(1.5) TRanslate(30px, 10%) rotate(1.8turn) skewX(30deg";
+d.style.transform = trans;
+d.style.WebkitTransform = trans;
 print(d.style.transform);
-d.style.transform = "matrix(0.866,0.5,-0.5,0.866,0,0) skewY(30deg) rotate(1.8turn) scaleY(1.5) translate(30px, 10px) translateZ(0)";
+trans = "matrix(0.866,0.5,-0.5,0.866,0,0) skewY(30deg) rotate(1.8turn) scaleY(1.5) translate(30px, 10px) translateZ(0)";
+d.style.transform = trans;
+d.style.WebkitTransform = trans;
 print(d.style.transform);
 
 </script>
