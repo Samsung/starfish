@@ -392,7 +392,7 @@ public:
 
     Color borderTopColor()
     {
-        if (m_surround == nullptr) {
+        if (m_surround == nullptr || !m_surround->border.top().hasBorderColor()) {
             return m_inheritedStyles.m_color;
         } else {
             return m_surround->border.top().color();
@@ -401,7 +401,7 @@ public:
 
     Color borderRightColor()
     {
-        if (m_surround == nullptr) {
+        if (m_surround == nullptr || !m_surround->border.right().hasBorderColor()) {
             return m_inheritedStyles.m_color;
         } else {
             return m_surround->border.right().color();
@@ -410,7 +410,7 @@ public:
 
     Color borderBottomColor()
     {
-        if (m_surround == nullptr) {
+        if (m_surround == nullptr || !m_surround->border.bottom().hasBorderColor()) {
             return m_inheritedStyles.m_color;
         } else {
             return m_surround->border.bottom().color();
@@ -419,7 +419,7 @@ public:
 
     Color borderLeftColor()
     {
-        if (m_surround == nullptr) {
+        if (m_surround == nullptr || !m_surround->border.left().hasBorderColor()) {
             return m_inheritedStyles.m_color;
         } else {
             return m_surround->border.left().color();

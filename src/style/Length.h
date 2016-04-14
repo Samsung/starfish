@@ -24,15 +24,16 @@ public:
     void changeToFixedIfNeeded(Length fontSize, Font* font)
     {
         if (!isComputed()) {
+            float fSize = 0.0f;
+            if (fontSize.isFixed())
+                fSize = fontSize.fixed();
             if (m_type == EmToBeFixed) {
-                float fSize = 0.0f;
-                if (fontSize.isFixed())
-                    fSize = fontSize.fixed();
-
                 m_data = fSize * m_data;
                 m_type = Fixed;
             } else if (m_type == ExToBeFixed) {
                 // TODO: calculate ex (x-height of font)
+                m_data = fSize * m_data * 0.5;
+                m_type = Fixed;
             }
         }
     }
