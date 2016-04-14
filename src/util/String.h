@@ -4,7 +4,9 @@
 namespace StarFish {
 
 typedef std::basic_string<char, std::char_traits<char>, gc_allocator<char> > ASCIIString;
+typedef std::basic_string<char16_t, std::char_traits<char16_t>, gc_allocator<char16_t> > UTF16String;
 typedef std::basic_string<char32_t, std::char_traits<char32_t>, gc_allocator<char32_t> > UTF32String;
+
 class StringDataASCII;
 class String;
 
@@ -32,6 +34,8 @@ public:
         STARFISH_ASSERT(!m_isASCIIString);
         return (UTF32String*)((size_t)this + sizeof(size_t));
     }
+
+    UTF16String toUTF16String() const;
 
     const char* utf8Data();
 
@@ -68,7 +72,7 @@ public:
         }
     }
 
-    char32_t charAt(size_t idx)
+    char32_t charAt(size_t idx) const
     {
         if (m_isASCIIString) {
             return (*asASCIIString())[idx];
@@ -77,12 +81,12 @@ public:
         }
     }
 
-    char32_t operator[](size_t idx)
+    char32_t operator[](size_t idx) const
     {
         return charAt(idx);
     }
 
-    size_t indexOf(char32_t ch)
+    size_t indexOf(char32_t ch) const
     {
         for (size_t i = 0; i < length(); i ++) {
             if (charAt(i) == ch) {
@@ -92,7 +96,7 @@ public:
         return SIZE_MAX;
     }
 
-    size_t lastIndexOf(char32_t ch)
+    size_t lastIndexOf(char32_t ch) const
     {
         for (size_t i = length(); i > 0; i --) {
             if (charAt(i - 1) == ch) {
@@ -143,7 +147,7 @@ public:
     // token is only 1-byte char now.
     std::vector<String*, gc_allocator<String*>> tokenize(const char* tokens, size_t tokensLength);
 
-    icu::UnicodeString toUnicodeString()
+    icu::UnicodeString toUnicodeString() const
     {
         if (isASCIIString()) {
             return icu::UnicodeString(asASCIIString()->data(), asASCIIString()->length(), US_INV);
@@ -152,7 +156,7 @@ public:
         }
     }
 
-    icu::UnicodeString toUnicodeString(size_t start, size_t end)
+    icu::UnicodeString toUnicodeString(size_t start, size_t end) const
     {
         size_t len = end - start;
         if (isASCIIString()) {

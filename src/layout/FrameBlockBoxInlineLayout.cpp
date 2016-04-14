@@ -5,7 +5,7 @@
 
 namespace StarFish {
 
-LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, LineFormattingContext& ctx)
+static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, LineFormattingContext& ctx)
 {
     LayoutUnit maxAscender = ascenderInOut;
     LayoutUnit maxDescender = descenderInOut;
@@ -302,7 +302,7 @@ LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentS
     return ascenderInOut - descenderInOut;
 }
 
-FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
+static FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
 {
     FrameBox* result = b;
 
@@ -325,7 +325,7 @@ FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
     return result;
 }
 
-FrameBox* findLastInlineBox(LineBox* lb)
+static FrameBox* findLastInlineBox(LineBox* lb)
 {
     FrameBox* result = nullptr;
     for (size_t i = 0; i < lb->boxes().size(); i ++) {
@@ -344,6 +344,136 @@ FrameBox* findLastInlineBox(LineBox* lb)
     return result;
 }
 
+static char charDirection(char32_t c)
+{
+    auto property = u_getIntPropertyValue(c, UCHAR_BIDI_CLASS);
+    if ((property == U_RIGHT_TO_LEFT) || (property == U_RIGHT_TO_LEFT_ARABIC) || (property == U_RIGHT_TO_LEFT_EMBEDDING) || (property == U_RIGHT_TO_LEFT_OVERRIDE)) {
+        return 0;
+    } else if ((property == U_LEFT_TO_RIGHT) || (property == U_LEFT_TO_RIGHT_EMBEDDING) || (property == U_LEFT_TO_RIGHT_OVERRIDE)) {
+        return 1;
+    } else {
+        return 2;
+    }
+}
+
+static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
+{
+    bool everSeenUTF32String = false;
+    // TODO read direction css
+    InlineTextBox::CharDirection defaultCharDirection = InlineTextBox::CharDirection::Ltr;
+    InlineTextBox::CharDirection charDirectionBefore = defaultCharDirection;
+    for (size_t i = 0; i < boxes.size(); i ++) {
+        FrameBox* box = boxes[i];
+        if (box->isInlineBox()) {
+            InlineBox* ib = box->asInlineBox();
+            if (ib->isInlineTextBox()) {
+                InlineTextBox* tb = ib->asInlineTextBox();
+                if (tb->text()->isASCIIString()) {
+                    if (!everSeenUTF32String)
+                        tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
+                    else {
+                        if (tb->text()->containsOnlyWhitespace()) {
+                            tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
+                        } else {
+                            bool isNeturalRun = true;
+                            String* txt = tb->text();
+                            for (size_t i = 0; i < txt->length(); i ++) {
+                                char ret = charDirection(txt->charAt(i));
+                                if (ret != 2) {
+                                    isNeturalRun = false;
+                                    break;
+                                }
+                            }
+                            if (isNeturalRun) {
+                                tb->setCharDirection(charDirectionBefore);
+                            } else {
+                                tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
+                            }
+                        }
+                    }
+                } else {
+                    everSeenUTF32String = true;
+                    UBiDi* bidi = ubidi_open();
+                    UTF16String str = tb->text()->toUTF16String();
+                    UErrorCode err = (UErrorCode)0;
+                    ubidi_setPara(bidi, (const UChar*)str.data(), str.length(), UBIDI_DEFAULT_LTR, NULL, &err);
+                    STARFISH_ASSERT(U_SUCCESS(err));
+                    size_t total = ubidi_countRuns(bidi, &err);
+                    STARFISH_ASSERT(U_SUCCESS(err));
+
+                    if (total == 1) {
+                        int32_t start, length;
+                        UBiDiDirection dir = ubidi_getVisualRun(bidi, 0, &start, &length);
+                        tb->setCharDirection(dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr);
+                        charDirectionBefore = dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr;
+                    } else {
+                        LayoutUnit x = tb->x();
+                        LayoutUnit y = tb->y();
+                        size_t insertPos = i;
+                        boxes.erase(boxes.begin() + i);
+                        for (size_t i = 0; i < total; i ++) {
+                            int32_t start, length;
+                            UBiDiDirection dir = ubidi_getVisualRun(bidi, i, &start, &length);
+                            String* t = tb->text()->substring(start, length);
+                            // puts(t->utf8Data());
+                            InlineTextBox* box = new InlineTextBox(tb->node(), tb->style(), nullptr, t, tb->origin(), dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr);
+                            box->setLayoutParent(tb->layoutParent());
+                            box->setX(x);
+                            box->setY(y);
+                            LayoutUnit width = tb->style()->font()->measureText(t);
+                            box->setWidth(width);
+                            box->setHeight(tb->height());
+                            x += width;
+                            boxes.insert(boxes.begin() + insertPos++, box);
+                            charDirectionBefore = dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr;
+                        }
+                    }
+                    ubidi_close(bidi);
+                }
+            }
+        }
+    }
+
+    bool lastLTRState = true;
+    size_t RTLStartPos = SIZE_MAX;
+    for (size_t i = 0; i < boxes.size(); i ++) {
+        FrameBox* box = boxes[i];
+        if (box->isInlineBox()) {
+            InlineBox* ib = box->asInlineBox();
+            if (ib->isInlineTextBox()) {
+                if (lastLTRState) {
+                    if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                        // l->r
+                        RTLStartPos = i;
+                        lastLTRState = false;
+                    } else {
+                        // l->l
+                    }
+                } else {
+                    if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                        // r->r
+                    } else {
+                        // r->l
+                        if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
+                            if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
+                                if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                                    continue;
+                                }
+                            }
+                        }
+                        std::reverse(boxes.begin() + RTLStartPos, boxes.begin() + i);
+                        lastLTRState = true;
+                        RTLStartPos = SIZE_MAX;
+                    }
+                }
+            }
+        }
+    }
+    if (!lastLTRState) {
+        std::reverse(boxes.begin() + RTLStartPos, boxes.end());
+    }
+}
+
 void LineFormattingContext::completeLastLine()
 {
     LineBox* back = m_block.m_lineBoxes.back();
@@ -359,6 +489,7 @@ void LineFormattingContext::completeLastLine()
             }
         }
     }
+    resolveBidi(back->boxes());
 }
 
 void LineFormattingContext::breakLine(bool dueToBr)
@@ -400,7 +531,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
             while (nextOffset < txt->length() && String::isSpaceOrNewline((*txt)[nextOffset])) {
                 nextOffset++;
             }
-            f(offset, nextOffset, isWhiteSpace);
+            f(txt, offset, nextOffset, isWhiteSpace);
         } else {
             size_t start = offset;
             while (nextOffset < txt->length() && !String::isSpaceOrNewline((*txt)[nextOffset])) {
@@ -411,7 +542,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
             breaker->setText(txt->toUnicodeString(start, nextOffset));
             size_t c, prev = 0;
             while ((c = breaker->next()) != icu::BreakIterator::DONE) {
-                f(prev + start, c + start, isWhiteSpace);
+                f(txt, prev + start, c + start, isWhiteSpace);
                 prev = c;
             }
         }
@@ -446,12 +577,12 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
         if (f->isFrameText()) {
             String* txt = f->asFrameText()->text();
-            textDividerForLayout(ctx.starFish(), txt, [&](size_t offset, size_t nextOffset, bool isWhiteSpace) {
+            textDividerForLayout(ctx.starFish(), txt, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace) {
                 textAppendRetry:
                 if (isWhiteSpace) {
                     if (offset == 0 && f == origin->firstChild()) {
                         return;
-                    } else if (nextOffset == txt->length() && f == origin->lastChild()) {
+                    } else if (nextOffset == srcTxt->length() && f == origin->lastChild()) {
                         return;
                     } else if (lineFormattingContext.m_currentLineWidth == 0) {
                         return;
@@ -464,7 +595,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     resultString = String::spaceString;
                     textWidth = f->style()->font()->spaceWidth();
                 } else {
-                    String* ss = txt->substring(offset, nextOffset - offset);
+                    String* ss = srcTxt->substring(offset, nextOffset - offset);
                     resultString = ss;
                     textWidth = f->style()->font()->measureText(ss);
                 }
@@ -478,7 +609,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     lineBreakCallback(false);
                     goto textAppendRetry;
                 }
-                InlineBox* ib = new InlineTextBox(f->node(), f->style(), nullptr, resultString, f->asFrameText());
+                InlineBox* ib = new InlineTextBox(f->node(), f->style(), nullptr, resultString, f->asFrameText(), InlineTextBox::CharDirection::Mixed);
                 ib->setWidth(textWidth);
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);
                 lineFormattingContext.m_currentLineWidth += textWidth;
@@ -766,6 +897,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
     auto finishLayout = [&](bool lastNode = false)
     {
+        resolveBidi(self->boxes());
         InlineNonReplacedBox* selfForFinishLayout = self;
         while (selfForFinishLayout) {
             LayoutUnit end = lineFormattingContext.m_currentLineWidth;
@@ -879,7 +1011,6 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
         LayoutUnit currentLineWidth = 0;
         std::function<void(Frame*)> computeInlineLayout = [&](Frame* f)
         {
-
             // current
             if (!f->isNormalFlow()) {
                 return;
@@ -887,11 +1018,11 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
             if (f->isFrameText()) {
                 String* s = f->asFrameText()->text();
-                textDividerForLayout(ctx.layoutContext().starFish(), s, [&](size_t offset, size_t nextOffset, bool isWhiteSpace) {
+                textDividerForLayout(ctx.layoutContext().starFish(), s, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace) {
                     if (isWhiteSpace) {
                         if (offset == 0 && f == f->parent()->firstChild()) {
                             return;
-                        } else if (nextOffset == s->length() && f == f->parent()->lastChild()) {
+                        } else if (nextOffset == srcTxt->length() && f == f->parent()->lastChild()) {
                             return;
                         }
                     }
@@ -900,7 +1031,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     if (isWhiteSpace) {
                         w = f->style()->font()->spaceWidth();
                     } else {
-                        w = f->style()->font()->measureText(s->substring(offset, nextOffset - offset));
+                        w = f->style()->font()->measureText(srcTxt->substring(offset, nextOffset - offset));
                     }
 
                     if (currentLineWidth + w < remainWidth) {

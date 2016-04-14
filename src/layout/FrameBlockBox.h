@@ -46,9 +46,16 @@ public:
 
 class InlineTextBox : public InlineBox {
 public:
-    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, FrameText* origin)
+    enum CharDirection {
+        Ltr,
+        Rtl,
+        Mixed
+    };
+
+    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, FrameText* origin, CharDirection charDirection)
         : InlineBox(node, style, parent)
     {
+        m_charDirection = charDirection;
         m_text = str;
         m_origin = origin;
     }
@@ -59,7 +66,7 @@ public:
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
-        printf(" [%s] ", m_text->utf8Data());
+        printf(" [%s, dir: %d] ", m_text->utf8Data(), (int)m_charDirection);
     }
 
     virtual const char* name()
@@ -72,7 +79,23 @@ public:
         return m_text;
     }
 
+    bool charDirection()
+    {
+        return m_charDirection;
+    }
+
+    void setCharDirection(CharDirection dir)
+    {
+        m_charDirection = dir;
+    }
+
+    FrameText* origin()
+    {
+        return m_origin;
+    }
+
 protected:
+    CharDirection m_charDirection;
     String* m_text;
     FrameText* m_origin;
 };

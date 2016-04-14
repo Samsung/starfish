@@ -28,6 +28,8 @@
 
 #include <unicode/locid.h>
 #include <unicode/brkiter.h>
+#include <unicode/ubidi.h>
+#include <unicode/uchar.h>
 
 
 /* COMPILER() - the compiler being used to build the project */

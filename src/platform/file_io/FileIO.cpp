@@ -78,10 +78,13 @@ public:
     bool open(const char* fileName)
     {
         close();
+
+        String* newName = PathResolver::matchLocation(String::fromUTF8(fileName));
+
         if (open_cb)
-            m_fp = open_cb(fileName);
+            m_fp = open_cb(newName->utf8Data());
         else
-            m_fp = fopen(fileName, "r");
+            m_fp = fopen(newName->utf8Data(), "r");
         if (m_fp)
             return true;
         return false;

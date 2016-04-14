@@ -582,8 +582,12 @@ static int utf32ToUtf16(char32_t i, char16_t *u)
         *u++= 0xd800 | (i >> 10);
         *u= 0xdc00 | (i & 0x3ff);
         return 2;
+    } else {
+        // produce error char
+        // U+FFFD
+        *u = 0xFFFD;
+        return 1;
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
 
@@ -594,9 +598,7 @@ ScriptValue createScriptString(String* str)
         return escargot::ESString::create(std::move(s));
     } else {
         escargot::UTF16String out;
-
         for (size_t i = 0; i < str->length(); i++) {
-            // TODO utf-16 two char
             char32_t src = str->charAt(i);
             char16_t dst[2];
             int ret = utf32ToUtf16(src, dst);
