@@ -5,7 +5,7 @@ test/reftest/web-platform-tests/html_converted/dom/elements/elements-in-the-dom/
 test/reftest/web-platform-tests/html_converted/dom/elements/global-attributes/classlist-nonstring.html
 test/reftest/web-platform-tests/html_converted/semantics/grouping-content/the-div-element/grouping-div.html
 test/reftest/web-platform-tests/html_converted/semantics/grouping-content/the-p-element/grouping-p.html
-test/reftest/web-platform-tests/html_converted/semantics/scripting-1/the-script-element/script-text.html
+test/reftest/web-platform-tests/html_converted/semantics/scripting-1/the-script-element/script-onload-string.html
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/callback-invoked.html
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/callback-multicalls.html
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/cancel-invoked.html

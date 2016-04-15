@@ -1675,7 +1675,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            return element->onclick();
+            return element->onload();
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
@@ -1702,7 +1702,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            return element->onclick();
+            return element->onunload();
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
@@ -1712,7 +1712,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
             if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
-                element->setOnload(v);
+                element->setOnunload(v);
             } else {
                 element->clearOnunload();
             }
