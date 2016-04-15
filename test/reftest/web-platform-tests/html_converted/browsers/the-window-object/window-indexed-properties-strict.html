@@ -18,7 +18,7 @@ test(function() {
   window[-1] = "foo";
   assert_equals(window[-1], "foo");
 });
-test(function() {
+/*test(function() {
   "use strict";
   assert_throws(new TypeError(), function() {
     window[0] = "foo";
@@ -33,6 +33,7 @@ test(function() {
   });
   assert_equals(window[1], undefined);
 });
+*/
 test(function() {
   "use strict";
   var proto = Window.prototype;
