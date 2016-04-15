@@ -964,7 +964,7 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
         }
 
         valueText = valueText->concat(token->m_value);
-        token = getToken(false, true);
+        token = getToken(false, false);
     }
     /*
     if (values.length && valueText) {
