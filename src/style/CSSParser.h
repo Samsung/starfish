@@ -476,7 +476,8 @@ public:
                     else if (isPercent && !parser->consumeIfNext('%'))
                         return false;
 
-                    if (!isPercent && hasPoint)
+                    // NOTE: decimal-point is disallowed for rgb value.
+                    if (i < 3 && !isPercent && hasPoint)
                         return false;
 
                     if (i == numcnt - 1)
