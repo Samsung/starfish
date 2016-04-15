@@ -477,7 +477,7 @@ wpt_syntax_checker:
 regression_test_wpt_dom:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res true
 regression_test_wpt_html:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_html_regression.res true
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_html_regression.res
 regression_test_wpt_xhr:
 	./tool/reftest/wpt_test.sh tool/reftest/xhr_regression.res
 
@@ -500,7 +500,6 @@ regression_test_css3_transforms:
 
 regression_test:
 	make regression_test_wpt_dom
-	make regression_test_wpt_xhr
 	make regression_test_dom
 	make regression_test_demo
 	make regression_test_css1
