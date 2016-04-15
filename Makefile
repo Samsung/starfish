@@ -476,6 +476,8 @@ wpt_syntax_checker:
 
 regression_test_wpt_dom:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res true
+regression_test_wpt_html:
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_html_regression.res true
 regression_test_wpt_xhr:
 	./tool/reftest/wpt_test.sh tool/reftest/xhr_regression.res
 
