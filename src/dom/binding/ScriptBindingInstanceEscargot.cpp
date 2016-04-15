@@ -119,11 +119,9 @@ void ScriptBindingInstance::exit()
     escargot::ESValue v = instance->currentExecutionContext()->readArgument(0);                     \
 
 void defineNativeAccessorPropertyButNeedToGenerateJSFunction(escargot::ESObject* obj, escargot::ESString* propertyName,
-    escargot::NativeFunctionType getter, escargot::NativeFunctionType setter)
+    escargot::NativeFunctionType getter, escargot::NativeFunctionType setter, bool isEnumerable = true, bool isConfigurable = true)
 {
     bool isWritable = setter;
-    bool isEnumerable = true;
-    bool isConfigurable = true;
 
     escargot::ESPropertyAccessorData* accData = new escargot::ESPropertyAccessorData();
     accData->setJSGetter(escargot::ESFunctionObject::create(nullptr, getter, escargot::ESVMInstance::currentInstance()->strings().emptyString, 0, false, false));
@@ -198,7 +196,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("addEventListener"), 0, false);
-    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), false, false, false, fnAddEventListener);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), true, true, true, fnAddEventListener);
 
     auto fnRemoveEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -216,7 +214,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("removeEventListener"), 0, false);
-    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeEventListener"), false, false, false, fnRemoveEventListener);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeEventListener"), true, true, true, fnRemoveEventListener);
 
     auto fnDispatchEvent = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -235,18 +233,22 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue(ret);
     }, escargot::ESString::create("dispatchEvent"), 1, false);
-    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("dispatchEvent"), false, false, false, fnDispatchEvent);
+    EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("dispatchEvent"), true, true, true, fnDispatchEvent);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Window, EventTargetFunction->protoType());
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("window"), false, false, false, fetchData(this)->m_instance->globalObject());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fetchData(this)->m_instance->globalObject(), escargot::ESString::create("window"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        return escargot::ESVMInstance::currentInstance()->globalObject();
+    }, nullptr, true, false);
     fetchData(this)->m_instance->globalObject()->set__proto__(WindowFunction->protoType());
     fetchData(this)->m_window = WindowFunction;
 
-    fetchData(this)->m_instance->globalObject()->defineAccessorProperty(escargot::ESString::create("document"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fetchData(this)->m_instance->globalObject(), escargot::ESString::create("document"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptObject();
-        },
-        NULL, false, false, false);
+    }, nullptr, true, false);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Node, EventTargetFunction->protoType());
     fetchData(this)->m_node = NodeFunction;

@@ -61,7 +61,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("setTimeout"), 1, false);
-    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setTimeout"), false, false, false, setTimeoutFunction);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setTimeout"), true, true, true, setTimeoutFunction);
 
     // [clearTimeout]
     // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-cleartimeout
@@ -75,7 +75,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("clearTimeout"), 0, false);
-    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), false, false, false, clearTimeoutFunction);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearTimeout"), true, true, true, clearTimeoutFunction);
 
     // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-setinterval
     escargot::ESFunctionObject* setIntervalFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -103,7 +103,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("setInterval"), 1, false);
-    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setInterval"), false, false, false, setIntervalFunction);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("setInterval"), true, true, true, setIntervalFunction);
 
     // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-clearinterval
     escargot::ESFunctionObject* clearIntervalFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -116,7 +116,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("clearInterval"), 0, false);
-    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearInterval"), false, false, false, clearIntervalFunction);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("clearInterval"), true, true, true, clearIntervalFunction);
 
     // TODO : Pass "any... arguments" if exist
     // TODO : First argument can be function or script source (currently allow function only)
@@ -168,7 +168,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue(0);
         },
-        NULL, false, false, false);
+        NULL, true, true, true);
 
     // https://www.w3.org/TR/cssom-view/#dom-window-innerheight
     ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("innerHeight"),
@@ -180,7 +180,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         return escargot::ESValue(0);
         },
-        NULL, false, false, false);
+        NULL, true, true, true);
 }
 
 void ScriptWrappable::initScriptWrappable(Node* ptr)
