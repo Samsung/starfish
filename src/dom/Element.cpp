@@ -172,8 +172,6 @@ Node* Element::clone()
     for (String* str : m_classNames) {
         newNode->m_classNames.push_back(str);
     }
-    newNode->m_namespace = m_namespace;
-    newNode->m_namespacePrefix = m_namespacePrefix;
     newNode->m_inlineStyle = inlineStyle()->clone(document(), newNode);
 
     return newNode;
@@ -188,7 +186,7 @@ NamedNodeMap* Element::attributes()
     }
     RareElementMembers* rareMembers = ensureRareElementMembers();
     if (!rareMembers->m_namedNodeMap)
-        rareMembers->m_namedNodeMap = new NamedNodeMap(m_document->scriptBindingInstance(), this);
+        rareMembers->m_namedNodeMap = new NamedNodeMap(document()->scriptBindingInstance(), this);
     return rareMembers->m_namedNodeMap;
 }
 
@@ -241,7 +239,7 @@ Attr* Element::ensureAttr(QualifiedName name)
         STARFISH_ASSERT(rareMembers->isRareElementMembers());
         if (!rareMembers->m_attrList)
             rareMembers->m_attrList = new (GC) AttrList();
-        returnAttr = new Attr(m_document, m_document->scriptBindingInstance(), this, name);
+        returnAttr = new Attr(document(), document()->scriptBindingInstance(), this, name);
         rareMembers->m_attrList->push_back(returnAttr);
     }
     return returnAttr;

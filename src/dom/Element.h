@@ -34,8 +34,6 @@ public:
         : Node(document, instance)
         , m_id(String::emptyString)
         , m_className(String::emptyString)
-        , m_namespace(String::emptyString)
-        , m_namespacePrefix(String::emptyString)
         , m_inlineStyle(nullptr)
     {
         initScriptWrappable(this, instance);
@@ -45,8 +43,6 @@ public:
         : Node(document)
         , m_id(String::emptyString)
         , m_className(String::emptyString)
-        , m_namespace(String::emptyString)
-        , m_namespacePrefix(String::emptyString)
         , m_inlineStyle(nullptr)
     {
         initScriptWrappable(this);
@@ -96,16 +92,6 @@ public:
     String* id()
     {
         return m_id;
-    }
-
-    String* namespaceUri()
-    {
-        return m_namespace;
-    }
-
-    String* namespacePrefix()
-    {
-        return m_namespacePrefix;
     }
 
     CSSStyleDeclaration* inlineStyleWithoutCreation()
@@ -217,8 +203,6 @@ protected:
     String* m_id;
     String* m_className;
     std::vector<String*, gc_allocator<String*>> m_classNames;
-    String* m_namespace;
-    String* m_namespacePrefix;
 
     CSSStyleDeclaration* m_inlineStyle;
 private:

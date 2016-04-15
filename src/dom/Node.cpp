@@ -77,7 +77,6 @@ Node* Node::cloneNode(bool deep)
 {
     Node* newNode = clone();
     STARFISH_ASSERT(newNode);
-    newNode->m_baseUri = m_baseUri;
 
     if (deep) {
         for (Node* child = firstChild(); child; child = child->nextSibling()) {
@@ -115,10 +114,7 @@ bool Node::isEqualNode(Node* other)
     case ELEMENT_NODE: {
         Element* thisNode = asElement();
         Element* otherNode = other->asElement();
-        if (!(thisNode->namespaceUri()->equals(otherNode->namespaceUri())
-            && thisNode->namespacePrefix()->equals(otherNode->namespacePrefix())
-            && thisNode->localName()->equals(otherNode->localName())
-            && thisNode->hasSameAttributes(otherNode))) {
+        if (!(thisNode->hasSameAttributes(otherNode))) {
             return false;
         }
         break;

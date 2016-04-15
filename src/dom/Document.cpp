@@ -215,7 +215,7 @@ Element* Document::getElementById(String* id)
 Element* Document::createElement(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+        throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
     if (localName == window()->starFish()->staticStrings()->m_htmlLocalName) {
         return new HTMLHtmlElement(this);
@@ -264,7 +264,7 @@ Comment* Document::createComment(String* data)
 Attr* Document::createAttribute(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
-        throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+        throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
     return new Attr(this, scriptBindingInstance(), localName);
 }

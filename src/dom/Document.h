@@ -86,11 +86,6 @@ public:
         return true;
     }
 
-    virtual Element* parentElement()
-    {
-        return nullptr;
-    }
-
     virtual Node* clone();
 
     Window* window()

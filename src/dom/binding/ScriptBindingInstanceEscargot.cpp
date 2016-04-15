@@ -426,14 +426,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("baseURI"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        String* nodeName = originalObj->baseURI();
-        return toJSString(nodeName);
-    }, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("ownerDocument"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
@@ -688,42 +680,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             bool found = obj->contains(nodeRef);
             return escargot::ESValue(found);
         }, escargot::ESString::create("contains"), 1, false));
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("lookupPrefix"), false, false, false,
-        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-            String* namespaceUri = toBrowserString(instance->currentExecutionContext()->readArgument(0).toString());
-            String* ns = obj->lookupPrefix(namespaceUri);
-            if (ns == nullptr) {
-                return escargot::ESValue(escargot::ESValue::ESNull);
-            }
-            return toJSString(ns);
-        }, escargot::ESString::create("lookupPrefix"), 1, false));
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("lookupNamespaceURI"), false, false, false,
-        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-            String* prefix = toBrowserString(instance->currentExecutionContext()->readArgument(0).toString());
-            String* ns = obj->lookupNamespaceURI(prefix);
-            if (ns == nullptr) {
-                return escargot::ESValue(escargot::ESValue::ESNull);
-            }
-            return toJSString(ns);
-        }, escargot::ESString::create("lookupNamespaceURI"), 1, false));
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("isDefaultNamespace"), false, false, false,
-        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-            String* namespaceUri = toBrowserString(instance->currentExecutionContext()->readArgument(0).toString());
-            bool ns = obj->isDefaultNamespace(namespaceUri);
-            return escargot::ESValue(ns);
-        }, escargot::ESString::create("isDefaultNamespace"), 1, false));
 
     escargot::ESFunctionObject* appendChildFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {

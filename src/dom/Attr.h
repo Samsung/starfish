@@ -11,21 +11,18 @@ public:
     Attr(Document* document, ScriptBindingInstance* instance, Element* element, QualifiedName name)
         : Node(document), m_element(element), m_name(name), m_standAloneValue(String::emptyString)
     {
-        ScriptWrappable(this);
         initScriptWrappable(this, instance);
     }
 
     Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name)
         : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(String::emptyString)
     {
-        ScriptWrappable(this);
         initScriptWrappable(this, instance);
     }
 
     Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name, String* value)
         : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(value)
     {
-        ScriptWrappable(this);
         initScriptWrappable(this, instance);
     }
 
@@ -63,11 +60,6 @@ public:
         return m_name.string();
     }
 
-    virtual Element* parentElement()
-    {
-        return nullptr;
-    }
-
     virtual String* localName()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -86,7 +78,7 @@ public:
 
     virtual Node* clone()
     {
-        return (Node*)(new Attr(m_document, m_document->scriptBindingInstance(), m_name, value()));
+        return (Node*)(new Attr(document(), document()->scriptBindingInstance(), m_name, value()));
     }
 
     virtual bool isAttr() const

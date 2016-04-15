@@ -110,7 +110,6 @@ protected:
 
         m_style = nullptr;
         m_frame = nullptr;
-        m_baseUri = String::emptyString; // need to set by the parser
         m_rareNodeMembers = nullptr;
     }
 
@@ -149,11 +148,6 @@ public:
 
     virtual String* nodeName() = 0;
 
-    String* baseURI()
-    {
-        return m_baseUri;
-    }
-
     Document* ownerDocument() const
     {
         if (isDocument()) {
@@ -168,7 +162,7 @@ public:
         return m_parentNode;
     }
 
-    virtual Element* parentElement()
+    Element* parentElement()
     {
         Node* parent = parentNode();
         if (parent && parent->nodeType() == ELEMENT_NODE) {
@@ -555,31 +549,26 @@ private:
     void validateReplace(Node* child, Node* childToRemove);
 
 protected:
+    Node* getDocTypeChild();
     bool m_needsStyleRecalc : 1;
     bool m_childNeedsStyleRecalc : 1;
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;
-
     // for element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
 
-    Document* m_document;
-    NodeState m_state;
+    NodeState m_state : 1;
 
-    String* m_baseUri;
-
-    Frame* m_frame;
     RareNodeMembers* m_rareNodeMembers;
-
-    Node* getDocTypeChild();
-
 private:
+    Document* m_document;
     Node* m_nextSibling;
     Node* m_previousSibling;
     Node* m_firstChild;
     Node* m_lastChild;
     Node* m_parentNode;
     ComputedStyle* m_style;
+    Frame* m_frame;
 };
 }
 
