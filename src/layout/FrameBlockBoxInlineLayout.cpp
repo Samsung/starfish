@@ -373,7 +373,7 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                         tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
                     else {
                         if (tb->text()->containsOnlyWhitespace()) {
-                            tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
+                            tb->setCharDirection(defaultCharDirection);
                         } else {
                             bool isNeturalRun = true;
                             String* txt = tb->text();
@@ -385,7 +385,8 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                                 }
                             }
                             if (isNeturalRun) {
-                                tb->setCharDirection(charDirectionBefore);
+                                // tb->setCharDirection(charDirectionBefore);
+                                tb->setCharDirection(defaultCharDirection);
                             } else {
                                 tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
                             }
@@ -400,7 +401,7 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                     STARFISH_ASSERT(U_SUCCESS(err));
                     size_t total = ubidi_countRuns(bidi, &err);
                     STARFISH_ASSERT(U_SUCCESS(err));
-
+                    InlineTextBox* lastTextBox = tb;
                     if (total == 1) {
                         int32_t start, length;
                         UBiDiDirection dir = ubidi_getVisualRun(bidi, 0, &start, &length);
@@ -426,9 +427,73 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                             x += width;
                             boxes.insert(boxes.begin() + insertPos++, box);
                             charDirectionBefore = dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr;
+                            lastTextBox = box;
                         }
                     }
                     ubidi_close(bidi);
+
+                    auto splitBoxAt = [&boxes, &defaultCharDirection](InlineTextBox* where, size_t idx, bool neturalAtLast)
+                    {
+                        auto iter = std::find(boxes.begin(), boxes.end(), where);
+                        size_t boxIdx = iter - boxes.begin();
+                        boxes.erase(iter);
+                        String* newText = where->text()->substring(0, idx + 1);
+
+                        InlineTextBox* box = new InlineTextBox(where->node(), where->style(), nullptr, newText, where->origin(), neturalAtLast ? where->charDirection() : defaultCharDirection);
+                        box->setLayoutParent(where->layoutParent());
+                        LayoutUnit x = where->x();
+                        LayoutUnit y = where->y();
+                        box->setX(x);
+                        box->setY(y);
+                        LayoutUnit width = where->style()->font()->measureText(newText);
+                        box->setWidth(width);
+                        box->setHeight(where->height());
+                        x += width;
+                        boxes.insert(boxes.begin() + boxIdx++, box);
+
+                        String* newText2 = where->text()->substring(idx + 1, where->text()->length() - idx);
+                        box = new InlineTextBox(where->node(), where->style(), nullptr, newText2, where->origin(), neturalAtLast ? defaultCharDirection : where->charDirection());
+                        box->setLayoutParent(where->layoutParent());
+                        box->setX(x);
+                        box->setY(y);
+                        width = where->style()->font()->measureText(newText2);
+                        box->setWidth(width);
+                        box->setHeight(where->height());
+                        boxes.insert(boxes.begin() + boxIdx, box);
+
+                        return box;
+                    };
+
+                    // check it has leading netural chars
+                    char32_t first = lastTextBox->text()->charAt(0);
+                    if (charDirection(first) == 2) {
+                        size_t idx = 1;
+                        while (idx < lastTextBox->text()->length()) {
+                            if (charDirection(lastTextBox->text()->charAt(idx)) != 2) {
+                                break;
+                            }
+                            idx++;
+                        }
+
+                        if (idx != lastTextBox->text()->length()) {
+                            lastTextBox = splitBoxAt(lastTextBox, idx - 1, false);
+                        }
+                    }
+
+                    // check it has trailing netural chars
+                    char32_t last = lastTextBox->text()->charAt(lastTextBox->text()->length() - 1);
+                    if (charDirection(last) == 2) {
+                        size_t idx = lastTextBox->text()->length() - 1;
+                        while (idx != 0) {
+                            if (charDirection(lastTextBox->text()->charAt(idx)) != 2) {
+                                break;
+                            }
+                            idx--;
+                        }
+                        if (idx != 0) {
+                            splitBoxAt(lastTextBox, idx, true);
+                        }
+                    }
                 }
             }
         }

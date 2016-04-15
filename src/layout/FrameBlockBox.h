@@ -49,7 +49,8 @@ public:
     enum CharDirection {
         Ltr,
         Rtl,
-        Mixed
+        Mixed,
+        Netural,
     };
 
     InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, FrameText* origin, CharDirection charDirection)
@@ -79,7 +80,7 @@ public:
         return m_text;
     }
 
-    bool charDirection()
+    CharDirection charDirection()
     {
         return m_charDirection;
     }
