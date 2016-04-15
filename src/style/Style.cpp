@@ -3470,8 +3470,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(StarFish* sf)
     ComputedStyle* ret = new ComputedStyle();
     ret->m_display = DisplayValue::BlockDisplayValue;
     ret->m_inheritedStyles.m_color = Color(0, 0, 0, 255);
-    // TODO implement ltr, rtl
-    ret->m_inheritedStyles.m_textAlign = TextAlignValue::LeftTextAlignValue;
+    ret->m_inheritedStyles.m_textAlign = TextAlignValue::NamelessTextAlignValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->loadResources(sf);
     return ret;
@@ -4467,6 +4466,21 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             }
         }
     };
+
+    if (element->isHTMLElement()) {
+        if (element->asHTMLElement()->hasDirAttribute()) {
+            String* str = element->asHTMLElement()->getAttribute(element->document()->window()->starFish()->staticStrings()->m_dir);
+            str = str->toLower();
+            if (str->equals("ltr")) {
+                ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
+            } else if (str->equals("rtl")) {
+                ret->m_inheritedStyles.m_direction = DirectionValue::RtlDirectionValue;
+            } else {
+                ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
+            }
+
+        }
+    }
 
     // first sheet is must user-agent style sheet!
     for (unsigned i = 0; i < m_sheets.size(); i++) {

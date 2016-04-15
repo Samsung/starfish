@@ -56,8 +56,6 @@ public:
         : Element(document)
     {
         initScriptWrappable(this);
-        m_id = String::emptyString;
-        m_className = String::emptyString;
     }
 
     /* 4.4 Interface Node */
@@ -76,7 +74,7 @@ public:
 
     FOR_EACH_HTML_ELEMENT_OP(IS_KIND_ELEMENT);
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
 
     ScriptValue onclick()
     {
@@ -144,7 +142,14 @@ public:
         clearAttributeEventListener(eventType);
     }
 
+
+    bool hasDirAttribute()
+    {
+        return m_hasDirAttribute;
+    }
+
 protected:
+
 };
 
 }

@@ -149,6 +149,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_rel = QualifiedName::fromString(sf, "rel");
     m_href = QualifiedName::fromString(sf, "href");
     m_type = QualifiedName::fromString(sf, "type");
+    m_dir = QualifiedName::fromString(sf, "dir");
 
     m_click = QualifiedName::fromString(sf, "click");
     m_onclick = QualifiedName::fromString(sf, "onclick");

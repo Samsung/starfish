@@ -32,19 +32,19 @@ public:
 
     Element(Document* document, ScriptBindingInstance* instance)
         : Node(document, instance)
-        , m_id(String::emptyString)
-        , m_className(String::emptyString)
         , m_inlineStyle(nullptr)
     {
+        m_id = String::emptyString;
+        m_className = String::emptyString;
         initScriptWrappable(this, instance);
     }
 
     Element(Document* document)
         : Node(document)
-        , m_id(String::emptyString)
-        , m_className(String::emptyString)
         , m_inlineStyle(nullptr)
     {
+        m_id = String::emptyString;
+        m_className = String::emptyString;
         initScriptWrappable(this);
     }
 
@@ -89,39 +89,6 @@ public:
         return (HTMLElement*)this;
     }
 
-    String* id()
-    {
-        return m_id;
-    }
-
-    CSSStyleDeclaration* inlineStyleWithoutCreation()
-    {
-        return m_inlineStyle;
-    }
-
-    CSSStyleDeclaration* inlineStyle()
-    {
-        if (m_inlineStyle == nullptr) {
-            m_inlineStyle = new CSSStyleDeclaration(document(), this);
-        }
-        return m_inlineStyle;
-    }
-
-    // DO NOT MODIFY THIS VECTOR
-    const std::vector<String*, gc_allocator<String*> >& classNames()
-    {
-        return m_classNames;
-    }
-
-    bool hasClassName(String* className)
-    {
-        for (unsigned i = 0; i < m_classNames.size(); i++) {
-            if (className->equals(m_classNames[i]))
-                return true;
-        }
-        return false;
-    }
-
     // DO NOT MODIFY ATTRIBUTES WITHOUT THESE FUNCTIONS
     size_t hasAttribute(QualifiedName name);
     size_t attributeCount() const
@@ -149,7 +116,7 @@ public:
         return m_attributes[hasAttribute(name)];
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
 
     virtual void dump()
     {
@@ -163,12 +130,6 @@ public:
         }
 
         printf("className:%s", className.data());
-    }
-
-    void notifyInlineStyleChanged()
-    {
-        setNeedsStyleRecalc();
-        m_didInlineStyleModifiedAfterAttributeSet = true;
     }
 
     /* Other than DOM API */
@@ -195,17 +156,55 @@ public:
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);
 
+    String* id()
+    {
+        return m_id;
+    }
+
+    // DO NOT MODIFY THIS VECTOR
+    const std::vector<String*, gc_allocator<String*> >& classNames()
+    {
+        return m_classNames;
+    }
+
+    bool hasClassName(String* className)
+    {
+        for (unsigned i = 0; i < m_classNames.size(); i++) {
+            if (className->equals(m_classNames[i]))
+                return true;
+        }
+        return false;
+    }
+
+    CSSStyleDeclaration* inlineStyleWithoutCreation()
+    {
+        return m_inlineStyle;
+    }
+
+    CSSStyleDeclaration* inlineStyle()
+    {
+        if (m_inlineStyle == nullptr) {
+            m_inlineStyle = new CSSStyleDeclaration(document(), this);
+        }
+        return m_inlineStyle;
+    }
+
+    void notifyInlineStyleChanged()
+    {
+        setNeedsStyleRecalc();
+        m_didInlineStyleModifiedAfterAttributeSet = true;
+    }
+
 protected:
     // DO NOT MODIFY ATTRIBUTES.
     const AttributeVector* getAttributes() { return (AttributeVector*)&m_attributes; }
     virtual Node* clone();
 
+    CSSStyleDeclaration* m_inlineStyle;
+private:
     String* m_id;
     String* m_className;
     std::vector<String*, gc_allocator<String*>> m_classNames;
-
-    CSSStyleDeclaration* m_inlineStyle;
-private:
     AttributeVector m_attributes;
 };
 }

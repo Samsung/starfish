@@ -85,9 +85,9 @@ public:
 
     bool paused() { return !m_isPlaying; }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value)
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
     {
-        HTMLElement::didAttributeChanged(name, old, value);
+        HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
         if (name == document()->window()->starFish()->staticStrings()->m_src) {
             m_src = document()->window()->starFish()->makeResourcePath(value);
 #ifdef STARFISH_TIZEN_WEARABLE

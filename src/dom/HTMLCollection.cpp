@@ -1,7 +1,7 @@
 #include "StarFishConfig.h"
 #include "HTMLCollection.h"
 #include "dom/Document.h"
-#include "dom/Element.h"
+#include "dom/HTMLElement.h"
 #include "dom/Traverse.h"
 
 namespace StarFish {
@@ -21,7 +21,7 @@ Element* HTMLCollection::namedItem(String* key)
     if (key->length()) {
         for (unsigned i = 0; i < m_activeNodeList.length(); i++) {
             Element* elem = m_activeNodeList.item(i)->asElement();
-            if (elem->id()->equals(key))
+            if (elem->asElement()->asHTMLElement()->id()->equals(key))
                 return elem;
         }
     }

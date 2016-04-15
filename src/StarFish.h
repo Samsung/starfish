@@ -44,6 +44,7 @@ public:
     QualifiedName m_rel;
     QualifiedName m_href;
     QualifiedName m_type;
+    QualifiedName m_dir;
 
     // Event Names
     QualifiedName m_click;

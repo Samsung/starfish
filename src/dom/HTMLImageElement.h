@@ -86,7 +86,7 @@ public:
         return true;
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value);
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
 
 private:
     ImageData* m_imageData;

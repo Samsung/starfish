@@ -47,11 +47,11 @@ void Element::setAttribute(QualifiedName name, String* value)
     size_t idx = hasAttribute(name);
     if (idx == SIZE_MAX) {
         m_attributes.push_back(Attribute(name, value));
-        didAttributeChanged(name, String::emptyString, value);
+        didAttributeChanged(name, String::emptyString, value, true, false);
     } else {
         String* v = m_attributes[idx].value();
         m_attributes[idx].setValue(value);
-        didAttributeChanged(name, v, value);
+        didAttributeChanged(name, v, value, false, false);
     }
 }
 
@@ -76,16 +76,17 @@ void Element::removeAttribute(QualifiedName name)
                 }
             }
         }
-        didAttributeChanged(name, v, String::emptyString);
+        didAttributeChanged(name, v, String::emptyString, false, true);
     }
 }
 
-void Element::didAttributeChanged(QualifiedName name, String* old, String* value)
+void Element::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
-    if (name == document()->window()->starFish()->staticStrings()->m_id) {
+    StaticStrings* ss = document()->window()->starFish()->staticStrings();
+    if (name == ss->m_id) {
         m_id = value;
         setNeedsStyleRecalc();
-    } else if (name == document()->window()->starFish()->staticStrings()->m_class) {
+    } else if (name == ss->m_class) {
         DOMTokenList::tokenize(&m_classNames, value);
         setNeedsStyleRecalc();
 
@@ -95,7 +96,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
             parent->invalidateNodeListCacheDueToChangeClassNameOfDescendant();
             parent = parent->parentNode();
         }
-    } else if (name == document()->window()->starFish()->staticStrings()->m_style) {
+    } else if (name == ss->m_style) {
         if (old->equals(String::emptyString)) {
             attributeData(name).registerGetterCallback(this, [](Element* element, const Attribute * const attr) -> String* {
                 if (element->m_didInlineStyleModifiedAfterAttributeSet) {
@@ -166,11 +167,6 @@ Node* Element::clone()
 
     for (const Attribute& attr : m_attributes) {
         newNode->setAttribute(attr.name(), attr.value());
-    }
-    newNode->m_id = m_id;
-    newNode->m_className = m_className;
-    for (String* str : m_classNames) {
-        newNode->m_classNames.push_back(str);
     }
     newNode->m_inlineStyle = inlineStyle()->clone(document(), newNode);
 

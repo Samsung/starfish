@@ -107,6 +107,7 @@ protected:
         m_childNeedsFrameTreeBuild = true;
 
         m_didInlineStyleModifiedAfterAttributeSet = false;
+        m_hasDirAttribute = false;
 
         m_style = nullptr;
         m_frame = nullptr;
@@ -554,8 +555,10 @@ protected:
     bool m_childNeedsStyleRecalc : 1;
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;
-    // for element
+    // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
+    // for HTMLElelement
+    bool m_hasDirAttribute : 1;
 
     NodeState m_state : 1;
 

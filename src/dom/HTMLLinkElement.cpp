@@ -94,9 +94,9 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
     }
 }
 
-void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old, String* value)
+void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_href) {
         checkLoadStyleSheet();
     } else if (name == document()->window()->starFish()->staticStrings()->m_type) {

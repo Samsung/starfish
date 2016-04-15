@@ -7,9 +7,9 @@
 
 namespace StarFish {
 
-void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, String* value)
+void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
-    HTMLElement::didAttributeChanged(name, old, value);
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
         LayoutSize sizeBefore(0, 0);
         LayoutSize size(0, 0);

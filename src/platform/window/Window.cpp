@@ -596,13 +596,13 @@ void Window::rendering()
 
 
             std::string className;
-            for (unsigned i = 0; i < ctx->owner()->node()->asElement()->classNames().size(); i++) {
-                className += ctx->owner()->node()->asElement()->classNames()[i]->utf8Data();
+            for (unsigned i = 0; i < ctx->owner()->node()->asElement()->asHTMLElement()->classNames().size(); i++) {
+                className += ctx->owner()->node()->asElement()->asHTMLElement()->classNames()[i]->utf8Data();
                 className += " ";
             }
 
             printf("StackingContext[%p, node %p %s id:%s className:%s , frame %p, buf %d, %d %d %d %d]\n",
-                ctx, ctx->owner()->node(), ctx->owner()->node()->localName()->utf8Data(), ctx->owner()->node()->asElement()->id()->utf8Data(), className.data(), ctx->owner(), (int)ctx->needsOwnBuffer()
+                ctx, ctx->owner()->node(), ctx->owner()->node()->localName()->utf8Data(), ctx->owner()->node()->asElement()->asHTMLElement()->id()->utf8Data(), className.data(), ctx->owner(), (int)ctx->needsOwnBuffer()
                 , (int)fr.x(), (int)fr.y(), (int)fr.width(), (int)fr.height());
 
             auto iter = ctx->childContexts().begin();

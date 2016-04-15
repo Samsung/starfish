@@ -700,7 +700,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
     auto filter = [](Node* node, void* data) -> bool
     {
         String* classNames = (String*)data;
-        if (node->isElement() && node->asElement()->classNames().size() > 0) {
+        if (node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->classNames().size() > 0) {
 
             size_t length = classNames->length();
             bool isWhiteSpaceState = true;
@@ -719,7 +719,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
 
                         String* tok = new StringDataUTF32(std::move(str));
 
-                        if (!node->asElement()->hasClassName(tok))
+                        if (!node->asElement()->asHTMLElement()->hasClassName(tok))
                         return false;
 
                         str.clear();
@@ -731,7 +731,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
 
             if (str.length()) {
                 String* tok = new StringDataUTF32(std::move(str));
-                if (!node->asElement()->hasClassName(tok))
+                if (!node->asElement()->asHTMLElement()->hasClassName(tok))
                 return false;
             }
 

@@ -204,11 +204,10 @@ Node* Document::clone()
 Element* Document::getElementById(String* id)
 {
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {
-        if (child->isElement() && child->asElement()->id()->equals(id)) {
+        if (child->isElement() && child->asElement()->isHTMLElement() && child->asElement()->asHTMLElement()->id()->equals(id)) {
             return true;
         } else
             return false;
-
     });
 }
 
