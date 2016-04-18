@@ -19,3 +19,4 @@ test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/
 test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/Document.getElementsByClassName-null-undef.html
 test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/Element.getElementsByClassName-null-undef.html
 test/reftest/web-platform-tests/html_converted/webappapis/scripting/events/event-handler-javascript.html
+test/reftest/web-platform-tests/html_converted/webappapis/scripting/events/body-onload.html
