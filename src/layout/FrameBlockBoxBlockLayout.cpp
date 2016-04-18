@@ -34,6 +34,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     while (child) {
         // Place the child.
         child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+
         if (style()->direction() == LtrDirectionValue) {
             child->asFrameBox()->setX(paddingLeft() + borderLeft());
         } else {

@@ -165,7 +165,8 @@ public:
                 if (style()->direction() == LtrDirectionValue) {
                     setAbsX(style()->left().specifiedValue(parentWidth));
                 } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    LayoutUnit computedRight = style()->right().specifiedValue(parentWidth);
+                    setAbsX(parentWidth - FrameBox::width() - computedRight);
                 }
             }
 
@@ -173,7 +174,7 @@ public:
                 if (style()->direction() == LtrDirectionValue) {
                     moveX(FrameBox::marginLeft());
                 } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    moveX(-FrameBox::marginRight());
                 }
             } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
                 moveX(FrameBox::marginLeft());
