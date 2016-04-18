@@ -3,7 +3,7 @@
 
 namespace StarFish {
 
-void FrameDocument::layout(LayoutContext& ctx)
+void FrameDocument::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     int w = node()->asDocument()->window()->width();
     int h = node()->asDocument()->window()->height();
@@ -14,7 +14,7 @@ void FrameDocument::layout(LayoutContext& ctx)
     STARFISH_ASSERT(firstChild() == lastChild());
     STARFISH_ASSERT(firstChild()->isRootElement());
 
-    FrameBlockBox::layout(ctx);
+    FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
     firstChild()->asFrameBox()->asFrameBlockBox()->m_visibleRect.unite(m_visibleRect);
 }

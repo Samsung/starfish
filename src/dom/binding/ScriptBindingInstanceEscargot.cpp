@@ -994,7 +994,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         CSSStyleDeclaration* s = originalObj->asElement()->inlineStyle();
         return s->scriptValue();
-    }, nullptr);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_style, toBrowserString(v));
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
 
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getElementsByClassName"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {

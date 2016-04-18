@@ -23,7 +23,7 @@ public:
         return true;
     }
 
-    virtual void layout(LayoutContext& ctx);
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     virtual void paint(Canvas* canvas, PaintingStage stage)
     {
         STARFISH_ASSERT(stage == PaintingStageEnd);

@@ -683,7 +683,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
         } else if (f->isFrameReplaced()) {
             FrameReplaced* r = f->asFrameReplaced();
-            r->layout(ctx);
+            r->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
         insertReplacedBox:
             if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth) || lineFormattingContext.m_currentLineWidth == 0) {
@@ -697,7 +697,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             // inline-block
             FrameBlockBox* r = f->asFrameBlockBox();
             STARFISH_ASSERT(f->style()->display() == DisplayValue::InlineBlockDisplayValue);
-            f->layout(ctx);
+            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
             LayoutUnit ascender = 0;
             if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox()) && r->style()->overflow() == OverflowValue::VisibleOverflow) {

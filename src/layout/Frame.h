@@ -204,7 +204,6 @@ public:
     }
 
 private:
-
     struct BlockFormattingContext {
         BlockFormattingContext(bool isNormalFlow)
         {
@@ -218,6 +217,7 @@ private:
         LayoutUnit m_maxNegativeMarginBottom;
         LineBox* m_lastLineBox;
     };
+
     StarFish* m_starFish;
 
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
@@ -497,7 +497,12 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void layout(LayoutContext& ctx)
+    enum LayoutWantToResolve {
+        ResolveWidth = 1,
+        ResolveHeight = 1 << 1,
+        ResolveAll = ResolveWidth | ResolveHeight,
+    };
+    virtual void layout(LayoutContext& ctx, LayoutWantToResolve resolveWhat)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

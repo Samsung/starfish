@@ -5,48 +5,69 @@
 
 namespace StarFish {
 
-void FrameBlockBox::layout(LayoutContext& ctx)
-{
-    if (isEstablishesBlockFormattingContext())
-        ctx.establishBlockFormattingContext(isNormalFlow());
+class BlockFormattingContextBlock {
+public:
+    BlockFormattingContextBlock(Frame* frm, LayoutContext& ctx)
+        : m_ctx(ctx)
+        , m_needs(false)
+    {
+        if (frm->isEstablishesBlockFormattingContext()) {
+            m_needs = true;
+            m_ctx.establishBlockFormattingContext(frm->isNormalFlow());
+        }
+    }
+    ~BlockFormattingContextBlock()
+    {
+        if (m_needs)
+            m_ctx.removeBlockFormattingContext();
+    }
 
+    LayoutContext& m_ctx;
+    bool m_needs;
+};
+
+void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+{
+    BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
     if (isNormalFlow()) {
         // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
         // Determine horizontal margins and width of this object.
 
-        LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
-        computeBorderMarginPadding(parentContentWidth);
+        if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
+            LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
+            computeBorderMarginPadding(parentContentWidth);
 
-        // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
-        ComputedStyle* style = Frame::style();
-        if (style->width().isAuto()) {
-            if (m_flags.m_shouldComputePreferredWidth) {
-                ComputePreferredWidthContext p(ctx, parentContentWidth);
-                computePreferredWidth(p);
-                setContentWidth(p.result());
+            // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
+            ComputedStyle* style = Frame::style();
+            if (style->width().isAuto()) {
+                if (m_flags.m_shouldComputePreferredWidth) {
+                    ComputePreferredWidthContext p(ctx, parentContentWidth);
+                    computePreferredWidth(p);
+                    setContentWidth(p.result());
+                } else {
+                    LayoutUnit remainWidth = parentContentWidth;
+                    remainWidth -= marginWidth();
+                    remainWidth -= borderWidth();
+                    remainWidth -= paddingWidth();
+                    setContentWidth(remainWidth);
+                }
             } else {
-                LayoutUnit remainWidth = parentContentWidth;
-                remainWidth -= marginWidth();
-                remainWidth -= borderWidth();
-                remainWidth -= paddingWidth();
-                setContentWidth(remainWidth);
-            }
-        } else {
-            if (style->width().isFixed()) {
-                setContentWidth(style->width().fixed());
-            } else {
-                STARFISH_ASSERT(style->width().isPercent());
-                setContentWidth(parentContentWidth * style->width().percent());
-            }
+                if (style->width().isFixed()) {
+                    setContentWidth(style->width().fixed());
+                } else {
+                    STARFISH_ASSERT(style->width().isPercent());
+                    setContentWidth(parentContentWidth * style->width().percent());
+                }
 
-            if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
-                LayoutUnit remain = parentContentWidth;
-                remain -= contentWidth();
-                remain -= borderWidth();
-                remain -= paddingWidth();
-                if (remain > 0) {
-                    setMarginLeft(remain / 2);
-                    setMarginRight(remain / 2);
+                if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    if (remain > 0) {
+                        setMarginLeft(remain / 2);
+                        setMarginRight(remain / 2);
+                    }
                 }
             }
         }
@@ -84,7 +105,7 @@ void FrameBlockBox::layout(LayoutContext& ctx)
             if (style()->direction() == LtrDirectionValue) {
                 setMarginRight(0);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                setMarginLeft(0);
             }
         }
 
@@ -110,8 +131,8 @@ void FrameBlockBox::layout(LayoutContext& ctx)
                 LayoutUnit computedLeft = left.specifiedValue(parentWidth);
                 setAbsX(computedLeft);
             } else {
-                // TODO direction == rtl
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                LayoutUnit computedRight = right.specifiedValue(parentWidth);
+                setAbsX(parentWidth - width.specifiedValue(parentWidth) - computedRight);
             }
         } else {
             // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
@@ -151,7 +172,7 @@ void FrameBlockBox::layout(LayoutContext& ctx)
             if (style()->direction() == LtrDirectionValue) {
                 moveX(FrameBox::marginLeft());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                moveX(-FrameBox::marginRight());
             }
         } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
             moveX(FrameBox::marginLeft());
@@ -173,6 +194,10 @@ void FrameBlockBox::layout(LayoutContext& ctx)
         } else if (width.isPercent()) {
             setContentWidth(parentWidth * width.percent());
         }
+    }
+
+    if (!(Frame::LayoutWantToResolve::ResolveHeight & resolveWhat)) {
+        return;
     }
 
     LayoutUnit contentHeight;
@@ -301,7 +326,7 @@ void FrameBlockBox::layout(LayoutContext& ctx)
     ctx.layoutRegisteredAbsolutePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
         for (size_t i = 0; i < frames.size(); i ++) {
             Frame* f = frames[i];
-            f->layout(ctx);
+            f->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             mergeVisibleRect(f->asFrameBox());
         }
     });
@@ -348,10 +373,6 @@ void FrameBlockBox::layout(LayoutContext& ctx)
             mergeVisibleRect(f->asFrameBox());
         }
     });
-
-    if (isEstablishesBlockFormattingContext()) {
-        ctx.removeBlockFormattingContext();
-    }
 }
 
 Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage s)

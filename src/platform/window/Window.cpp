@@ -567,7 +567,7 @@ void Window::rendering()
         });
 
         LayoutContext ctx(starFish());
-        m_document->frame()->layout(ctx);
+        m_document->frame()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
         {
             Timer t("computeStackingContextProperties");
             m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
@@ -909,7 +909,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
             t = t->parentNode();
         }
 
-        if(shouldDispatchEvent) {
+        if (shouldDispatchEvent) {
             String* eventType = starFish()->staticStrings()->m_click.string();
             Event* e = new Event(eventType, EventInit(true, true));
             EventTarget::dispatchEvent(t->asNode()->asDocument()->window(), e);

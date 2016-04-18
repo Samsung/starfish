@@ -313,7 +313,7 @@ public:
         return "FrameBlockBox";
     }
 
-    virtual void layout(LayoutContext& ctx);
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(ComputePreferredWidthContext& ctx);
 
     virtual void dump(int depth);

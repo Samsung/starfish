@@ -35,7 +35,7 @@ public:
         return "FrameReplaced";
     }
 
-    virtual void layout(LayoutContext& ctx)
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
     {
         LayoutSize s = intrinsicSize();
         LayoutUnit parentContentWidth = ctx.blockContainer(this)->asFrameBox()->contentWidth();

@@ -33,35 +33,39 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     bool hasOnlySelfCollapsing = true;
     while (child) {
         // Place the child.
-        child->asFrameBox()->setX(paddingLeft() + borderLeft());
+        child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+        if (style()->direction() == LtrDirectionValue) {
+            child->asFrameBox()->setX(paddingLeft() + borderLeft());
+        } else {
+            child->asFrameBox()->setX(contentWidth() - paddingRight() - borderRight() - child->asFrameBox()->width());
+        }
+
         child->asFrameBox()->setY(normalFlowHeight + top);
 
-        // Lay out the child
-        if (child->isNormalFlow()) {
-            child->layout(ctx);
-            Length marginLeft = child->style()->marginLeft();
-            Length marginRight = child->style()->marginRight();
-            LayoutUnit mX = 0;
-            if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                // FIXME what "direction value" should we watch? self? child?
-                if (style()->direction() == LtrDirectionValue) {
-                    mX = child->asFrameBox()->marginLeft();
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-            } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-                mX = contentWidth() - child->asFrameBox()->width();
-                mX -= child->asFrameBox()->marginRight();
-            } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
+        Length marginLeft = child->style()->marginLeft();
+        Length marginRight = child->style()->marginRight();
+        LayoutUnit mX = 0;
+        if (!marginLeft.isAuto() && !marginRight.isAuto()) {
+            if (style()->direction() == LtrDirectionValue) {
                 mX = child->asFrameBox()->marginLeft();
             } else {
-                // auto-auto
-                mX = child->asFrameBox()->marginLeft();
+                mX = -child->asFrameBox()->marginRight();
             }
-            child->asFrameBox()->moveX(mX);
+        } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
+            mX = contentWidth() - child->asFrameBox()->width();
+            mX -= child->asFrameBox()->marginRight();
+        } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
+            mX = child->asFrameBox()->marginLeft();
+        } else {
+            // auto-auto
+            mX = child->asFrameBox()->marginLeft();
+        }
+        child->asFrameBox()->moveX(mX);
 
+        if (child->isNormalFlow()) {
+            // Lay out the child
+            child->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             LayoutUnit posTop = marginInfo.positiveMargin(), negTop = marginInfo.negativeMargin();
-
             if (child->asFrameBox()->marginTop() >= 0)
                 posTop = std::max(child->asFrameBox()->marginTop(), posTop);
             else
