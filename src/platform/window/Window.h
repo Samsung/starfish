@@ -158,6 +158,28 @@ public:
         return height();
     }
 
+    ScriptValue onclick()
+    {
+        auto eventType = starFish()->staticStrings()->m_click.string();
+        EventListener* l = getAttributeEventListener(eventType);
+        if (!l)
+            return ScriptValueNull;
+        return l->scriptValue();
+    }
+
+    void setOnclick(ScriptValue f)
+    {
+        auto eventType = starFish()->staticStrings()->m_click.string();
+        EventListener* l = new EventListener(f, true);
+        setAttributeEventListener(eventType, l);
+    }
+
+    void clearOnClick()
+    {
+        auto eventType = starFish()->staticStrings()->m_click.string();
+        clearAttributeEventListener(eventType);
+    }
+
 protected:
     void setNeedsRendering()
     {

@@ -181,6 +181,28 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         return escargot::ESValue(0);
         },
         NULL, true, true, true);
+
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("onclick"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            return wnd->onclick();
+        }
+        return escargot::ESValue();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const escargot::ESValue& value){
+        escargot::ESValue v = originalObj;
+        if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            if (value.asESPointer()->isESFunctionObject()) {
+                wnd->setOnclick(value);
+            } else {
+                wnd->clearOnClick();
+            }
+        }
+        },
+        true, true, true);
 }
 
 void ScriptWrappable::initScriptWrappable(Node* ptr)
