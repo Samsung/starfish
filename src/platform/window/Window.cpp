@@ -931,7 +931,7 @@ void Window::dispatchLoadEvent()
         Window* wnd = (Window*)data;
         String* eventType = wnd->starFish()->staticStrings()->m_load.string();
         Event* e = new Event(eventType, EventInit(false, false));
-        wnd->EventTarget::dispatchEvent(wnd->document()->bodyElement(), e);
+        wnd->EventTarget::dispatchEvent(e);
     }, this);
 }
 

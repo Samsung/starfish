@@ -37,6 +37,21 @@ public:
         }
     }
 
+    ScriptValue onload()
+    {
+        return document()->window()->onload();
+    }
+
+    void setOnload(ScriptValue f)
+    {
+        document()->window()->setOnload(f);
+    }
+
+    void clearOnload()
+    {
+        document()->window()->clearOnload();
+    }
+
 protected:
 };
 

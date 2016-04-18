@@ -180,6 +180,28 @@ public:
         clearAttributeEventListener(eventType);
     }
 
+    ScriptValue onload()
+    {
+        auto eventType = starFish()->staticStrings()->m_load.string();
+        EventListener* l = getAttributeEventListener(eventType);
+        if (!l)
+            return ScriptValueNull;
+        return l->scriptValue();
+    }
+
+    void setOnload(ScriptValue f)
+    {
+        auto eventType = starFish()->staticStrings()->m_load.string();
+        EventListener* l = new EventListener(f, true);
+        setAttributeEventListener(eventType, l);
+    }
+
+    void clearOnload()
+    {
+        auto eventType = starFish()->staticStrings()->m_load.string();
+        clearAttributeEventListener(eventType);
+    }
+
 protected:
     void setNeedsRendering()
     {

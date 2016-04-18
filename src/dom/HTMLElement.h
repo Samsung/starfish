@@ -98,7 +98,7 @@ public:
         clearAttributeEventListener(eventType);
     }
 
-    ScriptValue onload()
+    virtual ScriptValue onload()
     {
         auto eventType = document()->window()->starFish()->staticStrings()->m_load.string();
         EventListener* l = getAttributeEventListener(eventType);
@@ -107,14 +107,14 @@ public:
         return l->scriptValue();
     }
 
-    void setOnload(ScriptValue f)
+    virtual void setOnload(ScriptValue f)
     {
         auto eventType = document()->window()->starFish()->staticStrings()->m_load.string();
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
     }
 
-    void clearOnload()
+    virtual void clearOnload()
     {
         auto eventType = document()->window()->starFish()->staticStrings()->m_load.string();
         clearAttributeEventListener(eventType);

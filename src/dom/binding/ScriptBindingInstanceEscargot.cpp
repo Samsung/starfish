@@ -250,6 +250,21 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptObject();
     }, nullptr, true, false);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        WindowFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::WindowObject, Window);
+        return originalObj->onload();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::WindowObject, Window);
+        if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+            originalObj->setOnload(v);
+        } else {
+            originalObj->clearOnload();
+        }
+        return escargot::ESValue();
+    });
+
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(Node, EventTargetFunction->protoType());
     fetchData(this)->m_node = NodeFunction;
 
