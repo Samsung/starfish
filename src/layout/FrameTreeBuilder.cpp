@@ -181,7 +181,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 
         Frame* currentFrame;
         {
-            DisplayValue display = current->style()->originalDisplay();
+            DisplayValue display = current->style()->display();
             if (display == DisplayValue::BlockDisplayValue) {
                 if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
