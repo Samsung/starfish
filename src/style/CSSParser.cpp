@@ -918,7 +918,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly)
 
 String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
 {
-    String* valueText = String::emptyString;
+    std::vector<CSSToken*, gc_allocator<CSSToken*>> willBeConcat;
     std::vector<String*, gc_allocator<String*>> blocks;
     // bool foundPriority = false;
     std::vector<String*, gc_allocator<String*>> values;
@@ -943,10 +943,11 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                 token = getToken(true, true);
                 break;
             }*/
-            if (valueText->length()) {
-                return valueText;
+            if (willBeConcat.size() > 0) {
+                return combineAndTrimTokenValues(&willBeConcat);
             } else {
-                valueText = String::createASCIIString("inherit");
+                willBeConcat.clear();
+                willBeConcat.push_back(token);
                 token = getToken(true, true);
                 break;
             }
@@ -963,7 +964,7 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
             }
         }
 
-        valueText = valueText->concat(token->m_value);
+        willBeConcat.push_back(token);
         token = getToken(false, false);
     }
     /*
@@ -972,10 +973,35 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
         aDecl.push(this._createJscsspDeclarationFromValuesArray(descriptor, values, valueText));
         return valueText;
     }*/
-    if (valueText->length()) {
+    if (willBeConcat.size() > 0) {
         forgetState();
     }
-    return valueText;
+    return combineAndTrimTokenValues(&willBeConcat);
+}
+
+// Remove comments from both sides of a tokenList & Concat
+String* CSSParser::combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator<CSSToken*>>* list)
+{
+    String* result = String::emptyString;
+    if (list != nullptr) {
+        std::vector<CSSToken*, gc_allocator<CSSToken*>> stashed;
+        bool seenNoneComment = false;
+        for (CSSToken* item : *list) {
+            if (seenNoneComment && item->isComment()) {
+                stashed.push_back(item);
+            } else {
+                seenNoneComment = true;
+                if (stashed.size()) {
+                    for (CSSToken* commentItem : stashed) {
+                        result = result->concat(commentItem->m_value);
+                    }
+                    stashed.clear();
+                }
+                result = result->concat(item->m_value);
+            }
+        }
+    }
+    return result;
 }
 
 void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration)

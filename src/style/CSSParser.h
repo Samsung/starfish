@@ -605,6 +605,7 @@ protected:
     void addUnknownAtRule(CSSStyleSheet* aSheet, String* aString);
     void reportError(const char *aMsg);
     bool parseCharsetRule(CSSStyleSheet* aSheet);
+    static String* combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator<CSSToken*>>* list);
     Document* m_document;
     bool m_preserveWS;
     bool m_preserveComments;
