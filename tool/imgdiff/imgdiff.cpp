@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
                     }
 
                     // s
-                    if ((y < (height-1)) && (checkVector[y+2][x])) {
+                    if ((y < (height-1)) && (checkVector[y+1][x])) {
                         cnt++;
                     }
 
