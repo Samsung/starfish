@@ -36,7 +36,6 @@ public:
     {
         m_id = String::emptyString;
         m_className = String::emptyString;
-        initScriptWrappable(this, instance);
     }
 
     Element(Document* document)
@@ -45,7 +44,6 @@ public:
     {
         m_id = String::emptyString;
         m_className = String::emptyString;
-        initScriptWrappable(this);
     }
 
     /* 4.4 Interface Node */

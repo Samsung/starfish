@@ -14,6 +14,10 @@ public:
         m_type = type;
         m_data = data;
         // init
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this);
     }
 

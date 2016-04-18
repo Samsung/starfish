@@ -32,6 +32,11 @@ public:
 
     virtual ~Event() { }
 
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
     const String* type() const { return m_type; }
     EventTarget* target() const { return m_target; }
     void setTarget(EventTarget* target) { m_target = target; }

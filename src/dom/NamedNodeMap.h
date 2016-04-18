@@ -12,6 +12,10 @@ public:
     NamedNodeMap(ScriptBindingInstance* instance, Element* element)
         : ScriptWrappable(this), m_element(element), m_instance(instance)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this, instance);
     }
     unsigned long length();

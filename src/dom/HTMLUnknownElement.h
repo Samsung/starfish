@@ -10,8 +10,12 @@ public:
     HTMLUnknownElement(Document* document, String* localName)
         : HTMLElement(document)
     {
-        initScriptWrappable(this);
         m_localName = localName;
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
     }
 
     /* 4.4 Interface Node */

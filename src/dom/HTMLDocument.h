@@ -13,6 +13,10 @@ public:
     HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance)
         : Document(window, scriptBindingInstance)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this);
     }
 

@@ -12,7 +12,6 @@ public:
     CharacterData(Document* document, String* data)
         : Node(document)
     {
-        initScriptWrappable(this);
         m_data = data;
     }
 

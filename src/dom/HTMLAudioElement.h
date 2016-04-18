@@ -13,7 +13,6 @@ public:
     HTMLAudioElement(Document* document)
         : HTMLElement(document)
     {
-        initScriptWrappable(this);
         m_isPlaying = false;
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -36,6 +35,11 @@ public:
             }
         }
 #endif
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
     }
 
     static void _on_player_completed_cb(void* user_data)

@@ -57,7 +57,6 @@ Node::Node(Document* document)
     : EventTarget()
 {
     m_document = document;
-    initScriptWrappable(this, document->window()->starFish()->scriptBindingInstance());
     initNode();
 }
 

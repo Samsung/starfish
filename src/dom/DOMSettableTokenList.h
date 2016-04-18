@@ -11,7 +11,6 @@ public:
     DOMSettableTokenList(ScriptBindingInstance* instance, Element* element, QualifiedName localName)
         : DOMTokenList(instance, element, localName)
     {
-        initScriptWrappable(this, instance);
     }
 
     /* 7.2. Interface DOMSettableTokenList */
@@ -26,6 +25,11 @@ public:
     void setValue(String* value)
     {
         m_value = value;
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this, instance);
     }
 
 private:

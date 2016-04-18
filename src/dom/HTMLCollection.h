@@ -14,6 +14,10 @@ public:
     HTMLCollection(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data, bool canCache = false)
         : ScriptWrappable(this), m_activeNodeList(root, filter, data, canCache)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this, instance);
     }
     unsigned long length() const;

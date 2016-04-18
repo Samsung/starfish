@@ -24,8 +24,6 @@ Event::Event()
     : ScriptWrappable(this)
     , m_isInitialized(true)
 {
-    initScriptWrappable(this);
-
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     m_timeStamp = (BILLION * time.tv_sec + time.tv_nsec) / MILLION;
@@ -38,8 +36,6 @@ Event::Event(String* eventType, const EventInit& init)
     , m_bubbles(init.bubbles)
     , m_cancelable(init.cancelable)
 {
-    initScriptWrappable(this);
-
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     m_timeStamp = (BILLION * time.tv_sec + time.tv_nsec) / MILLION;

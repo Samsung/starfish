@@ -14,8 +14,13 @@ public:
         : ScriptWrappable(this)
         , m_activeNodeList(root, filter, data, canCache)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this, instance);
     }
+
     unsigned long length() const;
     Node* item(unsigned long index);
     ActiveNodeList& activeNodeList()

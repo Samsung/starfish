@@ -43,6 +43,11 @@ public:
 
     DOMException(ScriptBindingInstance* instance, Code code, const char* message = nullptr);
 
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this, instance);
+    }
+
     String* message() { return m_message; }
     const char* name() { return s_names[m_code]; }
     int code() { return m_code; }

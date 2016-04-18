@@ -82,7 +82,6 @@ protected:
         : EventTarget()
     {
         m_document = document;
-        initScriptWrappable(this, instance);
         initNode();
     }
 

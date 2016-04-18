@@ -70,8 +70,6 @@ DOMException::DOMException(ScriptBindingInstance* instance, Code code, const cha
         message = s_descriptions[code];
     m_message = String::fromUTF8(message);
 
-    initScriptWrappable(this, instance);
-    scriptObject()->defineDataProperty(escargot::ESString::create("code"), false, false, false, escargot::ESValue(m_code));
 }
 
 }

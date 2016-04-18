@@ -10,6 +10,10 @@ public:
     Comment(Document* document, String* data = String::emptyString)
         : CharacterData(document, data)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this);
     }
 

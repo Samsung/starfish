@@ -23,9 +23,6 @@ XMLHttpRequest::XMLHttpRequest()
     m_sendFlag = false;
     m_bindingInstance = nullptr;
     m_sync = false;
-
-    // init
-    initScriptWrappable(this);
 }
 
 void XMLHttpRequest::send(String* body)

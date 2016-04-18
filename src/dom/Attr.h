@@ -11,17 +11,20 @@ public:
     Attr(Document* document, ScriptBindingInstance* instance, Element* element, QualifiedName name)
         : Node(document), m_element(element), m_name(name), m_standAloneValue(String::emptyString)
     {
-        initScriptWrappable(this, instance);
     }
 
     Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name)
         : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(String::emptyString)
     {
-        initScriptWrappable(this, instance);
     }
 
     Attr(Document* document, ScriptBindingInstance* instance, QualifiedName name, String* value)
         : Node(document), m_element(nullptr), m_name(name), m_standAloneValue(value)
+    {
+
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this, instance);
     }

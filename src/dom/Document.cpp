@@ -198,7 +198,7 @@ String* Document::localName()
 
 Node* Document::clone()
 {
-    return new Document(window(), scriptBindingInstance());
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
 Element* Document::getElementById(String* id)

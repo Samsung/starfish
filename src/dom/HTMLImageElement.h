@@ -11,6 +11,10 @@ public:
         : HTMLElement(document)
         , m_imageData(nullptr)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this);
     }
 

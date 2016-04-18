@@ -14,7 +14,6 @@ public:
         , m_publicId(String::emptyString)
         , m_systemId(String::emptyString)
     {
-        initScriptWrappable(this);
     }
 
     DocumentType(Document* document, String* name, String* publicId, String* systemId)
@@ -22,6 +21,10 @@ public:
         , m_name(name)
         , m_publicId(publicId)
         , m_systemId(systemId)
+    {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
     }

@@ -12,8 +12,13 @@ public:
     DOMTokenList(ScriptBindingInstance* instance, Element* element, QualifiedName localName)
         : ScriptWrappable(this), m_element(element), m_localName(localName)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this, instance);
     }
+
     static void tokenize(std::vector<String*, gc_allocator<String*>>* tokens, String* src);
     unsigned long length();
     String* item(unsigned long index);

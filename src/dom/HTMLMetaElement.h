@@ -10,6 +10,10 @@ public:
     HTMLMetaElement(Document* document)
         : HTMLElement(document)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this);
     }
 

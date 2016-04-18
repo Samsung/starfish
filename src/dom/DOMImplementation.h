@@ -17,6 +17,10 @@ public:
         , m_window(window)
         , m_instance(instance)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this, instance);
     }
 

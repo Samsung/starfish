@@ -30,6 +30,11 @@ public:
         return true;
     }
 
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
     bool inRendering()
     {
         return m_inRendering;

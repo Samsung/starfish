@@ -87,15 +87,22 @@ public:
     };
     ScriptWrappable(void* extraPointerData);
 
-    ScriptValue scriptValue()
+    ScriptObject scriptObject()
     {
+        if (UNLIKELY((size_t)m_object & (size_t)1)) {
+            return scriptObjectSlowCase();
+        }
         return m_object;
     }
 
-    ScriptObject scriptObject()
+    ScriptObject scriptObjectSlowCase();
+    ScriptValue scriptValue()
     {
-        return m_object;
+        return scriptObject();
     }
+
+
+    virtual void initScriptObject(ScriptBindingInstance* instance) = 0;
 
     void initScriptWrappable(Window* ptr);
     void initScriptWrappable(Node* ptr);
@@ -148,7 +155,7 @@ public:
 
     bool hasProperty(String* name);
 
-protected:
+private:
     escargot::ESObject* m_object;
 };
 

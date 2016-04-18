@@ -376,7 +376,6 @@ Window::Window(StarFish* starFish)
 
     m_document = new HTMLDocument(this, m_starFish->scriptBindingInstance());
     initScriptWrappable(this);
-    m_document->initScriptWrappable(m_document);
     m_timeoutCounter = 0;
 
     m_needsRendering = false;

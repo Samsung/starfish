@@ -1088,7 +1088,6 @@ public:
         : ScriptWrappable(this)
         , m_document(document)
     {
-        initScriptWrappable(this);
         m_element = element;
     }
 
@@ -1121,6 +1120,12 @@ public:
 
         return newStyle;
     }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
 
     String* generateCSSText();
 
@@ -1270,6 +1275,12 @@ public:
         init(kind, rt, 1, pc, document, new CSSStyleDeclaration(document));
     }
 
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
+
     CSSStyleDeclaration* styleDeclaration()
     {
         return m_styleDeclaration;
@@ -1287,7 +1298,6 @@ protected:
         m_ruleText = ruleText;
         m_ruleTextLength = ruleTextLength;
         m_pseudoClass = pc;
-        initScriptWrappable(this);
         m_styleDeclaration = decl;
     }
 

@@ -11,6 +11,10 @@ public:
         : HTMLElement(document)
         , m_isAlreadyStarted(false)
     {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
         initScriptWrappable(this);
     }
 

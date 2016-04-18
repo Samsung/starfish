@@ -55,7 +55,6 @@ public:
     HTMLElement(Document* document)
         : Element(document)
     {
-        initScriptWrappable(this);
     }
 
     /* 4.4 Interface Node */

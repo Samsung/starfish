@@ -26,7 +26,7 @@ static ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* insta
 ScriptBindingInstance::ScriptBindingInstance()
 {
     m_enterCount = 0;
-    m_data = new ScriptBindingInstanceDataEscargot();
+    m_data = new ScriptBindingInstanceDataEscargot(this);
     fetchData(this)->m_instance = new escargot::ESVMInstance();
     enter();
 }
@@ -77,7 +77,7 @@ void ScriptBindingInstance::exit()
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);                                                                                    \
+    fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);                                                                                    \
     functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
 // TypeError: Illegal invocation
 #define THROW_ILLEGAL_INVOCATION()                                                                                                                           \
@@ -153,6 +153,7 @@ escargot::ESValue toJSString(String* v)
 
 void ScriptBindingInstance::initBinding(StarFish* sf)
 {
+    ScriptBindingInstance* scriptBindingInstance = this;
     escargot::ESValue v;
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
@@ -1965,8 +1966,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue();
     });
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlBodyElement = HTMLBodyElementFunction;
+    // DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, HTMLElementFunction->protoType());
+    // fetchData(this)->m_htmlBodyElement = HTMLBodyElementFunction;
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLDivElement, HTMLElementFunction->protoType());
     fetchData(this)->m_htmlDivElement = HTMLDivElementFunction;
@@ -3364,6 +3365,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }
 
 #endif
+}
+
+escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, fetchData(scriptBindingInstance)->m_htmlElement->protoType());
+    return HTMLBodyElementFunction;
 }
 
 void ScriptBindingInstance::evaluate(String* str)

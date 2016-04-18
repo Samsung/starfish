@@ -92,6 +92,11 @@ public:
 
     XMLHttpRequest();
 
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
     RESPONSE_TYPE getResponseType()
     {
         return m_responseType;
