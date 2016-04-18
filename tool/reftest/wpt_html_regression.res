@@ -25,3 +25,4 @@ test/reftest/web-platform-tests/html_converted/dom/documents/resource-metadata-m
 test/reftest/web-platform-tests/html_converted/dom/documents/resource-metadata-management/document-compatmode-02.html
 test/reftest/web-platform-tests/html_converted/infrastructure/conformance-requirements/extensibility/foreign.html
 test/reftest/web-platform-tests/html_converted/browsers/the-window-object/window-properties.html
+test/reftest/web-platform-tests/html_converted/browsers/the-window-object/window-prototype-chain.html

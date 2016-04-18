@@ -178,6 +178,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("log"), 1, false));
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
+    escargot::ESFunctionObject* toStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        escargot::ESValue constructor = thisValue.asESPointer()->asESObject()->get(escargot::ESString::create("constructor"));
+        escargot::ESValue constructor_name = constructor.asESPointer()->asESObject()->get(escargot::ESString::create("name"));
+        String* result = String::createASCIIString("[object ");
+        result = result->concat(toBrowserString(constructor_name.toString()));
+        result = result->concat(String::createASCIIString("]"));
+        return toJSString(result);
+        }, escargot::ESString::create("toString"), 0, false);
+
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
 
     auto fnAddEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -244,6 +254,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, nullptr, true, false);
     fetchData(this)->m_instance->globalObject()->set__proto__(WindowFunction->protoType());
     fetchData(this)->m_window = WindowFunction;
+    WindowFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), false, false, false, toStringFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(), escargot::ESString::create("document"),
