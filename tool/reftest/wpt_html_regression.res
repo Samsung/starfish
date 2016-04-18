@@ -13,3 +13,5 @@ test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/cance
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/same-dispatch-time.html
 test/reftest/web-platform-tests/html_converted/webappapis/scripting/processing-model-2/addEventListener.html
 test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/document.body-setter-01.html
+test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/Document.getElementsByClassName-null-undef.html
+test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/Element.getElementsByClassName-null-undef.html

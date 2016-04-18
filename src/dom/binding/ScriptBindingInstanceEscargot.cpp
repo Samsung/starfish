@@ -1005,8 +1005,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             if (obj->isElement()) {
                 Element* elem = obj->asElement();
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-                if (argValue.isESString()) {
-                    escargot::ESString* argStr = argValue.asESString();
+                if (argValue.isESString() || argValue.isUndefinedOrNull()) {
+                    escargot::ESString* argStr;
+                    if (argValue.isNull()) {
+                        argStr = escargot::ESString::create("null");
+                    } else if (argValue.isUndefined()) {
+                        argStr = escargot::ESString::create("undefined");
+                    } else {
+                        argStr = argValue.asESString();
+                    }
                     HTMLCollection* result = elem->getElementsByClassName(toBrowserString(argStr));
                     if (result != nullptr)
                         return result->scriptValue();
@@ -1468,8 +1475,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         if (obj->isDocument()) {
             Document* doc = obj->asDocument();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            if (argValue.isESString()) {
-                escargot::ESString* argStr = argValue.asESString();
+            if (argValue.isESString() || argValue.isUndefinedOrNull()) {
+                escargot::ESString* argStr;
+                if (argValue.isNull()) {
+                    argStr = escargot::ESString::create("null");
+                } else if (argValue.isUndefined()) {
+                    argStr = escargot::ESString::create("undefined");
+                } else {
+                    argStr = argValue.asESString();
+                }
+
                 HTMLCollection* result = doc->getElementsByClassName(toBrowserString(argStr));
                 if (result != nullptr)
                     return result->scriptValue();
