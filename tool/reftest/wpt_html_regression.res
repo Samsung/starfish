@@ -12,3 +12,4 @@ test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/callb
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/cancel-invoked.html
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/same-dispatch-time.html
 test/reftest/web-platform-tests/html_converted/webappapis/scripting/processing-model-2/addEventListener.html
+test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/document.body-setter-01.html

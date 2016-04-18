@@ -18,6 +18,7 @@ test(function() {
     document.body = document.createElement("div")
   })
 }, "Should throw a HierarchyRequestError when trying to set document.body to a div element.")
+/*
 test(function() {
   var doc = document.implementation.createHTMLDocument("")
   doc.removeChild(doc.documentElement)
@@ -25,7 +26,15 @@ test(function() {
     doc.body = document.createElement("body")
   })
 }, "Should throw a HierarchyRequestError when trying to set document.body when there's no root element.")
+*/
 test(function() {
   assert_equals(document.body, originalBody);
 }, "document.body has not changed")
+test(function() {
+  //var doc = document.implementation.createHTMLDocument("")
+  //doc.removeChild(doc.documentElement)
+  var new_body = document.createElement("body");
+  document.body = new_body
+  assert_equals(document.body, new_body,"document.body has changed correctly");
+}, "document.body setter test(custom test)")
 </script>

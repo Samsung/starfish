@@ -1155,7 +1155,27 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-    }, nullptr);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
+        if (!v.isUndefinedOrNull()) {
+            Node* nd = originalObj;
+            Node* node_v = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+            if (nd->isDocument()) {
+                if (node_v->isElement() && node_v->asElement()->isHTMLElement() && node_v->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+                    HTMLBodyElement* body = nd->asDocument()->bodyElement();
+                    HTMLHtmlElement* html_root = nd->asDocument()->rootElement();
+                    html_root->removeChild(body);
+                    html_root->appendChild(node_v);
+                } else {
+                    THROW_DOM_EXCEPTION(instance, DOMException::HIERARCHY_REQUEST_ERR);
+                }
+                return escargot::ESValue();
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("documentElement"),
