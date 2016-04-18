@@ -1664,7 +1664,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue();
     });
 
-
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onclick"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -1691,6 +1690,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue();
     });
+
+    escargot::ESFunctionObject* clickFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* obj = originalObj;
+        String* eventType = obj->document()->window()->starFish()->staticStrings()->m_click.string();
+        Event* e = new Event(eventType, EventInit(true, true));
+        obj->dispatchEvent(e);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("click"), 1, false);
+    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("click"), true, true, true, clickFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),

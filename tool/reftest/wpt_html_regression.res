@@ -3,6 +3,7 @@ test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/
 test/reftest/web-platform-tests/html_converted/dom/documents/dom-tree-accessors/document.head-01.html
 test/reftest/web-platform-tests/html_converted/dom/elements/elements-in-the-dom/unknown-element.html
 test/reftest/web-platform-tests/html_converted/dom/elements/global-attributes/classlist-nonstring.html
+test/reftest/web-platform-tests/html_converted/editing/activation/click.html
 test/reftest/web-platform-tests/html_converted/semantics/grouping-content/the-div-element/grouping-div.html
 test/reftest/web-platform-tests/html_converted/semantics/grouping-content/the-p-element/grouping-p.html
 test/reftest/web-platform-tests/html_converted/semantics/scripting-1/the-script-element/script-onload-string.html

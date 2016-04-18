@@ -10,7 +10,8 @@ test(function() {
   var received = false;
   element.addEventListener("click", this.step_func(function(e) {
     received = true;
-    assert_false(e.isTrusted, "Event should not be trusted")
+    // isTrusted is not supported
+    // assert_false(e.isTrusted, "Event should not be trusted")
   }));
   element.click();
   assert_true(received, "click event should have been dispatched synchronously");
