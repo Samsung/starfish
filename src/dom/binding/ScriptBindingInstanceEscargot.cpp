@@ -1307,6 +1307,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("compatMode"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return escargot::ESString::create("CSS1Compat");
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("firstElementChild"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
