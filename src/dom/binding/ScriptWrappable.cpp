@@ -251,7 +251,7 @@ void ScriptWrappable::initScriptWrappable(Node* ptr)
 void ScriptWrappable::initScriptWrappable(Node* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_node->protoType());
+    scriptObject()->set__proto__(data->node()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -265,14 +265,14 @@ void ScriptWrappable::initScriptWrappable(Element* element)
 void ScriptWrappable::initScriptWrappable(DocumentType* element)
 {
     auto data = fetchData(element->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_documentType->protoType());
+    scriptObject()->set__proto__(data->documentType()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
 void ScriptWrappable::initScriptWrappable(Element* element, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_element->protoType());
+    scriptObject()->set__proto__(data->element()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -280,7 +280,7 @@ void ScriptWrappable::initScriptWrappable(Document*)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_document->protoType());
+    scriptObject()->set__proto__(data->document()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -288,7 +288,7 @@ void ScriptWrappable::initScriptWrappable(Document*)
 void ScriptWrappable::initScriptWrappable(DOMImplementation* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_domImplementation->protoType());
+    scriptObject()->set__proto__(data->m_domImplementation()->protoType());
     scriptObject()->setExtraData(DOMImplementationObject);
 }
 #endif
@@ -297,7 +297,7 @@ void ScriptWrappable::initScriptWrappable(HTMLDocument*)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlDocument->protoType());
+    scriptObject()->set__proto__(data->htmlDocument()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -305,7 +305,7 @@ void ScriptWrappable::initScriptWrappable(CharacterData* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_characterData->protoType());
+    scriptObject()->set__proto__(data->characterData()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -313,7 +313,7 @@ void ScriptWrappable::initScriptWrappable(Text* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_text->protoType());
+    scriptObject()->set__proto__(data->text()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -321,7 +321,7 @@ void ScriptWrappable::initScriptWrappable(Comment* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_comment->protoType());
+    scriptObject()->set__proto__(data->comment()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -329,7 +329,7 @@ void ScriptWrappable::initScriptWrappable(HTMLElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlElement->protoType());
+    scriptObject()->set__proto__(data->htmlElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -337,7 +337,7 @@ void ScriptWrappable::initScriptWrappable(HTMLHtmlElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlHtmlElement->protoType());
+    scriptObject()->set__proto__(data->htmlHtmlElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -345,7 +345,7 @@ void ScriptWrappable::initScriptWrappable(HTMLHeadElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlHeadElement->protoType());
+    scriptObject()->set__proto__(data->htmlHeadElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -361,7 +361,7 @@ void ScriptWrappable::initScriptWrappable(HTMLStyleElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlStyleElement->protoType());
+    scriptObject()->set__proto__(data->htmlStyleElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -369,7 +369,7 @@ void ScriptWrappable::initScriptWrappable(HTMLLinkElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlLinkElement->protoType());
+    scriptObject()->set__proto__(data->htmlLinkElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -377,7 +377,7 @@ void ScriptWrappable::initScriptWrappable(HTMLScriptElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlScriptElement->protoType());
+    scriptObject()->set__proto__(data->htmlScriptElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -385,7 +385,7 @@ void ScriptWrappable::initScriptWrappable(HTMLImageElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlImageElement->protoType());
+    scriptObject()->set__proto__(data->htmlImageElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -393,7 +393,7 @@ void ScriptWrappable::initScriptWrappable(HTMLDivElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlDivElement->protoType());
+    scriptObject()->set__proto__(data->htmlDivElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -401,7 +401,7 @@ void ScriptWrappable::initScriptWrappable(HTMLBRElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlBrElement->protoType());
+    scriptObject()->set__proto__(data->htmlBrElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -409,7 +409,7 @@ void ScriptWrappable::initScriptWrappable(HTMLMetaElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlMetaElement->protoType());
+    scriptObject()->set__proto__(data->htmlMetaElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -417,7 +417,7 @@ void ScriptWrappable::initScriptWrappable(HTMLParagraphElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlParagraphElement->protoType());
+    scriptObject()->set__proto__(data->htmlParagraphElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -425,7 +425,7 @@ void ScriptWrappable::initScriptWrappable(HTMLSpanElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlSpanElement->protoType());
+    scriptObject()->set__proto__(data->htmlSpanElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -434,7 +434,7 @@ void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlAudioElement->protoType());
+    scriptObject()->set__proto__(data->htmlAudioElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 #endif
@@ -443,7 +443,7 @@ void ScriptWrappable::initScriptWrappable(HTMLUnknownElement* ptr)
 {
     Node* node = (Node*)this;
     auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_htmlUnknownElement->protoType());
+    scriptObject()->set__proto__(data->htmlUnknownElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
@@ -454,7 +454,7 @@ void ScriptWrappable::initScriptWrappable(XMLHttpRequest* xhr)
     auto data = fetchData(instance);
     xhr->setScriptBindingInstance(instance);
     xhr->setStarfishInstance(window->starFish());
-    scriptObject()->set__proto__(data->m_xhrElement->protoType());
+    scriptObject()->set__proto__(data->xhrElement()->protoType());
     scriptObject()->setExtraData(XMLHttpRequestObject);
 }
 
@@ -463,21 +463,21 @@ void ScriptWrappable::initScriptWrappable(Blob* blob)
     Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
     ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_blobElement->protoType());
+    scriptObject()->set__proto__(data->blobElement()->protoType());
     scriptObject()->setExtraData(BlobObject);
 }
 
 void ScriptWrappable::initScriptWrappable(URL* url, ScriptBindingInstance* instance)
 {
     // auto data = fetchData(instance);
-    // scriptObject()->set__proto__(data->m_urlElement->protoType());
+    // scriptObject()->set__proto__(data->urlElement()->protoType());
     // scriptObject()->setExtraData(URLObject);
 }
 
 void ScriptWrappable::initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_domException->protoType());
+    scriptObject()->set__proto__(data->domException()->protoType());
     scriptObject()->setExtraData(DOMExceptionObject);
 
     scriptObject()->defineDataProperty(escargot::ESString::create("code"), false, false, false, escargot::ESValue(exception->code()));
@@ -493,21 +493,21 @@ void ScriptWrappable::initScriptWrappable(Event* event)
     Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
     ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_event->protoType());
+    scriptObject()->set__proto__(data->event()->protoType());
     scriptObject()->setExtraData(EventObject);
 }
 
 void ScriptWrappable::initScriptWrappable(UIEvent* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_uiEvent->protoType());
+    scriptObject()->set__proto__(data->uiEvent()->protoType());
     scriptObject()->setExtraData(EventObject);
 }
 
 void ScriptWrappable::initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_mouseEvent->protoType());
+    scriptObject()->set__proto__(data->mouseEvent()->protoType());
     scriptObject()->setExtraData(EventObject);
 }
 
@@ -516,14 +516,14 @@ void ScriptWrappable::initScriptWrappable(ProgressEvent* ptr)
     Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
     ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_progressEvent->protoType());
+    scriptObject()->set__proto__(data->progressEvent()->protoType());
     scriptObject()->setExtraData(EventObject);
 }
 
 void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_htmlCollection->protoType());
+    scriptObject()->set__proto__(data->htmlCollection()->protoType());
     scriptObject()->setExtraData(HTMLCollectionObject);
 
     scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
@@ -562,7 +562,7 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
 void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_nodeList->protoType());
+    scriptObject()->set__proto__(data->nodeList()->protoType());
     scriptObject()->setExtraData(NodeListObject);
 
     scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
@@ -594,7 +594,7 @@ void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* 
 void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_domTokenList->protoType());
+    scriptObject()->set__proto__(data->domTokenList()->protoType());
     scriptObject()->setExtraData(DOMTokenListObject);
 
     scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
@@ -626,35 +626,35 @@ void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstan
 void ScriptWrappable::initScriptWrappable(DOMSettableTokenList* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_domSettableTokenList->protoType());
+    scriptObject()->set__proto__(data->domSettableTokenList()->protoType());
     scriptObject()->setExtraData(DOMSettableTokenListObject);
 }
 
 void ScriptWrappable::initScriptWrappable(NamedNodeMap* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_namedNodeMap->protoType());
+    scriptObject()->set__proto__(data->namedNodeMap()->protoType());
     scriptObject()->setExtraData(NamedNodeMapObject);
 }
 
 void ScriptWrappable::initScriptWrappable(Attr* ptr, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
-    scriptObject()->set__proto__(data->m_attr->protoType());
+    scriptObject()->set__proto__(data->attr()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
 
 void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
 {
     auto data = fetchData(ptr->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_cssStyleDeclaration->protoType());
+    scriptObject()->set__proto__(data->cssStyleDeclaration()->protoType());
     scriptObject()->setExtraData(CSSStyleDeclarationObject);
 }
 
 void ScriptWrappable::initScriptWrappable(CSSStyleRule* ptr)
 {
     auto data = fetchData(ptr->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->m_cssStyleRule->protoType());
+    scriptObject()->set__proto__(data->cssStyleRule()->protoType());
     scriptObject()->setExtraData(CSSStyleRuleObject);
 }
 

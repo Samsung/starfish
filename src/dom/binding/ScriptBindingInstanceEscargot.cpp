@@ -65,8 +65,9 @@ void ScriptBindingInstance::exit()
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);                                                                                    \
     functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
+
+// fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);
 
 #define DEFINE_FUNCTION_NOT_CONSTRUCTOR(functionName, parentName)                                                                                                                                                                          \
     escargot::ESString* functionName##String = escargot::ESString::create(#functionName);                                                                                                                                  \
@@ -77,8 +78,10 @@ void ScriptBindingInstance::exit()
             return escargot::ESValue();           \
         }, functionName##String, 0, true, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
-    fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);                                                                                    \
     functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
+
+// fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);
+
 // TypeError: Illegal invocation
 #define THROW_ILLEGAL_INVOCATION()                                                                                                                           \
     escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal invocation")))); \
@@ -153,7 +156,6 @@ escargot::ESValue toJSString(String* v)
 
 void ScriptBindingInstance::initBinding(StarFish* sf)
 {
-    ScriptBindingInstance* scriptBindingInstance = this;
     escargot::ESValue v;
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
@@ -200,6 +202,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_instance->globalObject()->objectPrototype()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, toStringFunction);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    fetchData(this)->m_eventTarget = EventTargetFunction;
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(EventTargetString, true, false, true, EventTargetFunction);
 
     auto fnAddEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -272,9 +276,164 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptObject();
     }, nullptr, true, false);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Node, EventTargetFunction->protoType());
-    fetchData(this)->m_node = NodeFunction;
 
+    // binding names first
+    escargot::ESObject* globalObject = fetchData(this)->m_instance->globalObject();
+#define DECLARE_NAME_FOR_BINDING(codeName, exportName) \
+    globalObject->defineAccessorProperty(escargot::ESString::create(#exportName), [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue \
+        { \
+            return fetchData((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptBindingInstance())->codeName##Value(); \
+        }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& value) \
+        { \
+            fetchData((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptBindingInstance())->codeName(); \
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData(); \
+            fetchData(wnd->document()->scriptBindingInstance())->m_value##codeName = value; \
+        }, true, false, true);
+    STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
+/*
+    globalObject->defineAccessorProperty(escargot::ESString::create("Node"), [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+            return fetchData((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptBindingInstance())->node();
+        }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& value)
+        {
+            fetchData((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptBindingInstance())->node();
+            escargot::ESVMInstance::currentInstance()->globalObject()->defineDataProperty(name, true, false, true, value);
+        }, true, false, true);
+*/
+
+
+    /* 4.5.1 Interface DOMImplementation */
+#ifdef STARFISH_EXP
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMImplementation, fetchData(this)->m_instance->globalObject()->objectPrototype());
+    fetchData(this)->m_domImplementation = DOMImplementationFunction;
+
+    DOMImplementationFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createHTMLDocument"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMImplementationObject, DOMImplementation);
+            DOMImplementation* impl = originalObj;
+            if (impl) {
+                Document* doc = impl->createHTMLDocument();
+                if (doc) {
+                    return doc->scriptValue();
+                }
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        },
+    escargot::ESString::create("createHTMLDocument"), 2, false));
+#endif
+
+#ifdef STARFISH_ENABLE_AUDIO
+    // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLAudioElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
+
+    escargot::ESFunctionObject* audioPlayFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+    {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
+                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->play();
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, escargot::ESString::create("play"), 1, false);
+    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("play"), false, false, false, audioPlayFunction);
+
+    escargot::ESFunctionObject* audioPauseFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+    {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+        if (nd->isElement()) {
+            if (nd->asElement()->isHTMLElement()) {
+                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
+                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->pause();
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+                }
+            }
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, escargot::ESString::create("pause"), 1, false);
+    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pause"), false, false, false, audioPauseFunction);
+
+    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("paused"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
+        {
+            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
+            if (nd->isElement()) {
+                if (nd->asElement()->isHTMLElement()) {
+                    if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
+                        return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLAudioElement()->paused());
+                    }
+                }
+            }
+            THROW_ILLEGAL_INVOCATION();
+            RELEASE_ASSERT_NOT_REACHED();
+        },
+        NULL, true, true, false);
+#endif
+
+
+#ifdef TIZEN_DEVICE_API
+    fetchData(this)->m_deviceAPIObject = new DeviceAPI::NativePluginManager(fetchData(this)->m_instance);
+#endif
+
+#ifdef TIZEN_DEVICE_API
+    {
+        escargot::ESValue loadFunction = fetchData(this)->m_instance->globalObject()->get(escargot::ESString::create("load"));
+        std::string path = "/opt/usr/apps/";
+        path += getenv("PACKAGE_NAME");
+        path += "/shared/test/deviceapi/";
+
+        std::string prefix = path;
+        path += "include.js";
+        fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("prefix"), false, false, false, escargot::ESString::create(prefix.data()));
+        escargot::ESValue pathValue = escargot::ESString::create(path.data());
+
+        ScriptValue result;
+        escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+
+        std::jmp_buf tryPosition;
+        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
+            result = escargot::ESFunctionObject::call(instance, loadFunction, escargot::ESValue(), &pathValue, 1, false);
+            instance->unregisterTryPos(&tryPosition);
+            STARFISH_LOG_INFO("Tizen device api load ok");
+        } else {
+            result = instance->getCatchedError();
+            STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
+        }
+    }
+
+#endif
+}
+
+#define IMPL_EMPTY_BINDING(codeName, exportName, fromCodeName) \
+escargot::ESFunctionObject* binding##exportName(ScriptBindingInstance* scriptBindingInstance) \
+{ \
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(exportName, fetchData(scriptBindingInstance)->fromCodeName()->protoType()); \
+    return exportName##Function; \
+}
+
+IMPL_EMPTY_BINDING(htmlDocument, HTMLDocument, document);
+IMPL_EMPTY_BINDING(comment, Comment, characterData);
+IMPL_EMPTY_BINDING(htmlHtmlElement, HTMLHtmlElement, htmlElement);
+IMPL_EMPTY_BINDING(htmlHeadElement, HTMLHeadElement, htmlElement);
+IMPL_EMPTY_BINDING(htmlDivElement, HTMLDivElement, htmlElement);
+IMPL_EMPTY_BINDING(htmlParagraphElement, HTMLMetaElement, htmlElement);
+IMPL_EMPTY_BINDING(htmlParagraphElement, HTMLParagraphElement, htmlElement);
+IMPL_EMPTY_BINDING(htmlSpanElement, HTMLSpanElement, htmlElement);
+IMPL_EMPTY_BINDING(htmlBrElement, HTMLBRElement, htmlElement);
+IMPL_EMPTY_BINDING(htmlUnknownElement, HTMLUnknownElement, htmlElement);
+
+escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Node, fetchData(scriptBindingInstance)->m_eventTarget->protoType());
     /* 4.4 Interface Node */
 
     NodeFunction->defineAccessorProperty(escargot::ESString::create("ELEMENT_NODE"),
@@ -780,9 +939,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 return escargot::ESValue(escargot::ESValue::ESNull);
             }
         }, escargot::ESString::create("insertBefore"), 2, false));
+    return NodeFunction;
+}
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Element, NodeFunction->protoType());
-    fetchData(this)->m_element = ElementFunction;
+escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Element, fetchData(scriptBindingInstance)->node()->protoType());
 
     /* 4.8 Interface Element */
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -1097,11 +1259,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }, escargot::ESString::create("getElementsByTagName"), 1, false)
     );
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentType, NodeFunction->protoType());
-    fetchData(this)->m_documentType = DocumentTypeFunction;
-
-    DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
-
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("hasAttribute"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -1125,6 +1282,112 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             }
         }, escargot::ESString::create("hasAttribute"), 1, false)
     );
+
+    return ElementFunction;
+}
+
+escargot::ESFunctionObject* bindingCharacterData(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CharacterData, fetchData(scriptBindingInstance)->node()->protoType());
+
+    /* 4.9 Interface CharacterData */
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("data"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isCharacterData()) {
+            return toJSString(nd->asCharacterData()->data());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isCharacterData()) {
+            if (v.isNull()) {
+                nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("")));
+                return escargot::ESValue();
+            } else if (v.isUndefined()) {
+                nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("undefined")));
+                return escargot::ESValue();
+            }
+            nd->asCharacterData()->setData(toBrowserString(v));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isCharacterData()) {
+            if (nd->asCharacterData()->data()->isASCIIString())
+                return escargot::ESValue(nd->asCharacterData()->length());
+            else {
+                // TODO: measure length without converting
+                return escargot::ESValue(toJSString(nd->asCharacterData()->data()).toString()->length());
+            }
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    escargot::ESFunctionObject* removeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+        Node* p = obj->parentNode();
+        if (p == nullptr) {
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }
+        obj->remove();
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("remove"), 0, false);
+    CharacterDataFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
+
+    return CharacterDataFunction;
+}
+
+escargot::ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Text, fetchData(scriptBindingInstance)->characterData()->protoType());
+
+    /* 4.10 Interface Text */
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("wholeText"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (!nd->isText()) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        String* text = (nd->asText())->wholeText();
+        return toJSString(text);
+    }, nullptr);
+
+    return TextFunction;
+}
+
+escargot::ESFunctionObject* bindingDocumentType(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentType, fetchData(scriptBindingInstance)->node()->protoType());
+
+    escargot::ESFunctionObject* removeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+        Node* p = obj->parentNode();
+        if (p == nullptr) {
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }
+        obj->remove();
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("remove"), 0, false);
+    DocumentTypeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
 
     /* 4.7 Interface DocumentType */
 
@@ -1160,8 +1423,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return toJSString(s);
     }, nullptr);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Document, NodeFunction->protoType());
-    fetchData(this)->m_document = DocumentFunction;
+    return DocumentTypeFunction;
+}
+
+escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Document, fetchData(scriptBindingInstance)->node()->protoType());
 
     /* 4.5 Interface Document */
 
@@ -1187,9 +1454,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         Node* nd = originalObj;
         if (nd->isDocument()) {
             Document* document = nd->asDocument();
-            HTMLBodyElement* head = document->bodyElement();
-            if (head) {
-                return head->scriptValue();
+            HTMLBodyElement* body = document->bodyElement();
+            if (body) {
+                return body->scriptValue();
             }
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
@@ -1247,50 +1514,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, nullptr);
 #endif
 
-/*
-    // TODO implement this functions
-    // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("URL"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
-        },
-        NULL, false, false, false);
-
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("documentURI"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
-        },
-        NULL, false, false, false);
-
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("origin"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
-        },
-        NULL, false, false, false);
-
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("compatMode"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
-        },
-        NULL, false, false, false);
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("inputEncoding"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
-        },
-        NULL, false, false, false);
-
-    DocumentFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("contentType"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        return escargot::ESString::create("NOT supported yet!");
-        },
-        NULL, false, false, false);
-*/
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("characterSet"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -1622,103 +1845,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         THROW_ILLEGAL_INVOCATION()
     }, nullptr);
+    return DocumentFunction;
+}
 
-
-    /* 4.5.1 Interface DOMImplementation */
-#ifdef STARFISH_EXP
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMImplementation, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_domImplementation = DOMImplementationFunction;
-
-    DOMImplementationFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createHTMLDocument"), false, false, false,
-        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMImplementationObject, DOMImplementation);
-            DOMImplementation* impl = originalObj;
-            if (impl) {
-                Document* doc = impl->createHTMLDocument();
-                if (doc) {
-                    return doc->scriptValue();
-                }
-            }
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-    escargot::ESString::create("createHTMLDocument"), 2, false));
-#endif
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLDocument, DocumentFunction->protoType());
-    fetchData(this)->m_htmlDocument = HTMLDocumentFunction;
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CharacterData, NodeFunction->protoType());
-    fetchData(this)->m_characterData = CharacterDataFunction;
-
-    /* 4.9 Interface CharacterData */
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("data"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isCharacterData()) {
-            return toJSString(nd->asCharacterData()->data());
-        }
-        THROW_ILLEGAL_INVOCATION();
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isCharacterData()) {
-            if (v.isNull()) {
-                nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("")));
-                return escargot::ESValue();
-            } else if (v.isUndefined()) {
-                nd->asCharacterData()->setData(toBrowserString(::escargot::ESString::create("undefined")));
-                return escargot::ESValue();
-            }
-            nd->asCharacterData()->setData(toBrowserString(v));
-            return escargot::ESValue();
-        }
-        THROW_ILLEGAL_INVOCATION();
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isCharacterData()) {
-            if (nd->asCharacterData()->data()->isASCIIString())
-                return escargot::ESValue(nd->asCharacterData()->length());
-            else {
-                // TODO: measure length without converting
-                return escargot::ESValue(toJSString(nd->asCharacterData()->data()).toString()->length());
-            }
-        }
-        THROW_ILLEGAL_INVOCATION();
-    }, nullptr);
-
-    CharacterDataFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, removeFunction);
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Text, CharacterDataFunction->protoType());
-    fetchData(this)->m_text = TextFunction;
-
-    /* 4.10 Interface Text */
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        TextFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("wholeText"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (!nd->isText()) {
-            THROW_ILLEGAL_INVOCATION();
-        }
-        String* text = (nd->asText())->wholeText();
-        return toJSString(text);
-    }, nullptr);
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Comment, CharacterDataFunction->protoType());
-    fetchData(this)->m_comment = CommentFunction;
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLElement, ElementFunction->protoType());
-    fetchData(this)->m_htmlElement = HTMLElementFunction;
+escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLElement, fetchData(scriptBindingInstance)->element()->protoType());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("dir"),
@@ -1832,14 +1964,18 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue();
     });
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLHtmlElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlHtmlElement = HTMLHtmlElementFunction;
+    return HTMLElementFunction;
+}
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLHeadElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlHeadElement = HTMLHeadElementFunction;
+escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    return HTMLBodyElementFunction;
+}
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLScriptElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlScriptElement = HTMLScriptElementFunction;
+escargot::ESFunctionObject* bindingHTMLScriptElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLScriptElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
@@ -1901,8 +2037,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLStyleElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlStyleElement = HTMLStyleElementFunction;
+    return HTMLScriptElementFunction;
+}
+
+escargot::ESFunctionObject* bindingHTMLStyleElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLStyleElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLStyleElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
@@ -1923,9 +2063,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         THROW_ILLEGAL_INVOCATION();
         return escargot::ESValue();
     });
+    return HTMLStyleElementFunction;
+}
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLLinkElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlLinkElement = HTMLLinkElementFunction;
+escargot::ESFunctionObject* bindingHTMLLinkElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLLinkElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("href"),
@@ -1987,23 +2130,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue();
     });
 
-    // DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, HTMLElementFunction->protoType());
-    // fetchData(this)->m_htmlBodyElement = HTMLBodyElementFunction;
+    return HTMLLinkElementFunction;
+}
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLDivElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlDivElement = HTMLDivElementFunction;
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLImageElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlImageElement = HTMLImageElementFunction;
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLMetaElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlMetaElement = HTMLMetaElementFunction;
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLParagraphElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlParagraphElement = HTMLParagraphElementFunction;
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLSpanElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlSpanElement = HTMLSpanElementFunction;
+escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLImageElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
@@ -2107,69 +2239,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         THROW_ILLEGAL_INVOCATION();
         return escargot::ESValue();
     });
+    return HTMLImageElementFunction;
+}
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBRElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlBrElement = HTMLBRElementFunction;
-
-#ifdef STARFISH_ENABLE_AUDIO
-    // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLAudioElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
-
-    escargot::ESFunctionObject* audioPlayFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
-    {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        if (nd->isElement()) {
-            if (nd->asElement()->isHTMLElement()) {
-                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
-                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->play();
-                    return escargot::ESValue(escargot::ESValue::ESNull);
-                }
-            }
-        }
-        THROW_ILLEGAL_INVOCATION()
-    }, escargot::ESString::create("play"), 1, false);
-    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("play"), false, false, false, audioPlayFunction);
-
-    escargot::ESFunctionObject* audioPauseFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
-    {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        if (nd->isElement()) {
-            if (nd->asElement()->isHTMLElement()) {
-                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
-                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->pause();
-                    return escargot::ESValue(escargot::ESValue::ESNull);
-                }
-            }
-        }
-        THROW_ILLEGAL_INVOCATION()
-    }, escargot::ESString::create("pause"), 1, false);
-    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pause"), false, false, false, audioPauseFunction);
-
-    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("paused"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
-                        return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLAudioElement()->paused());
-                    }
-                }
-            }
-            THROW_ILLEGAL_INVOCATION();
-            RELEASE_ASSERT_NOT_REACHED();
-        },
-        NULL, true, true, false);
-#endif
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLCollection, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_htmlCollection = HTMLCollectionFunction;
+escargot::ESFunctionObject* bindingHTMLCollection(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLCollection, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
 
     /* 4.2.7.2 Interface HTMLCollection */
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -2217,428 +2292,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("namedItem"), 1, false);
     HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("namedItem"), true, true, true, namedItemFunction);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NodeList, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_nodeList = NodeListFunction;
+    return HTMLCollectionFunction;
+}
 
-    NodeListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false,
-        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
-        {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
-            NodeList* nodeList = (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
-
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            TO_INDEX_UINT32(argValue, idx);
-            if (idx != INVALID_INDEX && idx < nodeList->length()) {
-                Node* nd = nodeList->item(argValue.asUInt32());
-                return nd->scriptValue();
-            }
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        }, escargot::ESString::create("item"), 1, false)
-    );
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NodeListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeListObject, NodeList);
-        uint32_t len = originalObj->length();
-        return escargot::ESValue(len);
-    }, nullptr);
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_domTokenList = DOMTokenListFunction;
-
-    /* 7.1 Interface DOMTokenList */
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMTokenListObject, DOMTokenList);
-        uint32_t len = originalObj->length();
-        return escargot::ESValue(len);
-    }, nullptr);
-
-    escargot::ESFunctionObject* domTokenListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
-
-        DOMTokenList* self = (DOMTokenList*)(thisValue.asESPointer()->asESObject()->extraPointerData());
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        TO_INDEX_UINT32(argValue, idx);
-        if (idx != INVALID_INDEX && idx < self->length()) {
-            String* elem = self->item(idx);
-            return toJSString(elem);
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("item"), 1, false);
-    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, domTokenListItemFunction);
-
-    escargot::ESFunctionObject* domTokenListContainsFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
-        try {
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            escargot::ESString* argStr = argValue.toString();
-            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argStr));
-            return escargot::ESValue(res);
-        } catch(DOMException* e) {
-            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }, escargot::ESString::create("contains"), 1, false);
-    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("contains"), false, false, false, domTokenListContainsFunction);
-
-    escargot::ESFunctionObject* domTokenListAddFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
-        try {
-            std::vector<String*, gc_allocator<String*>> tokens;
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            for (int i = 0; i < argCount; i++) {
-                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-                escargot::ESString* argStr = argValue.toString();
-                String* aa = toBrowserString(argStr);
-                tokens.push_back(aa);
-            }
-            if (argCount > 0)
-                ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->add(&tokens);
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        } catch(DOMException* e) {
-            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }, escargot::ESString::create("add"), 1, false);
-    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("add"), false, false, false, domTokenListAddFunction);
-
-    escargot::ESFunctionObject* domTokenListRemoveFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
-        try {
-            std::vector<String*, gc_allocator<String*>> tokens;
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            for (int i = 0; i < argCount; i++) {
-                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-                escargot::ESString* argStr = argValue.toString();
-                String* aa = toBrowserString(argStr);
-                tokens.push_back(aa);
-            }
-            if (argCount > 0)
-                ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        } catch(DOMException* e) {
-            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }, escargot::ESString::create("remove"), 1, false);
-    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, domTokenListRemoveFunction);
-
-    escargot::ESFunctionObject* domTokenListToggleFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
-        try {
-            int argCount = instance->currentExecutionContext()->argumentCount();
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-            escargot::ESValue forceValue;
-            if (argCount >= 2)
-                forceValue = instance->currentExecutionContext()->readArgument(1);
-            if (argCount > 0) {
-                escargot::ESString* argStr = argValue.toString();
-                bool didAdd;
-                if (argCount == 1) {
-                    didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
-                } else {
-                    ASSERT(forceValue.isBoolean());
-                    didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), true, forceValue.asBoolean());
-                }
-                return escargot::ESValue(didAdd);
-            }
-            return escargot::ESValue(escargot::ESValue::ESNull);
-        } catch(DOMException* e) {
-            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }, escargot::ESString::create("toggle"), 1, false);
-    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toggle"), false, false, false, domTokenListToggleFunction);
-
-    escargot::ESFunctionObject* domTokenListToStringFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
-        String* str = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toString();
-        return toJSString(str);
-    }, escargot::ESString::create("toString"), 1, false);
-    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, domTokenListToStringFunction);
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMSettableTokenList, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_domSettableTokenList = DOMSettableTokenListFunction;
-
-    /* 7.2 Interface DOMSettableTokenList */
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
-        uint32_t len = originalObj->length();
-        return escargot::ESValue(len);
-    }, nullptr);
-
-    escargot::ESFunctionObject* domSettableTokenListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-        DOMTokenList* self = (DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData();
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        TO_INDEX_UINT32(argValue, idx);
-        if (idx != INVALID_INDEX && idx < self->length()) {
-            String* elem = self->item(argValue.asUInt32());
-            return toJSString(elem);
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("item"), 1, false);
-    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, domSettableTokenListItemFunction);
-
-    escargot::ESFunctionObject* domSettableTokenListContainsFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString()) {
-            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argValue.asESString()));
-            return escargot::ESValue(res);
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
-    }, escargot::ESString::create("contains"), 1, false);
-    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("contains"), false, false, false, domSettableTokenListContainsFunction);
-
-    escargot::ESFunctionObject* domSettableTokenListAddFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        std::vector<String*, gc_allocator<String*>> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-            if (argValue.isESString()) {
-                String* aa = toBrowserString(argValue.asESString());
-                tokens.push_back(aa);
-            } else {
-                THROW_ILLEGAL_INVOCATION()
-            }
-        }
-        if (argCount > 0)
-            ((DOMTokenList*) thisValue.asESPointer()->asESObject())->add(&tokens);
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("add"), 1, false);
-    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("add"), false, false, false, domSettableTokenListAddFunction);
-
-    escargot::ESFunctionObject* domSettableTokenListRemoveFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        std::vector<String*, gc_allocator<String*>> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-            if (argValue.isESString()) {
-                String* aa = toBrowserString(argValue.asESString());
-                tokens.push_back(aa);
-            } else {
-                THROW_ILLEGAL_INVOCATION()
-            }
-        }
-        if (argCount > 0)
-            ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("remove"), 1, false);
-    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, domSettableTokenListRemoveFunction);
-
-    escargot::ESFunctionObject* domSettableTokenListToggleFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        escargot::ESValue forceValue;
-        if (argCount >= 2)
-            forceValue = instance->currentExecutionContext()->readArgument(1);
-        if (argCount > 0 && argValue.isESString()) {
-            bool didAdd;
-            if (argCount == 1) {
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), false, false);
-            } else {
-                ASSERT(forceValue.isBoolean());
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), true, forceValue.asBoolean());
-            }
-            return escargot::ESValue(didAdd);
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("toggle"), 1, false);
-    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toggle"), false, false, false, domSettableTokenListToggleFunction);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
-        String* value = originalObj->value();
-        return toJSString(value);
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
-        originalObj->setValue(toBrowserString(v));
-        return escargot::ESValue();
-    });
-
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NamedNodeMap, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_namedNodeMap = NamedNodeMapFunction;
-
-    /* 4.8.1 Interface NamedNodeMap */
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        NamedNodeMapFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NamedNodeMapObject, NamedNodeMap);
-        uint32_t len = originalObj->length();
-        return escargot::ESValue(len);
-    }, nullptr);
-
-    escargot::ESFunctionObject* NamedNodeMapItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
-        NamedNodeMap* self = (NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData();
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        TO_INDEX_UINT32(argValue, idx);
-        if (idx != INVALID_INDEX && idx < self->length()) {
-            Attr* elem = self->item(argValue.asUInt32());
-            if (elem != nullptr)
-                return elem->scriptValue();
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("item"), 1, false);
-    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, NamedNodeMapItemFunction);
-
-    escargot::ESFunctionObject* NamedNodeMapGetNamedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
-
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString()) {
-            Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(
-            QualifiedName::fromString(((Window*)instance->globalObject()->extraPointerData())->starFish(), argValue.asESString()->utf8Data()));
-        if (elem != nullptr)
-            return elem->scriptValue();
-        } else {
-            THROW_ILLEGAL_INVOCATION()
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("getNamedItem"), 1, false);
-    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getNamedItem"), false, false, false, NamedNodeMapGetNamedItemFunction);
-
-    escargot::ESFunctionObject* NamedNodeMapSetNamedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
-        NamedNodeMap* namedNodeMap = (NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData();
-        STARFISH_ASSERT(namedNodeMap->element());
-
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        CHECK_TYPEOF(argValue, ScriptWrappable::Type::NodeObject);
-        if (!((Node*) argValue.asESPointer()->asESObject()->extraPointerData())->isAttr()) {
-            THROW_ILLEGAL_INVOCATION()
-        }
-        Attr* passedAttr = (Attr*) argValue.asESPointer()->asESObject()->extraPointerData();
-        Attr* toReturn = namedNodeMap->setNamedItem(passedAttr);
-        if (toReturn)
-            return toReturn->scriptValue();
-        else
-            return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("setNamedItem"), 1, false);
-    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setNamedItem"), false, false, false, NamedNodeMapSetNamedItemFunction);
-
-    escargot::ESFunctionObject* NamedNodeMapRemoveNamedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
-
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString()) {
-            try {
-                QualifiedName name = QualifiedName::fromString(((Window*)instance->globalObject()->extraPointerData())->starFish(),
-                    argValue.asESString()->utf8Data());
-                Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(name);
-                if (old == nullptr)
-                    throw new DOMException(((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, nullptr);
-                Attr* toReturn = new Attr(old->document(), ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), name, old->value());
-                ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->removeNamedItem(name);
-                if (toReturn != nullptr)
-                    return toReturn->scriptValue();
-            } catch(DOMException* e) {
-                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-
-        } else
-            THROW_ILLEGAL_INVOCATION()
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("removeNamedItem"), 1, false);
-    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeNamedItem"), false, false, false, NamedNodeMapRemoveNamedItemFunction);
-
-    /* 4.8.2 Interface Attr */
-    // FIXME Attr should inherit interface Node
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Attr, NodeFunction->protoType());
-    fetchData(this)->m_attr = AttrFunction;
-
-    auto attrNameValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        String* n = ((Attr*)originalObj)->name();
-        return toJSString(n);
-    };
-
-    auto attrValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        String* value = ((Attr*)originalObj)->value();
-        return toJSString(value);
-    };
-
-    auto attrValueSetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue
-    {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        ((Attr*)originalObj)->setValue(toBrowserString(v));
-        // FIXME(JMP): Actually this function have to return old Attr's value but we have to modify 'typedef void (*ESNativeSetter)(...)' in escargot/src/runtime/ESValue.h
-        // Because this need to many changes, we do the modification latter
-        return escargot::ESValue();
-    };
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("name"), attrNameValueGetter, nullptr);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"), attrValueGetter, attrValueSetter);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeValue"), attrValueGetter, attrValueSetter);
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textContent"), attrValueGetter, attrValueSetter);
-
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ownerElement"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        if (!((Node*) originalObj->extraPointerData())->isAttr()) {
-            THROW_ILLEGAL_INVOCATION()
-        }
-
-        Element* elem = ((Attr*) originalObj->extraPointerData())->ownerElement();
-        if (elem != nullptr)
-            return elem->scriptValue();
-        return escargot::ESValue(escargot::ESValue::ESNull);
-        },
-        NULL, false, false, false);
-
-    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("specified"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-        if (!((Node*) originalObj->extraPointerData())->isAttr()) {
-            THROW_ILLEGAL_INVOCATION()
-        }
-        return escargot::ESValue(true);
-        },
-        NULL, false, false, false);
-
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLUnknownElement, HTMLElementFunction->protoType());
-    fetchData(this)->m_htmlUnknownElement = HTMLUnknownElementFunction;
-
+escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingInstance)
+{
     /* 3.2 Interface Event */
     auto eventFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         int argCount = instance->currentExecutionContext()->argumentCount();
@@ -2701,9 +2359,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
     }, escargot::ESString::create("Event"), 1, true, false);
     eventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
-    eventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), true, false, true, eventFunction);
-    fetchData(this)->m_event = eventFunction;
+    eventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    // fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), true, false, true, eventFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
@@ -2856,14 +2513,25 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue(timeStamp);
     }, nullptr);
 
+    return eventFunction;
+}
+
+escargot::ESFunctionObject* bindingUIEvent(ScriptBindingInstance* scriptBindingInstance)
+{
     /* UI Events */
-    DEFINE_FUNCTION(UIEvent, eventFunction->protoType());
-    fetchData(this)->m_uiEvent = UIEventFunction;
+    DEFINE_FUNCTION(UIEvent, fetchData(scriptBindingInstance)->event()->protoType());
+    return UIEventFunction;
+}
 
+escargot::ESFunctionObject* bindingMouseEvent(ScriptBindingInstance* scriptBindingInstance)
+{
     /* Mouse Events */
-    DEFINE_FUNCTION(MouseEvent, UIEventFunction->protoType());
-    fetchData(this)->m_mouseEvent = MouseEventFunction;
+    DEFINE_FUNCTION(MouseEvent, fetchData(scriptBindingInstance)->uiEvent()->protoType());
+    return MouseEventFunction;
+}
 
+escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBindingInstance)
+{
     /* Progress Events */
     auto progressEventFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         int argCount = instance->currentExecutionContext()->argumentCount();
@@ -2945,9 +2613,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
     }, escargot::ESString::create("ProgressEvent"), 1, true, false);
     progressEventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
-    progressEventFunction->protoType().asESPointer()->asESObject()->set__proto__(eventFunction->protoType());
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("ProgressEvent"), true, false, true, progressEventFunction);
-    fetchData(this)->m_progressEvent = progressEventFunction;
+    progressEventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->event()->protoType());
+
+    // fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("ProgressEvent"), true, false, true, progressEventFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         progressEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("lengthComputable"),
@@ -2988,10 +2656,449 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
     }, nullptr);
 
-    /* style-related getter/setter start here */
+    return progressEventFunction;
+}
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_cssStyleDeclaration = CSSStyleDeclarationFunction;
+escargot::ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NodeList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    NodeListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeListObject);
+            NodeList* nodeList = (NodeList*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            TO_INDEX_UINT32(argValue, idx);
+            if (idx != INVALID_INDEX && idx < nodeList->length()) {
+                Node* nd = nodeList->item(argValue.asUInt32());
+                return nd->scriptValue();
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("item"), 1, false)
+    );
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NodeListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeListObject, NodeList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
+    return NodeListFunction;
+}
+
+escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMTokenList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    /* 7.1 Interface DOMTokenList */
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMTokenListObject, DOMTokenList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
+    escargot::ESFunctionObject* domTokenListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
+
+        DOMTokenList* self = (DOMTokenList*)(thisValue.asESPointer()->asESObject()->extraPointerData());
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        TO_INDEX_UINT32(argValue, idx);
+        if (idx != INVALID_INDEX && idx < self->length()) {
+            String* elem = self->item(idx);
+            return toJSString(elem);
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("item"), 1, false);
+    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, domTokenListItemFunction);
+
+    escargot::ESFunctionObject* domTokenListContainsFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
+        try {
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESString* argStr = argValue.toString();
+            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argStr));
+            return escargot::ESValue(res);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("contains"), 1, false);
+    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("contains"), false, false, false, domTokenListContainsFunction);
+
+    escargot::ESFunctionObject* domTokenListAddFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
+        try {
+            std::vector<String*, gc_allocator<String*>> tokens;
+            int argCount = instance->currentExecutionContext()->argumentCount();
+            for (int i = 0; i < argCount; i++) {
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+                escargot::ESString* argStr = argValue.toString();
+                String* aa = toBrowserString(argStr);
+                tokens.push_back(aa);
+            }
+            if (argCount > 0)
+                ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->add(&tokens);
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("add"), 1, false);
+    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("add"), false, false, false, domTokenListAddFunction);
+
+    escargot::ESFunctionObject* domTokenListRemoveFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
+        try {
+            std::vector<String*, gc_allocator<String*>> tokens;
+            int argCount = instance->currentExecutionContext()->argumentCount();
+            for (int i = 0; i < argCount; i++) {
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+                escargot::ESString* argStr = argValue.toString();
+                String* aa = toBrowserString(argStr);
+                tokens.push_back(aa);
+            }
+            if (argCount > 0)
+                ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("remove"), 1, false);
+    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, domTokenListRemoveFunction);
+
+    escargot::ESFunctionObject* domTokenListToggleFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
+        try {
+            int argCount = instance->currentExecutionContext()->argumentCount();
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue forceValue;
+            if (argCount >= 2)
+                forceValue = instance->currentExecutionContext()->readArgument(1);
+            if (argCount > 0) {
+                escargot::ESString* argStr = argValue.toString();
+                bool didAdd;
+                if (argCount == 1) {
+                    didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
+                } else {
+                    ASSERT(forceValue.isBoolean());
+                    didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), true, forceValue.asBoolean());
+                }
+                return escargot::ESValue(didAdd);
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("toggle"), 1, false);
+    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toggle"), false, false, false, domTokenListToggleFunction);
+
+    escargot::ESFunctionObject* domTokenListToStringFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMTokenListObject);
+        String* str = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toString();
+        return toJSString(str);
+    }, escargot::ESString::create("toString"), 1, false);
+    DOMTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, domTokenListToStringFunction);
+
+    return DOMTokenListFunction;
+}
+
+escargot::ESFunctionObject* bindingDOMSettableTokenList(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMSettableTokenList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    /* 7.2 Interface DOMSettableTokenList */
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
+    escargot::ESFunctionObject* domSettableTokenListItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+        DOMTokenList* self = (DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData();
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        TO_INDEX_UINT32(argValue, idx);
+        if (idx != INVALID_INDEX && idx < self->length()) {
+            String* elem = self->item(argValue.asUInt32());
+            return toJSString(elem);
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("item"), 1, false);
+    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, domSettableTokenListItemFunction);
+
+    escargot::ESFunctionObject* domSettableTokenListContainsFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        if (argValue.isESString()) {
+            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argValue.asESString()));
+            return escargot::ESValue(res);
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+    }, escargot::ESString::create("contains"), 1, false);
+    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("contains"), false, false, false, domSettableTokenListContainsFunction);
+
+    escargot::ESFunctionObject* domSettableTokenListAddFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+
+        std::vector<String*, gc_allocator<String*>> tokens;
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        for (int i = 0; i < argCount; i++) {
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+            if (argValue.isESString()) {
+                String* aa = toBrowserString(argValue.asESString());
+                tokens.push_back(aa);
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+        }
+        if (argCount > 0)
+            ((DOMTokenList*) thisValue.asESPointer()->asESObject())->add(&tokens);
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("add"), 1, false);
+    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("add"), false, false, false, domSettableTokenListAddFunction);
+
+    escargot::ESFunctionObject* domSettableTokenListRemoveFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+
+        std::vector<String*, gc_allocator<String*>> tokens;
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        for (int i = 0; i < argCount; i++) {
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+            if (argValue.isESString()) {
+                String* aa = toBrowserString(argValue.asESString());
+                tokens.push_back(aa);
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+        }
+        if (argCount > 0)
+            ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("remove"), 1, false);
+    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, domSettableTokenListRemoveFunction);
+
+    escargot::ESFunctionObject* domSettableTokenListToggleFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
+
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESValue forceValue;
+        if (argCount >= 2)
+            forceValue = instance->currentExecutionContext()->readArgument(1);
+        if (argCount > 0 && argValue.isESString()) {
+            bool didAdd;
+            if (argCount == 1) {
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), false, false);
+            } else {
+                ASSERT(forceValue.isBoolean());
+                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), true, forceValue.asBoolean());
+            }
+            return escargot::ESValue(didAdd);
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("toggle"), 1, false);
+    DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toggle"), false, false, false, domSettableTokenListToggleFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMSettableTokenListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
+        String* value = originalObj->value();
+        return toJSString(value);
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMSettableTokenListObject, DOMSettableTokenList);
+        originalObj->setValue(toBrowserString(v));
+        return escargot::ESValue();
+    });
+
+    return DOMSettableTokenListFunction;
+}
+
+escargot::ESFunctionObject* bindingNamedNodeMap(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(NamedNodeMap, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    /* 4.8.1 Interface NamedNodeMap */
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NamedNodeMapFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NamedNodeMapObject, NamedNodeMap);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
+    escargot::ESFunctionObject* NamedNodeMapItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+        NamedNodeMap* self = (NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData();
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        TO_INDEX_UINT32(argValue, idx);
+        if (idx != INVALID_INDEX && idx < self->length()) {
+            Attr* elem = self->item(argValue.asUInt32());
+            if (elem != nullptr)
+                return elem->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("item"), 1, false);
+    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false, NamedNodeMapItemFunction);
+
+    escargot::ESFunctionObject* NamedNodeMapGetNamedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        if (argValue.isESString()) {
+            Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(
+            QualifiedName::fromString(((Window*)instance->globalObject()->extraPointerData())->starFish(), argValue.asESString()->utf8Data()));
+        if (elem != nullptr)
+            return elem->scriptValue();
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("getNamedItem"), 1, false);
+    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getNamedItem"), false, false, false, NamedNodeMapGetNamedItemFunction);
+
+    escargot::ESFunctionObject* NamedNodeMapSetNamedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+        NamedNodeMap* namedNodeMap = (NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData();
+        STARFISH_ASSERT(namedNodeMap->element());
+
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        CHECK_TYPEOF(argValue, ScriptWrappable::Type::NodeObject);
+        if (!((Node*) argValue.asESPointer()->asESObject()->extraPointerData())->isAttr()) {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        Attr* passedAttr = (Attr*) argValue.asESPointer()->asESObject()->extraPointerData();
+        Attr* toReturn = namedNodeMap->setNamedItem(passedAttr);
+        if (toReturn)
+            return toReturn->scriptValue();
+        else
+            return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("setNamedItem"), 1, false);
+    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setNamedItem"), false, false, false, NamedNodeMapSetNamedItemFunction);
+
+    escargot::ESFunctionObject* NamedNodeMapRemoveNamedItemFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NamedNodeMapObject);
+
+        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+        if (argValue.isESString()) {
+            try {
+                QualifiedName name = QualifiedName::fromString(((Window*)instance->globalObject()->extraPointerData())->starFish(),
+                    argValue.asESString()->utf8Data());
+                Attr* old = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(name);
+                if (old == nullptr)
+                    throw new DOMException(((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, nullptr);
+                Attr* toReturn = new Attr(old->document(), ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->striptBindingInstance(), name, old->value());
+                ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->removeNamedItem(name);
+                if (toReturn != nullptr)
+                    return toReturn->scriptValue();
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+
+        } else
+            THROW_ILLEGAL_INVOCATION()
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("removeNamedItem"), 1, false);
+    NamedNodeMapFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeNamedItem"), false, false, false, NamedNodeMapRemoveNamedItemFunction);
+
+    return NamedNodeMapFunction;
+}
+
+escargot::ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInstance)
+{
+    /* 4.8.2 Interface Attr */
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Attr, fetchData(scriptBindingInstance)->node()->protoType());
+
+    auto attrNameValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        String* n = ((Attr*)originalObj)->name();
+        return toJSString(n);
+    };
+
+    auto attrValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        String* value = ((Attr*)originalObj)->value();
+        return toJSString(value);
+    };
+
+    auto attrValueSetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue
+    {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        ((Attr*)originalObj)->setValue(toBrowserString(v));
+        // FIXME(JMP): Actually this function have to return old Attr's value but we have to modify 'typedef void (*ESNativeSetter)(...)' in escargot/src/runtime/ESValue.h
+        // Because this need to many changes, we do the modification latter
+        return escargot::ESValue();
+    };
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("name"), attrNameValueGetter, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"), attrValueGetter, attrValueSetter);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeValue"), attrValueGetter, attrValueSetter);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textContent"), attrValueGetter, attrValueSetter);
+
+    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ownerElement"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        if (!((Node*) originalObj->extraPointerData())->isAttr()) {
+            THROW_ILLEGAL_INVOCATION()
+        }
+
+        Element* elem = ((Attr*) originalObj->extraPointerData())->ownerElement();
+        if (elem != nullptr)
+            return elem->scriptValue();
+        return escargot::ESValue(escargot::ESValue::ESNull);
+        },
+        NULL, false, false, false);
+
+    AttrFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("specified"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
+        if (!((Node*) originalObj->extraPointerData())->isAttr()) {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return escargot::ESValue(true);
+        },
+        NULL, false, false, false);
+
+    return AttrFunction;
+}
+
+escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* scriptBindingInstance)
+{
+    /* style-related getter/setter start here */
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
 
 #define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                 \
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(                                                                     \
@@ -3012,9 +3119,17 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     });
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleRule, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_cssStyleRule = CSSStyleRuleFunction;
+    return CSSStyleDeclarationFunction;
+}
 
+escargot::ESFunctionObject* bindingCSSStyleRule(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleRule, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    return CSSStyleRuleFunction;
+}
+
+escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptBindingInstance)
+{
     /* XMLHttpRequest */
     escargot::ESFunctionObject* xhrElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         auto xhr = new XMLHttpRequest();
@@ -3022,9 +3137,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return xhr->scriptValue();
     }, escargot::ESString::create("XMLHttpRequest"), 0, true, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
-    xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(EventTargetFunction->protoType());
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
-    fetchData(this)->m_xhrElement = xhrElementFunction;
+    xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget->protoType());
+    fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseType"),
@@ -3358,25 +3472,31 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("setRequestHeader"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setRequestHeader"), false, false, false, xhrSetRequestHeaderFunction);
 
+    return xhrElementFunction;
+}
 
+escargot::ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInstance)
+{
     /* Blob */
-    DEFINE_FUNCTION(Blob, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_blobElement = BlobFunction;
+    DEFINE_FUNCTION(Blob, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    return BlobFunction;
+}
 
+escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBindingInstance)
+{
     /* DOM Exception */
-    DEFINE_FUNCTION(DOMException, fetchData(this)->m_instance->globalObject()->objectPrototype());
-    fetchData(this)->m_domException = DOMExceptionFunction;
-    DOMExceptionFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(this)->m_instance->globalObject()->errorPrototype());
+    DEFINE_FUNCTION(DOMException, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->errorPrototype());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMExceptionFunction->protoType().asESPointer()->asESObject(), fetchData(this)->m_instance->strings().name,
+        DOMExceptionFunction->protoType().asESPointer()->asESObject(), fetchData(scriptBindingInstance)->m_instance->strings().name,
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject, DOMException);
         return escargot::ESString::create(originalObj->name());
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DOMExceptionFunction->protoType().asESPointer()->asESObject(), fetchData(this)->m_instance->strings().message,
+        DOMExceptionFunction->protoType().asESPointer()->asESObject(), fetchData(scriptBindingInstance)->m_instance->strings().message,
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMExceptionObject, DOMException);
         return toJSString(originalObj->message());
@@ -3389,43 +3509,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESValue(originalObj->code());
     }, nullptr);
 
-#ifdef TIZEN_DEVICE_API
-    fetchData(this)->m_deviceAPIObject = new DeviceAPI::NativePluginManager(fetchData(this)->m_instance);
-#endif
-
-#ifdef TIZEN_DEVICE_API
-    {
-        escargot::ESValue loadFunction = fetchData(this)->m_instance->globalObject()->get(escargot::ESString::create("load"));
-        std::string path = "/opt/usr/apps/";
-        path += getenv("PACKAGE_NAME");
-        path += "/shared/test/deviceapi/";
-
-        std::string prefix = path;
-        path += "include.js";
-        fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("prefix"), false, false, false, escargot::ESString::create(prefix.data()));
-        escargot::ESValue pathValue = escargot::ESString::create(path.data());
-
-        ScriptValue result;
-        escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-
-        std::jmp_buf tryPosition;
-        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-            result = escargot::ESFunctionObject::call(instance, loadFunction, escargot::ESValue(), &pathValue, 1, false);
-            instance->unregisterTryPos(&tryPosition);
-            STARFISH_LOG_INFO("Tizen device api load ok");
-        } else {
-            result = instance->getCatchedError();
-            STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
-        }
-    }
-
-#endif
-}
-
-escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* scriptBindingInstance)
-{
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, fetchData(scriptBindingInstance)->m_htmlElement->protoType());
-    return HTMLBodyElementFunction;
+    return DOMExceptionFunction;
 }
 
 void ScriptBindingInstance::evaluate(String* str)
