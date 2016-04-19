@@ -21,6 +21,7 @@ public:
     ScriptBindingInstanceDataEscargot(ScriptBindingInstance* bindingInstance)
     {
         m_bindingInstance = bindingInstance;
+        m_orgToString = nullptr;
         m_node = nullptr;
         m_element = nullptr;
         m_document = nullptr;
@@ -77,6 +78,7 @@ private:
     escargot::ESFunctionObject* m_htmlBodyElement;
 public:
 // private:
+    escargot::ESFunctionObject* m_orgToString;
     escargot::ESFunctionObject* m_node;
     escargot::ESFunctionObject* m_element;
     escargot::ESFunctionObject* m_document;

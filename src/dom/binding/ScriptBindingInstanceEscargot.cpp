@@ -180,13 +180,24 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     escargot::ESFunctionObject* toStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        escargot::ESValue constructor = thisValue.asESPointer()->asESObject()->get(escargot::ESString::create("constructor"));
-        escargot::ESValue constructor_name = constructor.asESPointer()->asESObject()->get(escargot::ESString::create("name"));
-        String* result = String::createASCIIString("[object ");
-        result = result->concat(toBrowserString(constructor_name.toString()));
-        result = result->concat(String::createASCIIString("]"));
-        return toJSString(result);
+        if (thisValue.isESPointer() && thisValue.asESPointer()->isESObject()) {
+            escargot::ESObject* obj = thisValue.asESPointer()->asESObject();
+            if (obj->extraData()) {
+                escargot::ESValue constructor = thisValue.asESPointer()->asESObject()->get(escargot::ESString::create("constructor"));
+                escargot::ESValue constructor_name = constructor.asESPointer()->asESObject()->get(escargot::ESString::create("name"));
+                String* result = String::createASCIIString("[object ");
+                result = result->concat(toBrowserString(constructor_name.toString()));
+                result = result->concat(String::createASCIIString("]"));
+                return toJSString(result);
+            }
+        }
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        escargot::ESFunctionObject* function = fetchData(wnd->document()->scriptBindingInstance())->m_orgToString;
+        return callScriptFunction(function, instance->currentExecutionContext()->arguments(), instance->currentExecutionContext()->argumentCount(), thisValue);
+
         }, escargot::ESString::create("toString"), 0, false);
+    fetchData(this)->m_orgToString = fetchData(this)->m_instance->globalObject()->objectPrototype()->getOwnProperty(escargot::ESString::create("toString")).asESPointer()->asESFunctionObject();
+    fetchData(this)->m_instance->globalObject()->objectPrototype()->defineDataProperty(escargot::ESString::create("toString"), true, false, true, toStringFunction);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(EventTarget, fetchData(this)->m_instance->globalObject()->objectPrototype());
 
@@ -254,7 +265,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, nullptr, true, false);
     fetchData(this)->m_instance->globalObject()->set__proto__(WindowFunction->protoType());
     fetchData(this)->m_window = WindowFunction;
-    WindowFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toString"), false, false, false, toStringFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(), escargot::ESString::create("document"),

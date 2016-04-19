@@ -1086,7 +1086,7 @@ policies and contribution forms [3].
     expose(assert_regexp_match, "assert_regexp_match");
 
     function assert_class_string(object, class_string, description) {
-        assert_equals(window.toString.call(object), "[object " + class_string + "]",
+        assert_equals({}.toString.call(object), "[object " + class_string + "]",
                       description);
     }
     expose(assert_class_string, "assert_class_string");

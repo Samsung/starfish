@@ -261,7 +261,7 @@ policies and contribution forms [3].
     WindowTestEnvironment.prototype.global_scope = function() {
         return window;
     };
-    
+
     /*
      * Base TestEnvironment implementation for a generic web worker.
      *
@@ -821,7 +821,7 @@ policies and contribution forms [3].
                     return "DocumentFragment node with " + val.childNodes.length + (val.childNodes.length == 1 ? " child" : " children");
                 default:
                     return "Node object of unknown type";
-                }                
+                }
             }
             */
 
@@ -1299,7 +1299,7 @@ policies and contribution forms [3].
         }
     }
     expose(assert_any, "assert_any");
-    
+
     function Test(name, properties)
     {
         if (tests.file_is_test && tests.tests.length) {
@@ -2107,7 +2107,7 @@ policies and contribution forms [3].
         status_text[Test.prototype.FAIL] = "Fail";
         status_text[Test.prototype.TIMEOUT] = "Timeout";
         status_text[Test.prototype.NOTRUN] = "Not Run";
-        
+
         var status_number = {};
         forEach(tests,
                 function(test) {
@@ -2124,7 +2124,7 @@ policies and contribution forms [3].
             return status.replace(/\s/g, '').toLowerCase();
         }
 
-        // XXX: skip below because there are a few unsupported APIs 
+        // XXX: skip below because there are a few unsupported APIs
         /*
         var summary_template = ["section", {"id":"summary"},
                                 ["h2", {}, "Summary"],
@@ -2663,10 +2663,10 @@ policies and contribution forms [3].
      */
 
     var tests = new Tests();
-    
+
     // XXX: `addEventListener` is changed to `this.addEventListener`
     this.addEventListener("error", function(e) {
-        if (tests.file_is_test) {            
+        if (tests.file_is_test) {
             var test = tests.tests[0];
             if (test.phase >= test.phases.HAS_RESULT) {
                 return;
