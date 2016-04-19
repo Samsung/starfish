@@ -2916,9 +2916,24 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 escargot::ESValue total = obj->get(escargot::ESString::create("total"));
                 bool canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : false;
                 bool canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : false;
-                bool canLengthComputable = lengthComputable.isBoolean() ? lengthComputable.asBoolean() : false;
-                unsigned long long loadedValue = loaded.isNumber() ? loaded.asNumber() : 0;
-                unsigned long long totalValue = total.isNumber() ? total.asNumber() : 0;
+                bool canLengthComputable = false;
+                if (lengthComputable.isBoolean()) {
+                    canLengthComputable = lengthComputable.asBoolean();
+                } else if (lengthComputable.isESString()) {
+                    canLengthComputable = lengthComputable.asESString()->length() != 0 ? true : false;
+                }
+                unsigned long long loadedValue = 0;
+                if (loaded.isNumber()) {
+                    loadedValue = loaded.asNumber();
+                } else if (loaded.isESString()) {
+                    loadedValue = loaded.toUint32();
+                }
+                unsigned long long totalValue = 0;
+                if (total.isNumber()) {
+                    totalValue = total.asNumber();
+                } else if (loaded.isESString()) {
+                    totalValue = total.toUint32();
+                }
 
                 auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()), ProgressEventInit(canBubbles, canCancelable, canLengthComputable, loadedValue, totalValue));
                 return event->scriptValue();
