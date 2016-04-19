@@ -2659,6 +2659,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
             } else if (firstArg.isObject()) {
                 type = escargot::ESString::create("[object Object]");
+            } else if (firstArg.isNull()) {
+                type = escargot::ESString::create("null");
+            } else if (firstArg.isUndefined()) {
+                type = escargot::ESString::create("undefined");
             }
             auto event = new Event(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
@@ -2673,6 +2677,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                     type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
                 } else if (firstArg.isObject()) {
                     type = escargot::ESString::create("[object Object]");
+                } else if (firstArg.isNull()) {
+                    type = escargot::ESString::create("null");
+                } else if (firstArg.isUndefined()) {
+                    type = escargot::ESString::create("undefined");
                 }
                 bool canBubbles = false;
                 bool canCancelable = false;
@@ -2876,6 +2884,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
             } else if (firstArg.isObject()) {
                 type = escargot::ESString::create("[object Object]");
+            } else if (firstArg.isNull()) {
+                type = escargot::ESString::create("null");
+            } else if (firstArg.isUndefined()) {
+                type = escargot::ESString::create("undefined");
             }
             auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
@@ -2890,6 +2902,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                     type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
                 } else if (firstArg.isObject()) {
                     type = escargot::ESString::create("[object Object]");
+                } else if (firstArg.isNull()) {
+                    type = escargot::ESString::create("null");
+                } else if (firstArg.isUndefined()) {
+                    type = escargot::ESString::create("undefined");
                 }
 
                 escargot::ESObject* obj = secondArg.asESPointer()->asESObject();
