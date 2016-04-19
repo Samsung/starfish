@@ -43,27 +43,27 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
         child->asFrameBox()->setY(normalFlowHeight + top);
 
-        Length marginLeft = child->style()->marginLeft();
-        Length marginRight = child->style()->marginRight();
-        LayoutUnit mX = 0;
-        if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-            if (style()->direction() == LtrDirectionValue) {
+        if (child->isNormalFlow()) {
+            Length marginLeft = child->style()->marginLeft();
+            Length marginRight = child->style()->marginRight();
+            LayoutUnit mX = 0;
+            if (!marginLeft.isAuto() && !marginRight.isAuto()) {
+                if (style()->direction() == LtrDirectionValue) {
+                    mX = child->asFrameBox()->marginLeft();
+                } else {
+                    mX = -child->asFrameBox()->marginRight();
+                }
+            } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
+                mX = contentWidth() - child->asFrameBox()->width();
+                mX -= child->asFrameBox()->marginRight();
+            } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
                 mX = child->asFrameBox()->marginLeft();
             } else {
-                mX = -child->asFrameBox()->marginRight();
+                // auto-auto
+                mX = child->asFrameBox()->marginLeft();
             }
-        } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-            mX = contentWidth() - child->asFrameBox()->width();
-            mX -= child->asFrameBox()->marginRight();
-        } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-            mX = child->asFrameBox()->marginLeft();
-        } else {
-            // auto-auto
-            mX = child->asFrameBox()->marginLeft();
-        }
-        child->asFrameBox()->moveX(mX);
+            child->asFrameBox()->moveX(mX);
 
-        if (child->isNormalFlow()) {
             // Lay out the child
             child->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             LayoutUnit posTop = marginInfo.positiveMargin(), negTop = marginInfo.negativeMargin();
