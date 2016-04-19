@@ -122,24 +122,25 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // 5. Initialize event's eventPhase attribute to CAPTURING_PHASE.
     // 1) Path : highest ancestor -> origin
     // 6. For each object in event path, invoke its event listeners with event event, as long as event's stop propagation flag is unset.
-    if (!event->stopPropagation()) {
-        event->setEventPhase(Event::CAPTURING_PHASE);
-        for (size_t i = eventPath.size(); i > 1; i--) {
-            EventTarget* eventTarget = eventPath[i - 1];
-            EventListenerVector* originals = eventTarget->getEventListeners(event->type());
-            if (originals) {
-                // Iterate Copied Vector : listeners can be removed during iteration
-                EventListenerVector copies = EventListenerVector(*originals);
-                for (auto listener : copies) {
-                    STARFISH_ASSERT(listener);
-                    if (std::find(originals->begin(), originals->end(), listener) != originals->end() && listener->capture()) {
-                        STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
-                        // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", node->localName()->utf8Data());
-                        event->setCurrentTarget(eventTarget);
-                        ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-                        callScriptFunction(listener->scriptValue(), argv, 1, eventTarget->scriptValue());
-                    }
+    event->setEventPhase(Event::CAPTURING_PHASE);
+    for (size_t i = eventPath.size(); i > 1; i--) {
+        if (event->stopPropagation())
+            break;
+        EventTarget* eventTarget = eventPath[i - 1];
+        EventListenerVector* originals = eventTarget->getEventListeners(event->type());
+        if (originals) {
+            // Iterate Copied Vector : listeners can be removed during iteration
+            EventListenerVector copies = EventListenerVector(*originals);
+            for (auto listener : copies) {
+                STARFISH_ASSERT(listener);
+                if (std::find(originals->begin(), originals->end(), listener) != originals->end() && listener->capture()) {
+                    STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
+                    // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", node->localName()->utf8Data());
+                    event->setCurrentTarget(eventTarget);
+                    ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
+                    callScriptFunction(listener->scriptValue(), argv, 1, eventTarget->scriptValue());
                 }
+
             }
         }
     }
@@ -170,9 +171,11 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // 1) Path : origin -> highest ancestor
     // 2) Initialize event's eventPhase attribute to BUBBLING_PHASE.
     // 3) For each object in event path, invoke its event listeners, with event event as long as event's stop propagation flag is unset.
-    if (event->bubbles() && !event->stopPropagation()) {
+    if (event->bubbles()) {
         event->setEventPhase(Event::BUBBLING_PHASE);
         for (size_t i = 1; i < eventPath.size(); i++) {
+            if (event->stopPropagation())
+                break;
             EventTarget* eventTarget = eventPath[i];
             EventListenerVector* originals = eventTarget->getEventListeners(event->type());
             if (originals) {
