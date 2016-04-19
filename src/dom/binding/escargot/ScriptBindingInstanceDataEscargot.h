@@ -4,6 +4,9 @@
 
 namespace StarFish {
 
+// #define STARFISH_ENUM_LAZY_BINDING_NAMES(F)
+
+
 escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* scriptBindingInstance);
 class ScriptBindingInstance;
 
@@ -20,51 +23,8 @@ public:
 
     ScriptBindingInstanceDataEscargot(ScriptBindingInstance* bindingInstance)
     {
+        memset(this, 0, sizeof (ScriptBindingInstanceDataEscargot));
         m_bindingInstance = bindingInstance;
-        m_orgToString = nullptr;
-        m_node = nullptr;
-        m_element = nullptr;
-        m_document = nullptr;
-        m_documentType = nullptr;
-        m_htmlDocument = nullptr;
-        m_characterData = nullptr;
-        m_text = nullptr;
-        m_comment = nullptr;
-#ifdef STARFISH_EXP
-        m_domImplementation = nullptr;
-#endif
-        m_htmlElement = nullptr;
-        m_htmlHtmlElement = nullptr;
-        m_htmlHeadElement = nullptr;
-        m_htmlScriptElement = nullptr;
-        m_htmlStyleElement = nullptr;
-        m_htmlLinkElement = nullptr;
-        m_htmlBodyElement = nullptr;
-        m_htmlDivElement = nullptr;
-        m_htmlImageElement = nullptr;
-        m_htmlBrElement = nullptr;
-        m_htmlMetaElement = nullptr;
-        m_htmlParagraphElement = nullptr;
-        m_htmlSpanElement = nullptr;
-#ifdef STARFISH_ENABLE_AUDIO
-        m_htmlAudioElement = nullptr;
-#endif
-        m_htmlCollection = nullptr;
-        m_htmlUnknownElement = nullptr;
-        m_event = nullptr;
-        m_uiEvent = nullptr;
-        m_mouseEvent = nullptr;
-        m_progressEvent = nullptr;
-        m_nodeList = nullptr;
-        m_domTokenList = nullptr;
-        m_domSettableTokenList = nullptr;
-        m_namedNodeMap = nullptr;
-        m_attr = nullptr;
-        m_cssStyleDeclaration = nullptr;
-        m_cssStyleRule = nullptr;
-        m_xhrElement = nullptr;
-        m_blobElement = nullptr;
-        m_domException = nullptr;
     }
 
     escargot::ESFunctionObject* htmlBodyElement()
