@@ -26,3 +26,5 @@ test/reftest/web-platform-tests/html_converted/dom/documents/resource-metadata-m
 test/reftest/web-platform-tests/html_converted/infrastructure/conformance-requirements/extensibility/foreign.html
 test/reftest/web-platform-tests/html_converted/browsers/the-window-object/window-properties.html
 test/reftest/web-platform-tests/html_converted/browsers/the-window-object/window-prototype-chain.html
+test/reftest/web-platform-tests/html_converted/semantics/text-level-semantics/the-bdi-element/bdi-neutral-to-another-bdi-1-ref.html
+
