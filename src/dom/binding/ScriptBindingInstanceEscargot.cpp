@@ -2663,7 +2663,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             auto event = new Event(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
         } else {
-            if (secondArg.isObject()) {
+            if (secondArg.isObject() || secondArg.isUndefinedOrNull()) {
                 escargot::ESString* type;
                 if (firstArg.isESString()) {
                     type = firstArg.asESString();
@@ -2674,11 +2674,14 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
                 } else if (firstArg.isObject()) {
                     type = escargot::ESString::create("[object Object]");
                 }
-
-                escargot::ESValue bubbles = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("bubbles"));
-                escargot::ESValue cancelable = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("cancelable"));
-                bool canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : false;
-                bool canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : false;
+                bool canBubbles = false;
+                bool canCancelable = false;
+                if (!secondArg.isUndefinedOrNull()) {
+                    escargot::ESValue bubbles = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("bubbles"));
+                    escargot::ESValue cancelable = secondArg.asESPointer()->asESObject()->get(escargot::ESString::create("cancelable"));
+                    canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : canBubbles;
+                    canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : canCancelable;
+                }
 
                 auto event = new Event(String::fromUTF8(type->utf8Data()), EventInit(canBubbles, canCancelable));
                 return event->scriptValue();
