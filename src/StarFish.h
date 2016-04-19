@@ -80,7 +80,7 @@ public:
 #ifndef STARFISH_TIZEN_WEARABLE
     StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h);
 #else
-    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h);
+    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h);
 #endif
     ~StarFish()
     {
@@ -186,7 +186,9 @@ protected:
     FontSelector m_fontSelector;
 };
 
+#ifdef STARFISH_ENABLE_PIXEL_TEST
 extern bool g_enablePixelTest;
+#endif
 
 }
 #endif

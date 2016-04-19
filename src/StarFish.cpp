@@ -42,7 +42,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
     m_window = Window::create(this, w, h);
 }
 #else
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h)
+StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h)
     : m_staticStrings(this)
     , m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
@@ -63,7 +63,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
     m_currentPath = currentPath;
 
     init(w, h);
-    m_window = Window::create(this, w, h, win);
+    m_window = Window::create(this, w, h);
 }
 #endif
 

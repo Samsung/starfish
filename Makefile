@@ -122,7 +122,11 @@ else ifeq ($(HOST), tizen_wearable_emulator)
  
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
 	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
-	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB)) -static-libstdc++
+	LDFLAGS += -L/home/parkjaeman/dev/starfish/deps/tizen/lib/tizen-wearable-2.3-emulator-x86
+	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB)) -ldlog -licuuc -licudata
+ifeq ($(TYPE), lib)
+	LDFLAGS += -static-libstdc++
+endif
 endif
 
 $(info host... $(HOST))

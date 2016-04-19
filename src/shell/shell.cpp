@@ -35,7 +35,9 @@ int main(int argc, char *argv[])
         } else if (strstr(argv[i], "--working-directory=") == argv[i]) {
             path = argv[i] + strlen("--working-directory=");
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
+#ifdef STARFISH_ENABLE_PIXEL_TEST
             g_enablePixelTest = true;
+#endif
         } else if (strstr(argv[i], "--width=") == argv[i]) {
             width = std::atoi(argv[i] + strlen("--width="));
         } else if (strstr(argv[i], "--height=") == argv[i]) {
