@@ -133,6 +133,8 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             EventListenerVector copies = EventListenerVector(*originals);
             for (auto listener : copies) {
                 STARFISH_ASSERT(listener);
+                if (event->stopImmediatePropagation())
+                    break;
                 if (std::find(originals->begin(), originals->end(), listener) != originals->end() && listener->capture()) {
                     STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                     // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", node->localName()->utf8Data());
@@ -183,6 +185,8 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 EventListenerVector copies = EventListenerVector(*originals);
                 for (auto listener : copies) {
                     STARFISH_ASSERT(listener);
+                    if (event->stopImmediatePropagation())
+                        break;
                     if (std::find(originals->begin(), originals->end(), listener) != originals->end() && !listener->capture()) {
                         STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                         // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s\n", node->localName()->utf8Data());

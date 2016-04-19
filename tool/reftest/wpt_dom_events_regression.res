@@ -5,3 +5,4 @@ test/reftest/web-platform-tests/DOMEvents_converted/init-event-while-dispatching
 test/reftest/web-platform-tests/DOMEvents_converted/throwing-in-listener-when-all-have-not-run-yet.html
 test/reftest/web-platform-tests/DOMEvents_converted/tests/approved/DOM.event.flow.html
 test/reftest/web-platform-tests/DOMEvents_converted/tests/approved/stopPropagation.deferred.effect.html
+test/reftest/web-platform-tests/DOMEvents_converted/tests/approved/stopImmediatePropagation.effect.html
