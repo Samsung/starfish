@@ -19,7 +19,7 @@ class Window : public EventTarget {
     friend class HTMLBodyElement;
     friend class Node;
 public:
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_APP
     static Window* create(StarFish* sf, size_t w = SIZE_MAX, size_t h = SIZE_MAX);
 #else
     static Window* create(StarFish* sf, size_t w = SIZE_MAX, size_t h = SIZE_MAX, void* win = nullptr);

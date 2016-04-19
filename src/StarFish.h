@@ -77,10 +77,10 @@ enum StarFishDeviceKind {
 
 class StarFish : public gc_cleanup {
 public:
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_APP
     StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h);
 #else
-    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h);
+    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h);
 #endif
     ~StarFish()
     {

@@ -94,6 +94,7 @@ else ifeq ($(HOST), tizen_wearable_arm)
 	DEPENDENCY_INCLUDE =
 
 	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
 	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
@@ -122,10 +123,11 @@ else ifeq ($(HOST), tizen_wearable_emulator)
  
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
 	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
-	LDFLAGS += -L/home/parkjaeman/dev/starfish/deps/tizen/lib/tizen-wearable-2.3-emulator-x86
+	LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-2.3-emulator-x86
 	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB)) -ldlog -licuuc -licudata
 ifeq ($(TYPE), lib)
 	LDFLAGS += -static-libstdc++
+	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
 endif
 endif
 

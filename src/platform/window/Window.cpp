@@ -227,7 +227,7 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
         wnd->setNeedsLayout();
 }
 
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_APP
 Window* Window::create(StarFish* sf, size_t w, size_t h)
 {
     Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);

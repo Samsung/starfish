@@ -41,7 +41,7 @@ private:
     FILE* m_fp;
 };
 
-#ifndef STARFISH_TIZEN_WEARABLE
+#ifndef STARFISH_TIZEN_WEARABLE_APP
 String* PathResolver::matchLocation(String* filePath)
 {
     return filePath;
@@ -49,7 +49,7 @@ String* PathResolver::matchLocation(String* filePath)
 #endif
 
 
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_APP
 
 typedef FILE* (*sfopen_cb)(const char* fileName);
 typedef long int (*sflength_cb)(FILE* fp);
@@ -140,7 +140,7 @@ String* PathResolver::matchLocation(String* filePath)
 
 FileIO* FileIO::create()
 {
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_APP
     FileIOTizen* fio = new FileIOTizen();
 #else
     FileIOPosix* fio = new FileIOPosix();
@@ -150,7 +150,7 @@ FileIO* FileIO::create()
 
 FileIO* FileIO::createInNonGCArea()
 {
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_APP
     FileIOTizen* fio = new(malloc(sizeof (FileIOTizen))) FileIOTizen();
 #else
     FileIOPosix* fio = new(malloc(sizeof (FileIOPosix))) FileIOPosix();

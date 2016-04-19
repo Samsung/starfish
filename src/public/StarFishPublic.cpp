@@ -1,5 +1,5 @@
 #ifdef NDEBUG
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN_WEARABLE_APP
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -33,7 +33,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const ch
     starfishGCAddRoots(String::emptyString, String::emptyString + sizeof(String*));
     starfishGCAddRoots(String::spaceString, String::spaceString + sizeof(String*));
     StarFishInstance* instance = (StarFishInstance*)malloc(sizeof(StarFishInstance));
-    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, String::fromUTF8(workingDirectory), locale, 360, 360);
+    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, String::fromUTF8(workingDirectory), locale, window, 360, 360);
     starfishGCAddRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
     return instance;
 }
