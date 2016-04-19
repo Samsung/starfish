@@ -474,10 +474,18 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-transforms-1.res"
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
+regression_test_wpt_cssom:
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_cssom_regression.res
 regression_test_wpt_dom:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res true
+regression_test_wpt_dom_events:
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_events_regression.res
 regression_test_wpt_html:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_html_regression.res
+regression_test_wpt_page_visibility:
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_page_visibility_regression.res
+regression_test_wpt_progress_events:
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_progress_events_regression.res
 regression_test_wpt_xhr:
 	./tool/reftest/wpt_test.sh tool/reftest/xhr_regression.res
 
