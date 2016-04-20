@@ -2321,6 +2321,8 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                 type = escargot::ESString::create("null");
             } else if (firstArg.isUndefined()) {
                 type = escargot::ESString::create("undefined");
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             auto event = new Event(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
@@ -2339,6 +2341,8 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                     type = escargot::ESString::create("null");
                 } else if (firstArg.isUndefined()) {
                     type = escargot::ESString::create("undefined");
+                } else {
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
                 bool canBubbles = false;
                 bool canCancelable = false;

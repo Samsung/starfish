@@ -94,16 +94,22 @@ else ifeq ($(HOST), tizen_wearable_arm)
 	DEPENDENCY_INCLUDE =
 
 	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
-	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
 	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
 	CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
 	CXXFLAGS += -Ideps/tizen/include
 
+	LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-2.3-target-arm
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
 	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
-	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB)) -static-libstdc++
+	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
+    ifeq ($(TYPE), lib)
+    	LDFLAGS += -static-libstdc++
+    	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
+    else
+    	LDFLAGS +=  -ldlog -licuuc -licudata -lecore -lecore_input -lecore_evas -levas -lelementary -lrt -lefl-extension -lfreetype -lcapi-media-player -lcairo -lfontconfig
+    endif
 else ifeq ($(HOST), tizen_wearable_emulator)
   OUTDIR=out/tizen_$(ARCH)/$(TYPE)/$(MODE)
 	TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
@@ -124,11 +130,13 @@ else ifeq ($(HOST), tizen_wearable_emulator)
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
 	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
 	LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-2.3-emulator-x86
-	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB)) -ldlog -licuuc -licudata
-ifeq ($(TYPE), lib)
-	LDFLAGS += -static-libstdc++
-	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
-endif
+	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
+    ifeq ($(TYPE), lib)
+    	LDFLAGS += -static-libstdc++
+    	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
+    else
+    	LDFLAGS +=  -ldlog -licuuc -licudata
+    endif
 endif
 
 $(info host... $(HOST))
@@ -342,7 +350,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
   LD    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
-  CXXFLAGS += -Os -g0 -finline-limit=64
+  CXXFLAGS += -O0 -g3 -finline-limit=64
   LIB = libWebWidgetEngine.so
 endif
 
@@ -459,7 +467,7 @@ pixel_test_css21:
 	make pixel_test_css tc=css21
 pixel_test_css3_color:
 	make pixel_test_css tc=css3_color
-pixel_test_css3_backgrounds:
+pixel_test_css3_backgrounds
 	make pixel_test_css tc=css3_backgrounds
 pixel_test_css3_transforms:
 	make pixel_test_css tc=css3_transforms
