@@ -102,7 +102,7 @@ void ScriptBindingInstance::exit()
         }                                                                             \
     }
 
-#define CHECK_TYPEOF_WIDH_ERRCODE(thisValue, type, instance, errcode) \
+#define CHECK_TYPEOF_WITH_ERRCODE(thisValue, type, instance, errcode) \
     { \
         escargot::ESValue v = thisValue; \
         if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) { \
@@ -867,7 +867,7 @@ escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInst
     escargot::ESFunctionObject* appendChildFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-            CHECK_TYPEOF_WIDH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject, instance, DOMException::HIERARCHY_REQUEST_ERR);
+            CHECK_TYPEOF_WITH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject, instance, DOMException::HIERARCHY_REQUEST_ERR);
             CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
             Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
             Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
@@ -885,7 +885,7 @@ escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInst
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             try {
                 escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-                CHECK_TYPEOF_WIDH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject, instance, DOMException::NOT_FOUND_ERR);
+                CHECK_TYPEOF_WITH_ERRCODE(thisValue, ScriptWrappable::Type::NodeObject, instance, DOMException::NOT_FOUND_ERR);
                 CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
                 Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
                 Node* child = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
