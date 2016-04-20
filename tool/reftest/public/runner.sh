@@ -22,7 +22,11 @@ if [[ "$tc" == *"test_dom" ]]; then
     WPTTEST=0
 elif [[ "$tc" == *"test_wpt_dom" ]]; then
     tc=$(cat $tc)
+elif [[ "$tc" == *"test_wpt_dom_events" ]]; then
+    tc=$(cat $tc)
 elif [[ "$tc" == *"test_wpt_html" ]]; then
+    tc=$(cat $tc)
+elif [[ "$tc" == *"test_wpt_page_visibility" ]]; then
     tc=$(cat $tc)
 elif [[ "$tc" == *"test_wpt_xhr" ]]; then
     tc=$(cat $tc)
