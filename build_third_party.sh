@@ -49,7 +49,10 @@ NUMPROC=$(grep 'processor' /proc/cpuinfo | wc -l)
 #cd ..
 
 cd third_party/escargot/
-./build_third_party.sh && make x64.interpreter.release.static -j && make x64.interpreter.debug.static -j
+./build_third_party.sh
+make clean
+make x64.interpreter.release.static -j8
+make x64.interpreter.debug.static -j8
 
 if [ -n "$TIZEN_SDK_HOME" ]; then
 make tizen_wearable_arm.interpreter.release.static -j8

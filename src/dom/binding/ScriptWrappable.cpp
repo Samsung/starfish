@@ -65,7 +65,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
                             escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
                         } else {
                             escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
-                            printf("Uncaught %s\n", err.toString()->utf8Data());
+                            STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
                         }
                     }, instance->currentExecutionContext()->readArgument(1).toUint32(),
                     instance->currentExecutionContext()->readArgument(0).asESPointer()));
@@ -107,7 +107,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
                             escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
                         } else {
                             escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
-                            printf("Uncaught %s\n", err.toString()->utf8Data());
+                            STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
                         }
                     }, instance->currentExecutionContext()->readArgument(1).toUint32(),
                     instance->currentExecutionContext()->readArgument(0).asESPointer()));
@@ -147,8 +147,14 @@ void ScriptWrappable::initScriptWrappable(Window* window)
                             escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
                             escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
                         } else {
+                            std::jmp_buf tryPosition;
                             escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
-                            printf("Uncaught %s\n", err.toString()->utf8Data());
+                            if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
+                                STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
+                                escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+                            } else {
+                                STARFISH_LOG_INFO("Uncaught Error\n");
+                            }
                         }
                     }, instance->currentExecutionContext()->readArgument(0).asESPointer()));
             }
@@ -731,7 +737,7 @@ ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, S
         instance->unregisterTryPos(&tryPosition);
     } else {
         result = instance->getCatchedError();
-        printf("Uncaught %s\n", result.toString()->utf8Data());
+        STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
     }
     return result;
 }

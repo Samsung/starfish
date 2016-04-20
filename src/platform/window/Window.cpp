@@ -347,9 +347,6 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
         return;
     }, wnd);
 
-    evas_event_callback_add(e, EVAS_CALLBACK_RENDER_FLUSH_POST, [](void* data, Evas* e, void* event_info) {
-    }, wnd);
-
     /*
     eext_rotary_event_handler_add([](void *data, Eext_Rotary_Event_Info *info) -> Eina_Bool {
         Window* sf = (Window*)data;

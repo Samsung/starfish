@@ -102,12 +102,12 @@ else ifeq ($(HOST), tizen_wearable_arm)
 
 	LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-2.3-target-arm
 	LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
-	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
-	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
     ifeq ($(TYPE), lib)
     	LDFLAGS += -static-libstdc++
     	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
     else
+    	LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
+    	LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
     	LDFLAGS +=  -ldlog -licuuc -licudata -lecore -lecore_input -lecore_evas -levas -lelementary -lrt -lefl-extension -lfreetype -lcapi-media-player -lcairo -lfontconfig
     endif
 else ifeq ($(HOST), tizen_wearable_emulator)
@@ -335,7 +335,7 @@ else ifeq ($(HOST), tizen_wearable_arm)
   LD    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
-  CXXFLAGS += -Os -g0 -finline-limit=64 -s
+  CXXFLAGS += -Os -g0 -finline-limit=64
   LIB = libWebWidgetEngine.so
 else ifeq ($(HOST), tizen_wearable_emulator)
   ifndef TIZEN_SDK_HOME
