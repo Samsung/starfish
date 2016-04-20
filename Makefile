@@ -487,8 +487,12 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-transforms-1.res"
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
-regression_test_wpt_cssom:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_cssom_regression.res
+regression_test_demo:
+	./tool/reftest/css_test.sh demo true
+
+regression_test_dom:
+	./tool/reftest/dom_test.sh tool/reftest/dom_regression.res true
+
 regression_test_wpt_dom:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res true
 regression_test_wpt_dom_events:
@@ -502,12 +506,6 @@ regression_test_wpt_progress_events:
 regression_test_wpt_xhr:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_xhr_regression.res
 
-regression_test_dom:
-	./tool/reftest/dom_test.sh tool/reftest/dom_regression.res true
-
-regression_test_demo:
-	./tool/reftest/css_test.sh demo true
-
 regression_test_css1:
 	./tool/reftest/css_test.sh css1 true
 regression_test_css21:
@@ -520,8 +518,13 @@ regression_test_css3_transforms:
 	./tool/reftest/css_test.sh css-transforms-1 true
 
 regression_test:
-	make regression_test_wpt_dom
 	make regression_test_dom
+	make regression_test_wpt_dom
+	make regression_test_wpt_dom_events
+	make regression_test_wpt_html
+	make regression_test_wpt_page_visibility
+	make regression_test_wpt_progress_events
+	make regression_test_wpt_xhr
 	make regression_test_demo
 	make regression_test_css1
 	make regression_test_css21
