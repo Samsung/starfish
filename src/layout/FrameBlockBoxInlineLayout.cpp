@@ -412,11 +412,14 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                         LayoutUnit y = tb->y();
                         size_t insertPos = i;
                         boxes.erase(boxes.begin() + i);
+                        int32_t start = 0; int32_t end;
                         for (size_t i = 0; i < total; i ++) {
-                            int32_t start, length;
-                            UBiDiDirection dir = ubidi_getVisualRun(bidi, i, &start, &length);
-                            String* t = tb->text()->substring(start, length);
+                            ubidi_getLogicalRun(bidi, start, &end, NULL);
+                            String* t = tb->text()->substring(start, end);
                             // puts(t->utf8Data());
+                            start = end;
+                            UBiDiDirection dir = ubidi_getBaseDirection((const UChar*)t->toUTF16String().data(), t->length());
+
                             InlineTextBox* box = new InlineTextBox(tb->node(), tb->style(), nullptr, t, tb->origin(), dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr);
                             box->setLayoutParent(tb->layoutParent());
                             box->setX(x);
@@ -480,19 +483,25 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                         }
                     }
 
-                    // check it has trailing netural chars
-                    char32_t last = lastTextBox->text()->charAt(lastTextBox->text()->length() - 1);
-                    if (charDirection(last) == 2) {
-                        size_t idx = lastTextBox->text()->length() - 1;
-                        while (idx != 0) {
-                            if (charDirection(lastTextBox->text()->charAt(idx)) != 2) {
+                    // check it has trailing neutral chars
+                    size_t lastPos = lastTextBox->text()->length() - 1;
+                    char32_t lastChar = lastTextBox->text()->charAt(lastPos);
+                    size_t i = lastPos;
+                    if (charDirection(lastChar) == 2) {
+                        while (true) {
+                            if (charDirection(lastTextBox->text()->charAt(i)) != 2) {
                                 break;
                             }
-                            idx--;
+                            if (i == 0) {
+                                break;
+                            } else {
+                                i--;
+                            }
                         }
-                        if (idx != 0) {
-                            splitBoxAt(lastTextBox, idx, true);
-                        }
+                    }
+
+                    if (i < lastPos) {
+                        splitBoxAt(lastTextBox, i, true);
                     }
                 }
             }
