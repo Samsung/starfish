@@ -53,6 +53,7 @@ void XMLHttpRequest::send(String* body)
         HeaderBuffer header;
         header.memory = NULL;
         header.contentType = NULL;
+        header.contentLength = 0;
         header.size = 0;
 
         Buffer buffer;
@@ -60,7 +61,6 @@ void XMLHttpRequest::send(String* body)
         buffer.size = 0;
 
         ProgressData progressData;
-        progressData.fromOnline = fromOnline;
         progressData.curl = curl;
         progressData.obj = xhrobj;
         progressData.lastruntime = 0;

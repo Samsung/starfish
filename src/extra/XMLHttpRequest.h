@@ -83,7 +83,6 @@ public:
     };
 
     struct ProgressData {
-        bool fromOnline;
         double lastruntime;
         CURL* curl;
         XMLHttpRequest* obj;
@@ -257,8 +256,7 @@ public:
             p_data->lastruntime = curtime;
 
             p_data->loaded = static_cast<uint32_t>(dlnow);
-            if (!p_data->fromOnline)
-                p_data->total = static_cast<uint32_t>(dltotal);
+            p_data->total = static_cast<uint32_t>(dltotal);
             this_obj->m_readyState = LOADING;
             this_obj->callEventHandler(NONE, false, p_data->loaded, p_data->total, this_obj->m_readyState);
 
