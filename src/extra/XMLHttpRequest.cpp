@@ -60,6 +60,7 @@ void XMLHttpRequest::send(String* body)
         buffer.size = 0;
 
         ProgressData progressData;
+        progressData.fromOnline = fromOnline;
         progressData.curl = curl;
         progressData.obj = xhrobj;
         progressData.lastruntime = 0;
@@ -226,6 +227,9 @@ void XMLHttpRequest::send(String* body)
                     script_obj->set(createScriptString(String::fromUTF8("responseText")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
 
                 }
+                if (pass->contentSize == 0)
+                    pass->total = 0;
+
                 this_obj->m_readyState = DONE;
                 this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
                 this_obj->callEventHandler(PROGRESS, true, pass->loaded, pass->total);
@@ -373,6 +377,7 @@ void XMLHttpRequest::setTimeout(uint32_t timeout)
 void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, uint32_t loaded, uint32_t total, int readyState)
 {
     String* eventName = nullptr;
+    bool lengthComputable = false;
     if (readyState >= 0) {
         ScriptValue rsc = getHandler(String::fromUTF8("readystatechange"), starfishInstance());
         if (rsc.isObject() && rsc.asESPointer()->isESFunctionObject()) {
@@ -395,10 +400,13 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
     else if (progState == LOADEND)
         eventName = String::fromUTF8("loadend");
 
+    if (total>0)
+        lengthComputable = true;
+
     if (eventName) {
         ScriptValue en = getHandler(eventName, starfishInstance());
         if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
-            ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, false, loaded, total));
+            ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, lengthComputable, loaded, total));
             ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
             callScriptFunction(en, json_arg, 1, scriptValue());
         }
@@ -412,7 +420,7 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
         if (clickListeners) {
             for (unsigned i = 0; i < clickListeners->size(); i++) {
                 STARFISH_ASSERT(clickListeners->at(i)->scriptValue() != ScriptValueNull);
-                ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, false, loaded, total));
+                ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, lengthComputable, loaded, total));
                 ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
                 ScriptValue fn = clickListeners->at(i)->scriptValue();
                 if (!fn.isNull())

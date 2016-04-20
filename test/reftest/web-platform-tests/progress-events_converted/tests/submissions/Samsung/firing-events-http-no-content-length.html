@@ -31,7 +31,8 @@
           test.done();
         }
         xhr.open("GET", "resources/no-content-length.py", true);
-        
+        //xhr.open("GET", "http://web-platform.test:8000/progress-events/tests/submissions/Samsung/resources/no-content-length.py", true);
+        //xhr.open("GET", chrome.extension.getURL('resources/no-content-length.py'), true);
         xhr.send(null);
       })
     </script>
