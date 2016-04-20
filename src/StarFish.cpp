@@ -69,7 +69,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
 
 void StarFish::init(int w, int h)
 {
-    UErrorCode code;
+    UErrorCode code = U_ZERO_ERROR;
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));

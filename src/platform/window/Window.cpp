@@ -909,9 +909,12 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         }
 
         if (shouldDispatchEvent) {
+            if (t == nullptr) {
+                t = m_document;
+            }
             String* eventType = starFish()->staticStrings()->m_click.string();
             Event* e = new Event(eventType, EventInit(true, true));
-            EventTarget::dispatchEvent(t->asNode()->asDocument()->window(), e);
+            EventTarget::dispatchEvent(t->asDocument()->window(), e);
         }
 
         releaseActiveNode();

@@ -350,7 +350,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
   LD    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
-  CXXFLAGS += -O0 -g3 -finline-limit=64
+  CXXFLAGS += -Os -g0 -finline-limit=64
   LIB = libWebWidgetEngine.so
 endif
 
@@ -467,7 +467,7 @@ pixel_test_css21:
 	make pixel_test_css tc=css21
 pixel_test_css3_color:
 	make pixel_test_css tc=css3_color
-pixel_test_css3_backgrounds
+pixel_test_css3_backgrounds:
 	make pixel_test_css tc=css3_backgrounds
 pixel_test_css3_transforms:
 	make pixel_test_css tc=css3_transforms
