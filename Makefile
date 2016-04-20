@@ -93,7 +93,7 @@ else ifeq ($(HOST), tizen_wearable_arm)
 
 	DEPENDENCY_INCLUDE =
 
-	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE -DESCARGOT_TIZEN
 	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
@@ -120,7 +120,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
 
 	DEPENDENCY_INCLUDE =
  
-	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE -DESCARGOT_TIZEN
 	CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
 	CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
 	CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
