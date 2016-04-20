@@ -158,7 +158,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 {
     escargot::ESValue v;
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#if defined(STARFISH_ENABLE_PIXEL_TEST) || defined(STARFISH_EMULATOR_RELEASE)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("wptTestEnd"), false, false, false, escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         const char* hide = getenv("HIDE_WINDOW");
         if ((hide && strlen(hide)))

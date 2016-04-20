@@ -352,6 +352,11 @@ else ifeq ($(HOST), tizen_wearable_emulator)
   STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
   CXXFLAGS += -Os -g0 -finline-limit=64
   LIB = libWebWidgetEngine.so
+ifeq ($(TYPE), exe)
+  CXXFLAGS += -DSTARFISH_EMULATOR_RELEASE
+endif
+
+
 endif
 
 ifeq ($(TYPE), lib)
