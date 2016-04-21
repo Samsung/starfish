@@ -517,10 +517,10 @@ regression_test_demo:
 	./tool/reftest/css_test.sh demo true
 
 regression_test_dom:
-	./tool/reftest/dom_test.sh tool/reftest/dom_regression.res true
+	./tool/reftest/dom_test.sh tool/reftest/dom_regression.res
 
 regression_test_wpt_dom:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res true
+	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res
 regression_test_wpt_dom_events:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_events_regression.res
 regression_test_wpt_html:
