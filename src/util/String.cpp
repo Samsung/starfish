@@ -193,7 +193,7 @@ String* String::fromUTF8(const char* str)
 {
     const char* p = str;
     while (*p) {
-        if (*p < 0) {
+        if (*p & 0x80) {
             return new StringDataUTF32(str, strlen(str));
         }
         p++;
