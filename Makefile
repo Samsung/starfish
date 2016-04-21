@@ -220,7 +220,11 @@ endif
 LDFLAGS += -lescargot
 
 ifeq ($(MODE), debug)
+    ifeq ($(ARCH), x64)
     LDFLAGS += -Lthird_party/escargot/out/x64/interpreter/debug
+    else
+    LDFLAGS += -Lthird_party/escargot/out/$(ARCH)/interpreter/debug
+    endif
     LDFLAGS += third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/debug.shared/.libs/libgc.a
 
     # TODO : use this option only for HOST=linux
@@ -321,6 +325,9 @@ else ifeq ($(HOST), tizen_arm)
   AR    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
   CXXFLAGS += -Os -g0
+  ifeq ($(MODE), debug)
+    CXXFLAGS += -g3 -Wno-literal-suffix
+  endif
   LIB = libWebWidgetEngine.so
 else ifeq ($(HOST), tizen_wearable_arm)
   ifndef TIZEN_SDK_HOME
@@ -336,6 +343,9 @@ else ifeq ($(HOST), tizen_wearable_arm)
   AR    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
   CXXFLAGS += -Os -g0 -finline-limit=64
+  ifeq ($(MODE), debug)
+    CXXFLAGS += -g3 -Wno-literal-suffix
+  endif
   LIB = libWebWidgetEngine.so
 else ifeq ($(HOST), tizen_wearable_emulator)
   ifndef TIZEN_SDK_HOME
@@ -351,6 +361,9 @@ else ifeq ($(HOST), tizen_wearable_emulator)
   AR    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
   CXXFLAGS += -Os -g0 -finline-limit=64
+  ifeq ($(MODE), debug)
+    CXXFLAGS += -g3 -Wno-literal-suffix
+  endif
   LIB = libWebWidgetEngine.so
 ifeq ($(TYPE), exe)
   CXXFLAGS += -DSTARFISH_EMULATOR_RELEASE
