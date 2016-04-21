@@ -16,9 +16,13 @@ FAILTC=0
 TCFILE=0
 PASSTCFILE=0
 
-PLATFORM=$1
+PLATFORM=`uname -m`
+if [[ "$PLATFORM" != "x86_64" && "$PLATFORM" != "i686" ]]; then
+    echo "Not supported platform"
+    exit
+fi
 
-tc=$2
+tc=$1
 if [[ "$tc" == "wpt_dom" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
 elif [[ "$tc" == "wpt_dom_events" ]]; then
@@ -30,7 +34,8 @@ elif [[ "$tc" == "wpt_page_visibility" ]]; then
 elif [[ "$tc" == "wpt_xhr" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
 else
-    echo "Usage: ./runner.js [x64|emulator] [input]"
+    echo "Usage: ./runner.js [test_input]"
+    echo "test_input: [wpt_dom | wpt_dom_events | wpt_html | wpt_page_visibility | wpt_xhr]"
     exit
 fi
 
@@ -44,10 +49,10 @@ array=( $tc )
 pos=$(( ${#array[*]} - 1 ))
 last=${array[$pos]}
 
-if [[ "$PLATFORM" == "x64" ]]; then
+if [[ "$PLATFORM" == "x86_64" ]]; then
    	STARFISH="./test/bin/x64/StarFish"
 	ROTATE="$(nproc)"
-elif [[ "$PLATFORM" == "emulator" ]]; then 
+elif [[ "$PLATFORM" == "i686" ]]; then
    	STARFISH="./test/bin/tizen_emulator/StarFish"
 	ROTATE=1
 else
@@ -65,12 +70,12 @@ for i in $tc ; do
     # Convert the html file
     XML=${i%.*}".xml"
 
-	if [[ "$PLATFORM" == "x64" ]]; then
+	if [[ "$PLATFORM" == "x86_64" ]]; then
 		cd preprocessor
     	./convert.sh ../$i > /dev/null 2&>1
 		cd ..
     	cp preprocessor/out/result.xml $XML 
-	elif [[ "$PLATFORM" == "emulator" ]]; then
+	elif [[ "$PLATFORM" == "i686" ]]; then
 		dlogutil -c
 	fi
 
@@ -83,7 +88,7 @@ for i in $tc ; do
     fi
     wait;
 
-	if [[ "$PLATFORM" == "x64" ]]; then
+	if [[ "$PLATFORM" == "x86_64" ]]; then
     	for c in $(seq 0 $cnt); do
         	TMPFILE="tmp"$c
 
@@ -147,7 +152,7 @@ for i in $tc ; do
 
         	rm $TMPFILE
     	done
-	elif [[ "$PLATFORM" == "emulator" ]]; then
+	elif [[ "$PLATFORM" == "i686" ]]; then
 		PASS=`dlogutil -d | grep -E "Pass" | wc -l`
 		PASSTC=`expr $PASSTC + $PASS`
 		FAIL=`dlogutil -d | grep -E "Fail" | wc -l`
