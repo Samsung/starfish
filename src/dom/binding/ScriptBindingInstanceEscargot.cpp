@@ -268,6 +268,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return escargot::ESVMInstance::currentInstance()->globalObject();
     }, nullptr, true, false);
     fetchData(this)->m_instance->globalObject()->set__proto__(WindowFunction->protoType());
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(WindowString, true, false, true, WindowFunction);
     fetchData(this)->m_window = WindowFunction;
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
