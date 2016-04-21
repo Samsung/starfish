@@ -762,11 +762,10 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
     LineBox* back = m_lineBoxes.back();
     LayoutUnit ascender;
     LayoutUnit descender;
-    LayoutUnit minimumHeight;
-    LayoutUnit h = computeVerticalProperties(back, style(), ascender, descender, lineFormattingContext);
+    computeVerticalProperties(back, style(), ascender, descender, lineFormattingContext);
     back->m_ascender = ascender;
     back->m_descender = descender;
-    back->m_frameRect.setHeight(h);
+    back->m_frameRect.setHeight(ascender - descender);
 
     lineFormattingContext.completeLastLine();
 
@@ -1258,13 +1257,9 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
     m_border = m_orgBorder;
 
     canvas->save();
-    canvas->translate(LayoutUnit(0), -y());
-    moveY(height());
+    canvas->translate(LayoutUnit(0), m_ascender  - (style()->font()->metrics().m_ascender) - borderTop() - paddingTop());
     setContentHeight(style()->font()->metrics().m_ascender - style()->font()->metrics().m_descender);
-    moveY(-contentHeight() - paddingTop() - borderTop());
     setHeight(contentHeight() + paddingHeight() + borderHeight());
-
-    canvas->translate(LayoutUnit(0), y());
     FrameBox::paintBackgroundAndBorders(canvas);
     canvas->restore();
 
