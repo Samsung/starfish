@@ -63,7 +63,8 @@ void ScriptBindingInstance::exit()
     escargot::ESFunctionObject* functionName##Function = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance*) -> escargot::ESValue      \
         {      \
             return escargot::ESValue();           \
-        }, functionName##String, 0, true, false); \
+        }, functionName##String, 0, true, true); \
+    functionName##Function->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
     functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
 
@@ -76,7 +77,8 @@ void ScriptBindingInstance::exit()
             escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal constructor")))); \
             STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
             return escargot::ESValue();           \
-        }, functionName##String, 0, true, false); \
+        }, functionName##String, 0, true, true); \
+        functionName##Function->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
     functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
 
@@ -2362,9 +2364,10 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
-    }, escargot::ESString::create("Event"), 1, true, false);
+    }, escargot::ESString::create("Event"), 1, true, true);
     eventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     eventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    eventFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
     // fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Event"), true, false, true, eventFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -2620,10 +2623,10 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
-    }, escargot::ESString::create("ProgressEvent"), 1, true, false);
+    }, escargot::ESString::create("ProgressEvent"), 1, true, true);
     progressEventFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     progressEventFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->event()->protoType());
-
+    progressEventFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
     // fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("ProgressEvent"), true, false, true, progressEventFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(

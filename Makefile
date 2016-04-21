@@ -135,7 +135,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
     	LDFLAGS += -static-libstdc++
     	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
     else
-		LDFLAGS += libstdc++.a
+		LDFLAGS += deps/tizen/lib/tizen-wearable-2.3-emulator-x86/libstdc++.a
     	LDFLAGS += -ldlog -licuuc -licudata
     endif
 endif
@@ -424,9 +424,7 @@ tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 
 $(OUTDIR)/$(BIN): $(OBJS) $(THIRD_PARTY_LIBS) 
 	@echo "[LINK] $@"
-	mv deps/tizen/lib/tizen-wearable-2.3-emulator-x86/libstdc++.a .
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
-	mv libstdc++.a deps/tizen/lib/tizen-wearable-2.3-emulator-x86/
 
 $(OUTDIR)/$(LIB): $(OBJS) $(THIRD_PARTY_LIBS)
 	@echo "[LINK] $@"
