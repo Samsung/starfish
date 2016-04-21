@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html  dir="rtl"  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>rtl on html, javascript confirm box</title>
+<link rel='author' title='Richard Ishida' href='mailto:ishida@w3.org'>
+<link rel='help' href='#text-rendered-in-native-user-interfaces'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="[Exploratory test] When the html tag sets dir to rtl, text runs in a JavaScript confirm box are in the correct order and characters within a directional run are in the right order.">
+<style type='text/css'>
+/* the CSS below is not part of the test */
+table td { border: 1px solid #CCC; }
+img { margin: 10px; }
+</style>
+</head>
+<body>
+<div class='prerequisites' dir="ltr">Prerequisites: A Hebrew font. A non-RTL browser version.</div>
+<p class='title' dir="ltr">rtl on html, javascript confirm box</p>
+<p class="instructions" dir="ltr">Click on the button. Test passes if the order of characters in the confirm box follows that in the reference graphic below the button.</p>
+
+
+<div class="test"><button onclick="confirm('פעילות הבינאום, W3C'); return false;">Click me</button></div>
+
+
+
+
+
+<div style="text-align:rtl;"><img src="bidi-chrome/support/hebrew.png" alt="reference graphic" ></div>
+
+
+<div class='description' dir="ltr">
+<p class="assertion">Assertion: [Exploratory test] When the html tag sets dir to rtl, text runs in a JavaScript confirm box are in the correct order and characters within a directional run are in the right order.</p>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-chrome-003a">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-chrome-003<br /><a href="/International/testslist-text-direction" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-003" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

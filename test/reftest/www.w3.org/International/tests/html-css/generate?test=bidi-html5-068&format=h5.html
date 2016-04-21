@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>textarea with dir=auto, script assigns to mixed L and R paragraphs</title>
+<link rel='author' title='HTML5 bidi test WG' href='mailto:html5bidi@googlegroups.com'>
+<link rel='help' href='#the-dir-attribute'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.">
+<style type='text/css'>
+
+      body, textarea {
+        font-size:18px;
+        text-align:left;
+      }
+      .test, .ref {
+        border: medium solid gray;
+        width: 400px;
+        margin: 20px;
+      }
+      .comments {
+        display: none;
+      }
+     .test { border: 1px solid orange; font-size: 2em; margin: 10px; } .ref { border: 1px solid teal; margin: 10px; padding: 5px; clear: both; font-size: 2em; } body { font-size: 1em; } .notes { display: block; }
+
+input { border: 1px dotted gray; border-radius: 20px; }</style>
+</head>
+<body>
+<div class='prerequisites'>Prerequisites: A Hebrew font.</div>
+<p class='title'>textarea with dir=auto, script assigns to mixed L and R paragraphs</p>
+<div class="instructions"><span class="instructionsymbol"><img src="images/same.png" alt="same" ></span> <p>Test passes if the two boxes below look exactly the same.</p></div>
+<!--<div class="comments">
+      Key to entities used below:
+        &#x200e; - LRM, the invisible left-to-right mark (strongly LTR).
+        &#x200f; - RLM, the invisible right-to-left mark (strongly RTL).
+      We use text-align:left because neither the dir="auto" nor the unicode-bidi:plaintext
+      specification states whether text-align:start and text-align:end should obey the paragraph
+      direction or the direction property in a unicode-bidi:plaintext element.
+    </div>-->
+
+
+
+<div id="test" class="test">
+      <script>
+        window.onload = function() {
+          var test = document.getElementById('test');
+          var textareas = test.getElementsByTagName('textarea');
+          for (var i = 0; i != textareas.length; i++) {
+            var input = textareas[i];
+            if (input.parentNode.dir == 'ltr') {
+              // Assign a value whose first strong is RTL.
+              input.value =
+                  '!\u200F123\u200E@\n' +
+                  '@\u200E123\u200F!\n' +
+                  '!123\u200F\u200E@\n' +
+                  '@123\u200E\u200F!\n';
+            } else {
+              // Assign a value whose first strong is LTR.
+              input.value =
+                  '@\u200E123\u200F!\n' +
+                  '!\u200F123\u200E@\n' +
+                  '@123\u200E\u200F!\n' +
+                  '!123\u200F\u200E@\n';
+            }
+          }
+        }
+      </script>
+      <div dir="ltr">
+        <textarea rows="5" dir="auto">
+&#x200e;
+        </textarea>
+      </div>
+      <div dir="rtl">
+        <textarea rows="5" dir="auto">
+&#x200f;
+        </textarea>
+      </div>
+    </div>
+
+
+
+
+
+<div class="ref">
+      <div dir="ltr">
+        <textarea rows="5" dir="rtl">
+!123@
+!123@
+!123@
+!123@
+        </textarea>
+      </div>
+      <div dir="rtl">
+        <textarea rows="5" dir="ltr">
+@123!
+@123!
+@123!
+@123!
+        </textarea>
+      </div>
+    </div>
+
+
+<div class='description'>
+<p class="assertion">Assertion:        When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.</p>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-html5-069">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-html5-068<br /><a href="/International/tests/html-css/bidi-html5/results-bidi-html5" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-068" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

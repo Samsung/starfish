@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang='en' xml:lang='en' xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<title>HTML browser chrome and bidi text: Summarized test results</title>
+<meta name="description" content="Summary of results of HTML5 bidi markup tests." />
+<link rel="stylesheet" href="/International/style/article-display-html5.css" type="text/css" />
+<link rel="copyright" href="#copyright"/>
+<script type="text/javascript" src="/International/javascript/articletoc-html5.js"></script>
+<style>.unlinked { font-size: 150%; color:red; line-height: 1.5; }</style>
+
+<!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><script type="application/javascript">
+var cn = { }
+
+cn.en = "If you let the browser set a cookie, you will continue to see W3C Internationalization Activity pages (where available) in the language you chose. Do you want to set the cookie?"
+cn.es = "Si permite que el navegador establezca una cookie, continuará viendo las páginas de Actividad de Internacionalización de W3C (si existieran) en el idioma de su elección. ¿Quiere establecer la cookie?"
+cn.de = "Wenn Sie die Seite ein Cookie lassen, werden Sie weiterhin W3C Internationalization Activity Seiten in der Sprache, die Sie ausgewählt haben, in denen zu sehen. Möchten Sie das Cookie gesetzt?"
+cn.fr = "Si vous acceptez que votre navigateur crée un cookie, vous continuerez de voir les pages d’activité d’internationalisation de W3C (lorsque cela est possible) dans la langue de votre choix. Souhaitez-vous créer le cookie\u00A0?"
+cn['pt-br'] = "Se você deixar o navegador definir um cookie, você vai continuar a ver páginas W3C Internacionalização Atividade (quando disponível) no idioma que você escolheu. Você quer definir o cookie?"
+cn.sv = "Om du tillåter webbläsaren att spara en kaka (cookie), så kommer du i fortsättningen att se sidor från W3C Internationalization Activity i det språk du valt (när sådana översättningar finns). Vill du spara kakan?"
+cn.uk = "Якщо ви дозволите браузер встановити куки, ви будете продовжувати бачити сторінки W3C Інтернаціоналізація активність (за наявності) на мові, який ви обрали. Ви хочете, щоб встановити печиво?"
+
+
+function stickyConneg (filename, cLang, targetLang) {
+	var response = false
+	var msg = '['+cLang+'] '+cn[cLang]
+	msg += '\n\n'+'['+targetLang+'] '+cn[targetLang]
+	if (targetLang !== 'en' && cLang !== 'en') msg += '\n\n'+'[en] '+cn.en
+	response = confirm(msg)
+	if (response == true) {
+		var d = new Date()
+		d.setTime(d.getTime() + 60*24*60*60*1000)
+		var expires = ';expires='+d.toUTCString()
+		var path = ";path=/"
+		document.cookie = 'w3ci18nlang='+targetLang+expires+path
+		}
+	document.location.assign(filename+'.'+targetLang)
+	}
+</script>
+<link rel="stylesheet" href="../results.css" type="text/css" />
+<script src='http://w3c-test.org/framework/app/jquery.js'></script>
+<script src="/International/javascript/results-functions.js"></script>
+</head>
+
+<body>
+
+<header>
+<aside id="mainNavigation">
+	<nav id="site-navigation">
+		<a href="/International/"><img id="picture" alt="World map" title="World map" src="/International/icons/world.gif" width="150" height="61"/></a>
+		
+		</nav>
+	
+	<nav class="noprint" id="search"><form method="get" action="/International/site-search.php" enctype="application/x-www-form-urlencoded" style="margin: 0;">
+<div id="searchSite"><input name="q" type="text" value="I18n site search: " onfocus="this.value=''" id="searchField" accesskey="E" maxlength="255"/></div>
+</form></nav>
+	<nav id="breadcrumbs"><p><a href='/International/'>Home </a> &gt; <a href='/International/resources'>Resources</a> &gt; <a href='/International/tests/'>Tests</a></p></nav>
+	<nav class="noprint" id="toc">
+		<h2 id="internal-links" class="notoc"><a href="#internal-links">On this page</a></h2>
+		<div id="toclocation"> </div>
+		</nav>
+	<nav class="noprint" id="relatedlinks">
+		<h2 id="key" class="notoc"><a href="#key">Key</a></h2>
+<div class="key">
+<p class="pass">all results pass</p>
+<p class="pass fail">pass reported but also other results</p>
+<p class="fail">all results fail</p>
+<p class="fail uncertain">fail reported but also uncertain</p>
+<p class="uncertain">all results uncertain</p>
+</div>
+<p style="text-align: center;"># pass / # fail / # uncertain</p>
+		</nav>
+	<div id="aboutdoc">
+		<h2 id='abouthead' class='notoc'>About this article</h2>
+<p>This article was published without public review. If there are things that need addressing, please send us feedback using the link near the bottom of the page.</p>
+		</div>
+	</aside>
+	<nav id="boilerplate"><div id="siteicons"><a href="http://www.w3.org/" title="Go to W3C Home Page"><img src="/International/icons/w3c_home.gif" alt="s_gotoW3cHome"/></a><a href="/International/" title="Go to Internationalization Activity Home Page" id="i18n-name">
+	Internationalization</a></div>
+<div id="sitelinks" class="noprint"><a href="/International/" title="Internationalization Activity home page.">Home</a>&#xA0; 
+<a href="/International/resources" title="Information resources on the Internationalization site.">Resources</a>&#xA0;
+<a href="/International/technique-index" title="Task-based index of i18n techniques.">Techniques</a>&#xA0;
+<a href="/International/resource-index" title="Topic index for information on this site.">Topics</a>&#xA0; 
+<a href="/International/log/description" title="Information about news filters and RSS feeds for W3C Internationalization.">News</a>&#xA0;
+<a href="/International/about#scope" title="Groups that make up the Internationalization Activity.">Groups</a>&#xA0; 
+<a href="/International/about" title="About the Internationalization Activity.">About</a>&#xA0; 
+&#xA0; </div><div id="line">&#xA0;</div></nav>
+<h1>Summarized test results: <br>
+  HTML browser chrome and bidi text</h1>
+</header>
+
+
+		<section> 
+<div id="audience"> 
+				<p><span class="leadin">Intended audience:</span> users, XHTML/HTML coders (using editors or scripting), script developers (PHP, JSP, etc.), CSS coders, Web project managers, and anyone who wants to know how bidirectional text features work in current browsers.</p>
+			<p class='updated'>Updated <a href='http://www.w3.org/blog/International/tag/results-bidi-chrome/'><time datetime='2012-08-02T07:26:00Z'>2012-08-02 07:26:00</time></a></p>	    </div>
+
+
+			<section> 
+                <p>These tests check how browser chrome handles bidirectional text in response to code in HTML. </p>
+                <p>Note that the snapshot summaries of these test results are for released versions of the browsers tested. Versions that are still in development may provide better support for these features. The tests themselves do not test any vendor prefixes.</p>
+			</section>
+		</section>
+		
+    
+<section> 
+<h2 id="results_html5"><a href="#results_html5">results</a></h2>
+<p>All tests reported so far have been conducted in an English environment (operating system and browser version).</p>
+<p>To see the test, click on the link in the left-most column. To see detailed results for a single test, click on the link in the right-most column. To submit test data for a single test, click on the link in the right-most column and then follow the link on that page.</p>
+<p>The tables show the latest results from the W3C Test Framework. Below the tables are summaries of the results at a given date. The table data may be more up-to-date than the summary. The tables may also contain some incorrectly scored tests, and tests that relate to non-released versions of browsers. These are not included in the summary.<br style="clear:both;"/></p>
+<section>
+  <h3 id="scrollbar"><a href="#scrollbar">Scrollbar alignment</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-001" target="_blank">dir on html, vertical scrollbar alignment</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, the browser window's vertical scroll bar will be on the usual side of the window.</th>
+<td title='Gecko' id='bidi-chrome-001-gecko'></td>
+<td title='Presto' id='bidi-chrome-001-presto'></td>
+<td title='Trident' id='bidi-chrome-001-trident'></td>
+<td title='WebKit' id='bidi-chrome-001-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-001" target="_blank">bidi-chrome-001</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-009" target="_blank">dir on body, vertical scrollbar alignment</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, the browser window's vertical scroll bar will be on the usual side of the window.</th>
+<td title='Gecko' id='bidi-chrome-009-gecko'></td>
+<td title='Presto' id='bidi-chrome-009-presto'></td>
+<td title='Trident' id='bidi-chrome-009-trident'></td>
+<td title='WebKit' id='bidi-chrome-009-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-009" target="_blank">bidi-chrome-009</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#text-rendered-in-native-user-interfaces">Section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/10.6.4">Latest results for section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 10.6.4</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+	  <h4>Snapshot summary,  2011-11-12</h4>
+	  <p>IE and Opera switch the scrollbar to the other side of the browser window if dir=&quot;rtl&quot; is set on either then html or body tags. The other browsers show on the usual side.</p>
+  </div>
+</section>
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="alertbox"><a href="#alertbox">Alert box</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-002" target="_blank">rtl on html, javascript alert box</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, text runs in a JavaScript alert box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-002-gecko'></td>
+<td title='Presto' id='bidi-chrome-002-presto'></td>
+<td title='Trident' id='bidi-chrome-002-trident'></td>
+<td title='WebKit' id='bidi-chrome-002-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-002" target="_blank">bidi-chrome-002</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-010" target="_blank">rtl on body, javascript alert box</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, text runs in a JavaScript alert box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-010-gecko'></td>
+<td title='Presto' id='bidi-chrome-010-presto'></td>
+<td title='Trident' id='bidi-chrome-010-trident'></td>
+<td title='WebKit' id='bidi-chrome-010-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-010" target="_blank">bidi-chrome-010</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-015" target="_blank">local rtl, javascript alert box</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, text runs in a JavaScript alert box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-015-gecko'></td>
+<td title='Presto' id='bidi-chrome-015-presto'></td>
+<td title='Trident' id='bidi-chrome-015-trident'></td>
+<td title='WebKit' id='bidi-chrome-015-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-015" target="_blank">bidi-chrome-015</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-020" target="_blank">javascript alert box with Unicode controls</a></th>
+<th class="side assert exp">[Exploratory test] When Unicode directional control characters surround text to be displayed on a JavaScript alert, text runs on the dialog box appear in the correct order.</th>
+<td title='Gecko' id='bidi-chrome-020-gecko'></td>
+<td title='Presto' id='bidi-chrome-020-presto'></td>
+<td title='Trident' id='bidi-chrome-020-trident'></td>
+<td title='WebKit' id='bidi-chrome-020-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-020" target="_blank">bidi-chrome-020</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-002a" target="_blank">rtl on html, javascript alert box layout</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, the layout of items in the JavaScript alert box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-002a-gecko'></td>
+<td title='Presto' id='bidi-chrome-002a-presto'></td>
+<td title='Trident' id='bidi-chrome-002a-trident'></td>
+<td title='WebKit' id='bidi-chrome-002a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-002a" target="_blank">bidi-chrome-002a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-010a" target="_blank">rtl on body, javascript alert box layout</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, the layout of items in the JavaScript alert box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-010a-gecko'></td>
+<td title='Presto' id='bidi-chrome-010a-presto'></td>
+<td title='Trident' id='bidi-chrome-010a-trident'></td>
+<td title='WebKit' id='bidi-chrome-010a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-010a" target="_blank">bidi-chrome-010a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-015a" target="_blank">local rtl, javascript alert box layout</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, the layout of items in the JavaScript alert box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-015a-gecko'></td>
+<td title='Presto' id='bidi-chrome-015a-presto'></td>
+<td title='Trident' id='bidi-chrome-015a-trident'></td>
+<td title='WebKit' id='bidi-chrome-015a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-015a" target="_blank">bidi-chrome-015a</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#text-rendered-in-native-user-interfaces">Section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/10.6.4">Latest results for section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 10.6.4</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p>JavaScript was used to pop up a message in the chrome of a dialog box. The tests also check whether the arrangement of items such as icons and buttons has changed in the dialog box.</p>
+    <h4>Snapshot summary,  2011-11-12</h4>
+<p>If Unicode control characters are used, the  JavaScript message is always correctly ordered on the dialogue box chrome.</p>
+	<p>Otherwise, only Safari 	produces	the	correct ordering, although it looks as if IE9 may do so, but only when the dir=&quot;rtl&quot; is set on the html tag, except for a bug that hides the LTR part of the message.</p>
+	<p>Internet Explorer changes the direction of the items on the dialogue box, but only when dir=rtl is set on the html tag (not on body or the nearest parent). None of the other browsers change the dialogue box appearance.</p>
+  </div>
+</section>
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="confirmbox"><a href="#confirmbox">Confirm box</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-003" target="_blank">rtl on html, javascript confirm box</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, text runs in a JavaScript confirm box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-003-gecko'></td>
+<td title='Presto' id='bidi-chrome-003-presto'></td>
+<td title='Trident' id='bidi-chrome-003-trident'></td>
+<td title='WebKit' id='bidi-chrome-003-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-003" target="_blank">bidi-chrome-003</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-011" target="_blank">rtl on body, javascript confirm box</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, text runs in a JavaScript confirm box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-011-gecko'></td>
+<td title='Presto' id='bidi-chrome-011-presto'></td>
+<td title='Trident' id='bidi-chrome-011-trident'></td>
+<td title='WebKit' id='bidi-chrome-011-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-011" target="_blank">bidi-chrome-011</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-016" target="_blank">local rtl, javascript confirm box</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, text runs in a JavaScript confirm box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-016-gecko'></td>
+<td title='Presto' id='bidi-chrome-016-presto'></td>
+<td title='Trident' id='bidi-chrome-016-trident'></td>
+<td title='WebKit' id='bidi-chrome-016-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-016" target="_blank">bidi-chrome-016</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-021" target="_blank">javascript confirm box with Unicode controls</a></th>
+<th class="side assert exp">[Exploratory test] When Unicode directional control characters surround text to be displayed on a JavaScript confirm box, text runs on the dialog box appear in the correct order.</th>
+<td title='Gecko' id='bidi-chrome-021-gecko'></td>
+<td title='Presto' id='bidi-chrome-021-presto'></td>
+<td title='Trident' id='bidi-chrome-021-trident'></td>
+<td title='WebKit' id='bidi-chrome-021-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-021" target="_blank">bidi-chrome-021</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-003a" target="_blank">rtl on html, javascript confirm box layout</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, the layout of the JavaScript confirm box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-003a-gecko'></td>
+<td title='Presto' id='bidi-chrome-003a-presto'></td>
+<td title='Trident' id='bidi-chrome-003a-trident'></td>
+<td title='WebKit' id='bidi-chrome-003a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-003a" target="_blank">bidi-chrome-003a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-011a" target="_blank">rtl on body, javascript confirm box layout</a></th>
+<th class="side assert exp">[Exploratory test] When the body  tag sets dir to rtl, the layout of the JavaScript confirm box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-011a-gecko'></td>
+<td title='Presto' id='bidi-chrome-011a-presto'></td>
+<td title='Trident' id='bidi-chrome-011a-trident'></td>
+<td title='WebKit' id='bidi-chrome-011a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-011a" target="_blank">bidi-chrome-011a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-016a" target="_blank">local rtl, javascript confirm box layout</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, the layout of the JavaScript confirm box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-016a-gecko'></td>
+<td title='Presto' id='bidi-chrome-016a-presto'></td>
+<td title='Trident' id='bidi-chrome-016a-trident'></td>
+<td title='WebKit' id='bidi-chrome-016a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-016a" target="_blank">bidi-chrome-016a</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#text-rendered-in-native-user-interfaces">Section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/10.6.4">Latest results for section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 10.6.4</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+			<p>JavaScript was used to pop up a message in the chrome of a confirm box.  The tests also check whether the arrangement of items such as icons and buttons has changed in the dialog box.</p>
+			<h4>Snapshot summary,  2011-11-12</h4>
+	<p>If Unicode control characters are used, the  JavaScript message is always correctly ordered on the dialogue box chrome.</p>
+	<p>Otherwise, only Safari 	consistently produces	the	correct ordering. IE also does so, but only when the dir=&quot;rtl&quot; is set on the html tag. All other browsers fail to produce the correct ordering of message text on the dialogue chrome.</p>
+	<p>As with the alert box, Internet Explorer changes the direction of the items on the dialogue box only when dir=rtl is set on the html tag (not on body or the nearest parent). None of the other browsers change the dialogue box appearance.</p>
+  </div>
+</section>
+
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="promptbox"><a href="#promptbox">Prompt box</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-004" target="_blank">rtl on html, javascript prompt box</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, text runs in the chrome of a JavaScript prompt box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-004-gecko'></td>
+<td title='Presto' id='bidi-chrome-004-presto'></td>
+<td title='Trident' id='bidi-chrome-004-trident'></td>
+<td title='WebKit' id='bidi-chrome-004-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-004" target="_blank">bidi-chrome-004</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-012" target="_blank">rtl on body, javascript prompt box</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, text runs in the chrome of a JavaScript prompt box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-012-gecko'></td>
+<td title='Presto' id='bidi-chrome-012-presto'></td>
+<td title='Trident' id='bidi-chrome-012-trident'></td>
+<td title='WebKit' id='bidi-chrome-012-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-012" target="_blank">bidi-chrome-012</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-017" target="_blank">local rtl, javascript prompt box</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, text runs in the chrome of a JavaScript prompt box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-017-gecko'></td>
+<td title='Presto' id='bidi-chrome-017-presto'></td>
+<td title='Trident' id='bidi-chrome-017-trident'></td>
+<td title='WebKit' id='bidi-chrome-017-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-017" target="_blank">bidi-chrome-017</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-022" target="_blank">javascript prompt box with Unicode controls</a></th>
+<th class="side assert exp">[Exploratory test] When Unicode directional control characters surround text to be displayed on a JavaScript prompt box, text runs on the dialog box chrome appear in the correct order.</th>
+<td title='Gecko' id='bidi-chrome-022-gecko'></td>
+<td title='Presto' id='bidi-chrome-022-presto'></td>
+<td title='Trident' id='bidi-chrome-022-trident'></td>
+<td title='WebKit' id='bidi-chrome-022-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-022" target="_blank">bidi-chrome-022</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-004a" target="_blank">rtl on html, javascript prompt box input</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, text runs in the default input of a JavaScript prompt box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-004a-gecko'></td>
+<td title='Presto' id='bidi-chrome-004a-presto'></td>
+<td title='Trident' id='bidi-chrome-004a-trident'></td>
+<td title='WebKit' id='bidi-chrome-004a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-004a" target="_blank">bidi-chrome-004a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-012a" target="_blank">rtl on body, javascript prompt box input</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, text runs in the default input of a JavaScript prompt box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-012a-gecko'></td>
+<td title='Presto' id='bidi-chrome-012a-presto'></td>
+<td title='Trident' id='bidi-chrome-012a-trident'></td>
+<td title='WebKit' id='bidi-chrome-012a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-012a" target="_blank">bidi-chrome-012a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-017a" target="_blank">local rtl, javascript prompt box</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, text runs in the default input of a JavaScript prompt box are in the correct order and characters within a directional run are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-017a-gecko'></td>
+<td title='Presto' id='bidi-chrome-017a-presto'></td>
+<td title='Trident' id='bidi-chrome-017a-trident'></td>
+<td title='WebKit' id='bidi-chrome-017a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-017a" target="_blank">bidi-chrome-017a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-022a" target="_blank">javascript prompt box with Unicode controls input</a></th>
+<th class="side assert exp">[Exploratory test] When Unicode directional control characters surround text to be displayed on a JavaScript prompt box, text runs for the initial prompt appear in the correct order.</th>
+<td title='Gecko' id='bidi-chrome-022a-gecko'></td>
+<td title='Presto' id='bidi-chrome-022a-presto'></td>
+<td title='Trident' id='bidi-chrome-022a-trident'></td>
+<td title='WebKit' id='bidi-chrome-022a-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-022a" target="_blank">bidi-chrome-022a</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-004b" target="_blank">rtl on html, javascript prompt box layout</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, the layout of a JavaScript prompt box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-004b-gecko'></td>
+<td title='Presto' id='bidi-chrome-004b-presto'></td>
+<td title='Trident' id='bidi-chrome-004b-trident'></td>
+<td title='WebKit' id='bidi-chrome-004b-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-004b" target="_blank">bidi-chrome-004b</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-012b" target="_blank">rtl on body, javascript prompt box layout</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, the layout of a JavaScript prompt box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-012b-gecko'></td>
+<td title='Presto' id='bidi-chrome-012b-presto'></td>
+<td title='Trident' id='bidi-chrome-012b-trident'></td>
+<td title='WebKit' id='bidi-chrome-012b-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-012b" target="_blank">bidi-chrome-012b</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-017b" target="_blank">local rtl, javascript prompt box</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, the layout of a JavaScript prompt box has the same direction as usual.</th>
+<td title='Gecko' id='bidi-chrome-017b-gecko'></td>
+<td title='Presto' id='bidi-chrome-017b-presto'></td>
+<td title='Trident' id='bidi-chrome-017b-trident'></td>
+<td title='WebKit' id='bidi-chrome-017b-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-017b" target="_blank">bidi-chrome-017b</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#text-rendered-in-native-user-interfaces">Section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/10.6.4">Latest results for section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 10.6.4</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+			<p>JavaScript was used to create a message in the chrome of a prompt box and to provide default input text in the input field of the dialog box.  The tests also check whether the arrangement of items such as icons and buttons has changed in the dialog box.</p>
+			<h4>Snapshot summary,  2011-11-12</h4>
+	<p>As usual, if Unicode control characters are used, the  JavaScript message is always correctly ordered on the dialogue box chrome and in the default prompt in the input field.</p>
+	<p>Only Safari 	consistently produces	the	correct ordering of message text on the dialog box chrome, but both Safari and Chrome produce the correct ordering in the input field.</p>
+	<p>None of the browsers changes the direction of the items on the dialogue box.</p>
+  </div>
+</section>
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="tooltips"><a href="#tooltips">Tooltips</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-005" target="_blank">rtl on html, tooltip text starts with RTL</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-005-gecko'></td>
+<td title='Presto' id='bidi-chrome-005-presto'></td>
+<td title='Trident' id='bidi-chrome-005-trident'></td>
+<td title='WebKit' id='bidi-chrome-005-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-005" target="_blank">bidi-chrome-005</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-013" target="_blank">rtl on body, tooltip text starts with RTL</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-013-gecko'></td>
+<td title='Presto' id='bidi-chrome-013-presto'></td>
+<td title='Trident' id='bidi-chrome-013-trident'></td>
+<td title='WebKit' id='bidi-chrome-013-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-013" target="_blank">bidi-chrome-013</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-018" target="_blank">local rtl, tooltip text starts with RTL</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-018-gecko'></td>
+<td title='Presto' id='bidi-chrome-018-presto'></td>
+<td title='Trident' id='bidi-chrome-018-trident'></td>
+<td title='WebKit' id='bidi-chrome-018-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-018" target="_blank">bidi-chrome-018</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-006" target="_blank">rtl on html, tooltip text starts with LTR</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-006-gecko'></td>
+<td title='Presto' id='bidi-chrome-006-presto'></td>
+<td title='Trident' id='bidi-chrome-006-trident'></td>
+<td title='WebKit' id='bidi-chrome-006-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-006" target="_blank">bidi-chrome-006</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-014" target="_blank">rtl on body, tooltip text starts with LTR</a></th>
+<th class="side assert exp">[Exploratory test] When the body tag sets dir to rtl, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-014-gecko'></td>
+<td title='Presto' id='bidi-chrome-014-presto'></td>
+<td title='Trident' id='bidi-chrome-014-trident'></td>
+<td title='WebKit' id='bidi-chrome-014-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-014" target="_blank">bidi-chrome-014</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-019" target="_blank">local rtl, tooltip text starts with LTR</a></th>
+<th class="side assert exp">[Exploratory test] When dir is set to rtl on a local element, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-019-gecko'></td>
+<td title='Presto' id='bidi-chrome-019-presto'></td>
+<td title='Trident' id='bidi-chrome-019-trident'></td>
+<td title='WebKit' id='bidi-chrome-019-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-019" target="_blank">bidi-chrome-019</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-023" target="_blank">tooltip text with Unicode controls</a></th>
+<th class="side assert exp">[Exploratory test] When Unicode directional control characters surround attribute text to be displayed in a tooltip, text runs in the tooltip appear in the correct order.</th>
+<td title='Gecko' id='bidi-chrome-023-gecko'></td>
+<td title='Presto' id='bidi-chrome-023-presto'></td>
+<td title='Trident' id='bidi-chrome-023-trident'></td>
+<td title='WebKit' id='bidi-chrome-023-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-023" target="_blank">bidi-chrome-023</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#text-rendered-in-native-user-interfaces">Section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/10.6.4">Latest results for section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 10.6.4</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p>Bidirectional text was added to a title attribute. </p>
+    <h4>Snapshot summary,  2011-11-12</h4>
+	<p>If the text starts with a RTL character, all browsers except Opera produce the correct ordering of text in a tooltip.</p>
+	<p>If the  text starts with a LTR character, both Opera and Safari fail, but the others produce the expected order in the tooltip.</p>
+	<p>All tooltips look fine if Unicode control characters are used in the attribute.</p>
+	<p>This appears to indicate that Opera doesn't manage direction in tooltips at all, and that Safari relies on detection of the first character in the tooltip to apply ordering rules.</p>
+  </div>
+</section>
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="pagetitle"><a href="#pagetitle">Page title</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-007" target="_blank">rtl on html, page title text begins with RTL</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, directional runs in the window title are in the correct order and characters within a directional run in the window title are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-007-gecko'></td>
+<td title='Presto' id='bidi-chrome-007-presto'></td>
+<td title='Trident' id='bidi-chrome-007-trident'></td>
+<td title='WebKit' id='bidi-chrome-007-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-007" target="_blank">bidi-chrome-007</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-008" target="_blank">rtl on html, page title text begins with LTR</a></th>
+<th class="side assert exp">[Exploratory test] When the html tag sets dir to rtl, directional runs in the window title are in the correct order and characters within a directional run in the window title are in the right order.</th>
+<td title='Gecko' id='bidi-chrome-008-gecko'></td>
+<td title='Presto' id='bidi-chrome-008-presto'></td>
+<td title='Trident' id='bidi-chrome-008-trident'></td>
+<td title='WebKit' id='bidi-chrome-008-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-008" target="_blank">bidi-chrome-008</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-chrome-024" target="_blank">page title text with Unicode controls</a></th>
+<th class="side assert exp">[Exploratory test] When Unicode directional control characters surround the text in the text element, text runs in the window title location appear in the correct order.</th>
+<td title='Gecko' id='bidi-chrome-024-gecko'></td>
+<td title='Presto' id='bidi-chrome-024-presto'></td>
+<td title='Trident' id='bidi-chrome-024-trident'></td>
+<td title='WebKit' id='bidi-chrome-024-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-024" target="_blank">bidi-chrome-024</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#text-rendered-in-native-user-interfaces">Section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/10.6.4">Latest results for section 10.6.4</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 10.6.4</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p>Bidirectional text was added to a title element. </p>
+    <h4>Snapshot summary,  2011-11-12</h4>
+	<p>If the text in the title element starts with a RTL character, all browsers except Internet Explorer produce the correct ordering of text in the window header or, if there is no header, in the tab label.</p>
+	<p>If the text starts with a LTR character, all browsers fail to order the text as expected.</p>
+	<p>Use of Unicode control characters produces the expected results for all browsers.</p>
+  </div>
+</section>
+
+</section>
+<aside class="section" id="survey">
+    <p>Tell us what you think (English).</p>
+    <p><a class="interaction" target="_blank" href="https://github.com/w3c/i18n-drafts/issues/new?title=Feedback on html-css/bidi-chrome/results-bidi-chrome&body=[source] (http://www.w3.org/International/tests/html-css/bidi-chrome/results-bidi-chrome.en.php) [en]%0A%0A">Send us a comment</a></p>
+    <p style="margin-top:1em">Follow our news feed.</p>
+    <p><a class="interaction" href="http://twitter.com/webi18n" title="Twitter: @webi18n"><img src="/International/icons/twitter-bird.png" style="vertical-align: middle;" alt=" " /> &#x200E;@webi18n</a></p>
+    <p><a class="interaction" href="http://www.w3.org/blog/International/feed/rdf/" title="All news items shown on the home page."><img src="/International/icons/rss.gif" alt=" " /> Home page news</a></p>
+	</aside><div class="section noprint">
+	<h2 id="endlinks"><a href="#endlinks">Further reading</a></h2>	<ul id="full-links">
+		<li>
+			<p><a href="/International/tests/">Tests under /International</a></p>
+		</li>
+		<li>
+			<p><a href="http://w3c-test.org/framework/review/i18n-html5/">Tests in W3C Test Framework</a></p>
+		</li>
+	</ul>
+</div>
+<footer>
+	<address> 
+		<p>By: Richard Ishida, W3C.   </p>
+		</address>
+	
+	<small id='version'>Content first published <time datetime='2009-04-16'>2009-04-16</time>. Last substantive update <time datetime='2012-08-02T07:26:00Z'>2012-08-02 07:26:00 GMT</time>. This version <time datetime='2012-08-02T07:26:00Z'>2012-08-02 07:26:00 GMT</time></small>
+	<small>For the history of document changes, search for
+<span class="searchkey"><a href="http://www.w3.org/blog/International/tag/results-bidi-chrome/">results-bidi-chrome</a></span>
+in the i18n blog.</small>
+	<small class='copyright' lang='en' xml:lang='en' ><a rel='Copyright' href='/Consortium/Legal/ipr-notice#Copyright' id='copyright'>Copyright</a> © 2009-2012 <a href='/'><abbr title='World Wide Web Consortium'>W3C</abbr></a><sup>®</sup> (<a href='http://www.csail.mit.edu/'><abbr title='Massachusetts Institute of Technology'>MIT</abbr></a>, <a href='http://www.ercim.eu/'><abbr title='European Research Consortium for Informatics and Mathematics'>ERCIM</abbr></a>, <a href='http://www.keio.ac.jp/'>Keio</a>, <a href='http://ev.buaa.edu.cn/'>Beihang</a>), All Rights Reserved. W3C <a href='/Consortium/Legal/ipr-notice#Legal_Disclaimer'>liability</a>, <a href='/Consortium/Legal/ipr-notice#W3C_Trademarks'>trademark</a>, <a rel='Copyright' href='/Consortium/Legal/copyright-documents'>document use</a> and <a rel='Copyright' href='/Consortium/Legal/copyright-software'>software licensing</a> rules apply. Your interactions with this site are in accordance with our <a href='/Consortium/Legal/privacy-statement#Public'>public</a> and <a href='/Consortium/Legal/privacy-statement#Members'>Member</a> privacy statements.</small>
+	</footer>
+<script type="text/javascript">if (document.getElementById('toclocation')) { createtoc(); }</script>
+<script src="/International/javascript/results-jquery.js"></script>
+<script>  
+var testlist = [
+ 	'bidi-chrome-001','bidi-chrome-009','bidi-chrome-002','bidi-chrome-010','bidi-chrome-015','bidi-chrome-020','bidi-chrome-002a','bidi-chrome-010a','bidi-chrome-015a','bidi-chrome-003','bidi-chrome-011','bidi-chrome-016','bidi-chrome-021','bidi-chrome-003a','bidi-chrome-011a','bidi-chrome-016a','bidi-chrome-004','bidi-chrome-012','bidi-chrome-017','bidi-chrome-022','bidi-chrome-004a','bidi-chrome-012a','bidi-chrome-017a','bidi-chrome-022a','bidi-chrome-004b','bidi-chrome-012b','bidi-chrome-017b','bidi-chrome-005','bidi-chrome-013','bidi-chrome-018','bidi-chrome-006','bidi-chrome-014','bidi-chrome-019','bidi-chrome-023','bidi-chrome-007','bidi-chrome-008','bidi-chrome-024'			];
+
+TestFramework.resultSummary("i18n-html5", "", generateStuffInPage );
+</script>
+</body>
+</html>

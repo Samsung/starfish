@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html  dir="rtl"  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>rtl on html, javascript prompt box layout</title>
+<link rel='author' title='Richard Ishida' href='mailto:ishida@w3.org'>
+<link rel='help' href='#text-rendered-in-native-user-interfaces'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="[Exploratory test] When the html tag sets dir to rtl, the layout of a JavaScript prompt box has the same direction as usual.">
+<style type='text/css'>
+/* the CSS below is not part of the test */
+table td { border: 1px solid #CCC; }
+img { margin: 10px; }
+</style>
+</head>
+<body>
+<div class='prerequisites' dir="ltr">Prerequisites: A non-RTL browser version.</div>
+<p class='title' dir="ltr">rtl on html, javascript prompt box layout</p>
+<p class="instructions" dir="ltr">Click on the button. Test passes if the position of icons, buttons, etc (excluding text alignment) in the prompt box is in the same direction as <a href="bidi-chrome/control.html" target="_blank">usual</a>.</p>
+
+
+<div class="test"><button onclick="prompt('פעילות הבינאום, W3C', 'פעילות הבינאום, W3C');">Click me</button></div>
+
+
+<div class='description' dir="ltr">
+<p class="assertion">Assertion: [Exploratory test] When the html tag sets dir to rtl, the layout of a JavaScript prompt box has the same direction as usual.</p>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-chrome-012">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-chrome-004b<br /><a href="/International/testslist-text-direction" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-004b" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

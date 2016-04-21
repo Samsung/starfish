@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html    lang="en" >
+<head>
+<meta charset="utf-8">
+<title>bdo, dir ltr</title>
+<link rel='author' title='Richard Ishida' href='mailto:ishida@w3.org'>
+<link rel='help' href='#the-dir-attribute'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="The bdo element with dir set to ltr causes all contained text to ignore the bidirectional algorithm and displays all characters from left to right.">
+<style type='text/css'>
+.test { font-size: 150%; }
+
+/* the CSS below is not part of the test */
+table td { border: 1px solid #CCC; }
+img { margin: 10px; }
+</style>
+</head>
+<body>
+<div class='prerequisites' dir="ltr">Prerequisites: You will need a font that allows you to distinguish Hebrew characters.</div>
+<p class='title' dir="ltr">bdo, dir ltr</p>
+<p class="instructions"><span class="instructionsymbol"><img src="images/same.png" alt="same" ></span> Test passes if the characters are in the same order.</p>
+
+
+<div class="test"><bdo dir="ltr">פעילות הבינאום, W3C</bdo></div>
+
+
+
+
+
+<div style="text-align:left;"><img src="bidi-markup/support/bdoltr.png" alt="reference graphic" ></div>
+
+
+<div class='description' dir="ltr">
+<p class="assertion">Assertion: The bdo element with dir set to ltr causes all contained text to ignore the bidirectional algorithm and displays all characters from left to right.</p>
+<div class="notes" dir="ltr">Notes:<p><span class='orangesymbolexpl'>=</span> means check that the test and reference graphic look the same, except for font differences and cursive joining behavior.</p></div>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-markup-028">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-markup-027<br /><a href="/International/testslist-text-direction#inlinemarkup" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-027" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

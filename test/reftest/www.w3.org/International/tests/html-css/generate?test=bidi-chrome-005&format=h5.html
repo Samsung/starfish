@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html  dir="rtl"  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>rtl on html, tooltip text starts with RTL</title>
+<link rel='author' title='Richard Ishida' href='mailto:ishida@w3.org'>
+<link rel='help' href='#text-rendered-in-native-user-interfaces'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="[Exploratory test] When the html tag sets dir to rtl, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.">
+<style type='text/css'>
+/* the CSS below is not part of the test */
+table td { border: 1px solid #CCC; }
+img { margin: 10px; }
+</style>
+</head>
+<body>
+<div class='prerequisites' dir="ltr">Prerequisites: A Hebrew and an Arabic font.</div>
+<p class='title' dir="ltr">rtl on html, tooltip text starts with RTL</p>
+<p class="instructions" dir="ltr">Mouse over the box with the orange border. Test passes if the text in the tooltip is the same as that in the reference graphic.</p>
+
+
+<div class="test" title="مصر ישראל Deutschland France">Mouse over me</div>
+
+
+
+
+
+<div style="text-align:right;"><img src="bidi-chrome/support/deutschfrance.png" alt="reference graphic" ></div>
+
+
+<div class='description' dir="ltr">
+<p class="assertion">Assertion: [Exploratory test] When the html tag sets dir to rtl, text runs in tooltip popups are in the correct order and characters within a directional run in tooltip popups are in the right order.</p>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-chrome-006">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-chrome-005<br /><a href="/International/testslist-text-direction" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-chrome-005" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

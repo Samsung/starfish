@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>BDI: neutral when contains LRO or RLO without PDF</title>
+<link rel='author' title='HTML5 bidi test WG' href='mailto:html5bidi@googlegroups.com'>
+<link rel='help' href='#the-bdi-element'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, if a BDI contains LRO or RLO characters lacking a matching PDF, these must not affect       the visual ordering of the content outside the BDI.">
+<style type='text/css'>
+
+      body{
+        font-size:2em;
+      }
+      .test, .ref {
+        border: medium solid gray;
+        width: 400px;
+        margin: 20px;
+      }
+      .comments { display: none; }
+     .test { border: 1px solid orange; font-size: 2em; margin: 10px; } .ref { border: 1px solid teal; margin: 10px; padding: 5px; clear: both; font-size: 2em; } body { font-size: 1em; } .notes { display: block; }
+
+input { border: 1px dotted gray; border-radius: 20px; }</style>
+</head>
+<body>
+<div class='prerequisites'>Prerequisites: A Hebrew font.</div>
+<p class='title'>BDI: neutral when contains LRO or RLO without PDF</p>
+<div class="instructions"><span class="instructionsymbol"><img src="images/same.png" alt="same" ></span> <p>Test passes if the two boxes below look exactly the same.</p></div>
+<!--<div class="comments">
+      Key to entities used below:
+        &#x5d0; ... &#x5d5; - The first six Hebrew letters (strongly RTL).
+        &#x202d; - The LRO (left-to-right-override) formatting character.
+        &#x202e; - the RLO (right-to-left-override) formatting character.
+        &#x202c; - The PDF (pop directional formatting) formatting character; closes LRO and RLO.
+      If the BDI in the test's first DIV were a SPAN, the RLO it contains, not being closed by a
+      PDF, would visually reorder the de into ed.
+    </div>-->
+
+
+
+<div class="test">
+      <div dir="ltr"><bdi>&#x5d0;&#x202e;bc</bdi>de...</div>
+      <div dir="ltr"><bdi dir="ltr">&#x5d0;&#x202e;bc</bdi>de...</div>
+      <div dir="ltr"><bdi dir="rtl">&#x5d0;&#x202e;bc</bdi>de...</div>
+      <div dir="rtl"><bdi>a&#x202d;&#x5d1;&#x5d2;</bdi>&#x5d3;&#x5d4;...</div>
+      <div dir="rtl"><bdi dir="ltr">a&#x202d;&#x5d1;&#x5d2;</bdi>&#x5d3;&#x5d4;...</div>
+      <div dir="rtl"><bdi dir="rtl">a&#x202d;&#x5d1;&#x5d2;</bdi>&#x5d3;&#x5d4;...</div>
+    </div>
+
+
+
+
+
+<div class="ref">
+      <div dir="ltr">&#x202d;cb&#x5d0;de...&#x202c;</div>
+      <div dir="ltr">&#x202d;cb&#x5d0;de...&#x202c;</div>
+      <div dir="ltr">&#x202d;cb&#x5d0;de...&#x202c;</div>
+      <div dir="rtl">&#x202d;...&#x5d4;&#x5d3;a&#x5d1;&#x5d2;&#x202c;</div>
+      <div dir="rtl">&#x202d;...&#x5d4;&#x5d3;a&#x5d1;&#x5d2;&#x202c;</div>
+      <div dir="rtl">&#x202d;...&#x5d4;&#x5d3;a&#x5d1;&#x5d2;&#x202c;</div>
+    </div>
+
+
+<div class='description'>
+<p class="assertion">Assertion:        'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, if a BDI contains LRO or RLO characters lacking a matching PDF, these must not affect       the visual ordering of the content outside the BDI.</p>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-html5-004">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-html5-003<br /><a href="/International/tests/html-css/bidi-html5/results-bidi-html5" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-003" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

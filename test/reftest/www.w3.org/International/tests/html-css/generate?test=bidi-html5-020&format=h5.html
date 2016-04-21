@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>newline in pre separates bidi paragraphs</title>
+<link rel='author' title='HTML5 bidi test WG' href='mailto:html5bidi@googlegroups.com'>
+<link rel='help' href='#the-pre-element'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="A newline in a pre element should separate paragraphs for the purposes of the Unicode bidirectional algorithm.">
+<style type='text/css'>
+input { border: 1px dotted gray; border-radius: 20px; }</style>
+</head>
+<body>
+<div class='prerequisites'>Prerequisites: A Hebrew font.</div>
+<p class='title'>newline in pre separates bidi paragraphs</p>
+<div class="instructions"><p>Test passes if the rightmost character in the first line below is a full stop and to the left of it is a Hebrew letter.</p></div>
+
+
+<div class="test">
+      <pre>
+A Hebrew letter and a full stop: &#x5d0;.
+&#x5d0; this line begins with a Hebrew letter.
+      </pre>
+    </div>
+
+
+<div class='description'>
+<p class="assertion">Assertion: A newline in a pre element should separate paragraphs for the purposes of the Unicode bidirectional algorithm.</p>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-html5-021">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-html5-020<br /><a href="/International/tests/html-css/bidi-html5/results-bidi-html5" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-020" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang='en' xml:lang='en' xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<title>Bidi algorithm in HTML: Summarized test results</title>
+<meta name="description" content="Summary of results of HTML5 bidi markup tests." />
+<link rel="stylesheet" href="/International/style/article-display-html5.css" type="text/css" />
+<link rel="copyright" href="#copyright"/>
+<script type="text/javascript" src="/International/javascript/articletoc-html5.js"></script>
+<style>.unlinked { font-size: 150%; color:red; line-height: 1.5; }</style>
+
+<!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><script type="application/javascript">
+var cn = { }
+
+cn.en = "If you let the browser set a cookie, you will continue to see W3C Internationalization Activity pages (where available) in the language you chose. Do you want to set the cookie?"
+cn.es = "Si permite que el navegador establezca una cookie, continuará viendo las páginas de Actividad de Internacionalización de W3C (si existieran) en el idioma de su elección. ¿Quiere establecer la cookie?"
+cn.de = "Wenn Sie die Seite ein Cookie lassen, werden Sie weiterhin W3C Internationalization Activity Seiten in der Sprache, die Sie ausgewählt haben, in denen zu sehen. Möchten Sie das Cookie gesetzt?"
+cn.fr = "Si vous acceptez que votre navigateur crée un cookie, vous continuerez de voir les pages d’activité d’internationalisation de W3C (lorsque cela est possible) dans la langue de votre choix. Souhaitez-vous créer le cookie\u00A0?"
+cn['pt-br'] = "Se você deixar o navegador definir um cookie, você vai continuar a ver páginas W3C Internacionalização Atividade (quando disponível) no idioma que você escolheu. Você quer definir o cookie?"
+cn.sv = "Om du tillåter webbläsaren att spara en kaka (cookie), så kommer du i fortsättningen att se sidor från W3C Internationalization Activity i det språk du valt (när sådana översättningar finns). Vill du spara kakan?"
+cn.uk = "Якщо ви дозволите браузер встановити куки, ви будете продовжувати бачити сторінки W3C Інтернаціоналізація активність (за наявності) на мові, який ви обрали. Ви хочете, щоб встановити печиво?"
+
+
+function stickyConneg (filename, cLang, targetLang) {
+	var response = false
+	var msg = '['+cLang+'] '+cn[cLang]
+	msg += '\n\n'+'['+targetLang+'] '+cn[targetLang]
+	if (targetLang !== 'en' && cLang !== 'en') msg += '\n\n'+'[en] '+cn.en
+	response = confirm(msg)
+	if (response == true) {
+		var d = new Date()
+		d.setTime(d.getTime() + 60*24*60*60*1000)
+		var expires = ';expires='+d.toUTCString()
+		var path = ";path=/"
+		document.cookie = 'w3ci18nlang='+targetLang+expires+path
+		}
+	document.location.assign(filename+'.'+targetLang)
+	}
+</script>
+<link rel="stylesheet" href="../results.css" type="text/css" />
+<script src='http://w3c-test.org/framework/app/jquery.js'></script>
+<script src="/International/javascript/results-functions.js"></script>
+</head>
+
+<body>
+
+<header>
+<aside id="mainNavigation">
+	<nav id="site-navigation">
+		<a href="/International/"><img id="picture" alt="World map" title="World map" src="/International/icons/world.gif" width="150" height="61"/></a>
+		
+		</nav>
+	
+	<nav class="noprint" id="search"><form method="get" action="/International/site-search.php" enctype="application/x-www-form-urlencoded" style="margin: 0;">
+<div id="searchSite"><input name="q" type="text" value="I18n site search: " onfocus="this.value=''" id="searchField" accesskey="E" maxlength="255"/></div>
+</form></nav>
+	<nav id="breadcrumbs"><p><a href='/International/'>Home </a> &gt; <a href='/International/resources'>Resources</a> &gt; <a href='/International/tests/'>Tests</a></p></nav>
+	<nav class="noprint" id="toc">
+		<h2 id="internal-links" class="notoc"><a href="#internal-links">On this page</a></h2>
+		<div id="toclocation"> </div>
+		</nav>
+	<nav class="noprint" id="relatedlinks">
+		<h2 id="key" class="notoc"><a href="#key">Key</a></h2>
+<div class="key">
+<p class="pass">all results pass</p>
+<p class="pass fail">pass reported but also other results</p>
+<p class="fail">all results fail</p>
+<p class="fail uncertain">fail reported but also uncertain</p>
+<p class="uncertain">all results uncertain</p>
+</div>
+<p style="text-align: center;"># pass / # fail / # uncertain</p>
+		</nav>
+	<div id="aboutdoc">
+		<h2 id='abouthead' class='notoc'>About this article</h2>
+<p>This article was published without public review. If there are things that need addressing, please send us feedback using the link near the bottom of the page.</p>
+		</div>
+	</aside>
+	<nav id="boilerplate"><div id="siteicons"><a href="http://www.w3.org/" title="Go to W3C Home Page"><img src="/International/icons/w3c_home.gif" alt="s_gotoW3cHome"/></a><a href="/International/" title="Go to Internationalization Activity Home Page" id="i18n-name">
+	Internationalization</a></div>
+<div id="sitelinks" class="noprint"><a href="/International/" title="Internationalization Activity home page.">Home</a>&#xA0; 
+<a href="/International/resources" title="Information resources on the Internationalization site.">Resources</a>&#xA0;
+<a href="/International/technique-index" title="Task-based index of i18n techniques.">Techniques</a>&#xA0;
+<a href="/International/resource-index" title="Topic index for information on this site.">Topics</a>&#xA0; 
+<a href="/International/log/description" title="Information about news filters and RSS feeds for W3C Internationalization.">News</a>&#xA0;
+<a href="/International/about#scope" title="Groups that make up the Internationalization Activity.">Groups</a>&#xA0; 
+<a href="/International/about" title="About the Internationalization Activity.">About</a>&#xA0; 
+&#xA0; </div><div id="line">&#xA0;</div></nav>
+<h1>Summarized test results: <br>
+  Bidi algorithm in HTML</h1>
+</header>
+
+
+		<section> 
+<div id="audience"> 
+				<p><span class="leadin">Intended audience:</span> users, XHTML/HTML coders (using editors or scripting), script developers (PHP, JSP, etc.), CSS coders, Web project managers, and anyone who wants to know how language declarations work in current browsers.</p>
+			<p class='updated'>Updated <a href='http://www.w3.org/blog/International/tag/results-bidi-algorithm/'><time datetime='2011-12-17T09:20:00Z'>2011-12-17 09:20:00</time></a></p>		  </div>
+
+
+			<section> 
+                <p>These tests check whether user agents apply the basic bidirectional algorithm to text in HTML and XHTML documents (with no markup or styling involved). </p>
+                <p>Note that the snapshot summaries of these test results are for released versions of the browsers tested. Versions that are still in development may provide better support for these features. The tests themselves do not test any vendor prefixes.</p>
+			</section>
+		</section>
+		
+    
+<section> 
+<h2 id="results_html5"><a href="#results_html5">results</a></h2>
+<p>To see the test, click on the link in the left-most column. To see detailed results for a single test, click on the link in the right-most column. To submit test data for a single test, click on the link in the right-most column and then follow the link on that page.</p>
+<p>The tables show the latest results from the W3C Test Framework. Below the tables are summaries of the results at a given date. The table data may be more up-to-date than the summary. The tables may also contain some incorrectly scored tests, and tests that relate to non-released versions of browsers. These are not included in the summary.<br style="clear:both;"/></p>
+
+
+<section>
+  <h3 id="nomarkup"><a href="#nomarkup">Bidi algorithm (no markup)</a></h3>
+  
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-011" target="_blank">directional type, ltr context, hebrew</a></th>
+<th class="side assert ">In a left-to-right context, without markup, styling or special characters, a sequence of Hebrew characters and spaces will progress from right to left.</th>
+<td title='Gecko' id='bidi-markup-011-gecko'></td>
+<td title='Presto' id='bidi-markup-011-presto'></td>
+<td title='Trident' id='bidi-markup-011-trident'></td>
+<td title='WebKit' id='bidi-markup-011-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-011" target="_blank">bidi-markup-011</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-012" target="_blank">directional type, ltr context, arabic</a></th>
+<th class="side assert ">In a left-to-right context, without markup, styling or special characters, a sequence of Arabic characters and spaces will progress from right to left.</th>
+<td title='Gecko' id='bidi-markup-012-gecko'></td>
+<td title='Presto' id='bidi-markup-012-presto'></td>
+<td title='Trident' id='bidi-markup-012-trident'></td>
+<td title='WebKit' id='bidi-markup-012-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-012" target="_blank">bidi-markup-012</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-013" target="_blank">directional type, ltr context, hebrew in english</a></th>
+<th class="side assert ">In a left-to-right context, without markup, styling or special characters, a sequence of Hebrew characters and spaces will progress from right to left when embedded in a left-to-right script.</th>
+<td title='Gecko' id='bidi-markup-013-gecko'></td>
+<td title='Presto' id='bidi-markup-013-presto'></td>
+<td title='Trident' id='bidi-markup-013-trident'></td>
+<td title='WebKit' id='bidi-markup-013-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-013" target="_blank">bidi-markup-013</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-014" target="_blank">directional type, rtl context, english</a></th>
+<th class="side assert ">In a right-to-left context, without markup, styling or special characters, a sequence of English characters and spaces will progress from left to right.</th>
+<td title='Gecko' id='bidi-markup-014-gecko'></td>
+<td title='Presto' id='bidi-markup-014-presto'></td>
+<td title='Trident' id='bidi-markup-014-trident'></td>
+<td title='WebKit' id='bidi-markup-014-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-014" target="_blank">bidi-markup-014</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-015" target="_blank">directional type, rtl context, english in arabic</a></th>
+<th class="side assert ">In a right-to-left context, without markup, styling or special characters, a sequence of English characters and spaces will progress from left to right when embedded in a right-to-left script.</th>
+<td title='Gecko' id='bidi-markup-015-gecko'></td>
+<td title='Presto' id='bidi-markup-015-presto'></td>
+<td title='Trident' id='bidi-markup-015-trident'></td>
+<td title='WebKit' id='bidi-markup-015-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-015" target="_blank">bidi-markup-015</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-016" target="_blank">directional type, rtl context, english in hebrew</a></th>
+<th class="side assert ">In a right-to-left context, without markup, styling or special characters, a sequence of English characters and spaces will progress from left to right when embedded in a right-to-left script.</th>
+<td title='Gecko' id='bidi-markup-016-gecko'></td>
+<td title='Presto' id='bidi-markup-016-presto'></td>
+<td title='Trident' id='bidi-markup-016-trident'></td>
+<td title='WebKit' id='bidi-markup-016-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-016" target="_blank">bidi-markup-016</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-025" target="_blank">numbers, european</a></th>
+<th class="side assert ">A number takes on the direction of the surrounding text.</th>
+<td title='Gecko' id='bidi-markup-025-gecko'></td>
+<td title='Presto' id='bidi-markup-025-presto'></td>
+<td title='Trident' id='bidi-markup-025-trident'></td>
+<td title='WebKit' id='bidi-markup-025-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-025" target="_blank">bidi-markup-025</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=bidi-markup-026" target="_blank">numbers, arabic</a></th>
+<th class="side assert ">A number using Arabic digits takes on the direction of the surrounding text.</th>
+<td title='Gecko' id='bidi-markup-026-gecko'></td>
+<td title='Presto' id='bidi-markup-026-presto'></td>
+<td title='Trident' id='bidi-markup-026-trident'></td>
+<td title='WebKit' id='bidi-markup-026-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-026" target="_blank">bidi-markup-026</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+	  <h4>Snapshot summary,  2011-11-12</h4>
+			<p>All tests worked as expected, ie. the basic bidirectional algorithm is applied correctly to text without markup or styling to bidirectional text for all browsers tested.</p>
+    </div>
+</section>
+
+<!-- ·········································································· -->
+
+
+<section>
+<h3 id="overrides"><a href="#overrides">Control character overrides</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=direction-controls-001" target="_blank">RLO/PDF around inline text</a></th>
+<th class="side assert ">Inline text surrounded by RLO and PDF controls will run right to left.</th>
+<td title='Gecko' id='direction-controls-001-gecko'></td>
+<td title='Presto' id='direction-controls-001-presto'></td>
+<td title='Trident' id='direction-controls-001-trident'></td>
+<td title='WebKit' id='direction-controls-001-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/direction-controls-001" target="_blank">direction-controls-001</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=direction-controls-002" target="_blank">RLO/PDF around inline element</a></th>
+<th class="side assert ">Text in an inline element surrounded by RLO and PDF controls will run right to left.</th>
+<td title='Gecko' id='direction-controls-002-gecko'></td>
+<td title='Presto' id='direction-controls-002-presto'></td>
+<td title='Trident' id='direction-controls-002-trident'></td>
+<td title='WebKit' id='direction-controls-002-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/direction-controls-002" target="_blank">direction-controls-002</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=direction-controls-003" target="_blank">RLO/PDF around inline text around inline element</a></th>
+<th class="side assert ">Inline text that includes an inline element and is surrounded by RLO and PDF controls will all run right to left in a single flow.</th>
+<td title='Gecko' id='direction-controls-003-gecko'></td>
+<td title='Presto' id='direction-controls-003-presto'></td>
+<td title='Trident' id='direction-controls-003-trident'></td>
+<td title='WebKit' id='direction-controls-003-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/direction-controls-003" target="_blank">direction-controls-003</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=direction-controls-004" target="_blank">RLO/PDF around block element</a></th>
+<th class="side assert ">Text in a block element surrounded by RLO and PDF controls will not run right to left.</th>
+<td title='Gecko' id='direction-controls-004-gecko'></td>
+<td title='Presto' id='direction-controls-004-presto'></td>
+<td title='Trident' id='direction-controls-004-trident'></td>
+<td title='WebKit' id='direction-controls-004-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/direction-controls-004" target="_blank">direction-controls-004</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=direction-controls-005" target="_blank">RLO/PDF around inline text around block element</a></th>
+<th class="side assert ">When text that surrounds a block element is surrounded in turn by RLO and PDF controls, the text inside the block element will run left to right.</th>
+<td title='Gecko' id='direction-controls-005-gecko'></td>
+<td title='Presto' id='direction-controls-005-presto'></td>
+<td title='Trident' id='direction-controls-005-trident'></td>
+<td title='WebKit' id='direction-controls-005-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/direction-controls-005" target="_blank">direction-controls-005</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?format=h5&amp;test=direction-controls-006" target="_blank">RLO/PDF around inline text around block element 2</a></th>
+<th class="side assert ">When text that surrounds a block element is surrounded in turn by RLO and PDF controls, the text outside the block element will run right to left when it appears before but not after the block element.</th>
+<td title='Gecko' id='direction-controls-006-gecko'></td>
+<td title='Presto' id='direction-controls-006-presto'></td>
+<td title='Trident' id='direction-controls-006-trident'></td>
+<td title='WebKit' id='direction-controls-006-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/direction-controls-006" target="_blank">direction-controls-006</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+			<h4>Snapshot summary,  2011-11-12</h4>
+			<p>All tests but one worked as expected. RLO...PDF will override the bidirectional algorithm for inline text, regardless of inline markup. The control characters do not, however, affect text in block elements.</p>
+	  <p>What didn't work as expected in  Opera was that if you have RLO followed by inline text, then a block element, then inline text again, and finally PDF, the order of the second run of inline text is not overridden. The expected behavior is not clearly stated for Unicode control characters, but the Unicode Bidirectional Algorithm says that RLO is closed by an end of paragraph. Most browsers seem to assume that the start of a block element signifies the start of a new paragraph, and closes the preceding paragraph.</p>
+  </div>
+</section>
+
+</section>
+<aside class="section" id="survey">
+    <p>Tell us what you think (English).</p>
+    <p><a class="interaction" target="_blank" href="https://github.com/w3c/i18n-drafts/issues/new?title=Feedback on html-css/bidi-markup/results-bidi-algorithm&body=[source] (http://www.w3.org/International/tests/html-css/bidi-markup/results-bidi-algorithm.en.php) [en]%0A%0A">Send us a comment</a></p>
+    <p style="margin-top:1em">Follow our news feed.</p>
+    <p><a class="interaction" href="http://twitter.com/webi18n" title="Twitter: @webi18n"><img src="/International/icons/twitter-bird.png" style="vertical-align: middle;" alt=" " /> &#x200E;@webi18n</a></p>
+    <p><a class="interaction" href="http://www.w3.org/blog/International/feed/rdf/" title="All news items shown on the home page."><img src="/International/icons/rss.gif" alt=" " /> Home page news</a></p>
+	</aside><div class="section noprint">
+	<h2 id="endlinks"><a href="#endlinks">Further reading</a></h2>	<ul id="full-links">
+		<li>
+			<p><a href="/International/tests/">Tests under /International</a></p>
+		</li>
+		<li>
+			<p><a href="http://w3c-test.org/framework/review/i18n-html5/">Tests in W3C Test Framework</a></p>
+		</li>
+	</ul>
+</div>
+<footer>
+	<address> 
+		<p>By: Richard Ishida, W3C.   </p>
+		</address>
+	
+	<small id='version'>Content first published <time datetime='2009-04-16'>2009-04-16</time>. Last substantive update <time datetime='2011-12-17T09:20:00Z'>2011-12-17 09:20:00 GMT</time>. This version <time datetime='2011-12-17T09:20:00Z'>2011-12-17 09:20:00 GMT</time></small>
+	<small>For the history of document changes, search for
+<span class="searchkey"><a href="http://www.w3.org/blog/International/tag/results-bidi-algorithm/">results-bidi-algorithm</a></span>
+in the i18n blog.</small>
+	<small class='copyright' lang='en' xml:lang='en' ><a rel='Copyright' href='/Consortium/Legal/ipr-notice#Copyright' id='copyright'>Copyright</a> © 2009-2011 <a href='/'><abbr title='World Wide Web Consortium'>W3C</abbr></a><sup>®</sup> (<a href='http://www.csail.mit.edu/'><abbr title='Massachusetts Institute of Technology'>MIT</abbr></a>, <a href='http://www.ercim.eu/'><abbr title='European Research Consortium for Informatics and Mathematics'>ERCIM</abbr></a>, <a href='http://www.keio.ac.jp/'>Keio</a>, <a href='http://ev.buaa.edu.cn/'>Beihang</a>), All Rights Reserved. W3C <a href='/Consortium/Legal/ipr-notice#Legal_Disclaimer'>liability</a>, <a href='/Consortium/Legal/ipr-notice#W3C_Trademarks'>trademark</a>, <a rel='Copyright' href='/Consortium/Legal/copyright-documents'>document use</a> and <a rel='Copyright' href='/Consortium/Legal/copyright-software'>software licensing</a> rules apply. Your interactions with this site are in accordance with our <a href='/Consortium/Legal/privacy-statement#Public'>public</a> and <a href='/Consortium/Legal/privacy-statement#Members'>Member</a> privacy statements.</small>
+	</footer>
+<script type="text/javascript">if (document.getElementById('toclocation')) { createtoc(); }</script>
+<script src="/International/javascript/results-jquery.js"></script>
+<script>  
+var testlist = [
+ 	'bidi-markup-011','bidi-markup-012','bidi-markup-013','bidi-markup-014','bidi-markup-015','bidi-markup-016','bidi-markup-025','bidi-markup-026','direction-controls-001','direction-controls-002','direction-controls-003','direction-controls-004','direction-controls-005','direction-controls-006'			];
+
+TestFramework.resultSummary("i18n-html5", "", generateStuffInPage );
+</script>
+</body>
+</html>
