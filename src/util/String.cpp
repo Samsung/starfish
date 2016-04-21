@@ -182,7 +182,7 @@ const char* String::utf8DataSlowCase()
 String* String::fromUTF8(const char* src, size_t len)
 {
     for (unsigned i = 0; i < len; i ++) {
-        if (src[i] < 0) {
+        if (src[i] & 0x80) {
             return new StringDataUTF32(src, len);
         }
     }

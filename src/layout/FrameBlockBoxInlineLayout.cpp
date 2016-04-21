@@ -412,7 +412,8 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                         LayoutUnit y = tb->y();
                         size_t insertPos = i;
                         boxes.erase(boxes.begin() + i);
-                        int32_t start = 0; int32_t end;
+                        int32_t start = 0;
+                        int32_t end;
                         for (size_t i = 0; i < total; i ++) {
                             ubidi_getLogicalRun(bidi, start, &end, NULL);
                             String* t = tb->text()->substring(start, end);
@@ -614,7 +615,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
 
             auto breaker = sf->lineBreaker();
             breaker->setText(txt->toUnicodeString(start, nextOffset));
-            size_t c, prev = 0;
+            int32_t c, prev = 0;
             while ((c = breaker->next()) != icu::BreakIterator::DONE) {
                 f(txt, prev + start, c + start, isWhiteSpace);
                 prev = c;

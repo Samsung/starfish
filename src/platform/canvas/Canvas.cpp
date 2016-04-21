@@ -943,6 +943,8 @@ public:
             case 9:
                 weight = "extrablack";
                 break;
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
 
             const char* fontStyle = "normal";

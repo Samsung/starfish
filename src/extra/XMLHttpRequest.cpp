@@ -45,7 +45,7 @@ void XMLHttpRequest::send(String* body)
         if (strncmp(url.data(), "http", 4) == 0)
             fromOnline = true;
 
-        CURL* curl;
+        CURL* curl = nullptr;
         if (fromOnline)
             curl = curl_easy_init();
         CURLcode res;
@@ -101,6 +101,7 @@ void XMLHttpRequest::send(String* body)
             res_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
         } else {
+            STARFISH_ASSERT(!curl);
             std::string path = xhrobj->m_starfish->currentPath()->utf8Data();
             if (path.back() != '/') {
                 path += '/';

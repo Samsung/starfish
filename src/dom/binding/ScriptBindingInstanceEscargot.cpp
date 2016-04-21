@@ -2560,6 +2560,8 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
                 type = escargot::ESString::create("null");
             } else if (firstArg.isUndefined()) {
                 type = escargot::ESString::create("undefined");
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
@@ -2578,6 +2580,8 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
                     type = escargot::ESString::create("null");
                 } else if (firstArg.isUndefined()) {
                     type = escargot::ESString::create("undefined");
+                } else {
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
 
                 escargot::ESObject* obj = secondArg.asESPointer()->asESObject();

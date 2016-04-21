@@ -215,6 +215,8 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
                 } else {
                     currentFrame = new FrameBlockBox(current, nullptr);
                 }
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
 

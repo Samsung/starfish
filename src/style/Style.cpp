@@ -1044,6 +1044,8 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
             } else if (name->equals("skewy")) {
                 fkind = CSSTransformFunction::Kind::SkewY;
                 unit = Angle;
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
 
             ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
@@ -2551,6 +2553,9 @@ String* CSSStyleDeclaration::Background()
         repeat = String::fromUTF8("");
     else if (repeatX->equals("inherit") && repeatY->equals("inherit"))
         repeat = String::fromUTF8("");
+    else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     return image->concat(String::fromUTF8(" "))->concat(repeat)->concat(String::fromUTF8(" "))->concat(color);
 }
