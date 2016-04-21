@@ -939,22 +939,39 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             }
             last = newBox;
 
-            // TODO consider rtl
-            newBox->m_margin.setRight(origin->m_orgMargin.right());
-            newBox->m_border.setRight(origin->m_orgBorder.right());
-            newBox->m_padding.setRight(origin->m_orgPadding.right());
+            if (origin->style()->direction() == DirectionValue::LtrDirectionValue) {
+                newBox->m_margin.setRight(origin->m_orgMargin.right());
+                newBox->m_border.setRight(origin->m_orgBorder.right());
+                newBox->m_padding.setRight(origin->m_orgPadding.right());
 
-            newBox->m_orgMargin.setRight(origin->m_orgMargin.right());
-            newBox->m_orgBorder.setRight(origin->m_orgBorder.right());
-            newBox->m_orgPadding.setRight(origin->m_orgPadding.right());
+                newBox->m_orgMargin.setRight(origin->m_orgMargin.right());
+                newBox->m_orgBorder.setRight(origin->m_orgBorder.right());
+                newBox->m_orgPadding.setRight(origin->m_orgPadding.right());
 
-            origin->m_margin.setRight(0);
-            origin->m_border.setRight(0);
-            origin->m_padding.setRight(0);
+                origin->m_margin.setRight(0);
+                origin->m_border.setRight(0);
+                origin->m_padding.setRight(0);
 
-            origin->m_orgMargin.setRight(0);
-            origin->m_orgBorder.setRight(0);
-            origin->m_orgPadding.setRight(0);
+                origin->m_orgMargin.setRight(0);
+                origin->m_orgBorder.setRight(0);
+                origin->m_orgPadding.setRight(0);
+            } else {
+                newBox->m_margin.setLeft(origin->m_orgMargin.left());
+                newBox->m_border.setLeft(origin->m_orgBorder.left());
+                newBox->m_padding.setLeft(origin->m_orgPadding.left());
+
+                newBox->m_orgMargin.setLeft(origin->m_orgMargin.left());
+                newBox->m_orgBorder.setLeft(origin->m_orgBorder.left());
+                newBox->m_orgPadding.setLeft(origin->m_orgPadding.left());
+
+                origin->m_margin.setLeft(0);
+                origin->m_border.setLeft(0);
+                origin->m_padding.setLeft(0);
+
+                origin->m_orgMargin.setLeft(0);
+                origin->m_orgBorder.setLeft(0);
+                origin->m_orgPadding.setLeft(0);
+            }
 
             newBox->m_orgMargin.setTop(origin->m_orgMargin.top());
             newBox->m_orgMargin.setBottom(origin->m_orgMargin.bottom());
@@ -964,7 +981,6 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
             newBox->m_orgPadding.setTop(origin->m_orgPadding.top());
             newBox->m_orgPadding.setBottom(origin->m_orgPadding.bottom());
-
             self = newBox;
             iter++;
         }
