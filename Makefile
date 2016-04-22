@@ -533,6 +533,9 @@ regression_test_wpt_progress_events:
 regression_test_wpt_xhr:
 	./tool/reftest/wpt_test.sh tool/reftest/wpt_xhr_regression.res
 
+regression_test_webkit_dom:
+	./tool/reftest/dom_test.sh tool/reftest/webkit_dom_regression.res
+
 regression_test_css1:
 	./tool/reftest/css_test.sh css1 true
 regression_test_css21:
