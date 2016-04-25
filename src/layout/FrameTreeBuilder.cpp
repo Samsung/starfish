@@ -255,6 +255,8 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         bool isBlockContainer = currentFrame->isFrameBlockBox();
         if (isBlockContainer) {
             ctx.setCurrentBlockContainer(currentFrame->asFrameBlockBox());
+        } else if (currentFrame->parent()->isFrameBlockBox()) {
+            ctx.setCurrentBlockContainer(currentFrame->parent()->asFrameBlockBox());
         }
 
         Node* n = current->firstChild();
@@ -264,7 +266,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             n = n->nextSibling();
         }
 
-        if (isBlockContainer) {
+        if (isBlockContainer || currentFrame->parent()->isFrameBlockBox()) {
             ctx.setCurrentBlockContainer(back);
         }
 
