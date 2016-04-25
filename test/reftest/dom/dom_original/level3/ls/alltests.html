@@ -1,0 +1,472 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<title>http://www.w3.org/2001/DOM-Test-Suite/level3/ls/alltests</title>
+<link type="text/css" rel="stylesheet" href="http://www.w3.org/StyleSheets/activity-home.css">
+<script src="../../jsunit/app/jsUnitCore.js" type="text/javascript"></script><script src="DOMTestCase.js" type="text/javascript"></script><script src="DOMTestSuite.js" type="text/javascript"></script><script type="text/javascript">
+            
+function suite() {
+  var newsuite = new top.jsUnitTestSuite();
+  var suiteBuilder = createConfiguredBuilder();
+  var isHTML = (suiteBuilder.contentType == "text/html") || (suiteBuilder.contentType == "application/xhtml+xml");
+    newsuite.addTestPage("../level3/ls/DOMBuilderFilterTest0.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderFilterTest1.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderFilterTest2.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest0.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest1.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest2.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest3.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest4.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest5.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest6.html");  
+  newsuite.addTestPage("../level3/ls/DOMBuilderTest8.html");  
+  newsuite.addTestPage("../level3/ls/DOMEntityResolverTest0.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level3/ls/DOMEntityResolverTest1.html");
+  }
+  newsuite.addTestPage("../level3/ls/DOMEntityResolverTest2.html");  
+  newsuite.addTestPage("../level3/ls/DOMImplementationLSTest0.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("LS-Async", null) )) {
+  	   	newsuite.addTestPage("../level3/ls/DOMImplementationLSTest1.html");
+  }
+  newsuite.addTestPage("../level3/ls/DOMImplementationLSTest2.html");  
+  newsuite.addTestPage("../level3/ls/DOMImplementationLSTest3.html");  
+  newsuite.addTestPage("../level3/ls/DOMImplementationLSTest4.html");  
+  newsuite.addTestPage("../level3/ls/DOMImplementationLSTest5.html");  
+  newsuite.addTestPage("../level3/ls/DOMInputSourceTest0.html");  
+  newsuite.addTestPage("../level3/ls/DOMInputSourceTest1.html");  
+  newsuite.addTestPage("../level3/ls/DOMInputSourceTest2.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("Core", "3.0") )) {
+  	   	newsuite.addTestPage("../level3/ls/DOMInputSourceTest3.html");
+  }
+  newsuite.addTestPage("../level3/ls/DOMInputSourceTest4.html");  
+  newsuite.addTestPage("../level3/ls/DOMInputSourceTest5.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("Core", "3.0") )) {
+  	   	newsuite.addTestPage("../level3/ls/DOMInputSourceTest6.html");
+  }
+  newsuite.addTestPage("../level3/ls/DOMWriterFilterTest0.html");  
+  newsuite.addTestPage("../level3/ls/DOMWriterFilterTest1.html");  
+  newsuite.addTestPage("../level3/ls/DOMWriterFilterTest2.html");  
+  newsuite.addTestPage("../level3/ls/DOMWriterFilterTest3.html");  
+  newsuite.addTestPage("../level3/ls/DOMWriterTest0.html");  
+  newsuite.addTestPage("../level3/ls/DOMWriterTest1.html");  
+  newsuite.addTestPage("../level3/ls/DOMWriterTest2.html");  
+  newsuite.addTestPage("../level3/ls/DOMWriterTest3.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/DOMWriterTest4.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("namespaceAware", true) )) {
+  	   	newsuite.addTestPage("../level3/ls/DOMWriterTest5.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("namespaceAware", true) )) {
+  	   	newsuite.addTestPage("../level3/ls/DOMWriterTest6.html");
+  }
+  newsuite.addTestPage("../level3/ls/encoding01.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("Core", "3.0") )) {
+  	   	newsuite.addTestPage("../level3/ls/GetFeature1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("Core", "3.0") )) {
+  	   	newsuite.addTestPage("../level3/ls/GetFeature2.html");
+  }
+  newsuite.addTestPage("../level3/ls/HasFeature01.html");  
+  newsuite.addTestPage("../level3/ls/HasFeature02.html");  
+  newsuite.addTestPage("../level3/ls/HasFeature03.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("Core", "3.0") )) {
+  	   	newsuite.addTestPage("../level3/ls/HasFeature04.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("Core", "3.0") )) {
+  	   	newsuite.addTestPage("../level3/ls/HasFeature05.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/CharacterStream1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/SystemId1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/SystemId2.html");
+  }
+  newsuite.addTestPage("../level3/ls/CertifiedText1.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig1.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig2.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig3.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig4.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig5.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig6.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig7.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig8.html");  
+  newsuite.addTestPage("../level3/ls/LSParserConfig9.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig1.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig2.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig3.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig4.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig5.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig6.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig7.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig8.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig9.html");  
+  newsuite.addTestPage("../level3/ls/LSSerializerConfig10.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/writeToURI1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/writeToURI2.html");
+  }
+  newsuite.addTestPage("../level3/ls/canonicalform01.html");  
+  newsuite.addTestPage("../level3/ls/canonicalform03.html");  
+  newsuite.addTestPage("../level3/ls/canonicalform04.html");  
+  newsuite.addTestPage("../level3/ls/canonicalform05.html");  
+  newsuite.addTestPage("../level3/ls/canonicalform06.html");  
+  newsuite.addTestPage("../level3/ls/canonicalform08.html");  
+  newsuite.addTestPage("../level3/ls/canonicalform09.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("namespaceAware", true)  && suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/canonicalform10.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("namespaceAware", true)  && suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level3/ls/canonicalform11.html");
+  }
+  newsuite.addTestPage("../level3/ls/canonicalform12.html");  
+  newsuite.addTestPage("../level3/ls/canonicalform13.html");  
+  newsuite.addTestPage("../level3/ls/cdatasections01.html");  
+  newsuite.addTestPage("../level3/ls/cdatasections02.html");  
+  newsuite.addTestPage("../level3/ls/cdatasections03.html");  
+  newsuite.addTestPage("../level3/ls/cdatasections04.html");  
+  newsuite.addTestPage("../level3/ls/checkcharacternormalization01.html");  
+  newsuite.addTestPage("../level3/ls/checkcharacternormalization02.html");  
+  newsuite.addTestPage("../level3/ls/checkcharacternormalization03.html");  
+  newsuite.addTestPage("../level3/ls/checkcharacternormalization04.html");  
+  newsuite.addTestPage("../level3/ls/comments01.html");  
+  newsuite.addTestPage("../level3/ls/comments02.html");  
+  newsuite.addTestPage("../level3/ls/comments03.html");  
+  newsuite.addTestPage("../level3/ls/comments04.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization01.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization02.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization03.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization04.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization05.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization06.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization07.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("namespaceAware", true) )) {
+  	   	newsuite.addTestPage("../level3/ls/datatypenormalization08.html");
+  }
+  newsuite.addTestPage("../level3/ls/datatypenormalization09.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization10.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization11.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization12.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization13.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization14.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization15.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization16.html");  
+  newsuite.addTestPage("../level3/ls/datatypenormalization17.html");  
+  newsuite.addTestPage("../level3/ls/disallowdoctype01.html");  
+  newsuite.addTestPage("../level3/ls/discarddefaultcontent01.html");  
+  newsuite.addTestPage("../level3/ls/discarddefaultcontent02.html");  
+  newsuite.addTestPage("../level3/ls/elementcontentwhitespace01.html");  
+  newsuite.addTestPage("../level3/ls/elementcontentwhitespace02.html");  
+  newsuite.addTestPage("../level3/ls/elementcontentwhitespace03.html");  
+  newsuite.addTestPage("../level3/ls/entities01.html");  
+  newsuite.addTestPage("../level3/ls/entities02.html");  
+  newsuite.addTestPage("../level3/ls/entities03.html");  
+  newsuite.addTestPage("../level3/ls/entities04.html");  
+  newsuite.addTestPage("../level3/ls/entities05.html");  
+  newsuite.addTestPage("../level3/ls/entities06.html");  
+  newsuite.addTestPage("../level3/ls/entities07.html");  
+  newsuite.addTestPage("../level3/ls/entities08.html");  
+  newsuite.addTestPage("../level3/ls/entities09.html");  
+  newsuite.addTestPage("../level3/ls/infoset01.html");  
+  newsuite.addTestPage("../level3/ls/infoset02.html");  
+  newsuite.addTestPage("../level3/ls/infoset03.html");  
+  newsuite.addTestPage("../level3/ls/infoset04.html");  
+  newsuite.addTestPage("../level3/ls/infoset05.html");  
+  newsuite.addTestPage("../level3/ls/infoset06.html");  
+  newsuite.addTestPage("../level3/ls/infoset07.html");  
+  newsuite.addTestPage("../level3/ls/infoset08.html");  
+  newsuite.addTestPage("../level3/ls/namespacedeclarations01.html");  
+  newsuite.addTestPage("../level3/ls/namespacedeclarations02.html");  
+  newsuite.addTestPage("../level3/ls/namespaces01.html");  
+  newsuite.addTestPage("../level3/ls/namespaces02.html");  
+  newsuite.addTestPage("../level3/ls/newline01.html");  
+  newsuite.addTestPage("../level3/ls/newline02.html");  
+  newsuite.addTestPage("../level3/ls/newline03.html");  
+  newsuite.addTestPage("../level3/ls/noinputspecified01.html");  
+  newsuite.addTestPage("../level3/ls/nooutputspecified01.html");  
+  newsuite.addTestPage("../level3/ls/normalizecharacters01.html");  
+  newsuite.addTestPage("../level3/ls/normalizecharacters02.html");  
+  newsuite.addTestPage("../level3/ls/normalizecharacters03.html");  
+  newsuite.addTestPage("../level3/ls/normalizecharacters04.html");  
+  newsuite.addTestPage("../level3/ls/schemalocation01.html");  
+  newsuite.addTestPage("../level3/ls/schemalocation02.html");  
+  newsuite.addTestPage("../level3/ls/schemalocation03.html");  
+  newsuite.addTestPage("../level3/ls/schemalocation04.html");  
+  newsuite.addTestPage("../level3/ls/schematype01.html");  
+  newsuite.addTestPage("../level3/ls/schematype02.html");  
+  newsuite.addTestPage("../level3/ls/schematype03.html");  
+  newsuite.addTestPage("../level3/ls/schematype04.html");  
+  newsuite.addTestPage("../level3/ls/splitcdatasections01.html");  
+  newsuite.addTestPage("../level3/ls/splitcdatasections02.html");  
+  newsuite.addTestPage("../level3/ls/unsupportedencoding01.html");  
+  newsuite.addTestPage("../level3/ls/validate01.html");  
+  newsuite.addTestPage("../level3/ls/validate02.html");  
+  newsuite.addTestPage("../level3/ls/validate03.html");  
+  newsuite.addTestPage("../level3/ls/validate04.html");  
+  newsuite.addTestPage("../level3/ls/validate05.html");  
+  newsuite.addTestPage("../level3/ls/validate06.html");  
+  newsuite.addTestPage("../level3/ls/validate07.html");  
+  newsuite.addTestPage("../level3/ls/validate08.html");  
+  newsuite.addTestPage("../level3/ls/validateifschema01.html");  
+  newsuite.addTestPage("../level3/ls/validateifschema02.html");  
+  newsuite.addTestPage("../level3/ls/validateifschema03.html");  
+  newsuite.addTestPage("../level3/ls/validateifschema04.html");  
+  newsuite.addTestPage("../level3/ls/wellformed01.html");  
+  newsuite.addTestPage("../level3/ls/wellformed02.html");  
+  newsuite.addTestPage("../level3/ls/wellformed03.html");  
+  newsuite.addTestPage("../level3/ls/xmldeclaration01.html");  
+  newsuite.addTestPage("../level3/ls/xmldeclaration02.html");  
+
+  return newsuite;
+}
+</script>
+</head>
+<body onload="onImplementationChange()">
+<h1>DOM Level 3 LS Test Suite</h1>
+<form onsubmit="fixTestPagePath()" action="../../jsunit/testRunner.html" id="configuration">
+<table summary="Configuration" border="1" width="100%">
+<tr>
+<td>
+<table summary="Tests" width="100%">
+<tr>
+<td>Test: </td><td><select size="1" name="testpage"><option value="alltests.html" selected>alltests</option><option value="canonicalform01.html">canonicalform01</option>
+<option value="canonicalform03.html">canonicalform03</option>
+<option value="canonicalform04.html">canonicalform04</option>
+<option value="canonicalform05.html">canonicalform05</option>
+<option value="canonicalform06.html">canonicalform06</option>
+<option value="canonicalform08.html">canonicalform08</option>
+<option value="canonicalform09.html">canonicalform09</option>
+<option value="canonicalform10.html">canonicalform10</option>
+<option value="canonicalform11.html">canonicalform11</option>
+<option value="canonicalform12.html">canonicalform12</option>
+<option value="canonicalform13.html">canonicalform13</option>
+<option value="cdatasections01.html">cdatasections01</option>
+<option value="cdatasections02.html">cdatasections02</option>
+<option value="cdatasections03.html">cdatasections03</option>
+<option value="cdatasections04.html">cdatasections04</option>
+<option value="CertifiedText1.html">CertifiedText1</option>
+<option value="CharacterStream1.html">CharacterStream1</option>
+<option value="checkcharacternormalization01.html">checkcharacternormalization01</option>
+<option value="checkcharacternormalization02.html">checkcharacternormalization02</option>
+<option value="checkcharacternormalization03.html">checkcharacternormalization03</option>
+<option value="checkcharacternormalization04.html">checkcharacternormalization04</option>
+<option value="comments01.html">comments01</option>
+<option value="comments02.html">comments02</option>
+<option value="comments03.html">comments03</option>
+<option value="comments04.html">comments04</option>
+<option value="datatypenormalization01.html">datatypenormalization01</option>
+<option value="datatypenormalization02.html">datatypenormalization02</option>
+<option value="datatypenormalization03.html">datatypenormalization03</option>
+<option value="datatypenormalization04.html">datatypenormalization04</option>
+<option value="datatypenormalization05.html">datatypenormalization05</option>
+<option value="datatypenormalization06.html">datatypenormalization06</option>
+<option value="datatypenormalization07.html">datatypenormalization07</option>
+<option value="datatypenormalization08.html">datatypenormalization08</option>
+<option value="datatypenormalization09.html">datatypenormalization09</option>
+<option value="datatypenormalization10.html">datatypenormalization10</option>
+<option value="datatypenormalization11.html">datatypenormalization11</option>
+<option value="datatypenormalization12.html">datatypenormalization12</option>
+<option value="datatypenormalization13.html">datatypenormalization13</option>
+<option value="datatypenormalization14.html">datatypenormalization14</option>
+<option value="datatypenormalization15.html">datatypenormalization15</option>
+<option value="datatypenormalization16.html">datatypenormalization16</option>
+<option value="datatypenormalization17.html">datatypenormalization17</option>
+<option value="disallowdoctype01.html">disallowdoctype01</option>
+<option value="discarddefaultcontent01.html">discarddefaultcontent01</option>
+<option value="discarddefaultcontent02.html">discarddefaultcontent02</option>
+<option value="DOMBuilderFilterTest0.html">DOMBuilderFilterTest0</option>
+<option value="DOMBuilderFilterTest1.html">DOMBuilderFilterTest1</option>
+<option value="DOMBuilderFilterTest2.html">DOMBuilderFilterTest2</option>
+<option value="DOMBuilderTest0.html">DOMBuilderTest0</option>
+<option value="DOMBuilderTest1.html">DOMBuilderTest1</option>
+<option value="DOMBuilderTest2.html">DOMBuilderTest2</option>
+<option value="DOMBuilderTest3.html">DOMBuilderTest3</option>
+<option value="DOMBuilderTest4.html">DOMBuilderTest4</option>
+<option value="DOMBuilderTest5.html">DOMBuilderTest5</option>
+<option value="DOMBuilderTest6.html">DOMBuilderTest6</option>
+<option value="DOMBuilderTest8.html">DOMBuilderTest8</option>
+<option value="DOMEntityResolverTest0.html">DOMEntityResolverTest0</option>
+<option value="DOMEntityResolverTest1.html">DOMEntityResolverTest1</option>
+<option value="DOMEntityResolverTest2.html">DOMEntityResolverTest2</option>
+<option value="DOMImplementationLSTest0.html">DOMImplementationLSTest0</option>
+<option value="DOMImplementationLSTest1.html">DOMImplementationLSTest1</option>
+<option value="DOMImplementationLSTest2.html">DOMImplementationLSTest2</option>
+<option value="DOMImplementationLSTest3.html">DOMImplementationLSTest3</option>
+<option value="DOMImplementationLSTest4.html">DOMImplementationLSTest4</option>
+<option value="DOMImplementationLSTest5.html">DOMImplementationLSTest5</option>
+<option value="DOMInputSourceTest0.html">DOMInputSourceTest0</option>
+<option value="DOMInputSourceTest1.html">DOMInputSourceTest1</option>
+<option value="DOMInputSourceTest2.html">DOMInputSourceTest2</option>
+<option value="DOMInputSourceTest3.html">DOMInputSourceTest3</option>
+<option value="DOMInputSourceTest4.html">DOMInputSourceTest4</option>
+<option value="DOMInputSourceTest5.html">DOMInputSourceTest5</option>
+<option value="DOMInputSourceTest6.html">DOMInputSourceTest6</option>
+<option value="DOMWriterFilterTest0.html">DOMWriterFilterTest0</option>
+<option value="DOMWriterFilterTest1.html">DOMWriterFilterTest1</option>
+<option value="DOMWriterFilterTest2.html">DOMWriterFilterTest2</option>
+<option value="DOMWriterFilterTest3.html">DOMWriterFilterTest3</option>
+<option value="DOMWriterTest0.html">DOMWriterTest0</option>
+<option value="DOMWriterTest1.html">DOMWriterTest1</option>
+<option value="DOMWriterTest2.html">DOMWriterTest2</option>
+<option value="DOMWriterTest3.html">DOMWriterTest3</option>
+<option value="DOMWriterTest4.html">DOMWriterTest4</option>
+<option value="DOMWriterTest5.html">DOMWriterTest5</option>
+<option value="DOMWriterTest6.html">DOMWriterTest6</option>
+<option value="elementcontentwhitespace01.html">elementcontentwhitespace01</option>
+<option value="elementcontentwhitespace02.html">elementcontentwhitespace02</option>
+<option value="elementcontentwhitespace03.html">elementcontentwhitespace03</option>
+<option value="encoding01.html">encoding01</option>
+<option value="entities01.html">entities01</option>
+<option value="entities02.html">entities02</option>
+<option value="entities03.html">entities03</option>
+<option value="entities04.html">entities04</option>
+<option value="entities05.html">entities05</option>
+<option value="entities06.html">entities06</option>
+<option value="entities07.html">entities07</option>
+<option value="entities08.html">entities08</option>
+<option value="entities09.html">entities09</option>
+<option value="GetFeature1.html">GetFeature1</option>
+<option value="GetFeature2.html">GetFeature2</option>
+<option value="HasFeature01.html">HasFeature01</option>
+<option value="HasFeature02.html">HasFeature02</option>
+<option value="HasFeature03.html">HasFeature03</option>
+<option value="HasFeature04.html">HasFeature04</option>
+<option value="HasFeature05.html">HasFeature05</option>
+<option value="infoset01.html">infoset01</option>
+<option value="infoset02.html">infoset02</option>
+<option value="infoset03.html">infoset03</option>
+<option value="infoset04.html">infoset04</option>
+<option value="infoset05.html">infoset05</option>
+<option value="infoset06.html">infoset06</option>
+<option value="infoset07.html">infoset07</option>
+<option value="infoset08.html">infoset08</option>
+<option value="LSParserConfig1.html">LSParserConfig1</option>
+<option value="LSParserConfig2.html">LSParserConfig2</option>
+<option value="LSParserConfig3.html">LSParserConfig3</option>
+<option value="LSParserConfig4.html">LSParserConfig4</option>
+<option value="LSParserConfig5.html">LSParserConfig5</option>
+<option value="LSParserConfig6.html">LSParserConfig6</option>
+<option value="LSParserConfig7.html">LSParserConfig7</option>
+<option value="LSParserConfig8.html">LSParserConfig8</option>
+<option value="LSParserConfig9.html">LSParserConfig9</option>
+<option value="LSSerializerConfig1.html">LSSerializerConfig1</option>
+<option value="LSSerializerConfig10.html">LSSerializerConfig10</option>
+<option value="LSSerializerConfig2.html">LSSerializerConfig2</option>
+<option value="LSSerializerConfig3.html">LSSerializerConfig3</option>
+<option value="LSSerializerConfig4.html">LSSerializerConfig4</option>
+<option value="LSSerializerConfig5.html">LSSerializerConfig5</option>
+<option value="LSSerializerConfig6.html">LSSerializerConfig6</option>
+<option value="LSSerializerConfig7.html">LSSerializerConfig7</option>
+<option value="LSSerializerConfig8.html">LSSerializerConfig8</option>
+<option value="LSSerializerConfig9.html">LSSerializerConfig9</option>
+<option value="namespacedeclarations01.html">namespacedeclarations01</option>
+<option value="namespacedeclarations02.html">namespacedeclarations02</option>
+<option value="namespaces01.html">namespaces01</option>
+<option value="namespaces02.html">namespaces02</option>
+<option value="newline01.html">newline01</option>
+<option value="newline02.html">newline02</option>
+<option value="newline03.html">newline03</option>
+<option value="noinputspecified01.html">noinputspecified01</option>
+<option value="nooutputspecified01.html">nooutputspecified01</option>
+<option value="normalizecharacters01.html">normalizecharacters01</option>
+<option value="normalizecharacters02.html">normalizecharacters02</option>
+<option value="normalizecharacters03.html">normalizecharacters03</option>
+<option value="normalizecharacters04.html">normalizecharacters04</option>
+<option value="schemalocation01.html">schemalocation01</option>
+<option value="schemalocation02.html">schemalocation02</option>
+<option value="schemalocation03.html">schemalocation03</option>
+<option value="schemalocation04.html">schemalocation04</option>
+<option value="schematype01.html">schematype01</option>
+<option value="schematype02.html">schematype02</option>
+<option value="schematype03.html">schematype03</option>
+<option value="schematype04.html">schematype04</option>
+<option value="splitcdatasections01.html">splitcdatasections01</option>
+<option value="splitcdatasections02.html">splitcdatasections02</option>
+<option value="SystemId1.html">SystemId1</option>
+<option value="SystemId2.html">SystemId2</option>
+<option value="unsupportedencoding01.html">unsupportedencoding01</option>
+<option value="validate01.html">validate01</option>
+<option value="validate02.html">validate02</option>
+<option value="validate03.html">validate03</option>
+<option value="validate04.html">validate04</option>
+<option value="validate05.html">validate05</option>
+<option value="validate06.html">validate06</option>
+<option value="validate07.html">validate07</option>
+<option value="validate08.html">validate08</option>
+<option value="validateifschema01.html">validateifschema01</option>
+<option value="validateifschema02.html">validateifschema02</option>
+<option value="validateifschema03.html">validateifschema03</option>
+<option value="validateifschema04.html">validateifschema04</option>
+<option value="wellformed01.html">wellformed01</option>
+<option value="wellformed02.html">wellformed02</option>
+<option value="wellformed03.html">wellformed03</option>
+<option value="writeToURI1.html">writeToURI1</option>
+<option value="writeToURI2.html">writeToURI2</option>
+<option value="xmldeclaration01.html">xmldeclaration01</option>
+<option value="xmldeclaration02.html">xmldeclaration02</option>
+</select></td><td align="right"><input value="Load JSUnit" type="submit"></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<table summary="Configuration" width="100%" border="1">
+<tr>
+<th>Implementation</th><th>Configuration</th><th>Content Type</th>
+</tr>
+<tr>
+<td valign="top"><input onclick="onImplementationChange()" checked value="iframe" id="iframeImpl" name="implementation" type="radio"> iframe<br>
+<input onclick="onImplementationChange()" value="dom3ls" id="dom3lsImpl" name="implementation" type="radio"> DOM 3 Load/Save<br> 
+                            	Features: <input disabled name="dom3lsFeatures" type="text">
+<br>
+<input onclick="onImplementationChange()" value="mozillaXML" id="mozillaXMLImpl" name="implementation" type="radio"> Mozilla XML<br>
+<input onclick="onImplementationChange()" value="msxml3" id="msxml3Impl" name="implementation" type="radio"> MSXML 3.0<br>
+<input onclick="onImplementationChange()" value="msxml4" id="msxml4Impl" name="implementation" type="radio"> MSXML 4.0<br>
+<input onclick="onImplementationChange()" value="svgplugin" id="svgpluginImpl" name="implementation" type="radio"> SVG Plugin<br>
+</td><td valign="top"><input disabled checked type="checkbox" name="asynchronous" onclick="setAsynchronous(true)"> Asynchronous<br>
+<input onclick="setImplementationAttribute('expandEntityReferences', true)" disabled value="true" name="expandEntityReferences" type="checkbox"> Expanding Entities<br>
+<input onclick="setImplementationAttribute('ignoringElementContentWhitespace', true)" disabled value="true" name="ignoringElementContentWhitespace" type="checkbox"> Ignoring whitespace<br>
+<input onclick="setImplementationAttribute('validating', true)" disabled value="true" name="validating" type="checkbox"> Validating<br>
+<input onclick="setImplementationAttribute('coalescing', true)" disabled value="true" name="coalescing" type="checkbox"> Coalescing<br>
+<input onclick="setImplementationAttribute('namespaceAware', true)" disabled value="true" name="namespaceAware" type="checkbox"> Namespace aware<br>
+<input onclick="setImplementationAttribute('ignoringComments', true)" checked disabled value="true" name="ignoringComments" type="checkbox"> Ignoring comments<br>
+<input checked value="true" name="skipIncompatibleTests" type="checkbox"> Skip incompatible tests<br>
+<input value="true" checked name="autorun" type="checkbox"> Autorun<br>
+<input onclick="updateTestSubmission()" name="submitCheckbox" type="checkbox"> Submit results<br>
+                            Acceptor: http://<input size="35" disabled value="" name="submitresults" type="text">
+<br>
+							Result ID: <input disabled value="" name="resultid" type="text">
+<br>
+</td><td valign="top"><input onclick="setContentType('text/xml')" value="text/xml" id="contentTypeXML" name="contentType" type="radio">XML<br>
+<input onclick="setContentType('application/xhtml+xml')" value="application/xhtml+xml" id="contentTypeXHTML" name="contentType" type="radio">XHTML<br>
+<input onclick="setContentType('image/svg+xml')" value="image/svg+xml" id="contentTypeSVG" name="contentType" type="radio">SVG<br>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</form>
+<p>
+			Copyright (c) 2001-2004 World Wide Web Consortium,
+			(Massachusetts Institute of Technology, Institut National de
+			Recherche en Informatique et en Automatique, Keio University). All
+			Rights Reserved. This program is distributed under the W3C's Software
+			Intellectual Property License. This program is distributed in the
+			hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+			the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+			PURPOSE.
+			</p>
+<p>See W3C License <a href="http://www.w3.org/Consortium/Legal/">http://www.w3.org/Consortium/Legal/</a> 
+ for more details.</p>
+</body>
+</html>

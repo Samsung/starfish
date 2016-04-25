@@ -1,0 +1,1765 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<title>http://www.w3.org/2001/DOM-Test-Suite/level1/core/alltests</title>
+<link type="text/css" rel="stylesheet" href="http://www.w3.org/StyleSheets/activity-home.css">
+<script src="../../jsunit/app/jsUnitCore.js" type="text/javascript"></script><script src="DOMTestCase.js" type="text/javascript"></script><script src="DOMTestSuite.js" type="text/javascript"></script><script type="text/javascript">
+            
+function suite() {
+  var newsuite = new top.jsUnitTestSuite();
+  var suiteBuilder = createConfiguredBuilder();
+  var isHTML = (suiteBuilder.contentType == "text/html") || (suiteBuilder.contentType == "application/xhtml+xml");
+    if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrcreatedocumentfragment.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrcreatetextnode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrcreatetextnode2.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/attrdefaultvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attreffectivevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrentityreplacement.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrname.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrnextsiblingnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/attrnotspecifiedvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrparentnodenull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrprevioussiblingnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("expandEntityReferences", false) )) {
+  	   	newsuite.addTestPage("../level1/core/attrsetvaluenomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrsetvaluenomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrspecifiedvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrspecifiedvaluechanged.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/attrspecifiedvalueremove.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("coalescing", false) )) {
+  	   	newsuite.addTestPage("../level1/core/cdatasectiongetdata.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/cdatasectionnormalize.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataappenddata.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataappenddatagetdata.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataappenddatanomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataappenddatanomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatadeletedatabegining.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatadeletedataend.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatadeletedataexceedslength.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatadeletedatagetlengthanddata.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatadeletedatamiddle.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatadeletedatanomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatadeletedatanomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatagetdata.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatagetlength.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrdeletedatacountnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrdeletedataoffsetgreater.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrdeletedataoffsetnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrinsertdataoffsetgreater.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrinsertdataoffsetnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrreplacedatacountnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrreplacedataoffsetgreater.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrreplacedataoffsetnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrsubstringcountnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrsubstringnegativeoffset.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdataindexsizeerrsubstringoffsetgreater.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatainsertdatabeginning.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatainsertdataend.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatainsertdatamiddle.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatainsertdatanomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatainsertdatanomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatareplacedatabegining.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatareplacedataend.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatareplacedataexceedslengthofarg.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatareplacedataexceedslengthofdata.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatareplacedatamiddle.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatareplacedatanomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatareplacedatanomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatasetdatanomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatasetdatanomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatasetnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatasubstringexceedsvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/characterdatasubstringvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/commentgetcomment.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreateattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreatecdatasection.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreatecomment.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreatedocumentfragment.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreateelement.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreateelementcasesensitive.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreateelementdefaultattr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreateentityreference.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreateentityreferenceknown.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreateprocessinginstruction.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentcreatetextnode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentgetdoctype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("validating", false) )) {
+  	   	newsuite.addTestPage("../level1/core/documentgetdoctypenodtd.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentgetelementsbytagnamelength.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentgetelementsbytagnametotallength.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentgetelementsbytagnamevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentgetimplementation.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentgetrootnode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentinvalidcharacterexceptioncreateattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documentinvalidcharacterexceptioncreateelement.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/documentinvalidcharacterexceptioncreateentref.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/documentinvalidcharacterexceptioncreateentref1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/documentinvalidcharacterexceptioncreatepi.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/documentinvalidcharacterexceptioncreatepi1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documenttypegetdoctype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documenttypegetentities.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documenttypegetentitieslength.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documenttypegetentitiestype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documenttypegetnotations.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/documenttypegetnotationstype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/domimplementationfeaturenoversion.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("hasNullString", true) )) {
+  	   	newsuite.addTestPage("../level1/core/domimplementationfeaturenull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/domimplementationfeaturexml.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementaddnewattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementassociatedattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementchangeattributevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementcreatenewattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgetattributenode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgetattributenodenull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgetelementempty.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgetelementsbytagname.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgetelementsbytagnameaccessnodelist.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgetelementsbytagnamenomatch.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgetelementsbytagnamespecialvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementgettagname.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementinuseattributeerr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementinvalidcharacterexception.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementnormalize.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementnotfounderr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattributeaftercreate.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattributenode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattributenodenomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattributenodenomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattributenomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattributenomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/elementremoveattributerestoredefaultvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementreplaceattributewithself.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementreplaceexistingattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementreplaceexistingattributegevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/elementretrieveallattributes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementretrieveattrvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementretrievetagname.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementsetattributenodenomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("expandEntityReferences", false) )) {
+  	   	newsuite.addTestPage("../level1/core/elementsetattributenodenomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementsetattributenodenull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("expandEntityReferences", false) )) {
+  	   	newsuite.addTestPage("../level1/core/elementsetattributenomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementsetattributenomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/elementwrongdocumenterr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/entitygetentityname.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/entitygetpublicid.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/entitygetpublicidnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapchildnoderange.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapgetnameditem.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapinuseattributeerr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapnotfounderr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapnumberofnodes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapremovenameditem.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("validating", true) )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapremovenameditemgetvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapremovenameditemreturnnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapreturnattrnode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapreturnfirstitem.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapreturnlastitem.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapreturnnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapsetnameditem.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapsetnameditemreturnvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapsetnameditemthatexists.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapsetnameditemwithnewvalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/namednodemapwrongdocumenterr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchild.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchildchildexists.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchilddocfragment.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchildgetnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchildinvalidnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchildnewchilddiffdocument.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchildnodeancestor.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchildnomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeappendchildnomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeattributenodeattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeattributenodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeattributenodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeattributenodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodecdatasectionnodeattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodecdatasectionnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("coalescing", false) )) {
+  	   	newsuite.addTestPage("../level1/core/nodecdatasectionnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("coalescing", false) )) {
+  	   	newsuite.addTestPage("../level1/core/nodecdatasectionnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodechildnodes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodechildnodesappendchild.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodechildnodesempty.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodecloneattributescopied.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeclonefalsenocopytext.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeclonegetparentnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeclonenodefalse.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeclonenodetrue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeclonetruecopytext.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodecommentnodeattributes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodecommentnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodecommentnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodecommentnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumentfragmentnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumentfragmentnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumentfragmentnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumentnodeattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumentnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumentnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumentnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumenttypenodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumenttypenodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodedocumenttypenodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeelementnodeattributes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeelementnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeelementnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeelementnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentitynodeattributes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentitynodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentitynodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentitynodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentitysetnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentityreferencenodeattributes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentityreferencenodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentityreferencenodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeentityreferencenodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetfirstchild.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetfirstchildnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetlastchild.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetlastchildnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetnextsibling.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetnextsiblingnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetownerdocument.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetownerdocumentnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetprevioussibling.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodegetprevioussiblingnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodehaschildnodes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodehaschildnodesfalse.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbefore.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforedocfragment.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforeinvalidnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforenewchilddiffdocument.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforenewchildexists.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforenodeancestor.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforenodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforenomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforenomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforerefchildnonexistent.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeinsertbeforerefchildnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodelistindexequalzero.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodelistindexgetlength.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodelistindexgetlengthofemptylist.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodelistindexnotzero.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodelistreturnfirstitem.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodelistreturnlastitem.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodelisttraverselist.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodenotationnodeattributes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodenotationnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodenotationnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodenotationnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeparentnode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeparentnodenull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeprocessinginstructionnodeattributes.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeprocessinginstructionnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeprocessinginstructionnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeprocessinginstructionnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodeprocessinginstructionsetnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/noderemovechild.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/noderemovechildgetnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/noderemovechildnode.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/noderemovechildnomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/noderemovechildnomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/noderemovechildoldchildnonexistent.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechild.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildinvalidnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildnewchilddiffdocument.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildnewchildexists.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildnodeancestor.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildnomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildnomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodereplacechildoldchildnonexistent.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodesetnodevaluenomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodesetnodevaluenomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodetextnodeattribute.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodetextnodename.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodetextnodetype.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodetextnodevalue.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/notationgetnotationname.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/notationgetpublicid.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/notationgetpublicidnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/notationgetsystemid.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/notationgetsystemidnull.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/processinginstructiongetdata.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/processinginstructiongettarget.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("expandEntityReferences", false) )) {
+  	   	newsuite.addTestPage("../level1/core/processinginstructionsetdatanomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/processinginstructionsetdatanomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML  && suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/textindexsizeerrnegativeoffset.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textindexsizeerroffsetoutofbounds.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textparseintolistofelements.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textsplittextfour.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textsplittextnomodificationallowederr.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textsplittextnomodificationallowederrEE.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textsplittextone.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textsplittextthree.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textsplittexttwo.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/textwithnomarkup.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue01.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue02.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue03.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue04.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue05.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue06.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue07.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue08.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/nodevalue09.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_attrcreatedocumentfragment.html");  
+  newsuite.addTestPage("../level1/core/hc_attrcreatetextnode.html");  
+  newsuite.addTestPage("../level1/core/hc_attrcreatetextnode2.html");  
+  newsuite.addTestPage("../level1/core/hc_attreffectivevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_attrname.html");  
+  newsuite.addTestPage("../level1/core/hc_attrnextsiblingnull.html");  
+  newsuite.addTestPage("../level1/core/hc_attrparentnodenull.html");  
+  newsuite.addTestPage("../level1/core/hc_attrprevioussiblingnull.html");  
+  newsuite.addTestPage("../level1/core/hc_attrspecifiedvalue.html");  
+  newsuite.addTestPage("../level1/core/hc_attrspecifiedvaluechanged.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdataappenddata.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdataappenddatagetdata.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatadeletedatabegining.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatadeletedataend.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatadeletedataexceedslength.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatadeletedatagetlengthanddata.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatadeletedatamiddle.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatagetdata.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatagetlength.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrdeletedatacountnegative.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrdeletedataoffsetgreater.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrdeletedataoffsetnegative.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrinsertdataoffsetgreater.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrinsertdataoffsetnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrreplacedatacountnegative.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrreplacedataoffsetgreater.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrreplacedataoffsetnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrsubstringcountnegative.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrsubstringnegativeoffset.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_characterdataindexsizeerrsubstringoffsetgreater.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatainsertdatabeginning.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatainsertdataend.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatainsertdatamiddle.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatareplacedatabegining.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatareplacedataend.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatareplacedataexceedslengthofarg.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatareplacedataexceedslengthofdata.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatareplacedatamiddle.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatasetnodevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatasubstringexceedsvalue.html");  
+  newsuite.addTestPage("../level1/core/hc_characterdatasubstringvalue.html");  
+  newsuite.addTestPage("../level1/core/hc_commentgetcomment.html");  
+  newsuite.addTestPage("../level1/core/hc_documentcreateattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_documentcreatecomment.html");  
+  newsuite.addTestPage("../level1/core/hc_documentcreatedocumentfragment.html");  
+  newsuite.addTestPage("../level1/core/hc_documentcreateelement.html");  
+  newsuite.addTestPage("../level1/core/hc_documentcreateelementcasesensitive.html");  
+  newsuite.addTestPage("../level1/core/hc_documentcreatetextnode.html");  
+  newsuite.addTestPage("../level1/core/hc_documentgetdoctype.html");  
+  newsuite.addTestPage("../level1/core/hc_documentgetelementsbytagnamelength.html");  
+  newsuite.addTestPage("../level1/core/hc_documentgetelementsbytagnametotallength.html");  
+  newsuite.addTestPage("../level1/core/hc_documentgetelementsbytagnamevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_documentgetimplementation.html");  
+  newsuite.addTestPage("../level1/core/hc_documentgetrootnode.html");  
+  newsuite.addTestPage("../level1/core/hc_documentinvalidcharacterexceptioncreateattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_documentinvalidcharacterexceptioncreateattribute1.html");  
+  newsuite.addTestPage("../level1/core/hc_documentinvalidcharacterexceptioncreateelement.html");  
+  newsuite.addTestPage("../level1/core/hc_documentinvalidcharacterexceptioncreateelement1.html");  
+  newsuite.addTestPage("../level1/core/hc_domimplementationfeaturenoversion.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("hasNullString", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_domimplementationfeaturenull.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_domimplementationfeaturexml.html");  
+  newsuite.addTestPage("../level1/core/hc_elementaddnewattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_elementassociatedattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_elementchangeattributevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_elementcreatenewattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgetattributenode.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgetattributenodenull.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgetelementempty.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgetelementsbytagname.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgetelementsbytagnameaccessnodelist.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgetelementsbytagnamenomatch.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgetelementsbytagnamespecialvalue.html");  
+  newsuite.addTestPage("../level1/core/hc_elementgettagname.html");  
+  newsuite.addTestPage("../level1/core/hc_elementinuseattributeerr.html");  
+  newsuite.addTestPage("../level1/core/hc_elementinvalidcharacterexception.html");  
+  newsuite.addTestPage("../level1/core/hc_elementinvalidcharacterexception1.html");  
+  newsuite.addTestPage("../level1/core/hc_elementnormalize.html");  
+  newsuite.addTestPage("../level1/core/hc_elementnormalize2.html");  
+  newsuite.addTestPage("../level1/core/hc_elementnotfounderr.html");  
+  newsuite.addTestPage("../level1/core/hc_elementremoveattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_elementremoveattributeaftercreate.html");  
+  newsuite.addTestPage("../level1/core/hc_elementremoveattributenode.html");  
+  newsuite.addTestPage("../level1/core/hc_elementreplaceattributewithself.html");  
+  newsuite.addTestPage("../level1/core/hc_elementreplaceexistingattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_elementreplaceexistingattributegevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_elementretrieveallattributes.html");  
+  newsuite.addTestPage("../level1/core/hc_elementretrieveattrvalue.html");  
+  newsuite.addTestPage("../level1/core/hc_elementretrievetagname.html");  
+  newsuite.addTestPage("../level1/core/hc_elementsetattributenodenull.html");  
+  newsuite.addTestPage("../level1/core/hc_elementwrongdocumenterr.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_entitiesremovenameditem1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_entitiessetnameditem1.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_namednodemapchildnoderange.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapgetnameditem.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapinuseattributeerr.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapnotfounderr.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapnumberofnodes.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapremovenameditem.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapreturnattrnode.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapreturnfirstitem.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapreturnlastitem.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapreturnnull.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapsetnameditem.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapsetnameditemreturnvalue.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapsetnameditemthatexists.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapsetnameditemwithnewvalue.html");  
+  newsuite.addTestPage("../level1/core/hc_namednodemapwrongdocumenterr.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeappendchild.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeappendchildchildexists.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeappendchilddocfragment.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeappendchildgetnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeappendchildinvalidnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeappendchildnewchilddiffdocument.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeappendchildnodeancestor.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeattributenodeattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeattributenodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeattributenodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeattributenodevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_nodechildnodes.html");  
+  newsuite.addTestPage("../level1/core/hc_nodechildnodesappendchild.html");  
+  newsuite.addTestPage("../level1/core/hc_nodechildnodesempty.html");  
+  newsuite.addTestPage("../level1/core/hc_nodecloneattributescopied.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeclonefalsenocopytext.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeclonegetparentnull.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeclonenodefalse.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeclonenodetrue.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeclonetruecopytext.html");  
+  newsuite.addTestPage("../level1/core/hc_nodecommentnodeattributes.html");  
+  newsuite.addTestPage("../level1/core/hc_nodecommentnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodecommentnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodecommentnodevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_nodedocumentfragmentnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodedocumentfragmentnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodedocumentfragmentnodevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_nodedocumentnodeattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_nodedocumentnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodedocumentnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodedocumentnodevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeelementnodeattributes.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeelementnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeelementnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeelementnodevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetfirstchild.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetfirstchildnull.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetlastchild.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetlastchildnull.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetnextsibling.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetnextsiblingnull.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetownerdocument.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetownerdocumentnull.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetprevioussibling.html");  
+  newsuite.addTestPage("../level1/core/hc_nodegetprevioussiblingnull.html");  
+  newsuite.addTestPage("../level1/core/hc_nodehaschildnodes.html");  
+  newsuite.addTestPage("../level1/core/hc_nodehaschildnodesfalse.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbefore.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforedocfragment.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforeinvalidnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforenewchilddiffdocument.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforenewchildexists.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforenodeancestor.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforenodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforerefchildnonexistent.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeinsertbeforerefchildnull.html");  
+  newsuite.addTestPage("../level1/core/hc_nodelistindexequalzero.html");  
+  newsuite.addTestPage("../level1/core/hc_nodelistindexgetlength.html");  
+  newsuite.addTestPage("../level1/core/hc_nodelistindexgetlengthofemptylist.html");  
+  newsuite.addTestPage("../level1/core/hc_nodelistindexnotzero.html");  
+  newsuite.addTestPage("../level1/core/hc_nodelistreturnfirstitem.html");  
+  newsuite.addTestPage("../level1/core/hc_nodelistreturnlastitem.html");  
+  newsuite.addTestPage("../level1/core/hc_nodelisttraverselist.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeparentnode.html");  
+  newsuite.addTestPage("../level1/core/hc_nodeparentnodenull.html");  
+  newsuite.addTestPage("../level1/core/hc_noderemovechild.html");  
+  newsuite.addTestPage("../level1/core/hc_noderemovechildgetnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_noderemovechildnode.html");  
+  newsuite.addTestPage("../level1/core/hc_noderemovechildoldchildnonexistent.html");  
+  newsuite.addTestPage("../level1/core/hc_nodereplacechild.html");  
+  newsuite.addTestPage("../level1/core/hc_nodereplacechildinvalidnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodereplacechildnewchilddiffdocument.html");  
+  newsuite.addTestPage("../level1/core/hc_nodereplacechildnewchildexists.html");  
+  newsuite.addTestPage("../level1/core/hc_nodereplacechildnodeancestor.html");  
+  newsuite.addTestPage("../level1/core/hc_nodereplacechildnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodereplacechildoldchildnonexistent.html");  
+  newsuite.addTestPage("../level1/core/hc_nodetextnodeattribute.html");  
+  newsuite.addTestPage("../level1/core/hc_nodetextnodename.html");  
+  newsuite.addTestPage("../level1/core/hc_nodetextnodetype.html");  
+  newsuite.addTestPage("../level1/core/hc_nodetextnodevalue.html");  
+  newsuite.addTestPage("../level1/core/hc_nodevalue01.html");  
+  newsuite.addTestPage("../level1/core/hc_nodevalue02.html");  
+  newsuite.addTestPage("../level1/core/hc_nodevalue03.html");  
+  newsuite.addTestPage("../level1/core/hc_nodevalue04.html");  
+  newsuite.addTestPage("../level1/core/hc_nodevalue05.html");  
+  newsuite.addTestPage("../level1/core/hc_nodevalue06.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_nodevalue07.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_nodevalue08.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_notationsremovenameditem1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_notationssetnameditem1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.canSetImplementationAttribute("signed", true) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_textindexsizeerrnegativeoffset.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_textindexsizeerroffsetoutofbounds.html");  
+  newsuite.addTestPage("../level1/core/hc_textparseintolistofelements.html");  
+  newsuite.addTestPage("../level1/core/hc_textsplittextfour.html");  
+  newsuite.addTestPage("../level1/core/hc_textsplittextone.html");  
+  newsuite.addTestPage("../level1/core/hc_textsplittextthree.html");  
+  newsuite.addTestPage("../level1/core/hc_textsplittexttwo.html");  
+  newsuite.addTestPage("../level1/core/hc_textwithnomarkup.html");  
+  newsuite.addTestPage("../level1/core/hc_attrappendchild1.html");  
+  newsuite.addTestPage("../level1/core/hc_attrappendchild2.html");  
+  newsuite.addTestPage("../level1/core/hc_attrappendchild3.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_attrappendchild4.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_attrappendchild5.html");  
+  newsuite.addTestPage("../level1/core/hc_attrappendchild6.html");  
+  newsuite.addTestPage("../level1/core/hc_attrchildnodes1.html");  
+  newsuite.addTestPage("../level1/core/hc_attrchildnodes2.html");  
+  newsuite.addTestPage("../level1/core/hc_attrclonenode1.html");  
+  newsuite.addTestPage("../level1/core/hc_attrfirstchild.html");  
+  newsuite.addTestPage("../level1/core/hc_attrgetvalue1.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_attrgetvalue2.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_attrhaschildnodes.html");  
+  newsuite.addTestPage("../level1/core/hc_attrinsertbefore1.html");  
+  newsuite.addTestPage("../level1/core/hc_attrinsertbefore2.html");  
+  newsuite.addTestPage("../level1/core/hc_attrinsertbefore3.html");  
+  newsuite.addTestPage("../level1/core/hc_attrinsertbefore4.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_attrinsertbefore5.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_attrinsertbefore6.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (suiteBuilder.hasFeature("XML", null) )) {
+  	   	newsuite.addTestPage("../level1/core/hc_attrinsertbefore7.html");
+  }
+  newsuite.addTestPage("../level1/core/hc_attrlastchild.html");  
+  newsuite.addTestPage("../level1/core/hc_attrnormalize.html");  
+  newsuite.addTestPage("../level1/core/hc_attrremovechild1.html");  
+  newsuite.addTestPage("../level1/core/hc_attrremovechild2.html");  
+  newsuite.addTestPage("../level1/core/hc_attrreplacechild1.html");  
+  newsuite.addTestPage("../level1/core/hc_attrreplacechild2.html");  
+  newsuite.addTestPage("../level1/core/hc_attrsetvalue1.html");  
+  newsuite.addTestPage("../level1/core/hc_attrsetvalue2.html");  
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrremovechild1.html");
+  }
+  if (!suiteBuilder.skipIncompatibleTests || (!isHTML )) {
+  	   	newsuite.addTestPage("../level1/core/attrreplacechild1.html");
+  }
+
+  return newsuite;
+}
+</script>
+</head>
+<body onload="onImplementationChange()">
+<h1>DOM Level 1 Core Test Suite</h1>
+<form onsubmit="fixTestPagePath()" action="../../jsunit/testRunner.html" id="configuration">
+<table summary="Configuration" border="1" width="100%">
+<tr>
+<td>
+<table summary="Tests" width="100%">
+<tr>
+<td>Test: </td><td><select size="1" name="testpage"><option value="alltests.html" selected>alltests</option><option value="attrcreatedocumentfragment.html">attrcreatedocumentfragment</option>
+<option value="attrcreatetextnode.html">attrcreatetextnode</option>
+<option value="attrcreatetextnode2.html">attrcreatetextnode2</option>
+<option value="attrdefaultvalue.html">attrdefaultvalue</option>
+<option value="attreffectivevalue.html">attreffectivevalue</option>
+<option value="attrentityreplacement.html">attrentityreplacement</option>
+<option value="attrname.html">attrname</option>
+<option value="attrnextsiblingnull.html">attrnextsiblingnull</option>
+<option value="attrnotspecifiedvalue.html">attrnotspecifiedvalue</option>
+<option value="attrparentnodenull.html">attrparentnodenull</option>
+<option value="attrprevioussiblingnull.html">attrprevioussiblingnull</option>
+<option value="attrremovechild1.html">attrremovechild1</option>
+<option value="attrreplacechild1.html">attrreplacechild1</option>
+<option value="attrsetvaluenomodificationallowederr.html">attrsetvaluenomodificationallowederr</option>
+<option value="attrsetvaluenomodificationallowederrEE.html">attrsetvaluenomodificationallowederrEE</option>
+<option value="attrspecifiedvalue.html">attrspecifiedvalue</option>
+<option value="attrspecifiedvaluechanged.html">attrspecifiedvaluechanged</option>
+<option value="attrspecifiedvalueremove.html">attrspecifiedvalueremove</option>
+<option value="cdatasectiongetdata.html">cdatasectiongetdata</option>
+<option value="cdatasectionnormalize.html">cdatasectionnormalize</option>
+<option value="characterdataappenddata.html">characterdataappenddata</option>
+<option value="characterdataappenddatagetdata.html">characterdataappenddatagetdata</option>
+<option value="characterdataappenddatanomodificationallowederr.html">characterdataappenddatanomodificationallowederr</option>
+<option value="characterdataappenddatanomodificationallowederrEE.html">characterdataappenddatanomodificationallowederrEE</option>
+<option value="characterdatadeletedatabegining.html">characterdatadeletedatabegining</option>
+<option value="characterdatadeletedataend.html">characterdatadeletedataend</option>
+<option value="characterdatadeletedataexceedslength.html">characterdatadeletedataexceedslength</option>
+<option value="characterdatadeletedatagetlengthanddata.html">characterdatadeletedatagetlengthanddata</option>
+<option value="characterdatadeletedatamiddle.html">characterdatadeletedatamiddle</option>
+<option value="characterdatadeletedatanomodificationallowederr.html">characterdatadeletedatanomodificationallowederr</option>
+<option value="characterdatadeletedatanomodificationallowederrEE.html">characterdatadeletedatanomodificationallowederrEE</option>
+<option value="characterdatagetdata.html">characterdatagetdata</option>
+<option value="characterdatagetlength.html">characterdatagetlength</option>
+<option value="characterdataindexsizeerrdeletedatacountnegative.html">characterdataindexsizeerrdeletedatacountnegative</option>
+<option value="characterdataindexsizeerrdeletedataoffsetgreater.html">characterdataindexsizeerrdeletedataoffsetgreater</option>
+<option value="characterdataindexsizeerrdeletedataoffsetnegative.html">characterdataindexsizeerrdeletedataoffsetnegative</option>
+<option value="characterdataindexsizeerrinsertdataoffsetgreater.html">characterdataindexsizeerrinsertdataoffsetgreater</option>
+<option value="characterdataindexsizeerrinsertdataoffsetnegative.html">characterdataindexsizeerrinsertdataoffsetnegative</option>
+<option value="characterdataindexsizeerrreplacedatacountnegative.html">characterdataindexsizeerrreplacedatacountnegative</option>
+<option value="characterdataindexsizeerrreplacedataoffsetgreater.html">characterdataindexsizeerrreplacedataoffsetgreater</option>
+<option value="characterdataindexsizeerrreplacedataoffsetnegative.html">characterdataindexsizeerrreplacedataoffsetnegative</option>
+<option value="characterdataindexsizeerrsubstringcountnegative.html">characterdataindexsizeerrsubstringcountnegative</option>
+<option value="characterdataindexsizeerrsubstringnegativeoffset.html">characterdataindexsizeerrsubstringnegativeoffset</option>
+<option value="characterdataindexsizeerrsubstringoffsetgreater.html">characterdataindexsizeerrsubstringoffsetgreater</option>
+<option value="characterdatainsertdatabeginning.html">characterdatainsertdatabeginning</option>
+<option value="characterdatainsertdataend.html">characterdatainsertdataend</option>
+<option value="characterdatainsertdatamiddle.html">characterdatainsertdatamiddle</option>
+<option value="characterdatainsertdatanomodificationallowederr.html">characterdatainsertdatanomodificationallowederr</option>
+<option value="characterdatainsertdatanomodificationallowederrEE.html">characterdatainsertdatanomodificationallowederrEE</option>
+<option value="characterdatareplacedatabegining.html">characterdatareplacedatabegining</option>
+<option value="characterdatareplacedataend.html">characterdatareplacedataend</option>
+<option value="characterdatareplacedataexceedslengthofarg.html">characterdatareplacedataexceedslengthofarg</option>
+<option value="characterdatareplacedataexceedslengthofdata.html">characterdatareplacedataexceedslengthofdata</option>
+<option value="characterdatareplacedatamiddle.html">characterdatareplacedatamiddle</option>
+<option value="characterdatareplacedatanomodificationallowederr.html">characterdatareplacedatanomodificationallowederr</option>
+<option value="characterdatareplacedatanomodificationallowederrEE.html">characterdatareplacedatanomodificationallowederrEE</option>
+<option value="characterdatasetdatanomodificationallowederr.html">characterdatasetdatanomodificationallowederr</option>
+<option value="characterdatasetdatanomodificationallowederrEE.html">characterdatasetdatanomodificationallowederrEE</option>
+<option value="characterdatasetnodevalue.html">characterdatasetnodevalue</option>
+<option value="characterdatasubstringexceedsvalue.html">characterdatasubstringexceedsvalue</option>
+<option value="characterdatasubstringvalue.html">characterdatasubstringvalue</option>
+<option value="commentgetcomment.html">commentgetcomment</option>
+<option value="documentcreateattribute.html">documentcreateattribute</option>
+<option value="documentcreatecdatasection.html">documentcreatecdatasection</option>
+<option value="documentcreatecomment.html">documentcreatecomment</option>
+<option value="documentcreatedocumentfragment.html">documentcreatedocumentfragment</option>
+<option value="documentcreateelement.html">documentcreateelement</option>
+<option value="documentcreateelementcasesensitive.html">documentcreateelementcasesensitive</option>
+<option value="documentcreateelementdefaultattr.html">documentcreateelementdefaultattr</option>
+<option value="documentcreateentityreference.html">documentcreateentityreference</option>
+<option value="documentcreateentityreferenceknown.html">documentcreateentityreferenceknown</option>
+<option value="documentcreateprocessinginstruction.html">documentcreateprocessinginstruction</option>
+<option value="documentcreatetextnode.html">documentcreatetextnode</option>
+<option value="documentgetdoctype.html">documentgetdoctype</option>
+<option value="documentgetdoctypenodtd.html">documentgetdoctypenodtd</option>
+<option value="documentgetelementsbytagnamelength.html">documentgetelementsbytagnamelength</option>
+<option value="documentgetelementsbytagnametotallength.html">documentgetelementsbytagnametotallength</option>
+<option value="documentgetelementsbytagnamevalue.html">documentgetelementsbytagnamevalue</option>
+<option value="documentgetimplementation.html">documentgetimplementation</option>
+<option value="documentgetrootnode.html">documentgetrootnode</option>
+<option value="documentinvalidcharacterexceptioncreateattribute.html">documentinvalidcharacterexceptioncreateattribute</option>
+<option value="documentinvalidcharacterexceptioncreateelement.html">documentinvalidcharacterexceptioncreateelement</option>
+<option value="documentinvalidcharacterexceptioncreateentref.html">documentinvalidcharacterexceptioncreateentref</option>
+<option value="documentinvalidcharacterexceptioncreateentref1.html">documentinvalidcharacterexceptioncreateentref1</option>
+<option value="documentinvalidcharacterexceptioncreatepi.html">documentinvalidcharacterexceptioncreatepi</option>
+<option value="documentinvalidcharacterexceptioncreatepi1.html">documentinvalidcharacterexceptioncreatepi1</option>
+<option value="documenttypegetdoctype.html">documenttypegetdoctype</option>
+<option value="documenttypegetentities.html">documenttypegetentities</option>
+<option value="documenttypegetentitieslength.html">documenttypegetentitieslength</option>
+<option value="documenttypegetentitiestype.html">documenttypegetentitiestype</option>
+<option value="documenttypegetnotations.html">documenttypegetnotations</option>
+<option value="documenttypegetnotationstype.html">documenttypegetnotationstype</option>
+<option value="domimplementationfeaturenoversion.html">domimplementationfeaturenoversion</option>
+<option value="domimplementationfeaturenull.html">domimplementationfeaturenull</option>
+<option value="domimplementationfeaturexml.html">domimplementationfeaturexml</option>
+<option value="elementaddnewattribute.html">elementaddnewattribute</option>
+<option value="elementassociatedattribute.html">elementassociatedattribute</option>
+<option value="elementchangeattributevalue.html">elementchangeattributevalue</option>
+<option value="elementcreatenewattribute.html">elementcreatenewattribute</option>
+<option value="elementgetattributenode.html">elementgetattributenode</option>
+<option value="elementgetattributenodenull.html">elementgetattributenodenull</option>
+<option value="elementgetelementempty.html">elementgetelementempty</option>
+<option value="elementgetelementsbytagname.html">elementgetelementsbytagname</option>
+<option value="elementgetelementsbytagnameaccessnodelist.html">elementgetelementsbytagnameaccessnodelist</option>
+<option value="elementgetelementsbytagnamenomatch.html">elementgetelementsbytagnamenomatch</option>
+<option value="elementgetelementsbytagnamespecialvalue.html">elementgetelementsbytagnamespecialvalue</option>
+<option value="elementgettagname.html">elementgettagname</option>
+<option value="elementinuseattributeerr.html">elementinuseattributeerr</option>
+<option value="elementinvalidcharacterexception.html">elementinvalidcharacterexception</option>
+<option value="elementnormalize.html">elementnormalize</option>
+<option value="elementnotfounderr.html">elementnotfounderr</option>
+<option value="elementremoveattribute.html">elementremoveattribute</option>
+<option value="elementremoveattributeaftercreate.html">elementremoveattributeaftercreate</option>
+<option value="elementremoveattributenode.html">elementremoveattributenode</option>
+<option value="elementremoveattributenodenomodificationallowederr.html">elementremoveattributenodenomodificationallowederr</option>
+<option value="elementremoveattributenodenomodificationallowederrEE.html">elementremoveattributenodenomodificationallowederrEE</option>
+<option value="elementremoveattributenomodificationallowederr.html">elementremoveattributenomodificationallowederr</option>
+<option value="elementremoveattributenomodificationallowederrEE.html">elementremoveattributenomodificationallowederrEE</option>
+<option value="elementremoveattributerestoredefaultvalue.html">elementremoveattributerestoredefaultvalue</option>
+<option value="elementreplaceattributewithself.html">elementreplaceattributewithself</option>
+<option value="elementreplaceexistingattribute.html">elementreplaceexistingattribute</option>
+<option value="elementreplaceexistingattributegevalue.html">elementreplaceexistingattributegevalue</option>
+<option value="elementretrieveallattributes.html">elementretrieveallattributes</option>
+<option value="elementretrieveattrvalue.html">elementretrieveattrvalue</option>
+<option value="elementretrievetagname.html">elementretrievetagname</option>
+<option value="elementsetattributenodenomodificationallowederr.html">elementsetattributenodenomodificationallowederr</option>
+<option value="elementsetattributenodenomodificationallowederrEE.html">elementsetattributenodenomodificationallowederrEE</option>
+<option value="elementsetattributenodenull.html">elementsetattributenodenull</option>
+<option value="elementsetattributenomodificationallowederr.html">elementsetattributenomodificationallowederr</option>
+<option value="elementsetattributenomodificationallowederrEE.html">elementsetattributenomodificationallowederrEE</option>
+<option value="elementwrongdocumenterr.html">elementwrongdocumenterr</option>
+<option value="entitygetentityname.html">entitygetentityname</option>
+<option value="entitygetpublicid.html">entitygetpublicid</option>
+<option value="entitygetpublicidnull.html">entitygetpublicidnull</option>
+<option value="hc_attrappendchild1.html">hc_attrappendchild1</option>
+<option value="hc_attrappendchild2.html">hc_attrappendchild2</option>
+<option value="hc_attrappendchild3.html">hc_attrappendchild3</option>
+<option value="hc_attrappendchild4.html">hc_attrappendchild4</option>
+<option value="hc_attrappendchild5.html">hc_attrappendchild5</option>
+<option value="hc_attrappendchild6.html">hc_attrappendchild6</option>
+<option value="hc_attrchildnodes1.html">hc_attrchildnodes1</option>
+<option value="hc_attrchildnodes2.html">hc_attrchildnodes2</option>
+<option value="hc_attrclonenode1.html">hc_attrclonenode1</option>
+<option value="hc_attrcreatedocumentfragment.html">hc_attrcreatedocumentfragment</option>
+<option value="hc_attrcreatetextnode.html">hc_attrcreatetextnode</option>
+<option value="hc_attrcreatetextnode2.html">hc_attrcreatetextnode2</option>
+<option value="hc_attreffectivevalue.html">hc_attreffectivevalue</option>
+<option value="hc_attrfirstchild.html">hc_attrfirstchild</option>
+<option value="hc_attrgetvalue1.html">hc_attrgetvalue1</option>
+<option value="hc_attrgetvalue2.html">hc_attrgetvalue2</option>
+<option value="hc_attrhaschildnodes.html">hc_attrhaschildnodes</option>
+<option value="hc_attrinsertbefore1.html">hc_attrinsertbefore1</option>
+<option value="hc_attrinsertbefore2.html">hc_attrinsertbefore2</option>
+<option value="hc_attrinsertbefore3.html">hc_attrinsertbefore3</option>
+<option value="hc_attrinsertbefore4.html">hc_attrinsertbefore4</option>
+<option value="hc_attrinsertbefore5.html">hc_attrinsertbefore5</option>
+<option value="hc_attrinsertbefore6.html">hc_attrinsertbefore6</option>
+<option value="hc_attrinsertbefore7.html">hc_attrinsertbefore7</option>
+<option value="hc_attrlastchild.html">hc_attrlastchild</option>
+<option value="hc_attrname.html">hc_attrname</option>
+<option value="hc_attrnextsiblingnull.html">hc_attrnextsiblingnull</option>
+<option value="hc_attrnormalize.html">hc_attrnormalize</option>
+<option value="hc_attrparentnodenull.html">hc_attrparentnodenull</option>
+<option value="hc_attrprevioussiblingnull.html">hc_attrprevioussiblingnull</option>
+<option value="hc_attrremovechild1.html">hc_attrremovechild1</option>
+<option value="hc_attrremovechild2.html">hc_attrremovechild2</option>
+<option value="hc_attrreplacechild1.html">hc_attrreplacechild1</option>
+<option value="hc_attrreplacechild2.html">hc_attrreplacechild2</option>
+<option value="hc_attrsetvalue1.html">hc_attrsetvalue1</option>
+<option value="hc_attrsetvalue2.html">hc_attrsetvalue2</option>
+<option value="hc_attrspecifiedvalue.html">hc_attrspecifiedvalue</option>
+<option value="hc_attrspecifiedvaluechanged.html">hc_attrspecifiedvaluechanged</option>
+<option value="hc_characterdataappenddata.html">hc_characterdataappenddata</option>
+<option value="hc_characterdataappenddatagetdata.html">hc_characterdataappenddatagetdata</option>
+<option value="hc_characterdatadeletedatabegining.html">hc_characterdatadeletedatabegining</option>
+<option value="hc_characterdatadeletedataend.html">hc_characterdatadeletedataend</option>
+<option value="hc_characterdatadeletedataexceedslength.html">hc_characterdatadeletedataexceedslength</option>
+<option value="hc_characterdatadeletedatagetlengthanddata.html">hc_characterdatadeletedatagetlengthanddata</option>
+<option value="hc_characterdatadeletedatamiddle.html">hc_characterdatadeletedatamiddle</option>
+<option value="hc_characterdatagetdata.html">hc_characterdatagetdata</option>
+<option value="hc_characterdatagetlength.html">hc_characterdatagetlength</option>
+<option value="hc_characterdataindexsizeerrdeletedatacountnegative.html">hc_characterdataindexsizeerrdeletedatacountnegative</option>
+<option value="hc_characterdataindexsizeerrdeletedataoffsetgreater.html">hc_characterdataindexsizeerrdeletedataoffsetgreater</option>
+<option value="hc_characterdataindexsizeerrdeletedataoffsetnegative.html">hc_characterdataindexsizeerrdeletedataoffsetnegative</option>
+<option value="hc_characterdataindexsizeerrinsertdataoffsetgreater.html">hc_characterdataindexsizeerrinsertdataoffsetgreater</option>
+<option value="hc_characterdataindexsizeerrinsertdataoffsetnegative.html">hc_characterdataindexsizeerrinsertdataoffsetnegative</option>
+<option value="hc_characterdataindexsizeerrreplacedatacountnegative.html">hc_characterdataindexsizeerrreplacedatacountnegative</option>
+<option value="hc_characterdataindexsizeerrreplacedataoffsetgreater.html">hc_characterdataindexsizeerrreplacedataoffsetgreater</option>
+<option value="hc_characterdataindexsizeerrreplacedataoffsetnegative.html">hc_characterdataindexsizeerrreplacedataoffsetnegative</option>
+<option value="hc_characterdataindexsizeerrsubstringcountnegative.html">hc_characterdataindexsizeerrsubstringcountnegative</option>
+<option value="hc_characterdataindexsizeerrsubstringnegativeoffset.html">hc_characterdataindexsizeerrsubstringnegativeoffset</option>
+<option value="hc_characterdataindexsizeerrsubstringoffsetgreater.html">hc_characterdataindexsizeerrsubstringoffsetgreater</option>
+<option value="hc_characterdatainsertdatabeginning.html">hc_characterdatainsertdatabeginning</option>
+<option value="hc_characterdatainsertdataend.html">hc_characterdatainsertdataend</option>
+<option value="hc_characterdatainsertdatamiddle.html">hc_characterdatainsertdatamiddle</option>
+<option value="hc_characterdatareplacedatabegining.html">hc_characterdatareplacedatabegining</option>
+<option value="hc_characterdatareplacedataend.html">hc_characterdatareplacedataend</option>
+<option value="hc_characterdatareplacedataexceedslengthofarg.html">hc_characterdatareplacedataexceedslengthofarg</option>
+<option value="hc_characterdatareplacedataexceedslengthofdata.html">hc_characterdatareplacedataexceedslengthofdata</option>
+<option value="hc_characterdatareplacedatamiddle.html">hc_characterdatareplacedatamiddle</option>
+<option value="hc_characterdatasetnodevalue.html">hc_characterdatasetnodevalue</option>
+<option value="hc_characterdatasubstringexceedsvalue.html">hc_characterdatasubstringexceedsvalue</option>
+<option value="hc_characterdatasubstringvalue.html">hc_characterdatasubstringvalue</option>
+<option value="hc_commentgetcomment.html">hc_commentgetcomment</option>
+<option value="hc_documentcreateattribute.html">hc_documentcreateattribute</option>
+<option value="hc_documentcreatecomment.html">hc_documentcreatecomment</option>
+<option value="hc_documentcreatedocumentfragment.html">hc_documentcreatedocumentfragment</option>
+<option value="hc_documentcreateelement.html">hc_documentcreateelement</option>
+<option value="hc_documentcreateelementcasesensitive.html">hc_documentcreateelementcasesensitive</option>
+<option value="hc_documentcreatetextnode.html">hc_documentcreatetextnode</option>
+<option value="hc_documentgetdoctype.html">hc_documentgetdoctype</option>
+<option value="hc_documentgetelementsbytagnamelength.html">hc_documentgetelementsbytagnamelength</option>
+<option value="hc_documentgetelementsbytagnametotallength.html">hc_documentgetelementsbytagnametotallength</option>
+<option value="hc_documentgetelementsbytagnamevalue.html">hc_documentgetelementsbytagnamevalue</option>
+<option value="hc_documentgetimplementation.html">hc_documentgetimplementation</option>
+<option value="hc_documentgetrootnode.html">hc_documentgetrootnode</option>
+<option value="hc_documentinvalidcharacterexceptioncreateattribute.html">hc_documentinvalidcharacterexceptioncreateattribute</option>
+<option value="hc_documentinvalidcharacterexceptioncreateattribute1.html">hc_documentinvalidcharacterexceptioncreateattribute1</option>
+<option value="hc_documentinvalidcharacterexceptioncreateelement.html">hc_documentinvalidcharacterexceptioncreateelement</option>
+<option value="hc_documentinvalidcharacterexceptioncreateelement1.html">hc_documentinvalidcharacterexceptioncreateelement1</option>
+<option value="hc_domimplementationfeaturenoversion.html">hc_domimplementationfeaturenoversion</option>
+<option value="hc_domimplementationfeaturenull.html">hc_domimplementationfeaturenull</option>
+<option value="hc_domimplementationfeaturexml.html">hc_domimplementationfeaturexml</option>
+<option value="hc_elementaddnewattribute.html">hc_elementaddnewattribute</option>
+<option value="hc_elementassociatedattribute.html">hc_elementassociatedattribute</option>
+<option value="hc_elementchangeattributevalue.html">hc_elementchangeattributevalue</option>
+<option value="hc_elementcreatenewattribute.html">hc_elementcreatenewattribute</option>
+<option value="hc_elementgetattributenode.html">hc_elementgetattributenode</option>
+<option value="hc_elementgetattributenodenull.html">hc_elementgetattributenodenull</option>
+<option value="hc_elementgetelementempty.html">hc_elementgetelementempty</option>
+<option value="hc_elementgetelementsbytagname.html">hc_elementgetelementsbytagname</option>
+<option value="hc_elementgetelementsbytagnameaccessnodelist.html">hc_elementgetelementsbytagnameaccessnodelist</option>
+<option value="hc_elementgetelementsbytagnamenomatch.html">hc_elementgetelementsbytagnamenomatch</option>
+<option value="hc_elementgetelementsbytagnamespecialvalue.html">hc_elementgetelementsbytagnamespecialvalue</option>
+<option value="hc_elementgettagname.html">hc_elementgettagname</option>
+<option value="hc_elementinuseattributeerr.html">hc_elementinuseattributeerr</option>
+<option value="hc_elementinvalidcharacterexception.html">hc_elementinvalidcharacterexception</option>
+<option value="hc_elementinvalidcharacterexception1.html">hc_elementinvalidcharacterexception1</option>
+<option value="hc_elementnormalize.html">hc_elementnormalize</option>
+<option value="hc_elementnormalize2.html">hc_elementnormalize2</option>
+<option value="hc_elementnotfounderr.html">hc_elementnotfounderr</option>
+<option value="hc_elementremoveattribute.html">hc_elementremoveattribute</option>
+<option value="hc_elementremoveattributeaftercreate.html">hc_elementremoveattributeaftercreate</option>
+<option value="hc_elementremoveattributenode.html">hc_elementremoveattributenode</option>
+<option value="hc_elementreplaceattributewithself.html">hc_elementreplaceattributewithself</option>
+<option value="hc_elementreplaceexistingattribute.html">hc_elementreplaceexistingattribute</option>
+<option value="hc_elementreplaceexistingattributegevalue.html">hc_elementreplaceexistingattributegevalue</option>
+<option value="hc_elementretrieveallattributes.html">hc_elementretrieveallattributes</option>
+<option value="hc_elementretrieveattrvalue.html">hc_elementretrieveattrvalue</option>
+<option value="hc_elementretrievetagname.html">hc_elementretrievetagname</option>
+<option value="hc_elementsetattributenodenull.html">hc_elementsetattributenodenull</option>
+<option value="hc_elementwrongdocumenterr.html">hc_elementwrongdocumenterr</option>
+<option value="hc_entitiesremovenameditem1.html">hc_entitiesremovenameditem1</option>
+<option value="hc_entitiessetnameditem1.html">hc_entitiessetnameditem1</option>
+<option value="hc_namednodemapchildnoderange.html">hc_namednodemapchildnoderange</option>
+<option value="hc_namednodemapgetnameditem.html">hc_namednodemapgetnameditem</option>
+<option value="hc_namednodemapinuseattributeerr.html">hc_namednodemapinuseattributeerr</option>
+<option value="hc_namednodemapnotfounderr.html">hc_namednodemapnotfounderr</option>
+<option value="hc_namednodemapnumberofnodes.html">hc_namednodemapnumberofnodes</option>
+<option value="hc_namednodemapremovenameditem.html">hc_namednodemapremovenameditem</option>
+<option value="hc_namednodemapreturnattrnode.html">hc_namednodemapreturnattrnode</option>
+<option value="hc_namednodemapreturnfirstitem.html">hc_namednodemapreturnfirstitem</option>
+<option value="hc_namednodemapreturnlastitem.html">hc_namednodemapreturnlastitem</option>
+<option value="hc_namednodemapreturnnull.html">hc_namednodemapreturnnull</option>
+<option value="hc_namednodemapsetnameditem.html">hc_namednodemapsetnameditem</option>
+<option value="hc_namednodemapsetnameditemreturnvalue.html">hc_namednodemapsetnameditemreturnvalue</option>
+<option value="hc_namednodemapsetnameditemthatexists.html">hc_namednodemapsetnameditemthatexists</option>
+<option value="hc_namednodemapsetnameditemwithnewvalue.html">hc_namednodemapsetnameditemwithnewvalue</option>
+<option value="hc_namednodemapwrongdocumenterr.html">hc_namednodemapwrongdocumenterr</option>
+<option value="hc_nodeappendchild.html">hc_nodeappendchild</option>
+<option value="hc_nodeappendchildchildexists.html">hc_nodeappendchildchildexists</option>
+<option value="hc_nodeappendchilddocfragment.html">hc_nodeappendchilddocfragment</option>
+<option value="hc_nodeappendchildgetnodename.html">hc_nodeappendchildgetnodename</option>
+<option value="hc_nodeappendchildinvalidnodetype.html">hc_nodeappendchildinvalidnodetype</option>
+<option value="hc_nodeappendchildnewchilddiffdocument.html">hc_nodeappendchildnewchilddiffdocument</option>
+<option value="hc_nodeappendchildnodeancestor.html">hc_nodeappendchildnodeancestor</option>
+<option value="hc_nodeattributenodeattribute.html">hc_nodeattributenodeattribute</option>
+<option value="hc_nodeattributenodename.html">hc_nodeattributenodename</option>
+<option value="hc_nodeattributenodetype.html">hc_nodeattributenodetype</option>
+<option value="hc_nodeattributenodevalue.html">hc_nodeattributenodevalue</option>
+<option value="hc_nodechildnodes.html">hc_nodechildnodes</option>
+<option value="hc_nodechildnodesappendchild.html">hc_nodechildnodesappendchild</option>
+<option value="hc_nodechildnodesempty.html">hc_nodechildnodesempty</option>
+<option value="hc_nodecloneattributescopied.html">hc_nodecloneattributescopied</option>
+<option value="hc_nodeclonefalsenocopytext.html">hc_nodeclonefalsenocopytext</option>
+<option value="hc_nodeclonegetparentnull.html">hc_nodeclonegetparentnull</option>
+<option value="hc_nodeclonenodefalse.html">hc_nodeclonenodefalse</option>
+<option value="hc_nodeclonenodetrue.html">hc_nodeclonenodetrue</option>
+<option value="hc_nodeclonetruecopytext.html">hc_nodeclonetruecopytext</option>
+<option value="hc_nodecommentnodeattributes.html">hc_nodecommentnodeattributes</option>
+<option value="hc_nodecommentnodename.html">hc_nodecommentnodename</option>
+<option value="hc_nodecommentnodetype.html">hc_nodecommentnodetype</option>
+<option value="hc_nodecommentnodevalue.html">hc_nodecommentnodevalue</option>
+<option value="hc_nodedocumentfragmentnodename.html">hc_nodedocumentfragmentnodename</option>
+<option value="hc_nodedocumentfragmentnodetype.html">hc_nodedocumentfragmentnodetype</option>
+<option value="hc_nodedocumentfragmentnodevalue.html">hc_nodedocumentfragmentnodevalue</option>
+<option value="hc_nodedocumentnodeattribute.html">hc_nodedocumentnodeattribute</option>
+<option value="hc_nodedocumentnodename.html">hc_nodedocumentnodename</option>
+<option value="hc_nodedocumentnodetype.html">hc_nodedocumentnodetype</option>
+<option value="hc_nodedocumentnodevalue.html">hc_nodedocumentnodevalue</option>
+<option value="hc_nodeelementnodeattributes.html">hc_nodeelementnodeattributes</option>
+<option value="hc_nodeelementnodename.html">hc_nodeelementnodename</option>
+<option value="hc_nodeelementnodetype.html">hc_nodeelementnodetype</option>
+<option value="hc_nodeelementnodevalue.html">hc_nodeelementnodevalue</option>
+<option value="hc_nodegetfirstchild.html">hc_nodegetfirstchild</option>
+<option value="hc_nodegetfirstchildnull.html">hc_nodegetfirstchildnull</option>
+<option value="hc_nodegetlastchild.html">hc_nodegetlastchild</option>
+<option value="hc_nodegetlastchildnull.html">hc_nodegetlastchildnull</option>
+<option value="hc_nodegetnextsibling.html">hc_nodegetnextsibling</option>
+<option value="hc_nodegetnextsiblingnull.html">hc_nodegetnextsiblingnull</option>
+<option value="hc_nodegetownerdocument.html">hc_nodegetownerdocument</option>
+<option value="hc_nodegetownerdocumentnull.html">hc_nodegetownerdocumentnull</option>
+<option value="hc_nodegetprevioussibling.html">hc_nodegetprevioussibling</option>
+<option value="hc_nodegetprevioussiblingnull.html">hc_nodegetprevioussiblingnull</option>
+<option value="hc_nodehaschildnodes.html">hc_nodehaschildnodes</option>
+<option value="hc_nodehaschildnodesfalse.html">hc_nodehaschildnodesfalse</option>
+<option value="hc_nodeinsertbefore.html">hc_nodeinsertbefore</option>
+<option value="hc_nodeinsertbeforedocfragment.html">hc_nodeinsertbeforedocfragment</option>
+<option value="hc_nodeinsertbeforeinvalidnodetype.html">hc_nodeinsertbeforeinvalidnodetype</option>
+<option value="hc_nodeinsertbeforenewchilddiffdocument.html">hc_nodeinsertbeforenewchilddiffdocument</option>
+<option value="hc_nodeinsertbeforenewchildexists.html">hc_nodeinsertbeforenewchildexists</option>
+<option value="hc_nodeinsertbeforenodeancestor.html">hc_nodeinsertbeforenodeancestor</option>
+<option value="hc_nodeinsertbeforenodename.html">hc_nodeinsertbeforenodename</option>
+<option value="hc_nodeinsertbeforerefchildnonexistent.html">hc_nodeinsertbeforerefchildnonexistent</option>
+<option value="hc_nodeinsertbeforerefchildnull.html">hc_nodeinsertbeforerefchildnull</option>
+<option value="hc_nodelistindexequalzero.html">hc_nodelistindexequalzero</option>
+<option value="hc_nodelistindexgetlength.html">hc_nodelistindexgetlength</option>
+<option value="hc_nodelistindexgetlengthofemptylist.html">hc_nodelistindexgetlengthofemptylist</option>
+<option value="hc_nodelistindexnotzero.html">hc_nodelistindexnotzero</option>
+<option value="hc_nodelistreturnfirstitem.html">hc_nodelistreturnfirstitem</option>
+<option value="hc_nodelistreturnlastitem.html">hc_nodelistreturnlastitem</option>
+<option value="hc_nodelisttraverselist.html">hc_nodelisttraverselist</option>
+<option value="hc_nodeparentnode.html">hc_nodeparentnode</option>
+<option value="hc_nodeparentnodenull.html">hc_nodeparentnodenull</option>
+<option value="hc_noderemovechild.html">hc_noderemovechild</option>
+<option value="hc_noderemovechildgetnodename.html">hc_noderemovechildgetnodename</option>
+<option value="hc_noderemovechildnode.html">hc_noderemovechildnode</option>
+<option value="hc_noderemovechildoldchildnonexistent.html">hc_noderemovechildoldchildnonexistent</option>
+<option value="hc_nodereplacechild.html">hc_nodereplacechild</option>
+<option value="hc_nodereplacechildinvalidnodetype.html">hc_nodereplacechildinvalidnodetype</option>
+<option value="hc_nodereplacechildnewchilddiffdocument.html">hc_nodereplacechildnewchilddiffdocument</option>
+<option value="hc_nodereplacechildnewchildexists.html">hc_nodereplacechildnewchildexists</option>
+<option value="hc_nodereplacechildnodeancestor.html">hc_nodereplacechildnodeancestor</option>
+<option value="hc_nodereplacechildnodename.html">hc_nodereplacechildnodename</option>
+<option value="hc_nodereplacechildoldchildnonexistent.html">hc_nodereplacechildoldchildnonexistent</option>
+<option value="hc_nodetextnodeattribute.html">hc_nodetextnodeattribute</option>
+<option value="hc_nodetextnodename.html">hc_nodetextnodename</option>
+<option value="hc_nodetextnodetype.html">hc_nodetextnodetype</option>
+<option value="hc_nodetextnodevalue.html">hc_nodetextnodevalue</option>
+<option value="hc_nodevalue01.html">hc_nodevalue01</option>
+<option value="hc_nodevalue02.html">hc_nodevalue02</option>
+<option value="hc_nodevalue03.html">hc_nodevalue03</option>
+<option value="hc_nodevalue04.html">hc_nodevalue04</option>
+<option value="hc_nodevalue05.html">hc_nodevalue05</option>
+<option value="hc_nodevalue06.html">hc_nodevalue06</option>
+<option value="hc_nodevalue07.html">hc_nodevalue07</option>
+<option value="hc_nodevalue08.html">hc_nodevalue08</option>
+<option value="hc_notationsremovenameditem1.html">hc_notationsremovenameditem1</option>
+<option value="hc_notationssetnameditem1.html">hc_notationssetnameditem1</option>
+<option value="hc_textindexsizeerrnegativeoffset.html">hc_textindexsizeerrnegativeoffset</option>
+<option value="hc_textindexsizeerroffsetoutofbounds.html">hc_textindexsizeerroffsetoutofbounds</option>
+<option value="hc_textparseintolistofelements.html">hc_textparseintolistofelements</option>
+<option value="hc_textsplittextfour.html">hc_textsplittextfour</option>
+<option value="hc_textsplittextone.html">hc_textsplittextone</option>
+<option value="hc_textsplittextthree.html">hc_textsplittextthree</option>
+<option value="hc_textsplittexttwo.html">hc_textsplittexttwo</option>
+<option value="hc_textwithnomarkup.html">hc_textwithnomarkup</option>
+<option value="namednodemapchildnoderange.html">namednodemapchildnoderange</option>
+<option value="namednodemapgetnameditem.html">namednodemapgetnameditem</option>
+<option value="namednodemapinuseattributeerr.html">namednodemapinuseattributeerr</option>
+<option value="namednodemapnotfounderr.html">namednodemapnotfounderr</option>
+<option value="namednodemapnumberofnodes.html">namednodemapnumberofnodes</option>
+<option value="namednodemapremovenameditem.html">namednodemapremovenameditem</option>
+<option value="namednodemapremovenameditemgetvalue.html">namednodemapremovenameditemgetvalue</option>
+<option value="namednodemapremovenameditemreturnnodevalue.html">namednodemapremovenameditemreturnnodevalue</option>
+<option value="namednodemapreturnattrnode.html">namednodemapreturnattrnode</option>
+<option value="namednodemapreturnfirstitem.html">namednodemapreturnfirstitem</option>
+<option value="namednodemapreturnlastitem.html">namednodemapreturnlastitem</option>
+<option value="namednodemapreturnnull.html">namednodemapreturnnull</option>
+<option value="namednodemapsetnameditem.html">namednodemapsetnameditem</option>
+<option value="namednodemapsetnameditemreturnvalue.html">namednodemapsetnameditemreturnvalue</option>
+<option value="namednodemapsetnameditemthatexists.html">namednodemapsetnameditemthatexists</option>
+<option value="namednodemapsetnameditemwithnewvalue.html">namednodemapsetnameditemwithnewvalue</option>
+<option value="namednodemapwrongdocumenterr.html">namednodemapwrongdocumenterr</option>
+<option value="nodeappendchild.html">nodeappendchild</option>
+<option value="nodeappendchildchildexists.html">nodeappendchildchildexists</option>
+<option value="nodeappendchilddocfragment.html">nodeappendchilddocfragment</option>
+<option value="nodeappendchildgetnodename.html">nodeappendchildgetnodename</option>
+<option value="nodeappendchildinvalidnodetype.html">nodeappendchildinvalidnodetype</option>
+<option value="nodeappendchildnewchilddiffdocument.html">nodeappendchildnewchilddiffdocument</option>
+<option value="nodeappendchildnodeancestor.html">nodeappendchildnodeancestor</option>
+<option value="nodeappendchildnomodificationallowederr.html">nodeappendchildnomodificationallowederr</option>
+<option value="nodeappendchildnomodificationallowederrEE.html">nodeappendchildnomodificationallowederrEE</option>
+<option value="nodeattributenodeattribute.html">nodeattributenodeattribute</option>
+<option value="nodeattributenodename.html">nodeattributenodename</option>
+<option value="nodeattributenodetype.html">nodeattributenodetype</option>
+<option value="nodeattributenodevalue.html">nodeattributenodevalue</option>
+<option value="nodecdatasectionnodeattribute.html">nodecdatasectionnodeattribute</option>
+<option value="nodecdatasectionnodename.html">nodecdatasectionnodename</option>
+<option value="nodecdatasectionnodetype.html">nodecdatasectionnodetype</option>
+<option value="nodecdatasectionnodevalue.html">nodecdatasectionnodevalue</option>
+<option value="nodechildnodes.html">nodechildnodes</option>
+<option value="nodechildnodesappendchild.html">nodechildnodesappendchild</option>
+<option value="nodechildnodesempty.html">nodechildnodesempty</option>
+<option value="nodecloneattributescopied.html">nodecloneattributescopied</option>
+<option value="nodeclonefalsenocopytext.html">nodeclonefalsenocopytext</option>
+<option value="nodeclonegetparentnull.html">nodeclonegetparentnull</option>
+<option value="nodeclonenodefalse.html">nodeclonenodefalse</option>
+<option value="nodeclonenodetrue.html">nodeclonenodetrue</option>
+<option value="nodeclonetruecopytext.html">nodeclonetruecopytext</option>
+<option value="nodecommentnodeattributes.html">nodecommentnodeattributes</option>
+<option value="nodecommentnodename.html">nodecommentnodename</option>
+<option value="nodecommentnodetype.html">nodecommentnodetype</option>
+<option value="nodecommentnodevalue.html">nodecommentnodevalue</option>
+<option value="nodedocumentfragmentnodename.html">nodedocumentfragmentnodename</option>
+<option value="nodedocumentfragmentnodetype.html">nodedocumentfragmentnodetype</option>
+<option value="nodedocumentfragmentnodevalue.html">nodedocumentfragmentnodevalue</option>
+<option value="nodedocumentnodeattribute.html">nodedocumentnodeattribute</option>
+<option value="nodedocumentnodename.html">nodedocumentnodename</option>
+<option value="nodedocumentnodetype.html">nodedocumentnodetype</option>
+<option value="nodedocumentnodevalue.html">nodedocumentnodevalue</option>
+<option value="nodedocumenttypenodename.html">nodedocumenttypenodename</option>
+<option value="nodedocumenttypenodetype.html">nodedocumenttypenodetype</option>
+<option value="nodedocumenttypenodevalue.html">nodedocumenttypenodevalue</option>
+<option value="nodeelementnodeattributes.html">nodeelementnodeattributes</option>
+<option value="nodeelementnodename.html">nodeelementnodename</option>
+<option value="nodeelementnodetype.html">nodeelementnodetype</option>
+<option value="nodeelementnodevalue.html">nodeelementnodevalue</option>
+<option value="nodeentitynodeattributes.html">nodeentitynodeattributes</option>
+<option value="nodeentitynodename.html">nodeentitynodename</option>
+<option value="nodeentitynodetype.html">nodeentitynodetype</option>
+<option value="nodeentitynodevalue.html">nodeentitynodevalue</option>
+<option value="nodeentityreferencenodeattributes.html">nodeentityreferencenodeattributes</option>
+<option value="nodeentityreferencenodename.html">nodeentityreferencenodename</option>
+<option value="nodeentityreferencenodetype.html">nodeentityreferencenodetype</option>
+<option value="nodeentityreferencenodevalue.html">nodeentityreferencenodevalue</option>
+<option value="nodeentitysetnodevalue.html">nodeentitysetnodevalue</option>
+<option value="nodegetfirstchild.html">nodegetfirstchild</option>
+<option value="nodegetfirstchildnull.html">nodegetfirstchildnull</option>
+<option value="nodegetlastchild.html">nodegetlastchild</option>
+<option value="nodegetlastchildnull.html">nodegetlastchildnull</option>
+<option value="nodegetnextsibling.html">nodegetnextsibling</option>
+<option value="nodegetnextsiblingnull.html">nodegetnextsiblingnull</option>
+<option value="nodegetownerdocument.html">nodegetownerdocument</option>
+<option value="nodegetownerdocumentnull.html">nodegetownerdocumentnull</option>
+<option value="nodegetprevioussibling.html">nodegetprevioussibling</option>
+<option value="nodegetprevioussiblingnull.html">nodegetprevioussiblingnull</option>
+<option value="nodehaschildnodes.html">nodehaschildnodes</option>
+<option value="nodehaschildnodesfalse.html">nodehaschildnodesfalse</option>
+<option value="nodeinsertbefore.html">nodeinsertbefore</option>
+<option value="nodeinsertbeforedocfragment.html">nodeinsertbeforedocfragment</option>
+<option value="nodeinsertbeforeinvalidnodetype.html">nodeinsertbeforeinvalidnodetype</option>
+<option value="nodeinsertbeforenewchilddiffdocument.html">nodeinsertbeforenewchilddiffdocument</option>
+<option value="nodeinsertbeforenewchildexists.html">nodeinsertbeforenewchildexists</option>
+<option value="nodeinsertbeforenodeancestor.html">nodeinsertbeforenodeancestor</option>
+<option value="nodeinsertbeforenodename.html">nodeinsertbeforenodename</option>
+<option value="nodeinsertbeforenomodificationallowederr.html">nodeinsertbeforenomodificationallowederr</option>
+<option value="nodeinsertbeforenomodificationallowederrEE.html">nodeinsertbeforenomodificationallowederrEE</option>
+<option value="nodeinsertbeforerefchildnonexistent.html">nodeinsertbeforerefchildnonexistent</option>
+<option value="nodeinsertbeforerefchildnull.html">nodeinsertbeforerefchildnull</option>
+<option value="nodelistindexequalzero.html">nodelistindexequalzero</option>
+<option value="nodelistindexgetlength.html">nodelistindexgetlength</option>
+<option value="nodelistindexgetlengthofemptylist.html">nodelistindexgetlengthofemptylist</option>
+<option value="nodelistindexnotzero.html">nodelistindexnotzero</option>
+<option value="nodelistreturnfirstitem.html">nodelistreturnfirstitem</option>
+<option value="nodelistreturnlastitem.html">nodelistreturnlastitem</option>
+<option value="nodelisttraverselist.html">nodelisttraverselist</option>
+<option value="nodenotationnodeattributes.html">nodenotationnodeattributes</option>
+<option value="nodenotationnodename.html">nodenotationnodename</option>
+<option value="nodenotationnodetype.html">nodenotationnodetype</option>
+<option value="nodenotationnodevalue.html">nodenotationnodevalue</option>
+<option value="nodeparentnode.html">nodeparentnode</option>
+<option value="nodeparentnodenull.html">nodeparentnodenull</option>
+<option value="nodeprocessinginstructionnodeattributes.html">nodeprocessinginstructionnodeattributes</option>
+<option value="nodeprocessinginstructionnodename.html">nodeprocessinginstructionnodename</option>
+<option value="nodeprocessinginstructionnodetype.html">nodeprocessinginstructionnodetype</option>
+<option value="nodeprocessinginstructionnodevalue.html">nodeprocessinginstructionnodevalue</option>
+<option value="nodeprocessinginstructionsetnodevalue.html">nodeprocessinginstructionsetnodevalue</option>
+<option value="noderemovechild.html">noderemovechild</option>
+<option value="noderemovechildgetnodename.html">noderemovechildgetnodename</option>
+<option value="noderemovechildnode.html">noderemovechildnode</option>
+<option value="noderemovechildnomodificationallowederr.html">noderemovechildnomodificationallowederr</option>
+<option value="noderemovechildnomodificationallowederrEE.html">noderemovechildnomodificationallowederrEE</option>
+<option value="noderemovechildoldchildnonexistent.html">noderemovechildoldchildnonexistent</option>
+<option value="nodereplacechild.html">nodereplacechild</option>
+<option value="nodereplacechildinvalidnodetype.html">nodereplacechildinvalidnodetype</option>
+<option value="nodereplacechildnewchilddiffdocument.html">nodereplacechildnewchilddiffdocument</option>
+<option value="nodereplacechildnewchildexists.html">nodereplacechildnewchildexists</option>
+<option value="nodereplacechildnodeancestor.html">nodereplacechildnodeancestor</option>
+<option value="nodereplacechildnodename.html">nodereplacechildnodename</option>
+<option value="nodereplacechildnomodificationallowederr.html">nodereplacechildnomodificationallowederr</option>
+<option value="nodereplacechildnomodificationallowederrEE.html">nodereplacechildnomodificationallowederrEE</option>
+<option value="nodereplacechildoldchildnonexistent.html">nodereplacechildoldchildnonexistent</option>
+<option value="nodesetnodevaluenomodificationallowederr.html">nodesetnodevaluenomodificationallowederr</option>
+<option value="nodesetnodevaluenomodificationallowederrEE.html">nodesetnodevaluenomodificationallowederrEE</option>
+<option value="nodetextnodeattribute.html">nodetextnodeattribute</option>
+<option value="nodetextnodename.html">nodetextnodename</option>
+<option value="nodetextnodetype.html">nodetextnodetype</option>
+<option value="nodetextnodevalue.html">nodetextnodevalue</option>
+<option value="nodevalue01.html">nodevalue01</option>
+<option value="nodevalue02.html">nodevalue02</option>
+<option value="nodevalue03.html">nodevalue03</option>
+<option value="nodevalue04.html">nodevalue04</option>
+<option value="nodevalue05.html">nodevalue05</option>
+<option value="nodevalue06.html">nodevalue06</option>
+<option value="nodevalue07.html">nodevalue07</option>
+<option value="nodevalue08.html">nodevalue08</option>
+<option value="nodevalue09.html">nodevalue09</option>
+<option value="notationgetnotationname.html">notationgetnotationname</option>
+<option value="notationgetpublicid.html">notationgetpublicid</option>
+<option value="notationgetpublicidnull.html">notationgetpublicidnull</option>
+<option value="notationgetsystemid.html">notationgetsystemid</option>
+<option value="notationgetsystemidnull.html">notationgetsystemidnull</option>
+<option value="processinginstructiongetdata.html">processinginstructiongetdata</option>
+<option value="processinginstructiongettarget.html">processinginstructiongettarget</option>
+<option value="processinginstructionsetdatanomodificationallowederr.html">processinginstructionsetdatanomodificationallowederr</option>
+<option value="processinginstructionsetdatanomodificationallowederrEE.html">processinginstructionsetdatanomodificationallowederrEE</option>
+<option value="textindexsizeerrnegativeoffset.html">textindexsizeerrnegativeoffset</option>
+<option value="textindexsizeerroffsetoutofbounds.html">textindexsizeerroffsetoutofbounds</option>
+<option value="textparseintolistofelements.html">textparseintolistofelements</option>
+<option value="textsplittextfour.html">textsplittextfour</option>
+<option value="textsplittextnomodificationallowederr.html">textsplittextnomodificationallowederr</option>
+<option value="textsplittextnomodificationallowederrEE.html">textsplittextnomodificationallowederrEE</option>
+<option value="textsplittextone.html">textsplittextone</option>
+<option value="textsplittextthree.html">textsplittextthree</option>
+<option value="textsplittexttwo.html">textsplittexttwo</option>
+<option value="textwithnomarkup.html">textwithnomarkup</option>
+</select></td><td align="right"><input value="Load JSUnit" type="submit"></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<table summary="Configuration" width="100%" border="1">
+<tr>
+<th>Implementation</th><th>Configuration</th><th>Content Type</th>
+</tr>
+<tr>
+<td valign="top"><input onclick="onImplementationChange()" checked value="iframe" id="iframeImpl" name="implementation" type="radio"> iframe<br>
+<input onclick="onImplementationChange()" value="dom3ls" id="dom3lsImpl" name="implementation" type="radio"> DOM 3 Load/Save<br> 
+                            	Features: <input disabled name="dom3lsFeatures" type="text">
+<br>
+<input onclick="onImplementationChange()" value="mozillaXML" id="mozillaXMLImpl" name="implementation" type="radio"> Mozilla XML<br>
+<input onclick="onImplementationChange()" value="msxml3" id="msxml3Impl" name="implementation" type="radio"> MSXML 3.0<br>
+<input onclick="onImplementationChange()" value="msxml4" id="msxml4Impl" name="implementation" type="radio"> MSXML 4.0<br>
+<input onclick="onImplementationChange()" value="svgplugin" id="svgpluginImpl" name="implementation" type="radio"> SVG Plugin<br>
+</td><td valign="top"><input disabled checked type="checkbox" name="asynchronous" onclick="setAsynchronous(true)"> Asynchronous<br>
+<input onclick="setImplementationAttribute('expandEntityReferences', true)" disabled value="true" name="expandEntityReferences" type="checkbox"> Expanding Entities<br>
+<input onclick="setImplementationAttribute('ignoringElementContentWhitespace', true)" disabled value="true" name="ignoringElementContentWhitespace" type="checkbox"> Ignoring whitespace<br>
+<input onclick="setImplementationAttribute('validating', true)" disabled value="true" name="validating" type="checkbox"> Validating<br>
+<input onclick="setImplementationAttribute('coalescing', true)" disabled value="true" name="coalescing" type="checkbox"> Coalescing<br>
+<input onclick="setImplementationAttribute('namespaceAware', true)" disabled value="true" name="namespaceAware" type="checkbox"> Namespace aware<br>
+<input onclick="setImplementationAttribute('ignoringComments', true)" checked disabled value="true" name="ignoringComments" type="checkbox"> Ignoring comments<br>
+<input checked value="true" name="skipIncompatibleTests" type="checkbox"> Skip incompatible tests<br>
+<input value="true" checked name="autorun" type="checkbox"> Autorun<br>
+<input onclick="updateTestSubmission()" name="submitCheckbox" type="checkbox"> Submit results<br>
+                            Acceptor: http://<input size="35" disabled value="" name="submitresults" type="text">
+<br>
+							Result ID: <input disabled value="" name="resultid" type="text">
+<br>
+</td><td valign="top"><input onclick="setContentType('text/xml')" value="text/xml" id="contentTypeXML" name="contentType" type="radio">XML<br>
+<input onclick="setContentType('text/html')" checked value="text/html" id="contentTypeHTML" name="contentType" type="radio">HTML<br>
+<input onclick="setContentType('application/xhtml+xml')" value="application/xhtml+xml" id="contentTypeXHTML" name="contentType" type="radio">XHTML<br>
+<input onclick="setContentType('image/svg+xml')" value="image/svg+xml" id="contentTypeSVG" name="contentType" type="radio">SVG<br>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</form>
+<p>
+			Copyright (c) 2001-2004 World Wide Web Consortium,
+			(Massachusetts Institute of Technology, Institut National de
+			Recherche en Informatique et en Automatique, Keio University). All
+			Rights Reserved. This program is distributed under the W3C's Software
+			Intellectual Property License. This program is distributed in the
+			hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+			the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+			PURPOSE.
+			</p>
+<p>See W3C License <a href="http://www.w3.org/Consortium/Legal/">http://www.w3.org/Consortium/Legal/</a> 
+ for more details.</p>
+</body>
+</html>
