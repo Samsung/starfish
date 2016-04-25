@@ -18,6 +18,7 @@ test/reftest/web-platform-tests/html_converted/editing/activation/click.html
 test/reftest/web-platform-tests/html_converted/infrastructure/conformance-requirements/extensibility/foreign.html
 test/reftest/web-platform-tests/html_converted/semantics/grouping-content/the-div-element/grouping-div.html
 test/reftest/web-platform-tests/html_converted/semantics/grouping-content/the-p-element/grouping-p.html
+test/reftest/web-platform-tests/html_converted/semantics/scripting-1/the-script-element/script-languages-01.html
 test/reftest/web-platform-tests/html_converted/semantics/scripting-1/the-script-element/script-onload-string.html
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/callback-invoked.html
 test/reftest/web-platform-tests/html_converted/webappapis/animation-frames/callback-multicalls.html
