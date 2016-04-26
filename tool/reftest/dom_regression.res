@@ -92,6 +92,7 @@ test/reftest/dom/html_converted/level2/core/documenttypepublicid01.html
 test/reftest/dom/html_converted/level2/core/documenttypesystemid01.html
 test/reftest/dom/html_converted/level2/core/elementhasattribute01.html
 test/reftest/dom/html_converted/level2/core/elementhasattribute03.html
+test/reftest/dom/html_converted/level2/core/elementhasattribute04.html
 test/reftest/dom/html_converted/level2/core/hc_namednodemapinvalidtype1.html
 test/reftest/dom/html_converted/level2/events/DocumentEventCast01.html
 test/reftest/dom/html_converted/level2/html/HTMLDocument05.html
