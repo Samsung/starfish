@@ -105,8 +105,7 @@ function hc_attrremovechild2() {
             retval = titleAttr.removeChild(textNode);
         }
         catch(ex) {
-          console.log("ex: " + ex);
-          success = (typeof(ex.code) != 'undefined' && ex.code == 8);
+      success = (typeof(ex.code) != 'undefined' && ex.code == 8);
         }
         assertTrue("throw_NOT_FOUND_ERR",success);
     }

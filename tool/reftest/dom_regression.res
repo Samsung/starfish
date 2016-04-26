@@ -187,4 +187,7 @@ test/reftest/dom/html_converted/level1/core/hc_attrinsertbefore2.html
 test/reftest/dom/html_converted/level1/core/nodedocumenttypenodename.html
 test/reftest/dom/html_converted/level1/core/nodedocumenttypenodetype.html
 test/reftest/dom/html_converted/level1/core/nodedocumenttypenodevalue.html
-
+test/reftest/dom/html_converted/level1/core/hc_attrlastchild.html
+test/reftest/dom/html_converted/level1/core/hc_attrremovechild1.html
+test/reftest/dom/html_converted/level1/core/hc_attrreplacechild1.html
+test/reftest/dom/html_converted/level1/core/hc_attrsetvalue2.html
