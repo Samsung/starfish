@@ -1127,20 +1127,6 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
     LayoutUnit remainWidth = ctx.lastKnownWidth();
     LayoutUnit minWidth;
 
-    if (style()->borderLeftWidth().isFixed())
-        minWidth += style()->borderLeftWidth().fixed();
-    if (style()->borderRightWidth().isFixed())
-        minWidth += style()->borderRightWidth().fixed();
-    if (style()->paddingLeft().isFixed())
-        minWidth += style()->paddingLeft().fixed();
-    if (style()->paddingRight().isFixed())
-        minWidth += style()->paddingRight().fixed();
-    if (style()->marginLeft().isFixed())
-        minWidth += style()->marginLeft().fixed();
-    if (style()->marginRight().isFixed())
-        minWidth += style()->marginRight().fixed();
-    remainWidth -= minWidth;
-
     if (hasBlockFlow()) {
         if (style()->width().isFixed()) {
             minWidth += style()->width().fixed();
@@ -1149,9 +1135,10 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
             Frame* child = firstChild();
             while (child) {
                 if (child->isNormalFlow()) {
-                    ComputePreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - minWidth);
+                    LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
+                    ComputePreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp);
                     child->computePreferredWidth(newCtx);
-                    ctx.setResult(newCtx.result() + minWidth);
+                    ctx.setResult(newCtx.result() + mbp);
                 }
                 child = child->next();
             }
@@ -1195,14 +1182,15 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     }
 
                     if (w > remainWidth) {
-                        ctx.setResult(currentLineWidth);
+                        ctx.setResult(remainWidth);
                         currentLineWidth = 0;
                     }
                 });
             } else if (f->isFrameBlockBox()) {
-                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth);
+                LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
+                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp);
                 f->computePreferredWidth(newCtx);
-                ctx.setResult(newCtx.result());
+                ctx.setResult(newCtx.result() + mbp);
             } else if (f->isFrameLineBreak()) {
                 // linebreaks
                 ctx.setResult(currentLineWidth);

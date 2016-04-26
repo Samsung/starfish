@@ -99,6 +99,14 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
             Length marginLeft = style()->marginLeft();
             Length marginRight = style()->marginRight();
+
+            LayoutUnit parentWidthForComputePreferredWidth = parentContentWidth - paddingWidth() - borderWidth() - marginWidth();
+            if (style()->direction() == LtrDirectionValue) {
+                parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidth + ctx.blockContainer(this)->asFrameBox()->paddingLeft();
+            } else {
+                parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidth + ctx.blockContainer(this)->asFrameBox()->paddingRight();
+            }
+
             if (!marginLeft.isAuto() && !marginRight.isAuto()) {
                 if (style()->direction() == LtrDirectionValue) {
                     setMarginRight(0);
@@ -107,7 +115,6 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 }
             }
 
-            LayoutUnit parentWidthForComputePreferredWidth = parentContentWidth - paddingWidth() - borderWidth() - marginWidth();
             Length left = style()->left();
             Length right = style()->right();
             Length width = style()->width();

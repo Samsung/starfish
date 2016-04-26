@@ -255,6 +255,24 @@ public:
         return m_lastKnownWidth;
     }
 
+    static LayoutUnit computeMinimumWidthDueToMBP(ComputedStyle* style)
+    {
+        LayoutUnit minWidth;
+        if (style->borderLeftWidth().isFixed())
+            minWidth += style->borderLeftWidth().fixed();
+        if (style->borderRightWidth().isFixed())
+            minWidth += style->borderRightWidth().fixed();
+        if (style->paddingLeft().isFixed())
+            minWidth += style->paddingLeft().fixed();
+        if (style->paddingRight().isFixed())
+            minWidth += style->paddingRight().fixed();
+        if (style->marginLeft().isFixed())
+            minWidth += style->marginLeft().fixed();
+        if (style->marginRight().isFixed())
+            minWidth += style->marginRight().fixed();
+        return minWidth;
+    }
+
 private:
     LayoutContext& m_layoutContext;
     LayoutUnit m_result;
