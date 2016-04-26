@@ -318,6 +318,17 @@ public:
         return "FrameBlockBox";
     }
 
+    bool isNecessaryBlockBox()
+    {
+        if (!node()) {
+            if (firstChild() && firstChild()->isFrameInline()) {
+                FrameInline* fi = firstChild()->asFrameInline();
+                return !(fi->isLeftMBPCleared() && fi->isRightMBPCleared() && !fi->firstChild());
+            }
+        }
+        return true;
+    }
+
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(ComputePreferredWidthContext& ctx);
 
@@ -364,6 +375,8 @@ public:
             return false;
         if (asFrameBox()->height() > 0)
             return false;
+        if (!isNecessaryBlockBox())
+            return true;
         Length heightLength = style()->height();
         // NOTE: In case of percentage height,
         // if containing blocks' height is fixed, the block is not self-collaping block.

@@ -739,6 +739,10 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
 std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx)
 {
+    if (!isNecessaryBlockBox()) {
+        return std::make_pair(0, LayoutRect(0, 0, 0, 0));
+    }
+
     LayoutRect visibleRect(0, 0, 0, 0);
     LayoutUnit lineBoxX = paddingLeft() + borderLeft();
     LayoutUnit lineBoxY = paddingTop() + borderTop();
@@ -1105,7 +1109,8 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             }
         }
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
-        inlineBox->setX(self->width() + extra);
+        self->setWidth(self->width() + extra);
+        inlineBox->setX(self->width());
         InlineNonReplacedBox* result = InlineNonReplacedBox::layoutInline(inlineBox, ctx, blockBox, lfc, self, true);
         Frame* newSelfCandi = result->layoutParent();
         if (newSelfCandi->asFrameBox()->isInlineBox() && newSelfCandi->asFrameBox()->asInlineBox()->isInlineNonReplacedBox()) {
@@ -1126,6 +1131,10 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 {
     LayoutUnit remainWidth = ctx.lastKnownWidth();
     LayoutUnit minWidth;
+
+    if (!isNecessaryBlockBox()) {
+        return;
+    }
 
     if (hasBlockFlow()) {
         if (style()->width().isFixed()) {
