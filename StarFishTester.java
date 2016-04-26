@@ -69,10 +69,8 @@ public class StarFishTester {
 			File rm = new File("/tmp/StarFishTester/");
 			deleteDirectory(rm);
 
+			final String reftestFolder = "./out/x64/exe/debug/reftest/";
 			final String outFolder = "./out/x64/exe/debug/reftest/pixel_test/";
-
-			File rDir = new File(outFolder + "test/reftest/csswg-test/css1/");
-			rDir.mkdirs();
 
 			ArrayList<Thread> threads = new ArrayList<Thread>();
 			for (int i = 0; i < cores; i ++) {
@@ -107,27 +105,32 @@ public class StarFishTester {
 
                             // System.out.println(tempDir);
 
-							String folderName = outFolder + workItem;
+							String caseName = workItem;
+                            caseName = caseName.replace("test/reftest", "");
+							String folderName = outFolder + caseName;
 							folderName = folderName.substring(0, folderName.lastIndexOf('/'));
 
-							String caseName = workItem;
+                            File rDir = new File(folderName);
+                            rDir.mkdirs();
+
 							caseName = caseName.substring(0, caseName.lastIndexOf('.'));
 
                             // excute runner
                             try {
 
-								String resultXML = (outFolder+caseName+"/result.xml");
+                                String resultFolder = reftestFolder + caseName + "/";
+								String resultXML = resultFolder + "/result.xml";
 								File xml = new File(resultXML);
 								String ss = "";
+                                String pngFile = outFolder + caseName + "_result.png";
 								if (xml.exists()) {
-                                    String pngFile = outFolder + caseName + "_result.png";
                                     File png = new File(pngFile);
                                     if (png.exists()) {
                                         png.delete();
                                     }
 									ss = "./StarFish " + resultXML + " --pixel-test --width=" + 800 + " --height=" + 600 + " --working-directory=" + caseName.substring(0, caseName.lastIndexOf('/') + 1) + " --screen-shot=" + pngFile;
 								} else {
-									ss = "./run.sh " + workItem + " --result-folder="  + (outFolder+caseName+"/") + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + outFolder + caseName + "_result.png";
+									ss = "./run.sh " + workItem + " --result-folder="  + (resultFolder) + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + pngFile;
 								}
 
 								// System.out.println(ss);

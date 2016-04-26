@@ -13,7 +13,9 @@ EXPECTED_IMAGE_PATH="test/regression"
 PASSFILE="tmp.res"
 RESULTFILE="regression.res"
 echo -n '' > ${RESULTFILE}
+XMLDIR="out/x64/exe/debug/"
 OUTDIR="out/x64/exe/debug/reftest/Regression"
+mkdir -p $XMLDIR
 mkdir -p $OUTDIR
 mkdir -p $EXPECTED_IMAGE_PATH
 PASS=0
@@ -61,14 +63,23 @@ for i in $tc ; do
     fi
     cnt=`expr $cnt + 1`
     html=$i
+    xmlfile=${i#*/}
+    xmlfile=${xmlfile%.*}
     i=${i//csswg-test_converted/csswg-test}
     dir=${i%.*}
     file=${dir##*/}
     dir=${dir#*/}
     dir=${dir%/*}
 
+
     # Capture the screenshot
-    ELM_ENGINE="shot:" ./run.sh $html --regression-test --width=${W} --height=${H} > /dev/null 2>&1
+    xmlfile=${XMLDIR}${xmlfile}"/result.xml"
+    if [[ -f ${xmlfile} ]]
+    then
+        ELM_ENGINE="shot:" ./StarFish $xmlfile --regression-test --width=${W} --height=${H} --working-directory=${html%/*}/ > /dev/null 2>&1
+    else
+        ELM_ENGINE="shot:" ./run.sh $html --regression-test --width=${W} --height=${H} > /dev/null 2>&1
+    fi
     mkdir -p ${EXPECTED_IMAGE_PATH}/${dir}
     GOAL_PNG="${EXPECTED_IMAGE_PATH}/${dir}/${file}_result.png"
     if [[ "$1" != "demo" ]]; then
