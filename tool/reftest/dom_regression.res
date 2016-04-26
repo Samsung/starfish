@@ -184,3 +184,6 @@ test/reftest/dom/html_converted/level1/core/hc_attrhaschildnodes.html
 test/reftest/dom/html_converted/level1/core/hc_attrinsertbefore1.html
 test/reftest/dom/html_converted/level1/core/hc_attrinsertbefore2.html
 test/reftest/dom/html_converted/level1/core/nodedocumenttypenodename.html
+test/reftest/dom/html_converted/level1/core/nodedocumenttypenodetype.html
+test/reftest/dom/html_converted/level1/core/nodedocumenttypenodevalue.html
+
