@@ -192,3 +192,5 @@ test/reftest/dom/html_converted/level1/core/hc_attrremovechild1.html
 test/reftest/dom/html_converted/level1/core/hc_attrreplacechild1.html
 test/reftest/dom/html_converted/level1/core/hc_attrsetvalue2.html
 test/reftest/dom/html_converted/level1/core/cdatasectiongetdata.html
+test/reftest/dom/html_converted/level1/core/nodeentitysetnodevalue.html
+
