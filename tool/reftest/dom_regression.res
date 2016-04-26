@@ -174,3 +174,5 @@ test/reftest/dom/html_converted/level1/core/hc_attrappendchild1.html
 test/reftest/dom/html_converted/level1/core/namednodemapremovenameditemgetvalue.html
 test/reftest/dom/html_converted/level1/core/hc_attrappendchild6.html
 test/reftest/dom/html_converted/level1/core/namednodemapremovenameditemreturnnodevalue.html
+test/reftest/dom/html_converted/level1/core/hc_attrchildnodes1.html
+test/reftest/dom/html_converted/level1/core/hc_attrchildnodes2.html
