@@ -154,7 +154,7 @@ if [ "$REGRESSION" = true ]; then
             destdir=${dest%/*}
             mkdir -p $destdir
             path=${i%/*}
-            cp -rf $path/support $destdir/
+            [[ -e $path/support ]] && cp -rf $path/support $destdir/
             echo $i"====>"$dest > regression_test_log
             cp $i $dest
         done
@@ -170,7 +170,7 @@ if [ "$REGRESSION" = true ]; then
                 destdir=${dest%/*}
                 mkdir -p $destdir
                 path=${i%/*}
-                cp -rf $path/support $destdir/
+                [[ -e $path/support ]] && cp -rf $path/support $destdir/
                 echo $i"====>"$dest > regression_test_log
                 cp $i $dest
             done
