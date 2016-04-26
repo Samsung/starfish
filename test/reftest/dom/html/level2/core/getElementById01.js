@@ -39,7 +39,7 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("validating", true);
+       //setImplementationAttribute("validating", true);
 
       docsLoaded = 0;
       
@@ -103,7 +103,7 @@ function getElementById01() {
       element = doc.getElementById("CANADA");
       tagname = element.tagName;
 
-      assertEquals("throw_Equals","emp:address",tagname);
+      assertEquals("throw_Equals","EM",tagname);
        
 }
 

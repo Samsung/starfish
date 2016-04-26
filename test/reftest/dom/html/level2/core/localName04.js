@@ -39,7 +39,7 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("namespaceAware", true);
+       //setImplementationAttribute("namespaceAware", true);
 
       docsLoaded = 0;
       
@@ -101,11 +101,11 @@ function localName04() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("employee");
+      elementList = doc.getElementsByTagName("acronym");
       testEmployee = elementList.item(0);
       employeeLocalName = testEmployee.localName;
 
-      assertEquals("lname","employee",employeeLocalName);
+      assertEquals("lname","acronym",employeeLocalName);
        
 }
 

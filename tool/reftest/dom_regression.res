@@ -193,4 +193,9 @@ test/reftest/dom/html_converted/level1/core/hc_attrreplacechild1.html
 test/reftest/dom/html_converted/level1/core/hc_attrsetvalue2.html
 test/reftest/dom/html_converted/level1/core/cdatasectiongetdata.html
 test/reftest/dom/html_converted/level1/core/nodeentitysetnodevalue.html
-
+test/reftest/dom/html_converted/level2/core/getElementById01.html
+test/reftest/dom/html_converted/level2/core/getElementById02.html
+test/reftest/dom/html_converted/level2/core/localName01.html
+test/reftest/dom/html_converted/level2/core/localName02.html
+test/reftest/dom/html_converted/level2/core/localName03.html
+test/reftest/dom/html_converted/level2/core/localName04.html

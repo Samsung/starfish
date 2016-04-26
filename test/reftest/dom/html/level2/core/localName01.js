@@ -39,7 +39,7 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("namespaceAware", true);
+       //setImplementationAttribute("namespaceAware", true);
 
       docsLoaded = 0;
       
@@ -103,13 +103,13 @@ function localName01() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("emp:address");
+      elementList = doc.getElementsByTagName("acronym");
       testAddr = elementList.item(0);
       assertNotNull("empAddrNotNull",testAddr);
-addrAttr = testAddr.getAttributeNode("emp:domestic");
+addrAttr = testAddr.getAttributeNode("title");
       localName = addrAttr.localName;
 
-      assertEquals("localName","domestic",localName);
+      assertEquals("localName","title",localName);
        
 }
 

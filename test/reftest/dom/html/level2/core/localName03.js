@@ -102,7 +102,7 @@ function localName03() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("employeeId");
+      elementList = doc.getElementsByTagName("acronym");
       testEmployee = elementList.item(0);
       textNode = testEmployee.firstChild;
 
