@@ -4,6 +4,7 @@
 #include "layout/FrameBox.h"
 #include "layout/FrameReplaced.h"
 #include "layout/FrameInline.h"
+#include "layout/FrameText.h"
 
 namespace StarFish {
 
@@ -323,7 +324,14 @@ public:
         if (!node()) {
             if (firstChild() && firstChild()->isFrameInline()) {
                 FrameInline* fi = firstChild()->asFrameInline();
-                return !(fi->isLeftMBPCleared() && fi->isRightMBPCleared() && !fi->firstChild());
+                if (fi->isLeftMBPCleared() && fi->isRightMBPCleared()) {
+                    if (!fi->firstChild())
+                        return false;
+                    if (fi->firstChild()->isFrameText()) {
+                        if (fi->firstChild()->asFrameText()->text()->containsOnlyWhitespace())
+                            return false;
+                    }
+                }
             }
         }
         return true;
