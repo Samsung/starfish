@@ -872,7 +872,6 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
     if (freshStart)
         self->computeBorderMarginPadding(inlineContentWidth);
-    // LayoutUnit w = self->marginLeft() + self->borderLeft() + self->paddingLeft();
     if (freshStart) {
         self->m_orgBorder = self->m_border;
         self->m_orgPadding = self->m_padding;
@@ -885,10 +884,6 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         self->setPaddingTop(0);
         self->setPaddingBottom(0);
 
-        // if (w > (inlineContentWidth - lineFormattingContext.m_currentLineWidth) && layoutParentBox == nullptr) {
-        //     lineFormattingContext.breakLine();
-        // }
-
         if (!layoutParentBox) {
             lineFormattingContext.currentLine()->boxes().push_back(self);
             self->setLayoutParent(lineFormattingContext.currentLine());
@@ -899,9 +894,6 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
         lineFormattingContext.registerInlineContent();
     }
-
-    // lineFormattingContext.m_currentLineWidth += w;
-    // self->setWidth(self->paddingLeft() + self->borderLeft());
 
     if (layoutParentBox) {
         LayoutUnit w = self->marginLeft() + self->borderLeft() + self->paddingLeft();
@@ -1059,18 +1051,22 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
     inlineBoxGenerator(self->m_origin, ctx, lineFormattingContext, inlineContentWidth, extraWidthDueToFrameInlineFirstChild, [&](FrameBox* ib)
     {
         self->boxes().push_back(ib);
-        if (unprocessedLeftWidths) {
-            self->setWidth(self->width() + self->borderLeft() + self->paddingLeft());
-            if (self->style()->direction() == LtrDirectionValue) {
+        if (self->style()->direction() == LtrDirectionValue) {
+            if (unprocessedLeftWidths) {
+                self->setWidth(self->width() + self->borderLeft() + self->paddingLeft());
                 lineFormattingContext.m_currentLineWidth += unprocessedLeftWidths;
                 unprocessedLeftWidths = 0;
                 extraWidthDueToFrameInlineFirstChild = unprocessedRightWidths;
-            } else {
+            }
+        } else {
+            if (unprocessedRightWidths) {
+                self->setWidth(self->width() + self->borderRight() + self->paddingRight());
                 lineFormattingContext.m_currentLineWidth += unprocessedRightWidths;
                 unprocessedRightWidths = 0;
                 extraWidthDueToFrameInlineFirstChild = unprocessedLeftWidths;
             }
         }
+
 
         ib->setLayoutParent(self);
         if (self->style()->direction() == LtrDirectionValue) {
@@ -1092,8 +1088,24 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         }
     }, [&](FrameInline* f)
     {
+        LayoutUnit extra;
+        if (self->style()->direction() == LtrDirectionValue) {
+            if (unprocessedLeftWidths) {
+                lineFormattingContext.m_currentLineWidth += unprocessedLeftWidths;
+                extra = unprocessedLeftWidths;
+                unprocessedLeftWidths = 0;
+                extraWidthDueToFrameInlineFirstChild = unprocessedRightWidths;
+            }
+        } else {
+            if (unprocessedRightWidths) {
+                lineFormattingContext.m_currentLineWidth += unprocessedRightWidths;
+                extra = unprocessedRightWidths;
+                unprocessedRightWidths = 0;
+                extraWidthDueToFrameInlineFirstChild = unprocessedLeftWidths;
+            }
+        }
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
-        inlineBox->setX(self->width());
+        inlineBox->setX(self->width() + extra);
         InlineNonReplacedBox* result = InlineNonReplacedBox::layoutInline(inlineBox, ctx, blockBox, lfc, self, true);
         Frame* newSelfCandi = result->layoutParent();
         if (newSelfCandi->asFrameBox()->isInlineBox() && newSelfCandi->asFrameBox()->asInlineBox()->isInlineNonReplacedBox()) {
@@ -1113,12 +1125,8 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 {
     LayoutUnit remainWidth = ctx.lastKnownWidth();
-    LayoutUnit minWidth = 0;
+    LayoutUnit minWidth;
 
-    if (style()->marginLeft().isFixed())
-        minWidth += style()->marginLeft().fixed();
-    if (style()->marginRight().isFixed())
-        minWidth += style()->marginRight().fixed();
     if (style()->borderLeftWidth().isFixed())
         minWidth += style()->borderLeftWidth().fixed();
     if (style()->borderRightWidth().isFixed())
@@ -1127,9 +1135,11 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
         minWidth += style()->paddingLeft().fixed();
     if (style()->paddingRight().isFixed())
         minWidth += style()->paddingRight().fixed();
-
+    if (style()->marginLeft().isFixed())
+        minWidth += style()->marginLeft().fixed();
+    if (style()->marginRight().isFixed())
+        minWidth += style()->marginRight().fixed();
     remainWidth -= minWidth;
-    ctx.setResult(minWidth);
 
     if (hasBlockFlow()) {
         if (style()->width().isFixed()) {
@@ -1190,9 +1200,9 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     }
                 });
             } else if (f->isFrameBlockBox()) {
-                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - minWidth);
+                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth);
                 f->computePreferredWidth(newCtx);
-                ctx.setResult(newCtx.result() + minWidth);
+                ctx.setResult(newCtx.result());
             } else if (f->isFrameLineBreak()) {
                 // linebreaks
                 ctx.setResult(currentLineWidth);
@@ -1238,7 +1248,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
                 if (currentLineWidth > remainWidth) {
                     // linebreaks
-                    ctx.setResult(currentLineWidth);
+                    ctx.setResult(remainWidth);
                     currentLineWidth = 0;
                 }
             }

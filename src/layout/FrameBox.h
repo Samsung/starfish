@@ -56,6 +56,9 @@ public:
         printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(), (float)width(), (float)height());
         LayoutRect rt = visibleRect();
         printf(" visibleRect(%g,%g,%g,%g) ", (float)rt.x(), (float)rt.y(), (float)rt.width(), (float)rt.height());
+        printf(" padding(%g,%g,%g,%g) ", (float)paddingTop(), (float)paddingRight(), (float)paddingBottom(), (float)paddingLeft());
+        printf(" border(%g,%g,%g,%g) ", (float)borderTop(), (float)borderRight(), (float)borderBottom(), (float)borderLeft());
+        printf(" margin(%g,%g,%g,%g) ", (float)marginTop(), (float)marginRight(), (float)marginBottom(), (float)marginLeft());
     }
 
     StackingContext* stackingContext()
