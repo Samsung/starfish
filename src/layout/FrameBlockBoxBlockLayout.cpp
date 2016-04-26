@@ -11,7 +11,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     LayoutUnit bottom = paddingBottom() + borderBottom();
     LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top;
     LayoutRect visibleRect(0, 0, 0, 0);
-    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext(), style()->height());
+    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() || isFrameDocument(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
     if (marginInfo.canCollapseTopWithChildren()) {
         if (marginTop() >= 0) {
