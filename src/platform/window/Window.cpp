@@ -29,6 +29,8 @@ extern Evas* g_internalCanvas;
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
 
+bool g_fireOnloadEvent = false;
+
 #define PNG_SKIP_SETJMP_CHECK
 #include <png.h>
 
@@ -678,7 +680,7 @@ void Window::rendering()
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path)) {
+        if (path && strlen(path) && g_fireOnloadEvent) {
             evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
             // int writeImage(char* filename, int width, int height, void *buffer)
             // writeImage(path, width(), height(), evas_object_image_data_get(g_imgBufferForScreehShot, EINA_FALSE));
@@ -931,6 +933,10 @@ void Window::dispatchLoadEvent()
         String* eventType = wnd->starFish()->staticStrings()->m_load.string();
         Event* e = new Event(eventType, EventInit(false, false));
         wnd->EventTarget::dispatchEvent(e);
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+        g_fireOnloadEvent = true;
+        wnd->setNeedsPainting();
+#endif
     }, this);
 }
 

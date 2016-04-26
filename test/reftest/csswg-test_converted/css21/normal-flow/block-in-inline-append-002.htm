@@ -9,14 +9,12 @@
     
     <script type="text/javascript">
       function doTest() {
-        var i = document.getElementById("inner");
-        var frag = document.createDocumentFragment();
         var newSpan = document.createElement("span");
+        var i = document.getElementById("inner");
         newSpan.appendChild(document.createTextNode("span"));
         newSpan.style.display = "block";
-        frag.appendChild(newSpan);
-        frag.appendChild(document.createTextNode("after span"));
-        i.appendChild(frag);
+        i.appendChild(newSpan);
+        i.appendChild(document.createTextNode("after span"))
       }
     </script>
   <style>
