@@ -499,7 +499,7 @@ wpt_test_xhr:
 	make wpt_test tc=tool/reftest/xhr.res
 
 dom_test:
-	./tool/reftest/wpt_test.sh $(tc) $(regression)
+	./tool/reftest/dom_test.sh $(tc) $(regression)
 
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
