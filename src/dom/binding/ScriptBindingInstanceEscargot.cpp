@@ -3076,6 +3076,7 @@ escargot::ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInst
     };
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("name"), attrNameValueGetter, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("localName"), attrNameValueGetter, nullptr);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("value"), attrValueGetter, attrValueSetter);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeValue"), attrValueGetter, attrValueSetter);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(AttrFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textContent"), attrValueGetter, attrValueSetter);
