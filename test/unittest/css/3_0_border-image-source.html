@@ -7,6 +7,8 @@
     padding: 15px;
     border-image-source: url(border.png);    
     border-image-slice: 30;
+    -webkit-border-image-source: url(border.png);    
+    -webkit-border-image-slice: 30;
 }
 </style>
 </head>
@@ -19,6 +21,9 @@
         divNode.style.borderImageSource = "url(border.png)";
         divNode.style.borderImageSlice = "42 fill";
         divNode.style.borderImageWidth = "2";
+        divNode.style.webkitBorderImageSource = "url(border.png)";
+        divNode.style.webkitBorderImageSlice = "42 fill";
+        divNode.style.webkitBorderImageWidth = "2";
     }
     run();
 </script>
