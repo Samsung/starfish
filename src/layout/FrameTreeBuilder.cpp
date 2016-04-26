@@ -18,6 +18,7 @@ class FrameTreeBuilderContext {
 public:
     FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer)
     {
+        m_isInFrameInlineFlow = false;
         setCurrentBlockContainer(currentBlockContainer);
         computeTextDecorationData(currentBlockContainer->style());
     }
@@ -78,9 +79,26 @@ public:
         return m_currentDecorationData;
     }
 
+    std::unordered_map<Node*, FrameInline*>& frameInlineItem()
+    {
+        return m_frameInlineItem;
+    }
+
+    bool isInFrameInlineFlow()
+    {
+        return m_isInFrameInlineFlow;
+    }
+
+    void setIsInFrameInlineFlow(bool b)
+    {
+        m_isInFrameInlineFlow = b;
+    }
+
 protected:
+    bool m_isInFrameInlineFlow;
     FrameBlockBox* m_currentBlockContainer;
     FrameTextTextDecorationData* m_currentDecorationData;
+    std::unordered_map<Node*, FrameInline*, std::hash<Node*>, std::equal_to<Node*>> m_frameInlineItem;
 };
 
 void FrameTreeBuilder::clearTree(Node* current)
@@ -94,7 +112,7 @@ void FrameTreeBuilder::clearTree(Node* current)
     }
 }
 
-void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode)
+static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx)
 {
     if (!frameBlockBox->firstChild()) {
         frameBlockBox->appendChild(currentFrame);
@@ -102,6 +120,14 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
     }
 
     bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
+
+    if (!isBlockChild) {
+        if (currentNode->parentNode()->style()->display() == InlineDisplayValue) {
+            auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
+            iter->second->appendChild(currentFrame);
+            return;
+        }
+    }
 
     if (frameBlockBox->hasBlockFlow()) {
         if (isBlockChild) {
@@ -166,16 +192,17 @@ void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFram
             frameBlockBox->appendChild(currentFrame);
         } else {
             // Inline... + Inline case
-            Frame* parent = currentFrame->node()->parentNode()->frame();
-            parent->appendChild(currentFrame);
+            frameBlockBox->appendChild(currentFrame);
         }
     }
 }
 
 void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 {
+    bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
+    bool didSplitBlock = false;
+    std::vector<FrameInline*, gc_allocator<FrameInline*>> stackedFrameInline;
     FrameTextTextDecorationData* textDecoBack = ctx.currentDecorationData();
-
     if (current->needsFrameTreeBuild() || force) {
         force = true;
 
@@ -204,6 +231,8 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
                     currentFrame = new FrameLineBreak(current);
                 } else {
                     currentFrame = new FrameInline(current);
+                    ctx.setIsInFrameInlineFlow(true);
+                    ctx.frameInlineItem().insert(std::make_pair(current, currentFrame->asFrameInline()));
                 }
             } else if (display == DisplayValue::NoneDisplayValue) {
                 FrameTreeBuilder::clearTree(current);
@@ -221,20 +250,50 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         }
 
         bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
-        if (isBlockChild && !ctx.currentBlockContainer()->hasBlockFlow() && current->parentNode()->style()->display() == InlineDisplayValue && currentFrame->isNormalFlow()) {
+        if (isBlockChild && !ctx.currentBlockContainer()->hasBlockFlow() && ctx.isInFrameInlineFlow() && currentFrame->isNormalFlow()) {
             // divide block. when comes Inline.. + Block(normal flow)
+            didSplitBlock = true;
             Frame* parent = current->parentNode()->frame();
             while (true) {
                 if (parent->isFrameBlockBox() && parent->node())
                     break;
-
                 parent = parent->parent();
             }
 
+            Node* nd = current->parentNode();
+            while (true) {
+                if (nd->frame()->isFrameBlockBox()) {
+                    break;
+                }
+                auto iter = ctx.frameInlineItem().find(nd);
+                STARFISH_ASSERT(iter != ctx.frameInlineItem().end());
+                FrameInline* in = new FrameInline(nd);
+                if (iter->second->isLeftMBPCleared()) {
+                    in->setLeftMBPCleared();
+                }
+                if (iter->second->isRightMBPCleared()) {
+                    in->setRightMBPCleared();
+                }
+
+                if (in->style()->direction() == DirectionValue::LtrDirectionValue) {
+                    in->setLeftMBPCleared();
+                    iter->second->setRightMBPCleared();
+                } else {
+                    iter->second->setLeftMBPCleared();
+                    in->setRightMBPCleared();
+                }
+
+                stackedFrameInline.push_back(in);
+                iter->second = in;
+                STARFISH_ASSERT(ctx.frameInlineItem().find(nd)->second == in);
+                nd = nd->parentNode();
+            }
+
             ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
+            ctx.setIsInFrameInlineFlow(false);
         }
 
-        frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame, current);
+        frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame, current, ctx);
 
         STARFISH_ASSERT(currentFrame->parent());
         current->setFrame(currentFrame);
@@ -255,8 +314,6 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         bool isBlockContainer = currentFrame->isFrameBlockBox();
         if (isBlockContainer) {
             ctx.setCurrentBlockContainer(currentFrame->asFrameBlockBox());
-        } else if (currentFrame->parent()->isFrameBlockBox()) {
-            ctx.setCurrentBlockContainer(currentFrame->parent()->asFrameBlockBox());
         }
 
         Node* n = current->firstChild();
@@ -266,13 +323,37 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             n = n->nextSibling();
         }
 
-        if (isBlockContainer || currentFrame->parent()->isFrameBlockBox()) {
+        if (isBlockContainer) {
             ctx.setCurrentBlockContainer(back);
         }
 
         current->clearChildNeedsFrameTreeBuild();
     }
 
+    if (didSplitBlock) {
+        FrameInline* prev = nullptr;
+        for (size_t i = stackedFrameInline.size(); i > 0; i--) {
+            FrameInline* in = stackedFrameInline[i - 1];
+            if (i == stackedFrameInline.size()) {
+                STARFISH_ASSERT(ctx.currentBlockContainer()->hasBlockFlow());
+
+                ComputedStyle* newStyle = new ComputedStyle(ctx.currentBlockContainer()->style());
+                newStyle->setDisplay(DisplayValue::BlockDisplayValue);
+                newStyle->loadResources(current->document()->window()->starFish());
+                newStyle->arrangeStyleValues(ctx.currentBlockContainer()->style());
+
+                FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
+
+                ctx.currentBlockContainer()->appendChild(blockBox);
+                blockBox->appendChild(in);
+                ctx.setCurrentBlockContainer(blockBox);
+            } else {
+                prev->appendChild(in);
+            }
+            prev = in;
+        }
+    }
+    ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
     ctx.setCurrentTextDecorationData(textDecoBack);
 }
 

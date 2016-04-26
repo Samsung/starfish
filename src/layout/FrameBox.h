@@ -427,47 +427,71 @@ public:
     void computeBorderMarginPadding(LayoutUnit parentContentWidth)
     {
         // padding
-        if (style()->paddingLeft().isSpecified()) {
+        if (style()->paddingLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
             setPaddingLeft(style()->paddingLeft().specifiedValue(parentContentWidth));
+        } else {
+            setPaddingLeft(0);
         }
         if (style()->paddingTop().isSpecified()) {
             setPaddingTop(style()->paddingTop().specifiedValue(parentContentWidth));
+        } else {
+            setPaddingTop(0);
         }
-        if (style()->paddingRight().isSpecified()) {
+        if (style()->paddingRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
             setPaddingRight(style()->paddingRight().specifiedValue(parentContentWidth));
+        } else {
+            setPaddingRight(0);
         }
         if (style()->paddingBottom().isSpecified()) {
             setPaddingBottom(style()->paddingBottom().specifiedValue(parentContentWidth));
+        } else {
+            setPaddingBottom(0);
         }
 
         // border
         if (style()->hasBorderStyle()) {
-            if (style()->borderLeftWidth().isSpecified()) {
+            if (style()->borderLeftWidth().isSpecified() && !m_flags.m_isLeftMBPCleared) {
                 setBorderLeft(style()->borderLeftWidth().specifiedValue(parentContentWidth));
+            } else {
+                setBorderLeft(0);
             }
             if (style()->borderTopWidth().isSpecified()) {
                 setBorderTop(style()->borderTopWidth().specifiedValue(parentContentWidth));
+            } else {
+                setBorderTop(0);
             }
-            if (style()->borderRightWidth().isSpecified()) {
+            if (style()->borderRightWidth().isSpecified() && !m_flags.m_isRightMBPCleared) {
                 setBorderRight(style()->borderRightWidth().specifiedValue(parentContentWidth));
+            } else {
+                setBorderRight(0);
             }
             if (style()->borderBottomWidth().isSpecified()) {
                 setBorderBottom(style()->borderBottomWidth().specifiedValue(parentContentWidth));
+            } else {
+                setBorderBottom(0);
             }
         }
 
         // margin
-        if (style()->marginLeft().isSpecified()) {
+        if (style()->marginLeft().isSpecified() && !m_flags.m_isLeftMBPCleared) {
             setMarginLeft(style()->marginLeft().specifiedValue(parentContentWidth));
+        } else {
+            setMarginLeft(0);
         }
         if (style()->marginTop().isSpecified()) {
             setMarginTop(style()->marginTop().specifiedValue(parentContentWidth));
+        } else {
+            setMarginTop(0);
         }
-        if (style()->marginRight().isSpecified()) {
+        if (style()->marginRight().isSpecified() && !m_flags.m_isRightMBPCleared) {
             setMarginRight(style()->marginRight().specifiedValue(parentContentWidth));
+        } else {
+            setMarginRight(0);
         }
         if (style()->marginBottom().isSpecified()) {
             setMarginBottom(style()->marginBottom().specifiedValue(parentContentWidth));
+        } else {
+            setMarginBottom(0);
         }
     }
 

@@ -183,7 +183,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 if (m_flags.m_shouldComputePreferredWidth) {
                     ComputePreferredWidthContext p(ctx, parentWidthForComputePreferredWidth);
                     computePreferredWidth(p);
-                    setContentWidth(p.result());
+                    setContentWidth(p.result() - borderWidth() - paddingWidth());
                 } else {
                     setContentWidth(parentWidth);
                 }

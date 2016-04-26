@@ -275,6 +275,9 @@ public:
         bool isRootElement = node && node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLHtmlElement();
         m_flags.m_isRootElement = isRootElement;
 
+        m_flags.m_isLeftMBPCleared = false;
+        m_flags.m_isRightMBPCleared = false;
+
         computeStyleFlags();
     }
 
@@ -562,6 +565,26 @@ public:
         return m_flags.m_shouldComputePreferredWidth;
     }
 
+    bool isLeftMBPCleared()
+    {
+        return m_flags.m_isLeftMBPCleared;
+    }
+
+    bool isRightMBPCleared()
+    {
+        return m_flags.m_isRightMBPCleared;
+    }
+
+    void setLeftMBPCleared()
+    {
+        m_flags.m_isLeftMBPCleared = true;
+    }
+
+    void setRightMBPCleared()
+    {
+        m_flags.m_isRightMBPCleared = true;
+    }
+
 protected:
     struct {
         bool m_needsLayout : 1;
@@ -582,6 +605,9 @@ protected:
         bool m_shouldComputePreferredWidth : 1;
         bool m_isNormalFlow : 1;
         bool m_isRootElement : 1;
+
+        bool m_isLeftMBPCleared: 1;
+        bool m_isRightMBPCleared: 1;
     } m_flags;
 
 private:

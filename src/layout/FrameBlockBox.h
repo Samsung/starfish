@@ -3,6 +3,7 @@
 
 #include "layout/FrameBox.h"
 #include "layout/FrameReplaced.h"
+#include "layout/FrameInline.h"
 
 namespace StarFish {
 
@@ -108,6 +109,10 @@ public:
     InlineNonReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameInline* origin)
         : InlineBox(node, style, parent)
     {
+        if (origin->isLeftMBPCleared())
+            setLeftMBPCleared();
+        if (origin->isRightMBPCleared())
+            setRightMBPCleared();
         m_origin = origin;
         m_descender = m_ascender = 0;
     }

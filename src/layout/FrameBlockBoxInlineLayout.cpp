@@ -625,7 +625,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
     }
 }
 
-void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit inlineContentWidth,
+void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit inlineContentWidth, LayoutUnit& extraWidthDueToFrameInlineFirstChild,
     std::function<void(FrameBox*)> gotInlineBoxCallback, std::function<void(bool)> lineBreakCallback, std::function<void(FrameInline*)> frameInlineCallback)
 {
     Frame* f = origin->firstChild();
@@ -675,7 +675,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     textWidth = f->style()->font()->measureText(ss);
                 }
 
-                if (textWidth <= inlineContentWidth - lineFormattingContext.m_currentLineWidth || lineFormattingContext.m_currentLineWidth == 0) {
+                if (textWidth <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild) || lineFormattingContext.m_currentLineWidth == 0) {
 
                 } else {
                     if (isWhiteSpace)
@@ -696,7 +696,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             r->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
         insertReplacedBox:
-            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth) || lineFormattingContext.m_currentLineWidth == 0) {
+            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild) || lineFormattingContext.m_currentLineWidth == 0) {
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                 gotInlineBoxCallback(r);
             } else {
@@ -719,7 +719,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             lineFormattingContext.registerInlineBlockAscender(ascender, r);
 
         insertBlockBox:
-            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth) || lineFormattingContext.m_currentLineWidth == 0) {
+            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild) || lineFormattingContext.m_currentLineWidth == 0) {
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                 gotInlineBoxCallback(r);
             } else {
@@ -744,8 +744,9 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
     LayoutUnit lineBoxY = paddingTop() + borderTop();
     LayoutUnit inlineContentWidth = contentWidth();
     LineFormattingContext lineFormattingContext(*this, ctx, inlineContentWidth);
+    LayoutUnit unused;
 
-    inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, [&](FrameBox* ib) {
+    inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, unused, [&](FrameBox* ib) {
         lineFormattingContext.currentLine()->boxes().push_back(ib);
         ib->setLayoutParent(lineFormattingContext.currentLine());
         lineFormattingContext.registerInlineContent();
@@ -871,7 +872,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
     if (freshStart)
         self->computeBorderMarginPadding(inlineContentWidth);
-    LayoutUnit w = self->marginLeft() + self->borderLeft() + self->paddingLeft();
+    // LayoutUnit w = self->marginLeft() + self->borderLeft() + self->paddingLeft();
     if (freshStart) {
         self->m_orgBorder = self->m_border;
         self->m_orgPadding = self->m_padding;
@@ -884,9 +885,9 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         self->setPaddingTop(0);
         self->setPaddingBottom(0);
 
-        if (w > (inlineContentWidth - lineFormattingContext.m_currentLineWidth) && layoutParentBox == nullptr) {
-            lineFormattingContext.breakLine();
-        }
+        // if (w > (inlineContentWidth - lineFormattingContext.m_currentLineWidth) && layoutParentBox == nullptr) {
+        //     lineFormattingContext.breakLine();
+        // }
 
         if (!layoutParentBox) {
             lineFormattingContext.currentLine()->boxes().push_back(self);
@@ -899,8 +900,14 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         lineFormattingContext.registerInlineContent();
     }
 
-    lineFormattingContext.m_currentLineWidth += w;
-    self->setWidth(self->paddingLeft() + self->borderLeft());
+    // lineFormattingContext.m_currentLineWidth += w;
+    // self->setWidth(self->paddingLeft() + self->borderLeft());
+
+    if (layoutParentBox) {
+        LayoutUnit w = self->marginLeft() + self->borderLeft() + self->paddingLeft();
+        lineFormattingContext.m_currentLineWidth += w;
+        self->setWidth(self->paddingLeft() + self->borderLeft());
+    }
 
     auto breakLine = [&]()
     {
@@ -991,18 +998,32 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         InlineNonReplacedBox* selfForFinishLayout = self;
         while (selfForFinishLayout) {
             LayoutUnit end = lineFormattingContext.m_currentLineWidth;
-            if (end + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight() > inlineContentWidth) {
-                selfForFinishLayout->m_margin.setRight(0);
-                selfForFinishLayout->m_border.setRight(0);
-                selfForFinishLayout->m_padding.setRight(0);
-                if (lastNode) {
-                    selfForFinishLayout->m_orgMargin.setRight(0);
-                    selfForFinishLayout->m_orgBorder.setRight(0);
-                    selfForFinishLayout->m_orgPadding.setRight(0);
-                }
-            }
 
-            lineFormattingContext.m_currentLineWidth += selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight();
+            if (selfForFinishLayout->style()->direction() == DirectionValue::LtrDirectionValue) {
+                if (end + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight() > inlineContentWidth) {
+                    selfForFinishLayout->m_margin.setRight(0);
+                    selfForFinishLayout->m_border.setRight(0);
+                    selfForFinishLayout->m_padding.setRight(0);
+                    if (lastNode) {
+                        selfForFinishLayout->m_orgMargin.setRight(0);
+                        selfForFinishLayout->m_orgBorder.setRight(0);
+                        selfForFinishLayout->m_orgPadding.setRight(0);
+                    }
+                }
+                lineFormattingContext.m_currentLineWidth += selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight();
+            } else {
+                if (end + selfForFinishLayout->paddingLeft() + selfForFinishLayout->borderLeft() + selfForFinishLayout->marginLeft() > inlineContentWidth) {
+                    selfForFinishLayout->m_margin.setLeft(0);
+                    selfForFinishLayout->m_border.setLeft(0);
+                    selfForFinishLayout->m_padding.setLeft(0);
+                    if (lastNode) {
+                        selfForFinishLayout->m_orgMargin.setLeft(0);
+                        selfForFinishLayout->m_orgBorder.setLeft(0);
+                        selfForFinishLayout->m_orgPadding.setLeft(0);
+                    }
+                }
+                lineFormattingContext.m_currentLineWidth += selfForFinishLayout->paddingLeft() + selfForFinishLayout->borderLeft() + selfForFinishLayout->marginLeft();
+            }
 
             selfForFinishLayout->setWidth(selfForFinishLayout->width() + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight());
             if (selfForFinishLayout->width() < 0) {
@@ -1027,20 +1048,48 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         }
     };
 
-#define BREAK_LINE() \
-    finishLayout();  \
-    breakLine();
-
-    inlineBoxGenerator(self->m_origin, ctx, lineFormattingContext, inlineContentWidth, [&](FrameBox* ib)
+    LayoutUnit extraWidthDueToFrameInlineFirstChild;
+    LayoutUnit unprocessedLeftWidths;
+    LayoutUnit unprocessedRightWidths;
+    if (!layoutParentBox) {
+        unprocessedLeftWidths = self->marginLeft() + self->borderLeft() + self->paddingLeft();
+        unprocessedRightWidths = self->marginRight() + self->borderRight() + self->paddingRight();
+        extraWidthDueToFrameInlineFirstChild = unprocessedLeftWidths + unprocessedRightWidths;
+    }
+    inlineBoxGenerator(self->m_origin, ctx, lineFormattingContext, inlineContentWidth, extraWidthDueToFrameInlineFirstChild, [&](FrameBox* ib)
     {
         self->boxes().push_back(ib);
+        if (unprocessedLeftWidths) {
+            self->setWidth(self->width() + self->borderLeft() + self->paddingLeft());
+            if (self->style()->direction() == LtrDirectionValue) {
+                lineFormattingContext.m_currentLineWidth += unprocessedLeftWidths;
+                unprocessedLeftWidths = 0;
+                extraWidthDueToFrameInlineFirstChild = unprocessedRightWidths;
+            } else {
+                lineFormattingContext.m_currentLineWidth += unprocessedRightWidths;
+                unprocessedRightWidths = 0;
+                extraWidthDueToFrameInlineFirstChild = unprocessedLeftWidths;
+            }
+        }
+
         ib->setLayoutParent(self);
-        ib->setX(self->width() + ib->marginLeft());
+        if (self->style()->direction() == LtrDirectionValue) {
+            ib->setX(self->width() + ib->marginLeft());
+        } else {
+            ib->setX(self->width() + ib->marginRight());
+        }
         self->setWidth(self->width() + ib->width() + ib->marginWidth());
     }, [&](bool dueToBr)
     {
         // FIXME consider dueToBr
-        BREAK_LINE();
+        if (!self->boxes().size() && !layoutParentBox) {
+            lineFormattingContext.currentLine()->boxes().erase(std::find(lineFormattingContext.currentLine()->boxes().begin(), lineFormattingContext.currentLine()->boxes().end(), self));
+            lineFormattingContext.breakLine(false);
+            lineFormattingContext.currentLine()->boxes().push_back(self);
+        } else {
+            finishLayout();
+            breakLine();
+        }
     }, [&](FrameInline* f)
     {
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
@@ -1078,6 +1127,8 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
         minWidth += style()->paddingLeft().fixed();
     if (style()->paddingRight().isFixed())
         minWidth += style()->paddingRight().fixed();
+
+    remainWidth -= minWidth;
     ctx.setResult(minWidth);
 
     if (hasBlockFlow()) {
