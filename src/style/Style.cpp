@@ -3927,6 +3927,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderTopColor(parentStyle->borderTopColor());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                    style->clearBorderTopColor();
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Transparent) {
                     style->setBorderTopColor(Color(0, 0, 0, 0));
                 } else {
@@ -3939,6 +3940,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderRightColor(parentStyle->borderRightColor());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                    style->clearBorderRightColor();
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Transparent) {
                     style->setBorderRightColor(Color(0, 0, 0, 0));
                 } else {
@@ -3951,6 +3953,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderBottomColor(parentStyle->borderBottomColor());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                    style->clearBorderBottomColor();
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Transparent) {
                     style->setBorderBottomColor(Color(0, 0, 0, 0));
                 } else {
@@ -3963,6 +3966,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderLeftColor(parentStyle->borderLeftColor());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                    style->clearBorderLeftColor();
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Transparent) {
                     style->setBorderLeftColor(Color(0, 0, 0, 0));
                 } else {

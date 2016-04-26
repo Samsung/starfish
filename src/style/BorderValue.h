@@ -48,6 +48,11 @@ public:
         m_hasBorderColor = true;
     }
 
+    void clearColor()
+    {
+        m_hasBorderColor = false;
+    }
+
     bool hasBorderColor()
     {
         return m_hasBorderColor;

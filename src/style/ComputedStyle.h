@@ -508,6 +508,30 @@ public:
         return m_transformOrigin != nullptr;
     }
 
+    void clearBorderTopColor()
+    {
+        if (m_surround)
+            surround()->border.top().clearColor();
+    }
+
+    void clearBorderRightColor()
+    {
+        if (m_surround)
+            surround()->border.right().clearColor();
+    }
+
+    void clearBorderBottomColor()
+    {
+        if (m_surround)
+            surround()->border.bottom().clearColor();
+    }
+
+    void clearBorderLeftColor()
+    {
+        if (m_surround)
+            surround()->border.left().clearColor();
+    }
+
     void setBorderTopColor(Color color)
     {
         surround()->border.top().setColor(color);
