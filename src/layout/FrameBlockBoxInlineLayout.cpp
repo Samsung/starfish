@@ -616,44 +616,46 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                 if (box->asInlineBox()->isInlineTextBox()) {
                     InlineTextBox* b = box->asInlineBox()->asInlineTextBox();
                     String* t = b->text();
-                    bool shouldReplaceString = false;
-                    for (size_t j = 0; j < t->length(); j++) {
-                        char32_t ch = t->charAt(j);
-                        if (ch < 128) {
-                            if (parenthesisMap[ch]) {
-                                shouldReplaceString = true;
-                                break;
+                    if (t->length() == 1) {
+                        bool shouldReplaceString = false;
+                        for (size_t j = 0; j < t->length(); j++) {
+                            char32_t ch = t->charAt(j);
+                            if (ch < 128) {
+                                if (parenthesisMap[ch]) {
+                                    shouldReplaceString = true;
+                                    break;
+                                }
                             }
                         }
-                    }
 
-                    if (shouldReplaceString) {
-                        if (t->isASCIIString()) {
-                            ASCIIString str;
-                            for (size_t j = 0; j < t->length(); j++) {
-                                char32_t ch = t->charAt(j);
-                                if (ch < 128) {
-                                    if (parenthesisMap[ch]) {
-                                        ch = parenthesisMap[ch];
+                        if (shouldReplaceString) {
+                            if (t->isASCIIString()) {
+                                ASCIIString str;
+                                for (size_t j = 0; j < t->length(); j++) {
+                                    char32_t ch = t->charAt(j);
+                                    if (ch < 128) {
+                                        if (parenthesisMap[ch]) {
+                                            ch = parenthesisMap[ch];
+                                        }
                                     }
+                                    str += (char)ch;
                                 }
-                                str += (char)ch;
-                            }
-                            t = new StringDataASCII(std::move(str));
-                        } else {
-                            UTF32String str;
-                            for (size_t j = 0; j < t->length(); j++) {
-                                char32_t ch = t->charAt(j);
-                                if (ch < 128) {
-                                    if (parenthesisMap[ch]) {
-                                        ch = parenthesisMap[ch];
+                                t = new StringDataASCII(std::move(str));
+                            } else {
+                                UTF32String str;
+                                for (size_t j = 0; j < t->length(); j++) {
+                                    char32_t ch = t->charAt(j);
+                                    if (ch < 128) {
+                                        if (parenthesisMap[ch]) {
+                                            ch = parenthesisMap[ch];
+                                        }
                                     }
+                                    str += ch;
                                 }
-                                str += ch;
+                                t = new StringDataUTF32(std::move(str));
                             }
-                            t = new StringDataUTF32(std::move(str));
+                            b->setText(t);
                         }
-                        b->setText(t);
                     }
                 }
             }
