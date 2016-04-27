@@ -18,17 +18,16 @@ def compare(expected, result):
     extract_expected=re.findall(Search_PATTERN,expected)
     extract_result = re.findall(Search_PATTERN, result)
 
-    for pattern in extract_expected:
-        for pattern2 in extract_result:
-            if pattern2==pattern:
-                return 'Pass'
+    for index, item in enumerate(extract_expected):
+        if(extract_expected[index]!=extract_result[index]):
 
-    if DEBUG:
-        print 'expeted:', expected
-        print 'result:,', result
-        print 'DEBUG', str(extract_expected), str(extract_result)
-    return 'Fail'
+            if DEBUG:
+                print 'expeted:', expected
+                print 'result:,', result
+                print 'DEBUG', str(extract_expected), str(extract_result)
 
+            return 'Fail'
+    return 'Pass'
 
 def main():
     Compare_RESULT = 'Fail'
