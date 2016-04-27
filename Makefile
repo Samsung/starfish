@@ -2,6 +2,7 @@ BUILDDIR=./build
 HOST=linux
 
 BIN=StarFish
+EBIN=StarFish
 LIB=libStarFish.so
 
 LOCAL_PATH = $(shell pwd)
@@ -135,7 +136,7 @@ else ifeq ($(HOST), tizen_wearable_emulator)
     	LDFLAGS += -static-libstdc++
     	CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
     else
-		LDFLAGS += deps/tizen/lib/tizen-wearable-2.3-emulator-x86/libstdc++.a
+		LDFLAGS += libstdc++.a
     	LDFLAGS += -ldlog -licuuc -licudata
     endif
 endif
@@ -411,7 +412,7 @@ tizen_wearable_arm.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $< .
 tizen_wearable_emulator.exe.debug: $(OUTDIR)/$(BIN)
 	cp -f $< .
-tizen_wearable_emulator.exe.release: $(OUTDIR)/$(BIN)
+tizen_wearable_emulator.exe.release: $(OUTDIR)/$(EBIN)
 	cp -f $< .
 tizen_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
 	cp -f $< .
@@ -425,6 +426,12 @@ tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 $(OUTDIR)/$(BIN): $(OBJS) $(THIRD_PARTY_LIBS) 
 	@echo "[LINK] $@"
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
+
+$(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS) 
+	@echo "[LINK] $@"
+	ln -sf deps/tizen/lib/tizen-wearable-2.3-emulator-x86/libstdc++.a.0 libstdc++.a
+	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
+	rm libstdc++.a
 
 $(OUTDIR)/$(LIB): $(OBJS) $(THIRD_PARTY_LIBS)
 	@echo "[LINK] $@"
