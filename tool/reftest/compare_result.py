@@ -5,10 +5,9 @@ import re
 
 DEBUG = False
 
-Search_PATTERN='Success|failure|error'
+Search_PATTERN='Status..Success|Status..failure|Status..error|\sPASS\s|\sFAIL\s'
 
 def compare(expected, result):
-
     extract_expected =[]
 
     if DEBUG:
@@ -19,14 +18,16 @@ def compare(expected, result):
     extract_result = re.findall(Search_PATTERN, result)
 
     for index, item in enumerate(extract_expected):
-        if(extract_expected[index]!=extract_result[index]):
+        #remove white space
+        compareA = re.sub(r'\s+','',extract_expected[index])
+        compareB = re.sub(r'\s+','',extract_result[index])
 
+        if compareA!=compareB:
             if DEBUG:
-                print 'expeted:', expected
-                print 'result:,', result
-                print 'DEBUG', str(extract_expected), str(extract_result)
-
+                print "\""+compareA+"\""
+                print "\""+compareB+"\""
             return 'Fail'
+
     return 'Pass'
 
 def main():
@@ -36,7 +37,8 @@ def main():
         print 'argument list', str(sys.argv)
 
     if len(sys.argv) != 3:
-        print 'Usage compare_result.py Expected_file_path result_file_path'
+        if DEBUG:
+            print 'Usage compare_result.py Expected_file_path result_file_path'
 
     fp = open(sys.argv[1], 'r')
     EXPECTED_Str = fp.read();
