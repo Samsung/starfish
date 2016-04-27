@@ -5,13 +5,12 @@ These are imported from [The Web Platform Tests Project](https://github.com/w3c/
 
 The test suites that we use are like below:
 
-* cssom-view (will be imported)
 * dom
-* DOMEvents (will be imported)
-* html (will be imported)
-* page-visibility (will be imported)
-* progress-events (will be imported)
-* XMLHttpRequest (will be imported)
+* DOMEvents
+* html
+* page-visibility
+* progress-events
+* XMLHttpRequest
 
 Running the Tests
 =================

@@ -2,15 +2,15 @@
 <meta charset="UTF-8">
 <title>Throwing in event listener</title>
 
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
+<script src="../resources/testharness.js"></script>
+<script src="../resources/testharnessreport.js"></script>
+<body><div id="log"></div></body>
 
 <script>
     setup({allow_uncaught_exception:true})
     var t = async_test("Throwing in event listener");
 
-    document.addEventListener('DOMContentLoaded', t.step_func(function(){
+    document.body.onload = t.step_func(function(){
         var element = document.getElementById('bim');
 
         var secondCalled = false;
@@ -24,7 +24,7 @@
 
         assert_true(secondCalled);
         t.done();
-    }));
+    });
 </script>
 
 <div id="bim">

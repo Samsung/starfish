@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <title>Click event on an element not in the document</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id=log></div>
+<script src="../resources/testharness.js"></script>
+<script src="../resources/testharnessreport.js"></script>
+<div id="log"></div>
 <script>
 test(function() {
   var EVENT = "click";
@@ -12,8 +12,9 @@ test(function() {
     assert_equals(evt.target, TARGET);
     t.done();
   }), true);
-  var e = document.createEvent("Event");
-  e.initEvent(EVENT, true, true);
+  // var e = document.createEvent("Event");
+  // e.initEvent(EVENT, true, true);
+  var e = new Event(EVENT, {bubbles: true, cancelable: true})
   TARGET.dispatchEvent(e);
 });
 </script>

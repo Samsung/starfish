@@ -2,14 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>nextElementSibling</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 </head>
 <body>
-<h1>Test of nextElementSibling</h1>
+<div>Test of nextElementSibling</div>
 <div id="log"></div>
 <p id="parentEl">The result of <span id="first_element_child">this test</span> is <span id="last_element_child" style="font-weight:bold;">unknown.</span></p>
-<script><![CDATA[
+<script>
 test(function() {
   var parentEl = document.getElementById("parentEl");
   var fec = document.getElementById("first_element_child");
@@ -18,6 +18,6 @@ test(function() {
   assert_equals(nes.nodeType, 1)
   assert_equals(nes.getAttribute("id"), "last_element_child")
 })
-]]></script>
+</script>
 </body>
 </html>

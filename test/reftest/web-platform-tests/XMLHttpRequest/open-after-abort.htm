@@ -2,8 +2,8 @@
 <html>
   <head>
     <title>XMLHttpRequest: open() after abort()</title>
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
+    <script src="../resources/testharness.js"></script>
+    <script src="../resources/testharnessreport.js"></script>
     <link rel="help" href="https://xhr.spec.whatwg.org/#the-open()-method" data-tested-assertations="following::ol/li[15] following::ol/li[15]/ol/li[1] following::ol/li[15]/ol/li[2]" />
   </head>
   <body>
@@ -17,6 +17,7 @@
                                     // abort() -> 4, open() -> 1
         client.onreadystatechange = function() {
           test.step(function() {
+			console.log("client.readyState = " + client.readyState);
             result.push(client.readyState)
           })
         }
@@ -27,6 +28,8 @@
         assert_equals(client.readyState, 0)
         client.open("GET", "resources/well-formed.xml")
         assert_equals(client.readyState, 1)
+		console.log("result = " + result);
+		console.log("expected = " + expected);
         assert_array_equals(result, expected)
       })
       test.done()

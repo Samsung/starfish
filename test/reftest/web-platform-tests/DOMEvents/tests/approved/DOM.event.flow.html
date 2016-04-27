@@ -2,11 +2,11 @@
 <html>
 <head>
 <title> Event dispatch and DOM event flow </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../../resources/testharness.js"></script>
+<script src="../../../resources/testharnessreport.js"></script>
 </head>
 <body>
-<div id=log></div>
+<div id="log"></div>
 
 <table id="table" border="1" style="display: none">
     <tbody id="table-body">
@@ -45,8 +45,9 @@
             CurrentTargets[i].addEventListener(EVENT, TestEvent, false);
         }
         
-        var evt = document.createEvent("Event");
-        evt.initEvent(EVENT, true, true);               
+        // var evt = document.createEvent("Event");
+        // evt.initEvent(EVENT, true, true);
+        var evt = new Event(EVENT, {bubbles: true, cancelable: true});        
         TARGET.dispatchEvent(evt);
 
         assert_array_equals(ActualResult, ExpectResult, "ActualResult");

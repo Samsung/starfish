@@ -94,16 +94,17 @@ function initEvent05() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      event = doc.createEvent("MutationEvents");
+      event = new Event(expectedEventType, {bubbles: expectedCanBubble, cancelable: expectedCancelable});
+      // event = doc.createEvent("MutationEvents");
       assertNotNull("notnull",event);
-event.initEvent(expectedEventType,expectedCanBubble,expectedCancelable);
+      // event.initEvent(expectedEventType,expectedCanBubble,expectedCancelable);
       actualEventType = event.type;
 
       assertEquals("type",expectedEventType,actualEventType);
-       actualCancelable = event.cancelable;
+      actualCancelable = event.cancelable;
 
       assertEquals("cancelable",expectedCancelable,actualCancelable);
-       actualCanBubble = event.bubbles;
+      actualCanBubble = event.bubbles;
 
       assertEquals("canBubble",expectedCanBubble,actualCanBubble);
 

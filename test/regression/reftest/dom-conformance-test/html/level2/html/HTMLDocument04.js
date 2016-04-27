@@ -91,7 +91,7 @@ function HTMLDocument04() {
       }
       doc = load(docRef, "doc", "HTMLDocument04");
       vurl = doc.URL;
-
+      console.log("vurl: " + vurl);
       assertURIEquals("URLLink",null,null,null,null,"HTMLDocument04",null,null,true,vurl);
 
 }

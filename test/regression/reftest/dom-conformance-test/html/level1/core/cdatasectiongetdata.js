@@ -1,11 +1,11 @@
 
 /*
-Copyright Â© 2001-2004 World Wide Web Consortium, 
-(Massachusetts Institute of Technology, European Research Consortium 
-for Informatics and Mathematics, Keio University). All 
-Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the 
-hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+Copyright Â© 2001-2004 World Wide Web Consortium,
+(Massachusetts Institute of Technology, European Research Consortium
+for Informatics and Mathematics, Keio University). All
+Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 */
@@ -39,21 +39,21 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("coalescing", false);
+       //setImplementationAttribute("coalescing", false);
 
       docsLoaded = 0;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       docsLoaded += preload(docRef, "doc", "hc_staff");
-        
+
        if (docsLoaded == 1) {
           setUpPageStatus = 'complete';
        }
     } catch(ex) {
-    	catchInitializationError(builder, ex);
+      catchInitializationError(builder, ex);
         setUpPageStatus = 'complete';
     }
 }
@@ -61,7 +61,7 @@ function setUpPage() {
 
 
 //
-//   This method is called on the completion of 
+//   This method is called on the completion of
 //      each asychronous load started in setUpTests.
 //
 //   When every synchronous loaded document has completed,
@@ -75,7 +75,7 @@ function loadComplete() {
 
 
 /**
-* 
+*
 Retrieve the last CDATASection node located inside the
 second child of the second employee and examine its
 content.  Since the CDATASection interface inherits
@@ -96,23 +96,23 @@ function cdatasectiongetdata() {
       var lastChild;
       var data;
       var nodeType;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      nameList = doc.getElementsByTagName("name");
+      nameList = doc.getElementsByTagName("code");
       child = nameList.item(1);
       lastChild = child.lastChild;
 
       nodeType = lastChild.nodeType;
 
-      assertEquals("isCDATA",4,nodeType);
+      assertEquals("isTEXT",3,nodeType);
        data = lastChild.data;
 
-      assertEquals("data","This is an adjacent CDATASection with a reference to a tab &tab;",data);
-       
+      assertEquals("data","Secretary",data);
+
 }
 
 

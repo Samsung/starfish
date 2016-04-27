@@ -105,11 +105,11 @@ function namednodemapremovenameditemreturnnodevalue() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("address");
+      elementList = doc.getElementsByTagName("acronym");
       testAddress = elementList.item(2);
       attributes = testAddress.attributes;
 
-      removedNode = attributes.removeNamedItem("street");
+      removedNode = attributes.removeNamedItem("class");
       value = removedNode.nodeValue;
 
       assertEquals("namednodemapRemoveNamedItemReturnNodeValueAssert","No",value);

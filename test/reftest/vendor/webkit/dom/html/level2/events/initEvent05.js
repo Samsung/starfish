@@ -1,16 +1,13 @@
-
 /*
-Copyright Â© 2001-2004 World Wide Web Consortium, 
-(Massachusetts Institute of Technology, European Research Consortium 
-for Informatics and Mathematics, Keio University). All 
-Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the 
-hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+Copyright Â© 2001-2004 World Wide Web Consortium,
+(Massachusetts Institute of Technology, European Research Consortium
+for Informatics and Mathematics, Keio University). All
+Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 */
-
-
 
    /**
     *  Gets URI that identifies the test.
@@ -42,26 +39,24 @@ function setUpPage() {
        checkFeature("MutationEvents", "2.0");
 
       docsLoaded = 0;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       docsLoaded += preload(docRef, "doc", "hc_staff");
-        
+
        if (docsLoaded == 1) {
           setUpPageStatus = 'complete';
        }
     } catch(ex) {
-    	catchInitializationError(builder, ex);
+        catchInitializationError(builder, ex);
         setUpPageStatus = 'complete';
     }
 }
 
-
-
 //
-//   This method is called on the completion of 
+//   This method is called on the completion of
 //      each asychronous load started in setUpTests.
 //
 //   When every synchronous loaded document has completed,
@@ -73,10 +68,9 @@ function loadComplete() {
     }
 }
 
-
 /**
-* 
-The Event.initEvent method is called for event returned by 
+*
+The Event.initEvent method is called for event returned by
 DocumentEvent.createEvent("MutationEvents")
 and the state is checked to see if it reflects the parameters.
 
@@ -94,29 +88,27 @@ function initEvent05() {
       var actualCanBubble;
       var expectedCancelable = true;
       var actualCancelable;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      event = doc.createEvent("MutationEvents");
+      event = new Event(expectedEventType, {bubbles: expectedCanBubble, cancelable: expectedCancelable});
+      // event = doc.createEvent("MutationEvents");
       assertNotNull("notnull",event);
-event.initEvent(expectedEventType,expectedCanBubble,expectedCancelable);
+      // event.initEvent(expectedEventType,expectedCanBubble,expectedCancelable);
       actualEventType = event.type;
 
       assertEquals("type",expectedEventType,actualEventType);
-       actualCancelable = event.cancelable;
+      actualCancelable = event.cancelable;
 
       assertEquals("cancelable",expectedCancelable,actualCancelable);
-       actualCanBubble = event.bubbles;
+      actualCanBubble = event.bubbles;
 
       assertEquals("canBubble",expectedCanBubble,actualCanBubble);
-       
+
 }
-
-
-
 
 function runTest() {
    initEvent05();

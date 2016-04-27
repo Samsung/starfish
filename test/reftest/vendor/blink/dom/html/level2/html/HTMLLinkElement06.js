@@ -92,10 +92,10 @@ function HTMLLinkElement06() {
       doc = load(docRef, "doc", "link");
       nodeList = doc.getElementsByTagName("link");
       assertSize("Asize",2,nodeList);
-testNode = nodeList.item(0);
+      testNode = nodeList.item(0);
       vrel = testNode.rel;
 
-      assertEquals("relLink","Glossary",vrel);
+      assertEquals("relLink","stylesheet",vrel);
 
 }
 

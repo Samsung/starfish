@@ -98,14 +98,14 @@ function documenttypesystemid01() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      domImpl = doc.implementation;
-docType = domImpl.createDocumentType("l2:root","PUB","SYS");
-      publicId = docType.publicId;
+//      domImpl = doc.implementation;
+//docType = domImpl.createDocumentType("l2:root","PUB","SYS");
+      publicId = doc.doctype.publicId;
 
-      systemId = docType.systemId;
+      systemId = doc.doctype.systemId;
 
-      assertEquals("documenttypepublicid01","PUB",publicId);
-       assertEquals("documenttypesystemid01","SYS",systemId);
+      assertEquals("documenttypepublicid01","",publicId);
+       assertEquals("documenttypesystemid01","",systemId);
        
 }
 

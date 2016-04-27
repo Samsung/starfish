@@ -184,11 +184,12 @@ function dispatchEvent13() {
       }
       doc = load(docRef, "doc", "hc_staff");
       listeners[listeners.length] = listener1;
-listeners[listeners.length] = listener2;
-doc.addEventListener("foo", listener1.handleEvent, false);
+      listeners[listeners.length] = listener2;
+      doc.addEventListener("foo", listener1.handleEvent, false);
       doc.addEventListener("foo", listener2.handleEvent, false);
-      evt = doc.createEvent("Events");
-      evt.initEvent("foo",true,false);
+      evt = new Event("foo", {bubbles: true, cancelable: false});
+      // evt = doc.createEvent("Events");
+      // evt.initEvent("foo",true,false);
       preventDefault = doc.dispatchEvent(evt);
       assertSize("eventCount",1,events);
 

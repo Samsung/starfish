@@ -111,7 +111,6 @@ function hc_namednodemapsetnameditemthatexists() {
       testAddress = elementList.item(1);
       newAttribute = doc.createAttribute("class");
       attributes = testAddress.attributes;
-
       setNode = attributes.setNamedItem(newAttribute);
       districtNode = attributes.getNamedItem("class");
       attrValue = districtNode.nodeValue;

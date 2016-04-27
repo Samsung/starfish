@@ -98,11 +98,12 @@ function dispatchEvent11() {
       doc.addEventListener("foo", monitor.handleEvent, false);
       doc.addEventListener("foo", monitor.handleEvent, false);
       doc.removeEventListener("foo", monitor.handleEvent, false);
-     evt = doc.createEvent("Events");
-      evt.initEvent("foo",true,false);
+      evt = new Event("foo", {bubbles: true, cancelable: false});
+      // evt = doc.createEvent("Events");
+      // evt.initEvent("foo",true,false);
       preventDefault = doc.dispatchEvent(evt);
       events = monitor.allEvents;
-assertSize("eventCount",0,events);
+      assertSize("eventCount",0,events);
 
 }
 

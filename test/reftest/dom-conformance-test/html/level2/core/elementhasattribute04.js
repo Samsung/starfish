@@ -99,9 +99,9 @@ function elementhasattribute04() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      element = doc.createElement("address");
+      element = doc.createElement("acronym");
       attribute = doc.createAttribute("domestic");
-      newAttribute = element.setAttributeNode(attribute);
+      newAttribute = element.setAttribute("domestic", "");
       state = element.hasAttribute("domestic");
       assertTrue("elementhasattribute04",state);
 

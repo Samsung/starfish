@@ -91,26 +91,28 @@ function initEvent03() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      event = doc.createEvent("Events");
+      event = new Event("rotate", {"bubbles":true, "cancelable":true});
+      // event = doc.createEvent("Events");
       assertNotNull("notnull",event);
-event.initEvent("rotate",true,true);
+      // event.initEvent("rotate",true,true);
       actualEventType = event.type;
 
       assertEquals("type","rotate",actualEventType);
-       actualCancelable = event.cancelable;
+      actualCancelable = event.cancelable;
 
       assertEquals("cancelable",true,actualCancelable);
-       actualCanBubble = event.bubbles;
+      actualCanBubble = event.bubbles;
 
       assertEquals("canBubble",true,actualCanBubble);
-       event.initEvent("shear",false,false);
+      event = new Event("shear", {"bubbles":false, "cancelable":false});
+      // event.initEvent("shear",false,false);
       actualEventType = event.type;
 
       assertEquals("type2","shear",actualEventType);
-       actualCancelable = event.cancelable;
+      actualCancelable = event.cancelable;
 
       assertEquals("cancelable2",false,actualCancelable);
-       actualCanBubble = event.bubbles;
+      actualCanBubble = event.bubbles;
 
       assertEquals("canBubble2",false,actualCanBubble);
 

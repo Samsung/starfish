@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <title>Node.insertBefore</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 <div id="log"></div>
+
+<script src="../assert_array_equals.js"></script>
+
 <script>
+
 function testLeafNode(nodeName, createNodeFunction) {
+
   test(function() {
     var node = createNodeFunction();
     assert_throws(new TypeError(), function() { node.insertBefore(null, null) })
@@ -29,7 +34,7 @@ test(function() {
 testLeafNode("DocumentType", function () { return document.doctype; } )
 testLeafNode("Text", function () { return document.createTextNode("Foo") })
 testLeafNode("Comment", function () { return document.createComment("Foo") })
-testLeafNode("ProcessingInstruction", function () { return document.createProcessingInstruction("foo", "bar") })
+//testLeafNode("ProcessingInstruction", function () { return document.createProcessingInstruction("foo", "bar") })
 
 test(function() {
   // Step 2.
@@ -46,7 +51,7 @@ test(function() {
     a.insertBefore(b, c);
   });
 }, "Calling insertBefore with a reference child whose parent is not the context node must throw a NotFoundError.")
-
+/*
 // Step 4.1.
 test(function() {
   var doc = document.implementation.createHTMLDocument("title");
@@ -289,7 +294,7 @@ test(function() {
     el.insertBefore(doctype, null);
   });
 }, "If the context node is an element, inserting a document or a doctype should throw a HierarchyRequestError.")
-
+*/
 // Step 7.
 test(function() {
   var a = document.createElement("div");
@@ -303,4 +308,5 @@ test(function() {
   assert_equals(a.insertBefore(c, c), c);
   assert_array_equals(a.childNodes, [b, c]);
 }, "Inserting a node before itself should not move the node");
+
 </script>

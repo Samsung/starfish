@@ -1,16 +1,13 @@
-
 /*
-Copyright Â© 2001-2004 World Wide Web Consortium, 
-(Massachusetts Institute of Technology, European Research Consortium 
-for Informatics and Mathematics, Keio University). All 
-Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the 
-hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+Copyright Â© 2001-2004 World Wide Web Consortium,
+(Massachusetts Institute of Technology, European Research Consortium
+for Informatics and Mathematics, Keio University). All
+Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 */
-
-
 
    /**
     *  Gets URI that identifies the test.
@@ -41,26 +38,24 @@ function setUpPage() {
      builder = createConfiguredBuilder();
 
       docsLoaded = 0;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       docsLoaded += preload(docRef, "doc", "hc_staff");
-        
+
        if (docsLoaded == 1) {
           setUpPageStatus = 'complete';
        }
     } catch(ex) {
-    	catchInitializationError(builder, ex);
+        catchInitializationError(builder, ex);
         setUpPageStatus = 'complete';
     }
 }
 
-
-
 //
-//   This method is called on the completion of 
+//   This method is called on the completion of
 //      each asychronous load started in setUpTests.
 //
 //   When every synchronous loaded document has completed,
@@ -72,11 +67,10 @@ function loadComplete() {
     }
 }
 
-
 /**
-* 
+*
 The Event.initEvent method is called for event returned by DocumentEvent.createEvent("events")
-and the state is checked to see if it reflects the parameters.  initEvent may be 
+and the state is checked to see if it reflects the parameters.  initEvent may be
 called multiple times and the last time is definitive.
 
 * @author Curt Arnold
@@ -91,39 +85,38 @@ function initEvent03() {
       var actualEventType;
       var actualCanBubble;
       var actualCancelable;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      event = doc.createEvent("Events");
+      event = new Event("rotate", {"bubbles":true, "cancelable":true});
+      // event = doc.createEvent("Events");
       assertNotNull("notnull",event);
-event.initEvent("rotate",true,true);
+      // event.initEvent("rotate",true,true);
       actualEventType = event.type;
 
       assertEquals("type","rotate",actualEventType);
-       actualCancelable = event.cancelable;
+      actualCancelable = event.cancelable;
 
       assertEquals("cancelable",true,actualCancelable);
-       actualCanBubble = event.bubbles;
+      actualCanBubble = event.bubbles;
 
       assertEquals("canBubble",true,actualCanBubble);
-       event.initEvent("shear",false,false);
+      event = new Event("shear", {"bubbles":false, "cancelable":false});
+      // event.initEvent("shear",false,false);
       actualEventType = event.type;
 
       assertEquals("type2","shear",actualEventType);
-       actualCancelable = event.cancelable;
+      actualCancelable = event.cancelable;
 
       assertEquals("cancelable2",false,actualCancelable);
-       actualCanBubble = event.bubbles;
+      actualCanBubble = event.bubbles;
 
       assertEquals("canBubble2",false,actualCanBubble);
-       
+
 }
-
-
-
 
 function runTest() {
    initEvent03();

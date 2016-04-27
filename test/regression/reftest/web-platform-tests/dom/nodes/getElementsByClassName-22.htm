@@ -3,8 +3,8 @@
         <title>getElementsByClassName</title>
         <meta content="move item in collection order" name="description">
     <link href="https://dom.spec.whatwg.org/#dom-document-getelementsbyclassname" rel="help">
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
+    <script src="../../resources/testharness.js"></script>
+    <script src="../../resources/testharnessreport.js"></script>
 </head>
     <body>
         <div id="log"></div>
@@ -46,7 +46,9 @@
                 var collection = document.getElementsByClassName("text");
                 assert_equals(collection.length, 4);
                 var boldText = document.getElementsByTagName("b")[0];
-                document.getElementsByTagName("table")[0].tBodies[0].rows[0].cells[0].appendChild(boldText);
+                // NOTE: removing table tags
+                //document.getElementsByTagName("table")[0].tBodies[0].rows[0].cells[0].appendChild(boldText);
+                document.getElementsByTagName("table")[0].getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0].getElementsByTagName("td")[0].appendChild(boldText);
 
                 assert_equals(collection.length, 4);
                 assert_equals(collection[0].parentNode.nodeName, "DIV");

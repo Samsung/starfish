@@ -2,11 +2,20 @@
 <title>Node.compareDocumentPosition() tests</title>
 <link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
 <div id=log></div>
-<script src=/resources/testharness.js></script>
-<script src=/resources/testharnessreport.js></script>
+<script src=../../resources/testharness.js></script>
+<script src=../../resources/testharnessreport.js></script>
 <script src=../common.js></script>
 <script>
 "use strict";
+
+delete testNodes[3]; //detachedPara1
+delete testNodes[4]; //detachedPara1.firstChild
+delete testNodes[5]; //document
+delete testNodes[6]; //detachedDiv
+delete testNodes[7]; //detachedTextNode
+delete testNodes[9]; //detachedComment
+delete testNodes[12]; //detachedPara2
+delete testNodes[13]; //detachedPara2.firstChild
 
 testNodes.forEach(function(referenceName) {
   var reference = eval(referenceName);
@@ -14,7 +23,7 @@ testNodes.forEach(function(referenceName) {
     var other = eval(otherName);
     test(function() {
       var result = reference.compareDocumentPosition(other);
-
+      //console.log("[MONG] Debug: "+referenceName+":"+otherName+" : "+result);
       // "If other and reference are the same object, return zero and
       // terminate these steps."
       if (other === reference) {

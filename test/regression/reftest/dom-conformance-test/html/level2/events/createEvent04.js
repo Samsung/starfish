@@ -88,7 +88,8 @@ function createEvent04() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      event = doc.createEvent("MouseEvents");
+      // event = doc.createEvent("MouseEvents");
+      event = new Event("MouseEvents");
       assertNotNull("notnull",event);
 
 }

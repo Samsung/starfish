@@ -2,11 +2,11 @@
 <html>
 <head>
 <title> Event.stopPropagation() deferred effect </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../../resources/testharness.js"></script>
+<script src="../../../resources/testharnessreport.js"></script>
 </head>
 <body>
-<div id=log></div>
+<div id="log"></div>
 
 <table id="table" border="1" style="display: none">
     <tbody id="table-body">
@@ -29,6 +29,7 @@
     var TABLE = document.getElementById("table");
     var BODY = document.body;
     var HTML = document.documentElement;                
+    // var CurrentTargets = [window, document, HTML, BODY, TABLE, TBODY, PARENT, TARGET];
     var CurrentTargets = [window, document, HTML, BODY, TABLE, TBODY, PARENT, TARGET];
     var ExpectResult = [window, window, document, document, HTML, HTML, BODY, BODY, TABLE, TABLE];
     var ActualResult = [];
@@ -47,8 +48,9 @@
             CurrentTargets[i].addEventListener(EVENT, function(e){TestEvent(e, 1)}, true);
         }
        
-        var evt = document.createEvent("Event");
-        evt.initEvent(EVENT, true, true);            
+        // var evt = document.createEvent("Event");
+        // evt.initEvent(EVENT, true, true);
+        var evt = new Event(EVENT, {bubbles: true, cancelable: true});
         TARGET.dispatchEvent(evt);
 
         assert_array_equals(ActualResult, ExpectResult, "ActualResult");
@@ -58,6 +60,7 @@
          
     function TestEvent(evt, i)
     {
+        console.log("ActualResult.push:" + evt.currentTarget);
         ActualResult.push(evt.currentTarget);         
         ActualListeners.push(i);
         if ((1 == evt.eventPhase) && (TABLE == evt.currentTarget) && (0 == i))

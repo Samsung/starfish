@@ -93,10 +93,10 @@ function HTMLScriptElement02() {
       doc = load(docRef, "doc", "script");
       nodeList = doc.getElementsByTagName("script");
       assertSize("Asize",4,nodeList);
-testNode = nodeList.item(3);
+      testNode = nodeList.item(3);
       vcharset = testNode.charset;
-
-      assertEquals("charsetLink","US-ASCII",vcharset);
+      console.log("testNode.charset:" + testNode.charset);
+      assertEquals("charsetLink","UTF-8",vcharset);
 
 }
 

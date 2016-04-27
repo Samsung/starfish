@@ -1,8 +1,11 @@
 <!doctype html>
 <meta charset=utf-8>
-<title>HTMLCollection and empty names</title>
-<script src=/resources/testharness.js></script>
-<script src=/resources/testharnessreport.js></script>
+<!--EDIT-->
+<!--title>HTMLCollection and empty names</title-->
+<script src=../../resources/testharness.js></script>
+<script src=../../resources/testharnessreport.js>
+
+</script>
 <div id=log></div>
 <div id=test>
 <div class=a id></div>
@@ -25,20 +28,22 @@ test(function() {
   assert_equals(c.namedItem(""), null, "namedItem should return null for empty string.");
 }, "Empty string as a name for Element.getElementsByTagName");
 
-test(function() {
-  var c = document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "a");
-  assert_false("" in c, "Empty string should not be in the collection.");
-  assert_equals(c[""], undefined, "Named getter should return undefined for empty string.");
-  assert_equals(c.namedItem(""), null, "namedItem should return null for empty string.");
-}, "Empty string as a name for Document.getElementsByTagNameNS");
+// // EDIT : Does not support getElementsByTagNameNS()
+// test(function() {
+//   var c = document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "a");
+//   assert_false("" in c, "Empty string should not be in the collection.");
+//   assert_equals(c[""], undefined, "Named getter should return undefined for empty string.");
+//   assert_equals(c.namedItem(""), null, "namedItem should return null for empty string.");
+// }, "Empty string as a name for Document.getElementsByTagNameNS");
 
-test(function() {
-  var div = document.getElementById("test");
-  var c = div.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "a");
-  assert_false("" in c, "Empty string should not be in the collection.");
-  assert_equals(c[""], undefined, "Named getter should return undefined for empty string.");
-  assert_equals(c.namedItem(""), null, "namedItem should return null for empty string.");
-}, "Empty string as a name for Element.getElementsByTagNameNS");
+// // EDIT : Does not support getElementsByTagNameNS()
+// test(function() {
+//   var div = document.getElementById("test");
+//   var c = div.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "a");
+//   assert_false("" in c, "Empty string should not be in the collection.");
+//   assert_equals(c[""], undefined, "Named getter should return undefined for empty string.");
+//   assert_equals(c.namedItem(""), null, "namedItem should return null for empty string.");
+// }, "Empty string as a name for Element.getElementsByTagNameNS");
 
 test(function() {
   var c = document.getElementsByClassName("a");

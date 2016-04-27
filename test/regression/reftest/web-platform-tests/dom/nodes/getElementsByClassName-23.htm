@@ -3,8 +3,8 @@
         <title>getElementsByClassName</title>
         <meta content="multiple defined classes" name="description">
     <link href="https://dom.spec.whatwg.org/#dom-document-getelementsbyclassname" rel="help">
-    <script src="/resources/testharness.js"></script>
-    <script src="/resources/testharnessreport.js"></script>
+    <script src="../../resources/testharness.js"></script>
+    <script src="../../resources/testharnessreport.js"></script>
 </head>
     <body>
         <div id="log"></div>
@@ -14,6 +14,7 @@
             </div>
             <b class="text">text</b>
         </div>
+        <!-- table-related tags are not supported
         <table>
             <caption class="text caption">text caption</caption>
             <thead>
@@ -38,6 +39,31 @@
                 </tr>
             </tfoot>
         </table>
+        -->
+        <div>
+            <div class="text caption">text caption</div>
+            <div>
+                <div>
+                    <span class="TEXT head">TEXT head</span>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <span class="span text1">span text1</span>
+                </div>
+                <div>
+                    <span class="span text">span text</span>
+                </div>
+                <div>
+                    <span class="span te xt">span te xt</span>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <span class="TEXT foot">TEXT foot</span>
+                </div>
+            </div>
+        </div>
         <div class="xt te">xt te</div>
 
         <script type="text/javascript">
@@ -45,8 +71,10 @@
             {
                 var collection = document.getElementsByClassName("te xt");
                 assert_equals(collection.length, 2);
-                assert_equals(collection[0].parentNode.nodeName, "TR");
-                assert_equals(collection[1].parentNode.nodeName, "BODY");
+                // assert_equals(collection[0].parentNode.nodeName, "TR");
+                // assert_equals(collection[1].parentNode.nodeName, "BODY");
+                assert_equals(collection.item(0).parentNode.nodeName, "DIV");
+                assert_equals(collection.item(1).parentNode.nodeName, "BODY");
             }, "multiple defined classes");
         </script>
 </body></html>

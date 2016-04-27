@@ -92,7 +92,7 @@ function HTMLLinkElement08() {
       doc = load(docRef, "doc", "link");
       nodeList = doc.getElementsByTagName("link");
       assertSize("Asize",2,nodeList);
-testNode = nodeList.item(0);
+      testNode = nodeList.item(0);
       vtype = testNode.type;
 
       assertEquals("typeLink","text/html",vtype);

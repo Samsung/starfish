@@ -7,14 +7,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <title>Entity References</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 </head>
 <body>
-<h1>Test of Entity References</h1>
+<div>Test of Entity References</div>
 <div id="log"></div>
 <p id="parentEl">The result of this test is &tree;</p>
-<script><![CDATA[
+<script>
 test(function() {
   var parentEl = document.getElementById("parentEl")
   var fec = parentEl.firstElementChild;
@@ -22,6 +22,6 @@ test(function() {
   assert_equals(fec.nodeType, 1)
   assert_equals(fec.getAttribute("id"), "first_element_child")
 })
-]]></script>
+</script>
 </body>
 </html>

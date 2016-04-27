@@ -39,7 +39,7 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("validating", true);
+       //setImplementationAttribute("validating", true);
 
       docsLoaded = 0;
       
@@ -110,13 +110,13 @@ function namednodemapremovenameditemgetvalue() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("address");
+      elementList = doc.getElementsByTagName("acronym");
       testEmployee = elementList.item(2);
       attributes = testEmployee.attributes;
 
       assertNotNull("attributesNotNull",attributes);
-removedNode = attributes.removeNamedItem("street");
-      streetAttr = attributes.getNamedItem("street");
+removedNode = attributes.removeNamedItem("title");
+      streetAttr = attributes.getNamedItem("title");
       assertNotNull("streetAttrNotNull",streetAttr);
 value = streetAttr.value;
 

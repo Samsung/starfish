@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <title>Node.removeChild</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 <script src="creators.js"></script>
 <div id="log"></div>
 <iframe src=about:blank></iframe>
 <script>
 var documents = [
   [function() { return document }, "the main document"],
-  [function() { return frames[0].document }, "a frame document"],
-  [function() { return document.implementation.createHTMLDocument() },
-   "a synthetic document"],
+//  [function() { return frames[0].document }, "a frame document"],
+//  [function() { return document.implementation.createHTMLDocument()},
+//   "a synthetic document"],
 ];
 
 documents.forEach(function(d) {
@@ -44,11 +44,12 @@ documents.forEach(function(d) {
       assert_throws("NOT_FOUND_ERR", function() { s.removeChild(doc) })
     }, "Calling removeChild on a " + p + " from " + description +
        " with no children should throw NOT_FOUND_ERR.")
-  }
+   }
 });
 
 test(function() {
   assert_throws(new TypeError(), function() { document.body.removeChild(null) })
   assert_throws(new TypeError(), function() { document.body.removeChild({'a':'b'}) })
 }, "Passing a value that is not a Node reference to removeChild should throw TypeError.")
+
 </script>

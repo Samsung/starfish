@@ -1,11 +1,11 @@
 
 /*
-Copyright Â© 2001-2004 World Wide Web Consortium, 
-(Massachusetts Institute of Technology, European Research Consortium 
-for Informatics and Mathematics, Keio University). All 
-Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the 
-hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+Copyright Â© 2001-2004 World Wide Web Consortium,
+(Massachusetts Institute of Technology, European Research Consortium
+for Informatics and Mathematics, Keio University). All
+Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 */
@@ -39,16 +39,16 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("validating", true);
+       //setImplementationAttribute("validating", true);
 
       docsLoaded = 0;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       docsLoaded += preload(docRef, "doc", "hc_staff");
-        
+
        if (docsLoaded == 1) {
           setUpPageStatus = 'complete';
        }
@@ -61,7 +61,7 @@ function setUpPage() {
 
 
 //
-//   This method is called on the completion of 
+//   This method is called on the completion of
 //      each asychronous load started in setUpTests.
 //
 //   When every synchronous loaded document has completed,
@@ -75,16 +75,16 @@ function loadComplete() {
 
 
 /**
-* 
+*
     If there is not an explicit value assigned to an attribute
   and there is a declaration for this attribute and that
   declaration includes a default value, then that default
   value is the attributes default value.
-  Retrieve the attribute named "street" from the last 
-  child of of the first employee and examine its 
+  Retrieve the attribute named "street" from the last
+  child of of the first employee and examine its
   value.  That value should be the value given the
-  attribute in the DTD file.  The test uses the 
-  "getNamedItem(name)" method from the NamedNodeMap 
+  attribute in the DTD file.  The test uses the
+  "getNamedItem(name)" method from the NamedNodeMap
   interface.
 
 * @author NIST
@@ -102,21 +102,21 @@ function attrdefaultvalue() {
       var attributes;
       var streetAttr;
       var value;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      addressList = doc.getElementsByTagName("address");
+      addressList = doc.getElementsByTagName("acronym");
       testNode = addressList.item(0);
       attributes = testNode.attributes;
 
-      streetAttr = attributes.getNamedItem("street");
+      streetAttr = attributes.getNamedItem("title");
       value = streetAttr.nodeValue;
 
       assertEquals("attrDefaultValueAssert","Yes",value);
-       
+
 }
 
 

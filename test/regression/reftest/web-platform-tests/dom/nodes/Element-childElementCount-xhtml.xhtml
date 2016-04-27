@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>childElementCount</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 </head>
 <body>
-<h1>Test of childElementCount</h1>
+<div>Test of childElementCount</div>
 <div id="log"></div>
 <p id="parentEl">The result of <span id="first_element_child"><span>this</span> <span>test</span></span> is
 <span id="middle_element_child" style="font-weight:bold;">unknown.</span>
@@ -14,12 +14,12 @@
 
 
 <span id="last_element_child" style="display:none;">fnord</span> </p>
-<script><![CDATA[
+<script>
 test(function() {
   var parentEl = document.getElementById("parentEl")
   assert_true("childElementCount" in parentEl)
   assert_equals(parentEl.childElementCount, 3)
 })
-]]></script>
+</script>
 </body>
 </html>

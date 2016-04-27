@@ -1,29 +1,45 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
-<title> Event.bubbles attribute is set to false </title>
+<!--EDIT-->
+<!--title> Event.bubbles attribute is set to false </title>
 <link rel="help" href="https://dom.spec.whatwg.org/#dom-event-initevent">
-<link rel="help" href="https://dom.spec.whatwg.org/#concept-event-dispatch">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<link rel="help" href="https://dom.spec.whatwg.org/#concept-event-dispatch"-->
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
+<style>
+  #table {
+    display: none;
+  }
+  .col {
+    display: inline-block;
+  }
+  .cell {
+    border: 1px solid black;
+    padding: 0;
+    margin: 1px;
+  }
+</style>
 <div id=log></div>
-<table id="table" border="1" style="display: none">
-    <tbody id="table-body">
-    <tr id="table-row">
-        <td id="table-cell">Shady Grove</td>
-        <td>Aeolian</td>
-    </tr>
-    <tr id="parent">
-        <td id="target">Over the river, Charlie</td>
-        <td>Dorian</td>
-    </tr>
-    </tbody>
-</table>
+<div id="table">
+  <div id="table-body">
+    <div class="col" id="parent">
+      <p class="cell">Shady Grove</p>
+      <p class="cell" id="target">Over the river, Charlie</p>
+    </div>
+    <div class="col">
+      <p class="cell">Aeolian</p>
+      <p class="cell">Dorian</p>
+    </div>
+  </div>
+</div>
 <script>
 function targetsForDocumentChain(document) {
     return [
         document,
         document.documentElement,
-        document.getElementsByTagName("body")[0],
+        // EDIT
+        // document.getElementsByTagName("body")[0],
+        document.getElementsByTagName("body").item(0),
         document.getElementById("table"),
         document.getElementById("table-body"),
         document.getElementById("parent")
@@ -46,8 +62,10 @@ function testChain(document, targetParents, phases, event_type) {
         targets[i].addEventListener(event_type, test_event, false);
     }
 
-    var evt = document.createEvent("Event");
-    evt.initEvent(event_type, false, true);
+    // EDIT
+    // var evt = document.createEvent("Event");
+    // evt.initEvent(event_type, false, true);
+    var evt = new Event(event_type, {"bubbles":false, "cancelable":true});
 
     target.dispatchEvent(evt);
 
@@ -76,23 +94,23 @@ test(function () {
     testChain(document, targetsForDocumentChain(document), phasesForDocumentChain, "load");
 }, "In window.document with load event")
 
-test(function () {
-    var documentClone = document.cloneNode(true);
-    testChain(
-        documentClone, targetsForDocumentChain(documentClone), phasesForDocumentChain, "click");
-}, "In window.document.cloneNode(true)");
+// test(function () {
+//     var documentClone = document.cloneNode(true);
+//     testChain(
+//         documentClone, targetsForDocumentChain(documentClone), phasesForDocumentChain, "click");
+// }, "In window.document.cloneNode(true)");
 
-test(function () {
-    var newDocument = new Document();
-    newDocument.appendChild(document.documentElement.cloneNode(true));
-    testChain(
-        newDocument, targetsForDocumentChain(newDocument), phasesForDocumentChain, "click");
-}, "In new Document()");
+// test(function () {
+//     var newDocument = new Document();
+//     newDocument.appendChild(document.documentElement.cloneNode(true));
+//     testChain(
+//         newDocument, targetsForDocumentChain(newDocument), phasesForDocumentChain, "click");
+// }, "In new Document()");
 
-test(function () {
-    var HTMLDocument = document.implementation.createHTMLDocument();
-    HTMLDocument.body.appendChild(document.getElementById("table").cloneNode(true));
-    testChain(
-        HTMLDocument, targetsForDocumentChain(HTMLDocument), phasesForDocumentChain, "click");
-}, "In DOMImplementation.createHTMLDocument()");
+// test(function () {
+//     var HTMLDocument = document.implementation.createHTMLDocument();
+//     HTMLDocument.body.appendChild(document.getElementById("table").cloneNode(true));
+//     testChain(
+//         HTMLDocument, targetsForDocumentChain(HTMLDocument), phasesForDocumentChain, "click");
+// }, "In DOMImplementation.createHTMLDocument()");
 </script>

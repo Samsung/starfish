@@ -3,15 +3,15 @@
 <title>Node.appendChild applied to CharacterData</title>
 <link rel=help href="https://dom.spec.whatwg.org/#dom-node-appendchild">
 <link rel=help href="https://dom.spec.whatwg.org/#introduction-to-the-dom">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
 function create(type) {
   switch (type) {
     case "Text": return document.createTextNode("test"); break;
     case "Comment": return document.createComment("test"); break;
-    case "ProcessingInstruction": return document.createProcessingInstruction("target", "test"); break;
+    //case "ProcessingInstruction": return document.createProcessingInstruction("target", "test"); break;
   }
 }
 
@@ -25,7 +25,7 @@ function testNode(type1, type2) {
   }, type1 + ".appendChild(" + type2 + ")");
 }
 
-var types = ["Text", "Comment", "ProcessingInstruction"];
+var types = ["Text", "Comment"/*, "ProcessingInstruction"*/];
 types.forEach(function(type1) {
   types.forEach(function(type2) {
     testNode(type1, type2);

@@ -2,15 +2,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>firstElementChild</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 </head>
 <body>
-<h1>Test of firstElementChild</h1>
+<div>Test of firstElementChild</div>
 <div id="log"></div>
 <p id="parentEl">The result of this test is
 <span id="first_element_child" style="font-weight:bold;">logged above.</span></p>
-<script><![CDATA[
+<script>
 test(function() {
   var parentEl = document.getElementById("parentEl");
   var fec = parentEl.firstElementChild;
@@ -18,6 +18,6 @@ test(function() {
   assert_equals(fec.nodeType, 1)
   assert_equals(fec.getAttribute("id"), "first_element_child")
 })
-]]></script>
+</script>
 </body>
 </html>

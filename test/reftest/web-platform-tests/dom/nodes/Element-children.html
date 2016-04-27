@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <title>HTMLCollection edge cases</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 <div id="log"></div>
 <div id="test"><img><img id=foo><img id=foo><img name="bar"></div>
 <script>
 setup(function() {
   // Add some non-HTML elements in there to test what happens with those.
   var container = document.getElementById("test");
-  var child = document.createElementNS("", "img");
+  var child = document.createElement("img");
   child.setAttribute("id", "baz");
   container.appendChild(child);
 
-  child = document.createElementNS("", "img");
+  child = document.createElement("img");
   child.setAttribute("name", "qux");
   container.appendChild(child);
 });
@@ -23,7 +23,7 @@ test(function() {
   assert_true(result instanceof Element, "Expected an Element.");
   assert_false(result.hasAttribute("id"), "Expected the IDless Element.")
 })
-
+/*
 test(function() {
   var container = document.getElementById("test");
   var list = container.children;
@@ -48,11 +48,12 @@ test(function() {
   }
 
   var unexposedNames = ['qux'];
-  for (var unexposedName of unexposedNames) {
-    assert_false(unexposedName in list);
-    assert_false(list.hasOwnProperty(unexposedName));
-    assert_equals(list[unexposedName], undefined);
-    assert_equals(list.namedItem(unexposedName), null);
+  //for (var unexposedName of unexposedNames) {
+  for (var i = 0; i < unexposedNames.length; i++) {
+    assert_false(unexposedNames[i] in list);
+    assert_false(list.hasOwnProperty(unexposedNames[i]));
+    assert_equals(list[unexposedNames[i]], undefined);
+    assert_equals(list.namedItem(unexposedNames[i]), null);
   }
-});
+);}*/
 </script>

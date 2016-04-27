@@ -98,7 +98,7 @@ function hasAttribute03() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("address");
+      elementList = doc.getElementsByTagName("acronym");
       testNode = elementList.item(0);
       state = testNode.hasAttribute("nomatch");
       assertFalse("throw_False",state);

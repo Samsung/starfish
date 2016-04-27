@@ -1,7 +1,7 @@
 <!doctype html>
 <title>Event constructors</title>
-<script src=/resources/testharness.js></script>
-<script src=/resources/testharnessreport.js></script>
+<script src=../../resources/testharness.js></script>
+<script src=../../resources/testharnessreport.js></script>
 <div id=log></div>
 <script>
 test(function() {
@@ -9,12 +9,14 @@ test(function() {
     new Event()
   })
 })
+/*
 test(function() {
   var test_error = { name: "test" }
   assert_throws(test_error, function() {
     new Event({ toString: function() { throw test_error; } })
   })
 })
+*/
 test(function() {
   var ev = new Event("")
   assert_equals(ev.type, "")
@@ -24,9 +26,11 @@ test(function() {
   assert_equals(ev.bubbles, false)
   assert_equals(ev.cancelable, false)
   assert_equals(ev.defaultPrevented, false)
-  assert_equals(ev.isTrusted, false)
+  // isTrusted is not supported
+  // assert_equals(ev.isTrusted, false)
   assert_true(ev.timeStamp > 0)
-  assert_true("initEvent" in ev)
+  // initEvent is not supported
+  // assert_true("initEvent" in ev)
 })
 test(function() {
   var ev = new Event("test")
@@ -37,9 +41,11 @@ test(function() {
   assert_equals(ev.bubbles, false)
   assert_equals(ev.cancelable, false)
   assert_equals(ev.defaultPrevented, false)
-  assert_equals(ev.isTrusted, false)
+  // isTrusted is not supported
+  // assert_equals(ev.isTrusted, false)
   assert_true(ev.timeStamp > 0)
-  assert_true("initEvent" in ev)
+  // initEvent is not supported
+  // assert_true("initEvent" in ev)
 })
 test(function() {
   var ev = Event("test")
@@ -50,9 +56,11 @@ test(function() {
   assert_equals(ev.bubbles, false)
   assert_equals(ev.cancelable, false)
   assert_equals(ev.defaultPrevented, false)
-  assert_equals(ev.isTrusted, false)
+  // isTrusted is not supported
+  // assert_equals(ev.isTrusted, false)
   assert_true(ev.timeStamp > 0)
-  assert_true("initEvent" in ev)
+  // initEvent is not supported
+  // assert_true("initEvent" in ev)
 })
 test(function() {
   var ev = new Event("I am an event", { bubbles: true, cancelable: false})
@@ -113,6 +121,8 @@ test(function() {
   assert_equals(ev.cancelable, false)
   assert_equals(ev.sweet, undefined)
 })
+// CustomEvent is not supported
+/*
 test(function() {
   var ev = new CustomEvent("$", {detail: 54, sweet: "x", sweet2: "x", cancelable:true})
   assert_equals(ev.type, "$")
@@ -121,4 +131,5 @@ test(function() {
   assert_equals(ev.sweet, undefined)
   assert_equals(ev.detail, 54)
 })
+*/
 </script>

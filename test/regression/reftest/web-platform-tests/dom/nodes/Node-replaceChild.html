@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
 <title>Node.replaceChild</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 <body><a><b></b><c></c></a>
 <div id="log"></div>
+
+<script src="../assert_array_equals.js"></script>
+
 <script>
 // IDL.
 test(function() {
@@ -40,6 +43,7 @@ test(function() {
     a.replaceChild(b, a);
   });
 }, "If child's parent is not the context node, a NotFoundError exception should be thrown")
+/*
 test(function() {
   var nodes = [
     document.implementation.createDocumentType("html", "", ""),
@@ -56,6 +60,7 @@ test(function() {
     });
   });
 }, "If the context node is not a node that can contain children, a NotFoundError exception should be thrown")
+*/
 
 // Step 2.
 test(function() {
@@ -65,19 +70,17 @@ test(function() {
   assert_throws("HierarchyRequestError", function() {
     a.replaceChild(a, a);
   });
-
   a.appendChild(b);
   assert_throws("HierarchyRequestError", function() {
     a.replaceChild(a, b);
   });
-
   var c = document.createElement("div");
   c.appendChild(a);
   assert_throws("HierarchyRequestError", function() {
     a.replaceChild(c, b);
   });
 }, "If node is an inclusive ancestor of the context node, a HierarchyRequestError should be thrown.")
-
+/*
 // Step 3.1.
 test(function() {
   var doc = document.implementation.createHTMLDocument("title");
@@ -224,6 +227,7 @@ test(function() {
     df.replaceChild(doctype, a);
   });
 }, "If the context node is a DocumentFragment, inserting a document or a doctype should throw a HierarchyRequestError.")
+
 test(function() {
   var el = document.createElement("div");
   var a = el.appendChild(document.createElement("a"));
@@ -238,7 +242,7 @@ test(function() {
     el.replaceChild(doctype, a);
   });
 }, "If the context node is an element, inserting a document or a doctype should throw a HierarchyRequestError.")
-
+*/
 // Step 6.
 test(function() {
   var a = document.createElement("div");
@@ -276,7 +280,7 @@ test(function() {
   assert_equals(a.replaceChild(c, c), c);
   assert_array_equals(a.childNodes, [b, c]);
 }, "Replacing a node with itself should not move the node");
-
+/*
 // Step 7.
 test(function() {
   var doc = document.implementation.createHTMLDocument("title");
@@ -319,6 +323,7 @@ test(function() {
   assert_equals(doc.documentElement, doc.replaceChild(a, doc.documentElement));
   assert_array_equals(doc.childNodes, [doc.doctype, a]);
 }, "Replacing the document element with a single element should work.");
+*/
 test(function() {
   document.addEventListener("DOMNodeRemoved", function(e) {
     document.body.appendChild(document.createElement("x"));
@@ -329,6 +334,7 @@ test(function() {
   assert_equals(a.firstChild, c);
   assert_equals(c.parentNode, a);
 }, "replaceChild should work in the presence of mutation events.")
+/*
 test(function() {
   var TEST_ID = "findme";
   var gBody = document.getElementsByTagName("body")[0];
@@ -342,4 +348,5 @@ test(function() {
   parent.replaceChild(df, child);
   assert_equals(document.getElementById(TEST_ID), fragChild, "should not be null");
 }, "Replacing an element with a DocumentFragment should allow a child of the DocumentFragment to be found by Id.")
+*/
 </script>

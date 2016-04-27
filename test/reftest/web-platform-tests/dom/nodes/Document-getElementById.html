@@ -3,8 +3,8 @@
 <title>Document.getElementById</title>
 <link rel="author" title="Tetsuharu OHZEKI" href="mailto:saneyuki.snyk@gmail.com">
 <link rel=help href="https://dom.spec.whatwg.org/#dom-document-getelementbyid">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
 <body>
   <div id="log"></div>
 
@@ -28,7 +28,7 @@
   </div>
 
 <script>
-  var gBody = document.getElementsByTagName("body")[0];
+  var gBody = document.getElementsByTagName("body").item(0);
 
   test(function() {
     assert_equals(document.getElementById(""), null);
@@ -161,14 +161,15 @@
     var target = document.getElementById(TEST_ID);
     assert_equals(target, element, "should return the element before changing the value");
 
-    element.attributes[0].value = TEST_ID + "-updated";
+    element.attributes.item(0).value = TEST_ID + "-updated";
     var target2 = document.getElementById(TEST_ID);
     assert_equals(target2, null, "should return null after updated id via Attr.value");
     var target3 = document.getElementById(TEST_ID + "-updated");
     assert_equals(target3, element, "should be equal to the updated element.");
   }, "changing attribute's value via `Attr` gotten from `Element.attribute`.");
 
-
+/*
+  // FIXME: [Widget Engine] Not support innerHTML & outerHTML in our spec
   test(function() {
     var TEST_ID = "test8";
 
@@ -240,7 +241,7 @@
     var test = document.getElementById(TEST_ID);
     assert_equals(test, null, "should be null.");
   }, "remove id attribute via outerHTML");
-
+*/
 
   test(function() {
     // setup fixtures.

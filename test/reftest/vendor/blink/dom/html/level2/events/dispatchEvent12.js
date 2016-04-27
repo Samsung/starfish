@@ -127,13 +127,14 @@ function dispatchEvent12() {
       doc = load(docRef, "doc", "hc_staff");
       doc.addEventListener("foo", monitor.handleEvent, false);
       doc.removeEventListener("foo", monitor.handleEvent, true);
-     doc.removeEventListener("food", monitor.handleEvent, false);
-     doc.removeEventListener("foo", other.handleEvent, false);
-     evt = doc.createEvent("Events");
-      evt.initEvent("foo",true,false);
+      doc.removeEventListener("food", monitor.handleEvent, false);
+      doc.removeEventListener("foo", other.handleEvent, false);
+      evt = new Event("foo", {bubbles: true, cancelable: false});
+      // evt = doc.createEvent("Events");
+      // evt.initEvent("foo",true,false);
       preventDefault = doc.dispatchEvent(evt);
       events = monitor.allEvents;
-assertSize("eventCount",1,events);
+      assertSize("eventCount",1,events);
 
 }
 

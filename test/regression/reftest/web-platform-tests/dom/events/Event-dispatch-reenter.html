@@ -1,21 +1,35 @@
 <!DOCTYPE html>
 <meta charset=utf-8>
-<title> Dispatch additional events inside an event listener </title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<!--EDIT-->
+<!--title> Dispatch additional events inside an event listener </title-->
+<script src="../../resources/testharness.js"></script>
+<script src="../../resources/testharnessreport.js"></script>
+<style>
+  #table {
+    display: none;
+  }
+  .col {
+    display: inline-block;
+  }
+  .cell {
+    border: 1px solid black;
+    padding: 0;
+    margin: 1px;
+  }
+</style>
 <div id=log></div>
-<table id="table" border="1" style="display: none">
-    <tbody id="table-body">
-    <tr id="table-row">
-        <td id="table-cell">Shady Grove</td>
-        <td>Aeolian</td>
-    </tr>
-    <tr id="parent">
-        <td id="target">Over the river, Charlie</td>
-        <td>Dorian</td>
-    </tr>
-    </tbody>
-</table>
+<div id="table">
+  <div id="table-body">
+    <div class="col" id="parent">
+      <p class="cell">Shady Grove</p>
+      <p class="cell" id="target">Over the river, Charlie</p>
+    </div>
+    <div class="col">
+      <p class="cell">Aeolian</p>
+      <p class="cell">Dorian</p>
+    </div>
+  </div>
+</div>
 <script>
 test(function() {
     var event_type = "foo";
@@ -43,10 +57,11 @@ test(function() {
     var test_event = this.step_func(function(evt) {
         actual_targets.push(evt.currentTarget);
         actual_types.push(evt.type);
-
         if (table == evt.currentTarget && event_type == evt.type) {
-            var e = document.createEvent("Event");
-            e.initEvent("bar", true, true);
+            // EDIT
+            // var e = document.createEvent("Event");
+            // e.initEvent("bar", true, true);
+            var e = new Event("bar", {"bubbles":true, "cancelable":true});
             target.dispatchEvent(e);
         }
     });
@@ -56,8 +71,10 @@ test(function() {
         targets[i].addEventListener("bar", test_event, false);
     }
 
-    var evt = document.createEvent("Event");
-    evt.initEvent(event_type, false, true);
+    // EDIT
+    // var evt = document.createEvent("Event");
+    // evt.initEvent(event_type, false, true);
+    var evt = new Event(event_type, {"bubbles":false, "cancelable":true});
     target.dispatchEvent(evt);
 
     assert_array_equals(actual_targets, expected_targets, "actual_targets");

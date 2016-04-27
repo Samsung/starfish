@@ -92,7 +92,7 @@ function HTMLLinkElement03() {
       doc = load(docRef, "doc", "link");
       nodeList = doc.getElementsByTagName("link");
       assertSize("Asize",2,nodeList);
-testNode = nodeList.item(0);
+      testNode = nodeList.item(0);
       vhref = testNode.href;
 
       assertURIEquals("hrefLink",null,null,null,"glossary.html",null,null,null,null,vhref);

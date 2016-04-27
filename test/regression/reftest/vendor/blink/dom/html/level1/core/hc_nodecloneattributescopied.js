@@ -83,34 +83,35 @@ function hc_nodecloneattributescopied() {
    var success;
     if(checkInitialization(builder, "hc_nodecloneattributescopied") != null) return;
     var doc;
-      var elementList;
-      var addressNode;
-      var clonedNode;
-      var attributes;
-      var attributeNode;
-      var attributeName;
-      var result = new Array();
+    var elementList;
+    var addressNode;
+    var clonedNode;
+    var attributes;
+    var attributeNode;
+    var attributeName;
+    var result = new Array();
 
-      htmlExpected = new Array();
-      htmlExpected[0] = "class";
-      htmlExpected[1] = "title";
+    htmlExpected = new Array();
+    htmlExpected[0] = "class";
+    htmlExpected[1] = "title";
 
-      expected = new Array();
-      expected[0] = "class";
-      expected[1] = "title";
-      expected[2] = "dir";
+    expected = new Array();
+    expected[0] = "class";
+    expected[1] = "title";
+    expected[2] = "dir";
 
-      var docRef = null;
-      if (typeof(this.doc) != 'undefined') {
-        docRef = this.doc;
-      }
-      doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("acronym");
-      addressNode = elementList.item(1);
-      clonedNode = addressNode.cloneNode(false);
-      attributes = clonedNode.attributes;
+    var docRef = null;
+    if (typeof(this.doc) != 'undefined') {
+      docRef = this.doc;
+    }
+    doc = load(docRef, "doc", "hc_staff");
+    elementList = doc.getElementsByTagName("acronym");
+    addressNode = elementList.item(1);
+    console.log("addressNode.constructor: " + addressNode.constructor);
+    clonedNode = addressNode.cloneNode(false);
+    attributes = clonedNode.attributes;
 
-      for(var indexN10076 = 0;indexN10076 < attributes.length; indexN10076++) {
+    for(var indexN10076 = 0;indexN10076 < attributes.length; indexN10076++) {
       attributeNode = attributes.item(indexN10076);
       attributeName = attributeNode.nodeName;
 
@@ -118,19 +119,11 @@ function hc_nodecloneattributescopied() {
 
     }
 
-    if(
-
-    (builder.contentType == "text/html")
-
-    ) {
-    assertEqualsCollection("nodeNames_html",toLowerArray(htmlExpected),toLowerArray(result));
-
+    if((builder.contentType == "text/html")) {
+      assertEqualsCollection("nodeNames_html",toLowerArray(htmlExpected),toLowerArray(result));
+    } else {
+        assertEqualsCollection("nodeNames",expected,result);
     }
-
-        else {
-            assertEqualsCollection("nodeNames",expected,result);
-
-        }
 
 }
 

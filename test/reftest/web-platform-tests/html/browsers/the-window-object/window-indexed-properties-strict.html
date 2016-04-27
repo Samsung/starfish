@@ -6,8 +6,8 @@
 <link rel="help" href="https://html.spec.whatwg.org/multipage/#dom-window-item">
 <link rel="help" href="https://heycam.github.io/webidl/#getownproperty">
 <link rel="help" href="https://heycam.github.io/webidl/#defineownproperty">
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
+<script src="../../../resources/testharness.js"></script>
+<script src="../../../resources/testharnessreport.js"></script>
 <div id=log></div>
 <iframe></iframe>
 <script>
@@ -18,7 +18,7 @@ test(function() {
   window[-1] = "foo";
   assert_equals(window[-1], "foo");
 });
-test(function() {
+/*test(function() {
   "use strict";
   assert_throws(new TypeError(), function() {
     window[0] = "foo";
@@ -33,6 +33,7 @@ test(function() {
   });
   assert_equals(window[1], undefined);
 });
+*/
 test(function() {
   "use strict";
   var proto = Window.prototype;

@@ -39,7 +39,7 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("validating", true);
+       //setImplementationAttribute("validating", true);
 
       docsLoaded = 0;
       
@@ -100,9 +100,9 @@ function hasAttribute02() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("address");
+      elementList = doc.getElementsByTagName("acronym");
       testNode = elementList.item(0);
-      state = testNode.hasAttribute("street");
+      state = testNode.hasAttribute("title");
       assertTrue("throw_True",state);
 
 }

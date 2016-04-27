@@ -1,11 +1,11 @@
 
 /*
-Copyright Â© 2001-2004 World Wide Web Consortium, 
-(Massachusetts Institute of Technology, European Research Consortium 
-for Informatics and Mathematics, Keio University). All 
-Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the 
-hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+Copyright Â© 2001-2004 World Wide Web Consortium,
+(Massachusetts Institute of Technology, European Research Consortium
+for Informatics and Mathematics, Keio University). All
+Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 */
@@ -39,16 +39,16 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       setImplementationAttribute("namespaceAware", true);
+       //setImplementationAttribute("namespaceAware", true);
 
       docsLoaded = 0;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       docsLoaded += preload(docRef, "doc", "hc_staff");
-        
+
        if (docsLoaded == 1) {
           setUpPageStatus = 'complete';
        }
@@ -61,7 +61,7 @@ function setUpPage() {
 
 
 //
-//   This method is called on the completion of 
+//   This method is called on the completion of
 //      each asychronous load started in setUpTests.
 //
 //   When every synchronous loaded document has completed,
@@ -75,9 +75,9 @@ function loadComplete() {
 
 
 /**
-* 
+*
 	The method getLocalName returns the local part of the qualified name of this node.
-	
+
 	Ceate two new element nodes and atribute nodes, with and without namespace prefixes.
 	Retreive the local part of their qualified names using getLocalName and verrify
 	if it is correct.
@@ -98,16 +98,16 @@ function nodegetlocalname03() {
       var localQElemName;
       var localAttrName;
       var localQAttrName;
-      
+
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      element = doc.createElementNS("http://www.w3.org/DOM/Test/elem","elem");
-      qelement = doc.createElementNS("http://www.w3.org/DOM/Test/elem","qual:qelem");
-      attr = doc.createAttributeNS("http://www.w3.org/DOM/Test/attr","attr");
-      qattr = doc.createAttributeNS("http://www.w3.org/DOM/Test/attr","qual:qattr");
+      element = doc.createElement("elem");
+      qelement = doc.createElement("qelem");
+      attr = doc.createAttribute("attr");
+      qattr = doc.createAttribute("qattr");
       localElemName = element.localName;
 
       localQElemName = qelement.localName;
@@ -120,7 +120,7 @@ function nodegetlocalname03() {
        assertEquals("nodegetlocalname03_localQElemName","qelem",localQElemName);
        assertEquals("nodegetlocalname03_localAttrName","attr",localAttrName);
        assertEquals("nodegetlocalname03_localQAttrName","qattr",localQAttrName);
-       
+
 }
 
 

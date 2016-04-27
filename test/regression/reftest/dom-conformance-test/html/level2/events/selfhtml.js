@@ -507,13 +507,14 @@ function toLowerArray(src) {
 
 function checkFeature(feature, version)
 {
-  if (!builder.hasFeature(feature, version))
-  {
-    //
-    //   don't throw exception so that users can select to ignore the precondition
-    //
-    builder.initializationError = "builder does not support feature " + feature + " version " + version;
-  }
+  // EDIT(JY): Does not support document.implementation
+  // if (!builder.hasFeature(feature, version))
+  // {
+  //   //
+  //   //   don't throw exception so that users can select to ignore the precondition
+  //   //
+  //   builder.initializationError = "builder does not support feature " + feature + " version " + version;
+  // }
 }
 
 function setResult(resultType, message) {

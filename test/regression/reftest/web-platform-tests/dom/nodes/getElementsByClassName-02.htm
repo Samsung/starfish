@@ -3,12 +3,16 @@
 b">
  <head>
   <title>document.getElementsByClassName(): also simple</title>
-  <script src="/resources/testharness.js"></script>
-  <script src="/resources/testharnessreport.js"></script>
- </head>
+  <script src="../../resources/testharness.js"></script>
+  <script src="../../resources/testharnessreport.js"></script>
+
+  </head>
  <body class="a
 ">
   <div id="log"></div>
-  <script> test(function() {assert_array_equals(document.getElementsByClassName("a\n"), [document.documentElement, document.body])}) </script>
+
+  <script src="../assert_array_equals.js"></script>
+
+  <script>test(function() {assert_array_equals(document.getElementsByClassName("a\n"), [document.documentElement, document.body])})</script>
  </body>
 </html>

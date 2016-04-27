@@ -100,11 +100,12 @@ function elementhasattribute03() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      element = doc.createElement("address");
+      element = doc.createElement("acronym");
       attribute = doc.createAttribute("domestic");
       state = element.hasAttribute("domestic");
+      console.log("LEESS: "+state);
       assertFalse("elementhasattribute03_False",state);
-newAttribute = element.setAttributeNode(attribute);
+newAttribute = element.setAttribute("domestic","");
       state = element.hasAttribute("domestic");
       assertTrue("elementhasattribute03_True",state);
 

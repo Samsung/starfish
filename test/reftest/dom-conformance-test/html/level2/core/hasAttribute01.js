@@ -98,7 +98,7 @@ function hasAttribute01() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "hc_staff");
-      elementList = doc.getElementsByTagName("address");
+      elementList = doc.getElementsByTagName("acronym");
       testNode = elementList.item(4);
       state = testNode.hasAttribute("domestic");
       assertFalse("throw_False",state);

@@ -2,8 +2,8 @@
 <title>Event propagation tests</title>
 <link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
 <div id=log></div>
-<script src=/resources/testharness.js></script>
-<script src=/resources/testharnessreport.js></script>
+<script src=../../resources/testharness.js></script>
+<script src=../../resources/testharnessreport.js></script>
 <script>
 "use strict";
 
@@ -21,18 +21,26 @@ function testPropagationFlag(ev, expected, desc) {
   }, desc);
 }
 
-var ev = document.createEvent("Event");
-ev.initEvent("foo", true, false);
+// createEvent and initEvent are not supported
+// var ev = document.createEvent("Event");
+// ev.initEvent("foo", true, false);
+var ev = new Event("foo", {"bubbles":true, "cancelable":false});
 testPropagationFlag(ev, true, "Newly-created Event");
 ev.stopPropagation();
 testPropagationFlag(ev, false, "After stopPropagation()");
-ev.initEvent("foo", true, false);
+// initEvent is not supported
+// ev.initEvent("foo", true, false);
+ev = new Event("foo", {"bubbles":true, "cancelable":false});
 testPropagationFlag(ev, true, "Reinitialized after stopPropagation()");
 
-var ev = document.createEvent("Event");
-ev.initEvent("foo", true, false);
+// createEvent and initEvent are not supported
+// var ev = document.createEvent("Event");
+// ev.initEvent("foo", true, false);
+var ev = new Event("foo", {"bubbles":true, "cancelable":false});
 ev.stopImmediatePropagation();
 testPropagationFlag(ev, false, "After stopImmediatePropagation()");
-ev.initEvent("foo", true, false);
+// initEvent is not supported
+// ev.initEvent("foo", true, false);
+ev = new Event("foo", {"bubbles":true, "cancelable":false});
 testPropagationFlag(ev, true, "Reinitialized after stopImmediatePropagation()");
 </script>

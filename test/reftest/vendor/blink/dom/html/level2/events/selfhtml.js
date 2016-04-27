@@ -507,17 +507,19 @@ function toLowerArray(src) {
 
 function checkFeature(feature, version)
 {
-  if (!builder.hasFeature(feature, version))
-  {
-    //
-    //   don't throw exception so that users can select to ignore the precondition
-    //
-    builder.initializationError = "builder does not support feature " + feature + " version " + version;
-  }
+  // EDIT(JY): Does not support document.implementation
+  // if (!builder.hasFeature(feature, version))
+  // {
+  //   //
+  //   //   don't throw exception so that users can select to ignore the precondition
+  //   //
+  //   builder.initializationError = "builder does not support feature " + feature + " version " + version;
+  // }
 }
 
 function setResult(resultType, message) {
    var testName = getTargetURI();
+   /*
    document.open();
    document.writeln("<html><head>");
    document.writeln("<meta HTTP-EQUIV='Content-Type' CONTENT='text/html; CHARSET=utf-8'>");
@@ -540,6 +542,25 @@ function setResult(resultType, message) {
    document.close();
    if (parent != window) {
        parent.setResult(testName, resultType, message);
+   }
+   */
+
+   console.log("Test: " + testName);
+   if (resultType == null) {
+       console.log("Status: Success");
+   } else if (resultType == "skip") {
+       console.log("Status: Skipped");
+   } else {
+       console.log("Status: " + resultType);
+   }   
+   if (message != null) {
+       console.log("message: " + message);
+   }
+
+   try {
+       wptTestEnd();
+   } catch(e) {
+       console.log(e);
    }
 }
 
