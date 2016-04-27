@@ -74,13 +74,14 @@ for i in $tc ; do
         perl -i -pe $replace4 $TMPFILE
 
         SKIP=`grep -o Skipped $TMPFILE | wc -l`
-        RESULT=`grep -o $EXPECTED $TMPFILE | wc -l`
+        #RESULT=`grep -o $EXPECTED $TMPFILE | wc -l`
+        RESULT=$(python tool/reftest/compare_result.py $EXPECTED_FILE $TMPFILE 2>&1)
+        #echo $RESULT
         TCFILE=`expr $TCFILE + 1`
-
         if [ $SKIP -eq 1 ]; then
             SKIPTC=`expr $SKIPTC + 1`
             echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
-        elif [ $RESULT -eq 1 ]; then
+        elif [ $RESULT == 'Pass' ]; then
             PASSTC=`expr $PASSTC + 1`
             echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
             if [ "$REGRESSION" = true ]; then
@@ -97,7 +98,7 @@ for i in $tc ; do
             #dest=${dest%.*}
             #cp $tc".js" $dest".js"
             #cp $tc"-expected.txt" $dest"-expected.txt"
-        else 
+        else
             FAILTC=`expr $FAILTC + 1`
             echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
         fi
