@@ -419,13 +419,6 @@ tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $< .
 
 
-
-
-
-$(OUTDIR)/$(BIN): $(OBJS) $(THIRD_PARTY_LIBS) 
-	@echo "[LINK] $@"
-	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
-
 $(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS) 
 	@echo "[LINK] $@"
 	ln -sf deps/tizen/lib/tizen-wearable-2.3-emulator-x86/libstdc++.a.0 libstdc++.a
@@ -559,7 +552,6 @@ regression_test_css3_transforms:
 	./tool/reftest/css_test.sh css-transforms-1 true
 
 regression_test:
-	make regression_test_dom
 	make regression_test_wpt_dom
 	make regression_test_wpt_dom_events
 	make regression_test_wpt_html

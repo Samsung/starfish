@@ -356,11 +356,10 @@ static char charDirection(char32_t c)
     }
 }
 
-static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
+static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
 {
-    bool everSeenUTF32String = false;
-    // TODO read direction css
-    InlineTextBox::CharDirection defaultCharDirection = InlineTextBox::CharDirection::Ltr;
+    InlineTextBox::CharDirection defaultCharDirection = parentDir == DirectionValue::LtrDirectionValue ? InlineTextBox::CharDirection::Ltr : InlineTextBox::CharDirection::Rtl;
+    bool everSeenUTF32String = parentDir == DirectionValue::RtlDirectionValue;
     InlineTextBox::CharDirection charDirectionBefore = defaultCharDirection;
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
@@ -385,7 +384,6 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                                 }
                             }
                             if (isNeturalRun) {
-                                // tb->setCharDirection(charDirectionBefore);
                                 tb->setCharDirection(defaultCharDirection);
                             } else {
                                 tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
@@ -393,11 +391,15 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
                         }
                     }
                 } else {
-                    everSeenUTF32String = true;
+                    if (!everSeenUTF32String) {
+                        everSeenUTF32String = true;
+                        i = SIZE_MAX;
+                        continue;
+                    }
                     UBiDi* bidi = ubidi_open();
                     UTF16String str = tb->text()->toUTF16String();
                     UErrorCode err = (UErrorCode)0;
-                    ubidi_setPara(bidi, (const UChar*)str.data(), str.length(), UBIDI_DEFAULT_LTR, NULL, &err);
+                    ubidi_setPara(bidi, (const UChar*)str.data(), str.length(), parentDir == DirectionValue::LtrDirectionValue ? UBIDI_DEFAULT_LTR : UBIDI_DEFAULT_RTL, NULL, &err);
                     STARFISH_ASSERT(U_SUCCESS(err));
                     size_t total = ubidi_countRuns(bidi, &err);
                     STARFISH_ASSERT(U_SUCCESS(err));
@@ -509,43 +511,153 @@ static void resolveBidi(std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
         }
     }
 
-    bool lastLTRState = true;
-    size_t RTLStartPos = SIZE_MAX;
-    for (size_t i = 0; i < boxes.size(); i ++) {
-        FrameBox* box = boxes[i];
-        if (box->isInlineBox()) {
-            InlineBox* ib = box->asInlineBox();
-            if (ib->isInlineTextBox()) {
-                if (lastLTRState) {
-                    if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
-                        // l->r
-                        RTLStartPos = i;
-                        lastLTRState = false;
+    if (parentDir == DirectionValue::LtrDirectionValue) {
+        bool lastLTRState = true;
+        size_t RTLStartPos = SIZE_MAX;
+        for (size_t i = 0; i < boxes.size(); i ++) {
+            FrameBox* box = boxes[i];
+            if (box->isInlineBox()) {
+                InlineBox* ib = box->asInlineBox();
+                if (ib->isInlineTextBox()) {
+                    if (lastLTRState) {
+                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                            // l->r
+                            RTLStartPos = i;
+                            lastLTRState = false;
+                        } else {
+                            // l->l
+                        }
                     } else {
-                        // l->l
-                    }
-                } else {
-                    if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
-                        // r->r
-                    } else {
-                        // r->l
-                        if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
-                            if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
-                                if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
-                                    continue;
+                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                            // r->r
+                        } else {
+                            // r->l
+                            if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
+                                if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
+                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                                        continue;
+                                    }
                                 }
                             }
+                            std::reverse(boxes.begin() + RTLStartPos, boxes.begin() + i);
+                            lastLTRState = true;
+                            RTLStartPos = SIZE_MAX;
                         }
-                        std::reverse(boxes.begin() + RTLStartPos, boxes.begin() + i);
-                        lastLTRState = true;
-                        RTLStartPos = SIZE_MAX;
                     }
                 }
             }
         }
-    }
-    if (!lastLTRState) {
-        std::reverse(boxes.begin() + RTLStartPos, boxes.end());
+        if (!lastLTRState) {
+            std::reverse(boxes.begin() + RTLStartPos, boxes.end());
+        }
+    } else {
+        // reverse every boxes
+        std::reverse(boxes.begin(), boxes.end());
+
+        // reverse among ltr blockes
+        bool lastLTRState = false;
+        size_t LTRStartPos = 0;
+        for (size_t i = 0; i < boxes.size(); i ++) {
+            FrameBox* box = boxes[i];
+            if (box->isInlineBox()) {
+                InlineBox* ib = box->asInlineBox();
+                if (ib->isInlineTextBox()) {
+                    if (lastLTRState) {
+                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                            // l->r
+                            if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
+                                if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
+                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Ltr) {
+                                        continue;
+                                    }
+                                }
+                            }
+                            std::reverse(boxes.begin() + LTRStartPos, boxes.begin() + i);
+                            lastLTRState = false;
+                            LTRStartPos = SIZE_MAX;
+                        } else {
+                            // l->l
+                        }
+                    } else {
+                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                            // r->r
+                        } else {
+                            // r->l
+                            LTRStartPos = i;
+                            lastLTRState = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (lastLTRState) {
+            std::reverse(boxes.begin() + LTRStartPos, boxes.end());
+        }
+
+        // reverse parenthesis chars
+        static const char parenthesisMap[] = {
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            41, 40, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            62, 0, 60, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 93, 0, 91, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 125, 0, 123, 0, 0, 0
+        };
+        for (size_t i = 0; i < boxes.size(); i ++) {
+            FrameBox* box = boxes[i];
+            if (box->isInlineBox()) {
+                if (box->asInlineBox()->isInlineTextBox()) {
+                    InlineTextBox* b = box->asInlineBox()->asInlineTextBox();
+                    String* t = b->text();
+                    bool shouldReplaceString = false;
+                    for (size_t j = 0; j < t->length(); j++) {
+                        char32_t ch = t->charAt(j);
+                        if (ch < 128) {
+                            if (parenthesisMap[ch]) {
+                                shouldReplaceString = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (shouldReplaceString) {
+                        if (t->isASCIIString()) {
+                            ASCIIString str;
+                            for (size_t j = 0; j < t->length(); j++) {
+                                char32_t ch = t->charAt(j);
+                                if (ch < 128) {
+                                    if (parenthesisMap[ch]) {
+                                        ch = parenthesisMap[ch];
+                                    }
+                                }
+                                str += (char)ch;
+                            }
+                            t = new StringDataASCII(std::move(str));
+                        } else {
+                            UTF32String str;
+                            for (size_t j = 0; j < t->length(); j++) {
+                                char32_t ch = t->charAt(j);
+                                if (ch < 128) {
+                                    if (parenthesisMap[ch]) {
+                                        ch = parenthesisMap[ch];
+                                    }
+                                }
+                                str += ch;
+                            }
+                            t = new StringDataUTF32(std::move(str));
+                        }
+                        b->setText(t);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -564,7 +676,7 @@ void LineFormattingContext::completeLastLine()
             }
         }
     }
-    resolveBidi(back->boxes());
+    resolveBidi(m_block.style()->direction(), back->boxes());
 }
 
 void LineFormattingContext::breakLine(bool dueToBr)
@@ -990,7 +1102,14 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
     auto finishLayout = [&](bool lastNode = false)
     {
-        resolveBidi(self->boxes());
+        resolveBidi(self->style()->direction(), self->boxes());
+        LayoutUnit x = self->paddingLeft() + self->borderLeft();
+        for (size_t k = 0; k < self->m_boxes.size(); k++) {
+            FrameBox* childBox = self->m_boxes[k];
+            childBox->setX(x + childBox->marginLeft());
+            if (childBox->isNormalFlow())
+                x += childBox->width() + childBox->marginWidth();
+        }
         InlineNonReplacedBox* selfForFinishLayout = self;
         while (selfForFinishLayout) {
             LayoutUnit end = lineFormattingContext.m_currentLineWidth;

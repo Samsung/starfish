@@ -38,7 +38,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
         if (style()->direction() == LtrDirectionValue) {
             child->asFrameBox()->setX(paddingLeft() + borderLeft());
         } else {
-            child->asFrameBox()->setX(contentWidth() - paddingRight() - borderRight() - child->asFrameBox()->width());
+            child->asFrameBox()->setX(contentWidth() + borderLeft() + paddingLeft() - child->asFrameBox()->width());
         }
 
         child->asFrameBox()->setY(normalFlowHeight + top);

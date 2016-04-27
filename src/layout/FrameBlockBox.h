@@ -69,7 +69,7 @@ public:
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
-        printf(" [%s, dir: %d] ", m_text->utf8Data(), (int)m_charDirection);
+        printf(" [(%s), dir: %d] ", m_text->utf8Data(), (int)m_charDirection);
     }
 
     virtual const char* name()
@@ -80,6 +80,11 @@ public:
     String* text()
     {
         return m_text;
+    }
+
+    void setText(String* t)
+    {
+        m_text = t;
     }
 
     CharDirection charDirection()
