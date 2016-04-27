@@ -24,6 +24,12 @@ if (args[2] && args[2].indexOf("--result-folder=") == 0) {
 	console.log(resultXMLFolder)
 }
 
+var resultXMLFile=""
+if (args[2] && args[2].indexOf("--result-file=") == 0) {
+	resultXMLFile = args[2].slice("--result-file=".length);
+	console.log(resultXMLFile)
+}
+
 page.open("tool/html2xml/index.html", function() {
 	page.evaluate(function (data, absPath, point) {
 		window.point = point
@@ -46,7 +52,11 @@ page.open("tool/html2xml/index.html", function() {
 			window.setTimeout(wait, 100);
 			return;
 		}
-		var resultXML = resultXMLFolder + "./result.xml"
+		var resultXML;
+        if (resultXMLFile != "")
+            resultXML = resultXMLFile;
+        else
+            resultXML = resultXMLFolder + "./result.xml"
 		fs.write(resultXML, result, "w");
 		var wd = absPath.substring(0, absPath.lastIndexOf("/") + 1)
 
