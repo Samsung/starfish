@@ -23,7 +23,19 @@ if [[ "$PLATFORM" != "x86_64" && "$PLATFORM" != "i686" ]]; then
 fi
 
 tc=$1
-if [[ "$tc" == "wpt_dom" ]]; then
+if [[ "$tc" == "dom_conformance" ]]; then
+    tc=$(cat test/tool/dom-conformance-test/test_$tc)
+    WPTTEST=0
+elif [[ "$tc" == "blink_dom_conformance" ]]; then
+    tc=$(cat test/tool/vendor/blink/test_$tc)
+    WPTTEST=0
+elif [[ "$tc" == "gecko_dom_conformance" ]]; then
+    tc=$(cat test/tool/vendor/gecko/test_$tc)
+    WPTTEST=0
+elif [[ "$tc" == "webkit_dom_conformance" ]]; then
+    tc=$(cat test/tool/vendor/webkit/test_$tc)
+    WPTTEST=0
+elif [[ "$tc" == "wpt_dom" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
 elif [[ "$tc" == "wpt_dom_events" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
@@ -35,7 +47,7 @@ elif [[ "$tc" == "wpt_xhr" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
 else
     echo "Usage: ./runner.js [test_input]"
-    echo "test_input: [wpt_dom | wpt_dom_events | wpt_html | wpt_page_visibility | wpt_xhr]"
+    echo "test_input: [ dom_conformance | wpt_dom | wpt_dom_events | wpt_html | wpt_page_visibility | wpt_xhr | blink_dom_conformance | gecko_dom_conformance ]"
     exit
 fi
 
@@ -152,17 +164,56 @@ for i in $tc ; do
 
         	rm $TMPFILE
     	done
-	elif [[ "$PLATFORM" == "i686" ]]; then
-		PASS=`dlogutil -d | grep -E "Pass" | wc -l`
-		PASSTC=`expr $PASSTC + $PASS`
-		FAIL=`dlogutil -d | grep -E "Fail" | wc -l`
-		FAILTC=`expr $FAILTC + $FAIL`
-		if [ $FAIL -eq 0 ]; then
-			PASSTCFILE=`expr $PASSTCFILE + 1`
-		fi
-		TCFILE=`expr $TCFILE + 1`
-	fi
-done
+    elif [[ "$PLATFORM" == "i686" ]]; then
+        if [ $WPTTEST -eq 1 ]; then
+            PASS=`dlogutil -d | grep -E "Pass" | wc -l`
+            FAIL=`dlogutil -d | grep -E "Fail" | wc -l`
+            SUM=`expr $PASS + $FAIL`
+            PASSTC=`expr $PASSTC + $PASS`
+            FAILTC=`expr $FAILTC + $FAIL`
+            TCFILE=`expr $TCFILE + 1`
+
+            if [ $SUM -eq 0 ]; then
+                echo -e "${YELLOW}[CHECK]${RESET}" ${filenames[$c]} "(${BOLD}No results${RESET})"
+                echo -e "[CHECK]" ${filenames[$c]} "(No results)" >> $RESULTFILE
+            elif [ $FAIL -eq 0 ]; then
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]} "(${GREEN}PASS:" $PASS"${RESET})"
+                echo -e "[PASS]" ${filenames[$c]} "(PASS:" $PASS")" >> $RESULTFILE
+                PASSTCFILE=`expr $PASSTCFILE + 1`
+            elif [ $PASS -eq 0 ]; then
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]} "(${RED}FAIL:" $FAIL"${RESET})"
+                echo -e "[FAIL]" ${filenames[$c]} "(FAIL:" $FAIL")" >> $RESULTFILE
+            else
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]} "(${GREEN}PASS:" $PASS"${RESET}," "${RED}FAIL:" $FAIL"${RESET})"
+                echo -e "[FAIL]" ${filenames[$c]} "(PASS:" $PASS"," "FAIL:" $FAIL")" >> $RESULTFILE
+            fi
+        elif [ $WPTTEST -eq 0 ]; then
+            # Expected result
+            EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
+            EXPECTED=$(cat $EXPECTED_FILE)
+            EXPECTED=${EXPECTED##*Status:}
+            EXPECTED=${EXPECTED%Detail*}
+
+            SKIP=`dlogutil -d | grep -E "Skipped" | wc -l`
+            RESULT=`dlogutil -d | grep -E $EXPECTED | wc -l`
+
+            if [ $SKIP -eq 1 ]; then
+                SKIPTC=`expr $SKIPTC + 1`
+                echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
+                echo -e "[SKIP]" ${filenames[$c]} >> $RESULTFILE
+            elif [ $RESULT -eq 1 ]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                echo -e "[PASS]" ${filenames[$c]} >> $RESULTFILE
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+                echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
+            fi
+            TCFILE=`expr $TCFILE + 1`
+        fi
+    fi
+    done
 
 wait;
 
