@@ -123,14 +123,15 @@ public class StarFishTester {
 								File xml = new File(resultXML);
 								String ss = "";
                                 String pngFile = outFolder + caseName + "_result.png";
+                                String workingDir = workItem.substring(0, workItem.lastIndexOf('/') + 1);
 								if (xml.exists()) {
                                     File png = new File(pngFile);
                                     if (png.exists()) {
                                         png.delete();
                                     }
-									ss = "./StarFish " + resultXML + " --pixel-test --width=" + 800 + " --height=" + 600 + " --working-directory=" + caseName.substring(0, caseName.lastIndexOf('/') + 1) + " --screen-shot=" + pngFile;
+									ss = "./StarFish " + resultXML + " --pixel-test --width=" + 800 + " --height=" + 600 + " --working-directory=" + workingDir  + " --screen-shot=" + pngFile;
 								} else {
-									ss = "./run.sh " + workItem + " --result-folder="  + (resultFolder) + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + pngFile;
+									ss = "./run.sh " + workItem + " --result-folder="  + (resultFolder) + " --pixel-test --width=" + 800 + " --height=" + 600 + " --working-directory=" + workingDir + " --screen-shot=" + pngFile;
 								}
 
 								// System.out.println(ss);
