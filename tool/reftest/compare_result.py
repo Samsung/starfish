@@ -19,13 +19,7 @@ def compare(expected, result):
 
     for index, item in enumerate(extract_expected):
         #remove white space
-        compareA = re.sub(r'\s+','',extract_expected[index])
-        compareB = re.sub(r'\s+','',extract_result[index])
-
-        if compareA!=compareB:
-            if DEBUG:
-                print "\""+compareA+"\""
-                print "\""+compareB+"\""
+        if re.match(extract_expected[index],extract_result[index],re.X):
             return 'Fail'
 
     return 'Pass'
