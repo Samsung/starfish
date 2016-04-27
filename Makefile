@@ -147,7 +147,8 @@ $(info type... $(TYPE))
 $(info mode... $(MODE))
 $(info build dir... $(OUTDIR))
 
-CXXFLAGS += -std=c++11
+CXXFLAGS += -std=c++11 -fno-rtti
+LDFLAGS +=
 
 ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2 -DESCARGOT_32=1
@@ -219,13 +220,11 @@ ifeq ($(TIZEN_DEVICE_API), true)
 	include third_party/deviceapi/build/Include.mk
 endif
 
-LDFLAGS += -lescargot
-
 ifeq ($(MODE), debug)
     ifeq ($(ARCH), x64)
-    LDFLAGS += -Lthird_party/escargot/out/x64/interpreter/debug
+    LDFLAGS += third_party/escargot/out/x64/interpreter/debug/libescargot.a
     else
-    LDFLAGS += -Lthird_party/escargot/out/$(ARCH)/interpreter/debug
+    LDFLAGS += third_party/escargot/out/$(ARCH)/interpreter/debug/libescargot.a
     endif
     LDFLAGS += third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/debug.shared/.libs/libgc.a
 
@@ -233,11 +232,11 @@ ifeq ($(MODE), debug)
     # LDFLAGS += -Wl,-rpath=$(LOCAL_PATH)/third_party/escargot/out/x64/interpreter/debug
 else
     ifeq ($(ARCH), x64)
-    LDFLAGS += -Lthird_party/escargot/out/x64/interpreter/release
+    LDFLAGS += third_party/escargot/out/x64/interpreter/release/libescargot.a
     # TODO : use this option only for HOST=linux
     # LDFLAGS += -Wl,-rpath=$(LOCAL_PATH)/third_party/escargot/out/x64/interpreter/release
     else
-    LDFLAGS += -Lthird_party/escargot/out/$(ARCH)/interpreter/release
+    LDFLAGS += third_party/escargot/out/$(ARCH)/interpreter/release/libescargot.a
     endif
     LDFLAGS += third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/release.shared/.libs/libgc.a
 endif
