@@ -65,4 +65,13 @@ getElementsByTagName\(\'table
 \.querySelector\(
 \.querySelectorAll\(
 \.getRangeAt\(
+<<<<<<< 8d2d22d3f55ee3596497ebbf29ef29d252545b2e
 \.getSelection\(
+||||||| merged common ancestors
+\.getSelection\(
+=======
+\.getSelection\(
+\.replaceWholeText\(
+\.addEventListener\(\"DOMNodeRemoved
+\.lowsrc
+>>>>>>> update TC filter PATTERN
