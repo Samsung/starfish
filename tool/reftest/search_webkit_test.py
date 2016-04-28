@@ -3,12 +3,26 @@
 import sys
 import re
 import os
+import json
+
+def readjson(fileName):
+    fp = open(fileName, 'r')
+    jsonobject = json.load(fp)
+    fp.close()
+    return jsonobject
 
 def read_PATTERN(fileName):
     Anti_Pattern=[];
     fp = open(fileName, 'r')
     Anti_Pattern = fp.readlines()
     fp.close()
+
+    #print str(Anti_Pattern)
+    return Anti_Pattern
+
+def read_json_PATTERN(key,jsonObject):
+    Anti_Pattern=[];
+    Anti_Pattern = jsonObject[key]
 
     #print str(Anti_Pattern)
     return Anti_Pattern
@@ -37,18 +51,21 @@ def check_content(str,Anti_Pattern):
     return True
 
 def main():
+
+    pattern_json = readjson('PATTERN.json')
+
     result = []
     result_fileName = []
-    Anti_Pattern_fileName = ['TEMPLATE']
+    tmp_file_Pattern = ['TEMPLATE']
 
     if len(sys.argv) != 2:
         print 'Check Parameter!'
 
-    write_result('PATTERN_FileName.txt', Anti_Pattern_fileName)
+    write_result('PATTERN_FileName.txt', tmp_file_Pattern)
 
-    Anti_Pattern_content = read_PATTERN('PATTERN.txt')
-    Anti_Pattern_dir = read_PATTERN('PATTERN_DIR.txt')
-    Anti_Pattern_fileName = read_PATTERN('PATTERN_FileName.txt')
+    Anti_Pattern_content = read_json_PATTERN('CONTENT_PATTERN',pattern_json)
+    Anti_Pattern_dir = read_json_PATTERN('DIR_PATTERN',pattern_json)
+    tmp_file_Pattern = read_PATTERN('PATTERN_FileName.txt')
 
     for root, directories, filenames in os.walk(sys.argv[1]):
         #for directory in directories:
@@ -64,9 +81,9 @@ def main():
                         result_fileName.append(filename)
                         result.append(current_file_path)
                     else:
-                        Anti_Pattern_fileName.append(only_file_name)
+                        tmp_file_Pattern.append(only_file_name)
 
-    Anti_Pattern_fileName_str = str(Anti_Pattern_fileName);
+    Anti_Pattern_fileName_str = str(tmp_file_Pattern);
 
     for index, filename in enumerate(result_fileName):
         only_file_name = os.path.splitext(filename)[0]
@@ -81,7 +98,7 @@ def main():
 
 
     write_result('RESULT.txt',real_result)
-    write_result('PATTERN_FileName.txt', Anti_Pattern_fileName)
+    write_result('PATTERN_FileName.txt', tmp_file_Pattern)
     #print str(result)
 
 main()
