@@ -69,3 +69,6 @@ getElementsByTagName\(\'table
 \.replaceWholeText\(
 \.addEventListener\(\"DOMNodeRemoved
 \.lowsrc
+new\sDocument\(
+document\.createElement\(\'canvas'
+\.getContext\(

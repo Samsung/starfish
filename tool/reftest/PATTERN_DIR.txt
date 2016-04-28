@@ -28,6 +28,7 @@ TreeWalker
 Range
 DOMURL
 resources
+Orientation
 DeviceOrientation
 DeviceMotion
 Geolocation
