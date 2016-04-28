@@ -74,7 +74,8 @@
       "\\.lowsrc",
       "new\\sDocument\\(",
       "document\\.createElement\\(\\'canvas'",
-      "\\.getContext\\("
+      "\\.getContext\\(",
+      "document\\.styleSheets"
 	],
 	"DIR_PATTERN": [
         "DOMImplementation",
