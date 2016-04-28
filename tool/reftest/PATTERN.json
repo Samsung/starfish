@@ -74,6 +74,7 @@
       "\\.blur\\(\\)",
       "\\.hostname",
       "\\.host",
+      "\\.cookieEnabled",
       "\\.registerElement\\(",
       "new\\sDocument",
       "new\\sOption",
@@ -131,7 +132,7 @@
 	],
 	"FILENAME_PATTERN": [
 		"-expected.html",
-        "-quirks.html",
-        "-quirks-mode.html"
+    "-quirks.html",
+    "-quirks-mode.html"
 	]
 }
