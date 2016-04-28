@@ -29,3 +29,9 @@ Range
 DOMURL
 resources
 DeviceOrientation
+DeviceMotion
+Geolocation
+Location
+NavigatorContentUtils
+nodesFromRect
+beforeload

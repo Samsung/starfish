@@ -53,3 +53,7 @@ XSLTProcessor
 getElementsByTagName\(\'table
 \.tBodies
 \.rows
+\.querySelector\(
+\.querySelectorAll\(
+\.getRangeAt\(
+\.getSelection\(
