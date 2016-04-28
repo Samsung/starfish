@@ -71,10 +71,10 @@
       "\\.activeElement",
       "\\.hasFocus\\(\\)",
       "\\.focus\\(\\)",
-      "\\.blur\\(\\)"
+      "\\.blur\\(\\)",
       "new\\sDocument\\(",
       "new\\sOption",
-      "\\.createElement\\(\\[\\\"\\'\\]canvas'",
+      "\\.createElement\\(\\[\\\"\\'\\]canvas",
       "\\.createElement\\(\\[\\\"\\'\\]iframe",
       "\\.getElementsByTagName\\(\\[\\\"\\'\\]iframe",
       "\\.getElementsByTagName\\(\\[\\\"\\'\\]table",
