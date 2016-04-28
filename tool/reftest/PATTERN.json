@@ -116,7 +116,6 @@
         "beforeload"
 	],
 	"FILENAME_PATTERN": [
-		"test1",
-		"test2"
+		"-expected.html"
 	]
 }

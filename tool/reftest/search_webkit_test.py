@@ -65,6 +65,7 @@ def main():
 
     Anti_Pattern_content = read_json_PATTERN('CONTENT_PATTERN',pattern_json)
     Anti_Pattern_dir = read_json_PATTERN('DIR_PATTERN',pattern_json)
+    Anti_Pattern_fileName = read_json_PATTERN('FILENAME_PATTERN',pattern_json)
     tmp_file_Pattern = read_PATTERN('PATTERN_FileName.txt')
 
     for root, directories, filenames in os.walk(sys.argv[1]):
@@ -74,14 +75,15 @@ def main():
             only_file_name = os.path.splitext(filename)[0]
             if filename.endswith('.html') or filename.endswith('.js'):
                 if check_content(root,Anti_Pattern_dir):
-                    current_file_path=os.path.join(root, filename)
-                    #print os.path.join(root, filename)
-                    current_file_str = open_File(current_file_path);
-                    if check_content(current_file_str,Anti_Pattern_content):
-                        result_fileName.append(filename)
-                        result.append(current_file_path)
-                    else:
-                        tmp_file_Pattern.append(only_file_name)
+                    if check_content(filename,Anti_Pattern_fileName):
+                        current_file_path=os.path.join(root, filename)
+                        #print os.path.join(root, filename)
+                        current_file_str = open_File(current_file_path);
+                        if check_content(current_file_str,Anti_Pattern_content):
+                            result_fileName.append(filename)
+                            result.append(current_file_path)
+                        else:
+                            tmp_file_Pattern.append(only_file_name)
 
     Anti_Pattern_fileName_str = str(tmp_file_Pattern);
 
@@ -89,6 +91,8 @@ def main():
         only_file_name = os.path.splitext(filename)[0]
 
         if re.search(only_file_name, Anti_Pattern_fileName_str, re.X) is not None:
+            result[index]=''
+        if filename.endswith('.js'):
             result[index]=''
 
     real_result = []
