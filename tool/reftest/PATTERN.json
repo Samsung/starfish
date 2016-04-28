@@ -76,7 +76,6 @@
       "document\\.createElement\\(\\'canvas'",
       "\\.getContext\\(",
       "document\\.styleSheets",
-      "document\\.write",
       "\\.activeElement",
       "\\.hasFocus\\(\\)",
       "\\.focus\\(\\)",
