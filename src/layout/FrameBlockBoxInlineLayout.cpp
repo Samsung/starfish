@@ -761,7 +761,8 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
         if (!f->isNormalFlow()) {
             LayoutUnit preferredWidth;
             if (f->asFrameBox()->shouldComputePreferredWidth()) {
-                ComputePreferredWidthContext p(ctx, inlineContentWidth);
+                LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
+                ComputePreferredWidthContext p(ctx, inlineContentWidth - mbp);
                 f->asFrameBox()->computePreferredWidth(p);
                 preferredWidth = p.result();
             } else {

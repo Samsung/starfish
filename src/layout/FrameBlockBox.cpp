@@ -40,7 +40,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             ComputedStyle* style = Frame::style();
             if (style->width().isAuto()) {
                 if (m_flags.m_shouldComputePreferredWidth) {
-                    ComputePreferredWidthContext p(ctx, parentContentWidth);
+                    LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(style);
+                    ComputePreferredWidthContext p(ctx, parentContentWidth - mbp);
                     computePreferredWidth(p);
                     setContentWidth(p.result());
                 } else {
