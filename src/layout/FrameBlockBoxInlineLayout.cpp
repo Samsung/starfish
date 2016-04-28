@@ -734,7 +734,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
             while (nextOffset < txt->length() && String::isSpaceOrNewline((*txt)[nextOffset])) {
                 nextOffset++;
             }
-            f(txt, offset, nextOffset, isWhiteSpace);
+            f(txt, offset, nextOffset, isWhiteSpace, true);
         } else {
             size_t start = offset;
             while (nextOffset < txt->length() && !String::isSpaceOrNewline((*txt)[nextOffset])) {
@@ -745,7 +745,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
             breaker->setText(txt->toUnicodeString(start, nextOffset));
             int32_t c, prev = 0;
             while ((c = breaker->next()) != icu::BreakIterator::DONE) {
-                f(txt, prev + start, c + start, isWhiteSpace);
+                f(txt, prev + start, c + start, isWhiteSpace, (prev + start != start));
                 prev = c;
             }
         }
@@ -781,7 +781,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
         if (f->isFrameText()) {
             String* txt = f->asFrameText()->text();
-            textDividerForLayout(ctx.starFish(), txt, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace) {
+            textDividerForLayout(ctx.starFish(), txt, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak) {
                 textAppendRetry:
                 if (isWhiteSpace) {
                     if (offset == 0) {
@@ -816,11 +816,20 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     textWidth = f->style()->font()->measureText(ss);
                 }
 
-                if (textWidth <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild) || lineFormattingContext.m_currentLineWidth == 0) {
+                bool couldNotBreak = false;
+                if (!isWhiteSpace && !canBreak) {
+                    FrameBox* last = findLastInlineBox(lineFormattingContext.currentLine());
+                    if (last && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
+                        String* str = last->asInlineBox()->asInlineTextBox()->text();
+                        if (!str->containsOnlyWhitespace()) {
+                            couldNotBreak = true;
+                        }
+                    }
+                }
+
+                if (couldNotBreak || (lineFormattingContext.m_currentLineWidth == 0) || textWidth <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild)) {
 
                 } else {
-                    if (isWhiteSpace)
-                        return;
                     // try this at nextline
                     lineBreakCallback(false);
                     goto textAppendRetry;
@@ -915,9 +924,8 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
 
     lineFormattingContext.completeLastLine();
 
-    if (m_lineBoxes.size() == 1 && m_lineBoxes.back()->boxes().size() == 0) {
-        m_lineBoxes.clear();
-        m_lineBoxes.shrink_to_fit();
+    if (m_lineBoxes.size() && m_lineBoxes.back()->boxes().size() == 0) {
+        m_lineBoxes.erase(m_lineBoxes.end() - 1);
     }
 
     // position each line
@@ -1313,7 +1321,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
             if (f->isFrameText()) {
                 String* s = f->asFrameText()->text();
-                textDividerForLayout(ctx.layoutContext().starFish(), s, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace) {
+                textDividerForLayout(ctx.layoutContext().starFish(), s, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak) {
                     if (isWhiteSpace) {
                         if (offset == 0 && f == f->parent()->firstChild()) {
                             return;
