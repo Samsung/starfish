@@ -1242,6 +1242,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             lineFormattingContext.currentLine()->boxes().erase(std::find(lineFormattingContext.currentLine()->boxes().begin(), lineFormattingContext.currentLine()->boxes().end(), self));
             lineFormattingContext.breakLine(false);
             lineFormattingContext.currentLine()->boxes().push_back(self);
+            self->setLayoutParent(lineFormattingContext.currentLine());
         } else {
             finishLayout();
             breakLine();
