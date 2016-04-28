@@ -182,6 +182,16 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("log"), 1, false));
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
+    // Navigator
+    // TODO implement Navigator function
+    escargot::ESObject* navigator = escargot::ESObject::create();
+    navigator->defineDataProperty(escargot::ESString::create("appCodeName"), true, true, true, escargot::ESString::create(APP_CODE_NAME));
+    navigator->defineDataProperty(escargot::ESString::create("appName"), true, true, true, escargot::ESString::create(APP_CODE_NAME));
+    navigator->defineDataProperty(escargot::ESString::create("appVersion"), true, true, true, escargot::ESString::create(APP_VERSION(APP_NAME, VERSION)));
+    navigator->defineDataProperty(escargot::ESString::create("vendor"), true, true, true, escargot::ESString::create(VENDOR_NAME));
+    navigator->defineDataProperty(escargot::ESString::create("userAgent"), true, true, true, escargot::ESString::create(USER_AGENT(APP_CODE_NAME, VERSION)));
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("navigator"), true, true, true, navigator);
+
     escargot::ESFunctionObject* toStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         if (thisValue.isESPointer() && thisValue.asESPointer()->isESObject()) {
