@@ -304,7 +304,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
 
 static FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
 {
-    FrameBox* result = b;
+    FrameBox* result = nullptr;
 
     auto iter = b->boxes().begin();
     while (iter != b->boxes().end()) {
@@ -312,7 +312,10 @@ static FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
         if (f->asFrameBox()->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
             if (ib->isInlineNonReplacedBox()) {
-                result = findLastInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
+                auto r = findLastInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
+                if (r) {
+                    result = r;
+                }
             } else {
                 result = ib;
             }
@@ -332,7 +335,10 @@ static FrameBox* findLastInlineBox(LineBox* lb)
         if (lb->boxes()[i]->isInlineBox()) {
             InlineBox* b = lb->boxes()[i]->asInlineBox();
             if (b->isInlineNonReplacedBox()) {
-                result = findLastInlineBoxNonReplacedBoxCase(b->asInlineNonReplacedBox());
+                auto r = findLastInlineBoxNonReplacedBoxCase(b->asInlineNonReplacedBox());
+                if (r) {
+                    result = r;
+                }
             } else {
                 result = b;
             }
@@ -674,6 +680,14 @@ void LineFormattingContext::completeLastLine()
                 boxes.erase(std::find(boxes.begin(), boxes.end(), last));
             } else {
                 std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = last->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox()->boxes();
+                auto self = last->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
+                LayoutUnit w = last->asInlineBox()->asInlineTextBox()->width();
+                while (true) {
+                    self->setWidth(self->width() - w);
+                    if (self->layoutParent()->asFrameBox()->isLineBox())
+                        break;
+                    self = self->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
+                }
                 boxes.erase(std::find(boxes.begin(), boxes.end(), last));
             }
         }
@@ -769,10 +783,22 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             textDividerForLayout(ctx.starFish(), txt, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace) {
                 textAppendRetry:
                 if (isWhiteSpace) {
-                    if (offset == 0 && f == origin->firstChild()) {
-                        return;
+                    if (offset == 0) {
+                        FrameBox* last = findLastInlineBox(lineFormattingContext.currentLine());
+                        if (last && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
+                            String* str = last->asInlineBox()->asInlineTextBox()->text();
+                            if (str->containsOnlyWhitespace()) {
+                                return;
+                            }
+                        }
+                        if (lineFormattingContext.m_currentLineWidth == 0)
+                            return;
                     } else if (nextOffset == srcTxt->length() && f == origin->lastChild()) {
-                        return;
+                        if (origin->isFrameInline()) {
+
+                        } else {
+                            return;
+                        }
                     } else if (lineFormattingContext.m_currentLineWidth == 0) {
                         return;
                     }
