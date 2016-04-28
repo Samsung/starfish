@@ -100,6 +100,7 @@ void XMLHttpRequest::send(String* body)
 
             res_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
+            xhrobj->setStatus(res_code);
         } else {
             STARFISH_ASSERT(!curl);
             std::string path = xhrobj->m_starfish->currentPath()->utf8Data();

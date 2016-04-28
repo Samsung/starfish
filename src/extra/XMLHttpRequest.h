@@ -258,13 +258,6 @@ public:
             p_data->loaded = static_cast<uint32_t>(dlnow);
             p_data->total = static_cast<uint32_t>(dltotal);
             this_obj->m_readyState = LOADING;
-            this_obj->callEventHandler(NONE, false, p_data->loaded, p_data->total, this_obj->m_readyState);
-
-            // printf("TOTAL TIME: %f \r\n", curtime);
-            // printf("UP: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
-            //         "  DOWN: %" CURL_FORMAT_CURL_OFF_T " of %" CURL_FORMAT_CURL_OFF_T
-            //         "\r\n",
-            //         ulnow, ultotal, dlnow, dltotal);
         }
 
         // check abort
