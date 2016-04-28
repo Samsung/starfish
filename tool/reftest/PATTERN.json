@@ -75,7 +75,12 @@
       "new\\sDocument\\(",
       "document\\.createElement\\(\\'canvas'",
       "\\.getContext\\(",
-      "document\\.styleSheets"
+      "document\\.styleSheets",
+      "document\\.write",
+      "\\.activeElement",
+      "\\.hasFocus\\(\\)",
+      "\\.focus\\(\\)",
+      "\\.blur\\(\\)"
 	],
 	"DIR_PATTERN": [
         "DOMImplementation",
@@ -117,6 +122,8 @@
         "beforeload"
 	],
 	"FILENAME_PATTERN": [
-		"-expected.html"
+		"-expected.html",
+        "-quirks.html",
+        "-quirks-mode.html"
 	]
 }
