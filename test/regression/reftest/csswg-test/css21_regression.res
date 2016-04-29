@@ -365,6 +365,7 @@ test/reftest/csswg-test_converted/css21/borders/border-right-006.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-008.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-applies-to-009.htm
+test/reftest/csswg-test_converted/css21/borders/border-right-applies-to-012.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-color-001.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-color-002.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-color-003.htm
@@ -508,6 +509,7 @@ test/reftest/csswg-test_converted/css21/borders/border-right-color-144.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-color-145.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-color-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-color-applies-to-009.htm
+test/reftest/csswg-test_converted/css21/borders/border-right-color-applies-to-012.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-style-001.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-style-005.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-width-092.htm
@@ -515,6 +517,7 @@ test/reftest/csswg-test_converted/css21/borders/border-right-width-093.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-width-094.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-width-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/borders/border-right-width-applies-to-009.htm
+test/reftest/csswg-test_converted/css21/borders/border-right-width-applies-to-012.htm
 test/reftest/csswg-test_converted/css21/borders/border-shorthands-001.htm
 test/reftest/csswg-test_converted/css21/borders/border-shorthands-002.htm
 test/reftest/csswg-test_converted/css21/borders/border-shorthands-003.htm
@@ -698,6 +701,7 @@ test/reftest/csswg-test_converted/css21/cascade/html-attribute-004.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-005.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-006.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-control.htm
+test/reftest/csswg-test_converted/css21/cascade/inherit-004.htm
 test/reftest/csswg-test_converted/css21/cascade/inherited-value-001.htm
 test/reftest/csswg-test_converted/css21/cascade/non-inherited-value-001.htm
 test/reftest/csswg-test_converted/css21/cascade/specificity-001.htm
@@ -734,24 +738,29 @@ test/reftest/csswg-test_converted/css21/linebox/inline-formatting-context-001.ht
 test/reftest/csswg-test_converted/css21/linebox/inline-formatting-context-004.htm
 test/reftest/csswg-test_converted/css21/linebox/inline-formatting-context-005.htm
 test/reftest/csswg-test_converted/css21/linebox/inline-formatting-context-020.htm
+test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-bottom-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-collapse-030.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-collapse-clear-000.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-collapse-clear-006.htm
+test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-left-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-left-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-left-applies-to-012.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-right-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-top-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/margin-top-applies-to-012.htm
+test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-applies-to-012.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-bottom-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-bottom-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-bottom-applies-to-012.htm
+test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-left-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-left-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-left-applies-to-012.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-right-applies-to-008.htm
+test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-right-applies-to-012.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-top-applies-to-008.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-top-applies-to-009.htm
 test/reftest/csswg-test_converted/css21/margin-padding-clear/padding-top-applies-to-012.htm
@@ -762,6 +771,7 @@ test/reftest/csswg-test_converted/css21/normal-flow/block-in-inline-nested-001.h
 test/reftest/csswg-test_converted/css21/normal-flow/block-in-inline-remove-000.htm
 test/reftest/csswg-test_converted/css21/normal-flow/block-in-inline-remove-001.htm
 test/reftest/csswg-test_converted/css21/normal-flow/block-in-inline-remove-003.htm
+test/reftest/csswg-test_converted/css21/normal-flow/block-in-inline-remove-006.htm
 test/reftest/csswg-test_converted/css21/normal-flow/block-replaced-height-001.htm
 test/reftest/csswg-test_converted/css21/normal-flow/height-percentage-003.htm
 test/reftest/csswg-test_converted/css21/normal-flow/inline-block-000.htm
@@ -780,6 +790,9 @@ test/reftest/csswg-test_converted/css21/positioning/position-relative-001.htm
 test/reftest/csswg-test_converted/css21/positioning/position-relative-003.htm
 test/reftest/csswg-test_converted/css21/positioning/position-relative-027.htm
 test/reftest/csswg-test_converted/css21/positioning/position-relative-028.htm
+test/reftest/csswg-test_converted/css21/positioning/position-relative-029.htm
+test/reftest/csswg-test_converted/css21/positioning/position-relative-030.htm
+test/reftest/csswg-test_converted/css21/positioning/position-relative-031.htm
 test/reftest/csswg-test_converted/css21/positioning/position-relative-032.htm
 test/reftest/csswg-test_converted/css21/reference/60x60-green.html
 test/reftest/csswg-test_converted/css21/reference/boxes_same_color_100px_black_50px_margin.htm
@@ -914,6 +927,7 @@ test/reftest/csswg-test_converted/css21/tables/table-anonymous-objects-014.htm
 test/reftest/csswg-test_converted/css21/text/text-align-001.htm
 test/reftest/csswg-test_converted/css21/text/text-align-002.htm
 test/reftest/csswg-test_converted/css21/text/text-align-003.htm
+test/reftest/csswg-test_converted/css21/text/text-align-applies-to-001.htm
 test/reftest/csswg-test_converted/css21/text/text-align-applies-to-002.htm
 test/reftest/csswg-test_converted/css21/text/text-align-applies-to-005.htm
 test/reftest/csswg-test_converted/css21/text/text-align-bidi-004.htm
