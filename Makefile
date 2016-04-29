@@ -489,6 +489,14 @@ pixel_test_css3_backgrounds:
 	make pixel_test_css tc=css3_backgrounds
 pixel_test_css3_transforms:
 	make pixel_test_css tc=css3_transforms
+pixel_test_css_all:
+	make pixel_test_css1 2> out/pixel_test_css_all.log
+	make pixel_test_css21 2>> out/pixel_test_css_all.log
+	make pixel_test_css3_color 2>> out/pixel_test_css_all.log
+	make pixel_test_css3_transforms 2>> out/pixel_test_css_all.log
+	make pixel_test_css3_backgrounds 2>> out/pixel_test_css_all.log
+	@echo '========== Show out/pixel_test_css_all.log =========='
+	@cat out/pixel_test_css_all.log | grep "====total" | awk 'BEGIN {s=0}{ s += $$6 } END {print "Total "s" Passed (CSS1/21/3-color/3-backgrounds/3-transforms)"}'
 
 wpt_test:
 	./tool/reftest/wpt_test.sh $(tc) $(regression)
