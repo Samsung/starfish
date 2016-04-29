@@ -474,6 +474,11 @@ install_pixel_test_dep:
 	mkdir -p ~/.fonts
 	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
 	fc-cache -fv
+	@echo ""
+	@echo "============ [ Install Arial Font ] ============"
+	sudo apt-get install ttf-mscorefonts-installer
+	sudo fc-cache
+	fc-match Arial
 
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
