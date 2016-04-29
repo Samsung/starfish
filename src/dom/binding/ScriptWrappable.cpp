@@ -641,6 +641,31 @@ void ScriptWrappable::initScriptWrappable(NamedNodeMap* ptr, ScriptBindingInstan
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->namedNodeMap()->protoType());
     scriptObject()->setExtraData(NamedNodeMapObject);
+
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NamedNodeMapObject);
+        NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        if (idx < self->length()) {
+            return true;
+        }
+        return false;
+    }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NamedNodeMapObject);
+        NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+        size_t len = self->length();
+        escargot::ESValueVector v(len);
+        for (size_t i = 0; i < len; i ++) {
+            v[i] = escargot::ESValue(i);
+        }
+        return v;
+    }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NamedNodeMapObject);
+        NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        ASSERT(idx < self->length());
+        return self->item(idx)->scriptValue();
+    });
 }
 
 void ScriptWrappable::initScriptWrappable(Attr* ptr, ScriptBindingInstance* instance)
