@@ -10,6 +10,9 @@ namespace StarFish {
 void HTMLScriptElement::executeScript()
 {
     if (!m_isAlreadyStarted) {
+        String* type_attr = getAttribute(document()->window()->starFish()->staticStrings()->m_type);
+        if (!type_attr->equals(String::emptyString) && !type_attr->equals("text/javascript"))
+            return;
         size_t idx = hasAttribute(document()->window()->starFish()->staticStrings()->m_src);
         if (idx == SIZE_MAX) {
             String* script = textContent();
