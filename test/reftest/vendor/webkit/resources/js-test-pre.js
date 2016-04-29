@@ -1,4 +1,8 @@
 // svg/dynamic-updates tests set enablePixelTesting=true, as we want to dump text + pixel results
+
+var self = window;
+Object.defineProperty(Element.prototype, "innerHTML", { get:function() { return ""}, set:function(d){console.log(d); }, configurable: true})
+
 if (self.testRunner)
     testRunner.dumpAsText(self.enablePixelTesting);
 
