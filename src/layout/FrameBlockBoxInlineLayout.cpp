@@ -168,7 +168,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     maxAscenderSoFar = std::max(pdescender + box->height(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
                     maxAscenderSoFar = std::max(box->y(), maxAscenderSoFar);
-                    maxDescenderSoFar = std::max(box->y() - box->height(), maxDescenderSoFar);
+                    maxDescenderSoFar = std::min(box->y() - box->height(), maxDescenderSoFar);
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
@@ -669,27 +669,32 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
     }
 }
 
+static void removeBoxFromLine(FrameBox* box)
+{
+    if (box->layoutParent()->asFrameBox()->isLineBox()) {
+        std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = box->layoutParent()->asFrameBox()->asLineBox()->boxes();
+        boxes.erase(std::find(boxes.begin(), boxes.end(), box));
+    } else {
+        std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox()->boxes();
+        auto self = box->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
+        LayoutUnit w = box->asInlineBox()->asInlineTextBox()->width();
+        while (true) {
+            self->setWidth(self->width() - w);
+            if (self->layoutParent()->asFrameBox()->isLineBox())
+                break;
+            self = self->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
+        }
+        boxes.erase(std::find(boxes.begin(), boxes.end(), box));
+    }
+}
+
 void LineFormattingContext::completeLastLine()
 {
     LineBox* back = m_block.m_lineBoxes.back();
     FrameBox* last = findLastInlineBox(back);
     if (last && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
         if (last->asInlineBox()->asInlineTextBox()->text()->equals(String::spaceString)) {
-            if (last->layoutParent()->asFrameBox()->isLineBox()) {
-                std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = last->layoutParent()->asFrameBox()->asLineBox()->boxes();
-                boxes.erase(std::find(boxes.begin(), boxes.end(), last));
-            } else {
-                std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes = last->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox()->boxes();
-                auto self = last->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
-                LayoutUnit w = last->asInlineBox()->asInlineTextBox()->width();
-                while (true) {
-                    self->setWidth(self->width() - w);
-                    if (self->layoutParent()->asFrameBox()->isLineBox())
-                        break;
-                    self = self->layoutParent()->asFrameBox()->asInlineBox()->asInlineNonReplacedBox();
-                }
-                boxes.erase(std::find(boxes.begin(), boxes.end(), last));
-            }
+            removeBoxFromLine(last);
         }
     }
     resolveBidi(m_block.style()->direction(), back->boxes());
@@ -816,6 +821,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     textWidth = f->style()->font()->measureText(ss);
                 }
 
+                /*
                 bool couldNotBreak = false;
                 if (!isWhiteSpace && !canBreak) {
                     FrameBox* last = findLastInlineBox(lineFormattingContext.currentLine());
@@ -826,8 +832,9 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                         }
                     }
                 }
+                */
 
-                if (couldNotBreak || (lineFormattingContext.m_currentLineWidth == 0) || textWidth <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild)) {
+                if (/*couldNotBreak || */(lineFormattingContext.m_currentLineWidth == 0) || textWidth <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild)) {
 
                 } else {
                     // try this at nextline
