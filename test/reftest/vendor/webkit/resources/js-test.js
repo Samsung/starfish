@@ -106,11 +106,15 @@ var unexpectedErrorMessage; // set by onerror when expectingError is not true
     }
 
     if (!isWorker()) {
+        // XXX: DOMContentLoaded is not supported
+        /*
         window.addEventListener('DOMContentLoaded', function() {
             // Some tests set jsTestIsAsync in load event handler. Adding the listener late
             // makes handleTestFinished() run after the test handles load events.
             window.addEventListener("load", handleTestFinished, false);
         }, false);
+        */
+        window.addEventListener("load", handleTestFinished, false);
         insertStyleSheet();
     }
 
