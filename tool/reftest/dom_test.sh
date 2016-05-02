@@ -15,6 +15,8 @@ SKIPTC=0
 FAILTC=0
 TCFILE=0
 
+WEBKIT_FAST_DOM=0
+
 if [ "$1" = "" ]; then
     tc=$(find test/reftest/web-platform-tests -name "*htm*")
 else
@@ -23,7 +25,12 @@ fi
 
 if [[ "$tc" == *"/" ]]; then
     tc=$(find $tc -name "*.htm*" | sort)
+elif [[ "$tc" == *"webkit_fast_dom_regression.res" ]]; then
+    echo "fast_dom"
+    WEBKIT_FAST_DOM=1
+    tc=$(cat $tc)
 elif [[ "$tc" == *".res" ]]; then
+    echo "dom"
     tc=$(cat $tc)
 fi
 
@@ -73,34 +80,39 @@ for i in $tc ; do
         perl -i -pe $replace3 $TMPFILE
         perl -i -pe $replace4 $TMPFILE
 
-        SKIP=`grep -o Skipped $TMPFILE | wc -l`
-        #RESULT=`grep -o $EXPECTED $TMPFILE | wc -l`
-        RESULT=$(python tool/reftest/compare_result.py $EXPECTED_FILE $TMPFILE 2>&1)
-        #echo $RESULT
         TCFILE=`expr $TCFILE + 1`
-        if [ $SKIP -eq 1 ]; then
-            SKIPTC=`expr $SKIPTC + 1`
-            echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
-        elif [ $RESULT == 'Pass' ]; then
-            PASSTC=`expr $PASSTC + 1`
-            echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
-            if [ "$REGRESSION" = true ]; then
-                echo -e ${filenames[$c]} >> $PASSFILENEW
-            fi
+        SKIP=`grep -o Skipped $TMPFILE | wc -l`
 
-            # Copy the passed files to converted dir
-            #tc=${filenames[$c]}
-            #dest=${tc%%/html*}"/html_converted"${tc#*html}
-            #dir=${dest%/*}
-            #mkdir -p $dir
-            #cp $tc $dest
-            #tc=${tc%.*}
-            #dest=${dest%.*}
-            #cp $tc".js" $dest".js"
-            #cp $tc"-expected.txt" $dest"-expected.txt"
+        if [ $WEBKIT_FAST_DOM -eq 1 ]; then
+            RESULT=$(python tool/reftest/compare_result.py $EXPECTED_FILE $TMPFILE 2>&1)
+            if [ $SKIP -eq 1 ]; then
+                SKIPTC=`expr $SKIPTC + 1`
+                echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
+            elif [ $RESULT == 'Pass' ]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                if [ "$REGRESSION" = true ]; then
+                    echo -e ${filenames[$c]} >> $PASSFILENEW
+                fi
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+            fi
         else
-            FAILTC=`expr $FAILTC + 1`
-            echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+            RESULT=`grep -o $EXPECTED $TMPFILE | wc -l`
+            if [ $SKIP -eq 1 ]; then
+                SKIPTC=`expr $SKIPTC + 1`
+                echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
+            elif [ $RESULT -eq 1 ]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                if [ "$REGRESSION" = true ]; then
+                    echo -e ${filenames[$c]} >> $PASSFILENEW
+                fi
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+            fi
         fi
 
         rm $TMPFILE
