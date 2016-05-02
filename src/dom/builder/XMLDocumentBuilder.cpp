@@ -85,24 +85,20 @@ void XMLDocumentBuilder::build(Document* document, String* filePath)
             }
 
             if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-                parentNode->appendChildForParser(newNode);
-
                 tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
                 while (child) {
                     fn(newNode, child);
                     child = child->NextSiblingElement();
                 }
-                newNode->asElement()->asHTMLElement()->asHTMLScriptElement()->executeScript();
+                parentNode->appendChildForParser(newNode);
                 return;
             } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLStyleElement()) {
-                parentNode->appendChildForParser(newNode);
-
                 tinyxml2::XMLElement* child = xmlElement->FirstChildElement();
                 while (child) {
                     fn(newNode, child);
                     child = child->NextSiblingElement();
                 }
-                newNode->asElement()->asHTMLElement()->asHTMLStyleElement()->generateStyleSheet();
+                parentNode->appendChildForParser(newNode);
                 return;
             } else if (newNode->isElement() && newNode->asElement()->isHTMLElement() && newNode->asElement()->asHTMLElement()->isHTMLLinkElement()) {
                 if (parentNode) {

@@ -500,6 +500,14 @@ Node* Node::appendChildForParser(Node* child)
     m_lastChild = child;
     child->setParentNode(this);
     child->setNeedsStyleRecalc();
+
+    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+        parent->didNodeInserted(this, child);
+    });
+
+    if (isInDocumentScope()) {
+        notifyNodeInsertedToDocumentTree(child);
+    }
     return child;
 }
 
