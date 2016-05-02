@@ -39,7 +39,7 @@ function setUpPage() {
      //   creates test document builder, may throw exception
      //
      builder = createConfiguredBuilder();
-       checkFeature("XML", null);
+     // checkFeature("XML", null);
 
       docsLoaded = 0;
       
