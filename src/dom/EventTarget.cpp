@@ -6,6 +6,41 @@
 
 namespace StarFish {
 
+ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eventType)
+{
+    bool error = false;
+    return scriptFunction(target, eventType, error);
+}
+
+ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eventType, bool& error)
+{
+    if (m_listener == ScriptValueNull) {
+        STARFISH_ASSERT(isAttribute());
+        STARFISH_ASSERT(target->isNode());
+        STARFISH_ASSERT(target->asNode()->isElement());
+        Element* element = target->asNode()->asElement();
+        String* eventName = String::createASCIIString("on")->concat(const_cast<String*>(eventType));
+        size_t idx = element->hasAttribute(QualifiedName::fromString(element->document()->window()->starFish(), eventName));
+        STARFISH_ASSERT(idx != SIZE_MAX);
+
+        String* bodyStr = element->getAttribute(idx);
+        String* name[] = {String::createASCIIString("event")};
+        m_listener = createScriptFunction(name, 1, bodyStr, error);
+    }
+    return m_listener;
+}
+
+ScriptValue EventListener::call(Event* event)
+{
+    bool hasError = false;
+    ScriptValue listenerFunc = scriptFunction(event->target(), event->type(), hasError);
+    if (!hasError) {
+        ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
+        callScriptFunction(listenerFunc, argv, 1, event->target()->scriptValue());
+    }
+    return listenerFunc;
+}
+
 EventListenerVector* EventTarget::getEventListeners(const String* eventType)
 {
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
@@ -136,11 +171,9 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 if (event->stopImmediatePropagation())
                     break;
                 if (std::find(originals->begin(), originals->end(), listener) != originals->end() && listener->capture()) {
-                    STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                     // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", node->localName()->utf8Data());
                     event->setCurrentTarget(eventTarget);
-                    ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-                    callScriptFunction(listener->scriptValue(), argv, 1, eventTarget->scriptValue());
+                    listener->call(event);
                 }
 
             }
@@ -159,11 +192,9 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             for (auto listener : copies) {
                 STARFISH_ASSERT(listener);
                 if (std::find(originals->begin(), originals->end(), listener) != originals->end()) {
-                    STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                     // STARFISH_LOG_INFO("[AT_TARGET] node: %s\n", origin->localName()->utf8Data());
                     event->setCurrentTarget(origin);
-                    ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-                    callScriptFunction(listener->scriptValue(), argv, 1, origin->scriptValue());
+                    listener->call(event);
                 }
             }
         }
@@ -188,11 +219,9 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                     if (event->stopImmediatePropagation())
                         break;
                     if (std::find(originals->begin(), originals->end(), listener) != originals->end() && !listener->capture()) {
-                        STARFISH_ASSERT(listener->scriptValue() != ScriptValueNull);
                         // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s\n", node->localName()->utf8Data());
                         event->setCurrentTarget(eventTarget);
-                        ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-                        callScriptFunction(listener->scriptValue(), argv, 1, eventTarget->scriptValue());
+                        listener->call(event);
                     }
                 }
             }

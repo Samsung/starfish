@@ -735,8 +735,9 @@ ScriptValue createScriptString(String* str)
     }
 }
 
-ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody)
+ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody, bool& error)
 {
+    error = false;
     escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
 
     escargot::ESValueVector arg(0);
@@ -746,10 +747,18 @@ ScriptValue createScriptFunction(String** argNames, size_t argc, String* functio
 
     arg.push_back(createScriptString(functionBody));
 
-    ScriptValue value = escargot::ESFunctionObject::call(instance, instance->globalObject()->function(), escargot::ESValue(),
-        arg.data(), argc + 1, false);
-
-    return value;
+    ScriptValue result;
+    std::jmp_buf tryPosition;
+    if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
+        result = escargot::ESFunctionObject::call(instance, instance->globalObject()->function(), escargot::ESValue(),
+            arg.data(), argc + 1, false);
+        instance->unregisterTryPos(&tryPosition);
+    } else {
+        result = instance->getCatchedError();
+        error = true;
+        STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
+    }
+    return result;
 }
 
 ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue)

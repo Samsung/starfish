@@ -25,10 +25,6 @@ public:
     {
         return (m_isAttribute == other->m_isAttribute) && (m_listener == other->m_listener) && (m_capture == other->m_capture);
     }
-    ScriptValue scriptValue()
-    {
-        return m_listener;
-    }
     bool capture() const
     {
         return m_capture;
@@ -37,6 +33,13 @@ public:
     {
         m_capture = capture;
     }
+    ScriptValue scriptValue()
+    {
+        return m_listener;
+    }
+    ScriptValue scriptFunction(EventTarget* target, const String* eventType);
+    ScriptValue scriptFunction(EventTarget* target, const String* eventType, bool& error);
+    ScriptValue call(Event* event);
 
 protected:
     ScriptValue m_listener;

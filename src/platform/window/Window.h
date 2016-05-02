@@ -169,7 +169,7 @@ public:
         EventListener* l = getAttributeEventListener(eventType);
         if (!l)
             return ScriptValueNull;
-        return l->scriptValue();
+        return l->scriptFunction(this, eventType);
     }
 
     void setOnclick(ScriptValue f)
@@ -191,7 +191,7 @@ public:
         EventListener* l = getAttributeEventListener(eventType);
         if (!l)
             return ScriptValueNull;
-        return l->scriptValue();
+        return l->scriptFunction(this, eventType);
     }
 
     void setOnload(ScriptValue f)
