@@ -1,6 +1,7 @@
 <p>Test for (rdar://problem/5725058). If you see this text, then all is well and no crash has occurred.</p>
 
 <p id="a"><a name="anchor">paragraph a</a></p>
+<script src="../../../resources/wpt-test-pre.js"></script>
 <script>
 if (window.testRunner)
     testRunner.dumpAsText();
@@ -18,3 +19,4 @@ document.getElementById("a").removeChild(x);
 x = list.length;
 x = list[0];
 </script>
+<script src="../../../resources/wpt-test-post.js"></script>
