@@ -187,11 +187,7 @@ public:
 
     ScriptValue onload()
     {
-        auto eventType = starFish()->staticStrings()->m_load.string();
-        EventListener* l = getAttributeEventListener(eventType);
-        if (!l)
-            return ScriptValueNull;
-        return l->scriptFunction(this, eventType);
+        return parseOnloadIfNeeds();
     }
 
     void setOnload(ScriptValue f)
@@ -206,6 +202,8 @@ public:
         auto eventType = starFish()->staticStrings()->m_load.string();
         clearAttributeEventListener(eventType);
     }
+
+    ScriptValue parseOnloadIfNeeds();
 
 protected:
     void setNeedsRendering()

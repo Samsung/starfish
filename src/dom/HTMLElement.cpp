@@ -13,9 +13,9 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
     if (name == ss->m_onclick) {
         setOnclick(ScriptValueNull);
     } else if (name == ss->m_onload) {
-        setOnclick(ScriptValueNull);
+        setOnload(ScriptValueNull);
     } else if (name == ss->m_onunload) {
-        setOnclick(ScriptValueNull);
+        setOnunload(ScriptValueNull);
     } else if (name == ss->m_dir) {
         if (attributeCreated)
             m_hasDirAttribute = true;

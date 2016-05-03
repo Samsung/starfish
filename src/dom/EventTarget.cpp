@@ -14,18 +14,21 @@ ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eve
 
 ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eventType, bool& error)
 {
-    if (m_listener == ScriptValueNull) {
+    if (m_listener == ScriptValueNull && target) {
+        // In case of onload Event with null listener, target cannot be Window!!
         STARFISH_ASSERT(isAttribute());
         STARFISH_ASSERT(target->isNode());
         STARFISH_ASSERT(target->asNode()->isElement());
         Element* element = target->asNode()->asElement();
         String* eventName = String::createASCIIString("on")->concat(const_cast<String*>(eventType));
         size_t idx = element->hasAttribute(QualifiedName::fromString(element->document()->window()->starFish(), eventName));
-        STARFISH_ASSERT(idx != SIZE_MAX);
-
-        String* bodyStr = element->getAttribute(idx);
-        String* name[] = {String::createASCIIString("event")};
-        m_listener = createScriptFunction(name, 1, bodyStr, error);
+        if (idx == SIZE_MAX) {
+            error = true;
+        } else {
+            String* bodyStr = element->getAttribute(idx);
+            String* name[] = {String::createASCIIString("event")};
+            m_listener = createScriptFunction(name, 1, bodyStr, error);
+        }
     }
     return m_listener;
 }
@@ -123,7 +126,6 @@ bool EventTarget::dispatchEvent(Event* event)
 bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
 {
     ASSERT(origin);
-
     // https://www.w3.org/TR/dom/#dispatching-events
     // 1. Let event be the event that is dispatched.
     // 2. Set event's dispatch flag.

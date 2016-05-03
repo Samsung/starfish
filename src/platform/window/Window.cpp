@@ -932,6 +932,7 @@ void Window::dispatchLoadEvent()
         Window* wnd = (Window*)data;
         String* eventType = wnd->starFish()->staticStrings()->m_load.string();
         Event* e = new Event(eventType, EventInit(false, false));
+        wnd->parseOnloadIfNeeds();
         wnd->EventTarget::dispatchEvent(e);
 #ifdef STARFISH_ENABLE_PIXEL_TEST
         g_fireOnloadEvent = true;
@@ -1006,6 +1007,15 @@ void Window::close()
 {
     STARFISH_LOG_INFO("onClose");
     dispatchUnloadEvent();
+}
+
+ScriptValue Window::parseOnloadIfNeeds()
+{
+    auto eventType = starFish()->staticStrings()->m_load.string();
+    EventListener* l = getAttributeEventListener(eventType);
+    if (!l)
+        return ScriptValueNull;
+    return l->scriptFunction(document()->bodyElement(), eventType);
 }
 
 
