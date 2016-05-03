@@ -28,3 +28,4 @@ test/reftest/vendor/webkit/fast/dom/Attr/value-not-nullable.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-call-as-function.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-with-index.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-with-name.html
+test/reftest/vendor/webkit/fast/dom/NodeList/no-named-getter.html
