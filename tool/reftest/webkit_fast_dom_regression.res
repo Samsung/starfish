@@ -18,7 +18,6 @@ test/reftest/vendor/webkit/fast/dom/getElementsByClassName/array/004.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/ASCII-case-insensitive.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/case-sensitive.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/conflict-tag-name.html
-test/reftest/vendor/webkit/fast/dom/HTMLScriptElement/script-reexecution.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-1.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-2.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-3.html
@@ -33,4 +32,4 @@ test/reftest/vendor/webkit/fast/dom/Document/createElement-invalid-names.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-valid-names.html
 test/reftest/vendor/webkit/fast/dom/attributes-configurable.html
 test/reftest/vendor/webkit/fast/dom/background-shorthand-csstext.html
-
+test/reftest/vendor/webkit/fast/dom/Document/replaceChild-null-oldChild.html

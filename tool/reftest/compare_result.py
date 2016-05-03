@@ -5,7 +5,7 @@ import re
 
 DEBUG = False
 
-Search_PATTERN='Status..Success|Status..failure|Status..error|\sPASS\s|\sFAIL\s'
+Search_PATTERN='Status..Success|Status..failure|Status..error|PASS|FAIL'
 
 def compare(expected, result):
     extract_expected =[]
@@ -17,9 +17,12 @@ def compare(expected, result):
     extract_expected=re.findall(Search_PATTERN,expected)
     extract_result = re.findall(Search_PATTERN, result)
 
+#    print extract_expected
+#    print extract_result
+#    print result
     for index, item in enumerate(extract_expected):
         #remove white space
-        if re.match(extract_expected[index],extract_result[index],re.X):
+        if not re.match(extract_expected[index],extract_result[index],re.X):
             return 'Fail'
 
     return 'Pass'

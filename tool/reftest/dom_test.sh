@@ -85,6 +85,7 @@ for i in $tc ; do
 
         if [ $WEBKIT_FAST_DOM -eq 1 ]; then
             RESULT=$(python tool/reftest/compare_result.py $EXPECTED_FILE $TMPFILE 2>&1)
+	    echo $RESULT 
             if [ $SKIP -eq 1 ]; then
                 SKIPTC=`expr $SKIPTC + 1`
                 echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}

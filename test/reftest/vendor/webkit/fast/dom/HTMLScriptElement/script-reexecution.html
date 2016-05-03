@@ -1,6 +1,5 @@
 <html>
 <head>
-<script src="../../../resources/wpt-test-pre.js"></script>
 <script type="text/javascript">
 function pass() {
     var contentElement = document.getElementById(test);
@@ -20,7 +19,7 @@ function test() {
 
     test = "p1";
     var e1 = document.createElement("script");
-    e1.textContent = " pass();";
+    e1.textContent = "pass();";
     document.getElementsByTagName("head")[0].appendChild(e1);
     document.getElementsByTagName("head")[0].removeChild(e1);
 
