@@ -1,0 +1,11 @@
+<p>Checks that attributes are on the prototype are configurable.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> event.eventPhase is 0</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> event.__proto__.hasOwnProperty('eventPhase') is true</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> properties.configurable is true</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> properties.enumerable is true</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> delete event.__proto__.eventPhase is true</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> event.eventPhase is undefined</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+wpt-test-pre.js:2 <br /><span class="pass">TEST COMPLETE</span><br />
+wpt-test-post.js:4 ReferenceError: wptTestEnd is not defined
+    at file:///home/jy/2016_WEBTF/02_blink/starfish/test/reftest/vendor/webkit/resources/wpt-test-post.js:2:5

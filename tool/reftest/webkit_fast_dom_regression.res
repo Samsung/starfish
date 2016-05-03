@@ -31,3 +31,6 @@ test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-with-name.html
 test/reftest/vendor/webkit/fast/dom/NodeList/no-named-getter.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-invalid-names.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-valid-names.html
+test/reftest/vendor/webkit/fast/dom/attributes-configurable.html
+test/reftest/vendor/webkit/fast/dom/background-shorthand-csstext.html
+
