@@ -20,6 +20,7 @@ public:
     }
 
     static void tokenize(std::vector<String*, gc_allocator<String*>>* tokens, String* src);
+    static void concatTokensInsideParentheses(std::vector<String*, gc_allocator<String*>>* tokens);
     unsigned long length();
     String* item(unsigned long index);
     bool contains(String* token);

@@ -355,7 +355,7 @@ void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*>
         m_valueKind = CSSStyleValuePair::ValueKind::Initial;
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = mergeTokens(tokens);
+        m_value.m_stringValue = tokens->at(0);
     }
 }
 
@@ -2535,29 +2535,24 @@ void CSSStyleDeclaration::setBackgroundRepeat(const char* value)
 
 String* CSSStyleDeclaration::Background()
 {
+    String* result = String::emptyString;
     String* image = BackgroundImage();
-    String* repeat;
-    String* repeatX = BackgroundRepeatX();
-    String* repeatY = BackgroundRepeatY();
+    String* repeat = BackgroundRepeat();
     String* color = BackgroundColor();
 
-    if (repeatX->equals("repeat") && repeatY->equals("repeat"))
-        repeat = String::fromUTF8("repeat");
-    else if (repeatX->equals("repeat") && repeatY->equals("no-repeat"))
-        repeat = String::fromUTF8("repeat-x");
-    else if (repeatX->equals("no-repeat") && repeatY->equals("repeat"))
-        repeat = String::fromUTF8("repeat-y");
-    else if (repeatX->equals("no-repeat") && repeatY->equals("no-repeat"))
-        repeat = String::fromUTF8("no-repeat");
-    else if (repeatX->equals("initial") && repeatY->equals("initial"))
-        repeat = String::fromUTF8("");
-    else if (repeatX->equals("inherit") && repeatY->equals("inherit"))
-        repeat = String::fromUTF8("");
-    else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    if (image->length() != 0 && !image->equals("initial"))
+        result = result->concat(image);
+    if (repeat->length() != 0 && !repeat->equals("initial") && !repeat->equals("inherit")) {
+        if (result->length())
+            result = result->concat(String::fromUTF8(" "));
+        result = result->concat(repeat);
     }
-
-    return image->concat(String::fromUTF8(" "))->concat(repeat)->concat(String::fromUTF8(" "))->concat(color);
+    if (color->length() != 0 && !color->equals("initial")) {
+        if (result->length())
+            result = result->concat(String::fromUTF8(" "));
+        result = result->concat(color);
+    }
+    return result;
 }
 
 void CSSStyleDeclaration::setBackground(const char* value)
@@ -2565,6 +2560,7 @@ void CSSStyleDeclaration::setBackground(const char* value)
     //  [<'background-color'> || <'background-image'> || <'background-repeat'>] | inherit
     std::vector<String*, gc_allocator<String*> > tokens;
     DOMTokenList::tokenize(&tokens, String::fromUTF8(value));
+    DOMTokenList::concatTokensInsideParentheses(&tokens);
 
     {
         size_t len = tokens.size();
@@ -2735,6 +2731,23 @@ bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator
     if (!(CSSPropertyParser::assureColor(token) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0))) {
         return false;
     }
+
+    // Valid format? : Both Chrome & Firefox produce color string that contains comma with single whitespace.
+    const char* initialPos = token;
+    char* currentPos = const_cast<char*>(initialPos);
+    char* commaPos = strchr(currentPos, ',');
+    String* validStr = String::emptyString;
+    auto len = tokens->at(0)->length();
+    while (currentPos && commaPos) {
+        validStr = validStr->concat(String::fromUTF8(currentPos, commaPos - currentPos + 1));
+        validStr = validStr->concat(String::fromUTF8(" "));
+        currentPos = commaPos + 1;
+        commaPos = strchr(currentPos, ',');
+    }
+    validStr = validStr->concat(String::fromUTF8(currentPos, len - (currentPos - initialPos)));
+    tokens->clear();
+    tokens->push_back(validStr);
+
     return true;
 }
 

@@ -45,6 +45,38 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*> >* tokens
     }
 }
 
+void DOMTokenList::concatTokensInsideParentheses(std::vector<String*, gc_allocator<String*>>* tokens)
+{
+    std::vector<String*, gc_allocator<String*>> newTokens;
+    String* combined = String::emptyString;
+    unsigned combinedCount = 0;
+    // unsigned parentheseDepth = 0; // Does not count parenthese depth
+    for (auto token : *tokens) {
+        // TODO: Sould Consider brakets insize QuotationMarks
+        if (combinedCount) {
+            combined = combined->concat(token);
+            combinedCount++;
+            if (strstr(token->utf8Data(), ")")) {
+                newTokens.push_back(combined);
+                combined = String::emptyString;
+                combinedCount = 0;
+            }
+        } else if (strstr(token->utf8Data(), "(")) {
+            combined = combined->concat(token);
+            combinedCount++;
+        } else {
+            newTokens.push_back(token);
+        }
+    }
+    if (combinedCount) {
+        newTokens.insert(newTokens.end(), tokens->end() - combinedCount, tokens->end());
+    }
+    if (newTokens.size() != tokens->size()) {
+        tokens->clear();
+        tokens->assign(newTokens.begin(), newTokens.end());
+    }
+}
+
 unsigned long DOMTokenList::length()
 {
     std::vector<String*, gc_allocator<String*> > tokens;
