@@ -1,13 +1,16 @@
+
 /*
-Copyright Â© 2001-2004 World Wide Web Consortium,
-(Massachusetts Institute of Technology, European Research Consortium
-for Informatics and Mathematics, Keio University). All
-Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the
-hope that it will be useful, but WITHOUT ANY WARRANTY; without even
-the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Copyright Â© 2001-2004 World Wide Web Consortium, 
+(Massachusetts Institute of Technology, European Research Consortium 
+for Informatics and Mathematics, Keio University). All 
+Rights Reserved. This work is distributed under the W3CÂ® Software License [1] in the 
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even 
+the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
 
 [1] http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
 */
+
+
 
    /**
     *  Gets URI that identifies the test.
@@ -38,24 +41,26 @@ function setUpPage() {
      builder = createConfiguredBuilder();
 
       docsLoaded = 0;
-
+      
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
       }
       docsLoaded += preload(docRef, "doc", "hc_staff");
-
+        
        if (docsLoaded == 1) {
           setUpPageStatus = 'complete';
        }
     } catch(ex) {
-        catchInitializationError(builder, ex);
+    	catchInitializationError(builder, ex);
         setUpPageStatus = 'complete';
     }
 }
 
+
+
 //
-//   This method is called on the completion of
+//   This method is called on the completion of 
 //      each asychronous load started in setUpTests.
 //
 //   When every synchronous loaded document has completed,
@@ -67,11 +72,12 @@ function loadComplete() {
     }
 }
 
+
 /**
-*
+* 
     A comment is all the characters between the starting
-  '<!--' and ending '-->'
-  Retrieve the nodes of the DOM document.  Search for a
+  '<!--' and ending '-->' 
+  Retrieve the nodes of the DOM document.  Search for a 
   comment node and the content is its value.
 
 * @author Curt Arnold
@@ -93,7 +99,7 @@ function hc_commentgetcomment() {
       var commentCount = 0;
       var childType;
       var attributes;
-
+      
       var docRef = null;
       if (typeof(this.doc) != 'undefined') {
         docRef = this.doc;
@@ -105,10 +111,11 @@ function hc_commentgetcomment() {
       child = elementList.item(indexN1005E);
       childType = child.nodeType;
 
-    if(
-    (8 == childType)
-    ) {
-    childName = child.nodeName;
+      
+	if(
+	(8 == childType)
+	) {
+	childName = child.nodeName;
 
       assertEquals("nodeName","#comment",childName);
        childValue = child.nodeValue;
@@ -119,15 +126,18 @@ function hc_commentgetcomment() {
       assertNull("attributes",attributes);
     commentCount += 1;
 
-    }
-
-    }
-       assertTrue("atMostOneComment",
-
-    (commentCount < 2)
+	}
+	
+	}
+   	assertTrue("atMostOneComment",
+      
+	(commentCount < 2)
 );
 
 }
+
+
+
 
 function runTest() {
    hc_commentgetcomment();
