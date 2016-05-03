@@ -15,6 +15,9 @@ test/reftest/vendor/webkit/fast/dom/getElementsByClassName/array/001.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/array/002.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/array/003.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/array/004.html
+test/reftest/vendor/webkit/fast/dom/getElementsByClassName/ASCII-case-insensitive.html
+test/reftest/vendor/webkit/fast/dom/getElementsByClassName/case-sensitive.html
+test/reftest/vendor/webkit/fast/dom/getElementsByClassName/conflict-tag-name.html
 test/reftest/vendor/webkit/fast/dom/HTMLScriptElement/script-reexecution.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-1.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-2.html
