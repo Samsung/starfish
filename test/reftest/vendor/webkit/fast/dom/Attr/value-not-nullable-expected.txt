@@ -1,0 +1,11 @@
+<p>Tests that Attr.value is not nullable</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+wpt-test-pre.js:2 attr = document.createAttribute('test')<br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> attr.value is ""</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> attr.value = null did not throw exception.</span><br />
+wpt-test-pre.js:2 <span><span class="fail">FAIL</span> attr.value should be null (of type string). Was null (of type object).</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> attr.value = undefined did not throw exception.</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> attr.value is "undefined"</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+wpt-test-pre.js:2 <br /><span class="pass">TEST COMPLETE</span><br />
+wpt-test-post.js:4 ReferenceError: wptTestEnd is not defined
+    at file:///home/jy/2016_WEBTF/02_blink/starfish/test/reftest/vendor/webkit/resources/wpt-test-post.js:2:5

@@ -1,23 +1,17 @@
-Tests that accessing Attr after its Element has been destroyed works without crashing.
-
-On success, you will see a series of "PASS" messages, followed by "TEST COMPLETE".
-
-
-PASS attributes.length is 1
-PASS attributes[0] is attributes.item(0)
-PASS attributes.getNamedItem('a') is attributes.item(0)
-PASS attributes.item(0).name is 'a'
-PASS attributes.item(0).specified is true
-PASS attributes.item(0).value is 'b'
-PASS attributes.item(0).ownerElement.tagName is 'P'
-PASS attributes.item(0).value is 'c'
-PASS attributes.length is 0
-PASS attr.name is 'a'
-PASS attr.specified is true
-PASS attr.value is 'b'
-PASS attr.ownerElement.tagName is 'P'
-PASS attr.value is 'c'
-PASS successfullyParsed is true
-
-TEST COMPLETE
-
+<p>Tests that accessing Attr after its Element has been destroyed works without crashing.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.length is 1</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes[0] is attributes.item(0)</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.getNamedItem('a') is attributes.item(0)</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.item(0).name is 'a'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.item(0).specified is true</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.item(0).value is 'b'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.item(0).ownerElement.tagName is 'P'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.item(0).value is 'c'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attributes.length is 0</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attr.name is 'a'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attr.specified is true</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attr.value is 'b'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attr.ownerElement.tagName is 'P'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> attr.value is 'c'</span><br />
+js-test-pre.js:4 <span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+js-test-pre.js:4 <br /><span class="pass">TEST COMPLETE</span><br />

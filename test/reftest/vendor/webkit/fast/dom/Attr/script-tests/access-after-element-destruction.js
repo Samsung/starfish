@@ -16,8 +16,6 @@ var attributes = element.attributes;
 element = null;
 
 // gc();
-console.log("attributes[0]: " + attributes[0]);
-console.log("attributes.item(0): " + attributes.item(0));
 shouldBe("attributes.length", "1");
 shouldBe("attributes[0]", "attributes.item(0)");
 shouldBe("attributes.getNamedItem('a')", "attributes.item(0)");
