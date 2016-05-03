@@ -23,3 +23,4 @@ test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-1.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-2.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-3.html
 test/reftest/vendor/webkit/fast/dom/NodeList/item-by-id-with-no-document.html
+test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-assignment.html
