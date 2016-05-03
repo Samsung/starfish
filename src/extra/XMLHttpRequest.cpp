@@ -17,6 +17,7 @@ XMLHttpRequest::XMLHttpRequest()
     m_readyState = UNSENT;
     m_status = 0;
     m_url = nullptr;
+    m_responseText = nullptr;
     m_responseHeader = nullptr;
     m_timeout = 0;
     m_abortFlag = false;
@@ -104,7 +105,7 @@ void XMLHttpRequest::send(String* body)
         } else {
             STARFISH_ASSERT(!curl);
             std::string path = xhrobj->m_starfish->currentPath()->utf8Data();
-            if (path.back() != '/') {
+            if ((path.length()!=0)&&(path.back() != '/')) {
                 path += '/';
             }
             path += url;
@@ -226,8 +227,7 @@ void XMLHttpRequest::send(String* body)
                 case TEXT_RESPONSE:
                 default:
                     script_obj->set(createScriptString(String::fromUTF8("response")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
-                    script_obj->set(createScriptString(String::fromUTF8("responseText")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
-
+                    this_obj->m_responseText = String::fromUTF8(pass->buf);
                 }
                 if (pass->contentSize == 0)
                     pass->total = 0;
@@ -359,6 +359,9 @@ String* XMLHttpRequest::getResponseText()
         throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
     if (m_readyState != LOADING && m_readyState != DONE)
         return String::emptyString;
+
+    if (m_responseText!=nullptr)
+        return m_responseText;
     return String::emptyString;
 }
 

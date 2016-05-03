@@ -281,6 +281,7 @@ public:
 
 protected:
     String* m_url;
+    String* m_responseText;
     char* m_responseHeader;
     METHOD_TYPE m_method;
     RESPONSE_TYPE m_responseType;
