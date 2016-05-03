@@ -18,6 +18,7 @@ XMLHttpRequest::XMLHttpRequest()
     m_status = 0;
     m_url = nullptr;
     m_responseText = nullptr;
+    m_response = ScriptValueNull;
     m_responseHeader = nullptr;
     m_timeout = 0;
     m_abortFlag = false;
@@ -212,21 +213,18 @@ void XMLHttpRequest::send(String* body)
             ecore_thread_main_loop_begin();
             ecore_idler_add([](void *data)->Eina_Bool {
                 Pass* pass = (Pass*)data;
-
                 XMLHttpRequest* this_obj = pass->obj;
-                ScriptObject script_obj = this_obj->scriptObject();
 
                 switch (this_obj->getResponseType()) {
                 case JSON_RESPONSE:
                     {
-                        ScriptValue ret = parseJSON(String::fromUTF8(pass->buf));
-                        script_obj->set(createScriptString(String::fromUTF8("response")), ret);
+                        this_obj->m_response = parseJSON(String::fromUTF8(pass->buf));
                     }
                     break;
 
                 case TEXT_RESPONSE:
                 default:
-                    script_obj->set(createScriptString(String::fromUTF8("response")), ScriptValue(createScriptString(String::fromUTF8(pass->buf))));
+                    this_obj->m_response =ScriptValue(createScriptString(String::fromUTF8(pass->buf)));
                     this_obj->m_responseText = String::fromUTF8(pass->buf);
                 }
                 if (pass->contentSize == 0)
@@ -363,6 +361,14 @@ String* XMLHttpRequest::getResponseText()
     if (m_responseText!=nullptr)
         return m_responseText;
     return String::emptyString;
+}
+
+ScriptValue XMLHttpRequest::getResponse()
+{
+    if (m_readyState != LOADING && m_readyState != DONE)
+        return ScriptValueNull;
+
+    return m_response;
 }
 
 void XMLHttpRequest::setRequestHeader(const char* header, const char* value)

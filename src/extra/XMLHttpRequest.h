@@ -127,6 +127,8 @@ public:
 
     String* getResponseText();
 
+    ScriptValue getResponse();
+
     String* getResponseXML()
     {
         if (m_readyState != DONE)
@@ -282,6 +284,7 @@ public:
 protected:
     String* m_url;
     String* m_responseText;
+    ScriptValue m_response;
     char* m_responseHeader;
     METHOD_TYPE m_method;
     RESPONSE_TYPE m_responseType;

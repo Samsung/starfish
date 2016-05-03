@@ -3362,6 +3362,18 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("response"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        try {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+            return originalObj->getResponse();
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseText"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
