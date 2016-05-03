@@ -31,24 +31,23 @@ QualifiedName QualifiedName::fromString(StarFish* sf, const char* str)
 bool checkNameProductionRuleStart_internal(char32_t c)
 {
     // https://www.w3.org/TR/xml/#NT-NameStartChar
+    if ((c >= 0x02BB && c <= 0x02C1) || c == 0x559 || c == 0x6E5 || c == 0x6E6)
+        return true;
+
     if (c == ':' || c == '_')
         return true;
 
-    if (isalpha(c))
-        return true;
+    if (!(U_GET_GC_MASK(c) & (U_GC_LL_MASK | U_GC_LU_MASK | U_GC_LO_MASK | U_GC_LT_MASK | U_GC_NL_MASK)))
+        return false;
 
-    if (((c >= 0xC0)&&(c <= 0xD6)) || ((c >= 0xD8)&&(c <= 0xF6)) || ((c >= 0xF8)&&(c <= 0x2FF)))
-        return true;
+    if (c >= 0xF900 && c < 0xFFFE)
+        return false;
 
-    if (((c >= 0x370)&&(c <= 0x37D)) || ((c >= 0x37F)&&(c <= 0x1FFF)) || ((c >= 0x200C)&&(c <= 0x200D)))
-        return true;
+    int type = u_getIntPropertyValue(c, UCHAR_DECOMPOSITION_TYPE);
+    if (type == U_DT_FONT || type == U_DT_COMPAT)
+        return false;
 
-    if (((c >= 0x2070)&&(c <= 0x218F)) || ((c >= 0x2C00)&&(c <= 0x2FEF)) || ((c >= 0x3001)&&(c <= 0xD7FF)))
-        return true;
-    if (((c >= 0xF900)&&(c <= 0xFDCF)) || ((c >= 0xFDF0)&&(c <= 0xFFFD)) || ((c >= 0x10000)&&(c <= 0xEFFFF)))
-        return true;
-
-    return false;
+    return true;
 }
 
 bool checkNameProductionRule_internal(char32_t c)
@@ -57,14 +56,25 @@ bool checkNameProductionRule_internal(char32_t c)
     if (checkNameProductionRuleStart_internal(c))
         return true;
 
-    if (isdigit(c))
+    if (c == 0x00B7 || c == 0x0387)
         return true;
 
-    if (c == '-' || c == '.' || c == 0xB7 || ((c >= 0x300) && (c <= 0x036F)) || ((c >= 0x203F) && (c <= 0x2040)))
+    if (c == '-' || c == '.')
         return true;
 
-    return false;
+    if (!(U_GET_GC_MASK(c) & (U_GC_M_MASK | U_GC_LM_MASK | U_GC_ND_MASK)))
+        return false;
+
+    if (c >= 0xF900 && c < 0xFFFE)
+        return false;
+
+    int type = u_getIntPropertyValue(c, UCHAR_DECOMPOSITION_TYPE);
+    if (type == U_DT_FONT || type == U_DT_COMPAT)
+        return false;
+
+    return true;
 }
+
 bool QualifiedName::checkNameProductionRule(String* str, unsigned length)
 {
     if (!checkNameProductionRuleStart_internal(str->charAt(0)))

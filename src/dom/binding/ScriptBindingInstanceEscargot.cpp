@@ -1650,6 +1650,9 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
                         return elem->scriptValue();
                 } else if (argValue.isESString()) {
                     escargot::ESString* argStr = argValue.asESString();
+                    auto bStr = toBrowserString(argStr);
+                    if (!QualifiedName::checkNameProductionRule(bStr, bStr->length()))
+                        throw new DOMException(doc->window()->starFish()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
                     QualifiedName name = QualifiedName::fromString(doc->window()->starFish(), argStr->utf8Data());
                     Element* elem = doc->createElement(name);
                     if (elem != nullptr)

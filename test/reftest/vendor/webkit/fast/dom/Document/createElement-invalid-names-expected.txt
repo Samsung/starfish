@@ -1,0 +1,15 @@
+<p>Test various valid name for elements according to the definition of DOM Level 2.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> document.createElement('0ascii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('0ascii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('.Ascii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('.Ascii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('-Ascii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('-Ascii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement(' ascii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided (' ascii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('	ascii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('	ascii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('֑sc.ii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('֑sc.ii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('⃣scii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('⃣scii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('िascii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('िascii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('ʳascii') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('ʳascii') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('asc i') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('asc i') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('asc	i') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('asc	i') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> document.createElement('asciiⅦ') threw exception InvalidCharacterError: Failed to execute 'createElement' on 'Document': The tag name provided ('asciiⅦ') is not a valid name..</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />
