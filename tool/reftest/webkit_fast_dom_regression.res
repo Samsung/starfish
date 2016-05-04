@@ -54,3 +54,4 @@ test/reftest/vendor/webkit/fast/dom/Window/replaceable.html
 test/reftest/vendor/webkit/fast/dom/node-childNodes-idempotence.html
 test/reftest/vendor/webkit/fast/dom/node-item.html
 test/reftest/vendor/webkit/fast/dom/node-legacy-event-listener.html
+test/reftest/vendor/webkit/fast/dom/Window/setTimeout-no-arguments.html
