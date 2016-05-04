@@ -19,6 +19,8 @@ test/reftest/vendor/webkit/fast/dom/getElementsByClassName/ASCII-case-insensitiv
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/case-sensitive.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/conflict-tag-name.html
 test/reftest/vendor/webkit/fast/dom/htmlcollection-children-mutation.html
+test/reftest/vendor/webkit/fast/dom/htmlcollection-length-after-item.html
+test/reftest/vendor/webkit/fast/dom/htmlcollection-length-after-item-2.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-1.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-2.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-3.html
