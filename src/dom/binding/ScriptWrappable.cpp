@@ -48,27 +48,42 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     // long setTimeout(Function handler, optional long timeout, any... arguments);
 
     // TODO : Pass "any... arguments" if exist
-    // TODO : First argument can be function or script source (currently allow function only)
     escargot::ESFunctionObject* setTimeoutFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+
+        auto handler = [](Window* wnd, void* data)
+        {
+            escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+            std::jmp_buf tryPosition;
+            if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
+                escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
+                escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+            } else {
+                escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
+                STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
+            }
+        };
+
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             if (instance->currentExecutionContext()->readArgument(0).isESPointer()
                 && instance->currentExecutionContext()->readArgument(0).asESPointer()
                 && instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
                 if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
                     Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-                    return escargot::ESValue(wnd->setTimeout([](Window* wnd, void* data) {
-                        escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
-                        std::jmp_buf tryPosition;
-                        if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
-                            escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), fn, escargot::ESValue(), NULL, 0, false);
-                            escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
-                        } else {
-                            escargot::ESValue err = escargot::ESVMInstance::currentInstance()->getCatchedError();
-                            STARFISH_LOG_INFO("Uncaught %s\n", err.toString()->utf8Data());
-                        }
-                    }, instance->currentExecutionContext()->readArgument(1).toUint32(),
+                    return escargot::ESValue(wnd->setTimeout(handler, instance->currentExecutionContext()->readArgument(1).toUint32(),
                     instance->currentExecutionContext()->readArgument(0).asESPointer()));
+                }
+            } else if (instance->currentExecutionContext()->readArgument(0).isESString()) {
+                if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
+                    String* bodyStr = toBrowserString(instance->currentExecutionContext()->readArgument(0).asESString());
+                    String* name[] = {String::emptyString};
+                    bool error = false;
+                    ScriptValue m_listener = createScriptFunction(name, 1, bodyStr, error);
+
+                    Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+                    return escargot::ESValue(wnd->setTimeout(handler, instance->currentExecutionContext()->readArgument(1).toUint32(),
+                    m_listener.asESPointer()));
+
                 }
             }
         }

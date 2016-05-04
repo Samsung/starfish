@@ -106,7 +106,7 @@ void XMLHttpRequest::send(String* body)
         } else {
             STARFISH_ASSERT(!curl);
             std::string path = xhrobj->m_starfish->currentPath()->utf8Data();
-            if ((path.length()!=0)&&(path.back() != '/')) {
+            if ((path.length() != 0)&&(path.back() != '/')) {
                 path += '/';
             }
             path += url;
@@ -358,7 +358,7 @@ String* XMLHttpRequest::getResponseText()
     if (m_readyState != LOADING && m_readyState != DONE)
         return String::emptyString;
 
-    if (m_responseText!=nullptr)
+    if (m_responseText != nullptr)
         return m_responseText;
     return String::emptyString;
 }
