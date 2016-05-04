@@ -739,7 +739,7 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
 {
     TimeoutData* td = new TimeoutData;
     td->m_window = this;
-    uint32_t id = m_timeoutCounter++;
+    uint32_t id = ++m_timeoutCounter;
     td->m_id = id;
     m_timeoutHandler.insert(std::make_pair(id, std::make_pair(handler, data)));
 
@@ -774,7 +774,7 @@ uint32_t Window::setInterval(WindowSetTimeoutHandler handler, uint32_t delay, vo
 {
     TimeoutData* td = new TimeoutData;
     td->m_window = this;
-    uint32_t id = m_timeoutCounter++;
+    uint32_t id = ++m_timeoutCounter;
     td->m_id = id;
     m_timeoutHandler.insert(std::make_pair(id, std::make_pair(handler, data)));
 

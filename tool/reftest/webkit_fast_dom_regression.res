@@ -57,3 +57,4 @@ test/reftest/vendor/webkit/fast/dom/node-legacy-event-listener.html
 test/reftest/vendor/webkit/fast/dom/Window/setTimeout-no-arguments.html
 test/reftest/vendor/webkit/fast/dom/multiple-ids.html
 test/reftest/vendor/webkit/fast/dom/isEqualNode-after-removeAttribute.html
+test/reftest/vendor/webkit/fast/dom/Window/setTimeout-setInterval-unique.html
