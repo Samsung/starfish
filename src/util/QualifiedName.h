@@ -28,7 +28,7 @@ public:
 
     static bool checkNameProductionRule(String* str, unsigned length);
 
-    bool operator==(const QualifiedName& src)
+    bool operator==(const QualifiedName& src) const
     {
         return m_string == src.m_string;
     }
@@ -43,7 +43,7 @@ public:
         return m_string;
     }
 
-    operator String*()
+    operator String*() const
     {
         return m_string;
     }

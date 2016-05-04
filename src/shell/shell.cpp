@@ -7,6 +7,15 @@
 
 using namespace StarFish;
 
+bool hasEnding(std::string const &fullString, std::string const &ending)
+{
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
+    }
+}
+
 int main(int argc, char *argv[])
 {
 #ifndef NDEBUG
@@ -18,7 +27,7 @@ int main(int argc, char *argv[])
 
     // printf("%d", (int)sizeof (StarFish::ComputedStyle));
 
-    const char* path = "";
+    std::string path = "";
     std::string screenShot;
     int width = 360, height = 360;
     for (int i = 2; i < argc; i ++) {
@@ -57,14 +66,32 @@ int main(int argc, char *argv[])
         // setenv("ELM_ENGINE", screenShot.data(), 1);
         setenv("SCREEN_SHOT", screenShot.data(), 1);
     }
+    if (!hasEnding(argv[1], "xml")) {
+        std::string d = argv[1];
+        if (d.find('/') == std::string::npos) {
+            path = "";
+        } else {
+            path += "./";
+            path += d.substr(0, d.find_last_of('/'));
+            path += "/";
+            char result[1024];
+            realpath(path.c_str(), result);
+            path = result;
+            path += "/";
+        }
+    }
 
-    printf("running StarFish (working directory = %s)\n", path);
-    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path), "en-us", width, height);
+    printf("running StarFish (working directory = %s)\n", path.c_str());
+    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path.c_str()), "en-us", width, height);
     if (argc == 1) {
-        puts("please specify xml path");
+        puts("please specify file path");
         return -1;
     }
-    sf->window()->loadXMLDocument(String::createASCIIString(argv[1]));
+
+    if (hasEnding(argv[1], "xml")) {
+        sf->window()->loadPreprocessedXMLDocument(String::createASCIIString(argv[1]));
+    } else
+        sf->window()->navigate(String::createASCIIString(argv[1]));
 
     pthread_t t;
     pthread_attr_t attr;

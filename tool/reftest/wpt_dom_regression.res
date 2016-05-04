@@ -46,9 +46,7 @@ test/reftest/web-platform-tests/dom/nodes/Element-childElement-null.html
 test/reftest/web-platform-tests/dom/nodes/Element-childElement-null-xhtml.xhtml
 test/reftest/web-platform-tests/dom/nodes/Element-children.html
 test/reftest/web-platform-tests/dom/nodes/Element-classlist.html
-test/reftest/web-platform-tests/dom/nodes/Element-firstElementChild-entity-xhtml.xhtml
 test/reftest/web-platform-tests/dom/nodes/Element-firstElementChild.html
-test/reftest/web-platform-tests/dom/nodes/Element-firstElementChild-namespace-xhtml.xhtml
 test/reftest/web-platform-tests/dom/nodes/Element-firstElementChild-xhtml.xhtml
 test/reftest/web-platform-tests/dom/nodes/Element-getElementsByClassName.html
 test/reftest/web-platform-tests/dom/nodes/Element-getElementsByTagName.html
@@ -106,4 +104,3 @@ test/reftest/web-platform-tests/dom/nodes/Node-properties.html
 test/reftest/web-platform-tests/dom/nodes/Node-removeChild.html
 test/reftest/web-platform-tests/dom/nodes/Node-replaceChild.html
 test/reftest/web-platform-tests/dom/nodes/Node-textContent.html
-test/reftest/web-platform-tests/dom/nodes/ProcessingInstruction-literal-1.xhtml

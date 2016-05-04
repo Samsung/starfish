@@ -145,8 +145,8 @@ public:
     };
 
     virtual NodeType nodeType() = 0;
-
     virtual String* nodeName() = 0;
+    virtual void finishParsingChildren() { }
 
     Document* ownerDocument() const
     {
@@ -261,11 +261,14 @@ public:
     bool isInDocumentScope();
 
     Node* appendChild(Node* child);
-    Node* appendChildForParser(Node* child);
     Node* insertBefore(Node* child, Node* childRef = nullptr);
     Node* replaceChild(Node* child, Node* childToRemove);
     Node* removeChild(Node* child);
 
+    Node* parserAppendChild(Node* child);
+    void parserRemoveChild(Node*);
+    void parserInsertBefore(Node* newChild, Node* refChild);
+    void parserTakeAllChildrenFrom(Node* oldParent);
 
     /* 4.5. Interface Document */
     HTMLCollection* getElementsByTagName(String* qualifiedName);

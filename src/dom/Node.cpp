@@ -484,33 +484,6 @@ Node* Node::appendChild(Node* child)
     return child;
 }
 
-Node* Node::appendChildForParser(Node* child)
-{
-    STARFISH_ASSERT(child);
-    STARFISH_ASSERT(child->parentNode() == nullptr);
-    STARFISH_ASSERT(child->nextSibling() == nullptr);
-    STARFISH_ASSERT(child->previousSibling() == nullptr);
-
-    if (m_lastChild) {
-        child->setPreviousSibling(m_lastChild);
-        m_lastChild->setNextSibling(child);
-    } else {
-        m_firstChild = child;
-    }
-    m_lastChild = child;
-    child->setParentNode(this);
-    child->setNeedsStyleRecalc();
-
-    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
-        parent->didNodeInserted(this, child);
-    });
-
-    if (isInDocumentScope()) {
-        notifyNodeInsertedToDocumentTree(child);
-    }
-    return child;
-}
-
 Node* Node::insertBefore(Node* child, Node* childRef)
 {
     // Spec does not say what to do when node is null
@@ -670,6 +643,119 @@ Node* Node::removeChild(Node* child)
     });
 
     return child;
+}
+
+Node* Node::parserAppendChild(Node* child)
+{
+    STARFISH_ASSERT(child);
+    STARFISH_ASSERT(child->parentNode() == nullptr);
+    STARFISH_ASSERT(child->nextSibling() == nullptr);
+    STARFISH_ASSERT(child->previousSibling() == nullptr);
+
+    if (m_lastChild) {
+        child->setPreviousSibling(m_lastChild);
+        m_lastChild->setNextSibling(child);
+    } else {
+        m_firstChild = child;
+    }
+    m_lastChild = child;
+    child->setParentNode(this);
+
+    if (isInDocumentScope()) {
+        notifyNodeInsertedToDocumentTree(child);
+    }
+
+    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+        parent->didNodeInserted(this, child);
+    });
+
+    return child;
+}
+
+void Node::parserRemoveChild(Node* child)
+{
+    Node* prevChild = child->previousSibling();
+    Node* nextChild = child->nextSibling();
+
+    if (nextChild) {
+        nextChild->setPreviousSibling(prevChild);
+    }
+    if (prevChild) {
+        prevChild->setNextSibling(nextChild);
+    }
+    if (m_firstChild == child) {
+        m_firstChild = nextChild;
+    }
+    if (m_lastChild == child) {
+        m_lastChild = prevChild;
+    }
+
+    child->setPreviousSibling(nullptr);
+    child->setNextSibling(nullptr);
+    child->setParentNode(nullptr);
+
+    if (isInDocumentScope()) {
+        notifyNodeRemoveFromDocumentTree(child);
+    }
+
+    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+        parent->didNodeRemoved(this, child);
+    });
+}
+
+void Node::parserInsertBefore(Node* child, Node* childRef)
+{
+    ASSERT(child);
+    ASSERT(childRef->parentNode() == this);
+    if (childRef->previousSibling() == child || childRef == child) // nothing to do
+        return;
+
+    if (childRef == nullptr) {
+        appendChild(child);
+        return;
+    }
+    if (child == childRef) {
+        return;
+    }
+    if (child->parentNode()) {
+        child->parentNode()->removeChild(child);
+    }
+
+    STARFISH_ASSERT(child->parentNode() == nullptr);
+    STARFISH_ASSERT(child->nextSibling() == nullptr);
+    STARFISH_ASSERT(child->previousSibling() == nullptr);
+
+    Node* prev = childRef->previousSibling();
+    childRef->setPreviousSibling(child);
+    STARFISH_ASSERT(m_lastChild != prev);
+    if (prev) {
+        STARFISH_ASSERT(m_firstChild != childRef);
+        prev->setNextSibling(child);
+    } else {
+        STARFISH_ASSERT(m_firstChild == childRef);
+        m_firstChild = child;
+    }
+
+    child->setParentNode(this);
+    child->setPreviousSibling(prev);
+    child->setNextSibling(childRef);
+
+    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
+        parent->didNodeInserted(this, child);
+    });
+
+    if (isInDocumentScope()) {
+        notifyNodeInsertedToDocumentTree(child);
+    }
+}
+
+
+void Node::parserTakeAllChildrenFrom(Node* oldParent)
+{
+    while (Node* child = oldParent->firstChild()) {
+        oldParent->parserRemoveChild(child);
+        parserAppendChild(child);
+    }
 }
 
 HTMLCollection* Node::getElementsByTagName(String* qualifiedName)

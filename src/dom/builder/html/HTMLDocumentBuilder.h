@@ -1,14 +1,14 @@
-#ifndef __StarFishXMLDocumentBuilderElement__
-#define __StarFishXMLDocumentBuilderElement__
+#ifndef __StarFishHTMLDocumentBuilderElement__
+#define __StarFishHTMLDocumentBuilderElement__
 
 #include "dom/builder/DocumentBuilder.h"
 
 namespace StarFish {
 
 class Window;
-class XMLDocumentBuilder : public DocumentBuilder {
+class HTMLDocumentBuilder : public DocumentBuilder {
 public:
-    XMLDocumentBuilder()
+    HTMLDocumentBuilder()
     {
     }
 

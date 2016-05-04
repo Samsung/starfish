@@ -13,6 +13,7 @@ namespace StarFish {
 
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
     : Node(this, scriptBindingInstance)
+    , m_compatibilityMode(Document::NoQuirksMode)
     , m_styleResolver(*this)
     , m_pageVisibilityState(PageVisibilityStateVisible)
     , m_domVersion(0)
@@ -238,7 +239,7 @@ Element* Document::createElement(QualifiedName localName)
         return new HTMLSpanElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_brLocalName) {
         return new HTMLBRElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_imageLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_imgLocalName) {
         return new HTMLImageElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_audioLocalName) {
 #ifdef STARFISH_ENABLE_AUDIO

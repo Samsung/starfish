@@ -130,37 +130,9 @@ Node* Element::clone()
 {
     Element* newNode = nullptr;
     if (isHTMLElement()) {
-        if (localName()->equals(document()->window()->starFish()->staticStrings()->m_htmlLocalName)) {
-            newNode = new HTMLHtmlElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_headLocalName)) {
-            newNode = new HTMLHeadElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_bodyLocalName)) {
-            newNode = new HTMLBodyElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_divLocalName)) {
-            newNode = new HTMLDivElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_imageLocalName)) {
-            newNode = new HTMLImageElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_scriptLocalName)) {
-            newNode = new HTMLScriptElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_styleLocalName)) {
-            newNode = new HTMLStyleElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_brLocalName)) {
-            newNode = new HTMLBRElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_linkLocalName)) {
-            newNode = new HTMLLinkElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_metaLocalName)) {
-            newNode = new HTMLMetaElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_pLocalName)) {
-            newNode = new HTMLParagraphElement(document());
-        } else if (localName()->equals(document()->window()->starFish()->staticStrings()->m_spanLocalName)) {
-            newNode = new HTMLSpanElement(document());
-        } else if (isHTMLElement() && asHTMLElement()->isHTMLUnknownElement()) {
-            newNode = new HTMLUnknownElement(document(), asHTMLElement()->asHTMLUnknownElement()->localName());
-        } else {
-            STARFISH_RELEASE_ASSERT(false);
-        }
+        newNode = document()->createElement(QualifiedName::fromString(document()->window()->starFish(), localName()));
     } else {
-        STARFISH_RELEASE_ASSERT(false);
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     STARFISH_ASSERT(newNode);

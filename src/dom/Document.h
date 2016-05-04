@@ -27,6 +27,13 @@ friend DOMImplementation;
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance);
 public:
+    enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
+    void setCompatibilityMode(CompatibilityMode m) { m_compatibilityMode = m; }
+    CompatibilityMode compatibilityMode() const { return m_compatibilityMode; }
+    bool inQuirksMode() const { return m_compatibilityMode == QuirksMode; }
+    bool inLimitedQuirksMode() const { return m_compatibilityMode == LimitedQuirksMode; }
+    bool inNoQuirksMode() const { return m_compatibilityMode == NoQuirksMode; }
+
     /* 4.2.2. Interface NonElementParentNode */
     Element* getElementById(String* id);
 
@@ -119,6 +126,7 @@ public:
     }
 
 protected:
+    CompatibilityMode m_compatibilityMode;
     StyleResolver m_styleResolver;
     Window* m_window;
     ScriptBindingInstance* m_scriptBindingInstance;

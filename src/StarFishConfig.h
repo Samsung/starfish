@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <vector>
+#include <deque>
 #include <list>
 #include <set>
 #include <map>
@@ -148,6 +149,8 @@
 #define STARFISH_ASSERT_NOT_REACHED() do { assert(false); } while (0)
 #define STARFISH_ASSERT_STATIC(assertion, reason) static_assert(assertion, reason)
 #endif
+
+#define STARFISH_ASSERT_UNUSED(variable, assertion) STARFISH_ASSERT(assertion)
 
 /* COMPILE_ASSERT */
 #ifndef STARFISH_COMPILE_ASSERT

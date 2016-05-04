@@ -45,6 +45,12 @@ public:
         return m_data;
     }
 
+    void parserSetData(String* data)
+    {
+        STARFISH_ASSERT(data);
+        m_data = data;
+    }
+
     void setData(String* data)
     {
         STARFISH_ASSERT(data);

@@ -10,8 +10,29 @@ typedef std::basic_string<char32_t, std::char_traits<char32_t>, gc_allocator<cha
 class StringDataASCII;
 class String;
 
+template<typename CharType> inline bool isASCIIUpper(CharType c)
+{
+    return c >= 'A' && c <= 'Z';
+}
+
+template<typename CharType> inline bool isASCIILower(CharType c)
+{
+    return c >= 'a' && c <= 'z';
+}
+
+template<typename CharType> inline CharType toASCIILower(CharType c)
+{
+#if defined(_MSC_FULL_VER) && _MSC_FULL_VER == 170060610
+    // Make a workaround for VS2012 update 3 optimizer bug, remove once VS2012 fix it.
+    return (c >= 'A' && c <= 'Z') ? c + 0x20 : c;
+#else
+    return c | ((c >= 'A' && c <= 'Z') << 5);
+#endif
+}
+
 class String {
 public:
+    static const unsigned defaultLengthLimit = 1 << 16;
     typedef std::vector<String*, gc_allocator<String*> > Vector;
 
     static String* emptyString;
@@ -20,8 +41,10 @@ public:
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);
     static String* createASCIIString(const char* src);
-    static String* createUTF32String(const char32_t* c);
+    static String* createUTF32String(const UTF32String& src);
     static String* createUTF32String(char32_t c);
+    static String* createASCIIStringFromUTF32Source(const UTF32String& src);
+    static String* createASCIIStringFromUTF32SourceIfPossible(const UTF32String& src);
 
     ASCIIString* asASCIIString() const
     {
@@ -47,7 +70,7 @@ public:
         {
             const char* c = str;
             while (*c) {
-                STARFISH_ASSERT(*c > 0);
+                STARFISH_ASSERT(!(*c & 0x80));
                 c++;
             }
         }
@@ -57,6 +80,21 @@ public:
             return false;
         for (size_t i = 0; i < length() ; i ++) {
             if (charAt(i) != (char32_t)str[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool equals(const char32_t* str)
+    {
+        size_t srcLen = 0;
+        for (; str[srcLen] ; srcLen ++) { }
+
+        if (srcLen != length())
+            return false;
+        for (size_t i = 0; i < length() ; i ++) {
+            if (charAt(i) != str[i]) {
                 return false;
             }
         }
@@ -166,6 +204,10 @@ public:
         }
     }
 
+    UTF32String toUTF32String();
+
+    bool startsWith(String* str, bool caseSensitive = true);
+
 protected:
     template <typename T>
     static bool stringEqual(const T* s, const T* s1, const size_t& len)
@@ -183,7 +225,6 @@ protected:
         return true;
     }
 
-    UTF32String toUTF32String();
     const char* utf8DataSlowCase();
     String()
     {
@@ -213,6 +254,11 @@ public:
 
 class StringDataUTF32 : public String, public UTF32String, public gc {
 public:
+    StringDataUTF32(const UTF32String& str)
+        : UTF32String(str)
+    {
+        m_isASCIIString = false;
+    }
     StringDataUTF32(UTF32String&& str)
         : UTF32String(str)
     {
@@ -225,6 +271,431 @@ public:
         m_isASCIIString = false;
     }
 };
+
+
+class SegmentedString;
+
+class SegmentedSubstring {
+public:
+    SegmentedSubstring()
+        : m_length(0)
+        , m_doNotExcludeLineNumbers(true)
+        , m_is8Bit(false)
+        , m_string(String::emptyString)
+    {
+        m_data.string32Ptr = 0;
+    }
+
+    SegmentedSubstring(String* str)
+        : m_length(str->length())
+        , m_doNotExcludeLineNumbers(true)
+        , m_string(str)
+    {
+        if (m_length) {
+            if (m_string->isASCIIString()) {
+                m_is8Bit = true;
+                m_data.string8Ptr = m_string->asASCIIString()->data();
+            } else {
+                m_is8Bit = false;
+                m_data.string32Ptr = m_string->asUTF32String()->data();
+            }
+        } else {
+            m_is8Bit = false;
+        }
+    }
+
+    void clear() { m_length = 0; m_data.string32Ptr = 0; m_is8Bit = false;}
+
+    bool is8Bit() { return m_is8Bit; }
+
+    bool excludeLineNumbers() const { return !m_doNotExcludeLineNumbers; }
+    bool doNotExcludeLineNumbers() const { return m_doNotExcludeLineNumbers; }
+
+    void setExcludeLineNumbers() { m_doNotExcludeLineNumbers = false; }
+
+    int numberOfCharactersConsumed() const { return m_string->length() - m_length; }
+
+    void appendTo(UTF32String& builder) const
+    {
+        int offset = (int)m_string->length() - m_length;
+
+        if (!offset) {
+            if (m_length) {
+                for (size_t i = 0; i < m_string->length(); i ++) {
+                    builder.push_back(m_string->charAt(i));
+                }
+            }
+        } else {
+            for (int i = offset; i < (offset + m_length); i ++) {
+                builder.push_back(m_string->charAt(i));
+            }
+        }
+    }
+
+    char32_t getCurrentChar8()
+    {
+        return *m_data.string8Ptr;
+    }
+
+    char32_t getCurrentChar32()
+    {
+        return m_data.string32Ptr ? *m_data.string32Ptr : 0;
+    }
+
+    char32_t incrementAndGetCurrentChar8()
+    {
+        STARFISH_ASSERT(m_data.string8Ptr);
+        return *++m_data.string8Ptr;
+    }
+
+    char32_t incrementAndGetCurrentChar32()
+    {
+        STARFISH_ASSERT(m_data.string32Ptr);
+        return *++m_data.string32Ptr;
+    }
+
+    String* currentSubString(unsigned length)
+    {
+        int offset = m_string->length() - m_length;
+        return m_string->substring(offset, length);
+    }
+
+    ALWAYS_INLINE char32_t getCurrentChar()
+    {
+        STARFISH_ASSERT(m_length);
+        if (is8Bit())
+            return getCurrentChar8();
+        return getCurrentChar32();
+    }
+
+    ALWAYS_INLINE char32_t incrementAndGetCurrentChar()
+    {
+        STARFISH_ASSERT(m_length);
+        if (is8Bit())
+            return incrementAndGetCurrentChar8();
+        return incrementAndGetCurrentChar32();
+    }
+
+public:
+    union {
+        const char* string8Ptr;
+        const char32_t* string32Ptr;
+    } m_data;
+    int m_length;
+
+private:
+    bool m_doNotExcludeLineNumbers;
+    bool m_is8Bit;
+    String* m_string;
+};
+
+// An abstract number of element in a sequence. The sequence has a first element.
+// This type should be used instead of integer because 2 contradicting traditions can
+// call a first element '0' or '1' which makes integer type ambiguous.
+class OrdinalNumber {
+public:
+    static OrdinalNumber fromZeroBasedInt(int zeroBasedInt) { return OrdinalNumber(zeroBasedInt); }
+    static OrdinalNumber fromOneBasedInt(int oneBasedInt) { return OrdinalNumber(oneBasedInt - 1); }
+    OrdinalNumber()
+        : m_zeroBasedValue(0)
+        { }
+
+    int zeroBasedInt() const { return m_zeroBasedValue; }
+    int oneBasedInt() const { return m_zeroBasedValue + 1; }
+
+    bool operator==(OrdinalNumber other) { return m_zeroBasedValue == other.m_zeroBasedValue; }
+    bool operator!=(OrdinalNumber other) { return !((*this) == other); }
+
+    static OrdinalNumber first() { return OrdinalNumber(0); }
+    static OrdinalNumber beforeFirst() { return OrdinalNumber(-1); }
+
+private:
+    OrdinalNumber(int zeroBasedInt)
+        : m_zeroBasedValue(zeroBasedInt)
+        { }
+    int m_zeroBasedValue;
+};
+
+class SegmentedString {
+public:
+    SegmentedString()
+        : m_pushedChar1(0)
+        , m_pushedChar2(0)
+        , m_currentChar(0)
+        , m_numberOfCharactersConsumedPriorToCurrentString(0)
+        , m_numberOfCharactersConsumedPriorToCurrentLine(0)
+        , m_currentLine(0)
+        , m_closed(false)
+        , m_empty(true)
+        , m_fastPathFlags(NoFastPath)
+        , m_advanceFunc(&SegmentedString::advanceEmpty)
+        , m_advanceAndUpdateLineNumberFunc(&SegmentedString::advanceEmpty)
+    {
+    }
+
+    SegmentedString(String* str)
+        : m_pushedChar1(0)
+        , m_pushedChar2(0)
+        , m_currentString(str)
+        , m_currentChar(0)
+        , m_numberOfCharactersConsumedPriorToCurrentString(0)
+        , m_numberOfCharactersConsumedPriorToCurrentLine(0)
+        , m_currentLine(0)
+        , m_closed(false)
+        , m_empty(!str->length())
+        , m_fastPathFlags(NoFastPath)
+    {
+        if (m_currentString.m_length)
+            m_currentChar = m_currentString.getCurrentChar();
+        updateAdvanceFunctionPointers();
+    }
+
+    void clear();
+    void close();
+
+    void append(const SegmentedString&);
+    void prepend(const SegmentedString&);
+
+    bool excludeLineNumbers() const { return m_currentString.excludeLineNumbers(); }
+    void setExcludeLineNumbers();
+
+    void push(char32_t c)
+    {
+        if (!m_pushedChar1) {
+            m_pushedChar1 = c;
+            m_currentChar = m_pushedChar1 ? m_pushedChar1 : m_currentString.getCurrentChar();
+            updateSlowCaseFunctionPointers();
+        } else {
+            STARFISH_ASSERT(!m_pushedChar2);
+            m_pushedChar2 = c;
+        }
+    }
+
+    bool isEmpty() const { return m_empty; }
+    unsigned length() const;
+
+    bool isClosed() const { return m_closed; }
+
+    enum LookAheadResult {
+        DidNotMatch,
+        DidMatch,
+        NotEnoughCharacters,
+    };
+
+    LookAheadResult lookAhead(String* string) { return lookAheadInline(string, true); }
+    LookAheadResult lookAheadIgnoringCase(String* string) { return lookAheadInline(string, false); }
+
+    void advance()
+    {
+        if (m_fastPathFlags & Use8BitAdvance) {
+            STARFISH_ASSERT(!m_pushedChar1);
+            bool haveOneCharacterLeft = (--m_currentString.m_length == 1);
+            m_currentChar = m_currentString.incrementAndGetCurrentChar8();
+
+            if (!haveOneCharacterLeft)
+                return;
+
+            updateSlowCaseFunctionPointers();
+
+            return;
+        }
+
+        (this->*m_advanceFunc)();
+    }
+
+    inline void advanceAndUpdateLineNumber()
+    {
+        if (m_fastPathFlags & Use8BitAdvance) {
+            STARFISH_ASSERT(!m_pushedChar1);
+
+            bool haveNewLine = (m_currentChar == '\n') & !!(m_fastPathFlags & Use8BitAdvanceAndUpdateLineNumbers);
+            bool haveOneCharacterLeft = (--m_currentString.m_length == 1);
+
+            m_currentChar = m_currentString.incrementAndGetCurrentChar8();
+
+            if (!(haveNewLine | haveOneCharacterLeft))
+                return;
+
+            if (haveNewLine) {
+                ++m_currentLine;
+                m_numberOfCharactersConsumedPriorToCurrentLine =  m_numberOfCharactersConsumedPriorToCurrentString + m_currentString.numberOfCharactersConsumed();
+            }
+
+            if (haveOneCharacterLeft)
+                updateSlowCaseFunctionPointers();
+
+            return;
+        }
+
+        (this->*m_advanceAndUpdateLineNumberFunc)();
+    }
+
+    void advanceAndASSERT(UChar expectedCharacter)
+    {
+        // ASSERT_UNUSED(expectedCharacter, currentChar() == expectedCharacter);
+        advance();
+    }
+
+    void advanceAndASSERTIgnoringCase(UChar expectedCharacter)
+    {
+        // ASSERT_UNUSED(expectedCharacter, WTF::Unicode::foldCase(currentChar()) == WTF::Unicode::foldCase(expectedCharacter));
+        advance();
+    }
+
+    void advancePastNonNewline()
+    {
+        STARFISH_ASSERT(currentChar() != '\n');
+        advance();
+    }
+
+    void advancePastNewlineAndUpdateLineNumber()
+    {
+        STARFISH_ASSERT(currentChar() == '\n');
+        if (!m_pushedChar1 && m_currentString.m_length > 1) {
+            int newLineFlag = m_currentString.doNotExcludeLineNumbers();
+            m_currentLine += newLineFlag;
+            if (newLineFlag)
+                m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + 1;
+            decrementAndCheckLength();
+            m_currentChar = m_currentString.incrementAndGetCurrentChar();
+            return;
+        }
+        advanceAndUpdateLineNumberSlowCase();
+    }
+
+    // Writes the consumed characters into consumedCharacters, which must
+    // have space for at least |count| characters.
+    void advance(unsigned count, char32_t* consumedCharacters);
+
+    bool escaped() const { return m_pushedChar1; }
+
+    int numberOfCharactersConsumed() const
+    {
+        int numberOfPushedCharacters = 0;
+        if (m_pushedChar1) {
+            ++numberOfPushedCharacters;
+            if (m_pushedChar2)
+                ++numberOfPushedCharacters;
+        }
+        return m_numberOfCharactersConsumedPriorToCurrentString + m_currentString.numberOfCharactersConsumed() - numberOfPushedCharacters;
+    }
+
+    String* toString() const;
+
+    char32_t currentChar() const { return m_currentChar; }
+
+    // The method is moderately slow, comparing to currentLine method.
+    OrdinalNumber currentColumn() const;
+    OrdinalNumber currentLine() const;
+    // Sets value of line/column variables. Column is specified indirectly by a parameter columnAftreProlog
+    // which is a value of column that we should get after a prolog (first prologLength characters) has been consumed.
+    void setCurrentPosition(OrdinalNumber line, OrdinalNumber columnAftreProlog, int prologLength);
+
+private:
+    enum FastPathFlags {
+        NoFastPath = 0,
+        Use8BitAdvanceAndUpdateLineNumbers = 1 << 0,
+        Use8BitAdvance = 1 << 1,
+    };
+
+    void append(const SegmentedSubstring&);
+    void prepend(const SegmentedSubstring&);
+
+    void advance8();
+    void advance16();
+    void advanceAndUpdateLineNumber8();
+    void advanceAndUpdateLineNumber16();
+    void advanceSlowCase();
+    void advanceAndUpdateLineNumberSlowCase();
+    void advanceEmpty();
+    void advanceSubstring();
+
+    void updateSlowCaseFunctionPointers();
+
+    void decrementAndCheckLength()
+    {
+        STARFISH_ASSERT(m_currentString.m_length > 1);
+        if (--m_currentString.m_length == 1)
+            updateSlowCaseFunctionPointers();
+    }
+
+    void updateAdvanceFunctionPointers()
+    {
+        if ((m_currentString.m_length > 1) && !m_pushedChar1) {
+            if (m_currentString.is8Bit()) {
+                m_advanceFunc = &SegmentedString::advance8;
+                m_fastPathFlags = Use8BitAdvance;
+                if (m_currentString.doNotExcludeLineNumbers()) {
+                    m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceAndUpdateLineNumber8;
+                    m_fastPathFlags |= Use8BitAdvanceAndUpdateLineNumbers;
+                } else {
+                    m_advanceAndUpdateLineNumberFunc = &SegmentedString::advance8;
+                }
+                return;
+            }
+
+            m_advanceFunc = &SegmentedString::advance16;
+            m_fastPathFlags = NoFastPath;
+            if (m_currentString.doNotExcludeLineNumbers())
+                m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceAndUpdateLineNumber16;
+            else
+                m_advanceAndUpdateLineNumberFunc = &SegmentedString::advance16;
+            return;
+        }
+
+        if (!m_currentString.m_length && !isComposite()) {
+            m_advanceFunc = &SegmentedString::advanceEmpty;
+            m_fastPathFlags = NoFastPath;
+            m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceEmpty;
+        }
+
+        updateSlowCaseFunctionPointers();
+    }
+
+    inline LookAheadResult lookAheadInline(String* string, bool caseSensitive)
+    {
+        if (!m_pushedChar1 && string->length() <= static_cast<unsigned>(m_currentString.m_length)) {
+            String* currentSubstring = m_currentString.currentSubString(string->length());
+            if (currentSubstring->startsWith(string, caseSensitive))
+                return DidMatch;
+            return DidNotMatch;
+        }
+        return lookAheadSlowCase(string, caseSensitive);
+    }
+
+    LookAheadResult lookAheadSlowCase(String* string, bool caseSensitive)
+    {
+        unsigned count = string->length();
+        if (count > length())
+            return NotEnoughCharacters;
+        UTF32String consumedCharacters;
+        consumedCharacters.resize(count);
+        advance(count, (char32_t*)consumedCharacters.data());
+        LookAheadResult result = DidNotMatch;
+        String* consumedString = new StringDataUTF32(std::move(consumedCharacters));
+        if (consumedString->startsWith(string, caseSensitive))
+            result = DidMatch;
+        prepend(SegmentedString(consumedString));
+        return result;
+    }
+
+    bool isComposite() const { return !(m_substrings.size() == 0); }
+
+    char32_t m_pushedChar1;
+    char32_t m_pushedChar2;
+    SegmentedSubstring m_currentString;
+    char32_t m_currentChar;
+    int m_numberOfCharactersConsumedPriorToCurrentString;
+    int m_numberOfCharactersConsumedPriorToCurrentLine;
+    int m_currentLine;
+    std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>> m_substrings;
+    bool m_closed;
+    bool m_empty;
+    unsigned char m_fastPathFlags;
+    void (SegmentedString::*m_advanceFunc)();
+    void (SegmentedString::*m_advanceAndUpdateLineNumberFunc)();
+};
+
 
 }
 #endif

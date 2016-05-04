@@ -84,9 +84,9 @@ void StarFish::run()
     m_messageLoop->run();
 }
 
-void StarFish::loadXMLDocument(String* filePath)
+void StarFish::loadPreprocessedXMLDocument(String* filePath)
 {
-    m_window->loadXMLDocument(filePath);
+    m_window->loadPreprocessedXMLDocument(filePath);
 }
 
 void StarFish::resume()
@@ -120,24 +120,39 @@ ImageData* StarFish::fetchImage(String* str)
     return iter->second;
 }
 
+void StarFish::addPointerInRootSet(void *ptr)
+{
+    auto iter = m_rootMap.find(ptr);
+    if (iter == m_rootMap.end()) {
+        m_rootMap.insert(std::make_pair(ptr, 1));
+    } else {
+        iter->second++;
+    }
+}
+
+void StarFish::removePointerFromRootSet(void *ptr)
+{
+    auto iter = m_rootMap.find(ptr);
+    if (iter->second == 1) {
+        m_rootMap.erase(iter);
+    } else {
+        iter->second--;
+    }
+}
+
 StaticStrings::StaticStrings(StarFish* sf)
 {
+    String* s = String::emptyString;
+    QualifiedName emptyAtom(s);
+    m_staticStringMap.insert(std::make_pair(std::string(), emptyAtom));
+
     m_documentLocalName = QualifiedName::fromString(sf, "#document");
     m_textLocalName = QualifiedName::fromString(sf, "#text");
     m_commentLocalName = QualifiedName::fromString(sf, "#comment");
-    m_htmlLocalName = QualifiedName::fromString(sf, "html");
-    m_headLocalName = QualifiedName::fromString(sf, "head");
-    m_styleLocalName = QualifiedName::fromString(sf, "style");
-    m_linkLocalName = QualifiedName::fromString(sf, "link");
-    m_scriptLocalName = QualifiedName::fromString(sf, "script");
-    m_metaLocalName = QualifiedName::fromString(sf, "meta");
-    m_bodyLocalName = QualifiedName::fromString(sf, "body");
-    m_divLocalName = QualifiedName::fromString(sf, "div");
-    m_pLocalName = QualifiedName::fromString(sf, "p");
-    m_imageLocalName = QualifiedName::fromString(sf, "img");
-    m_spanLocalName = QualifiedName::fromString(sf, "span");
-    m_brLocalName = QualifiedName::fromString(sf, "br");
-    m_audioLocalName = QualifiedName::fromString(sf, "audio");
+#define DEFINE_HTML_LOCAL_NAMES(name) \
+    m_##name##LocalName = QualifiedName::fromString(sf, #name);
+    STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
+#undef DEFINE_HTML_LOCAL_NAMES
 
     m_id = QualifiedName::fromString(sf, "id");
     m_class = QualifiedName::fromString(sf, "class");
@@ -150,6 +165,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_href = QualifiedName::fromString(sf, "href");
     m_type = QualifiedName::fromString(sf, "type");
     m_dir = QualifiedName::fromString(sf, "dir");
+    m_color = QualifiedName::fromString(sf, "color");
+    m_face = QualifiedName::fromString(sf, "face");
+    m_size = QualifiedName::fromString(sf, "size");
 
     m_click = QualifiedName::fromString(sf, "click");
     m_onclick = QualifiedName::fromString(sf, "onclick");

@@ -207,9 +207,9 @@ String* String::createASCIIString(const char* str)
     return new StringDataASCII(str);
 }
 
-String* String::createUTF32String(const char32_t* c)
+String* String::createUTF32String(const UTF32String& src)
 {
-    return new StringDataUTF32(c);
+    return new StringDataUTF32(src);
 }
 
 String* String::createUTF32String(char32_t c)
@@ -220,6 +220,36 @@ String* String::createUTF32String(char32_t c)
     }
     char32_t s[2] = {c, '\0'};
     return new StringDataUTF32(s);
+}
+
+String* String::createASCIIStringFromUTF32Source(const UTF32String& src)
+{
+#ifndef NDEBUG
+    for (size_t i = 0; i < src.length(); i ++) {
+        const char32_t c = src[i];
+        STARFISH_ASSERT(c < 128);
+    }
+#endif
+    ASCIIString ascii;
+    for (size_t i = 0; i < src.length(); i ++) {
+        ascii.push_back(src[i]);
+    }
+    return new StringDataASCII(std::move(ascii));
+}
+
+String* String::createASCIIStringFromUTF32SourceIfPossible(const UTF32String& src)
+{
+    for (size_t i = 0; i < src.length(); i ++) {
+        const char32_t c = src[i];
+        if (c > 127) {
+            return String::createUTF32String(src);
+        }
+    }
+    ASCIIString ascii;
+    for (size_t i = 0; i < src.length(); i ++) {
+        ascii.push_back(src[i]);
+    }
+    return new StringDataASCII(std::move(ascii));
 }
 
 const char* String::utf8Data()
@@ -302,7 +332,7 @@ String* String::replaceAll(String* from, String* to)
             str.replace(start_pos, from_str.length(), to_str);
             start_pos += to_str.length(); // Handles case where 'to' is a substring of 'from'
         }
-        return createUTF32String(str.data());
+        return createUTF32String(UTF32String(str.begin(), str.end()));
     }
 }
 
@@ -333,7 +363,7 @@ void String::split(char delim, Vector& tokens)
         ss << toUTF32String().data();
         std::basic_string<char32_t> item;
         while (std::getline(ss, item, (char32_t)delim)) {
-            tokens.push_back(String::createUTF32String(item.c_str()));
+            tokens.push_back(String::createUTF32String(UTF32String(item.begin(), item.end())));
         }
     }
 }
@@ -506,5 +536,326 @@ bool String::equalsWithoutCase(const String* str) const
     return false;
 }
 
+bool String::startsWith(String* str, bool caseSensitive)
+{
+    bool result = true;
+    size_t len = length();
+    size_t strLen = str->length();
+    if (strLen > len)
+        return false;
+
+    if (caseSensitive) {
+        for (size_t i = 0; i < strLen; i++) {
+            if (str->charAt(i) != charAt(i)) {
+                result = false;
+                break;
+            }
+        }
+    } else {
+        for (size_t i = 0; i < strLen; i++) {
+            if (tolower(str->charAt(i)) != tolower(charAt(i))) {
+                result = false;
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
+unsigned SegmentedString::length() const
+{
+    unsigned length = m_currentString.m_length;
+    if (m_pushedChar1) {
+        ++length;
+        if (m_pushedChar2)
+            ++length;
+    }
+    if (isComposite()) {
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator it = m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator e = m_substrings.end();
+        for (; it != e; ++it)
+            length += it->m_length;
+    }
+    return length;
+}
+
+void SegmentedString::setExcludeLineNumbers()
+{
+    m_currentString.setExcludeLineNumbers();
+    if (isComposite()) {
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::iterator it = m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::iterator e = m_substrings.end();
+        for (; it != e; ++it)
+            it->setExcludeLineNumbers();
+    }
+}
+
+void SegmentedString::clear()
+{
+    m_pushedChar1 = 0;
+    m_pushedChar2 = 0;
+    m_currentChar = 0;
+    m_currentString.clear();
+    m_numberOfCharactersConsumedPriorToCurrentString = 0;
+    m_numberOfCharactersConsumedPriorToCurrentLine = 0;
+    m_currentLine = 0;
+    m_substrings.clear();
+    m_closed = false;
+    m_empty = true;
+    m_fastPathFlags = NoFastPath;
+    m_advanceFunc = &SegmentedString::advanceEmpty;
+    m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceEmpty;
+}
+
+void SegmentedString::append(const SegmentedSubstring& s)
+{
+    STARFISH_ASSERT(!m_closed);
+    if (!s.m_length)
+        return;
+
+    if (!m_currentString.m_length) {
+        m_numberOfCharactersConsumedPriorToCurrentString += m_currentString.numberOfCharactersConsumed();
+        m_currentString = s;
+        updateAdvanceFunctionPointers();
+    } else {
+        m_substrings.push_back(s);
+    }
+    m_empty = false;
+}
+
+void SegmentedString::prepend(const SegmentedSubstring& s)
+{
+    STARFISH_ASSERT(!escaped());
+    STARFISH_ASSERT(!s.numberOfCharactersConsumed());
+    if (!s.m_length)
+        return;
+
+    // FIXME: We're assuming that the prepend were originally consumed by
+    //        this SegmentedString. We're also ASSERTing that s is a fresh
+    //        SegmentedSubstring. These assumptions are sufficient for our
+    //        current use, but we might need to handle the more elaborate
+    //        cases in the future.
+    m_numberOfCharactersConsumedPriorToCurrentString += m_currentString.numberOfCharactersConsumed();
+    m_numberOfCharactersConsumedPriorToCurrentString -= s.m_length;
+    if (!m_currentString.m_length) {
+        m_currentString = s;
+        updateAdvanceFunctionPointers();
+    } else {
+        // Shift our m_currentString into our list.
+        m_substrings.insert(m_substrings.begin(), m_currentString);
+        m_currentString = s;
+        updateAdvanceFunctionPointers();
+    }
+    m_empty = false;
+}
+
+void SegmentedString::close()
+{
+    // Closing a stream twice is likely a coding mistake.
+    STARFISH_ASSERT(!m_closed);
+    m_closed = true;
+}
+
+void SegmentedString::append(const SegmentedString& s)
+{
+    STARFISH_ASSERT(!m_closed);
+    STARFISH_ASSERT(!s.escaped());
+    append(s.m_currentString);
+    if (s.isComposite()) {
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator it = s.m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator e = s.m_substrings.end();
+        for (; it != e; ++it)
+            append(*it);
+    }
+    m_currentChar = m_pushedChar1 ? m_pushedChar1 : (m_currentString.m_length ? m_currentString.getCurrentChar() : 0);
+}
+
+void SegmentedString::prepend(const SegmentedString& s)
+{
+    STARFISH_ASSERT(!escaped());
+    STARFISH_ASSERT(!s.escaped());
+    if (s.isComposite()) {
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_reverse_iterator it = s.m_substrings.rbegin();
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_reverse_iterator e = s.m_substrings.rend();
+        for (; it != e; ++it)
+            prepend(*it);
+    }
+    prepend(s.m_currentString);
+    m_currentChar = m_pushedChar1 ? m_pushedChar1 : (m_currentString.m_length ? m_currentString.getCurrentChar() : 0);
+}
+
+void SegmentedString::advanceSubstring()
+{
+    if (isComposite()) {
+        m_numberOfCharactersConsumedPriorToCurrentString += m_currentString.numberOfCharactersConsumed();
+        m_currentString = m_substrings.front();
+        m_substrings.pop_front();
+        // If we've previously consumed some characters of the non-current
+        // string, we now account for those characters as part of the current
+        // string, not as part of "prior to current string."
+        m_numberOfCharactersConsumedPriorToCurrentString -= m_currentString.numberOfCharactersConsumed();
+        updateAdvanceFunctionPointers();
+    } else {
+        m_currentString.clear();
+        m_empty = true;
+        m_fastPathFlags = NoFastPath;
+        m_advanceFunc = &SegmentedString::advanceEmpty;
+        m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceEmpty;
+    }
+}
+
+String* SegmentedString::toString() const
+{
+    UTF32String result;
+    if (m_pushedChar1) {
+        result.push_back(m_pushedChar1);
+        if (m_pushedChar2)
+            result.push_back(m_pushedChar2);
+    }
+    m_currentString.appendTo(result);
+    if (isComposite()) {
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator it = m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator e = m_substrings.end();
+        for (; it != e; ++it)
+            it->appendTo(result);
+    }
+    return new StringDataUTF32(std::move(result));
+}
+
+void SegmentedString::advance(unsigned count, char32_t* consumedCharacters)
+{
+    STARFISH_ASSERT(count <= length());
+    for (unsigned i = 0; i < count; ++i) {
+        consumedCharacters[i] = currentChar();
+        advance();
+    }
+}
+
+void SegmentedString::advance8()
+{
+    STARFISH_ASSERT(!m_pushedChar1);
+    decrementAndCheckLength();
+    m_currentChar = m_currentString.incrementAndGetCurrentChar8();
+}
+
+void SegmentedString::advance16()
+{
+    STARFISH_ASSERT(!m_pushedChar1);
+    decrementAndCheckLength();
+    m_currentChar = m_currentString.incrementAndGetCurrentChar32();
+}
+
+void SegmentedString::advanceAndUpdateLineNumber8()
+{
+    STARFISH_ASSERT(!m_pushedChar1);
+    STARFISH_ASSERT(m_currentString.getCurrentChar() == m_currentChar);
+    if (m_currentChar == '\n') {
+        ++m_currentLine;
+        m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + 1;
+    }
+    decrementAndCheckLength();
+    m_currentChar = m_currentString.incrementAndGetCurrentChar8();
+}
+
+void SegmentedString::advanceAndUpdateLineNumber16()
+{
+    STARFISH_ASSERT(!m_pushedChar1);
+    STARFISH_ASSERT(m_currentString.getCurrentChar() == m_currentChar);
+    if (m_currentChar == '\n') {
+        ++m_currentLine;
+        m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + 1;
+    }
+    decrementAndCheckLength();
+    m_currentChar = m_currentString.incrementAndGetCurrentChar32();
+}
+
+void SegmentedString::advanceSlowCase()
+{
+    if (m_pushedChar1) {
+        m_pushedChar1 = m_pushedChar2;
+        m_pushedChar2 = 0;
+
+        if (m_pushedChar1) {
+            m_currentChar = m_pushedChar1;
+            return;
+        }
+
+        updateAdvanceFunctionPointers();
+    } else if (m_currentString.m_length) {
+        if (!--m_currentString.m_length)
+            advanceSubstring();
+    } else if (!isComposite()) {
+        m_currentString.clear();
+        m_empty = true;
+        m_fastPathFlags = NoFastPath;
+        m_advanceFunc = &SegmentedString::advanceEmpty;
+        m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceEmpty;
+    }
+    m_currentChar = m_currentString.m_length ? m_currentString.getCurrentChar() : 0;
+}
+
+void SegmentedString::advanceAndUpdateLineNumberSlowCase()
+{
+    if (m_pushedChar1) {
+        m_pushedChar1 = m_pushedChar2;
+        m_pushedChar2 = 0;
+
+        if (m_pushedChar1) {
+            m_currentChar = m_pushedChar1;
+            return;
+        }
+
+        updateAdvanceFunctionPointers();
+    } else if (m_currentString.m_length) {
+        if (m_currentString.getCurrentChar() == '\n' && m_currentString.doNotExcludeLineNumbers()) {
+            ++m_currentLine;
+            // Plus 1 because numberOfCharactersConsumed value hasn't incremented yet; it does with m_length decrement below.
+            m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + 1;
+        }
+        if (!--m_currentString.m_length)
+            advanceSubstring();
+        else
+            m_currentString.incrementAndGetCurrentChar(); // Only need the ++
+    } else if (!isComposite()) {
+        m_currentString.clear();
+        m_empty = true;
+        m_fastPathFlags = NoFastPath;
+        m_advanceFunc = &SegmentedString::advanceEmpty;
+        m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceEmpty;
+    }
+
+    m_currentChar = m_currentString.m_length ? m_currentString.getCurrentChar() : 0;
+}
+
+void SegmentedString::advanceEmpty()
+{
+    STARFISH_ASSERT(!m_currentString.m_length && !isComposite());
+    m_currentChar = 0;
+}
+
+void SegmentedString::updateSlowCaseFunctionPointers()
+{
+    m_fastPathFlags = NoFastPath;
+    m_advanceFunc = &SegmentedString::advanceSlowCase;
+    m_advanceAndUpdateLineNumberFunc = &SegmentedString::advanceAndUpdateLineNumberSlowCase;
+}
+
+OrdinalNumber SegmentedString::currentLine() const
+{
+    return OrdinalNumber::fromZeroBasedInt(m_currentLine);
+}
+
+OrdinalNumber SegmentedString::currentColumn() const
+{
+    int zeroBasedColumn = numberOfCharactersConsumed() - m_numberOfCharactersConsumedPriorToCurrentLine;
+    return OrdinalNumber::fromZeroBasedInt(zeroBasedColumn);
+}
+
+void SegmentedString::setCurrentPosition(OrdinalNumber line, OrdinalNumber columnAftreProlog, int prologLength)
+{
+    m_currentLine = line.zeroBasedInt();
+    m_numberOfCharactersConsumedPriorToCurrentLine = numberOfCharactersConsumed() + prologLength - columnAftreProlog.zeroBasedInt();
+}
 
 }

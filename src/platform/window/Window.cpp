@@ -1,7 +1,8 @@
 #include "StarFishConfig.h"
 #include "Window.h"
 
-#include "dom/builder/XMLDocumentBuilder.h"
+#include "dom/builder/html/HTMLDocumentBuilder.h"
+#include "dom/builder/preprocessed_xml/PreprocessedXMLDocumentBuilder.h"
 #include "dom/HTMLDocument.h"
 #include "layout/FrameTreeBuilder.h"
 #include "platform/canvas/font/Font.h"
@@ -715,9 +716,16 @@ void Window::setWholeDocumentNeedsStyleRecalc()
     setNeedsRendering();
 }
 
-void Window::loadXMLDocument(String* filePath)
+void Window::loadPreprocessedXMLDocument(String* filePath)
 {
-    XMLDocumentBuilder* builder = new XMLDocumentBuilder;
+    PreprocessedXMLDocumentBuilder* builder = new PreprocessedXMLDocumentBuilder;
+    builder->build(m_document, filePath);
+    dispatchLoadEvent();
+}
+
+void Window::navigate(String* filePath)
+{
+    HTMLDocumentBuilder* builder = new HTMLDocumentBuilder;
     builder->build(m_document, filePath);
     dispatchLoadEvent();
 }

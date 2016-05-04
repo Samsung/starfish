@@ -47,7 +47,7 @@ extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 
 extern "C" STARFISH_EXPORT void starfishLoadXMLDocument(StarFishInstance* instance, const char* xmlPath)
 {
-    TO_STARFISH(instance)->loadXMLDocument(String::fromUTF8(xmlPath));
+    TO_STARFISH(instance)->loadPreprocessedXMLDocument(String::fromUTF8(xmlPath));
 }
 
 extern "C" STARFISH_EXPORT void starfishNotifyPause(StarFishInstance* instance)

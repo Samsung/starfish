@@ -23,6 +23,7 @@ XMLHttpRequest::XMLHttpRequest()
     m_timeout = 0;
     m_abortFlag = false;
     m_sendFlag = false;
+    m_starfish = nullptr;
     m_bindingInstance = nullptr;
     m_sync = false;
 }
@@ -40,7 +41,7 @@ void XMLHttpRequest::send(String* body)
     m_sendFlag = true;
     callEventHandler(LOADSTART, true, 0, 0);
 
-    GC_add_roots(this, this + sizeof(XMLHttpRequest*));
+    m_starfish->addPointerInRootSet(this);
     auto task =
     [](XMLHttpRequest* xhrobj, std::string url, XMLHttpRequest::METHOD_TYPE methodType, std::string body, uint32_t timeout) -> bool {
         bool fromOnline = false;
@@ -68,7 +69,11 @@ void XMLHttpRequest::send(String* body)
         progressData.lastruntime = 0;
 
         if (fromOnline && !curl) {
-            GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
+            // invoke loadend event
+            // FIXME here is another thread
+            // we should move this code area into main thread
+            xhrobj->m_starfish->removePointerFromRootSet(xhrobj);
+            // ------------
             return false;
         }
 
@@ -90,11 +95,14 @@ void XMLHttpRequest::send(String* body)
             } else if (methodType == GET_METHOD) {
 
             } else {
-                printf("XMLHttpRequest UnSupportted method!!  \n");
+                STARFISH_LOG_ERROR("XMLHttpRequest UnSupportted method!!  \n");
 
                 // invoke loadend event
+                // FIXME here is another thread
+                // we should move this code area into main thread
                 xhrobj->callEventHandler(LOADEND, false, progressData.loaded, progressData.total);
-                GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
+                xhrobj->m_starfish->addPointerInRootSet(xhrobj);
+                // ----------------------
                 return false;
             }
 
@@ -148,12 +156,14 @@ void XMLHttpRequest::send(String* body)
                 header.memory = buff;
 
                 ecore_thread_main_loop_begin();
+                xhrobj->m_starfish->addPointerInRootSet(xhrobj);
                 ecore_idler_add([](void *data)->Eina_Bool {
                     XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
                     this_obj->m_readyState = HEADERS_RECEIVED;
                     this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
                     this_obj->m_readyState = LOADING;
                     this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
+                    this_obj->m_starfish->removePointerFromRootSet(this_obj);
                     return ECORE_CALLBACK_CANCEL;
                 }, xhrobj);
                 ecore_thread_main_loop_end();
@@ -187,7 +197,7 @@ void XMLHttpRequest::send(String* body)
                 curl_easy_cleanup(curl);
 
             if (buffer.size == 0) {
-                GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
+                xhrobj->m_starfish->removePointerFromRootSet(xhrobj);
                 return false;
             }
 
@@ -211,6 +221,7 @@ void XMLHttpRequest::send(String* body)
             pass->total = progressData.total;
 
             ecore_thread_main_loop_begin();
+            xhrobj->m_starfish->addPointerInRootSet(xhrobj);
             ecore_idler_add([](void *data)->Eina_Bool {
                 Pass* pass = (Pass*)data;
                 XMLHttpRequest* this_obj = pass->obj;
@@ -238,10 +249,11 @@ void XMLHttpRequest::send(String* body)
 
                 delete []pass->buf;
                 delete pass;
+                this_obj->m_starfish->removePointerFromRootSet(this_obj);
                 return ECORE_CALLBACK_CANCEL;
             }, pass);
+            xhrobj->m_starfish->removePointerFromRootSet(xhrobj);
             ecore_thread_main_loop_end();
-            GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
             return true;
 
         } else {
@@ -259,16 +271,18 @@ void XMLHttpRequest::send(String* body)
             }
 
             ecore_thread_main_loop_begin();
+            xhrobj->m_starfish->addPointerInRootSet(xhrobj);
             ecore_idler_add([](void *data)->Eina_Bool {
                 XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
                 this_obj->callEventHandler(ERROR, false, 0, 0);
+                this_obj->m_starfish->removePointerFromRootSet(this_obj);
                 return ECORE_CALLBACK_CANCEL;
             }, xhrobj);
             ecore_thread_main_loop_end();
         }
-        GC_remove_roots(xhrobj, xhrobj + sizeof(XMLHttpRequest*));
-        return false;
 
+        xhrobj->m_starfish->removePointerFromRootSet(xhrobj);
+        return false;
     };
 
     std::thread(task, this, std::move(url), m_method, std::move(bodyString), m_timeout).detach();

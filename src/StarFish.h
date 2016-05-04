@@ -10,28 +10,157 @@ class Window;
 class ScriptBindingInstance;
 class ImageData;
 
+
+#define STARFISH_ENUM_HTML_TAG_NAMES(F) \
+F(abbr) \
+F(acronym) \
+F(address) \
+F(article) \
+F(aside) \
+F(b) \
+F(basefont) \
+F(bdo) \
+F(bgsound) \
+F(big) \
+F(center) \
+F(cite) \
+F(code) \
+F(command) \
+F(dd) \
+F(dfn) \
+F(dt) \
+F(em) \
+F(figcaption) \
+F(figure) \
+F(footer) \
+F(header) \
+F(hgroup) \
+F(i) \
+F(kbd) \
+F(layer) \
+F(main) \
+F(mark) \
+F(nav) \
+F(nobr) \
+F(noframes) \
+F(nolayer) \
+F(plaintext) \
+F(rp) \
+F(s) \
+F(samp) \
+F(section) \
+F(small) \
+F(strike) \
+F(strong) \
+F(sub) \
+F(sup) \
+F(tt) \
+F(u) \
+F(var) \
+F(a) \
+F(area) \
+F(audio) \
+F(br) \
+F(base) \
+F(body) \
+F(canvas) \
+F(content) \
+F(dl) \
+F(datalist) \
+F(details) \
+F(dir) \
+F(div) \
+F(font) \
+F(form) \
+F(frame) \
+F(frameset) \
+F(hr) \
+F(head) \
+F(h1) \
+F(h2) \
+F(h3) \
+F(h4) \
+F(h5) \
+F(h6) \
+F(html) \
+F(iframe) \
+F(li) \
+F(label) \
+F(legend) \
+F(map) \
+F(marquee) \
+F(menu) \
+F(meta) \
+F(meter) \
+F(del) \
+F(ins) \
+F(ol) \
+F(optgroup) \
+F(option) \
+F(p) \
+F(param) \
+F(pre) \
+F(listing) \
+F(xmp) \
+F(progress) \
+F(blockquote) \
+F(q) \
+F(shadow) \
+F(source) \
+F(span) \
+F(caption) \
+F(td) \
+F(th) \
+F(col) \
+F(colgroup) \
+F(table) \
+F(tr) \
+F(tbody) \
+F(tfoot) \
+F(thead) \
+F(template) \
+F(title) \
+F(track) \
+F(ul) \
+F(img) \
+F(image) \
+F(video) \
+F(dialog) \
+F(button) \
+F(fieldset) \
+F(keygen) \
+F(output) \
+F(select) \
+F(textarea) \
+F(applet) \
+F(embed) \
+F(link) \
+F(script) \
+F(style) \
+F(input) \
+F(object) \
+F(bdi) \
+F(noembed) \
+F(noscript) \
+F(rt) \
+F(ruby) \
+F(summary) \
+F(wbr)
+
+
 class StaticStrings {
     friend class QualifiedName;
 public:
     StaticStrings(StarFish* sf);
 
-    // Node Names
     QualifiedName m_documentLocalName;
     QualifiedName m_textLocalName;
     QualifiedName m_commentLocalName;
-    QualifiedName m_htmlLocalName;
-    QualifiedName m_headLocalName;
-    QualifiedName m_styleLocalName;
-    QualifiedName m_linkLocalName;
-    QualifiedName m_scriptLocalName;
-    QualifiedName m_metaLocalName;
-    QualifiedName m_bodyLocalName;
-    QualifiedName m_divLocalName;
-    QualifiedName m_pLocalName;
-    QualifiedName m_imageLocalName;
-    QualifiedName m_spanLocalName;
-    QualifiedName m_brLocalName;
-    QualifiedName m_audioLocalName;
+    // tag Names
+#define DEFINE_HTML_LOCAL_NAMES(name) \
+    QualifiedName m_##name##LocalName;
+    STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
+#undef DEFINE_HTML_LOCAL_NAMES
 
     // Attribute Names
     QualifiedName m_id;
@@ -45,6 +174,9 @@ public:
     QualifiedName m_href;
     QualifiedName m_type;
     QualifiedName m_dir;
+    QualifiedName m_color;
+    QualifiedName m_face;
+    QualifiedName m_size;
 
     // Event Names
     QualifiedName m_click;
@@ -105,8 +237,8 @@ public:
 
     String* makeResourcePath(String* src)
     {
-        std::string p = m_currentPath->asASCIIString()->data();
-        std::string strSrc = src->asASCIIString()->data();
+        std::string p = m_currentPath->utf8Data();
+        std::string strSrc = src->utf8Data();
 
         if (posPrefix(strSrc, "file://") != std::string::npos)
             p = strSrc.substr(7);
@@ -115,10 +247,10 @@ public:
         else
             p.append(strSrc);
 
-        return String::createASCIIString(p.data());
+        return String::fromUTF8(p.data());
     }
 
-    void loadXMLDocument(String* filePath);
+    void loadPreprocessedXMLDocument(String* filePath);
 
     void resume();
     void pause();
@@ -164,6 +296,9 @@ public:
         return m_lineBreaker;
     }
 
+    void addPointerInRootSet(void *ptr);
+    void removePointerFromRootSet(void *ptr);
+
 protected:
     void init(int w, int h);
     size_t posPrefix(std::string str, std::string prefix)
@@ -184,6 +319,8 @@ protected:
     std::unordered_map<std::string, ImageData*, std::hash<std::string>, std::equal_to<std::string>,
         gc_allocator<std::pair<std::string, ImageData*>>> m_imageCache;
     FontSelector m_fontSelector;
+    std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
+        gc_allocator<std::pair<void*, size_t>>> m_rootMap;
 };
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST

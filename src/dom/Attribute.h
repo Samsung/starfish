@@ -72,6 +72,7 @@ private:
 
 typedef std::vector<Attribute, gc_allocator<Attribute>> AttributeVector;
 
+Attribute* findAttributeInVector(AttributeVector& attr, const QualifiedName& attributeName);
 }
 
 
