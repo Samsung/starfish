@@ -26,11 +26,9 @@ fi
 if [[ "$tc" == *"/" ]]; then
     tc=$(find $tc -name "*.htm*" | sort)
 elif [[ "$tc" == *"webkit_fast_dom_regression.res" ]]; then
-    echo "fast_dom"
     WEBKIT_FAST_DOM=1
     tc=$(cat $tc)
 elif [[ "$tc" == *".res" ]]; then
-    echo "dom"
     tc=$(cat $tc)
 fi
 
@@ -86,7 +84,6 @@ for i in $tc ; do
         if [ $WEBKIT_FAST_DOM -eq 1 ]; then
             RESULT=$(python tool/reftest/compare_result.py $EXPECTED_FILE $TMPFILE 2>&1)
 
-            echo $RESULT
             if [ $SKIP -eq 1 ]; then
                 SKIPTC=`expr $SKIPTC + 1`
                 echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
