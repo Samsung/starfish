@@ -1,0 +1,46 @@
+<head>
+<script>
+if (window.testRunner)
+    testRunner.dumpAsText();
+function testEquals(value1, value2, msg)
+{
+    console.log((value1 == value2 ? "PASS" : "FAIL") + "  " + (msg ? msg : ""));
+}
+function doTest() {
+
+    var labo_child;
+    
+    labo_child = document.createElement("p");
+    labo_child.setAttribute("id", "labo");
+    document.getElementById("labo").appendChild(labo_child);
+    sel = document.getElementById("labo");
+    testEquals(sel, "[object HTMLDivElement]", "Should be a div element");
+
+    labo_child = document.createElement("span");
+    labo_child.setAttribute("id", "labo2");
+    document.getElementById("labo2").appendChild(labo_child);
+    sel = document.getElementById("labo2");
+    testEquals(sel, "[object HTMLDivElement]", "Should be a div element");
+
+    sel = document.getElementById("labo3");
+    testEquals(sel, "[object HTMLDivElement]", "Should be a div element");
+
+    sel = document.getElementById("labo4");
+    testEquals(sel, "[object HTMLDivElement]", "Should be a div element");
+
+    try {
+        wptTestEnd();
+    } catch(e) {
+        console.log(e);
+    }
+}
+</script>
+</head>
+<body onload="doTest()">
+<div id='labo'></div>
+<div id='labo2'></div>
+<div id='labo3'><form><select name='labo3' id='labo3'><option>1</option><option>2</option></select><form></div>
+<div id='labo4'><span name='labo4' id='labo4'></span></div>
+
+<pre id="result"></pre>
+</body>
