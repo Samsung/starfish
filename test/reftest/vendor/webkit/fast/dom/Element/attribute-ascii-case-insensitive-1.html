@@ -55,20 +55,12 @@ function testAttributeOnTarget(equivalentNames, distinctNames) {
     });
 }
 
-function testParsedAttribute(attribute, equivalentNames, distinctNames) {
-    //testContainer.innerHTML = '<div ' + attribute + '="WebKit!" id="target"></div>';    
-    var a = document.createElement('div');
-    a.setAttribute(attribute, "WebKit!");
-    a.setAttribute("id", "target");
-    testContainer.appendChild(a);
-    
-    testAttributeOnTarget(equivalentNames, distinctNames);
-    
-    //testContainer.innerHTML = '';
-    while(testContainer.firstChild) {
-        testContainer.removeChild(testContainer.firstChild);
-    }
+/*function testParsedAttribute(attribute, equivalentNames, distinctNames) {
+    testContainer.innerHTML = '<div ' + attribute + '="WebKit!" id="target"></div>';    
+    testAttributeOnTarget(equivalentNames, distinctNames);    
+    testContainer.innerHTML = '';
 }
+*/
 
 function testAttributeFromDOMApis(attribute, equivalentNames, distinctNames) {
     var newElement = document.createElement('div');
@@ -93,7 +85,7 @@ function testAttribute(equivalentNames, distinctNames) {
     */
     equivalentNames.forEach(function(testCase, indxe) {
         debug("Testing " + testCase);
-        testParsedAttribute(testCase, equivalentNames, distinctNames);
+        //testParsedAttribute(testCase, equivalentNames, distinctNames);
         testAttributeFromDOMApis(testCase, equivalentNames, distinctNames);
         debug("");
     });
