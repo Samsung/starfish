@@ -37,4 +37,5 @@ test/reftest/vendor/webkit/fast/dom/Document/replaceChild-null-oldChild.html
 test/reftest/vendor/webkit/fast/dom/Element/attribute-ascii-case-insensitive-1.html
 test/reftest/vendor/webkit/fast/dom/capturing-event-listeners.html
 test/reftest/vendor/webkit/fast/dom/children-nodes.html
-
+test/reftest/vendor/webkit/fast/dom/Window/dispatchEvent.html
+test/reftest/vendor/webkit/fast/dom/Window/HTMLBodyElement-window-eventListener-attributes.html
