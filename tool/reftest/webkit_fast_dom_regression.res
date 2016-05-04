@@ -49,3 +49,6 @@ test/reftest/vendor/webkit/fast/dom/inline-event-attributes-moved.html
 test/reftest/vendor/webkit/fast/dom/NamedNodeMap-named-getter-caching.html
 test/reftest/vendor/webkit/fast/dom/NamedNodeMap-setNamedItem-crash.html
 test/reftest/vendor/webkit/fast/dom/Window/replaceable.html
+test/reftest/vendor/webkit/fast/dom/node-childNodes-idempotence.html
+test/reftest/vendor/webkit/fast/dom/node-item.html
+test/reftest/vendor/webkit/fast/dom/node-legacy-event-listener.html
