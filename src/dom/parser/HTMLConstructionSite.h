@@ -56,7 +56,7 @@ typedef HTMLElement HTMLFormElement;
 class HTMLConstructionSite : public gc {
 public:
     HTMLConstructionSite(Document*);
-    // HTMLConstructionSite(DocumentFragment*, ParserContentPolicy);
+    HTMLConstructionSite(DocumentFragment*);
     ~HTMLConstructionSite();
 
     void detach();

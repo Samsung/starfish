@@ -3,6 +3,9 @@
 #include "Text.h"
 
 #include "Document.h"
+#include "DocumentFragment.h"
+
+#include "dom/parser/HTMLParser.h"
 
 #include "style/Style.h"
 #include "style/CSSParser.h"
@@ -124,6 +127,23 @@ void Element::setTextContent(String* text)
     if (!text->equals(String::emptyString)) {
         appendChild(node);
     }
+}
+
+String* Element::innerHTML()
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+void Element::setInnerHTML(String* html)
+{
+    while (firstChild()) {
+        removeChild(firstChild());
+    }
+
+    DocumentFragment* df = document()->createDocumentFragment();
+    HTMLParser parser(document()->window()->starFish(), df, this, html);
+    parser.parse();
+    appendChild(df);
 }
 
 Node* Element::clone()

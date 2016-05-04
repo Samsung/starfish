@@ -69,6 +69,9 @@ public:
 
     virtual void setTextContent(String* text);
 
+    String* innerHTML();
+    void setInnerHTML(String*);
+
     /* Other methods (not in Node interface) */
 
     virtual bool isElement() const

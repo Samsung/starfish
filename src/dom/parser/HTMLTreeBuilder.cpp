@@ -107,18 +107,18 @@ static bool isFormattingTag(StaticStrings* s, const QualifiedName& tagName)
     return tagName == s->m_aLocalName || isNonAnchorFormattingTag(s, tagName);
 }
 
-/*static HTMLFormElement* closestFormAncestor(Element* element)
+static HTMLFormElement* closestFormAncestor(StaticStrings* s, Element* element)
 {
     while (element) {
-        if (element->hasTagName(formTag))
-            return toHTMLFormElement(element);
+        if (element->localName()->equals(s->m_formLocalName.string()))
+            return element->asHTMLElement();
         Node* parent = element->parentNode();
         if (!parent || !parent->isElement())
             return 0;
         element = parent->asElement();
     }
     return 0;
-}*/
+}
 
 class HTMLTreeBuilder::CharacterTokenBuffer : public gc {
 public:
@@ -242,7 +242,7 @@ private:
 };
 
 // HTMLDocumentParser*, HTMLDocument*, bool reportErrors
-HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, HTMLDocument* document, bool)
+HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, Document* document, bool)
     : m_framesetOk(true)
 #ifndef NDEBUG
     , m_isAttached(true)
@@ -257,24 +257,21 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, HTMLDocument* document, boo
     m_scriptToProcess = nullptr;
 }
 
-/*
 // FIXME: Member variables should be grouped into self-initializing structs to
 // minimize code duplication between these constructors.
-HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser* parser, DocumentFragment* fragment, Element* contextElement, ParserContentPolicy parserContentPolicy, const HTMLParserOptions& options)
+HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, DocumentFragment* fragment, Element* contextElement)
     : m_framesetOk(true)
 #ifndef NDEBUG
     , m_isAttached(true)
 #endif
     , m_fragmentContext(fragment, contextElement)
-    , m_tree(fragment, parserContentPolicy)
+    , m_tree(fragment)
     , m_insertionMode(InitialMode)
     , m_originalInsertionMode(InitialMode)
     , m_shouldSkipLeadingNewline(false)
     , m_parser(parser)
     , m_scriptToProcessStartPosition(uninitializedPositionValue1())
-    , m_options(options)
 {
-    ASSERT(isMainThread());
     // FIXME: This assertion will become invalid if <http://webkit.org/b/60316> is fixed.
     ASSERT(contextElement);
     if (contextElement) {
@@ -282,16 +279,16 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLDocumentParser* parser, DocumentFragment* f
         // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-end.html#fragment-case
         // For efficiency, we skip step 4.2 ("Let root be a new html element with no attributes")
         // and instead use the DocumentFragment as a root node.
-        m_tree.openElements()->pushRootNode(HTMLStackItem::create(fragment, HTMLStackItem::ItemForDocumentFragmentNode));
+        m_tree.openElements()->pushRootNode(new HTMLStackItem(fragment, HTMLStackItem::ItemForDocumentFragmentNode));
 
-        if (contextElement->hasTagName(templateTag))
-            m_templateInsertionModes.append(TemplateContentsMode);
+        if (contextElement->localName()->equals(fragment->document()->window()->starFish()->staticStrings()->m_templateLocalName.string()))
+            m_templateInsertionModes.push_back(TemplateContentsMode);
 
         resetInsertionModeAppropriately();
-        m_tree.setForm(closestFormAncestor(contextElement));
+        m_tree.setForm(closestFormAncestor(fragment->document()->window()->starFish()->staticStrings(), contextElement));
     }
 }
-
+/*
 HTMLTreeBuilder::~HTMLTreeBuilder()
 {
 }
@@ -313,14 +310,14 @@ HTMLTreeBuilder::FragmentParsingContext::FragmentParsingContext()
 {
     m_contextElementStackItem = nullptr;
 }
-/*
+
 HTMLTreeBuilder::FragmentParsingContext::FragmentParsingContext(DocumentFragment* fragment, Element* contextElement)
     : m_fragment(fragment)
 {
-    STARFISH_ASSERT(!fragment->hasChildren());
+    STARFISH_ASSERT(!fragment->firstChild());
     m_contextElementStackItem = new HTMLStackItem(contextElement, HTMLStackItem::ItemForContextElement);
 }
-*/
+
 HTMLTreeBuilder::FragmentParsingContext::~FragmentParsingContext()
 {
 }

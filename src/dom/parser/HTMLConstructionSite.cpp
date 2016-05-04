@@ -5,6 +5,7 @@
 #include "dom/DocumentType.h"
 #include "dom/Element.h"
 #include "dom/Text.h"
+#include "dom/DocumentFragment.h"
 
 #include "dom/HTMLScriptElement.h"
 #include "dom/HTMLHtmlElement.h"
@@ -306,18 +307,17 @@ HTMLConstructionSite::HTMLConstructionSite(Document* document)
     // ASSERT(m_document->isHTMLDocument() || m_document->isXHTMLDocument());
 }
 
-/*
-HTMLConstructionSite::HTMLConstructionSite(DocumentFragment* fragment, ParserContentPolicy parserContentPolicy)
-    : m_document(&fragment->document())
+HTMLConstructionSite::HTMLConstructionSite(DocumentFragment* fragment)
+    : m_document(fragment->document())
     , m_attachmentRoot(fragment)
-    , m_parserContentPolicy(parserContentPolicy)
     , m_isParsingFragment(true)
     , m_redirectAttachToFosterParent(false)
-    , m_inQuirksMode(fragment->document().inQuirksMode())
+    , m_inQuirksMode(fragment->document()->inQuirksMode())
 {
-    ASSERT(m_document->isHTMLDocument() || m_document->isXHTMLDocument());
+    m_form = nullptr;
+    m_head = nullptr;
 }
-*/
+
 
 HTMLConstructionSite::~HTMLConstructionSite()
 {

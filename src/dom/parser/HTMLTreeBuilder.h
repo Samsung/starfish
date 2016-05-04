@@ -44,8 +44,8 @@ public:
 
 class HTMLTreeBuilder : public gc {
 public:
-    HTMLTreeBuilder(HTMLParser*, HTMLDocument*, bool reportErrors);
-    // HTMLTreeBuilder(HTMLParser*, DocumentFragment*, Element* contextElement);
+    HTMLTreeBuilder(HTMLParser*, Document*, bool reportErrors);
+    HTMLTreeBuilder(HTMLParser*, DocumentFragment*, Element* contextElement);
 
     const HTMLElementStack* openElements() const { return m_tree.openElements(); }
 
@@ -177,7 +177,7 @@ private:
     class FragmentParsingContext : public gc {
     public:
         FragmentParsingContext();
-        // FragmentParsingContext(DocumentFragment*, Element* contextElement);
+        FragmentParsingContext(DocumentFragment*, Element* contextElement);
         ~FragmentParsingContext();
 
         DocumentFragment* fragment() const { return m_fragment; }

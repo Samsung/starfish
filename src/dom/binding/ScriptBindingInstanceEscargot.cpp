@@ -1082,6 +1082,27 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("innerHTML"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            return toJSString(nd->asElement()->innerHTML());
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement()) {
+            nd->asElement()->setInnerHTML(toBrowserString(v));
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("attributes"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
