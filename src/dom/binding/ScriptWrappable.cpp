@@ -68,13 +68,25 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             if (instance->currentExecutionContext()->readArgument(0).isESPointer()
                 && instance->currentExecutionContext()->readArgument(0).asESPointer()
                 && instance->currentExecutionContext()->readArgument(0).asESPointer()->isESFunctionObject()) {
-                if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
+                if (instance->currentExecutionContext()->readArgument(1).isUndefinedOrNull()) {
+                    Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+                    return escargot::ESValue(wnd->setTimeout(handler, 0,
+                    instance->currentExecutionContext()->readArgument(0).asESPointer()));
+                } else if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
                     Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
                     return escargot::ESValue(wnd->setTimeout(handler, instance->currentExecutionContext()->readArgument(1).toUint32(),
                     instance->currentExecutionContext()->readArgument(0).asESPointer()));
                 }
             } else if (instance->currentExecutionContext()->readArgument(0).isESString()) {
-                if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
+                if (instance->currentExecutionContext()->readArgument(1).isUndefinedOrNull()) {
+                    String* bodyStr = toBrowserString(instance->currentExecutionContext()->readArgument(0).asESString());
+                    String* name[] = {String::emptyString};
+                    bool error = false;
+                    ScriptValue m_listener = createScriptFunction(name, 1, bodyStr, error);
+                    Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+                    return escargot::ESValue(wnd->setTimeout(handler, 0,
+                    m_listener.asESPointer()));
+                } else if (instance->currentExecutionContext()->readArgument(1).isNumber()) {
                     String* bodyStr = toBrowserString(instance->currentExecutionContext()->readArgument(0).asESString());
                     String* name[] = {String::emptyString};
                     bool error = false;
