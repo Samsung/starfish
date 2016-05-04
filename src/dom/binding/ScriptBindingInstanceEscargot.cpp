@@ -2808,6 +2808,9 @@ escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBin
             int argCount = instance->currentExecutionContext()->argumentCount();
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             escargot::ESValue forceValue;
+
+            if (argCount == 0)
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Not enough arguments"))));
             if (argCount >= 2)
                 forceValue = instance->currentExecutionContext()->readArgument(1);
             if (argCount > 0) {
@@ -2816,8 +2819,12 @@ escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBin
                 if (argCount == 1) {
                     didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
                 } else {
-                    ASSERT(forceValue.isBoolean());
-                    didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), true, forceValue.asBoolean());
+                    if(forceValue.isUndefined()) {
+                        didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
+                    } else {
+                        ASSERT(forceValue.isBoolean());
+                        didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), true, forceValue.asBoolean());
+                    }
                 }
                 return escargot::ESValue(didAdd);
             }
