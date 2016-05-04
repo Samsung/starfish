@@ -220,12 +220,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     auto fnAddEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
-
+        if (instance->currentExecutionContext()->argumentCount() < 2) {
+            THROW_ILLEGAL_INVOCATION()
+        }
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
         escargot::ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
         if (firstArg.isESString() && secondArg.isESPointer() && secondArg.asESPointer()->isESFunctionObject()) {
-            // TODO: Verify valid event types (e.g. click)
             escargot::ESString* argStr = firstArg.asESString();
             auto eventTypeName = String::fromUTF8(argStr->utf8Data());
             auto listener = new EventListener(secondArg);
@@ -239,6 +240,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     auto fnRemoveEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
+        if (instance->currentExecutionContext()->argumentCount() < 2) {
+            THROW_ILLEGAL_INVOCATION()
+        }
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
         escargot::ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
