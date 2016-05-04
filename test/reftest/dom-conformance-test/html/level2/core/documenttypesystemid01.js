@@ -104,8 +104,8 @@ function documenttypesystemid01() {
 
       systemId = doc.doctype.systemId;
 
-      assertEquals("documenttypepublicid01","",publicId);
-       assertEquals("documenttypesystemid01","",systemId);
+      assertEquals("documenttypepublicid01",systemId,"http://www.w3.org/TR/html4/strict.dtd");
+       assertEquals("documenttypesystemid01",publicId,"-//W3C//DTD HTML 4.01//EN");
        
 }
 

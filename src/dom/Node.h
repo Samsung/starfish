@@ -149,12 +149,10 @@ public:
     virtual String* nodeName() = 0;
     virtual void beginParsing()
     {
-        STARFISH_ASSERT(!m_inParsing);
         m_inParsing = true;
     }
     virtual void finishParsing()
     {
-        STARFISH_ASSERT(m_inParsing);
         m_inParsing = false;
     }
 

@@ -104,11 +104,8 @@ function documenttypepublicid01() {
 //docType = domImpl.createDocumentType("l2:root","PUB",nullNS);
       publicId = doc.doctype.publicId;
 
-      //assertEquals("documenttypepublicid01","-//W3C//DTD HTML 4.01//EN",publicId);
+      assertEquals("documenttypepublicid01","-//W3C//DTD HTML 4.01//EN",publicId);
       
-      // TODO: Starfish should provide emtpy string for publicId.
-      assertEquals("documenttypepublicid01","",publicId);
-       
 }
 
 
