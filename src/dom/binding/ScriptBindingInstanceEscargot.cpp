@@ -2695,7 +2695,7 @@ escargot::ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBinding
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             TO_INDEX_UINT32(argValue, idx);
             if (idx != INVALID_INDEX && idx < nodeList->length()) {
-                Node* nd = nodeList->item(argValue.asUInt32());
+                Node* nd = nodeList->item(idx);
                 return nd->scriptValue();
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
@@ -2860,7 +2860,7 @@ escargot::ESFunctionObject* bindingDOMSettableTokenList(ScriptBindingInstance* s
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         TO_INDEX_UINT32(argValue, idx);
         if (idx != INVALID_INDEX && idx < self->length()) {
-            String* elem = self->item(argValue.asUInt32());
+            String* elem = self->item(idx);
             return toJSString(elem);
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
@@ -2984,7 +2984,7 @@ escargot::ESFunctionObject* bindingNamedNodeMap(ScriptBindingInstance* scriptBin
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         TO_INDEX_UINT32(argValue, idx);
         if (idx != INVALID_INDEX && idx < self->length()) {
-            Attr* elem = self->item(argValue.asUInt32());
+            Attr* elem = self->item(idx);
             if (elem != nullptr)
                 return elem->scriptValue();
         }

@@ -664,7 +664,8 @@ void ScriptWrappable::initScriptWrappable(NamedNodeMap* ptr, ScriptBindingInstan
         if (idx < self->length()) {
             return true;
         }
-        return false;
+        Attr* e = self->getNamedItem(QualifiedName::fromString(((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish(), key.asESString()->utf8Data()));
+        return e;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NamedNodeMapObject);
         NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
@@ -678,8 +679,14 @@ void ScriptWrappable::initScriptWrappable(NamedNodeMap* ptr, ScriptBindingInstan
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NamedNodeMapObject);
         NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
         uint32_t idx = key.toIndex();
-        ASSERT(idx < self->length());
-        return self->item(idx)->scriptValue();
+        if (idx == escargot::ESValue::ESInvalidIndexValue) {
+            Attr* e = self->getNamedItem(QualifiedName::fromString(((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish(), key.asESString()->utf8Data()));
+            if (e != nullptr)
+                return e->scriptValue();
+        } else if (idx < self->length()) {
+            return self->item(idx)->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
     });
 }
 
