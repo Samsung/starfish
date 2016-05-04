@@ -35,6 +35,7 @@ test/reftest/vendor/webkit/fast/dom/attributes-configurable.html
 test/reftest/vendor/webkit/fast/dom/background-shorthand-csstext.html
 test/reftest/vendor/webkit/fast/dom/Document/replaceChild-null-oldChild.html
 test/reftest/vendor/webkit/fast/dom/Element/attribute-ascii-case-insensitive-1.html
+test/reftest/vendor/webkit/fast/dom/Element/attribute-ascii-case-insensitive-2.html
 test/reftest/vendor/webkit/fast/dom/capturing-event-listeners.html
 test/reftest/vendor/webkit/fast/dom/children-nodes.html
 test/reftest/vendor/webkit/fast/dom/Window/dispatchEvent.html
