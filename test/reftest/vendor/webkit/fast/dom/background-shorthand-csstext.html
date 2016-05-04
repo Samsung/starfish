@@ -1,6 +1,5 @@
 <html>
 <head>
-<script src="../../resources/wpt-test-pre.js"></script>
 <script>
 function print(message, color) 
 {
@@ -36,6 +35,12 @@ function test()
     shouldBe("document.getElementById('div1').style.background == 'repeat-x white'", true);
     shouldBe("document.getElementById('div2').style.background == 'repeat blue'", true);
     shouldBe("document.getElementById('div3').style.background == 'none repeat rgb(255, 255, 255)'", true);
+    
+    try {
+        wptTestEnd();
+    } catch(e) {
+        console.log(e);
+    }
 }
 </script>
 </head>
@@ -52,6 +57,5 @@ initial values.
 <hr>
 
 <div id='console' style="background-color:white; border:2px solid black"></div>
-<script src="../../resources/wpt-test-post.js"></script>
 </body>
 </html>
