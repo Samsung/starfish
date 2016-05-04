@@ -251,6 +251,7 @@ public:
     }
 
     void loadPreprocessedXMLDocument(String* filePath);
+    void loadHTMLDocument(String* filePath);
 
     void resume();
     void pause();

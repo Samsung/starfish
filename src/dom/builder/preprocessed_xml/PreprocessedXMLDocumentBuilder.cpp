@@ -39,23 +39,27 @@ void PreprocessedXMLDocumentBuilder::build(Document* document, String* filePath)
         }
         if (type == 9) {
             newNode = document;
+            newNode->beginParsing();
         } else if (type == 10) {
             newNode = new DocumentType(document);
+            newNode->beginParsing();
             parentNode->parserAppendChild(newNode);
             return;
         } else if (type == 3) {
             newNode = new Text(document, String::fromUTF8(xmlElement->FirstChildElement()->FirstChild()->Value()));
+            newNode->beginParsing();
             parentNode->parserAppendChild(newNode);
             return;
         } else if (type == 8) {
             newNode = new Comment(document, String::fromUTF8(xmlElement->FirstChildElement()->FirstChild()->Value()));
+            newNode->beginParsing();
             parentNode->parserAppendChild(newNode);
             return;
         } else if (type == 1) {
             const char* name = xmlElement->Attribute("localName");
             QualifiedName qname = QualifiedName::fromString(document->window()->starFish(), name);
             newNode = document->createElement(qname);
-
+            newNode->beginParsing();
             STARFISH_ASSERT(newNode);
 
             if (newNode->isElement()) {
@@ -97,7 +101,7 @@ void PreprocessedXMLDocumentBuilder::build(Document* document, String* filePath)
             child = child->NextSiblingElement();
         }
 
-        newNode->finishParsingChildren();
+        newNode->finishParsing();
 
     };
 

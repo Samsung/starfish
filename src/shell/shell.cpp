@@ -25,6 +25,10 @@ int main(int argc, char *argv[])
     // GC_disable();
     int flag = 0;
 
+    if (argc == 1) {
+        puts("please specify file path");
+        return -1;
+    }
     // printf("%d", (int)sizeof (StarFish::ComputedStyle));
 
     std::string path = "";
@@ -83,10 +87,6 @@ int main(int argc, char *argv[])
 
     printf("running StarFish (working directory = %s)\n", path.c_str());
     StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path.c_str()), "en-us", width, height);
-    if (argc == 1) {
-        puts("please specify file path");
-        return -1;
-    }
 
     if (hasEnding(argv[1], "xml")) {
         sf->window()->loadPreprocessedXMLDocument(String::createASCIIString(argv[1]));

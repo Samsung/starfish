@@ -50,6 +50,11 @@ extern "C" STARFISH_EXPORT void starfishLoadXMLDocument(StarFishInstance* instan
     TO_STARFISH(instance)->loadPreprocessedXMLDocument(String::fromUTF8(xmlPath));
 }
 
+extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(StarFishInstance* instance, const char* path)
+{
+    TO_STARFISH(instance)->loadHTMLDocument(String::fromUTF8(path));
+}
+
 extern "C" STARFISH_EXPORT void starfishNotifyPause(StarFishInstance* instance)
 {
     TO_STARFISH(instance)->pause();

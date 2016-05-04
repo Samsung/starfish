@@ -37,6 +37,11 @@ public:
     virtual void didNodeRemovedFromDocumenTree();
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didNodeRemoved(Node* parent, Node* oldChild);
+    virtual void finishParsing()
+    {
+        HTMLElement::finishParsing();
+        generateStyleSheet();
+    }
 
     void generateStyleSheet();
     void removeStyleSheet();

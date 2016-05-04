@@ -175,7 +175,7 @@ void HTMLElementStack::popAll()
     while (m_top) {
         Node* node = topNode();
         if (node->isElement())
-            node->asElement()->finishParsingChildren();
+            node->asElement()->finishParsing();
         m_top = m_top->releaseNext();
     }
 }
@@ -348,7 +348,7 @@ void HTMLElementStack::insertAbove(HTMLStackItem* item, ElementRecord* recordBel
 
         m_stackDepth++;
         recordAbove->setNext(new ElementRecord(item, recordAbove->releaseNext()));
-        // recordAbove->next()->element()->beginParsingChildren();
+        recordAbove->next()->element()->beginParsing();
         return;
     }
     STARFISH_ASSERT_NOT_REACHED();
@@ -558,7 +558,7 @@ void HTMLElementStack::popCommon()
     STARFISH_ASSERT(!topStackItem()->hasTagName(topStackItem()->node()->document()->window()->starFish()->staticStrings()->m_htmlLocalName));
     STARFISH_ASSERT(!topStackItem()->hasTagName(topStackItem()->node()->document()->window()->starFish()->staticStrings()->m_headLocalName) || !m_headElement);
     STARFISH_ASSERT(!topStackItem()->hasTagName(topStackItem()->node()->document()->window()->starFish()->staticStrings()->m_bodyLocalName) || !m_bodyElement);
-    top()->finishParsingChildren();
+    top()->finishParsing();
     m_top = m_top->releaseNext();
 
     m_stackDepth--;

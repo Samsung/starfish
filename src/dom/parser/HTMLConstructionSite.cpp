@@ -90,12 +90,10 @@ static inline void executeInsertTask(HTMLConstructionSiteTask& task)
     insert(task);
 
     if (task.child->isElement()) {
-        /*
-        Element& child = toElement(*task.child);
-        child.beginParsingChildren();
+        Element* child = task.child->asElement();
+        child->beginParsing();
         if (task.selfClosing)
-            child.finishParsingChildren();
-        */
+            child->finishParsing();
     }
 }
 

@@ -99,6 +99,7 @@ protected:
 
         m_state = NodeStateNormal;
 
+        m_inParsing = false;
         m_needsStyleRecalc = true;
         m_childNeedsStyleRecalc = true;
 
@@ -146,7 +147,16 @@ public:
 
     virtual NodeType nodeType() = 0;
     virtual String* nodeName() = 0;
-    virtual void finishParsingChildren() { }
+    virtual void beginParsing()
+    {
+        STARFISH_ASSERT(!m_inParsing);
+        m_inParsing = true;
+    }
+    virtual void finishParsing()
+    {
+        STARFISH_ASSERT(m_inParsing);
+        m_inParsing = false;
+    }
 
     Document* ownerDocument() const
     {
@@ -553,6 +563,7 @@ private:
 
 protected:
     Node* getDocTypeChild();
+    bool m_inParsing : 1;
     bool m_needsStyleRecalc : 1;
     bool m_childNeedsStyleRecalc : 1;
     bool m_needsFrameTreeBuild : 1;

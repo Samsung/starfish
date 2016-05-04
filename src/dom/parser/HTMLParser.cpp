@@ -7,6 +7,7 @@ namespace StarFish {
 void HTMLParser::parse()
 {
     HTMLTreeBuilder builder(this, (HTMLDocument*)m_document, false);
+    m_document->setInParsing(true);
     while (true) {
         if (!m_tokenizer.nextToken(m_input.current(), token()))
             break;
@@ -34,6 +35,7 @@ void HTMLParser::parse()
         }
     }
     builder.finished();
+    m_document->setInParsing(false);
 
 }
 

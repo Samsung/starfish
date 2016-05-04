@@ -125,7 +125,18 @@ public:
         m_domVersion++;
     }
 
+    bool inParsing()
+    {
+        return m_inParsing;
+    }
+
+    void setInParsing(bool b)
+    {
+        m_inParsing = b;
+    }
+
 protected:
+    bool m_inParsing : 1;
     CompatibilityMode m_compatibilityMode;
     StyleResolver m_styleResolver;
     Window* m_window;

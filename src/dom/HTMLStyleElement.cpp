@@ -59,7 +59,13 @@ void HTMLStyleElement::didNodeRemovedFromDocumenTree()
 void HTMLStyleElement::generateStyleSheet()
 {
     STARFISH_ASSERT(isInDocumentScope());
-    STARFISH_ASSERT(!m_generatedSheet);
+
+    if (m_inParsing)
+        return;
+
+    if (m_generatedSheet)
+        removeStyleSheet();
+
     CSSParser parser(document());
 
     String* str = String::emptyString;

@@ -13,6 +13,7 @@ namespace StarFish {
 
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
     : Node(this, scriptBindingInstance)
+    , m_inParsing(false)
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_styleResolver(*this)
     , m_pageVisibilityState(PageVisibilityStateVisible)

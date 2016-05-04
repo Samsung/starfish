@@ -7,9 +7,9 @@
 
 namespace StarFish {
 
-void HTMLScriptElement::executeScript(bool force)
+void HTMLScriptElement::executeScript()
 {
-    if (!m_isAlreadyStarted || force) {
+    if (!m_isAlreadyStarted && !m_inParsing) {
         String* typeAttr = getAttribute(document()->window()->starFish()->staticStrings()->m_type);
         if (!typeAttr->equals(String::emptyString) && !typeAttr->equals("text/javascript"))
             return;
@@ -48,7 +48,8 @@ void HTMLScriptElement::executeScript(bool force)
 void HTMLScriptElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
-    executeScript();
+    if (!document()->inParsing())
+        executeScript();
 }
 
 }

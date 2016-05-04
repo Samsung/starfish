@@ -32,13 +32,13 @@ public:
         return true;
     }
 
-    void executeScript(bool force = false);
+    void executeScript();
 
     virtual void didNodeInsertedToDocumenTree();
-    virtual void finishParsingChildren()
+    virtual void finishParsing()
     {
-        HTMLElement::finishParsingChildren();
-        executeScript(true);
+        HTMLElement::finishParsing();
+        executeScript();
     }
 
 protected:

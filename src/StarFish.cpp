@@ -22,11 +22,14 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
+            /*
 #ifdef NDEBUG
             STARFISH_LOG_INFO("did GC. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
 #else
             STARFISH_LOG_INFO("did GC. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
+             */
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_total_bytes() / 1024.f / 1024.f);
         }
     });
 
@@ -87,6 +90,11 @@ void StarFish::run()
 void StarFish::loadPreprocessedXMLDocument(String* filePath)
 {
     m_window->loadPreprocessedXMLDocument(filePath);
+}
+
+void StarFish::loadHTMLDocument(String* filePath)
+{
+    m_window->navigate(filePath);
 }
 
 void StarFish::resume()

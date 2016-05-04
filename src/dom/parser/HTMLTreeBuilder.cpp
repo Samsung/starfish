@@ -10,6 +10,7 @@
 #include "dom/parser/HTMLStackItem.h"
 #include "dom/parser/HTMLToken.h"
 #include "dom/parser/HTMLTokenizer.h"
+#include "dom/DOM.h"
 
 namespace StarFish {
 
@@ -2088,8 +2089,10 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
             // Pause ourselves so that parsing stops until the script can be processed by the caller.
             ASSERT(m_tree.currentStackItem()->hasTagName(s->m_scriptLocalName));
             // if (scriptingContentIsAllowed(m_tree.parserContentPolicy()))
-            if (true)
-                m_scriptToProcess = m_tree.currentElement();
+            if (true) {
+                // m_scriptToProcess = m_tree.currentElement();
+                m_tree.currentElement()->asHTMLElement()->asHTMLScriptElement()->executeScript();
+            }
             m_tree.openElements()->pop();
             setInsertionMode(m_originalInsertionMode);
 
