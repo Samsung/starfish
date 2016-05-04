@@ -106,7 +106,7 @@ asdf
 
 				iframe.load = function job() {
 					// console.log (iframe.contentDocument.body.childNodes.length)
-					if (iframe.contentDocument.body.childNodes.length == 0) {
+					if (iframe.contentDocument.childNodes.length == 0) {
 						window.setTimeout(iframe.load, 50);
 						return;
 					}
