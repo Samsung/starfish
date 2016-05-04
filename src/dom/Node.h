@@ -17,6 +17,7 @@
 namespace StarFish {
 
 class CharacterData;
+class DocumentFragment;
 class Element;
 class Frame;
 class NodeList;
@@ -310,6 +311,11 @@ public:
     }
 
     virtual bool isDocumentType() const
+    {
+        return false;
+    }
+
+    virtual bool isDocumentFragment() const
     {
         return false;
     }

@@ -52,11 +52,14 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
+            /*
 #ifdef NDEBUG
             STARFISH_LOG_INFO("did GC. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
 #else
             STARFISH_LOG_INFO("did GC. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
+             */
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_total_bytes() / 1024.f / 1024.f);
         }
     });
     GC_set_free_space_divisor(64);
@@ -155,6 +158,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_staticStringMap.insert(std::make_pair(std::string(), emptyAtom));
 
     m_documentLocalName = QualifiedName::fromString(sf, "#document");
+    m_documentFragmentLocalName = QualifiedName::fromString(sf, "#document-fragment");
     m_textLocalName = QualifiedName::fromString(sf, "#text");
     m_commentLocalName = QualifiedName::fromString(sf, "#comment");
 #define DEFINE_HTML_LOCAL_NAMES(name) \

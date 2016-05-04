@@ -536,6 +536,35 @@ bool String::equalsWithoutCase(const String* str) const
     return false;
 }
 
+bool String::startsWith(const char* str, bool caseSensitive)
+{
+    // is string is all ascii??
+    STARFISH_ASSERT(String::createASCIIString(str));
+    bool result = true;
+    size_t len = length();
+    size_t strLen = strlen(str);
+    if (strLen > len)
+        return false;
+
+    if (caseSensitive) {
+        for (size_t i = 0; i < strLen; i++) {
+            if ((char32_t)str[i] != charAt(i)) {
+                result = false;
+                break;
+            }
+        }
+    } else {
+        for (size_t i = 0; i < strLen; i++) {
+            if (tolower(str[i]) != tolower(charAt(i))) {
+                result = false;
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
 bool String::startsWith(String* str, bool caseSensitive)
 {
     bool result = true;

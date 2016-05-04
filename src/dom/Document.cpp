@@ -213,6 +213,11 @@ Element* Document::getElementById(String* id)
     });
 }
 
+DocumentFragment* Document::createDocumentFragment()
+{
+    return new DocumentFragment(this);
+}
+
 Element* Document::createElement(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))

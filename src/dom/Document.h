@@ -47,6 +47,7 @@ public:
         return nullptr;
     }
 
+    DocumentFragment* createDocumentFragment();
     Element* createElement(QualifiedName localName);
     Text* createTextNode(String* data);
     Comment* createComment(String* data);

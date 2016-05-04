@@ -10,6 +10,7 @@ class Window;
 class Node;
 class Element;
 class Document;
+class DocumentFragment;
 class DocumentType;
 class HTMLDocument;
 class CharacterData;
@@ -111,6 +112,7 @@ public:
     void initScriptWrappable(Element* ptr);
     void initScriptWrappable(Element* ptr, ScriptBindingInstance*);
     void initScriptWrappable(Document* ptr);
+    void initScriptWrappable(DocumentFragment* ptr);
     void initScriptWrappable(HTMLDocument* ptr);
     void initScriptWrappable(CharacterData* ptr);
     void initScriptWrappable(Text* ptr);

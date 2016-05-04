@@ -154,6 +154,7 @@ public:
     StaticStrings(StarFish* sf);
 
     QualifiedName m_documentLocalName;
+    QualifiedName m_documentFragmentLocalName;
     QualifiedName m_textLocalName;
     QualifiedName m_commentLocalName;
     // tag Names

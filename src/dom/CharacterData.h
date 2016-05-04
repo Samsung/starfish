@@ -83,16 +83,6 @@ public:
     }
 
     virtual Node* clone() = 0;
-
-    virtual void paint(Canvas* canvas)
-    {
-    }
-
-    virtual Node* hitTest(float x, float y)
-    {
-        return NULL;
-    }
-
     static std::string replaceAll(const std::string& str, const std::string& pattern, const std::string& replace)
     {
         std::string result = str;

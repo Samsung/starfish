@@ -1386,6 +1386,12 @@ escargot::ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInst
     return TextFunction;
 }
 
+escargot::ESFunctionObject* bindingDocumentFragment(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentFragment, fetchData(scriptBindingInstance)->node()->protoType());
+    return DocumentFragmentFunction;
+}
+
 escargot::ESFunctionObject* bindingDocumentType(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentType, fetchData(scriptBindingInstance)->node()->protoType());
@@ -1629,6 +1635,25 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, nullptr);
+
+    escargot::ESFunctionObject* createDocumentFragmentFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        try {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            if (obj->isDocument()) {
+                Document* doc = obj->asDocument();
+                return doc->createDocumentFragment()->scriptValue();
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("DocumentFragment"), 1, false);
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("createDocumentFragment"), false, false, false, createDocumentFragmentFunction);
 
     escargot::ESFunctionObject* createElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         try {
@@ -2823,7 +2848,7 @@ escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBin
                 if (argCount == 1) {
                     didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
                 } else {
-                    if(forceValue.isUndefined()) {
+                    if (forceValue.isUndefined()) {
                         didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argStr), false, false);
                     } else {
                         ASSERT(forceValue.isBoolean());

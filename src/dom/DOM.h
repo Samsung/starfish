@@ -3,6 +3,7 @@
 
 #include "dom/Node.h"
 #include "dom/Document.h"
+#include "dom/DocumentFragment.h"
 #include "dom/DocumentType.h"
 #include "dom/HTMLDocument.h"
 #include "dom/DocumentType.h"

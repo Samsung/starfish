@@ -9,6 +9,7 @@ namespace StarFish {
     F(element, Element) \
     F(document, Document) \
     F(documentType, DocumentType) \
+    F(documentFragment, DocumentFragment) \
     F(htmlDocument, HTMLDocument) \
     F(characterData, CharacterData) \
     F(text, Text) \
@@ -106,6 +107,7 @@ private:
     escargot::ESFunctionObject* m_element;
     escargot::ESFunctionObject* m_document;
     escargot::ESFunctionObject* m_documentType;
+    escargot::ESFunctionObject* m_documentFragment;
     escargot::ESFunctionObject* m_htmlDocument;
     escargot::ESFunctionObject* m_characterData;
     escargot::ESFunctionObject* m_text;

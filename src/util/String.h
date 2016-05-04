@@ -206,6 +206,7 @@ public:
 
     UTF32String toUTF32String();
 
+    bool startsWith(const char* str, bool caseSensitive = true);
     bool startsWith(String* str, bool caseSensitive = true);
 
 protected:

@@ -389,7 +389,7 @@ Node* Node::getDocTypeChild()
 void Node::validatePreinsert(Node* node, Node* child) // (node, child)
 {
     // 4.2.1 pre-insertion validity
-    if (!(isDocument() || isElement())) {
+    if (!(isDocument() || isElement() || isDocumentFragment())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Parent is not a Document, DocumentFragment, or Element node.");
     }
 
@@ -406,7 +406,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
     if (child != nullptr && child->parentNode() != this) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR, "Child is not null and its parent is not parent.");
     }
-    if (!(node->isDocumentType() || node->isElement() || node->isText() || node->isComment())) {
+    if (!(node->isDocumentType() || node->isElement() || node->isText() || node->isComment() || node->isDocumentFragment())) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR, "Node is not a DocumentFragment, DocumentType, Element, Text, ProcessingInstruction, or Comment.");
     }
     if ((node->isText() && isDocument()) || (node->isDocumentType() && !isDocument())) {
@@ -452,6 +452,14 @@ Node* Node::appendChild(Node* child)
     STARFISH_ASSERT(child);
 
     validatePreinsert(child, nullptr);
+
+    if (child->isDocumentFragment()) {
+        while (Node* nd = child->firstChild()) {
+            child->removeChild(nd);
+            appendChild(nd);
+        }
+        return child;
+    }
 
     if (child->parentNode()) {
         Node* p = child->parentNode();
