@@ -1,0 +1,9 @@
+<p>Test traversing children using HTMLCollection while mutating DOM</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> child.firstChild.textContent is "child 0"</span><br />
+<span><span class="pass">PASS</span> child.firstChild.textContent is "child 1"</span><br />
+<span><span class="pass">PASS</span> child.firstChild.textContent is "child 2"</span><br />
+<span><span class="pass">PASS</span> child.firstChild.textContent is "child 3"</span><br />
+<span><span class="pass">PASS</span> child.firstChild.textContent is "child 4"</span><br />
+<span><span class="pass">PASS</span> child is null</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />
