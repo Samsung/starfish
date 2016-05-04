@@ -40,3 +40,4 @@ test/reftest/vendor/webkit/fast/dom/capturing-event-listeners.html
 test/reftest/vendor/webkit/fast/dom/children-nodes.html
 test/reftest/vendor/webkit/fast/dom/Window/dispatchEvent.html
 test/reftest/vendor/webkit/fast/dom/Window/HTMLBodyElement-window-eventListener-attributes.html
+test/reftest/vendor/webkit/fast/dom/Window/remove-timeout-crash.html
