@@ -266,6 +266,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         bool ret = false;
         if (argCount == 1 && firstArg.isObject()) {
+            if (!(firstArg.isObject() && (firstArg.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::EventObject))) {
+                auto msg = escargot::ESString::create("Failed to execute 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            }
             Event* event = (Event*)firstArg.asESPointer()->asESObject()->extraPointerData();
             ret = ((EventTarget*)thisValue.asESPointer()->asESObject()->extraPointerData())->dispatchEvent(event);
         }
