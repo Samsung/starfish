@@ -17,15 +17,19 @@ def compare(expected, result):
     extract_expected=re.findall(Search_PATTERN,expected)
     extract_result = re.findall(Search_PATTERN, result)
 
-#    print extract_expected
-#    print extract_result
-#    print result
-    for index, item in enumerate(extract_expected):
-        #remove white space
-        if not re.match(extract_expected[index],extract_result[index],re.X):
-            return 'Fail'
 
-    return 'Pass'
+    try:
+
+        for index, item in enumerate(extract_expected):
+            #remove white space
+            if not re.match(extract_expected[index],extract_result[index],re.X):
+                return 'Fail'
+
+        return 'Pass'
+    except:
+        print extract_expected
+        print extract_result
+        print result
 
 def main():
     Compare_RESULT = 'Fail'
