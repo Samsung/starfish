@@ -48,6 +48,7 @@ test/reftest/vendor/webkit/fast/dom/Element/id-in-node-list-index01.html
 test/reftest/vendor/webkit/fast/dom/Element/node-list-identity.html
 test/reftest/vendor/webkit/fast/dom/Element/onclick-case.html
 test/reftest/vendor/webkit/fast/dom/Element/setAttribute-case-insensitivity.html
+test/reftest/vendor/webkit/fast/dom/element-traversal-on-character-data.html
 test/reftest/vendor/webkit/fast/dom/capturing-event-listeners.html
 test/reftest/vendor/webkit/fast/dom/children-nodes.html
 test/reftest/vendor/webkit/fast/dom/Window/dispatchEvent.html

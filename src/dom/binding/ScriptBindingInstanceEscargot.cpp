@@ -1378,6 +1378,20 @@ escargot::ESFunctionObject* bindingCharacterData(ScriptBindingInstance* scriptBi
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nextElementSibling"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->nextElementSibling() ? originalObj->nextElementSibling()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CharacterDataFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("previousElementSibling"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        return originalObj->previousElementSibling() ? originalObj->previousElementSibling()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
+
     escargot::ESFunctionObject* removeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
