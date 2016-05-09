@@ -509,8 +509,24 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                         }
                     }
 
+                    auto isNumber = [](String* text) {
+                        for (unsigned i=0; i < text->length(); i++) {
+                            if ('0' <= text->charAt(i) && text->charAt(i) <= '9') {
+                            } else {
+                                return false;
+                            }
+                        }
+                        return true;
+                    };
+
                     if (i < lastPos) {
-                        splitBoxAt(lastTextBox, i, true);
+                        String* text = lastTextBox->text();
+                        if (isNumber(text)) {
+                            // if text is a number, do not split. The direction of number should be determined by surrounding text
+                            tb->setCharDirection(InlineTextBox::CharDirection::Netural);
+                        } else {
+                            splitBoxAt(lastTextBox, i, true);
+                        }
                     }
                 }
             }
@@ -534,13 +550,15 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                             // l->l
                         }
                     } else {
-                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl ||
+                            ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
                             // r->r
                         } else {
                             // r->l
                             if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
                                 if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
-                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl ||
+                                        boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
                                         continue;
                                     }
                                 }
