@@ -13,7 +13,11 @@
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
+#ifdef ESCARGOT_TIZEN3
+#include <Ecore.h>
+#else
 #include <Ecore_X.h>
+#endif
 #include <Ecore_Input.h>
 #include <Ecore_Input_Evas.h>
 

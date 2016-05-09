@@ -6,7 +6,11 @@
 #include "dom/binding/ScriptBindingInstance.h"
 
 #include <Elementary.h>
+#ifdef ESCARGOT_TIZEN3
+#include <Ecore.h>
+#else
 #include <Ecore_X.h>
+#endif
 
 namespace StarFish {
 

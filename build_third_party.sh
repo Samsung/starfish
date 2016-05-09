@@ -58,4 +58,8 @@ if [ -n "$TIZEN_SDK_HOME" ]; then
 make tizen_wearable_arm.interpreter.release.static -j8
 make tizen_wearable_emulator.interpreter.release.static -j8
 fi
+if [ -n "$TIZEN3_SDK_HOME" ]; then
+make tizen3_wearable_arm.interpreter.release.static -j8
+make tizen3_wearable_emulator.interpreter.release.static -j8
+fi
 
