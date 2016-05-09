@@ -7,10 +7,10 @@ namespace StarFish {
 
 class HTMLUnknownElement : public HTMLElement {
 public:
-    HTMLUnknownElement(Document* document, String* localName)
+    HTMLUnknownElement(Document* document, QualifiedName localName)
         : HTMLElement(document)
+        , m_name(localName)
     {
-        m_localName = localName;
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -22,7 +22,12 @@ public:
 
     virtual String* localName()
     {
-        return m_localName;
+        return m_name.localName();
+    }
+
+    virtual QualifiedName name()
+    {
+        return m_name;
     }
 
     /* Other methods (not in DOM API) */
@@ -32,7 +37,7 @@ public:
     }
 
 protected:
-    String* m_localName;
+    QualifiedName m_name;
 };
 
 }

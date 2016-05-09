@@ -20,7 +20,7 @@ HTMLFormattingElementList::~HTMLFormattingElementList()
 {
 }
 
-Element* HTMLFormattingElementList::closestElementInScopeWithName(const QualifiedName& targetName)
+Element* HTMLFormattingElementList::closestElementInScopeWithName(const AtomicString& targetName)
 {
     for (unsigned i = 1; i <= m_entries.size(); ++i) {
         const Entry& entry = m_entries[m_entries.size() - i];

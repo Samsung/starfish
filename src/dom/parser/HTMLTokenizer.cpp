@@ -4,26 +4,12 @@
 #include "HTMLEntityParser.h"
 #include "AtomicHTMLToken.h"
 
-/*
-#include "HTMLNames.h"
-#include "core/html/parser/HTMLEntityParser.h"
-#include "core/html/parser/HTMLParserIdioms.h"
-#include "core/html/parser/HTMLTreeBuilder.h"
-#include "platform/NotImplemented.h"
-#include "core/xml/parser/MarkupTokenizerInlines.h"
-#include "wtf/ASCIICType.h"
-#include "wtf/text/AtomicString.h"
-#include "wtf/unicode/Unicode.h"
-*/
-
 namespace StarFish {
-
-// using namespace HTMLNames;
 
 
 QualifiedName AtomicHTMLToken::nameForAttribute(const HTMLToken::Attribute& attribute) const
 {
-    return QualifiedName::fromString(m_starFish, new StringDataUTF32(attribute.name.data()));
+    return QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(m_starFish, new StringDataUTF32(attribute.name.data())));
 }
 
 bool AtomicHTMLToken::usesName() const

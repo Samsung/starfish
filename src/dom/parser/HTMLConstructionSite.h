@@ -99,7 +99,7 @@ public:
     void insertHTMLFormElement(AtomicHTMLToken*, bool isDemoted = false);
     void insertScriptElement(AtomicHTMLToken*);
     void insertTextNode(String*, WhitespaceMode = WhitespaceUnknown);
-    void insertForeignElement(AtomicHTMLToken*);
+    void insertForeignElement(AtomicHTMLToken* token, const AtomicString& namespaceURI);
 
     void insertHTMLHtmlStartTagBeforeHTML(AtomicHTMLToken*);
     void insertHTMLHtmlStartTagInBody(AtomicHTMLToken*);
@@ -122,7 +122,7 @@ public:
     void reconstructTheActiveFormattingElements();
 
     void generateImpliedEndTags();
-    void generateImpliedEndTagsWithExclusion(const QualifiedName& tagName);
+    void generateImpliedEndTagsWithExclusion(const AtomicString& tagName);
 
     bool inQuirksMode();
 
@@ -181,7 +181,7 @@ private:
     void findFosterSite(HTMLConstructionSiteTask&);
 
     Element* createHTMLElement(AtomicHTMLToken*);
-    Element* createElement(AtomicHTMLToken*);
+    Element* createElement(AtomicHTMLToken* token, const AtomicString& namespaceURI);
 
     void mergeAttributesFromTokenIntoElement(AtomicHTMLToken*, Element*);
     void dispatchDocumentElementAvailableIfNeeded();

@@ -72,6 +72,8 @@ public:
     String* innerHTML();
     void setInnerHTML(String*);
 
+    virtual QualifiedName name() = 0;
+
     /* Other methods (not in Node interface) */
 
     virtual bool isElement() const

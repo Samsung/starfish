@@ -150,7 +150,7 @@ Node* Element::clone()
 {
     Element* newNode = nullptr;
     if (isHTMLElement()) {
-        newNode = document()->createElement(QualifiedName::fromString(document()->window()->starFish(), localName()));
+        newNode = document()->createElement(name());
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

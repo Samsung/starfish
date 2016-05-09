@@ -911,7 +911,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         bool shouldDispatchEvent = shouldCallOnClick;
         while (t) {
             if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
-                String* eventType = starFish()->staticStrings()->m_click.string();
+                String* eventType = starFish()->staticStrings()->m_click.localName();
                 Event* e = new Event(eventType, EventInit(true, true));
                 EventTarget::dispatchEvent(t->asNode(), e);
                 shouldDispatchEvent = false;
@@ -923,7 +923,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
             if (t == nullptr) {
                 t = m_document;
             }
-            String* eventType = starFish()->staticStrings()->m_click.string();
+            String* eventType = starFish()->staticStrings()->m_click.localName();
             Event* e = new Event(eventType, EventInit(true, true));
             EventTarget::dispatchEvent(t->asDocument()->window(), e);
         }
@@ -942,7 +942,7 @@ void Window::dispatchLoadEvent()
 {
     starFish()->messageLoop()->addIdler([](void* data) {
         Window* wnd = (Window*)data;
-        String* eventType = wnd->starFish()->staticStrings()->m_load.string();
+        String* eventType = wnd->starFish()->staticStrings()->m_load.localName();
         Event* e = new Event(eventType, EventInit(false, false));
         wnd->parseOnloadIfNeeds();
         wnd->EventTarget::dispatchEvent(e);
@@ -955,7 +955,7 @@ void Window::dispatchLoadEvent()
 
 void Window::dispatchUnloadEvent()
 {
-    String* eventType = starFish()->staticStrings()->m_unload.string();
+    String* eventType = starFish()->staticStrings()->m_unload.localName();
     Event* e = new Event(eventType, EventInit(false, false));
     EventTarget::dispatchEvent(document()->bodyElement(), e);
 }
@@ -1023,7 +1023,7 @@ void Window::close()
 
 ScriptValue Window::parseOnloadIfNeeds()
 {
-    auto eventType = starFish()->staticStrings()->m_load.string();
+    auto eventType = starFish()->staticStrings()->m_load.localName();
     EventListener* l = getAttributeEventListener(eventType);
     if (!l)
         return ScriptValueNull;

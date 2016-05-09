@@ -22,7 +22,12 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_imgLocalName;
+        return document()->window()->starFish()->staticStrings()->m_imgTagName.localName();
+    }
+
+    virtual QualifiedName name()
+    {
+        return document()->window()->starFish()->staticStrings()->m_imgTagName;
     }
 
     /* HTMLImageElement related */

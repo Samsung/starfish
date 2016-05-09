@@ -134,7 +134,7 @@ private:
 
     void processFakeStartTag(const QualifiedName&, const AttributeVector& attributes = AttributeVector());
     void processFakeEndTag(const QualifiedName&);
-    // void processFakeEndTag(const QualifiedName&);
+    void processFakeEndTag(const AtomicString&);
     void processFakePEndTagIfPInButtonScope();
 
     void processGenericRCDATAStartTag(AtomicHTMLToken*);

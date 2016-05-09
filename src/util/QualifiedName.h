@@ -1,74 +1,59 @@
 #ifndef __StarFishQualifiedName__
 #define __StarFishQualifiedName__
 
+#include "util/AtomicString.h"
+
 namespace StarFish {
 
-class StarFish;
-
-class QualifiedName {
-    friend class StarFish;
+class QualifiedName : public gc {
     friend class StaticStrings;
     QualifiedName()
+        : m_namespaceURI(AtomicString::emptyAtomicString())
+        , m_localName(AtomicString::emptyAtomicString())
     {
-        m_string = nullptr;
     }
-    QualifiedName(String* str)
-    {
-        m_string = str;
-    }
-
 public:
-    static QualifiedName fromString(StarFish* sf, String* str);
-    static QualifiedName fromString(StarFish* sf, const char* str);
-
-    static QualifiedName emptyQualifiedName()
+    QualifiedName(const AtomicString& nsURI, const AtomicString& localName)
+        : m_namespaceURI(nsURI)
+        , m_localName(localName)
     {
-        return QualifiedName(String::emptyString);
     }
 
     static bool checkNameProductionRule(String* str, unsigned length);
-
     bool operator==(const QualifiedName& src) const
     {
-        return m_string == src.m_string;
+        return m_namespaceURI == src.m_namespaceURI && m_localName == src.m_localName;
     }
 
-    String* string() const
+    AtomicString localNameAtomic() const
     {
-        return m_string;
+        return m_localName;
     }
 
-    String* stringConst() const
+    AtomicString namespaceURIAtomic() const
     {
-        return m_string;
+        return m_namespaceURI;
     }
 
-    operator String*() const
+    String* localName() const
     {
-        return m_string;
+        return m_localName;
     }
 
-protected:
-    String* m_string;
-    // TODO add namespace..
-};
-}
-
-namespace std {
-template <>
-struct hash<StarFish::QualifiedName> {
-    size_t operator()(const StarFish::QualifiedName& qn) const
+    String* namespaceURI() const
     {
-        return hash<StarFish::String*>()(qn.stringConst());
+        return m_namespaceURI;
     }
+
+private:
+    AtomicString m_namespaceURI;
+    AtomicString m_localName;
 };
 
-template <>
-struct equal_to<StarFish::QualifiedName> {
-    size_t operator()(const StarFish::QualifiedName& lqn, const StarFish::QualifiedName& rqn) const
-    {
-        return lqn.stringConst() == rqn.stringConst();
-    }
-};
+inline bool operator==(const AtomicString& a, const QualifiedName& q) { return a == q.localNameAtomic(); }
+inline bool operator!=(const AtomicString& a, const QualifiedName& q) { return a != q.localNameAtomic(); }
+inline bool operator==(const QualifiedName& q, const AtomicString& a) { return a == q.localNameAtomic(); }
+inline bool operator!=(const QualifiedName& q, const AtomicString& a) { return a != q.localNameAtomic(); }
+
 }
 #endif

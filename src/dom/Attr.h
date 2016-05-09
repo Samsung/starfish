@@ -60,7 +60,7 @@ public:
 
     virtual String* nodeName()
     {
-        return m_name.string();
+        return m_name.localName();
     }
 
     virtual String* localName()

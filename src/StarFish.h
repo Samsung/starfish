@@ -1,6 +1,8 @@
 #ifndef __StarFish__
 #define __StarFish__
 
+#include "util/AtomicString.h"
+#include "util/QualifiedName.h"
 #include "platform/canvas/font/Font.h"
 
 namespace StarFish {
@@ -147,19 +149,21 @@ F(ruby) \
 F(summary) \
 F(wbr)
 
-
-class StaticStrings {
+class StaticStrings : public gc {
     friend class QualifiedName;
+    friend class AtomicString;
 public:
     StaticStrings(StarFish* sf);
+    StarFish* m_starFish;
+    AtomicString m_xhtmlNamespaceURI;
+    AtomicString m_documentLocalName;
+    AtomicString m_documentFragmentLocalName;
+    AtomicString m_textLocalName;
+    AtomicString m_commentLocalName;
 
-    QualifiedName m_documentLocalName;
-    QualifiedName m_documentFragmentLocalName;
-    QualifiedName m_textLocalName;
-    QualifiedName m_commentLocalName;
-    // tag Names
+    // HTML Tag Names
 #define DEFINE_HTML_LOCAL_NAMES(name) \
-    QualifiedName m_##name##LocalName;
+    QualifiedName m_##name##TagName;
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
 
@@ -187,10 +191,7 @@ public:
     QualifiedName m_unload;
     QualifiedName m_onunload;
     QualifiedName m_visibilitychange;
-
 protected:
-    std::unordered_map<std::string, QualifiedName,
-    std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, QualifiedName>>> m_staticStringMap;
 };
 
 enum StarFishStartUpFlag {
@@ -209,6 +210,8 @@ enum StarFishDeviceKind {
 };
 
 class StarFish : public gc_cleanup {
+    friend class AtomicString;
+    friend class StaticStrings;
 public:
 #ifndef STARFISH_TIZEN_WEARABLE_APP
     StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h);
@@ -270,7 +273,7 @@ public:
 
     StaticStrings* staticStrings()
     {
-        return &m_staticStrings;
+        return m_staticStrings;
     }
 
     MessageLoop* messageLoop()
@@ -309,7 +312,7 @@ protected:
         return str.find(prefix);
     }
 
-    StaticStrings m_staticStrings;
+    StaticStrings* m_staticStrings;
     icu::Locale m_locale;
     icu::BreakIterator* m_lineBreaker;
     unsigned int m_startUpFlag;
@@ -323,6 +326,9 @@ protected:
     FontSelector m_fontSelector;
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
         gc_allocator<std::pair<void*, size_t>>> m_rootMap;
+
+    std::unordered_map<std::string, AtomicString,
+        std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString>>> m_atomicStringMap;
 };
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST

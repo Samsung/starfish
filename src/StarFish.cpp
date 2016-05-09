@@ -20,8 +20,7 @@ bool g_enablePixelTest = false;
 
 #ifndef STARFISH_TIZEN_WEARABLE_APP
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h)
-    : m_staticStrings(this)
-    , m_locale(icu::Locale::createFromName(locale))
+    : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
@@ -50,8 +49,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
 }
 #else
 StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h)
-    : m_staticStrings(this)
-    , m_locale(icu::Locale::createFromName(locale))
+    : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
@@ -79,6 +77,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
 
 void StarFish::init(int w, int h)
 {
+    String* s = String::emptyString;
+    AtomicString emptyAtom(s);
+    m_atomicStringMap.insert(std::make_pair(std::string(), emptyAtom));
+    m_staticStrings = new StaticStrings(this);
     UErrorCode code = U_ZERO_ERROR;
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
@@ -156,42 +158,39 @@ void StarFish::removePointerFromRootSet(void *ptr)
 }
 
 StaticStrings::StaticStrings(StarFish* sf)
+    : m_starFish(sf)
+    , m_xhtmlNamespaceURI(AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))
+    , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
+    , m_documentFragmentLocalName(AtomicString::createAtomicString(sf, "#document-fragment"))
+    , m_textLocalName(AtomicString::createAtomicString(sf, "#text"))
+    , m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
 {
-    String* s = String::emptyString;
-    QualifiedName emptyAtom(s);
-    m_staticStringMap.insert(std::make_pair(std::string(), emptyAtom));
-
-    m_documentLocalName = QualifiedName::fromString(sf, "#document");
-    m_documentFragmentLocalName = QualifiedName::fromString(sf, "#document-fragment");
-    m_textLocalName = QualifiedName::fromString(sf, "#text");
-    m_commentLocalName = QualifiedName::fromString(sf, "#comment");
 #define DEFINE_HTML_LOCAL_NAMES(name) \
-    m_##name##LocalName = QualifiedName::fromString(sf, #name);
+    m_##name##TagName = QualifiedName(m_xhtmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
+    m_id = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "id"));
+    m_class = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "class"));
+    m_localName = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "localName"));
+    m_style = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "style"));
+    m_src = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "src"));
+    m_width = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "width"));
+    m_height = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "height"));
+    m_rel = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "rel"));
+    m_href = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "href"));
+    m_type = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "type"));
+    m_dir = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "dir"));
+    m_color = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "color"));
+    m_face = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "face"));
+    m_size = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "size"));
 
-    m_id = QualifiedName::fromString(sf, "id");
-    m_class = QualifiedName::fromString(sf, "class");
-    m_localName = QualifiedName::fromString(sf, "localName");
-    m_style = QualifiedName::fromString(sf, "style");
-    m_src = QualifiedName::fromString(sf, "src");
-    m_width = QualifiedName::fromString(sf, "width");
-    m_height = QualifiedName::fromString(sf, "height");
-    m_rel = QualifiedName::fromString(sf, "rel");
-    m_href = QualifiedName::fromString(sf, "href");
-    m_type = QualifiedName::fromString(sf, "type");
-    m_dir = QualifiedName::fromString(sf, "dir");
-    m_color = QualifiedName::fromString(sf, "color");
-    m_face = QualifiedName::fromString(sf, "face");
-    m_size = QualifiedName::fromString(sf, "size");
-
-    m_click = QualifiedName::fromString(sf, "click");
-    m_onclick = QualifiedName::fromString(sf, "onclick");
-    m_load = QualifiedName::fromString(sf, "load");
-    m_onload = QualifiedName::fromString(sf, "onload");
-    m_unload = QualifiedName::fromString(sf, "unload");
-    m_onunload = QualifiedName::fromString(sf, "onunload");
-    m_visibilitychange = QualifiedName::fromString(sf, "visibilitychange");
+    m_click = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "click"));
+    m_onclick = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onclick"));
+    m_load = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "load"));
+    m_onload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onload"));
+    m_unload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "unload"));
+    m_onunload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onunload"));
+    m_visibilitychange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "visibilitychange"));
 }
 
 }

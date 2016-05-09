@@ -21,7 +21,12 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_pLocalName;
+        return document()->window()->starFish()->staticStrings()->m_pTagName.localName();
+    }
+
+    virtual QualifiedName name()
+    {
+        return document()->window()->starFish()->staticStrings()->m_pTagName;
     }
 
     /* Other methods (not in DOM API) */

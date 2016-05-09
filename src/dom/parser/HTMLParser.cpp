@@ -35,7 +35,9 @@ void HTMLParser::parse()
                 rawToken.clear();
             }
         }
+        builder.flush();
         builder.finished();
+        builder.detach();
     } else {
         HTMLTreeBuilder builder(this, m_documentFragment, m_contextElement);
         while (true) {
@@ -64,7 +66,9 @@ void HTMLParser::parse()
                 rawToken.clear();
             }
         }
+        builder.flush();
         builder.finished();
+        builder.detach();
     }
     m_document->setInParsing(false);
 

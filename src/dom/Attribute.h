@@ -31,13 +31,13 @@ public:
 
     QualifiedName name() const
     {
-        STARFISH_ASSERT(m_name.string()->length());
+        STARFISH_ASSERT(m_name.localName()->length());
         return m_name;
     }
 
     String* value() const
     {
-        STARFISH_ASSERT(m_name.string()->length());
+        STARFISH_ASSERT(m_name.localName()->length());
 
         if (UNLIKELY(m_rareData && m_rareData->m_getter))
             return m_rareData->m_getter(m_rareData->m_element, this);
@@ -46,7 +46,7 @@ public:
 
     String* valueWithoutCheckGetter() const
     {
-        STARFISH_ASSERT(m_name.string()->length());
+        STARFISH_ASSERT(m_name.localName()->length());
         return m_value;
     }
 

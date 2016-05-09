@@ -766,27 +766,27 @@ void Node::parserTakeAllChildrenFrom(Node* oldParent)
     }
 }
 
-HTMLCollection* Node::getElementsByTagName(String* qualifiedName)
+HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
 {
     RareNodeMembers* rareData = ensureRareMembers();
     ActiveHTMLCollectionList* activeLists = rareData->ensureActiveHtmlCollectionListForTagName();
-    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(activeLists, qualifiedName);
+    HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(activeLists, qualifiedName.localName());
     if (list)
         return list;
 
     auto filter = [](Node* node, void* data)
     {
-        String* qualifiedName = (String*)data;
+        QualifiedName* qualifiedName = (QualifiedName*)data;
         if (node->isElement()) {
-            if (node->localName()->equals(qualifiedName))
+            if (node->asElement()->name() == *qualifiedName)
                 return true;
-            if (qualifiedName->equals("*"))
+            if (qualifiedName->localName()->equals("*"))
                 return true;
         }
         return false;
     };
-    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, qualifiedName, true);
-    rareData->putActiveHtmlCollectionListWithQuery(activeLists, qualifiedName, list);
+    list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, new QualifiedName(qualifiedName), true);
+    rareData->putActiveHtmlCollectionListWithQuery(activeLists, qualifiedName.localName(), list);
     return list;
 }
 

@@ -14,7 +14,7 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
         LayoutSize sizeBefore(0, 0);
         LayoutSize size(0, 0);
         sizeBefore = intrinsicSize();
-        if (!value->equals(String::spaceString)) {
+        if (!value->equals(String::emptyString)) {
             m_imageData = document()->window()->starFish()->fetchImage(document()->window()->starFish()->makeResourcePath(value));
         } else {
             m_imageData = nullptr;
@@ -33,7 +33,7 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
 
         document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
             HTMLImageElement* element = (HTMLImageElement*)data;
-            String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.string();
+            String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.localName();
             Event* e = new Event(eventType, EventInit(false, false));
             element->EventTarget::dispatchEvent(element, e);
         }, this);

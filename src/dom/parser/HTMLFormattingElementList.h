@@ -75,7 +75,7 @@ public:
     bool isEmpty() const { return !size(); }
     size_t size() const { return m_entries.size(); }
 
-    Element* closestElementInScopeWithName(const QualifiedName&);
+    Element* closestElementInScopeWithName(const AtomicString&);
 
     Entry* find(Element*);
     bool contains(Element*);

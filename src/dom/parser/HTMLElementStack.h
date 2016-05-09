@@ -18,7 +18,7 @@ public:
 
     class ElementRecord : public gc {
     public:
-        ~ElementRecord(); // Public for ~PassOwnPtr()
+        ~ElementRecord();
         Element* element() const { return m_item->element(); }
         Node* node() const { return m_item->node(); }
         HTMLStackItem* stackItem() const { return m_item; }
@@ -50,13 +50,6 @@ public:
         return m_top->element();
     }
 
-    /*
-    ContainerNode* topNode() const
-    {
-        ASSERT(m_top->node());
-        return m_top->node();
-    }
-    */
     Node* topNode() const
     {
         ASSERT(m_top->node());
@@ -73,7 +66,7 @@ public:
     ElementRecord* topRecord() const;
     ElementRecord* find(Element*) const;
     ElementRecord* furthestBlockForFormattingElement(Element*) const;
-    ElementRecord* topmost(const QualifiedName& tagName) const;
+    ElementRecord* topmost(const AtomicString& tagName) const;
 
     void insertAbove(HTMLStackItem*, ElementRecord*);
 
@@ -83,11 +76,12 @@ public:
     void pushHTMLHeadElement(HTMLStackItem*);
     void pushHTMLBodyElement(HTMLStackItem*);
 
+
     void pop();
-    void popUntil(const QualifiedName& tagName);
+    void popUntil(const AtomicString& tagName);
     void popUntil(Element*);
-    void popUntilPopped(const QualifiedName& tagName);
-    // void popUntilPopped(const QualifiedName& tagName) { popUntilPopped(tagName); }
+    void popUntilPopped(const AtomicString& tagName);
+    void popUntilPopped(const QualifiedName& tagName) { popUntilPopped(tagName.localNameAtomic()); }
 
     void popUntilPopped(Element*);
     void popUntilNumberedHeaderElementPopped();
@@ -106,19 +100,19 @@ public:
     void removeHTMLHeadElement(Element*);
 
     bool contains(Element*) const;
-    bool contains(const QualifiedName& tagName) const;
+    bool contains(const AtomicString& tagName) const;
 
     bool inScope(Element*) const;
-    bool inScope(const QualifiedName& tagName) const;
-    // bool inScope(const QualifiedName&) const;
-    bool inListItemScope(const QualifiedName& tagName) const;
-    // bool inListItemScope(const QualifiedName&) const;
-    bool inTableScope(const QualifiedName& tagName) const;
-    // bool inTableScope(const QualifiedName&) const;
-    bool inButtonScope(const QualifiedName& tagName) const;
-    // bool inButtonScope(const QualifiedName&) const;
-    bool inSelectScope(const QualifiedName& tagName) const;
-    // bool inSelectScope(const QualifiedName&) const;
+    bool inScope(const AtomicString& tagName) const;
+    bool inScope(const QualifiedName&) const;
+    bool inListItemScope(const AtomicString& tagName) const;
+    bool inListItemScope(const QualifiedName&) const;
+    bool inTableScope(const AtomicString& tagName) const;
+    bool inTableScope(const QualifiedName&) const;
+    bool inButtonScope(const AtomicString& tagName) const;
+    bool inButtonScope(const QualifiedName&) const;
+    bool inSelectScope(const AtomicString& tagName) const;
+    bool inSelectScope(const QualifiedName&) const;
 
     bool hasNumberedHeaderElementInScope() const;
 

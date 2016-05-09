@@ -22,7 +22,12 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_styleLocalName;
+        return document()->window()->starFish()->staticStrings()->m_styleTagName.localName();
+    }
+
+    virtual QualifiedName name()
+    {
+        return document()->window()->starFish()->staticStrings()->m_styleTagName;
     }
 
     /* Other methods (not in DOM API) */

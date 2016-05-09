@@ -21,7 +21,7 @@ ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eve
         STARFISH_ASSERT(target->asNode()->isElement());
         Element* element = target->asNode()->asElement();
         String* eventName = String::createASCIIString("on")->concat(const_cast<String*>(eventType));
-        size_t idx = element->hasAttribute(QualifiedName::fromString(element->document()->window()->starFish(), eventName));
+        size_t idx = element->hasAttribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(element->document()->window()->starFish(), eventName)));
         if (idx == SIZE_MAX) {
             error = true;
         } else {

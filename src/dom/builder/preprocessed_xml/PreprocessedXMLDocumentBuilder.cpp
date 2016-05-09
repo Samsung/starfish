@@ -57,7 +57,7 @@ void PreprocessedXMLDocumentBuilder::build(Document* document, String* filePath)
             return;
         } else if (type == 1) {
             const char* name = xmlElement->Attribute("localName");
-            QualifiedName qname = QualifiedName::fromString(document->window()->starFish(), name);
+            QualifiedName qname = QualifiedName(document->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(document->window()->starFish(), name));
             newNode = document->createElement(qname);
             newNode->beginParsing();
             STARFISH_ASSERT(newNode);
@@ -78,7 +78,7 @@ void PreprocessedXMLDocumentBuilder::build(Document* document, String* filePath)
                         // STARFISH_ASSERT(attr->FirstChild());
                         // QualifiedName name = QualifiedName::fromString(document->window()->starFish(), attr->FirstChild()->Value());
                         // String* value = String::fromUTF8(attr->FirstAttribute()->Value());
-                        QualifiedName name = QualifiedName::fromString(document->window()->starFish(), nameElement->FirstChild()->Value());
+                        QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(document->window()->starFish(), nameElement->FirstChild()->Value()));
                         String* value = String::fromUTF8(valueElement->FirstChild()->Value());
                         newNode->asElement()->setAttribute(name, value);
                         attr = attr->NextSiblingElement();

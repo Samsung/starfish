@@ -20,16 +20,16 @@ public:
 
     HTMLToken::Type type() const { return m_type; }
 
-    const QualifiedName& name() const
+    const AtomicString& name() const
     {
         STARFISH_ASSERT(usesName());
         return m_name;
     }
 
-    void setName(String* name)
+    void setName(const AtomicString& name)
     {
         STARFISH_ASSERT(usesName());
-        m_name = QualifiedName::fromString(m_starFish, name);
+        m_name = name;
     }
 
     bool selfClosing() const
@@ -85,7 +85,7 @@ public:
     explicit AtomicHTMLToken(StarFish* sf, HTMLToken& token)
         : m_starFish(sf)
         , m_type(token.type())
-        , m_name(QualifiedName::emptyQualifiedName())
+        , m_name(AtomicString::emptyAtomicString())
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
@@ -94,7 +94,7 @@ public:
             STARFISH_ASSERT_NOT_REACHED();
             break;
         case HTMLToken::DOCTYPE:
-            m_name = QualifiedName::fromString(m_starFish, new StringDataUTF32(UTF32String(token.name().begin(), token.name().end())));
+            m_name = AtomicString::createAttrAtomicString(m_starFish, new StringDataUTF32(UTF32String(token.name().begin(), token.name().end())));
             m_doctypeData = token.releaseDoctypeData();
             break;
         case HTMLToken::EndOfFile:
@@ -103,10 +103,10 @@ public:
         case HTMLToken::EndTag: {
             m_selfClosing = token.selfClosing();
             QualifiedName tagName = lookupHTMLTag(*sf->staticStrings(), token.name().data(), token.name().size());
-            if (tagName.string()->length())
-                m_name = tagName;
+            if (tagName.localName()->length())
+                m_name = tagName.localNameAtomic();
             else
-                m_name = QualifiedName::fromString(m_starFish, new StringDataUTF32(UTF32String(token.data().begin(), token.data().end())));
+                m_name = AtomicString::createAttrAtomicString(m_starFish, new StringDataUTF32(UTF32String(token.name().begin(), token.name().end())));
             initializeAttributes(token.attributes());
             break;
         }
@@ -163,17 +163,17 @@ public:
     explicit AtomicHTMLToken(StarFish* sf, HTMLToken::Type type)
         : m_starFish(sf)
         , m_type(type)
-        , m_name(QualifiedName::emptyQualifiedName())
+        , m_name(AtomicString::emptyAtomicString())
         , m_selfClosing(false)
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;
     }
 
-    AtomicHTMLToken(StarFish* sf, HTMLToken::Type type, String* name, const AttributeVector& attributes = AttributeVector())
+    AtomicHTMLToken(StarFish* sf, HTMLToken::Type type, AtomicString name, const AttributeVector& attributes = AttributeVector())
         : m_starFish(sf)
         , m_type(type)
-        , m_name(QualifiedName::fromString(m_starFish, name))
+        , m_name(name)
         , m_selfClosing(false)
         , m_attributes(attributes)
     {
@@ -194,7 +194,7 @@ private:
     bool usesAttributes() const;
 
     // "name" for DOCTYPE, StartTag, and EndTag
-    QualifiedName m_name;
+    AtomicString m_name;
 
     // "data" for Comment, "characters" for Character
     String* m_data;

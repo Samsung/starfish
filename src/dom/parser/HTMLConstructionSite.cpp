@@ -32,21 +32,21 @@ static inline void setAttributes(Element* element, AtomicHTMLToken* token)
 static bool hasImpliedEndTag(const HTMLStackItem* item)
 {
     StaticStrings* s = item->node()->document()->window()->starFish()->staticStrings();
-    return item->hasTagName(s->m_ddLocalName)
-        || item->hasTagName(s->m_dtLocalName)
-        || item->hasTagName(s->m_liLocalName)
-        || item->hasTagName(s->m_optionLocalName)
-        || item->hasTagName(s->m_optgroupLocalName)
-        || item->hasTagName(s->m_pLocalName)
-        || item->hasTagName(s->m_rpLocalName)
-        || item->hasTagName(s->m_rtLocalName);
+    return item->hasTagName(s->m_ddTagName)
+        || item->hasTagName(s->m_dtTagName)
+        || item->hasTagName(s->m_liTagName)
+        || item->hasTagName(s->m_optionTagName)
+        || item->hasTagName(s->m_optgroupTagName)
+        || item->hasTagName(s->m_pTagName)
+        || item->hasTagName(s->m_rpTagName)
+        || item->hasTagName(s->m_rtTagName);
 }
 
 static bool shouldUseLengthLimit(const Node* node)
 {
     StaticStrings* s = const_cast<Node*>(node)->document()->window()->starFish()->staticStrings();
-    return !const_cast<Node*>(node)->localName()->equals(s->m_scriptLocalName.string())
-        && !const_cast<Node*>(node)->localName()->equals(s->m_styleLocalName.string());
+    return !const_cast<Node*>(node)->localName()->equals(s->m_scriptTagName.localName())
+        && !const_cast<Node*>(node)->localName()->equals(s->m_styleTagName.localName());
         // && !node->hasTagName(SVGNames::scriptTag);
 }
 
@@ -68,13 +68,13 @@ static inline bool isAllWhitespace(String* string)
 
 static inline void insert(HTMLConstructionSiteTask& task)
 {
+    // TODO
     /*
     if (task.parent->hasTagName(templateTag))
         task.parent = toHTMLTemplateElement(task.parent.get())->content();
      */
     if (Node* parent = task.child->parentNode()) {
-        // parent->parserRemoveChild(*task.child);
-        parent->removeChild(task.child);
+        parent->parserRemoveChild(task.child);
     }
 
     if (task.nextChild) {
@@ -369,7 +369,7 @@ void HTMLConstructionSite::insertHTMLHtmlStartTagBeforeHTML(AtomicHTMLToken* tok
     HTMLHtmlElement* element = new HTMLHtmlElement(m_document);
     setAttributes(element, token);
     attachLater(m_attachmentRoot, element);
-    m_openElements.pushHTMLHtmlElement(new HTMLStackItem(element, token));
+    m_openElements.pushHTMLHtmlElement(new HTMLStackItem(element, token, token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
 
     executeQueuedTasks();
     // element->insertedByParser();
@@ -570,7 +570,7 @@ void HTMLConstructionSite::insertCommentOnHTMLHtmlElement(AtomicHTMLToken* token
 void HTMLConstructionSite::insertHTMLHeadElement(AtomicHTMLToken* token)
 {
     STARFISH_ASSERT(!shouldFosterParent());
-    m_head = new HTMLStackItem(createHTMLElement(token), token);
+    m_head = new HTMLStackItem(createHTMLElement(token), token, token->starFish()->staticStrings()->m_xhtmlNamespaceURI);
     attachLater(currentNode(), m_head->element());
     m_openElements.pushHTMLHeadElement(m_head);
 }
@@ -580,7 +580,7 @@ void HTMLConstructionSite::insertHTMLBodyElement(AtomicHTMLToken* token)
     STARFISH_ASSERT(!shouldFosterParent());
     Element* body = createHTMLElement(token);
     attachLater(currentNode(), body);
-    m_openElements.pushHTMLBodyElement(new HTMLStackItem(body, token));
+    m_openElements.pushHTMLBodyElement(new HTMLStackItem(body, token, token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
     // if (LocalFrame* frame = m_document->frame())
     //    frame->loader().client()->dispatchWillInsertBody();
 }
@@ -593,14 +593,14 @@ void HTMLConstructionSite::insertHTMLFormElement(AtomicHTMLToken* token, bool is
     m_form = element->asHTMLElement();
     // m_form->setDemoted(isDemoted);
     attachLater(currentNode(), m_form);
-    m_openElements.push(new HTMLStackItem(m_form, token));
+    m_openElements.push(new HTMLStackItem(m_form, token, token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
 }
 
 void HTMLConstructionSite::insertHTMLElement(AtomicHTMLToken* token)
 {
     Element* element = createHTMLElement(token);
     attachLater(currentNode(), element);
-    m_openElements.push(new HTMLStackItem(element, token));
+    m_openElements.push(new HTMLStackItem(element, token, token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
 }
 
 void HTMLConstructionSite::insertSelfClosingHTMLElement(AtomicHTMLToken* token)
@@ -639,15 +639,15 @@ void HTMLConstructionSite::insertScriptElement(AtomicHTMLToken* token)
     // if (scriptingContentIsAllowed(m_parserContentPolicy))
     if (true)
         attachLater(currentNode(), element);
-    m_openElements.push(new HTMLStackItem(element, token));
+    m_openElements.push(new HTMLStackItem(element, token, token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
 }
 
-void HTMLConstructionSite::insertForeignElement(AtomicHTMLToken* token)
+void HTMLConstructionSite::insertForeignElement(AtomicHTMLToken* token, const AtomicString& namespaceURI)
 {
     STARFISH_ASSERT(token->type() == HTMLToken::StartTag);
     // parseError when xmlns or xmlns:xlink are wrong.
 
-    Element* element = createElement(token);
+    Element* element = createElement(token, namespaceURI);
 
     /*if (scriptingContentIsAllowed(m_parserContentPolicy) || !toScriptLoaderIfPossible(element.get()))
         attachLater(currentNode(), element, token->selfClosing());*/
@@ -655,7 +655,7 @@ void HTMLConstructionSite::insertForeignElement(AtomicHTMLToken* token)
         attachLater(currentNode(), element, token->selfClosing());
 
     if (!token->selfClosing())
-        m_openElements.push(new HTMLStackItem(element, token));
+        m_openElements.push(new HTMLStackItem(element, token, namespaceURI));
 }
 
 void HTMLConstructionSite::insertTextNode(String* string, WhitespaceMode whitespaceMode)
@@ -715,9 +715,9 @@ void HTMLConstructionSite::takeAllChildren(HTMLStackItem* newParent, HTMLElement
     queueTask(task);
 }
 
-Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token)
+Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token, const AtomicString& namespaceURI)
 {
-    QualifiedName tagName = QualifiedName::fromString(m_document->window()->starFish(), token->name());
+    QualifiedName tagName(namespaceURI, AtomicString::createAttrAtomicString(m_document->window()->starFish(), token->name()));
     Element* element = ownerDocumentForCurrentNode().createElement(tagName);
     setAttributes(element, token);
     return element;
@@ -741,8 +741,8 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     // have to pass the current form element. We should rework form association
     // to occur after construction to allow better code sharing here.
     // Element* element = HTMLElementFactory::createHTMLElement(token->name(), document, form, true);
-    QualifiedName tagName = QualifiedName::fromString(m_document->window()->starFish(), token->name());
-    Element* element = m_document->createElement(tagName);
+    QualifiedName tagName = QualifiedName(token->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(m_document->window()->starFish(), token->name()));
+    Element* element = ownerDocumentForCurrentNode().createElement(tagName);
     setAttributes(element, token);
     ASSERT(element->isHTMLElement());
     return element;
@@ -753,13 +753,11 @@ HTMLStackItem* HTMLConstructionSite::createElementFromSavedToken(HTMLStackItem* 
     Element* element;
     // NOTE: Moving from item -> token -> item copies the Attribute vector twice!
     AtomicHTMLToken fakeToken(item->node()->document()->window()->starFish(), HTMLToken::StartTag, item->localName(), item->attributes());
-    /*if (item->namespaceURI() == HTMLNames::xhtmlNamespaceURI)
+    if (item->namespaceURI() == item->node()->document()->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI)
         element = createHTMLElement(&fakeToken);
     else
         element = createElement(&fakeToken, item->namespaceURI());
-        */
-    element = createElement(&fakeToken);
-    return new HTMLStackItem(element, &fakeToken);
+    return new HTMLStackItem(element, &fakeToken, item->namespaceURI());
 }
 
 bool HTMLConstructionSite::indexOfFirstUnopenFormattingElement(unsigned& firstUnopenElementIndex) const
@@ -796,7 +794,7 @@ void HTMLConstructionSite::reconstructTheActiveFormattingElements()
     }
 }
 
-void HTMLConstructionSite::generateImpliedEndTagsWithExclusion(const QualifiedName& tagName)
+void HTMLConstructionSite::generateImpliedEndTagsWithExclusion(const AtomicString& tagName)
 {
     while (hasImpliedEndTag(currentStackItem()) && !currentStackItem()->matchesHTMLTag(tagName))
         m_openElements.pop();
@@ -817,17 +815,17 @@ void HTMLConstructionSite::findFosterSite(HTMLConstructionSiteTask& task)
 {
     // When a node is to be foster parented, the last template element with no table element is below it in the stack of open elements is the foster parent element (NOT the template's parent!)
     auto s = m_document->window()->starFish()->staticStrings();
-    HTMLElementStack::ElementRecord* lastTemplateElement = m_openElements.topmost(s->m_templateLocalName);
-    if (lastTemplateElement && !m_openElements.inTableScope(s->m_tableLocalName)) {
+    HTMLElementStack::ElementRecord* lastTemplateElement = m_openElements.topmost(s->m_templateTagName.localNameAtomic());
+    if (lastTemplateElement && !m_openElements.inTableScope(s->m_tableTagName)) {
         task.parent = lastTemplateElement->element();
         return;
     }
 
-    HTMLElementStack::ElementRecord* lastTableElementRecord = m_openElements.topmost(s->m_tableLocalName);
+    HTMLElementStack::ElementRecord* lastTableElementRecord = m_openElements.topmost(s->m_tableTagName.localNameAtomic());
     if (lastTableElementRecord) {
         Element* lastTableElement = lastTableElementRecord->element();
         Node* parent;
-        if (lastTableElementRecord->next()->stackItem()->hasTagName(s->m_templateLocalName))
+        if (lastTableElementRecord->next()->stackItem()->hasTagName(s->m_templateTagName))
             parent = lastTableElementRecord->next()->element();
         else
             parent = lastTableElement->parentNode();

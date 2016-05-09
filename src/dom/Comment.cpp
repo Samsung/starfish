@@ -7,12 +7,12 @@ namespace StarFish {
 
 String* Comment::nodeName()
 {
-    return document()->window()->starFish()->staticStrings()->m_commentLocalName;
+    return document()->window()->starFish()->staticStrings()->m_commentLocalName.string();
 }
 
 String* Comment::localName()
 {
-    return document()->window()->starFish()->staticStrings()->m_commentLocalName;
+    return document()->window()->starFish()->staticStrings()->m_commentLocalName.string();
 }
 
 }

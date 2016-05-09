@@ -51,7 +51,12 @@ public:
 
     virtual String* localName()
     {
-        return document()->window()->starFish()->staticStrings()->m_audioLocalName;
+        return document()->window()->starFish()->staticStrings()->m_audioTagName.localName();
+    }
+
+    virtual QualifiedName name()
+    {
+        return document()->window()->starFish()->staticStrings()->m_audioTagName;
     }
 
     /* Other methods (not in DOM API) */

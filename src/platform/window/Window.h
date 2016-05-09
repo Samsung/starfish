@@ -166,7 +166,7 @@ public:
 
     ScriptValue onclick()
     {
-        auto eventType = starFish()->staticStrings()->m_click.string();
+        auto eventType = starFish()->staticStrings()->m_click.localName();
         EventListener* l = getAttributeEventListener(eventType);
         if (!l)
             return ScriptValueNull;
@@ -175,14 +175,14 @@ public:
 
     void setOnclick(ScriptValue f)
     {
-        auto eventType = starFish()->staticStrings()->m_click.string();
+        auto eventType = starFish()->staticStrings()->m_click.localName();
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
     }
 
     void clearOnClick()
     {
-        auto eventType = starFish()->staticStrings()->m_click.string();
+        auto eventType = starFish()->staticStrings()->m_click.localName();
         clearAttributeEventListener(eventType);
     }
 
@@ -193,14 +193,14 @@ public:
 
     void setOnload(ScriptValue f)
     {
-        auto eventType = starFish()->staticStrings()->m_load.string();
+        auto eventType = starFish()->staticStrings()->m_load.localName();
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
     }
 
     void clearOnload()
     {
-        auto eventType = starFish()->staticStrings()->m_load.string();
+        auto eventType = starFish()->staticStrings()->m_load.localName();
         clearAttributeEventListener(eventType);
     }
 

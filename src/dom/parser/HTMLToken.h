@@ -23,17 +23,6 @@ public:
     bool m_forceQuirks;
 };
 
-/*
-static inline Attribute* findAttributeInVector(Vector<Attribute>& attributes, const QualifiedName& name)
-{
-    for (unsigned i = 0; i < attributes.size(); ++i) {
-        if (attributes.at(i).name().matches(name))
-            return &attributes.at(i);
-    }
-    return 0;
-}
-*/
-
 class HTMLToken : public gc {
 public:
     enum Type {
@@ -335,8 +324,7 @@ public:
     const Attribute* getAttributeItem(const QualifiedName& name) const
     {
         for (unsigned i = 0; i < m_attributes.size(); ++i) {
-            // if (AtomicString(m_attributes.at(i).name) == name.localName())
-            if (name.string()->equals(m_attributes.at(i).name.data()))
+            if (name.localName()->equals(m_attributes.at(i).name.data()))
                 return &m_attributes.at(i);
         }
         return 0;

@@ -190,12 +190,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
 
 String* Document::nodeName()
 {
-    return window()->starFish()->staticStrings()->m_documentLocalName;
+    return window()->starFish()->staticStrings()->m_documentLocalName.string();
 }
 
 String* Document::localName()
 {
-    return window()->starFish()->staticStrings()->m_documentLocalName;
+    return window()->starFish()->staticStrings()->m_documentLocalName.string();
 }
 
 Node* Document::clone()
@@ -220,40 +220,40 @@ DocumentFragment* Document::createDocumentFragment()
 
 Element* Document::createElement(QualifiedName localName)
 {
-    if (!QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
+    if (!QualifiedName::checkNameProductionRule(localName.localName(), localName.localName()->length()))
         throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
-    if (localName == window()->starFish()->staticStrings()->m_htmlLocalName) {
+    if (localName == window()->starFish()->staticStrings()->m_htmlTagName) {
         return new HTMLHtmlElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_headLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_headTagName) {
         return new HTMLHeadElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_styleLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_styleTagName) {
         return new HTMLStyleElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_scriptLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_scriptTagName) {
         return new HTMLScriptElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_linkLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_linkTagName) {
         return new HTMLLinkElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_metaLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_metaTagName) {
         return new HTMLMetaElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_bodyLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_bodyTagName) {
         return new HTMLBodyElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_divLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_divTagName) {
         return new HTMLDivElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_pLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_pTagName) {
         return new HTMLParagraphElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_spanLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_spanTagName) {
         return new HTMLSpanElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_brLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_brTagName) {
         return new HTMLBRElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_imgLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_imgTagName) {
         return new HTMLImageElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_audioLocalName) {
+    } else if (localName == window()->starFish()->staticStrings()->m_audioTagName) {
 #ifdef STARFISH_ENABLE_AUDIO
         return new HTMLAudioElement(this);
 #endif
     }
 
-    STARFISH_LOG_INFO("got unknown element - %s\n", localName.string()->utf8Data());
+    STARFISH_LOG_INFO("got unknown element - %s\n", localName.localName()->utf8Data());
     return new HTMLUnknownElement(this, localName);
 }
 
@@ -269,7 +269,7 @@ Comment* Document::createComment(String* data)
 
 Attr* Document::createAttribute(QualifiedName localName)
 {
-    if (!QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
+    if (!QualifiedName::checkNameProductionRule(localName.localName(), localName.localName()->length()))
         throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
     return new Attr(this, scriptBindingInstance(), localName);
@@ -352,7 +352,7 @@ void Document::setVisibleState(PageVisibilityState visibilityState)
 
 void Document::visibilityStateChanged()
 {
-    String* eventType = window()->starFish()->staticStrings()->m_visibilitychange.string();
+    String* eventType = window()->starFish()->staticStrings()->m_visibilitychange.localName();
     Event* e = new Event(eventType, EventInit(true, false));
     EventTarget::dispatchEvent(this->asNode(), e);
 }
