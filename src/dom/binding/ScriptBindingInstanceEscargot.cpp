@@ -78,11 +78,19 @@ void ScriptBindingInstance::exit()
             STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
             return escargot::ESValue();           \
         }, functionName##String, 0, true, true); \
-        functionName##Function->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false); \
+    functionName##Function->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false); \
     functionName##Function->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
     functionName##Function->protoType().asESPointer()->asESObject()->set__proto__(parentName);
 
 // fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(functionName##String, true, false, true, functionName##Function);
+
+#define DEFINE_FUNCTION_WITH_PARENTFUNC(functionName, parentFunction) \
+    DEFINE_FUNCTION(functionName, parentFunction->protoType()) \
+    functionName##Function->set__proto__(parentFunction);
+
+#define DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(functionName, parentFunction) \
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(functionName, parentFunction->protoType()) \
+    functionName##Function->set__proto__(parentFunction);
 
 // TypeError: Illegal invocation
 #define THROW_ILLEGAL_INVOCATION()                                                                                                                           \
@@ -281,7 +289,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("dispatchEvent"), 1, false);
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("dispatchEvent"), true, true, true, fnDispatchEvent);
 
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Window, EventTargetFunction->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Window, EventTargetFunction);
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(), escargot::ESString::create("window"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -345,7 +353,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
 #ifdef STARFISH_ENABLE_AUDIO
     // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLAudioElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLAudioElement, fetchData(scriptBindingInstance)->htmlElement());
     fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
 
     escargot::ESFunctionObject* audioPlayFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
@@ -430,7 +438,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 #define IMPL_EMPTY_BINDING(codeName, exportName, fromCodeName) \
 escargot::ESFunctionObject* binding##exportName(ScriptBindingInstance* scriptBindingInstance) \
 { \
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(exportName, fetchData(scriptBindingInstance)->fromCodeName()->protoType()); \
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(exportName, fetchData(scriptBindingInstance)->fromCodeName()); \
     return exportName##Function; \
 }
 
@@ -447,7 +455,7 @@ IMPL_EMPTY_BINDING(htmlUnknownElement, HTMLUnknownElement, htmlElement);
 
 escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Node, fetchData(scriptBindingInstance)->m_eventTarget->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Node, fetchData(scriptBindingInstance)->m_eventTarget);
     /* 4.4 Interface Node */
 
     NodeFunction->defineAccessorProperty(escargot::ESString::create("ELEMENT_NODE"),
@@ -958,7 +966,7 @@ escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInst
 
 escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Element, fetchData(scriptBindingInstance)->node()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Element, fetchData(scriptBindingInstance)->node());
 
     /* 4.8 Interface Element */
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
@@ -1323,7 +1331,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
 
 escargot::ESFunctionObject* bindingCharacterData(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(CharacterData, fetchData(scriptBindingInstance)->node()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(CharacterData, fetchData(scriptBindingInstance)->node());
 
     /* 4.9 Interface CharacterData */
 
@@ -1388,7 +1396,7 @@ escargot::ESFunctionObject* bindingCharacterData(ScriptBindingInstance* scriptBi
 
 escargot::ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Text, fetchData(scriptBindingInstance)->characterData()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Text, fetchData(scriptBindingInstance)->characterData());
 
     /* 4.10 Interface Text */
 
@@ -1409,13 +1417,13 @@ escargot::ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInst
 
 escargot::ESFunctionObject* bindingDocumentFragment(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentFragment, fetchData(scriptBindingInstance)->node()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(DocumentFragment, fetchData(scriptBindingInstance)->node());
     return DocumentFragmentFunction;
 }
 
 escargot::ESFunctionObject* bindingDocumentType(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DocumentType, fetchData(scriptBindingInstance)->node()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(DocumentType, fetchData(scriptBindingInstance)->node());
 
     escargot::ESFunctionObject* removeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -1469,7 +1477,7 @@ escargot::ESFunctionObject* bindingDocumentType(ScriptBindingInstance* scriptBin
 
 escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Document, fetchData(scriptBindingInstance)->node()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Document, fetchData(scriptBindingInstance)->node());
 
     /* 4.5 Interface Document */
 
@@ -1913,7 +1921,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
 
 escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLElement, fetchData(scriptBindingInstance)->element()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLElement, fetchData(scriptBindingInstance)->element());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("dir"),
@@ -2032,13 +2040,13 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
 
 escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLBodyElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLBodyElement, fetchData(scriptBindingInstance)->htmlElement());
     return HTMLBodyElementFunction;
 }
 
 escargot::ESFunctionObject* bindingHTMLScriptElement(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLScriptElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLScriptElement, fetchData(scriptBindingInstance)->htmlElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
@@ -2105,7 +2113,7 @@ escargot::ESFunctionObject* bindingHTMLScriptElement(ScriptBindingInstance* scri
 
 escargot::ESFunctionObject* bindingHTMLStyleElement(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLStyleElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLStyleElement, fetchData(scriptBindingInstance)->htmlElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLStyleElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
@@ -2131,7 +2139,7 @@ escargot::ESFunctionObject* bindingHTMLStyleElement(ScriptBindingInstance* scrip
 
 escargot::ESFunctionObject* bindingHTMLLinkElement(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLLinkElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLLinkElement, fetchData(scriptBindingInstance)->htmlElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLLinkElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("href"),
@@ -2198,7 +2206,7 @@ escargot::ESFunctionObject* bindingHTMLLinkElement(ScriptBindingInstance* script
 
 escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(HTMLImageElement, fetchData(scriptBindingInstance)->htmlElement()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLImageElement, fetchData(scriptBindingInstance)->htmlElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLImageElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
@@ -2587,14 +2595,14 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
 escargot::ESFunctionObject* bindingUIEvent(ScriptBindingInstance* scriptBindingInstance)
 {
     /* UI Events */
-    DEFINE_FUNCTION(UIEvent, fetchData(scriptBindingInstance)->event()->protoType());
+    DEFINE_FUNCTION_WITH_PARENTFUNC(UIEvent, fetchData(scriptBindingInstance)->event());
     return UIEventFunction;
 }
 
 escargot::ESFunctionObject* bindingMouseEvent(ScriptBindingInstance* scriptBindingInstance)
 {
     /* Mouse Events */
-    DEFINE_FUNCTION(MouseEvent, fetchData(scriptBindingInstance)->uiEvent()->protoType());
+    DEFINE_FUNCTION_WITH_PARENTFUNC(MouseEvent, fetchData(scriptBindingInstance)->uiEvent());
     return MouseEventFunction;
 }
 
@@ -3119,7 +3127,7 @@ escargot::ESFunctionObject* bindingNamedNodeMap(ScriptBindingInstance* scriptBin
 escargot::ESFunctionObject* bindingAttr(ScriptBindingInstance* scriptBindingInstance)
 {
     /* 4.8.2 Interface Attr */
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Attr, fetchData(scriptBindingInstance)->node()->protoType());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Attr, fetchData(scriptBindingInstance)->node());
 
     auto attrNameValueGetter = [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
