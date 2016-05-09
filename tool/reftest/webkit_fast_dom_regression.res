@@ -1,4 +1,5 @@
 test/reftest/vendor/webkit/fast/dom/Attr/access-after-element-destruction.html
+test/reftest/vendor/webkit/fast/dom/getElementById-with-rope-string-arg-expected.txt
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/001.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/002.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/003.html
