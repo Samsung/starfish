@@ -89,3 +89,8 @@ test/reftest/vendor/webkit/fast/dom/createElement-with-column.html
 test/reftest/vendor/webkit/fast/dom/Window/window-properties-configurable.html
 test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-constants.html
 test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-legacy-event-listener.html
+test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/css-properties-case-sensitive.html
+test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/css-style-item.html
+test/reftest/vendor/webkit/fast/dom/no-elements.html
+test/reftest/vendor/webkit/fast/dom/objc-big-method-name.html
+test/reftest/vendor/webkit/fast/dom/prototype-constructor-setter.html
