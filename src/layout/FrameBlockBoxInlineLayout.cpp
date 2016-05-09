@@ -509,9 +509,13 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                         }
                     }
 
+                    // FIXME: Is there a isNumber() for unicode?
                     auto isNumber = [](String* text) {
                         for (unsigned i=0; i < text->length(); i++) {
-                            if ('0' <= text->charAt(i) && text->charAt(i) <= '9') {
+                            unsigned d = text->charAt(i);
+                            if (('0' <= d && d <= '9') ||
+                                 (0x0660 <= d && d <= 0x0669) || // 0 to 9 in Arabic
+                                 (0x06F0 <= d && d <= 0x06F9)) { // 0 to 9 in Extended Arabic
                             } else {
                                 return false;
                             }
