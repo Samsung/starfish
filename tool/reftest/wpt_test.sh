@@ -74,8 +74,8 @@ for i in $tc ; do
         perl -i -pe $replace3 $TMPFILE
         perl -i -pe $replace4 $TMPFILE
 
-        PASS=`grep -o Pass $TMPFILE | wc -l`
-        FAIL=`grep -o Fail $TMPFILE | wc -l`
+        PASS=`grep -o "Pass " $TMPFILE | wc -l`
+        FAIL=`grep -o "Fail " $TMPFILE | wc -l`
         SUM=`expr $PASS + $FAIL`
         PASSTC=`expr $PASSTC + $PASS`
         FAILTC=`expr $FAILTC + $FAIL`
