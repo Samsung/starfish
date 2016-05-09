@@ -73,3 +73,11 @@ test/reftest/vendor/webkit/fast/dom/Window/window-constructor-presence.html
 test/reftest/vendor/webkit/fast/dom/Window/window-custom-prototype-crash.html
 test/reftest/vendor/webkit/fast/dom/Window/window-function-name-getter-precedence.html
 test/reftest/vendor/webkit/fast/dom/Window/window-legacy-event-listener.html
+test/reftest/vendor/webkit/fast/dom/collection-backward-traversal-crash.html
+test/reftest/vendor/webkit/fast/dom/comment-document-fragment.html
+test/reftest/vendor/webkit/fast/dom/comment-dom-node.html
+test/reftest/vendor/webkit/fast/dom/comment-not-documentElement.html
+test/reftest/vendor/webkit/fast/dom/compatMode-AlmostStrict.html
+test/reftest/vendor/webkit/fast/dom/compatMode-Strict.html
+test/reftest/vendor/webkit/fast/dom/constructor-proto.html
+test/reftest/vendor/webkit/fast/dom/createElement-with-column.html
