@@ -37,6 +37,7 @@ test/reftest/vendor/webkit/fast/dom/Document/createElement-invalid-names.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-valid-names.html
 test/reftest/vendor/webkit/fast/dom/document-head.html
 test/reftest/vendor/webkit/fast/dom/DOMException/prototype-object.html
+test/reftest/vendor/webkit/fast/dom/dom-instanceof.html
 test/reftest/vendor/webkit/fast/dom/attributes-configurable.html
 test/reftest/vendor/webkit/fast/dom/background-shorthand-csstext.html
 test/reftest/vendor/webkit/fast/dom/Document/replaceChild-null-oldChild.html
