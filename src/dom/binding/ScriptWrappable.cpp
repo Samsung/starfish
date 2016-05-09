@@ -731,6 +731,28 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
     auto data = fetchData(ptr->document()->scriptBindingInstance());
     scriptObject()->set__proto__(data->cssStyleDeclaration()->protoType());
     scriptObject()->setExtraData(CSSStyleDeclarationObject);
+
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::CSSStyleDeclarationObject);
+        return !(key.toIndex() == escargot::ESValue::ESInvalidIndexValue);
+    }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::CSSStyleDeclarationObject);
+        CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
+        size_t len = self->length();
+        escargot::ESValueVector v(len);
+        for (size_t i = 0; i < len; i ++) {
+            v[i] = escargot::ESValue(i);
+        }
+        return v;
+    }, [](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::CSSStyleDeclarationObject);
+        CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        if (idx < self->length()) {
+            return escargot::ESString::create(self->item(idx)->utf8Data());
+        }
+        return escargot::ESString::create("");
+    });
 }
 
 void ScriptWrappable::initScriptWrappable(CSSStyleRule* ptr)

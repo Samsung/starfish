@@ -1233,6 +1233,18 @@ public:
             return t;
     }
 
+    unsigned long length() const
+    {
+        return m_cssValues.size();
+    }
+
+    String* item(unsigned long index)
+    {
+        if (index < m_cssValues.size())
+            return m_cssValues.at(index).keyName();
+        return String::emptyString;
+    }
+
 protected:
     std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> > m_cssValues;
     Document* m_document;

@@ -3221,6 +3221,14 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
     });
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CSSStyleDeclarationObject, CSSStyleDeclaration);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
     return CSSStyleDeclarationFunction;
 }
 
