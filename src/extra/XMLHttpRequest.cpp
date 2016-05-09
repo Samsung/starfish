@@ -257,6 +257,8 @@ void XMLHttpRequest::send(String* body)
             return true;
 
         } else {
+            // FIXME (SHOULD check this part with jaeman.park - mh.byun)
+            /*
             switch (res) {
             case CURLE_OPERATION_TIMEDOUT:
                 xhrobj->callEventHandler(TIMEOUT, false, 0, 0);
@@ -269,12 +271,13 @@ void XMLHttpRequest::send(String* body)
             default:
                 break;
             }
+            */
 
             ecore_thread_main_loop_begin();
             xhrobj->m_starfish->addPointerInRootSet(xhrobj);
             ecore_idler_add([](void *data)->Eina_Bool {
                 XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
-                this_obj->callEventHandler(ERROR, false, 0, 0);
+                this_obj->callEventHandler(ERROR, true, 0, 0);
                 this_obj->m_starfish->removePointerFromRootSet(this_obj);
                 return ECORE_CALLBACK_CANCEL;
             }, xhrobj);
@@ -424,23 +427,23 @@ void XMLHttpRequest::callEventHandler(PROG_STATE progState, bool isMainThread, u
         eventName = String::fromUTF8("load");
     else if (progState == LOADEND)
         eventName = String::fromUTF8("loadend");
+    else if (progState == LOADSTART)
+        eventName = String::fromUTF8("loadstart");
 
     if (total>0)
         lengthComputable = true;
 
-    if (eventName) {
-        ScriptValue en = getHandler(eventName, starfishInstance());
-        if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
-            ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, lengthComputable, loaded, total));
-            ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
-            callScriptFunction(en, json_arg, 1, scriptValue());
+    if (eventName&&isMainThread) {
+        /*
+        {
+            ScriptValue en = getHandler(eventName, starfishInstance());
+            if (en.isObject() && en.asESPointer()->isESFunctionObject()) {
+                ProgressEvent* pe = new ProgressEvent(eventName, ProgressEventInit(false, false, lengthComputable, loaded, total));
+                ScriptValue json_arg[1] = { ScriptValue(pe->scriptObject()) };
+                callScriptFunction(en, json_arg, 1, scriptValue());
+            }
         }
-        return;
-    } else {
-        eventName = String::fromUTF8("loadstart");
-    }
-
-    if (isMainThread) {
+        */
         auto clickListeners = getEventListeners(eventName);
         if (clickListeners) {
             for (unsigned i = 0; i < clickListeners->size(); i++) {
