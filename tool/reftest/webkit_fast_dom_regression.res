@@ -65,3 +65,4 @@ test/reftest/vendor/webkit/fast/dom/Window/setTimeout-string-argument.html
 test/reftest/vendor/webkit/fast/dom/Window/window-constructor.html
 test/reftest/vendor/webkit/fast/dom/Window/window-constructor-settable.html
 test/reftest/vendor/webkit/fast/dom/Window/window-constructor-presence.html
+test/reftest/vendor/webkit/fast/dom/Window/window-custom-prototype-crash.html
