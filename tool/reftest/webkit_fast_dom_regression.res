@@ -42,6 +42,7 @@ test/reftest/vendor/webkit/fast/dom/Element/attribute-ascii-case-insensitive-3.h
 test/reftest/vendor/webkit/fast/dom/Element/class-list-toggle.html
 test/reftest/vendor/webkit/fast/dom/Element/id-in-applet.html
 test/reftest/vendor/webkit/fast/dom/Element/id-in-getelement01.html
+test/reftest/vendor/webkit/fast/dom/Element/id-in-map.html
 test/reftest/vendor/webkit/fast/dom/capturing-event-listeners.html
 test/reftest/vendor/webkit/fast/dom/children-nodes.html
 test/reftest/vendor/webkit/fast/dom/Window/dispatchEvent.html
