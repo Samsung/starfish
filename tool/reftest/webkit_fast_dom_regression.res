@@ -64,3 +64,4 @@ test/reftest/vendor/webkit/fast/dom/clone-node-z-index.html
 test/reftest/vendor/webkit/fast/dom/Window/setTimeout-string-argument.html
 test/reftest/vendor/webkit/fast/dom/Window/window-constructor.html
 test/reftest/vendor/webkit/fast/dom/Window/window-constructor-settable.html
+test/reftest/vendor/webkit/fast/dom/Window/window-constructor-presence.html
