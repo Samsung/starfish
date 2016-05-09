@@ -96,3 +96,4 @@ test/reftest/vendor/webkit/fast/dom/no-elements.html
 test/reftest/vendor/webkit/fast/dom/objc-big-method-name.html
 test/reftest/vendor/webkit/fast/dom/prototype-constructor-setter.html
 test/reftest/vendor/webkit/fast/dom/webidl-operations-on-node-prototype.html
+test/reftest/vendor/webkit/fast/dom/timer-increase-min-interval-repeating.html
