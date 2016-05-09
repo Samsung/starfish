@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         if (d.find('/') == std::string::npos) {
             path = "";
         } else {
-            path += "./";
+            // path += "./";
             path += d.substr(0, d.find_last_of('/'));
             path += "/";
             char result[1024];
