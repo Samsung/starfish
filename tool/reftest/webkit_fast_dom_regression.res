@@ -61,3 +61,4 @@ test/reftest/vendor/webkit/fast/dom/Window/setTimeout-setInterval-unique.html
 test/reftest/vendor/webkit/fast/dom/class-all-whitespace.html
 test/reftest/vendor/webkit/fast/dom/clone-node-style.html
 test/reftest/vendor/webkit/fast/dom/clone-node-z-index.html
+test/reftest/vendor/webkit/fast/dom/Window/setTimeout-string-argument.html
