@@ -317,6 +317,8 @@ String* CSSStyleValuePair::keyName()
         return String::createASCIIString("border-right-width");
     case BorderBottomWidth:
         return String::createASCIIString("border-bottom-width");
+    case BorderLeftWidth:
+        return String::createASCIIString("border-left-width");
     case MarginTop:
         return String::createASCIIString("margin-top");
     case MarginBottom:
