@@ -424,7 +424,7 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                         int32_t end;
                         for (size_t i = 0; i < total; i ++) {
                             ubidi_getLogicalRun(bidi, start, &end, NULL);
-                            String* t = tb->text()->substring(start, end);
+                            String* t = tb->text()->substring(start, end-start);
                             // puts(t->utf8Data());
                             start = end;
                             UBiDiDirection dir = ubidi_getBaseDirection((const UChar*)t->toUTF16String().data(), t->length());
