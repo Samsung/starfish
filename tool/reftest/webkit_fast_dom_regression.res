@@ -58,3 +58,6 @@ test/reftest/vendor/webkit/fast/dom/Window/setTimeout-no-arguments.html
 test/reftest/vendor/webkit/fast/dom/multiple-ids.html
 test/reftest/vendor/webkit/fast/dom/isEqualNode-after-removeAttribute.html
 test/reftest/vendor/webkit/fast/dom/Window/setTimeout-setInterval-unique.html
+test/reftest/vendor/webkit/fast/dom/class-all-whitespace.html
+test/reftest/vendor/webkit/fast/dom/clone-node-style.html
+test/reftest/vendor/webkit/fast/dom/clone-node-z-index.html
