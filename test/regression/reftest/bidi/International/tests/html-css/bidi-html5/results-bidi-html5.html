@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang='en' xml:lang='en' xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<title>HTML5 bidi markup: Summarized test results</title>
+<meta name="description" content="Summary of results of HTML5 bidi markup tests." />
+<link rel="stylesheet" href="/International/style/article-display-html5.css" type="text/css" />
+<link rel="copyright" href="#copyright"/>
+<script type="text/javascript" src="/International/javascript/articletoc-html5.js"></script>
+<style>.unlinked { font-size: 150%; color:red; line-height: 1.5; }</style>
+
+<!--[if lt IE 9]><script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script><![endif]--><script type="application/javascript">
+var cn = { }
+
+cn.en = "If you let the browser set a cookie, you will continue to see W3C Internationalization Activity pages (where available) in the language you chose. Do you want to set the cookie?"
+cn.es = "Si permite que el navegador establezca una cookie, continuará viendo las páginas de Actividad de Internacionalización de W3C (si existieran) en el idioma de su elección. ¿Quiere establecer la cookie?"
+cn.de = "Wenn Sie die Seite ein Cookie lassen, werden Sie weiterhin W3C Internationalization Activity Seiten in der Sprache, die Sie ausgewählt haben, in denen zu sehen. Möchten Sie das Cookie gesetzt?"
+cn.fr = "Si vous acceptez que votre navigateur crée un cookie, vous continuerez de voir les pages d’activité d’internationalisation de W3C (lorsque cela est possible) dans la langue de votre choix. Souhaitez-vous créer le cookie\u00A0?"
+cn['pt-br'] = "Se você deixar o navegador definir um cookie, você vai continuar a ver páginas W3C Internacionalização Atividade (quando disponível) no idioma que você escolheu. Você quer definir o cookie?"
+cn.sv = "Om du tillåter webbläsaren att spara en kaka (cookie), så kommer du i fortsättningen att se sidor från W3C Internationalization Activity i det språk du valt (när sådana översättningar finns). Vill du spara kakan?"
+cn.uk = "Якщо ви дозволите браузер встановити куки, ви будете продовжувати бачити сторінки W3C Інтернаціоналізація активність (за наявності) на мові, який ви обрали. Ви хочете, щоб встановити печиво?"
+
+
+function stickyConneg (filename, cLang, targetLang) {
+	var response = false
+	var msg = '['+cLang+'] '+cn[cLang]
+	msg += '\n\n'+'['+targetLang+'] '+cn[targetLang]
+	if (targetLang !== 'en' && cLang !== 'en') msg += '\n\n'+'[en] '+cn.en
+	response = confirm(msg)
+	if (response == true) {
+		var d = new Date()
+		d.setTime(d.getTime() + 60*24*60*60*1000)
+		var expires = ';expires='+d.toUTCString()
+		var path = ";path=/"
+		document.cookie = 'w3ci18nlang='+targetLang+expires+path
+		}
+	document.location.assign(filename+'.'+targetLang)
+	}
+</script>
+<link rel="stylesheet" href="../results.css" type="text/css" />
+<script src='http://w3c-test.org/framework/app/jquery.js'></script>
+<script src="/International/javascript/results-functions.js"></script>
+</head>
+
+<body>
+
+<header>
+<aside id="mainNavigation">
+	<nav id="site-navigation">
+		<a href="/International/"><img id="picture" alt="World map" title="World map" src="/International/icons/world.gif" width="150" height="61"/></a>
+		
+		</nav>
+	
+	<nav class="noprint" id="search"><form method="get" action="/International/site-search.php" enctype="application/x-www-form-urlencoded" style="margin: 0;">
+<div id="searchSite"><input name="q" type="text" value="I18n site search: " onfocus="this.value=''" id="searchField" accesskey="E" maxlength="255"/></div>
+</form></nav>
+	<nav id="breadcrumbs"><p><a href='/International/'>Home </a> &gt; <a href='/International/resources'>Resources</a> &gt; <a href='/International/tests/'>Tests</a></p></nav>
+	<nav class="noprint" id="toc">
+		<h2 id="internal-links" class="notoc"><a href="#internal-links">On this page</a></h2>
+		<div id="toclocation"> </div>
+		</nav>
+	<nav class="noprint" id="relatedlinks">
+		<h2 id="key" class="notoc"><a href="#key">Key</a></h2>
+<div class="key">
+<p class="pass">all results pass</p>
+<p class="pass fail">pass reported but also other results</p>
+<p class="fail">all results fail</p>
+<p class="fail uncertain">fail reported but also uncertain</p>
+<p class="uncertain">all results uncertain</p>
+</div>
+<p style="text-align: center;"># pass / # fail / # uncertain</p>
+		</nav>
+	<div id="aboutdoc">
+		<h2 id='abouthead' class='notoc'>About this article</h2>
+<p>This article was published without public review. If there are things that need addressing, please send us feedback using the link near the bottom of the page.</p>
+		</div>
+	</aside>
+	<nav id="boilerplate"><div id="siteicons"><a href="http://www.w3.org/" title="Go to W3C Home Page"><img src="/International/icons/w3c_home.gif" alt="s_gotoW3cHome"/></a><a href="/International/" title="Go to Internationalization Activity Home Page" id="i18n-name">
+	Internationalization</a></div>
+<div id="sitelinks" class="noprint"><a href="/International/" title="Internationalization Activity home page.">Home</a>&#xA0; 
+<a href="/International/resources" title="Information resources on the Internationalization site.">Resources</a>&#xA0;
+<a href="/International/technique-index" title="Task-based index of i18n techniques.">Techniques</a>&#xA0;
+<a href="/International/resource-index" title="Topic index for information on this site.">Topics</a>&#xA0; 
+<a href="/International/log/description" title="Information about news filters and RSS feeds for W3C Internationalization.">News</a>&#xA0;
+<a href="/International/about#scope" title="Groups that make up the Internationalization Activity.">Groups</a>&#xA0; 
+<a href="/International/about" title="About the Internationalization Activity.">About</a>&#xA0; 
+&#xA0; </div><div id="line">&#xA0;</div></nav>
+<h1>Summarized test results: <br>
+  HTML5 bidi markup</h1>
+</header>
+
+
+		<section> 
+	  <div id="audience"> 
+				<p><span class="leadin">Intended audience:</span> users, XHTML/HTML coders (using editors or scripting), script developers (PHP, JSP, etc.), CSS coders, Web project managers, and anyone who wants to know whether ruby markup works in current browsers.</p>
+			<p class='updated'>Updated <a href='http://www.w3.org/blog/International/tag/results-bidi-html5/'><time datetime='2012-02-06T07:26:00Z'>2012-02-06 07:26:00</time></a></p>			</div>
+
+
+			<section> 
+                <p>These tests check whether user agents correctly apply the new markup added to HTML5 to improve handling of bidirectional text in languages such as Arabic, Hebrew, Persian, Thaana, Urdu, etc. </p>
+                <p>Note that these test results are for released versions of the browsers tested. Versions that are still in development may provide better support for these features. The tests do not use any vendor prefixes.</p>
+			</section>
+		</section>
+		
+    
+<section> 
+<h2 id="results_html5"><a href="#results_html5">results</a></h2>
+<p>A number of tests could not be fully checked because there was no font on the system to support one or more of the glyphs in the test. These tests were skipped.</p>
+<p>To see the test, click on the link in the left-most column. To see detailed results for a single test, click on the link in the right-most column. To submit test data for a single test, click on the link in the right-most column and then follow the link on that page.</p>
+<p>The tables show the latest results from the W3C Test Framework. Below the tables are summaries of the results at a given date. The table data may be more up-to-date than the summary. The tables may also contain some incorrectly scored tests, and tests that relate to non-released versions of browsers. These are not included in the summary.<br style="clear:both;"/></p>
+
+
+<section>
+  <h3 id="bdi"><a href="#bdi">bdi element</a></h3>
+  
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-001" target="_blank">BDI: has dir=auto by default</a></th>
+<th class="side assert ">       'The dir global attribute defaults to auto on this element (it never inherits from the parent       element like with other elements).'</th>
+<td title='Gecko' id='bidi-html5-001-gecko'></td>
+<td title='Presto' id='bidi-html5-001-presto'></td>
+<td title='Trident' id='bidi-html5-001-trident'></td>
+<td title='WebKit' id='bidi-html5-001-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-001" target="_blank">bidi-html5-001</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-002" target="_blank">BDI: neutral when BR</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, a BDI containing a BR (which serves as a paragraph break in the content of the BDI)       must not serve as a paragraph break in the content around the BDI.</th>
+<td title='Gecko' id='bidi-html5-002-gecko'></td>
+<td title='Presto' id='bidi-html5-002-presto'></td>
+<td title='Trident' id='bidi-html5-002-trident'></td>
+<td title='WebKit' id='bidi-html5-002-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-002" target="_blank">bidi-html5-002</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-003" target="_blank">BDI: neutral when contains LRO or RLO without PDF</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, if a BDI contains LRO or RLO characters lacking a matching PDF, these must not affect       the visual ordering of the content outside the BDI.</th>
+<td title='Gecko' id='bidi-html5-003-gecko'></td>
+<td title='Presto' id='bidi-html5-003-presto'></td>
+<td title='Trident' id='bidi-html5-003-trident'></td>
+<td title='WebKit' id='bidi-html5-003-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-003" target="_blank">bidi-html5-003</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-004" target="_blank">BDI: neutral when nested</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       This must apply when a BDI is nested within a BDI.</th>
+<td title='Gecko' id='bidi-html5-004-gecko'></td>
+<td title='Presto' id='bidi-html5-004-presto'></td>
+<td title='Trident' id='bidi-html5-004-trident'></td>
+<td title='WebKit' id='bidi-html5-004-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-004" target="_blank">bidi-html5-004</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-005" target="_blank">BDI: neutral when number</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'</th>
+<td title='Gecko' id='bidi-html5-005-gecko'></td>
+<td title='Presto' id='bidi-html5-005-presto'></td>
+<td title='Trident' id='bidi-html5-005-trident'></td>
+<td title='WebKit' id='bidi-html5-005-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-005" target="_blank">bidi-html5-005</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-006" target="_blank">BDI: paragraph-level container</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, under no circumstances should any part of the content outside a BDI be visually       reordered inside the BDI's content.</th>
+<td title='Gecko' id='bidi-html5-006-gecko'></td>
+<td title='Presto' id='bidi-html5-006-presto'></td>
+<td title='Trident' id='bidi-html5-006-trident'></td>
+<td title='WebKit' id='bidi-html5-006-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-006" target="_blank">bidi-html5-006</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-007" target="_blank">BDI: neutral to following letter</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'</th>
+<td title='Gecko' id='bidi-html5-007-gecko'></td>
+<td title='Presto' id='bidi-html5-007-presto'></td>
+<td title='Trident' id='bidi-html5-007-trident'></td>
+<td title='WebKit' id='bidi-html5-007-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-007" target="_blank">bidi-html5-007</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-008" target="_blank">BDI: neutral to immediately following letter</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'</th>
+<td title='Gecko' id='bidi-html5-008-gecko'></td>
+<td title='Presto' id='bidi-html5-008-presto'></td>
+<td title='Trident' id='bidi-html5-008-trident'></td>
+<td title='WebKit' id='bidi-html5-008-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-008" target="_blank">bidi-html5-008</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-009" target="_blank">BDI: neutral to preceding letter</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'</th>
+<td title='Gecko' id='bidi-html5-009-gecko'></td>
+<td title='Presto' id='bidi-html5-009-presto'></td>
+<td title='Trident' id='bidi-html5-009-trident'></td>
+<td title='WebKit' id='bidi-html5-009-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-009" target="_blank">bidi-html5-009</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-010" target="_blank">BDI: neutral to immediately preceding letter</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'</th>
+<td title='Gecko' id='bidi-html5-010-gecko'></td>
+<td title='Presto' id='bidi-html5-010-presto'></td>
+<td title='Trident' id='bidi-html5-010-trident'></td>
+<td title='WebKit' id='bidi-html5-010-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-010" target="_blank">bidi-html5-010</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-011" target="_blank">BDI: neutral to following number</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'</th>
+<td title='Gecko' id='bidi-html5-011-gecko'></td>
+<td title='Presto' id='bidi-html5-011-presto'></td>
+<td title='Trident' id='bidi-html5-011-trident'></td>
+<td title='WebKit' id='bidi-html5-011-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-011" target="_blank">bidi-html5-011</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-012" target="_blank">BDI: neutral to immediately following number</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'</th>
+<td title='Gecko' id='bidi-html5-012-gecko'></td>
+<td title='Presto' id='bidi-html5-012-presto'></td>
+<td title='Trident' id='bidi-html5-012-trident'></td>
+<td title='WebKit' id='bidi-html5-012-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-012" target="_blank">bidi-html5-012</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-013" target="_blank">BDI: neutral to surrounding letters</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, regardless of its content and its dir attribute (if any), a BDI will not prevent       a strongly RTL (or LTR) character preceding it from forming a single directional run with       another strongly RTL (LTR) character following it.</th>
+<td title='Gecko' id='bidi-html5-013-gecko'></td>
+<td title='Presto' id='bidi-html5-013-presto'></td>
+<td title='Trident' id='bidi-html5-013-trident'></td>
+<td title='WebKit' id='bidi-html5-013-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-013" target="_blank">bidi-html5-013</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-014" target="_blank">BDI: neutral when wrapped</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'        Obviously, this should hold even if the BDI's content is wrapped over more than one line.       A single character (U+FFFC or otherwise) obviously never gets wrapped over more than one       line, but we still expect the part of the content preceding the BDI, if any, that is       displayed on the same line as some part of the BDI to be ordered the same as it would be       if that part of the BDI were replaced with U+FFFC. Similarly, we expect the part of the       content following the BDI, if any, that is displayed on the same line as some part of the       BDI to be ordered the same as it would be if that part of the BDI were replaced with U+FFFC.</th>
+<td title='Gecko' id='bidi-html5-014-gecko'></td>
+<td title='Presto' id='bidi-html5-014-presto'></td>
+<td title='Trident' id='bidi-html5-014-trident'></td>
+<td title='WebKit' id='bidi-html5-014-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-014" target="_blank">bidi-html5-014</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-015" target="_blank">BDI: paragraph-level container</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the contents of a bdi element,       user agents must treat the element as a paragraph-level container.'       Thus, under no circumstances should the content outside a BDI affect the visual       ordering of the BDI's content.</th>
+<td title='Gecko' id='bidi-html5-015-gecko'></td>
+<td title='Presto' id='bidi-html5-015-presto'></td>
+<td title='Trident' id='bidi-html5-015-trident'></td>
+<td title='WebKit' id='bidi-html5-015-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-015" target="_blank">bidi-html5-015</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-016" target="_blank">BDI: neutral to another BDI</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, when a BDIs contains text of the same strong direction as another BDI following it, the       two must not form a directional run as would be the case if the BDIs were just SPANs.</th>
+<td title='Gecko' id='bidi-html5-016-gecko'></td>
+<td title='Presto' id='bidi-html5-016-presto'></td>
+<td title='Trident' id='bidi-html5-016-trident'></td>
+<td title='WebKit' id='bidi-html5-016-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-016" target="_blank">bidi-html5-016</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-017" target="_blank">BDI: neutral to another immediately following BDI</a></th>
+<th class="side assert ">       'For the purposes of applying the bidirectional algorithm to the paragraph-level       container that a bdi element finds itself within, the bdi element must be treated       like a U+FFFC OBJECT REPLACEMENT CHARACTER.'       Thus, when a BDIs contains text of the same strong direction as another BDI following it, the       two must not form a directional run as would be the case if the BDIs were just SPANs, even if       the two BDIs are not separated by anything at all.</th>
+<td title='Gecko' id='bidi-html5-017-gecko'></td>
+<td title='Presto' id='bidi-html5-017-presto'></td>
+<td title='Trident' id='bidi-html5-017-trident'></td>
+<td title='WebKit' id='bidi-html5-017-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-017" target="_blank">bidi-html5-017</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-bdi-element">Section 4.6.23</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/4.6.23">Latest results for section 4.6.23</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 4.6.23</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p> The <code class="kw">bdi</code> element isolates text from its surrounding content for the purposes of the Unicode Bidirectional Algorithm, and automatically sets the value of the dir attribute if none is explicity set.</p>
+    <h4>Snapshot summary,  2012-04-04</h4>
+    <p> Support for the bdi element is still either weak or non-existent. Only Firefox and Chrome pass any of the tests. The number passed by Chrome is increasing, from version to version. Firefox supports a lot more, but still far from all.</p>
+    </div>
+</section>
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="br"><a href="#br">br</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-018" target="_blank">BR separates bidi paragraph</a></th>
+<th class="side assert ">A br element should separate paragraphs for the purposes of the Unicode bidirectional algorithm.</th>
+<td title='Gecko' id='bidi-html5-018-gecko'></td>
+<td title='Presto' id='bidi-html5-018-presto'></td>
+<td title='Trident' id='bidi-html5-018-trident'></td>
+<td title='WebKit' id='bidi-html5-018-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-018" target="_blank">bidi-html5-018</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-019" target="_blank">BR in inline ancestors</a></th>
+<th class="side assert ">       'A br element should separate paragraphs for the purposes of the Unicode bidirectional       algorithm.'       'If an inline element is broken around a bidi paragraph boundary (e.g. if split by a block or       forced paragraph break), then the bidi control codes corresponding to the end of the element       are added before the interruption and the codes corresponding to the start of the element are       added after it. (In other words, any embedding levels or overrides started by the element are       closed at the paragraph break and reopened on the other side of it.)'</th>
+<td title='Gecko' id='bidi-html5-019-gecko'></td>
+<td title='Presto' id='bidi-html5-019-presto'></td>
+<td title='Trident' id='bidi-html5-019-trident'></td>
+<td title='WebKit' id='bidi-html5-019-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-019" target="_blank">bidi-html5-019</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-br-element">Section 4.6.26</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/4.6.26">Latest results for section 4.6.26</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 4.6.26</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p> This test checks whether a <code class="kw">br</code> element separates paragraphs for the purposes of the Unicode bidirectional algorithm.</p>
+    <h4>Snapshot summary,  2012-04-04</h4>
+    <p> Of the browsers tested, only Chrome and Firefox do this for both tests.</p>
+  </div>
+</section>
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="prenl"><a href="#prenl">pre-newline</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-020" target="_blank">newline in pre separates bidi paragraphs</a></th>
+<th class="side assert ">A newline in a pre element should separate paragraphs for the purposes of the Unicode bidirectional algorithm.</th>
+<td title='Gecko' id='bidi-html5-020-gecko'></td>
+<td title='Presto' id='bidi-html5-020-presto'></td>
+<td title='Trident' id='bidi-html5-020-trident'></td>
+<td title='WebKit' id='bidi-html5-020-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-020" target="_blank">bidi-html5-020</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-pre-element">Section 4.5.3</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/4.5.3">Latest results for section 4.5.3</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 4.5.3</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p> This test checks whether a newline in a <code class="kw">pre</code> element  separates paragraphs for the purposes of the Unicode bidirectional algorithm.</p>
+    <h4>Snapshot summary,  2012-04-04</h4>
+    <p> In all browsers except Opera, it did.</p>
+  </div>
+</section>
+
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="textareanl"><a href="#textareanl">text-area newline</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-021" target="_blank">newline in &lt;textarea&gt; separates bidi paragraphs</a></th>
+<th class="side assert ">A newline in a textarea element, and in its raw value, should separate paragraphs for the purposes of the Unicode bidirectional algorithm.</th>
+<td title='Gecko' id='bidi-html5-021-gecko'></td>
+<td title='Presto' id='bidi-html5-021-presto'></td>
+<td title='Trident' id='bidi-html5-021-trident'></td>
+<td title='WebKit' id='bidi-html5-021-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-021" target="_blank">bidi-html5-021</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-textarea-element">Section 4.10.13</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/4.10.13">Latest results for section 4.10.13</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 4.10.13</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p> These tests check  whether a newline in a <code class="kw">textarea</code> element, and in its raw value,  separates paragraphs for the purposes of the Unicode bidirectional algorithm.</p>
+    <h4>Snapshot summary,  2012-04-04</h4>
+    <p> In all browsers it does.</p>
+  </div>
+</section>
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="dirauto"><a href="#dirauto">dir=auto</a></h3>
+
+<section>
+  <h4 id="dirauto-basic"><a href="#dirauto-basic">Basic</a></h4>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-901" target="_blank">dir=auto, inline auto direction</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character of the text. dir=auto is applied to an inline element here, in various base direction contexts.</th>
+<td title='Gecko' id='bidi-html5-901-gecko'></td>
+<td title='Presto' id='bidi-html5-901-presto'></td>
+<td title='Trident' id='bidi-html5-901-trident'></td>
+<td title='WebKit' id='bidi-html5-901-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-901" target="_blank">bidi-html5-901</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-902" target="_blank">dir=auto, inline isolation</a></th>
+<th class="side assert ">dir='auto' on an inline element will directionally isolate its contents from a following number.</th>
+<td title='Gecko' id='bidi-html5-902-gecko'></td>
+<td title='Presto' id='bidi-html5-902-presto'></td>
+<td title='Trident' id='bidi-html5-902-trident'></td>
+<td title='WebKit' id='bidi-html5-902-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-902" target="_blank">bidi-html5-902</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-057" target="_blank">dir=auto, start with L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-057-gecko'></td>
+<td title='Presto' id='bidi-html5-057-presto'></td>
+<td title='Trident' id='bidi-html5-057-trident'></td>
+<td title='WebKit' id='bidi-html5-057-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-057" target="_blank">bidi-html5-057</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-065" target="_blank">dir=auto, start with R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-065-gecko'></td>
+<td title='Presto' id='bidi-html5-065-presto'></td>
+<td title='Trident' id='bidi-html5-065-trident'></td>
+<td title='WebKit' id='bidi-html5-065-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-065" target="_blank">bidi-html5-065</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p><div class="summary">
+  <p> This summary applies to the above, basic tests that check whether  <code>dir=auto</code> automatically applies direction and isolates its content. See following tables for more detailed tests.</p>
+  <h4>Snapshot summary,  2012-04-04<br>
+    Firefox 18.0, Opera 12.12, Internet Explorer 10, Chrome 24.0.1312.56, Safari 5.1.7
+  </h4>
+  <p> Chrome passes all tests, automatically detecting the direction according to the first strong character, and also isolating content when inline.</p>
+  <p>Safari does the auto-detection, but doesn't isolate inline content.</p>
+  <p>Firefox isolates inline content, but doesn't auto-detect direction.</p>
+  <p>Opera and Internet Explorer don't yet do anything with the <code class="kw">auto</code> value of <code class="kw">dir</code>.</p>
+  <p>&nbsp;</p>
+</div>
+</section>
+
+    <!-- ··············································· -->
+
+<section>
+  <h4 id="dirauto-more"><a href="#dirauto-more">More tests on block markup</a></h4>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-056" target="_blank">dir=auto, isolated in LTR text</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text, but the element behaves externally as a neutral character.       In this test, it allows a preceding R to form a single directional run       with a succeeding number.</th>
+<td title='Gecko' id='bidi-html5-056-gecko'></td>
+<td title='Presto' id='bidi-html5-056-presto'></td>
+<td title='Trident' id='bidi-html5-056-trident'></td>
+<td title='WebKit' id='bidi-html5-056-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-056" target="_blank">bidi-html5-056</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-022" target="_blank">dir=auto, start with bdi, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text while ignoring bdi elements.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-022-gecko'></td>
+<td title='Presto' id='bidi-html5-022-presto'></td>
+<td title='Trident' id='bidi-html5-022-trident'></td>
+<td title='WebKit' id='bidi-html5-022-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-022" target="_blank">bidi-html5-022</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-023" target="_blank">dir=auto, start with bdi, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text while ignoring bdi elements.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-023-gecko'></td>
+<td title='Presto' id='bidi-html5-023-presto'></td>
+<td title='Trident' id='bidi-html5-023-trident'></td>
+<td title='WebKit' id='bidi-html5-023-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-023" target="_blank">bidi-html5-023</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-024" target="_blank">dir=auto, start with dir=auto, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text while ignoring contained elements with an explicit dir of their own.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-024-gecko'></td>
+<td title='Presto' id='bidi-html5-024-presto'></td>
+<td title='Trident' id='bidi-html5-024-trident'></td>
+<td title='WebKit' id='bidi-html5-024-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-024" target="_blank">bidi-html5-024</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-025" target="_blank">dir=auto, start with dir=auto, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text while ignoring contained elements with an explicit dir of their own.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-025-gecko'></td>
+<td title='Presto' id='bidi-html5-025-presto'></td>
+<td title='Trident' id='bidi-html5-025-trident'></td>
+<td title='WebKit' id='bidi-html5-025-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-025" target="_blank">bidi-html5-025</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-026" target="_blank">dir=auto, start with dir, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text while ignoring contained elements with an explicit dir of their own.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-026-gecko'></td>
+<td title='Presto' id='bidi-html5-026-presto'></td>
+<td title='Trident' id='bidi-html5-026-trident'></td>
+<td title='WebKit' id='bidi-html5-026-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-026" target="_blank">bidi-html5-026</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-027" target="_blank">dir=auto, start with dir, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text while ignoring contained elements with an explicit dir of their own.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-027-gecko'></td>
+<td title='Presto' id='bidi-html5-027-presto'></td>
+<td title='Trident' id='bidi-html5-027-trident'></td>
+<td title='WebKit' id='bidi-html5-027-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-027" target="_blank">bidi-html5-027</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-028" target="_blank">dir=auto, start with L within contained element</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text, including text within contained elements.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-028-gecko'></td>
+<td title='Presto' id='bidi-html5-028-presto'></td>
+<td title='Trident' id='bidi-html5-028-trident'></td>
+<td title='WebKit' id='bidi-html5-028-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-028" target="_blank">bidi-html5-028</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-029" target="_blank">dir=auto, start with R within contained element</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text, including text within contained elements.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-029-gecko'></td>
+<td title='Presto' id='bidi-html5-029-presto'></td>
+<td title='Trident' id='bidi-html5-029-trident'></td>
+<td title='WebKit' id='bidi-html5-029-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-029" target="_blank">bidi-html5-029</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-030" target="_blank">dir=auto, start with script, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of descendant text while ignoring descendant script elements.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-030-gecko'></td>
+<td title='Presto' id='bidi-html5-030-presto'></td>
+<td title='Trident' id='bidi-html5-030-trident'></td>
+<td title='WebKit' id='bidi-html5-030-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-030" target="_blank">bidi-html5-030</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-031" target="_blank">dir=auto, start with script, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of descendant text while ignoring descendant script elements.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-031-gecko'></td>
+<td title='Presto' id='bidi-html5-031-presto'></td>
+<td title='Trident' id='bidi-html5-031-trident'></td>
+<td title='WebKit' id='bidi-html5-031-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-031" target="_blank">bidi-html5-031</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-032" target="_blank">dir=auto, start with style, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of descendant text while ignoring descendant style elements.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-032-gecko'></td>
+<td title='Presto' id='bidi-html5-032-presto'></td>
+<td title='Trident' id='bidi-html5-032-trident'></td>
+<td title='WebKit' id='bidi-html5-032-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-032" target="_blank">bidi-html5-032</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-033" target="_blank">dir=auto, start with style, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of descendant text while ignoring descendant style elements.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-033-gecko'></td>
+<td title='Presto' id='bidi-html5-033-presto'></td>
+<td title='Trident' id='bidi-html5-033-trident'></td>
+<td title='WebKit' id='bidi-html5-033-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-033" target="_blank">bidi-html5-033</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-034" target="_blank">dir=auto, start with textarea, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of descendant text while ignoring descendant textarea elements.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-034-gecko'></td>
+<td title='Presto' id='bidi-html5-034-presto'></td>
+<td title='Trident' id='bidi-html5-034-trident'></td>
+<td title='WebKit' id='bidi-html5-034-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-034" target="_blank">bidi-html5-034</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-035" target="_blank">dir=auto, start with textarea, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of descendant text while ignoring descendant textarea elements.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-035-gecko'></td>
+<td title='Presto' id='bidi-html5-035-presto'></td>
+<td title='Trident' id='bidi-html5-035-trident'></td>
+<td title='WebKit' id='bidi-html5-035-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-035" target="_blank">bidi-html5-035</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-036" target="_blank">dir=auto, start with EN, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Latin letter A since digits are not strongly       directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-036-gecko'></td>
+<td title='Presto' id='bidi-html5-036-presto'></td>
+<td title='Trident' id='bidi-html5-036-trident'></td>
+<td title='WebKit' id='bidi-html5-036-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-036" target="_blank">bidi-html5-036</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-037" target="_blank">dir=auto, start with EN, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Hebrew letter Alef since digits are not strongly       directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-037-gecko'></td>
+<td title='Presto' id='bidi-html5-037-presto'></td>
+<td title='Trident' id='bidi-html5-037-trident'></td>
+<td title='WebKit' id='bidi-html5-037-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-037" target="_blank">bidi-html5-037</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-058" target="_blank">dir=auto, start with N, then EN, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Latin letter A since neutrals and digits are not       strongly directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-058-gecko'></td>
+<td title='Presto' id='bidi-html5-058-presto'></td>
+<td title='Trident' id='bidi-html5-058-trident'></td>
+<td title='WebKit' id='bidi-html5-058-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-058" target="_blank">bidi-html5-058</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-059" target="_blank">dir=auto, start with N, then EN, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Hebrew letter Alef since neutrals and digits are not       strongly directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-059-gecko'></td>
+<td title='Presto' id='bidi-html5-059-presto'></td>
+<td title='Trident' id='bidi-html5-059-trident'></td>
+<td title='WebKit' id='bidi-html5-059-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-059" target="_blank">bidi-html5-059</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-060" target="_blank">dir=auto, start with N, then EN, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text, ignoring neutrals and numbers.       If there is no strong character, as in this test, the direction defaults to LTR.</th>
+<td title='Gecko' id='bidi-html5-060-gecko'></td>
+<td title='Presto' id='bidi-html5-060-presto'></td>
+<td title='Trident' id='bidi-html5-060-trident'></td>
+<td title='WebKit' id='bidi-html5-060-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-060" target="_blank">bidi-html5-060</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-061" target="_blank">dir=auto, start with N, then L</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Latin letter A since neutrals are not       strongly directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-061-gecko'></td>
+<td title='Presto' id='bidi-html5-061-presto'></td>
+<td title='Trident' id='bidi-html5-061-trident'></td>
+<td title='WebKit' id='bidi-html5-061-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-061" target="_blank">bidi-html5-061</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-062" target="_blank">dir=auto, start with N, then R</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       In this test, it is the Hebrew letter Alef since neutrals are not       strongly directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-062-gecko'></td>
+<td title='Presto' id='bidi-html5-062-presto'></td>
+<td title='Trident' id='bidi-html5-062-trident'></td>
+<td title='WebKit' id='bidi-html5-062-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-062" target="_blank">bidi-html5-062</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+</section>
+
+    <!-- ··············································· -->
+
+<section>
+  <h4 id="dirauto-input-basic"><a href="#dirauto-input-basic">Basic input</a></h4>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-040" target="_blank">input with dir=auto, start with L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-040-gecko'></td>
+<td title='Presto' id='bidi-html5-040-presto'></td>
+<td title='Trident' id='bidi-html5-040-trident'></td>
+<td title='WebKit' id='bidi-html5-040-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-040" target="_blank">bidi-html5-040</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-046" target="_blank">input with dir=auto, start with R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-046-gecko'></td>
+<td title='Presto' id='bidi-html5-046-presto'></td>
+<td title='Trident' id='bidi-html5-046-trident'></td>
+<td title='WebKit' id='bidi-html5-046-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-046" target="_blank">bidi-html5-046</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+  <p> This summary applies to the above, basic tests that check whether  <code>dir=auto</code> on the input element automatically applies base direction to the contents of the form field. See following tables for more detailed tests.</p>
+    <h4>Snapshot summary,  2013-01-25<br>
+Firefox 18.0, Opera 12.12, Internet Explorer 10, Chrome 24.0.1312.56, Safari 5.1.7 </h4>
+    <p> Of the browsers tested, only Chrome slides the text to the side of the input field indicated by the first strong character in the input. Safari consistently aligns the input value to the left, which is why it passes one test but not the other. Other browsers tested align the text with regards to the current base direction.</p>
+    <p>See below for additional tests of <code class="kw">auto</code> on the <code class="kw">input</code> element .</p>
+  </div>
+
+</section>
+
+    <!-- ··············································· -->
+
+<section>
+  <h4 id="dirauto-input"><a href="#dirauto-input">Other input</a></h4>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-038" target="_blank">input with dir=auto, start with EN+L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A since digits are not strongly       directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-038-gecko'></td>
+<td title='Presto' id='bidi-html5-038-presto'></td>
+<td title='Trident' id='bidi-html5-038-trident'></td>
+<td title='WebKit' id='bidi-html5-038-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-038" target="_blank">bidi-html5-038</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-039" target="_blank">input with dir=auto, start with EN+R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef since digits are not strongly       directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-039-gecko'></td>
+<td title='Presto' id='bidi-html5-039-presto'></td>
+<td title='Trident' id='bidi-html5-039-trident'></td>
+<td title='WebKit' id='bidi-html5-039-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-039" target="_blank">bidi-html5-039</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-041" target="_blank">input with dir=auto, start with N+EN+L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A since neutrals and digits are not       strongly directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-041-gecko'></td>
+<td title='Presto' id='bidi-html5-041-presto'></td>
+<td title='Trident' id='bidi-html5-041-trident'></td>
+<td title='WebKit' id='bidi-html5-041-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-041" target="_blank">bidi-html5-041</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-042" target="_blank">input with dir=auto, start with N+EN+R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef since neutrals and digits are not       strongly directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-042-gecko'></td>
+<td title='Presto' id='bidi-html5-042-presto'></td>
+<td title='Trident' id='bidi-html5-042-trident'></td>
+<td title='WebKit' id='bidi-html5-042-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-042" target="_blank">bidi-html5-042</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-043" target="_blank">input with dir=auto, all N+EN</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value, or to LTR if there is no such       character.       In this test, there is no strongly directional character in the value,       thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-043-gecko'></td>
+<td title='Presto' id='bidi-html5-043-presto'></td>
+<td title='Trident' id='bidi-html5-043-trident'></td>
+<td title='WebKit' id='bidi-html5-043-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-043" target="_blank">bidi-html5-043</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-044" target="_blank">input with dir=auto, start with N+L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A since neutrals are not       strongly directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-044-gecko'></td>
+<td title='Presto' id='bidi-html5-044-presto'></td>
+<td title='Trident' id='bidi-html5-044-trident'></td>
+<td title='WebKit' id='bidi-html5-044-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-044" target="_blank">bidi-html5-044</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-045" target="_blank">input with dir=auto, start with N+R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef since neutrals are not       strongly directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-045-gecko'></td>
+<td title='Presto' id='bidi-html5-045-presto'></td>
+<td title='Trident' id='bidi-html5-045-trident'></td>
+<td title='WebKit' id='bidi-html5-045-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-045" target="_blank">bidi-html5-045</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+</section>
+
+    <!-- ··············································· -->
+
+<section>
+  <h4 id="dirauto-input-scripted"><a href="#dirauto-input-scripted">Scripted input</a></h4>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-047" target="_blank">input with dir=auto, script assigns to start with EN+L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A since digits are not strongly       directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-047-gecko'></td>
+<td title='Presto' id='bidi-html5-047-presto'></td>
+<td title='Trident' id='bidi-html5-047-trident'></td>
+<td title='WebKit' id='bidi-html5-047-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-047" target="_blank">bidi-html5-047</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-048" target="_blank">input with dir=auto, script assigns to start with EN+R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef since digits are not strongly       directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-048-gecko'></td>
+<td title='Presto' id='bidi-html5-048-presto'></td>
+<td title='Trident' id='bidi-html5-048-trident'></td>
+<td title='WebKit' id='bidi-html5-048-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-048" target="_blank">bidi-html5-048</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-049" target="_blank">input with dir=auto, script assigns to start with L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A, thus the direction must be       resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-049-gecko'></td>
+<td title='Presto' id='bidi-html5-049-presto'></td>
+<td title='Trident' id='bidi-html5-049-trident'></td>
+<td title='WebKit' id='bidi-html5-049-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-049" target="_blank">bidi-html5-049</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-050" target="_blank">input with dir=auto, script assigns to start with N+EN+L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A since neutrals and digits are not       strongly directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-050-gecko'></td>
+<td title='Presto' id='bidi-html5-050-presto'></td>
+<td title='Trident' id='bidi-html5-050-trident'></td>
+<td title='WebKit' id='bidi-html5-050-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-050" target="_blank">bidi-html5-050</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-051" target="_blank">input with dir=auto, script assigns to start with N+EN+R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef since neutrals and digits are not       strongly directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-051-gecko'></td>
+<td title='Presto' id='bidi-html5-051-presto'></td>
+<td title='Trident' id='bidi-html5-051-trident'></td>
+<td title='WebKit' id='bidi-html5-051-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-051" target="_blank">bidi-html5-051</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-052" target="_blank">input with dir=auto, script assigns to all N+EN</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value, or to LTR if there is no such       character.       In this test, there is no strongly directional character in the value,       thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-052-gecko'></td>
+<td title='Presto' id='bidi-html5-052-presto'></td>
+<td title='Trident' id='bidi-html5-052-trident'></td>
+<td title='WebKit' id='bidi-html5-052-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-052" target="_blank">bidi-html5-052</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-053" target="_blank">input with dir=auto, script assigns to start with N+L</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Latin letter A since neutrals are not       strongly directional, thus the direction must be resolved as LTR.</th>
+<td title='Gecko' id='bidi-html5-053-gecko'></td>
+<td title='Presto' id='bidi-html5-053-presto'></td>
+<td title='Trident' id='bidi-html5-053-trident'></td>
+<td title='WebKit' id='bidi-html5-053-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-053" target="_blank">bidi-html5-053</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-054" target="_blank">input with dir=auto, script assigns to start with N+R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef since neutrals are not       strongly directional, thus the direction must be resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-054-gecko'></td>
+<td title='Presto' id='bidi-html5-054-presto'></td>
+<td title='Trident' id='bidi-html5-054-trident'></td>
+<td title='WebKit' id='bidi-html5-054-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-054" target="_blank">bidi-html5-054</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-055" target="_blank">input with dir=auto, script assigns to start with R</a></th>
+<th class="side assert ">       When dir='auto', the direction of an input element is set according to       the first strong character of its value.       In this test, it is the Hebrew letter Alef, thus the direction must be       resolved as RTL.</th>
+<td title='Gecko' id='bidi-html5-055-gecko'></td>
+<td title='Presto' id='bidi-html5-055-presto'></td>
+<td title='Trident' id='bidi-html5-055-trident'></td>
+<td title='WebKit' id='bidi-html5-055-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-055" target="_blank">bidi-html5-055</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+</section>
+
+    <!-- ··············································· -->
+
+<section>
+  <h4 id="dirauto-pre"><a href="#dirauto-pre">Pre</a></h4>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-903" target="_blank">dir=auto, pre, paragraph by paragraph</a></th>
+<th class="side assert ">When dir='auto', the direction is set according to the first strong character of the text. For pre elements, the heuristic is applied on a per-paragraph level.</th>
+<td title='Gecko' id='bidi-html5-903-gecko'></td>
+<td title='Presto' id='bidi-html5-903-presto'></td>
+<td title='Trident' id='bidi-html5-903-trident'></td>
+<td title='WebKit' id='bidi-html5-903-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-903" target="_blank">bidi-html5-903</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-063" target="_blank">pre with dir=auto, mixed L and R paragraphs</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.</th>
+<td title='Gecko' id='bidi-html5-063-gecko'></td>
+<td title='Presto' id='bidi-html5-063-presto'></td>
+<td title='Trident' id='bidi-html5-063-trident'></td>
+<td title='WebKit' id='bidi-html5-063-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-063" target="_blank">bidi-html5-063</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-064" target="_blank">pre with dir=auto, all N+EN</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.       If there is no strong character, as in this test, the direction defaults to LTR.</th>
+<td title='Gecko' id='bidi-html5-064-gecko'></td>
+<td title='Presto' id='bidi-html5-064-presto'></td>
+<td title='Trident' id='bidi-html5-064-trident'></td>
+<td title='WebKit' id='bidi-html5-064-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-064" target="_blank">bidi-html5-064</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-070" target="_blank">pre with dir=auto, all-N between all-Rs</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.       If there is no strong character, as in this test, the direction defaults to LTR.</th>
+<td title='Gecko' id='bidi-html5-070-gecko'></td>
+<td title='Presto' id='bidi-html5-070-presto'></td>
+<td title='Trident' id='bidi-html5-070-trident'></td>
+<td title='WebKit' id='bidi-html5-070-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-070" target="_blank">bidi-html5-070</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>
+<div class="summary">
+  <p> These tests check  what effect <code>dir=auto</code> has on the contents of the <code class="kw">pre</code> element.</p>
+  <h4>Snapshot summary,  2013-01-25<br>
+Firefox 18.0, Opera 12.12, Internet Explorer 10, Chrome 24.0.1312.56, Safari 5.1.7 </h4>
+  <p> Of the browsers tested, only Firefox aligns the text on a paragraph by paragraph basis according to the first strong character in the paragraph and also assigns base direction on a line by line basis.</p>
+  <p>Chrome  applies base direction on a paragraph by paragraph basis, but the alignment is determined by the first strong character in the pre element, rather than at the start of each paragraph. Safari also bases the alignment on the first strong character in the pre, but doesn't vary the base direction on a line by line basis.</p>
+  <p>Internet Explorer and Opera both fail to either assign base direction or align according to the content of the pre element at all. Alignment and base direction are those of the surrounding context.</p>
+</div>
+
+</section>
+
+    <!-- ··············································· -->
+
+
+<section>
+  <h4 id="dirauto-textarea"><a href="#dirauto-textarea">Textarea</a></h4>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-904" target="_blank">dir=auto, textarea, paragraph by paragraph</a></th>
+<th class="side assert ">When dir='auto', the direction is set according to the first strong character of the text. For textarea elements, the heuristic is applied on a per-paragraph level.</th>
+<td title='Gecko' id='bidi-html5-904-gecko'></td>
+<td title='Presto' id='bidi-html5-904-presto'></td>
+<td title='Trident' id='bidi-html5-904-trident'></td>
+<td title='WebKit' id='bidi-html5-904-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-904" target="_blank">bidi-html5-904</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-066" target="_blank">textarea with dir=auto, mixed L and R paragraphs</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.</th>
+<td title='Gecko' id='bidi-html5-066-gecko'></td>
+<td title='Presto' id='bidi-html5-066-presto'></td>
+<td title='Trident' id='bidi-html5-066-trident'></td>
+<td title='WebKit' id='bidi-html5-066-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-066" target="_blank">bidi-html5-066</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-067" target="_blank">textarea with dir=auto, all N+EN</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.       If there is no strong character, as in this test, the direction defaults to LTR.</th>
+<td title='Gecko' id='bidi-html5-067-gecko'></td>
+<td title='Presto' id='bidi-html5-067-presto'></td>
+<td title='Trident' id='bidi-html5-067-trident'></td>
+<td title='WebKit' id='bidi-html5-067-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-067" target="_blank">bidi-html5-067</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-068" target="_blank">textarea with dir=auto, script assigns to mixed L and R paragraphs</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.</th>
+<td title='Gecko' id='bidi-html5-068-gecko'></td>
+<td title='Presto' id='bidi-html5-068-presto'></td>
+<td title='Trident' id='bidi-html5-068-trident'></td>
+<td title='WebKit' id='bidi-html5-068-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-068" target="_blank">bidi-html5-068</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-069" target="_blank">textarea with dir=auto, script assigns to all N+EN</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.       If there is no strong character, as in this test, the direction defaults to LTR.</th>
+<td title='Gecko' id='bidi-html5-069-gecko'></td>
+<td title='Presto' id='bidi-html5-069-presto'></td>
+<td title='Trident' id='bidi-html5-069-trident'></td>
+<td title='WebKit' id='bidi-html5-069-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-069" target="_blank">bidi-html5-069</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-071" target="_blank">textarea with dir=auto, all-N between all-Rs</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.       If there is no strong character, as in this test, the direction defaults to LTR.</th>
+<td title='Gecko' id='bidi-html5-071-gecko'></td>
+<td title='Presto' id='bidi-html5-071-presto'></td>
+<td title='Trident' id='bidi-html5-071-trident'></td>
+<td title='WebKit' id='bidi-html5-071-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-071" target="_blank">bidi-html5-071</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-072" target="_blank">textarea with dir=auto, script assigns to all-N between all-Rs</a></th>
+<th class="side assert ">       When dir='auto', the direction is set according to the first strong character       of the text.       For textarea and pre elements, the heuristic is applied on a per-paragraph level.       If there is no strong character, as in this test, the direction defaults to LTR.</th>
+<td title='Gecko' id='bidi-html5-072-gecko'></td>
+<td title='Presto' id='bidi-html5-072-presto'></td>
+<td title='Trident' id='bidi-html5-072-trident'></td>
+<td title='WebKit' id='bidi-html5-072-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-072" target="_blank">bidi-html5-072</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dir-attribute">Section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/3.2.3.5">Latest results for section 3.2.3.5</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 3.2.3.5</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>
+<div class="summary">
+  <p> These tests check  what effect <code>dir=auto</code> has on the contents of the <code class="kw">textarea</code> element.</p>
+  <h4>Snapshot summary,  2013-01-25<br>
+Firefox 18.0, Opera 12.12, Internet Explorer 10, Chrome 24.0.1312.56, Safari 5.1.7 </h4>
+  <p> The results for <code class="kw">textarea</code> are the same as those for <code class="kw">pre</code>.</p>
+</div>
+
+</section>
+
+
+<!-- ·········································································· -->
+
+<section>
+<h3 id="dirname"><a href="#dirname">dirname</a></h3>
+
+<table class="results">
+    <tr>
+      <th class="topleft"></th>
+      <th>Assertion</th>
+      <th>Gecko</th>
+      <th>Presto</th>
+      <th>Trident</th>
+      <th>WebKit</th>
+      <th>Detailed results</th>
+      </tr><tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-905" target="_blank">dirname, ltr</a></th>
+<th class="side assert ">Dir is set to ltr on the input tag. The dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-905-gecko'></td>
+<td title='Presto' id='bidi-html5-905-presto'></td>
+<td title='Trident' id='bidi-html5-905-trident'></td>
+<td title='WebKit' id='bidi-html5-905-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-905" target="_blank">bidi-html5-905</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-906" target="_blank">dirname, rtl</a></th>
+<th class="side assert ">Dir is set to rtl on the input tag. The dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-906-gecko'></td>
+<td title='Presto' id='bidi-html5-906-presto'></td>
+<td title='Trident' id='bidi-html5-906-trident'></td>
+<td title='WebKit' id='bidi-html5-906-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-906" target="_blank">bidi-html5-906</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-907" target="_blank">dirname, inherits ltr</a></th>
+<th class="side assert ">Dir is set to ltr on an ancestor of the input tag. The dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-907-gecko'></td>
+<td title='Presto' id='bidi-html5-907-presto'></td>
+<td title='Trident' id='bidi-html5-907-trident'></td>
+<td title='WebKit' id='bidi-html5-907-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-907" target="_blank">bidi-html5-907</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-908" target="_blank">dirname, inherits rtl</a></th>
+<th class="side assert ">Dir is set to rtl on an ancestor of the input tag. The dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-908-gecko'></td>
+<td title='Presto' id='bidi-html5-908-presto'></td>
+<td title='Trident' id='bidi-html5-908-trident'></td>
+<td title='WebKit' id='bidi-html5-908-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-908" target="_blank">bidi-html5-908</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-909" target="_blank">dirname, default</a></th>
+<th class="side assert ">No dir attribute is set, so the document is ltr by default. The dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-909-gecko'></td>
+<td title='Presto' id='bidi-html5-909-presto'></td>
+<td title='Trident' id='bidi-html5-909-trident'></td>
+<td title='WebKit' id='bidi-html5-909-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-909" target="_blank">bidi-html5-909</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-910" target="_blank">dirname, auto, ltr text</a></th>
+<th class="side assert ">The dir attribute is set to auto. If the form field auto-detects ltr direction based on first strong character input, the dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-910-gecko'></td>
+<td title='Presto' id='bidi-html5-910-presto'></td>
+<td title='Trident' id='bidi-html5-910-trident'></td>
+<td title='WebKit' id='bidi-html5-910-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-910" target="_blank">bidi-html5-910</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-911" target="_blank">dirname, auto, rtl text</a></th>
+<th class="side assert ">The dir attribute is set to auto. If the form field auto-detects rtl direction based on first strong character input, the dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-911-gecko'></td>
+<td title='Presto' id='bidi-html5-911-presto'></td>
+<td title='Trident' id='bidi-html5-911-trident'></td>
+<td title='WebKit' id='bidi-html5-911-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-911" target="_blank">bidi-html5-911</a></td>
+</tr>
+<tr>
+<th class="side title"><a href="/International/tests/html-css/generate?test=bidi-html5-912" target="_blank">dirname, scripted</a></th>
+<th class="side assert ">The dir attribute is set using JavaScript. The dirname attribute will cause the direction of the input element to be passed with the form parameters.</th>
+<td title='Gecko' id='bidi-html5-912-gecko'></td>
+<td title='Presto' id='bidi-html5-912-presto'></td>
+<td title='Trident' id='bidi-html5-912-trident'></td>
+<td title='WebKit' id='bidi-html5-912-webkit'></td>
+<td class="links"><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-html5-912" target="_blank">bidi-html5-912</a></td>
+</tr>
+</table><p class="testLink"><strong>Links</strong>:  <a href="http://www.w3.org/TR/html5/Overview.html#the-dirname-attribute">Section 4.10.7.3.2</a> &bull; <a href="http://w3c-test.org/framework/results/i18n-html5/section/4.10.7.3.2">Latest results for section 4.10.7.3.2</a> &bull; <a href="http://w3c-test.org/framework/suite/i18n-html5">Submit data for section 4.10.7.3.2</a> &bull; <a href="/International/tests/#h5-direction">Related tests</a></p>  
+  <div class="summary">
+    <p> These tests check  whether a <code class="kw">dirname</code> attribute passes information about the direction of an <code class="kw">input</code> field.</p>
+    <h4>Snapshot summary,  2013-01-28<br>
+Firefox 18.0, Opera 12.12, Internet Explorer 10, Chrome 24.0.1312.56, Safari 5.1.7 </h4>
+    <p>Chrome and Opera both support <code class="kw">dirname</code>, and pass the direction information to the server. </p>
+    <p>Unfortunately, Opera doesn't support <code>dir=auto</code> at the moment, which restricts the usefulness of <code class="kw">dirname</code> for auto-detection.</p>
+  </div>
+</section>
+
+<!-- ·········································································· -->
+</section>
+
+</section>
+<aside class="section" id="survey">
+    <p>Tell us what you think (English).</p>
+    <p><a class="interaction" target="_blank" href="https://github.com/w3c/i18n-drafts/issues/new?title=Feedback on html-css/bidi-html5/results-bidi-html5&body=[source] (http://www.w3.org/International/tests/html-css/bidi-html5/results-bidi-html5.en.php) [en]%0A%0A">Send us a comment</a></p>
+    <p style="margin-top:1em">Follow our news feed.</p>
+    <p><a class="interaction" href="http://twitter.com/webi18n" title="Twitter: @webi18n"><img src="/International/icons/twitter-bird.png" style="vertical-align: middle;" alt=" " /> &#x200E;@webi18n</a></p>
+    <p><a class="interaction" href="http://www.w3.org/blog/International/feed/rdf/" title="All news items shown on the home page."><img src="/International/icons/rss.gif" alt=" " /> Home page news</a></p>
+	</aside><div class="section noprint">
+	<h2 id="endlinks"><a href="#endlinks">Further reading</a></h2>	<ul id="full-links">
+		<li>
+			<p><a href="/International/tests/">Tests under /International</a></p>
+		</li>
+		<li>
+			<p><a href="http://w3c-test.org/framework/review/i18n-html5/">Tests in W3C Test Framework</a></p>
+		</li>
+	</ul>
+</div>
+<footer>
+	<address> 
+		<p>By: Richard Ishida, W3C.   </p>
+		</address>
+	
+	<small id='version'>Content first published <time datetime='2012-02-06'>2012-02-06</time>. Last substantive update <time datetime='2012-02-06T07:26:00Z'>2012-02-06 07:26:00 GMT</time>. This version <time datetime='2012-02-06T07:26:00Z'>2012-02-06 07:26:00 GMT</time></small>
+	<small>For the history of document changes, search for
+<span class="searchkey"><a href="http://www.w3.org/blog/International/tag/results-bidi-html5/">results-bidi-html5</a></span>
+in the i18n blog.</small>
+	<small class='copyright' lang='en' xml:lang='en' ><a rel='Copyright' href='/Consortium/Legal/ipr-notice#Copyright' id='copyright'>Copyright</a> © 2012 <a href='/'><abbr title='World Wide Web Consortium'>W3C</abbr></a><sup>®</sup> (<a href='http://www.csail.mit.edu/'><abbr title='Massachusetts Institute of Technology'>MIT</abbr></a>, <a href='http://www.ercim.eu/'><abbr title='European Research Consortium for Informatics and Mathematics'>ERCIM</abbr></a>, <a href='http://www.keio.ac.jp/'>Keio</a>, <a href='http://ev.buaa.edu.cn/'>Beihang</a>), All Rights Reserved. W3C <a href='/Consortium/Legal/ipr-notice#Legal_Disclaimer'>liability</a>, <a href='/Consortium/Legal/ipr-notice#W3C_Trademarks'>trademark</a>, <a rel='Copyright' href='/Consortium/Legal/copyright-documents'>document use</a> and <a rel='Copyright' href='/Consortium/Legal/copyright-software'>software licensing</a> rules apply. Your interactions with this site are in accordance with our <a href='/Consortium/Legal/privacy-statement#Public'>public</a> and <a href='/Consortium/Legal/privacy-statement#Members'>Member</a> privacy statements.</small>
+	</footer>
+<script type="text/javascript">if (document.getElementById('toclocation')) { createtoc(); }</script>
+<script src="/International/javascript/results-jquery.js"></script>
+<script>  
+var testlist = [
+ 	'bidi-html5-001','bidi-html5-002','bidi-html5-003','bidi-html5-004','bidi-html5-005','bidi-html5-006','bidi-html5-007','bidi-html5-008','bidi-html5-009','bidi-html5-010','bidi-html5-011','bidi-html5-012','bidi-html5-013','bidi-html5-014','bidi-html5-015','bidi-html5-016','bidi-html5-017','bidi-html5-018','bidi-html5-019','bidi-html5-020','bidi-html5-021','bidi-html5-901','bidi-html5-902','bidi-html5-057','bidi-html5-065','bidi-html5-056','bidi-html5-022','bidi-html5-023','bidi-html5-024','bidi-html5-025','bidi-html5-026','bidi-html5-027','bidi-html5-028','bidi-html5-029','bidi-html5-030','bidi-html5-031','bidi-html5-032','bidi-html5-033','bidi-html5-034','bidi-html5-035','bidi-html5-036','bidi-html5-037','bidi-html5-058','bidi-html5-059','bidi-html5-060','bidi-html5-061','bidi-html5-062','bidi-html5-040','bidi-html5-046','bidi-html5-038','bidi-html5-039','bidi-html5-041','bidi-html5-042','bidi-html5-043','bidi-html5-044','bidi-html5-045','bidi-html5-047','bidi-html5-048','bidi-html5-049','bidi-html5-050','bidi-html5-051','bidi-html5-052','bidi-html5-053','bidi-html5-054','bidi-html5-055','bidi-html5-903','bidi-html5-063','bidi-html5-064','bidi-html5-070','bidi-html5-904','bidi-html5-066','bidi-html5-067','bidi-html5-068','bidi-html5-069','bidi-html5-071','bidi-html5-072','bidi-html5-905','bidi-html5-906','bidi-html5-907','bidi-html5-908','bidi-html5-909','bidi-html5-910','bidi-html5-911','bidi-html5-912'			];
+
+TestFramework.resultSummary("i18n-html5", "", generateStuffInPage );
+</script>
+</body>
+</html>

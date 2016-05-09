@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>paragraphs</title>
+<link rel='author' title='Richard Ishida' href='mailto:ishida@w3.org'>
+<link rel='help' href='#the-dir-attribute'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="When the html tag sets dir to rtl, (a) directional runs in a paragraph are ordered right-to-left, (b) the paragraph is right-aligned on the page.">
+<style type='text/css'>
+/* the CSS below is not part of the test */
+table td { border: 1px solid #CCC; }
+img { margin: 10px; }
+</style>
+</head>
+<body>
+<div class='prerequisites'>Prerequisites: An Arabic and a Hebrew font.</div>
+<p class='title'>paragraphs</p>
+<p class="instructions"><span class="instructionsymbol"><img src="images/same.png" alt="same" ></span> Test passes if:<br >A. The visual order of words is Hebrew (הישראלי), English (W3C), Arabic (مكتب)<br >B. The text is right-aligned.</p>
+
+
+<div class="test" dir="rtl"><p>مكتب W3C הישראלי</p></div>
+
+
+
+
+
+<div class="ref" style="text-align:right;"><img src="bidi-markup/support/bidi-blocks1.png" alt="reference graphic" ></div>
+
+
+<div class='description'>
+<p class="assertion">Assertion: When the html tag sets dir to rtl, (a) directional runs in a paragraph are ordered right-to-left, (b) the paragraph is right-aligned on the page.</p>
+<div class="notes">Notes:The order of directional runs in memory is: Arabic (مكتب) English (W3C) Hebrew (הישראלי).</p><p class='notes'><span class='orangesymbolexpl'>=</span> means you should check that the test and reference graphic look the same, except for font differences and cursive joining behavior.</div>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-markup-002">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-markup-001<br /><a href="/International/testslist-text-direction#blockbidi" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-001" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+

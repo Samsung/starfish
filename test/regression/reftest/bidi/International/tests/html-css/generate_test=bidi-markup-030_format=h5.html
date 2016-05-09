@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html  lang="en" >
+<head>
+<meta charset="utf-8">
+<title>dl lists</title>
+<link rel='author' title='Richard Ishida' href='mailto:ishida@w3.org'>
+<link rel='help' href='#the-dir-attribute'>
+<link rel="stylesheet" type="text/css" href="./generatedtests.css">
+<meta name="description" content="In a rtl context, all list items should start from the right, regardless of the direction of the script in the list item.">
+<style type='text/css'>
+dt { font-weight: bold; margin-top: 1em; }
+
+/* the CSS below is not part of the test */
+table td { border: 1px solid #CCC; }
+img { margin: 10px; }
+</style>
+</head>
+<body>
+<div class='prerequisites'>Prerequisites: An Arabic and a Hebrew font.</div>
+<p class='title'>dl lists</p>
+<p class="instructions">Test passes if all dt and dd list items are to the right of the page.</p>
+
+
+<div class="test" dir="rtl">
+			<dl>
+			<dt>Making the World Wide Web truly world wide</dt>
+			<dd>Making the World Wide Web truly world wide</dd>
+			<dt>جعل شبكة الويب العالميّة عالميّة حقًّا</dt>
+			<dd>جعل شبكة الويب العالميّة عالميّة حقًّا</dd>
+			<dt>ליצור מהרשת רשת כלל עולמית באמת</dt>
+			<dd>ליצור מהרשת רשת כלל עולמית באמת</dd>
+			</dl>
+			</div>
+
+
+<div class='description'>
+<p class="assertion">Assertion: In a rtl context, all list items should start from the right, regardless of the direction of the script in the list item.</p>
+<div class="notes">Notes:The base direction of the page is RTL. No other directional markup is used. Each pair of lines contains a dt followed by a dd.</div>
+</div>
+<div class="nexttest"><div><a href="generate?test=bidi-markup-017">Next test</a></div><div class="doctype">HTML5</div>
+<p class="jump">bidi-markup-030<br /><a href="/International/testslist-text-direction#blockbidi" target="_blank">Result summary &amp; related tests</a><br /><a href="http://w3c-test.org/framework/details/i18n-html5/bidi-markup-030" target="_blank">Detailed results for this test</a></p></div>
+</body>
+</html>
+
+
