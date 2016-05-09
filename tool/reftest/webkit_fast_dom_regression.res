@@ -85,3 +85,4 @@ test/reftest/vendor/webkit/fast/dom/compatMode-Strict.html
 test/reftest/vendor/webkit/fast/dom/constructor-proto.html
 test/reftest/vendor/webkit/fast/dom/createElement-with-column.html
 test/reftest/vendor/webkit/fast/dom/Window/window-properties-configurable.html
+test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-constants.html

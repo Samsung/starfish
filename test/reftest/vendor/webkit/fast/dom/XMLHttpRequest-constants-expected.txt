@@ -1,0 +1,21 @@
+<p>This test checks the constants on the XMLHttpRequst object, as well as its prototype and constructor.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+Test the constants on the XMLHttpRequest object itself.<br />
+<span><span class="pass">PASS</span> new XMLHttpRequest().UNSENT is 0</span><br />
+<span><span class="pass">PASS</span> new XMLHttpRequest().OPENED is 1</span><br />
+<span><span class="pass">PASS</span> new XMLHttpRequest().HEADERS_RECEIVED is 2</span><br />
+<span><span class="pass">PASS</span> new XMLHttpRequest().LOADING is 3</span><br />
+<span><span class="pass">PASS</span> new XMLHttpRequest().DONE is 4</span><br />
+Test the constants on the XMLHttpRequest prototype object.<br />
+<span><span class="pass">PASS</span> XMLHttpRequest.prototype.UNSENT is 0</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.prototype.OPENED is 1</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.prototype.HEADERS_RECEIVED is 2</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.prototype.LOADING is 3</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.prototype.DONE is 4</span><br />
+Test the constants on the XMLHttpRequest constructor object.<br />
+<span><span class="pass">PASS</span> XMLHttpRequest.UNSENT is 0</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.OPENED is 1</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.HEADERS_RECEIVED is 2</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.LOADING is 3</span><br />
+<span><span class="pass">PASS</span> XMLHttpRequest.DONE is 4</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />
