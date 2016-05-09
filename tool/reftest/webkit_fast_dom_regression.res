@@ -99,3 +99,4 @@ test/reftest/vendor/webkit/fast/dom/webidl-operations-on-node-prototype.html
 test/reftest/vendor/webkit/fast/dom/timer-increase-min-interval-repeating.html
 test/reftest/vendor/webkit/fast/dom/timer-increase-min-interval-and-reset-part-2.html
 test/reftest/vendor/webkit/fast/dom/timer-clear-interval-in-handler-and-generate-error.html
+test/reftest/vendor/webkit/fast/dom/timer-clear-interval-in-handler.html
