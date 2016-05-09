@@ -3642,8 +3642,49 @@ escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBin
         return escargot::ESValue(originalObj->code());
     }, nullptr);
 
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("INDEX_SIZE_ERR"), false, false, false, escargot::ESValue(1));
     DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("HIERARCHY_REQUEST_ERR"), false, false, false, escargot::ESValue(3));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("WRONG_DOCUMENT_ERR"), false, false, false, escargot::ESValue(4));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_CHARACTER_ERR"), false, false, false, escargot::ESValue(5));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("NO_MODIFICATION_ALLOWED_ERR"), false, false, false, escargot::ESValue(7));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("NOT_FOUND_ERR"), false, false, false, escargot::ESValue(8));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("NOT_SUPPORTED_ERR"), false, false, false, escargot::ESValue(9));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("INUSE_ATTRIBUTE_ERR"), false, false, false, escargot::ESValue(10));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_STATE_ERR"), false, false, false, escargot::ESValue(11));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("SYNTAX_ERR"), false, false, false, escargot::ESValue(12));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_MODIFICATION_ERR"), false, false, false, escargot::ESValue(13));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("NAMESPACE_ERR"), false, false, false, escargot::ESValue(14));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_ACCESS_ERR"), false, false, false, escargot::ESValue(15));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("SECURITY_ERR"), false, false, false, escargot::ESValue(18));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("NETWORK_ERR"), false, false, false, escargot::ESValue(19));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("ABORT_ERR"), false, false, false, escargot::ESValue(20));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("URL_MISMATCH_ERR"), false, false, false, escargot::ESValue(21));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("QUOTA_EXCEEDED_ERR"), false, false, false, escargot::ESValue(22));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("TIMEOUT_ERR"), false, false, false, escargot::ESValue(23));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_NODE_TYPE_ERR"), false, false, false, escargot::ESValue(24));
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("DATA_CLONE_ERR"), false, false, false, escargot::ESValue(25));
+
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("INDEX_SIZE_ERR"), false, false, false, escargot::ESValue(1));
     DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("HIERARCHY_REQUEST_ERR"), false, false, false, escargot::ESValue(3));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("WRONG_DOCUMENT_ERR"), false, false, false, escargot::ESValue(4));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_CHARACTER_ERR"), false, false, false, escargot::ESValue(5));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("NO_MODIFICATION_ALLOWED_ERR"), false, false, false, escargot::ESValue(7));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("NOT_FOUND_ERR"), false, false, false, escargot::ESValue(8));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("NOT_SUPPORTED_ERR"), false, false, false, escargot::ESValue(9));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("INUSE_ATTRIBUTE_ERR"), false, false, false, escargot::ESValue(10));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_STATE_ERR"), false, false, false, escargot::ESValue(11));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("SYNTAX_ERR"), false, false, false, escargot::ESValue(12));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_MODIFICATION_ERR"), false, false, false, escargot::ESValue(13));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("NAMESPACE_ERR"), false, false, false, escargot::ESValue(14));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_ACCESS_ERR"), false, false, false, escargot::ESValue(15));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("SECURITY_ERR"), false, false, false, escargot::ESValue(18));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("NETWORK_ERR"), false, false, false, escargot::ESValue(19));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("ABORT_ERR"), false, false, false, escargot::ESValue(20));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("URL_MISMATCH_ERR"), false, false, false, escargot::ESValue(21));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("QUOTA_EXCEEDED_ERR"), false, false, false, escargot::ESValue(22));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("TIMEOUT_ERR"), false, false, false, escargot::ESValue(23));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("INVALID_NODE_TYPE_ERR"), false, false, false, escargot::ESValue(24));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DATA_CLONE_ERR"), false, false, false, escargot::ESValue(25));
 
     return DOMExceptionFunction;
 }
