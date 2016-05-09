@@ -415,8 +415,7 @@ public:
     static bool assureInteger(const char* token, bool allowNegative)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeInteger())
-            return false;
+        parser->consumeNumber();
         float num = parser->parsedNumber();
         if (num != std::floor(num))
             return false;
