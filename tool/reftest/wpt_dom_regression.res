@@ -15,8 +15,8 @@ test/reftest/web-platform-tests/dom/events/EventTarget-addEventListener.html
 test/reftest/web-platform-tests/dom/events/EventTarget-dispatchEvent.html
 test/reftest/web-platform-tests/dom/events/EventTarget-dispatchEvent-returnvalue.html
 test/reftest/web-platform-tests/dom/events/EventTarget-removeEventListener.html
-test/reftest/web-platform-tests/dom/events/Event-type.html
 test/reftest/web-platform-tests/dom/events/Event-type-empty.html
+test/reftest/web-platform-tests/dom/events/Event-type.html
 test/reftest/web-platform-tests/dom/events/ProgressEvent.html
 test/reftest/web-platform-tests/dom/interface-objects.html
 test/reftest/web-platform-tests/dom/lists/DOMTokenList-stringifier.html
@@ -33,9 +33,9 @@ test/reftest/web-platform-tests/dom/nodes/Document-doctype.html
 test/reftest/web-platform-tests/dom/nodes/Document-getElementById.html
 test/reftest/web-platform-tests/dom/nodes/Document-getElementsByTagName.html
 test/reftest/web-platform-tests/dom/nodes/DocumentType-literal.html
-test/reftest/web-platform-tests/dom/nodes/Element-childElementCount.html
 test/reftest/web-platform-tests/dom/nodes/Element-childElementCount-dynamic-add.html
 test/reftest/web-platform-tests/dom/nodes/Element-childElementCount-dynamic-remove.html
+test/reftest/web-platform-tests/dom/nodes/Element-childElementCount.html
 test/reftest/web-platform-tests/dom/nodes/Element-childElementCount-nochild.html
 test/reftest/web-platform-tests/dom/nodes/Element-childElement-null.html
 test/reftest/web-platform-tests/dom/nodes/Element-children.html

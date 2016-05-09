@@ -178,3 +178,4 @@ test/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLScriptElement0
 test/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLScriptElement04.html
 test/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLScriptElement05.html
 test/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLStyleElement03.html
+test/reftest/vendor/gecko/dom_tests_mochitest/general/test_windowProperties.html

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that all window properties are accessible to nonprivileged code</title>
+  <!--script type="text/javascript" src="../ajax/mochikit/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"-->
+</head>
+
+<body id="body">
+
+<script type="text/javascript">
+function _logResult(test, passString, failString) {
+  var msg = test.result ? passString : failString;
+  if (test.result) {
+    console.log(msg + " | " + test.name);
+  } else {
+    console.log(msg);
+  }
+}
+
+function ok(condition, name, diag) {
+    var test = {'result': !!condition, 'name': name, 'diag': diag || ""};
+    _logResult(test, "status: SUCCESS", "status: FAIL");    
+};
+
+var lastProp;
+try {
+  var propVals = [];
+  for (var prop in window) {
+    lastProp = prop;
+    propVals.push(window[prop]);
+  }
+  
+  ok(true, "Read all " + propVals.length + " window properties");
+} catch (ex) {
+  ok(false, "Exception occurred reading window." + lastProp);   
+}
+
+try{
+  wptTestEnd();
+}catch(ex){
+  
+}
+</script>
+
+<p id="display"></p>
+
+</body>
+</html>
