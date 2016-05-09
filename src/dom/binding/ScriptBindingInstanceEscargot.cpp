@@ -3642,6 +3642,9 @@ escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBin
         return escargot::ESValue(originalObj->code());
     }, nullptr);
 
+    DOMExceptionFunction->asESObject()->defineDataProperty(escargot::ESString::create("HIERARCHY_REQUEST_ERR"), false, false, false, escargot::ESValue(3));
+    DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("HIERARCHY_REQUEST_ERR"), false, false, false, escargot::ESValue(3));
+
     return DOMExceptionFunction;
 }
 
