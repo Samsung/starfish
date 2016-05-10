@@ -19,7 +19,7 @@ void HTMLDocumentBuilder::build(Document* document, String* filePath)
         char* fileContents = (char*)malloc(len + 1);
         fio->read(fileContents, sizeof(char), len);
         fileContents[len] = 0;
-        string = String::fromUTF8(fileContents);
+        string = String::fromUTF8(fileContents, len);
         free(fileContents);
         fio->close();
     } else
