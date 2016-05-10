@@ -19,6 +19,7 @@ void HTMLScriptElement::executeScript()
             if (!firstChild())
                 return;
             String* script = textContent();
+            m_isAlreadyStarted = true;
             document()->window()->starFish()->evaluate(script);
         } else {
             String* url = getAttribute(idx);
@@ -31,6 +32,7 @@ void HTMLScriptElement::executeScript()
 
                 fileContents[siz] = 0;
 
+                m_isAlreadyStarted = true;
                 document()->window()->starFish()->evaluate(String::fromUTF8(fileContents));
 
                 free(fileContents);
@@ -44,7 +46,6 @@ void HTMLScriptElement::executeScript()
                 }, this);
             }
         }
-        m_isAlreadyStarted = true;
     }
 }
 
@@ -78,6 +79,13 @@ void HTMLScriptElement::setText(String* s)
     } else {
         setTextContent(s);
     }
+}
+
+Node* HTMLScriptElement::clone()
+{
+    HTMLScriptElement* n = HTMLElement::clone()->asElement()->asHTMLElement()->asHTMLScriptElement();
+    n->m_isAlreadyStarted = m_isAlreadyStarted;
+    return n;
 }
 
 }

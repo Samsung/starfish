@@ -51,6 +51,8 @@ public:
         executeScript();
     }
 
+    virtual Node* clone();
+
 protected:
     bool m_isAlreadyStarted;
 };
