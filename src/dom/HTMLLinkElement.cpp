@@ -41,7 +41,7 @@ void HTMLLinkElement::checkLoadStyleSheet()
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
     size_t rel = hasAttribute(document()->window()->starFish()->staticStrings()->m_rel);
 
-    if (type != SIZE_MAX && getAttribute(type)->toLower()->equals("text/css")
+    if (((type != SIZE_MAX && getAttribute(type)->toLower()->equals("text/css")) || type == SIZE_MAX)
         && href != SIZE_MAX
         && rel != SIZE_MAX && getAttribute(rel)->toLower()->equals("stylesheet")) {
         loadStyleSheet();
