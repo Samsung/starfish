@@ -18,7 +18,7 @@ void HTMLScriptElement::executeScript()
         if (idx == SIZE_MAX) {
             if (!firstChild())
                 return;
-            String* script = textContent();
+            String* script = text();
             m_isAlreadyStarted = true;
             document()->window()->starFish()->evaluate(script);
         } else {
@@ -69,7 +69,13 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
 
 String* HTMLScriptElement::text()
 {
-    return textContent();
+    String* str = String::createASCIIString("");
+    for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
+        if (child->nodeType() == TEXT_NODE) {
+            str = str->concat(child->textContent());
+        }
+    }
+    return str;
 }
 
 void HTMLScriptElement::setText(String* s)
