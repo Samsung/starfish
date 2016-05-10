@@ -123,3 +123,4 @@ test/reftest/vendor/webkit/fast/dom/duplicate-ids-document-order.html
 test/reftest/vendor/webkit/fast/dom/script-element-remove-self.html
 test/reftest/vendor/webkit/fast/dom/remove-style-element.html
 test/reftest/vendor/webkit/fast/dom/script-subtext-in-script-elements.html
+test/reftest/vendor/webkit/fast/dom/HTMLMetaElement/meta-attributes.html
