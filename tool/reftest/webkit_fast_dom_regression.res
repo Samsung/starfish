@@ -128,3 +128,4 @@ test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload.html
 test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload2.html
 test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload-before-page-load.html
 test/reftest/vendor/webkit/fast/dom/HTMLScriptElement/nested-execution.html
+test/reftest/vendor/webkit/fast/dom/simultaneouslyRegsiteredTimerFireOrder.html
