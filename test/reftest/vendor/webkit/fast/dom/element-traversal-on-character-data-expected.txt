@@ -1,15 +1,10 @@
-This test checks the implementation of the element traversal APIs on CharacterData as part of the NonDocumentTypeChildNode interface.
-
-On success, you will see a series of "PASS" messages, followed by "TEST COMPLETE".
-
-
-PASS firstTextNode.previousElementSibling is null
-PASS firstTextNode.nextElementSibling is element
-PASS firstTextNode.nextElementSibling.nextElementSibling is null
-PASS lastTextNode.previousElementSibling is element
-PASS lastTextNode.previousElementSibling.previousElementSibling is null
-PASS lastTextNode.nextElementSibling is null
-PASS successfullyParsed is true
-
-TEST COMPLETE
-
+<p>This test checks the implementation of the element traversal APIs on CharacterData as part of the NonDocumentTypeChildNode interface.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> children.previousElementSibling is null</span><br />
+<span><span class="pass">PASS</span> firstTextNode.previousElementSibling is null</span><br />
+<span><span class="pass">PASS</span> firstTextNode.nextElementSibling is element</span><br />
+<span><span class="pass">PASS</span> firstTextNode.nextElementSibling.nextElementSibling is null</span><br />
+<span><span class="pass">PASS</span> lastTextNode.previousElementSibling is element</span><br />
+<span><span class="pass">PASS</span> lastTextNode.previousElementSibling.previousElementSibling is null</span><br />
+<span><span class="pass">PASS</span> lastTextNode.nextElementSibling is null</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />

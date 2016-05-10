@@ -82,12 +82,9 @@ for i in $tc ; do
         SKIP=`grep -o Skipped $TMPFILE | wc -l`
 
         if [ $WEBKIT_FAST_DOM -eq 1 ]; then
-            RESULT=$(python tool/reftest/compare_result.py $EXPECTED_FILE $TMPFILE 2>&1)
-
-            if [ $SKIP -eq 1 ]; then
-                SKIPTC=`expr $SKIPTC + 1`
-                echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
-            elif [ $RESULT == 'Pass' ]; then
+            EXPECTED=`grep -Eo "PASS|FAIL" $EXPECTED_FILE`
+            RESULT=`grep -Eo "PASS|FAIL" $TMPFILE`
+            if [ "$EXPECTED" = "$RESULT" ]; then
                 PASSTC=`expr $PASSTC + 1`
                 echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
                 if [ "$REGRESSION" = true ]; then

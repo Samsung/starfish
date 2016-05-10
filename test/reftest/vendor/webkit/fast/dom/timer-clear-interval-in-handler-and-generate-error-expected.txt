@@ -1,2 +1,1 @@
-CONSOLE MESSAGE: line 10: TypeError: Type error
-
+PASS
