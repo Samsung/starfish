@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     }
 
     printf("running StarFish (working directory = %s)\n", path.c_str());
-    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path.c_str()), "en-us", width, height);
+    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path.c_str()), "en-us", "Asia/Seoul", width, height);
 
     if (hasEnding(argv[1], "xml")) {
         sf->window()->loadPreprocessedXMLDocument(String::createASCIIString(argv[1]));

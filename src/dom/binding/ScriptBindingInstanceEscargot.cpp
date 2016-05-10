@@ -166,6 +166,9 @@ escargot::ESValue toJSString(String* v)
 
 void ScriptBindingInstance::initBinding(StarFish* sf)
 {
+    fetchData(this)->m_instance->setlocale(sf->locale());
+    fetchData(this)->m_instance->setTimezoneID(icu::UnicodeString::fromUTF8(icu::StringPiece(sf->timezoneID()->utf8Data())));
+
     escargot::ESValue v;
 
 #if defined(STARFISH_ENABLE_PIXEL_TEST) || defined(STARFISH_EMULATOR_RELEASE)

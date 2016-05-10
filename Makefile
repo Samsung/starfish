@@ -76,95 +76,12 @@ endif
 
 ifeq ($(HOST), linux)
   OUTDIR=out/$(ARCH)/$(TYPE)/$(MODE)
-  CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc)
-  LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc)
 else ifeq ($(HOST), tizen_arm)
   OUTDIR=out/tizen_$(VERSION)/$(ARCH)/$(TYPE)/$(MODE)
-  TIZEN_INCLUDE = elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
-                  ecore-input-1 edje-1 eo-1 ethumb-client-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 \
-                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0
-  ifeq ($(VERSION), 3.0)
-    TIZEN_INCLUDE += emile-1
-  endif
-
-  TIZEN_LIB = m elementary eina eet ecore ecore_file ecore_input edje ethumb_client ecore_imf ecore_con efreet efreet_mime \
-              efreet_trash eio  evas ecore_evas ecore_x ecore_imf_evas
-
-  DEPENDENCY_INCLUDE = zlib png
-
-  CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
-  CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
-  CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
-  CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
-
-  LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
-  LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
-  LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
 else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   OUTDIR=out/tizen_$(VERSION)/$(ARCH)/$(TYPE)/$(MODE)
-  TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
-                  ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
-                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0 freetype2 media cairo
-  ifeq ($(VERSION), 3.0)
-    TIZEN_INCLUDE += emile-1 ethumb-client-1
-  endif
-
-  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player cairo
-
-  DEPENDENCY_INCLUDE =
-
-  CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE -DESCARGOT_TIZEN
-  ifeq ($(VERSION), 3.0)
-    CXXFLAGS += -DESCARGOT_TIZEN3
-  endif
-  CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
-  CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
-  CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
-  CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
-  CXXFLAGS += -Ideps/tizen/include
-
-  LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-$(VERSION)-target-arm
-  LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
-  ifneq ($(VERSION), 3.0)
-    LDFLAGS += -static-libstdc++
-  endif
-  ifeq ($(TYPE), lib)
-    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
-  else
-    LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
-    LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
-    LDFLAGS +=  -ldlog -licui18n -licuuc -licudata -lecore -lecore_input -lecore_evas -levas -lelementary -lrt -lefl-extension -lfreetype -lcapi-media-player -lcairo -lfontconfig
-  endif
 else ifeq ($(HOST), tizen_wearable_emulator)
   OUTDIR=out/tizen_$(VERSION)/$(ARCH)/$(TYPE)/$(MODE)
-  TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
-                  ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
-                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0 freetype2 media cairo
-
-  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo
-
-  DEPENDENCY_INCLUDE =
-
-  CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE -DESCARGOT_TIZEN
-  CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
-  CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
-  CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
-  CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
-  CXXFLAGS += -Ideps/tizen/include
-
-  LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
-  LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
-  LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-$(VERSION)-emulator-x86
-  LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
-  ifneq ($(VERSION), 3.0)
-    LDFLAGS += -static-libstdc++
-    LDFLAGS += libstdc++.a
-  endif
-  ifeq ($(TYPE), lib)
-    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
-  else
-    LDFLAGS += -ldlog -licui18n -licuuc -licudata
-  endif
 endif
 
 $(info host... $(HOST))
@@ -338,6 +255,8 @@ ifeq ($(HOST), linux)
   CXX          = g++
   STRIP        = strip
   CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
+  CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n)
+  LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n)
 else ifneq ($(filter $(HOST),tizen_arm tizen3_arm), )
   ifeq ($(HOST), tizen_arm)
     ifndef TIZEN_SDK_HOME
@@ -368,6 +287,26 @@ else ifneq ($(filter $(HOST),tizen_arm tizen3_arm), )
   ifeq ($(MODE), debug)
     CXXFLAGS += -g3 -Wno-literal-suffix
   endif
+    TIZEN_INCLUDE = elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
+                  ecore-input-1 edje-1 eo-1 ethumb-client-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 \
+                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0
+  ifeq ($(VERSION), 3.0)
+    TIZEN_INCLUDE += emile-1
+  endif
+
+  TIZEN_LIB = m elementary eina eet ecore ecore_file ecore_input edje ethumb_client ecore_imf ecore_con efreet efreet_mime \
+              efreet_trash eio  evas ecore_evas ecore_x ecore_imf_evas
+
+  DEPENDENCY_INCLUDE = zlib png
+
+  CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
+  CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
+  CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
+  CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
+
+  LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
+  LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
+  LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
   LIB = libWebWidgetEngine.so
 else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   ifeq ($(HOST), tizen_wearable_arm)
@@ -396,6 +335,39 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   ifeq ($(MODE), debug)
     CXXFLAGS += -g3 -Wno-literal-suffix
   endif
+    TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
+                  ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
+                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0 freetype2 media cairo
+  ifeq ($(VERSION), 3.0)
+    TIZEN_INCLUDE += emile-1 ethumb-client-1
+  endif
+
+  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player cairo
+
+  DEPENDENCY_INCLUDE =
+
+  CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE -DESCARGOT_TIZEN
+  ifeq ($(VERSION), 3.0)
+    CXXFLAGS += -DESCARGOT_TIZEN3
+  endif
+  CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
+  CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
+  CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
+  CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
+  CXXFLAGS += -Ideps/tizen/include
+
+  LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-$(VERSION)-target-arm
+  LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
+  ifneq ($(VERSION), 3.0)
+    LDFLAGS += -static-libstdc++
+  endif
+  ifeq ($(TYPE), lib)
+    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
+  else
+    LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
+    LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
+    LDFLAGS +=  -ldlog -licui18n -licuuc -licudata -lecore -lecore_input -lecore_evas -levas -lelementary -lrt -lefl-extension -lfreetype -lcapi-media-player -lcairo -lfontconfig
+  endif
   LIB = libWebWidgetEngine.so
 else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), )
   ifeq ($(HOST), tizen_wearable_emulator)
@@ -423,6 +395,34 @@ else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), 
   CXXFLAGS += -Os -g0 -finline-limit=64
   ifeq ($(MODE), debug)
     CXXFLAGS += -g3 -Wno-literal-suffix
+  endif
+    TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
+                  ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
+                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0 freetype2 media cairo
+
+  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo
+
+  DEPENDENCY_INCLUDE =
+
+  CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE -DESCARGOT_TIZEN
+  CXXFLAGS += --sysroot=$(TIZEN_SYSROOT) -std=c++11
+  CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
+  CXXFLAGS +=  $(addprefix -I$(DEPENDENCY_ROOT_DIR)/include/, $(DEPENDENCY_INCLUDE))
+  CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
+  CXXFLAGS += -Ideps/tizen/include
+
+  LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
+  LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
+  LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-$(VERSION)-emulator-x86
+  LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
+  ifneq ($(VERSION), 3.0)
+    LDFLAGS += -static-libstdc++
+    LDFLAGS += libstdc++.a
+  endif
+  ifeq ($(TYPE), lib)
+    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
+  else
+    LDFLAGS += -ldlog -licui18n -licuuc -licudata
   endif
   LIB = libWebWidgetEngine.so
 ifeq ($(TYPE), exe)

@@ -10,7 +10,7 @@ namespace StarFish {
 
 void HTMLScriptElement::executeScript()
 {
-    if (!m_isAlreadyStarted && !m_inParsing) {
+    if (!m_isAlreadyStarted && isInDocumentScope()) {
         String* typeAttr = getAttribute(document()->window()->starFish()->staticStrings()->m_type);
         if (!typeAttr->equals(String::emptyString) && !typeAttr->equals("text/javascript"))
             return;
@@ -51,22 +51,19 @@ void HTMLScriptElement::executeScript()
 void HTMLScriptElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
-    if (!document()->inParsing())
-        executeScript();
+    executeScript();
 }
 
 void HTMLScriptElement::didCharacterDataModified(String* before, String* after)
 {
     HTMLElement::didCharacterDataModified(before, after);
-    if (!document()->inParsing())
-        executeScript();
+    executeScript();
 }
 
 void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
 {
     HTMLElement::didNodeInserted(parent, newChild);
-    if (!document()->inParsing())
-        executeScript();
+    executeScript();
 }
 
 String* HTMLScriptElement::text()

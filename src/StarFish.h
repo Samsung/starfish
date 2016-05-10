@@ -214,9 +214,9 @@ class StarFish : public gc_cleanup {
     friend class StaticStrings;
 public:
 #ifndef STARFISH_TIZEN_WEARABLE_APP
-    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h);
+    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, int w, int h);
 #else
-    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h);
+    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, void* win, int w, int h);
 #endif
     ~StarFish()
     {
@@ -301,6 +301,11 @@ public:
         return m_lineBreaker;
     }
 
+    String* timezoneID()
+    {
+        return m_timezoneID;
+    }
+
     void addPointerInRootSet(void *ptr);
     void removePointerFromRootSet(void *ptr);
 
@@ -315,6 +320,7 @@ protected:
     StaticStrings* m_staticStrings;
     icu::Locale m_locale;
     icu::BreakIterator* m_lineBreaker;
+    String* m_timezoneID;
     unsigned int m_startUpFlag;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;

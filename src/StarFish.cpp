@@ -19,9 +19,10 @@ bool g_enablePixelTest = false;
 #endif
 
 #ifndef STARFISH_TIZEN_WEARABLE_APP
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, int w, int h)
+StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, int w, int h)
     : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
+    , m_timezoneID(String::fromUTF8(timezoneID))
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
@@ -48,9 +49,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
     m_window = Window::create(this, w, h);
 }
 #else
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, void* win, int w, int h)
+StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, void* win, int w, int h)
     : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
+    , m_timezoneID(String::fromUTF8(timezoneID))
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
