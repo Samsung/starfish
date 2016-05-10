@@ -56,6 +56,9 @@ public:
         return m_generatedSheet;
     }
 
+private:
+    void dispatchLoadEvent();
+
 protected:
     CSSStyleSheet* m_generatedSheet;
 };

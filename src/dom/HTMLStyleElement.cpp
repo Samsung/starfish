@@ -27,7 +27,7 @@ void HTMLStyleElement::didNodeInserted(Node* parent, Node* newChild)
         // FIXME
         // parse style sheet every modified-time is bad idea
         // should we parse stylesheet in rendering-time?
-        removeStyleSheet();
+        removeStyleSheet();        
         generateStyleSheet();
     }
 }
@@ -48,6 +48,7 @@ void HTMLStyleElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
     generateStyleSheet();
+    dispatchLoadEvent();
 }
 
 void HTMLStyleElement::didNodeRemovedFromDocumenTree()
@@ -91,6 +92,13 @@ void HTMLStyleElement::removeStyleSheet()
         document()->window()->setWholeDocumentNeedsStyleRecalc();
         m_generatedSheet = nullptr;
     }
+}
+
+void HTMLStyleElement::dispatchLoadEvent()
+{
+    String* eventType = document()->window()->starFish()->staticStrings()->m_load.localName();
+    Event* e = new Event(eventType, EventInit(false, false));
+    dispatchEvent(e);
 }
 
 }
