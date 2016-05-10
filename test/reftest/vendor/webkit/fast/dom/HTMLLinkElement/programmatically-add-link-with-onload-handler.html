@@ -9,10 +9,9 @@
 <pre id="console"></pre>
 <script>
 var link = createLinkElementWithStylesheet("resources/stylesheet.css");
-link.onload = function () { testPassedAndNotifyDone('Fired Load event.') };
+link.onload = function () { testPassedAndNotifyDone('Fired Load event.'); wptTestEnd(); };
 link.onerror = function () { testFailedAndNotifyDone('Fired Error event. Should have fired Load event.') };
 document.head.appendChild(link);
 </script>
-<script src="../../../resources/wpt-test-post.js"></script>
 </body>
 </html>

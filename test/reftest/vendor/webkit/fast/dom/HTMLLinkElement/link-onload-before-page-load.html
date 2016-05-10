@@ -20,7 +20,7 @@ function didReceiveLoadEvent(elementName)
 </script>
 <link rel="stylesheet" href="resources/stylesheet.css" onload="didReceiveLoadEvent('link')">
 </head>
-<body onload="didReceiveLoadEvent('body')">
+<body onload="didReceiveLoadEvent('body'); wptTestEnd();">
 <p>This tests that a Load event for an HTML Link element comes before the Load event for the window. This test PASSED if you see the word PASS below. Otherwise, it FAILED.</p>
 <pre id="console"></pre>
 </body>

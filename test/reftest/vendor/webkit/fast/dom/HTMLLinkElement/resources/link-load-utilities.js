@@ -31,13 +31,7 @@ function createStyleElementWithString(stylesheetData)
 function log(message)
 {
   document.getElementById("console").appendChild(document.createTextNode(message + "\n"));
-
   console.log(message);
-  try {
-      wptTestEnd();
-  } catch(e) {
-      console.log(e);
-  }
 }
 
 function testPassed(message)
@@ -66,4 +60,13 @@ function testFinished()
 {
   if (window.testRunner)
     testRunner.notifyDone();
+}
+
+function wptTestFinished()
+{
+    try {
+        wptTestEnd();
+    } catch(e) {
+        console.log(e);
+    }
 }
