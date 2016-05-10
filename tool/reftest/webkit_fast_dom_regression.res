@@ -124,3 +124,6 @@ test/reftest/vendor/webkit/fast/dom/script-element-remove-self.html
 test/reftest/vendor/webkit/fast/dom/remove-style-element.html
 test/reftest/vendor/webkit/fast/dom/script-subtext-in-script-elements.html
 test/reftest/vendor/webkit/fast/dom/HTMLMetaElement/meta-attributes.html
+test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload.html
+test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload2.html
+test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload-before-page-load.html

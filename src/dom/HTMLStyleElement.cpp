@@ -27,7 +27,7 @@ void HTMLStyleElement::didNodeInserted(Node* parent, Node* newChild)
         // FIXME
         // parse style sheet every modified-time is bad idea
         // should we parse stylesheet in rendering-time?
-        removeStyleSheet();        
+        removeStyleSheet();
         generateStyleSheet();
     }
 }
