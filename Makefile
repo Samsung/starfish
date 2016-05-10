@@ -417,7 +417,9 @@ else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), 
   LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
   ifneq ($(VERSION), 3.0)
     LDFLAGS += -static-libstdc++
-    LDFLAGS += libstdc++.a
+    ifneq ($(TYPE), lib)
+       LDFLAGS += libstdc++.a
+    endif
   endif
   ifeq ($(TYPE), lib)
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
