@@ -2115,6 +2115,26 @@ escargot::ESFunctionObject* bindingHTMLScriptElement(ScriptBindingInstance* scri
         return escargot::ESValue();
     });
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("text"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            return toJSString(nd->asElement()->asHTMLElement()->asHTMLScriptElement()->text());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
+            nd->asElement()->asHTMLElement()->asHTMLScriptElement()->setText(toBrowserString(v.toString()));
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    });
+
     // TODO : Implement setter
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLScriptElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("charset"),

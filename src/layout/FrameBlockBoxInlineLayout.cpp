@@ -510,12 +510,13 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                     }
 
                     // FIXME: Is there a isNumber() for unicode?
-                    auto isNumber = [](String* text) {
-                        for (unsigned i=0; i < text->length(); i++) {
+                    auto isNumber = [](String* text)
+                    {
+                        for (unsigned i = 0; i < text->length(); i++) {
                             unsigned d = text->charAt(i);
-                            if (('0' <= d && d <= '9') ||
-                                 (0x0660 <= d && d <= 0x0669) || // 0 to 9 in Arabic
-                                 (0x06F0 <= d && d <= 0x06F9)) { // 0 to 9 in Extended Arabic
+                            if (('0' <= d && d <= '9')
+                                || (0x0660 <= d && d <= 0x0669) // 0 to 9 in Arabic
+                                || (0x06F0 <= d && d <= 0x06F9)) { // 0 to 9 in Extended Arabic
                             } else {
                                 return false;
                             }
@@ -554,15 +555,15 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                             // l->l
                         }
                     } else {
-                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl ||
-                            ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
+                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl
+                            || ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
                             // r->r
                         } else {
                             // r->l
                             if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
                                 if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
-                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl ||
-                                        boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
+                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl
+                                        || boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
                                         continue;
                                     }
                                 }

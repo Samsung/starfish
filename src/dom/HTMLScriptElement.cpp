@@ -1,6 +1,7 @@
 #include "StarFishConfig.h"
 #include "dom/Document.h"
 #include "HTMLScriptElement.h"
+#include "CharacterData.h"
 
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/file_io/FileIO.h"
@@ -15,6 +16,8 @@ void HTMLScriptElement::executeScript()
             return;
         size_t idx = hasAttribute(document()->window()->starFish()->staticStrings()->m_src);
         if (idx == SIZE_MAX) {
+            if (!firstChild())
+                return;
             String* script = textContent();
             document()->window()->starFish()->evaluate(script);
         } else {
@@ -50,6 +53,34 @@ void HTMLScriptElement::didNodeInsertedToDocumenTree()
     HTMLElement::didNodeInsertedToDocumenTree();
     if (!document()->inParsing())
         executeScript();
+}
+
+void HTMLScriptElement::didCharacterDataModified(String* before, String* after)
+{
+    HTMLElement::didCharacterDataModified(before, after);
+    if (!document()->inParsing())
+        executeScript();
+}
+
+void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    HTMLElement::didNodeInserted(parent, newChild);
+    if (!document()->inParsing())
+        executeScript();
+}
+
+String* HTMLScriptElement::text()
+{
+    return textContent();
+}
+
+void HTMLScriptElement::setText(String* s)
+{
+    if (firstChild() && firstChild()->isText()) {
+        firstChild()->asCharacterData()->setData(s);
+    } else {
+        setTextContent(s);
+    }
 }
 
 }

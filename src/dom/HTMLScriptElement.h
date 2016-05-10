@@ -38,6 +38,11 @@ public:
     }
 
     void executeScript();
+    String* text();
+    void setText(String* s);
+
+    virtual void didCharacterDataModified(String* before, String* after);
+    virtual void didNodeInserted(Node* parent, Node* newChild);
 
     virtual void didNodeInsertedToDocumenTree();
     virtual void finishParsing()
