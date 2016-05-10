@@ -104,3 +104,4 @@ test/reftest/vendor/webkit/fast/dom/timer-increase-min-interval-and-reset-part-2
 test/reftest/vendor/webkit/fast/dom/timer-clear-interval-in-handler-and-generate-error.html
 test/reftest/vendor/webkit/fast/dom/timer-clear-interval-in-handler.html
 test/reftest/vendor/webkit/fast/dom/Text/text-should-not-have-attributes.html
+test/reftest/vendor/webkit/fast/dom/stripNullFromTextNodes.html
