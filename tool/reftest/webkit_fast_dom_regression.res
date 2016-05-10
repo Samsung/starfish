@@ -66,6 +66,7 @@ test/reftest/vendor/webkit/fast/dom/children-nodes.html
 test/reftest/vendor/webkit/fast/dom/Window/dispatchEvent.html
 test/reftest/vendor/webkit/fast/dom/Window/HTMLBodyElement-window-eventListener-attributes.html
 test/reftest/vendor/webkit/fast/dom/Window/remove-timeout-crash.html
+test/reftest/vendor/webkit/fast/dom/HTMLScriptElement/isURLAttribute.html
 test/reftest/vendor/webkit/fast/dom/inline-event-attributes-crash.html
 test/reftest/vendor/webkit/fast/dom/inline-event-attributes-moved.html
 test/reftest/vendor/webkit/fast/dom/NamedNodeMap-named-getter-caching.html
