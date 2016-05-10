@@ -157,8 +157,8 @@
 #define STARFISH_COMPILE_ASSERT(exp, name) static_assert((exp), #name)
 #endif
 
-#define STARFISH_RELEASE_ASSERT(assertion) do { if (!(assertion)) { STARFISH_LOG_ERROR("RELEASE_ASSERT at %s (%d)\n", __FILE__, __LINE__); abort(); } } while (0);
-#define STARFISH_RELEASE_ASSERT_NOT_REACHED() do { STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED at %s (%d)\n", __FILE__, __LINE__); abort(); } while (0)
+#define STARFISH_RELEASE_ASSERT(assertion) do { if (!(assertion)) { STARFISH_LOG_ERROR("RELEASE_ASSERT at %s (%d)\n", __FILE__, __LINE__); ::abort(); } } while (0);
+#define STARFISH_RELEASE_ASSERT_NOT_REACHED() do { STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED at %s (%d)\n", __FILE__, __LINE__); ::abort(); } while (0)
 
 #define STARFISH_MAKE_STACK_ALLOCATED() \
     inline void* operator new(size_t size) = delete; \

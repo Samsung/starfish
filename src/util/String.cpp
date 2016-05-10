@@ -69,7 +69,7 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
                             tRequiredSize = 6;
                         } else {
                             tRequiredSize = 1;
-                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                            uc = 0xFFFD;
                         }
 
     return tRequiredSize;

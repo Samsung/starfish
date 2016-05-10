@@ -110,8 +110,10 @@ void XMLHttpRequest::send(String* body)
 
             res_code = 0;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &res_code);
+            ecore_thread_main_loop_begin();
             xhrobj->setStatus(res_code);
         } else {
+            ecore_thread_main_loop_begin();
             STARFISH_ASSERT(!curl);
             std::string path = xhrobj->m_starfish->currentPath()->utf8Data();
             if ((path.length() != 0)&&(path.back() != '/')) {
@@ -146,16 +148,23 @@ void XMLHttpRequest::send(String* body)
             FileIO* fio = FileIO::createInNonGCArea();
             if (fio->open(path.data())) {
                 long int BUFF_SIZE = fio->length();
-                char* buff = new char[BUFF_SIZE];
+                char* buff = new char[BUFF_SIZE + 1];
                 fio->read(buff, sizeof(char), BUFF_SIZE);
+                buff[BUFF_SIZE] = 0;
                 fio->close();
 
                 res_code = 200;
-                xhrobj->setStatus(res_code);
                 res = CURLE_OK;
-                header.memory = buff;
+                header.memory = buff; // FIXME
+                header.contentType = buff; // FIXME
 
-                ecore_thread_main_loop_begin();
+                buffer.memory = buff;
+                buffer.size = BUFF_SIZE;
+                header.contentLength = BUFF_SIZE;
+                progressData.loaded = BUFF_SIZE;
+                progressData.total = BUFF_SIZE;
+
+                xhrobj->setStatus(res_code);
                 xhrobj->m_starfish->addPointerInRootSet(xhrobj);
                 ecore_idler_add([](void *data)->Eina_Bool {
                     XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
@@ -166,19 +175,6 @@ void XMLHttpRequest::send(String* body)
                     this_obj->m_starfish->removePointerFromRootSet(this_obj);
                     return ECORE_CALLBACK_CANCEL;
                 }, xhrobj);
-                ecore_thread_main_loop_end();
-
-                buffer.memory = buff;
-                header.contentType = buff;
-
-                int size = strlen(buff);
-                if (buff[size - 1] == '\n')
-                    buff[size - 1] = 0;
-
-                buffer.size = size;
-                header.contentLength = size;
-                progressData.loaded = size;
-                progressData.total = size;
             } else {
                 res_code = 0;
                 xhrobj->setStatus(res_code);
@@ -198,6 +194,7 @@ void XMLHttpRequest::send(String* body)
 
             if (buffer.size == 0) {
                 xhrobj->m_starfish->removePointerFromRootSet(xhrobj);
+                ecore_thread_main_loop_end();
                 return false;
             }
 
@@ -220,7 +217,6 @@ void XMLHttpRequest::send(String* body)
             pass->loaded = progressData.loaded;
             pass->total = progressData.total;
 
-            ecore_thread_main_loop_begin();
             xhrobj->m_starfish->addPointerInRootSet(xhrobj);
             ecore_idler_add([](void *data)->Eina_Bool {
                 Pass* pass = (Pass*)data;
@@ -229,14 +225,14 @@ void XMLHttpRequest::send(String* body)
                 switch (this_obj->getResponseType()) {
                 case JSON_RESPONSE:
                     {
-                        this_obj->m_response = parseJSON(String::fromUTF8(pass->buf));
+                        this_obj->m_response = parseJSON(String::fromUTF8(pass->buf, pass->total));
                     }
                     break;
 
                 case TEXT_RESPONSE:
                 default:
-                    this_obj->m_response =ScriptValue(createScriptString(String::fromUTF8(pass->buf)));
-                    this_obj->m_responseText = String::fromUTF8(pass->buf);
+                    this_obj->m_response = ScriptValue(createScriptString(String::fromUTF8(pass->buf)));
+                    this_obj->m_responseText = String::fromUTF8(pass->buf, pass->total);
                 }
                 if (pass->contentSize == 0)
                     pass->total = 0;
@@ -273,7 +269,6 @@ void XMLHttpRequest::send(String* body)
             }
             */
 
-            ecore_thread_main_loop_begin();
             xhrobj->m_starfish->addPointerInRootSet(xhrobj);
             ecore_idler_add([](void *data)->Eina_Bool {
                 XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
@@ -282,10 +277,9 @@ void XMLHttpRequest::send(String* body)
                 return ECORE_CALLBACK_CANCEL;
             }, xhrobj);
             ecore_thread_main_loop_end();
+            return false;
         }
-
-        xhrobj->m_starfish->removePointerFromRootSet(xhrobj);
-        return false;
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     };
 
     std::thread(task, this, std::move(url), m_method, std::move(bodyString), m_timeout).detach();
