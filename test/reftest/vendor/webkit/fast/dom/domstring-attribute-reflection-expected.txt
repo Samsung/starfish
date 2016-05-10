@@ -1,0 +1,32 @@
+Reflected DOMString attribute test for button/@id<br />
+Initial value:<br />
+<span><span class="pass">PASS</span> element.id is ""</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is null</span><br />
+Setting a value via the IDL attribute:<br />
+<span><span class="pass">PASS</span> element.id = "foo"; element.id is "foo"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is "foo"</span><br />
+Setting a value via the content attribute:<br />
+<span><span class="pass">PASS</span> element.setAttribute("id", " bar\n"); element.id is " bar\n"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is " bar\n"</span><br />
+Setting null via the IDL attribute:<br />
+<span><span class="pass">PASS</span> element.id = null; element.id is "null"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is "null"</span><br />
+Setting null via the content attribute:<br />
+<span><span class="pass">PASS</span> element.setAttribute("id", null); element.id is "null"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is "null"</span><br />
+Setting undefined via the IDL attribute:<br />
+<span><span class="pass">PASS</span> element.id = undefined; element.id is "undefined"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is "undefined"</span><br />
+Setting undefined via the content attribute:<br />
+<span><span class="pass">PASS</span> element.setAttribute("id", undefined); element.id is "undefined"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is "undefined"</span><br />
+Setting non-string via the IDL attribute:<br />
+<span><span class="pass">PASS</span> element.id = 123; element.id is "123"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is "123"</span><br />
+Setting non-string via the content attribute:<br />
+<span><span class="pass">PASS</span> element.setAttribute("id", 456); element.id is "456"</span><br />
+<span><span class="pass">PASS</span> element.getAttribute("id") is "456"</span><br />
+
+<br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />

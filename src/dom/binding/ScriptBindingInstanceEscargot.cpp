@@ -1178,14 +1178,14 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                 escargot::ESValue key = instance->currentExecutionContext()->readArgument(0);
                 escargot::ESValue val = instance->currentExecutionContext()->readArgument(1);
 
-                if (key.isESString() && val.isESString()) {
+                if (key.isESString()) {
                     auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
                     // Validate key string
                     QualifiedName attrKey = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(sf, key.asESString()->utf8Data()));
                     if (!QualifiedName::checkNameProductionRule(attrKey.localName(), attrKey.localName()->length()))
                         throw new DOMException(sf->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
-                    String* attrVal = toBrowserString(val.asESString());
+                    String* attrVal = toBrowserString(val);
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
                     if (elem) {
                         elem->setAttribute(attrKey, attrVal);
