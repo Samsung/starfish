@@ -10,6 +10,7 @@ public:
     HTMLScriptElement(Document* document)
         : HTMLElement(document)
         , m_isAlreadyStarted(false)
+        , m_isParserInserted(false)
     {
     }
 
@@ -46,6 +47,10 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
 
     virtual void didNodeInsertedToDocumenTree();
+    virtual void beginParsing()
+    {
+        HTMLElement::beginParsing();
+    }
     virtual void finishParsing()
     {
         HTMLElement::finishParsing();
@@ -53,9 +58,16 @@ public:
     }
 
     virtual Node* clone();
+    void markParserInserted()
+    {
+        m_isParserInserted = true;
+    }
 
 protected:
+
+    void executeExternalScript();
     bool m_isAlreadyStarted;
+    bool m_isParserInserted;
 };
 
 }

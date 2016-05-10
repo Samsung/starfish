@@ -416,8 +416,9 @@ else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), 
   LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-$(VERSION)-emulator-x86
   LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
   ifneq ($(VERSION), 3.0)
-    LDFLAGS += -static-libstdc++
-    ifneq ($(TYPE), lib)
+    ifeq ($(TYPE), lib)
+       LDFLAGS += -static-libstdc++
+    else
        LDFLAGS += libstdc++.a
     endif
   endif
@@ -502,7 +503,7 @@ tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 
 $(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS) 
 	@echo "[LINK] $@"
-	ln -sf deps/tizen/lib/tizen-wearable-$(VRESION)-emulator-x86/libstdc++.a.0 libstdc++.a
+	ln -sf deps/tizen/lib/tizen-wearable-$(VERSION)-emulator-x86/libstdc++.a.0 libstdc++.a
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
 	rm libstdc++.a
 

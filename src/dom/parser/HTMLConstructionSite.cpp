@@ -635,6 +635,7 @@ void HTMLConstructionSite::insertScriptElement(AtomicHTMLToken* token)
     // const bool alreadyStarted = m_isParsingFragment && parserInserted;
     // HTMLScriptElement* element = new HTMLScriptElement(ownerDocumentForCurrentNode(), parserInserted, alreadyStarted);
     HTMLScriptElement* element = new HTMLScriptElement(&ownerDocumentForCurrentNode());
+    element->markParserInserted();
     setAttributes(element, token);
     // if (scriptingContentIsAllowed(m_parserContentPolicy))
     if (true)

@@ -136,7 +136,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
         } else {
             // Block... + Inline case
             Frame* last = frameBlockBox->lastChild();
-            if (!last->isNormalFlow()) {
+            if (!last->isNormalFlow() && currentFrame->isNormalFlow()) {
                 Frame* lastAnnyBlockBox = nullptr;
 
                 Frame* cur = last->previous();
