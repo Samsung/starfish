@@ -105,3 +105,9 @@ test/reftest/vendor/webkit/fast/dom/timer-clear-interval-in-handler-and-generate
 test/reftest/vendor/webkit/fast/dom/timer-clear-interval-in-handler.html
 test/reftest/vendor/webkit/fast/dom/Text/text-should-not-have-attributes.html
 test/reftest/vendor/webkit/fast/dom/stripNullFromTextNodes.html
+test/reftest/vendor/webkit/fast/dom/replace-child-siblings.html
+test/reftest/vendor/webkit/fast/dom/replace-first-child.html
+test/reftest/vendor/webkit/fast/dom/script-add.html
+test/reftest/vendor/webkit/fast/dom/script-clone-rerun.html
+test/reftest/vendor/webkit/fast/dom/script-clone-rerun-self.html
+test/reftest/vendor/webkit/fast/dom/script-element-gc.html
