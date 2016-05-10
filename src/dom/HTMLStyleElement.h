@@ -45,7 +45,8 @@ public:
     virtual void finishParsing()
     {
         HTMLElement::finishParsing();
-        generateStyleSheet();
+        if (isInDocumentScope())
+            generateStyleSheet();
     }
 
     void generateStyleSheet();
