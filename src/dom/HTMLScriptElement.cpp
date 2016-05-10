@@ -23,6 +23,11 @@ void HTMLScriptElement::executeScript()
             document()->window()->starFish()->evaluate(script);
         } else {
             String* url = getAttribute(idx);
+            m_isAlreadyStarted = true;
+
+            if (!url->length())
+                return;
+
             FileIO* fio = FileIO::create();
             if (fio->open(document()->window()->starFish()->makeResourcePath(url))) {
                 size_t siz = fio->length();
@@ -32,7 +37,6 @@ void HTMLScriptElement::executeScript()
 
                 fileContents[siz] = 0;
 
-                m_isAlreadyStarted = true;
                 document()->window()->starFish()->evaluate(String::fromUTF8(fileContents));
 
                 free(fileContents);
@@ -46,6 +50,18 @@ void HTMLScriptElement::executeScript()
                 }, this);
             }
         }
+    }
+}
+
+
+void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    if (name == document()->window()->starFish()->staticStrings()->m_src) {
+        document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
+            HTMLScriptElement* element = (HTMLScriptElement*)data;
+            element->executeScript();
+        }, this);
     }
 }
 
