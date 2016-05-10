@@ -1,7 +1,13 @@
 if (started) {
     executed = true;
     if (canPass) {
-        document.getElementById("result").innerText = "PASS: Script executed after appendChild()";
+        //document.getElementById("result").innerText = "PASS: Script executed after appendChild()";
+        console.log("PASS: Script executed after appendChild()");
+        try {
+            wptTestEnd();
+        } catch(e) {
+            console.log(e);
+        }
         if (window.testRunner)
             testRunner.notifyDone();
     }
