@@ -1,0 +1,1 @@
+Result: <span class="pass">Timeout was successful</span><br>

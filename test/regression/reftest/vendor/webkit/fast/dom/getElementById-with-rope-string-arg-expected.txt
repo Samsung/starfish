@@ -1,0 +1,4 @@
+<p>This tests that calling getElementById() with a concatenated string as the argument doesn't make us crash on subsequent access to that string.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> nonexistentID is 'somethingfoobar'</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />

@@ -1,0 +1,7 @@
+<p>Test addEventListener() and removeEventListener() fail silently if arguments are missing.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> document.addEventListener("foo") threw exception TypeError: Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 1 present..</span><br />
+<span><span class="pass">PASS</span> document.removeEventListener("bar") threw exception TypeError: Failed to execute 'removeEventListener' on 'EventTarget': 2 arguments required, but only 1 present..</span><br />
+<span><span class="pass">PASS</span> document.addEventListener() threw exception TypeError: Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 0 present..</span><br />
+<span><span class="pass">PASS</span> document.removeEventListener() threw exception TypeError: Failed to execute 'removeEventListener' on 'EventTarget': 2 arguments required, but only 0 present..</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />

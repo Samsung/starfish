@@ -1,0 +1,13 @@
+<div id="content"></div>
+<script>
+if (window.testRunner)
+    testRunner.dumpAsText();
+
+var content = document.getElementById("content");
+document.getElementById("content").innerHTML = "<style>text</style>";
+content.style.display = "none";
+content.innerHTML = '';
+console.log("SUCCESS (you didn't crash!)");
+</script>
+<script src="../../resources/wpt-test-post.js"></script>
+<!--p>SUCCESS (you didn't crash!)</p-->

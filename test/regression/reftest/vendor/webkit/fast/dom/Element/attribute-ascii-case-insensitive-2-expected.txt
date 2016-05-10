@@ -1,0 +1,34 @@
+<p>In HTML, attributes should be ASCII case-insensitive. This test mostly checks Element.removeAttribute() with different source for setting the attribute.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-ÆøÅ") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-ÆøÅ") is false</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-Æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-Æøå") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-æøå") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-ÆØÅ") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-ÆØÅ") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æØÅ") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-æØÅ") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æØÅ") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æØÅ") is false</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-Æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-Æøå") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-æøå") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-ÆØÅ") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-ÆØÅ") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-ÆØÅ") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-ÆØÅ") is false</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-Æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-Æøå") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-æøå") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-æøå") is false</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-Æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").getAttribute("data-Æøå") is "WebKit!"</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-Æøå") is true</span><br /> 
+<span><span class="pass">PASS</span> document.getElementById("target").hasAttribute("data-Æøå") is false</span><br /> 
+<br /> 
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br /> 
+<br /><span class="pass">TEST COMPLETE</span><br />

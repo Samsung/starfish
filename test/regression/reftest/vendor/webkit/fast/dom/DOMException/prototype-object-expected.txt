@@ -1,0 +1,16 @@
+<p>This tests the prototype chain of DOMException objects.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> HierarchyRequestError: Failed to execute 'appendChild' on 'Node': Nodes of type '#document' may not be inserted inside nodes of type '#document'.</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> Object.prototype.toString.call(e) is "[object DOMException]"</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> Object.prototype.toString.call(e.__proto__) is "[object Object]"</span><br />
+wpt-test-pre.js:2 <span><span class="fail">PASS</span> Object.prototype.toString.call(e.__proto__.__proto__) is [object Error]</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> function DOMException() { [native code] }</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> e instanceof DOMException is true</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> e instanceof Error is true</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> e.constructor is window.DOMException</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> e.HIERARCHY_REQUEST_ERR is e.constructor.HIERARCHY_REQUEST_ERR</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> e.HIERARCHY_REQUEST_ERR is 3</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> e.code is 3</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> e.name is "HierarchyRequestError"</span><br />
+wpt-test-pre.js:2 <span><span class="pass">FAIL</span> e.message Should include HierarchyRequestError</span><br />
+wpt-test-pre.js:2 <span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+wpt-test-pre.js:2 <br /><span class="pass">TEST COMPLETE</span><br />
