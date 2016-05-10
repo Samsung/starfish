@@ -113,3 +113,4 @@ test/reftest/vendor/webkit/fast/dom/script-add.html
 test/reftest/vendor/webkit/fast/dom/script-clone-rerun.html
 test/reftest/vendor/webkit/fast/dom/script-clone-rerun-self.html
 test/reftest/vendor/webkit/fast/dom/script-element-gc.html
+test/reftest/vendor/webkit/fast/dom/duplicate-ids.html
