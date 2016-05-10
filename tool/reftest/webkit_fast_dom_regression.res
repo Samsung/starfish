@@ -25,6 +25,9 @@ test/reftest/vendor/webkit/fast/dom/htmlcollection-length-after-item-2.html
 test/reftest/vendor/webkit/fast/dom/HTMLDocument/constructor-setter-crash.html
 test/reftest/vendor/webkit/fast/dom/HTMLLinkElement/link-onload.html
 test/reftest/vendor/webkit/fast/dom/HTMLLinkElement/link-onload2.html
+test/reftest/vendor/webkit/fast/dom/HTMLLinkElement/link-onload-before-page-load.html
+test/reftest/vendor/webkit/fast/dom/HTMLLinkElement/programmatically-add-link-with-onload-handler.html
+test/reftest/vendor/webkit/fast/dom/HTMLLinkElement/prefetch-too-many-clients.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-1.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-2.html
 test/reftest/vendor/webkit/fast/dom/NodeList/5725058-crash-scenario-3.html
