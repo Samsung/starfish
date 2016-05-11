@@ -78,10 +78,10 @@ int main(int argc, char *argv[])
             // path += "./";
             path += d.substr(0, d.find_last_of('/'));
             path += "/";
-            char result[1024];
-            realpath(path.c_str(), result);
-            path = result;
+            char* p = realpath(path.c_str(), NULL);
+            path = p;
             path += "/";
+            free(p);
         }
     }
 
