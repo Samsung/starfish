@@ -28,6 +28,11 @@ public:
         m_instance.enter();
     }
 
+    ScriptBindingInstanceEnterer(ScriptBindingInstance* instance)
+        : ScriptBindingInstanceEnterer(*instance)
+    {
+    }
+
     ~ScriptBindingInstanceEnterer()
     {
         m_instance.exit();

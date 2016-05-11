@@ -8,13 +8,15 @@ class MessageLoop : public gc {
     friend class StarFish;
     friend class Window;
 public:
-    MessageLoop()
+    MessageLoop(StarFish* sf)
+        : m_starFish(sf)
     {
 
     }
 
     void addIdler(void (*fn)(void*), void* data);
 protected:
+    StarFish* m_starFish;
     void run();
 };
 

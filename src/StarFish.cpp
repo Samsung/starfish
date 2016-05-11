@@ -26,14 +26,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
-            /*
-#ifdef NDEBUG
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
-#else
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
-#endif
-             */
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_total_bytes() / 1024.f / 1024.f);
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
         }
     });
 
@@ -46,6 +39,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
     init(w, h);
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window = Window::create(this, w, h);
 }
 #else
@@ -56,14 +50,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
 {
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
-            /*
-#ifdef NDEBUG
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB\n", GC_get_heap_size() / 1024.f / 1024.f);
-#else
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB / %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
-#endif
-             */
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_total_bytes() / 1024.f / 1024.f);
+            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
         }
     });
     GC_set_free_space_divisor(64);
@@ -73,6 +60,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
     m_currentPath = currentPath;
 
     init(w, h);
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window = Window::create(this, w, h, win);
 }
 #endif
@@ -88,7 +76,7 @@ void StarFish::init(int w, int h)
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
-    m_messageLoop = new MessageLoop();
+    m_messageLoop = new MessageLoop(this);
     m_scriptBindingInstance = new ScriptBindingInstance();
     m_scriptBindingInstance->initBinding(this);
 }
@@ -100,22 +88,27 @@ void StarFish::run()
 
 void StarFish::loadPreprocessedXMLDocument(String* filePath)
 {
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->loadPreprocessedXMLDocument(filePath);
 }
 
 void StarFish::loadHTMLDocument(String* filePath)
 {
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->navigate(filePath);
 }
 
 void StarFish::resume()
 {
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->resume();
 }
 
 void StarFish::pause()
 {
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->pause();
+    GC_gcollect_and_unmap();
 }
 
 void StarFish::close()

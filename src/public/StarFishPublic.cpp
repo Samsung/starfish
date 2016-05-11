@@ -41,7 +41,6 @@ extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 {
     TO_STARFISH(instance)->close();
     starfishGCRemoveRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
-    delete TO_STARFISH(instance);
     free(instance);
 }
 

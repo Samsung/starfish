@@ -1050,7 +1050,7 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 }
                 FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
                 else {
-                    STARFISH_LOG_ERROR("unsupported property name(CSSParser) -> %s", descriptor->utf8Data());
+                    STARFISH_LOG_ERROR("unsupported property name(CSSParser) -> %s\n", descriptor->utf8Data());
                 }
                 return;
             }

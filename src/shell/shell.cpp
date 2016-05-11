@@ -89,9 +89,9 @@ int main(int argc, char *argv[])
     StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path.c_str()), "en-us", "Asia/Seoul", width, height);
 
     if (hasEnding(argv[1], "xml")) {
-        sf->window()->loadPreprocessedXMLDocument(String::createASCIIString(argv[1]));
+        sf->loadPreprocessedXMLDocument(String::createASCIIString(argv[1]));
     } else
-        sf->window()->navigate(String::createASCIIString(argv[1]));
+        sf->loadHTMLDocument(String::createASCIIString(argv[1]));
 
     pthread_t t;
     pthread_attr_t attr;

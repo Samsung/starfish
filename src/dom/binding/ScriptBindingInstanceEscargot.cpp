@@ -28,7 +28,6 @@ ScriptBindingInstance::ScriptBindingInstance()
     m_enterCount = 0;
     m_data = new ScriptBindingInstanceDataEscargot(this);
     fetchData(this)->m_instance = new escargot::ESVMInstance();
-    enter();
 }
 
 
@@ -166,6 +165,7 @@ escargot::ESValue toJSString(String* v)
 
 void ScriptBindingInstance::initBinding(StarFish* sf)
 {
+    ScriptBindingInstanceEnterer enter(this);
     fetchData(this)->m_instance->setlocale(sf->locale());
     fetchData(this)->m_instance->setTimezoneID(icu::UnicodeString::fromUTF8(icu::StringPiece(sf->timezoneID()->utf8Data())));
 
