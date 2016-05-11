@@ -239,12 +239,12 @@ protected:
     StarFish* m_starFish;
 
     uint32_t m_timeoutCounter;
-    std::unordered_map<uint32_t, std::pair<WindowSetTimeoutHandler, void*>, std::hash<uint32_t>, std::equal_to<uint32_t>,
-        gc_allocator<std::pair<uint32_t, std::pair<WindowSetTimeoutHandler, void*> > > > m_timeoutHandler;
+    std::unordered_map<uint32_t, void*, std::hash<uint32_t>, std::equal_to<uint32_t>,
+        gc_allocator<std::pair<uint32_t, void* > > > m_timeoutHandler;
 
     uint32_t m_requestAnimationFrameCounter;
-    std::unordered_map<uint32_t, std::pair<WindowSetTimeoutHandler, void*>, std::hash<uint32_t>, std::equal_to<uint32_t>,
-        gc_allocator<std::pair<uint32_t, std::pair<WindowSetTimeoutHandler, void*> > > > m_requestAnimationFrameHandler;
+    std::unordered_map<uint32_t, void*, std::hash<uint32_t>, std::equal_to<uint32_t>,
+        gc_allocator<std::pair<uint32_t, void*> > > m_requestAnimationFrameHandler;
 
     std::vector<Node*, gc_allocator<Node*> > m_activeNodes;
 };

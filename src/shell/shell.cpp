@@ -2,6 +2,8 @@
 #include "dom/Document.h"
 #include "StarFish.h"
 
+#include "dom/binding/ScriptBindingInstance.h"
+
 #include <pthread.h>
 #include <Elementary.h>
 
@@ -113,7 +115,7 @@ int main(int argc, char *argv[])
             ecore_thread_main_loop_begin();
             ecore_idler_add([](void *data) -> Eina_Bool {
                 Pass* p = (Pass*)data;
-
+                ScriptBindingInstanceEnterer enter(p->sf->scriptBindingInstance());
                 p->sf->evaluate(String::fromUTF8(p->buf));
 
                 delete [] p->buf;
