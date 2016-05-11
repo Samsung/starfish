@@ -113,7 +113,9 @@ void StarFish::pause()
 
 void StarFish::close()
 {
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->close();
+    m_scriptBindingInstance->close();
 }
 
 void StarFish::evaluate(String* s)

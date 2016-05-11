@@ -9,6 +9,7 @@ public:
     ScriptBindingInstance();
     void enter();
     void exit();
+    void close();
     void initBinding(StarFish* window);
     void* data()
     {

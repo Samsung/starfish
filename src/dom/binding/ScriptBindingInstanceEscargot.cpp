@@ -48,6 +48,12 @@ void ScriptBindingInstance::exit()
     }
     m_enterCount--;
 }
+
+void ScriptBindingInstance::close()
+{
+    ((DeviceAPI::NativePluginManager*)fetchData(this)->m_deviceAPIObject)->close();
+}
+
 #define INVALID_INDEX (escargot::ESValue::ESInvalidIndexValue)
 #define TO_INDEX_UINT32(argValue, idx) \
     uint32_t idx; \
