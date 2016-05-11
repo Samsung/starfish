@@ -585,15 +585,8 @@ pixel_test_css_all:
 	@echo '========== Show out/pixel_test_css_all.log =========='
 	@cat out/pixel_test_css_all.log | grep "====total" | awk 'BEGIN {s=0}{ s += $$6 } END {print "Total "s" Passed (CSS1/21/3-color/3-backgrounds/3-transforms)"}'
 
-wpt_test:
-	./tool/reftest/wpt_test.sh $(tc) $(regression)
-wpt_test_dom:
-	make wpt_test tc=tool/reftest/wpt_dom.res
-wpt_test_xhr:
-	make wpt_test tc=tool/reftest/xhr.res
-
-dom_test:
-	./tool/reftest/dom_test.sh $(tc) $(regression)
+reftest:
+	./tool/reftest/reftest.sh $(tc) $(regression)
 
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
@@ -612,31 +605,31 @@ regression_test_demo:
 	./tool/reftest/css_test.sh demo true
 
 regression_test_dom_conformance_test:
-	./tool/reftest/dom_test.sh tool/reftest/dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/dom_conformance_test_regression.res
 
 regression_test_wpt_dom:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_dom_regression.res
 regression_test_wpt_dom_events:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_dom_events_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_dom_events_regression.res
 regression_test_wpt_html:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_html_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_html_regression.res
 regression_test_wpt_page_visibility:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_page_visibility_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_page_visibility_regression.res
 regression_test_wpt_progress_events:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_progress_events_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_progress_events_regression.res
 regression_test_wpt_xhr:
-	./tool/reftest/wpt_test.sh tool/reftest/wpt_xhr_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_xhr_regression.res
 
 regression_test_blink_dom_conformance_test:
-	./tool/reftest/dom_test.sh tool/reftest/blink_dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/blink_dom_conformance_test_regression.res
 regression_test_gecko_dom_conformance_test:
-	./tool/reftest/dom_test.sh tool/reftest/gecko_dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/gecko_dom_conformance_test_regression.res
 regression_test_webkit_dom_conformance_test:
-	./tool/reftest/dom_test.sh tool/reftest/webkit_dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/webkit_dom_conformance_test_regression.res
 regression_test_webkit_fast_dom:
-	./tool/reftest/dom_test.sh tool/reftest/webkit_fast_dom_regression.res
+	./tool/reftest/reftest.sh tool/reftest/webkit_fast_dom_regression.res
 regression_test_webkit_fast_html:
-	./tool/reftest/dom_test.sh tool/reftest/webkit_fast_html_regression.res
+	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html_regression.res
 
 regression_test_css1:
 	./tool/reftest/css_test.sh css1 true
@@ -650,6 +643,7 @@ regression_test_css3_transforms:
 	./tool/reftest/css_test.sh css-transforms-1 true
 
 regression_test:
+	make regression_test_dom_conformance_test
 	make regression_test_wpt_dom
 	make regression_test_wpt_dom_events
 	make regression_test_wpt_html
@@ -659,8 +653,8 @@ regression_test:
 	make regression_test_blink_dom_conformance_test
 	make regression_test_gecko_dom_conformance_test
 	make regression_test_webkit_dom_conformance_test
-	make regression_test_dom_conformance_test
 	make regression_test_webkit_fast_dom
+	make regression_test_webkit_fast_html
 	make regression_test_demo
 	make regression_test_css1
 	make regression_test_css21
