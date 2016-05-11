@@ -635,6 +635,8 @@ regression_test_webkit_dom_conformance_test:
 	./tool/reftest/dom_test.sh tool/reftest/webkit_dom_conformance_test_regression.res
 regression_test_webkit_fast_dom:
 	./tool/reftest/dom_test.sh tool/reftest/webkit_fast_dom_regression.res
+regression_test_webkit_fast_html:
+	./tool/reftest/dom_test.sh tool/reftest/webkit_fast_html_regression.res
 
 regression_test_css1:
 	./tool/reftest/css_test.sh css1 true

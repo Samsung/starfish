@@ -25,7 +25,7 @@ fi
 
 if [[ "$tc" == *"/" ]]; then
     tc=$(find $tc -name "*.htm*" | sort)
-elif [[ "$tc" == *"webkit_fast_dom_regression.res" ]]; then
+elif [[ "$tc" == *"webkit_fast"*".res" ]]; then
     WEBKIT_FAST_DOM=1
     tc=$(cat $tc)
 elif [[ "$tc" == *".res" ]]; then
