@@ -8,7 +8,6 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 # Variables
-WPTTEST=1
 RESULTFILE="result"
 PASSTC=0
 SKIPTC=0
@@ -25,29 +24,37 @@ fi
 tc=$1
 if [[ "$tc" == "dom_conformance" ]]; then
     tc=$(cat test/tool/dom-conformance-test/test_$tc)
-    WPTTEST=0
+    TESTSUITE=0
 elif [[ "$tc" == "blink_dom_conformance" ]]; then
     tc=$(cat test/tool/vendor/blink/test_$tc)
-    WPTTEST=0
+    TESTSUITE=0
 elif [[ "$tc" == "gecko_dom_conformance" ]]; then
     tc=$(cat test/tool/vendor/gecko/test_$tc)
-    WPTTEST=0
+    TESTSUITE=0
 elif [[ "$tc" == "webkit_dom_conformance" ]]; then
     tc=$(cat test/tool/vendor/webkit/test_$tc)
-    WPTTEST=0
+    TESTSUITE=0
+elif [[ "$tc" == "webkit_fast_dom" ]]; then
+    tc=$(cat test/tool/vendor/webkit/test_$tc)
+    TESTSUITE=1
 elif [[ "$tc" == "wpt_dom" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
+    TESTSUITE=2
 elif [[ "$tc" == "wpt_dom_events" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
+    TESTSUITE=2
 elif [[ "$tc" == "wpt_html" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
+    TESTSUITE=2
 elif [[ "$tc" == "wpt_page_visibility" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
+    TESTSUITE=2
 elif [[ "$tc" == "wpt_xhr" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
+    TESTSUITE=2
 else
     echo "Usage: ./runner.js [test_input]"
-    echo "test_input: [ dom_conformance | wpt_dom | wpt_dom_events | wpt_html | wpt_page_visibility | wpt_xhr | blink_dom_conformance | gecko_dom_conformance ]"
+    echo "test_input: [ dom_conformance | wpt_dom | wpt_dom_events | wpt_html | wpt_page_visibility | wpt_xhr | blink_dom_conformance | gecko_dom_conformance | webkit_dom_conformance | webkit_fast_dom ]"
     exit
 fi
 
@@ -61,10 +68,7 @@ array=( $tc )
 pos=$(( ${#array[*]} - 1 ))
 last=${array[$pos]}
 
-if [[ "$PLATFORM" == "x86_64" ]]; then
-   	STARFISH="./test/bin/x64/StarFish"
-	ROTATE="$(nproc)"
-elif [[ "$PLATFORM" == "i686" ]]; then
+if [[ "$PLATFORM" == "i686" ]]; then
    	STARFISH="./test/bin/tizen_emulator/StarFish"
 	ROTATE=1
 else
@@ -79,93 +83,62 @@ for i in $tc ; do
     fi
     RESFILE="tmp"$cnt
 
-    # Convert the html file
-    XML=${i%.*}".xml"
-
-	if [[ "$PLATFORM" == "x86_64" ]]; then
-		cd preprocessor
-    	./convert.sh ../$i > /dev/null 2&>1
-		cd ..
-    	cp preprocessor/out/result.xml $XML 
-	elif [[ "$PLATFORM" == "i686" ]]; then
+	if [[ "$PLATFORM" == "i686" ]]; then
 		dlogutil -c
 	fi
 
     # Running the tests
     filenames[$cnt]=$i
-	workdir="--working-directory="${i%/*}"/"
-	$STARFISH $XML $workdir --hide-window > $RESFILE &
+	$STARFISH $i --hide-window > $RESFILE &
     if [[ $cnt != $((ROTATE-1)) ]] && [[ $i != $last ]]; then
         continue;
     fi
     wait;
 
-	if [[ "$PLATFORM" == "x86_64" ]]; then
-    	for c in $(seq 0 $cnt); do
-        	TMPFILE="tmp"$c
+    if [[ "$PLATFORM" == "i686" ]]; then
+        if [ $TESTSUITE -eq 0 ]; then
+            # W3C DOM Conformance Test Suites
 
-        	# Collect the result
-        	replace1='s/\\n"//g'
-        	replace2='s/"//g'
-        	replace3='s/\n//g'
-        	replace4='s/spawnSTDOUT:\s//g'
-        	perl -i -pe $replace1 $TMPFILE
-        	perl -i -pe $replace2 $TMPFILE
-        	perl -i -pe $replace3 $TMPFILE
-        	perl -i -pe $replace4 $TMPFILE
+            # Expected result
+            EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
+            EXPECTED=$(cat $EXPECTED_FILE)
+            EXPECTED=${EXPECTED##*Status:}
+            EXPECTED=${EXPECTED%Detail*}
+            SKIP=`dlogutil -d | grep -E "Skipped" | wc -l`
+            RESULT=`dlogutil -d | grep -E $EXPECTED | wc -l`
 
-        	if [ $WPTTEST -eq 1 ]; then
-            	PASS=`grep -o Pass $TMPFILE | wc -l`
-            	FAIL=`grep -o Fail $TMPFILE | wc -l`
-            	SUM=`expr $PASS + $FAIL`
-            	PASSTC=`expr $PASSTC + $PASS`
-            	FAILTC=`expr $FAILTC + $FAIL`
-            	TCFILE=`expr $TCFILE + 1`
+            if [ $SKIP -eq 1 ]; then
+                SKIPTC=`expr $SKIPTC + 1`
+                echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
+                echo -e "[SKIP]" ${filenames[$c]} >> $RESULTFILE
+            elif [ $RESULT -eq 1 ]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                echo -e "[PASS]" ${filenames[$c]} >> $RESULTFILE
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+                echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
+            fi
+            TCFILE=`expr $TCFILE + 1`
+        elif [ $TESTSUITE -eq 1 ]; then
+            # WebKit Tests (fast/dom)
+            EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
+            EXPECTED=`grep -Eo "PASS|FAIL" $EXPECTED_FILE`
+            RESULT=`dlogutil -d | grep -Eo "PASS|FAIL"`
 
-            	if [ $SUM -eq 0 ]; then
-                	echo -e "${YELLOW}[CHECK]${RESET}" ${filenames[$c]} "(${BOLD}No results${RESET})"
-                	echo -e "[CHECK]" ${filenames[$c]} "(No results)" >> $RESULTFILE
-            	elif [ $FAIL -eq 0 ]; then
-                	PASSTCFILE=`expr $PASSTCFILE + 1`
-                	echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]} "(${GREEN}PASS:" $PASS"${RESET})"
-                	echo -e "[PASS]" ${filenames[$c]} "(PASS:" $PASS")" >> $RESULTFILE
-            	elif [ $PASS -eq 0 ]; then
-                	echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]} "(${RED}FAIL:" $FAIL"${RESET})"
-                	echo -e "[FAIL]" ${filenames[$c]} "(FAIL:" $FAIL")" >> $RESULTFILE
-            	else
-                	echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]} "(${GREEN}PASS:" $PASS"${RESET}," "${RED}FAIL:" $FAIL"${RESET})"
-                	echo -e "[FAIL]" ${filenames[$c]} "(PASS:" $PASS"," "FAIL:" $FAIL")" >> $RESULTFILE
-            	fi
-        	elif [ $WPTTEST -eq 0 ]; then
-            	# Expected result
-            	EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
-            	EXPECTED=$(cat $EXPECTED_FILE)
-            	EXPECTED=${EXPECTED##*Status:}
-            	EXPECTED=${EXPECTED%Detail*}
-
-            	SKIP=`grep -o Skipped $TMPFILE | wc -l`
-            	RESULT=`grep -o $EXPECTED $TMPFILE | wc -l`
-            	TCFILE=`expr $TCFILE + 1`
-
-            	if [ $SKIP -eq 1 ]; then
-                	SKIPTC=`expr $SKIPTC + 1`
-                	echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
-                	echo -e "[SKIP]" ${filenames[$c]} >> $RESULTFILE
-            	elif [ $RESULT -eq 1 ]; then
-                	PASSTC=`expr $PASSTC + 1`
-                	echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
-                	echo -e "[PASS]" ${filenames[$c]} >> $RESULTFILE
-            	else
-                	FAILTC=`expr $FAILTC + 1`
-                	echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
-                	echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
-            	fi
-        	fi
-
-        	rm $TMPFILE
-    	done
-    elif [[ "$PLATFORM" == "i686" ]]; then
-        if [ $WPTTEST -eq 1 ]; then
+            if [ "$EXPECTED" = "$RESULT" ]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                echo -e "[PASS]" ${filenames[$c]} >> $RESULTFILE
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+                echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
+            fi
+            TCFILE=`expr $TCFILE + 1`
+        elif [ $TESTSUITE -eq 2 ]; then
+            # Web Platfrom Tests
             PASS=`dlogutil -d | grep -E "Pass" | wc -l`
             FAIL=`dlogutil -d | grep -E "Fail" | wc -l`
             SUM=`expr $PASS + $FAIL`
@@ -187,30 +160,6 @@ for i in $tc ; do
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]} "(${GREEN}PASS:" $PASS"${RESET}," "${RED}FAIL:" $FAIL"${RESET})"
                 echo -e "[FAIL]" ${filenames[$c]} "(PASS:" $PASS"," "FAIL:" $FAIL")" >> $RESULTFILE
             fi
-        elif [ $WPTTEST -eq 0 ]; then
-            # Expected result
-            EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
-            EXPECTED=$(cat $EXPECTED_FILE)
-            EXPECTED=${EXPECTED##*Status:}
-            EXPECTED=${EXPECTED%Detail*}
-
-            SKIP=`dlogutil -d | grep -E "Skipped" | wc -l`
-            RESULT=`dlogutil -d | grep -E $EXPECTED | wc -l`
-
-            if [ $SKIP -eq 1 ]; then
-                SKIPTC=`expr $SKIPTC + 1`
-                echo -e "${YELLOW}[SKIP]${RESET}" ${filenames[$c]}
-                echo -e "[SKIP]" ${filenames[$c]} >> $RESULTFILE
-            elif [ $RESULT -eq 1 ]; then
-                PASSTC=`expr $PASSTC + 1`
-                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
-                echo -e "[PASS]" ${filenames[$c]} >> $RESULTFILE
-            else
-                FAILTC=`expr $FAILTC + 1`
-                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
-                echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
-            fi
-            TCFILE=`expr $TCFILE + 1`
         fi
     fi
     done
@@ -218,15 +167,20 @@ for i in $tc ; do
 wait;
 
 # Print the summary
-if [ $WPTTEST -eq 1 ]; then
-    echo -e "\n${BOLD}###### Summary ######${RESET}\n"
-    echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
-    echo -e "\n###### Summary ######\n" >> $RESULTFILE
-    echo -e "Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.\n" >> $RESULTFILE
-elif [ $WPTTEST -eq 0 ]; then
+if [ $TESTSUITE -eq 0 ]; then
     echo -e "\n${BOLD}###### Summary ######${RESET}\n"
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
     echo -e "\n###### Summary ######\n" >> $RESULTFILE
     echo -e "Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.\n" >> $RESULTFILE
+elif [ $TESTSUITE -eq 1 ]; then
+    echo -e "\n${BOLD}###### Summary ######${RESET}\n"
+    echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
+    echo -e "\n###### Summary ######\n" >> $RESULTFILE
+    echo -e "Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.\n" >> $RESULTFILE
+elif [ $TESTSUITE -eq 2 ]; then
+    echo -e "\n${BOLD}###### Summary ######${RESET}\n"
+    echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
+    echo -e "\n###### Summary ######\n" >> $RESULTFILE
+    echo -e "Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.\n" >> $RESULTFILE
 fi
 

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style type="text/css">
+body {
+	text-align: center;
+}
+#time { font-size: 28px; }
+#place { font-size: 28px; }
+#spot { width: 25px }
+#tem1	{ font-size : 52px; }
+#tem2	{ font-size : 28px; }
+#w { width: 120px }
+.red {
+    color: rgb(255,0,0);
+}
+</style>
+</head>
+
+<body>
+    <div id="time">5:19 PM</div>
+    <div id="place" >
+        <img src="spot.png" id="spot">Seoul, Korea
+    </div>
+    <img src="cloud.png" id="w" >
+    <div id="tem1">18°c</div>
+    <div id="tem2">24°c/16°c</div>
+
+<script>
+var running = true;
+
+window.onpause = function() {
+    running = false;
+}
+
+window.onresume = function() {
+    running = true;
+    setTime()
+}
+
+function setTime() {
+    if(!running)
+        return;
+    var d = new Date();
+    var t;
+    var m = d.getMinutes();
+    if (m < 10)
+        m = "0" + m
+    var s = d.getSeconds();
+    if (s < 10)
+        s = "0" + s
+    t = (d.getHours() % 12) + ":" + m;
+    if (d.getHours() > 12) {
+        t += "PM"
+    } else {
+        t += "AM"
+    }
+    document.getElementById("time").firstChild.data = t;
+    window.setTimeout(setTime, 30*1000)
+}
+
+setTime();
+
+document.getElementById("w").onclick = function() {
+    console.log(this.src);
+    if (this.src.indexOf("cloud.png") > -1) {
+        this.src = "sun.png"
+	document.getElementById("place").className = "red"
+    } else {
+        this.src = "cloud.png"
+	document.getElementById("place").className = ""
+    }
+}
+
+</script>
+
+</body>
+</html>

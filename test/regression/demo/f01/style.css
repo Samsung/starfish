@@ -1,0 +1,34 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+html, body {
+	width: 360px;
+	height: 360px;
+}
+p {
+	text-align: center;
+	color: white;
+}
+.regularFont {
+	font-size: 20pt;
+}
+.mediumFont {
+	font-size: 22pt;
+}
+.largeFont {
+	font-size: 46pt;
+}
+#container {
+	width: 100%;
+	height: 100%;
+	background-color: black;
+	text-align: center;
+}
+#top_text {
+	padding-top: 8%;
+}
+#img_weather {
+	width: 166.7px;
+	height: 122.4px;
+}
