@@ -7,6 +7,7 @@
 #include <Elementary.h>
 #include <fcntl.h>
 #include "platform/file_io/FileIO.h"
+#include "platform/message_loop/MessageLoop.h"
 
 namespace StarFish {
 
@@ -166,14 +167,13 @@ void XMLHttpRequest::send(String* body)
 
                 xhrobj->setStatus(res_code);
                 xhrobj->m_starfish->addPointerInRootSet(xhrobj);
-                ecore_idler_add([](void *data)->Eina_Bool {
+                xhrobj->m_starfish->messageLoop()->addIdler([](void *data) {
                     XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
                     this_obj->m_readyState = HEADERS_RECEIVED;
                     this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
                     this_obj->m_readyState = LOADING;
                     this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
                     this_obj->m_starfish->removePointerFromRootSet(this_obj);
-                    return ECORE_CALLBACK_CANCEL;
                 }, xhrobj);
             } else {
                 res_code = 0;
@@ -218,7 +218,7 @@ void XMLHttpRequest::send(String* body)
             pass->total = progressData.total;
 
             xhrobj->m_starfish->addPointerInRootSet(xhrobj);
-            ecore_idler_add([](void *data)->Eina_Bool {
+            xhrobj->m_starfish->messageLoop()->addIdler([](void *data) {
                 Pass* pass = (Pass*)data;
                 XMLHttpRequest* this_obj = pass->obj;
 
@@ -246,7 +246,6 @@ void XMLHttpRequest::send(String* body)
                 delete []pass->buf;
                 delete pass;
                 this_obj->m_starfish->removePointerFromRootSet(this_obj);
-                return ECORE_CALLBACK_CANCEL;
             }, pass);
             xhrobj->m_starfish->removePointerFromRootSet(xhrobj);
             ecore_thread_main_loop_end();
@@ -270,11 +269,10 @@ void XMLHttpRequest::send(String* body)
             */
 
             xhrobj->m_starfish->addPointerInRootSet(xhrobj);
-            ecore_idler_add([](void *data)->Eina_Bool {
+            xhrobj->m_starfish->messageLoop()->addIdler([](void *data) {
                 XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
                 this_obj->callEventHandler(ERROR, true, 0, 0);
                 this_obj->m_starfish->removePointerFromRootSet(this_obj);
-                return ECORE_CALLBACK_CANCEL;
             }, xhrobj);
             ecore_thread_main_loop_end();
             return false;
