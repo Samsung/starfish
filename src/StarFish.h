@@ -169,6 +169,7 @@ public:
 
     // Attribute Names
     QualifiedName m_id;
+    QualifiedName m_name;
     QualifiedName m_class;
     QualifiedName m_localName;
     QualifiedName m_style;

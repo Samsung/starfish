@@ -246,6 +246,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("addEventListener"), 0, false);
+    fnAddEventListener->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addEventListener"), true, true, true, fnAddEventListener);
 
     auto fnRemoveEventListener = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -267,6 +268,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue();
     }, escargot::ESString::create("removeEventListener"), 0, false);
+    fnRemoveEventListener->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeEventListener"), true, true, true, fnRemoveEventListener);
 
     auto fnDispatchEvent = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {

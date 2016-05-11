@@ -23,6 +23,11 @@ Element* HTMLCollection::namedItem(String* key)
             Element* elem = m_activeNodeList.item(i)->asElement();
             if (elem->asElement()->asHTMLElement()->id()->equals(key))
                 return elem;
+            size_t idx = elem->hasAttribute(elem->document()->window()->starFish()->staticStrings()->m_name);
+            if (idx != SIZE_MAX) {
+                if (elem->getAttribute(idx)->equals(key))
+                    return elem;
+            }
         }
     }
     return nullptr;
