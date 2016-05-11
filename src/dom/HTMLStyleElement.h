@@ -10,6 +10,7 @@ public:
     HTMLStyleElement(Document* document)
         : HTMLElement(document)
         , m_generatedSheet(nullptr)
+        , m_loaded(false)
     {
     }
 
@@ -56,11 +57,22 @@ public:
         return m_generatedSheet;
     }
 
+    bool hasLoaded()
+    {
+        return m_loaded;
+    }
+
+    void setLoaded()
+    {
+        m_loaded = true;
+    }
+
 private:
     void dispatchLoadEvent();
 
 protected:
     CSSStyleSheet* m_generatedSheet;
+    bool m_loaded;
 };
 
 }

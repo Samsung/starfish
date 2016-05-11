@@ -3,6 +3,7 @@
 #include "HTMLStyleElement.h"
 #include "dom/Text.h"
 #include "dom/Traverse.h"
+#include "platform/message_loop/MessageLoop.h"
 
 #include "style/CSSParser.h"
 
@@ -96,9 +97,15 @@ void HTMLStyleElement::removeStyleSheet()
 
 void HTMLStyleElement::dispatchLoadEvent()
 {
-    String* eventType = document()->window()->starFish()->staticStrings()->m_load.localName();
-    Event* e = new Event(eventType, EventInit(false, false));
-    dispatchEvent(e);
+    document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
+        HTMLStyleElement* element = (HTMLStyleElement*)data;
+        if (!element->hasLoaded()) {
+            String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.localName();
+            Event* e = new Event(eventType, EventInit(false, false));
+            element->dispatchEvent(e);
+            element->setLoaded();
+        }
+    }, this);
 }
 
 }
