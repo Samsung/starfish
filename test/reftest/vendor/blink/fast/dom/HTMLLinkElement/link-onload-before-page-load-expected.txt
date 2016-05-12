@@ -1,0 +1,2 @@
+PASS Fired Load event at link.
+PASS Fired Load event at body.
