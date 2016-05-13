@@ -72,6 +72,7 @@ test/reftest/vendor/blink/fast/dom/node-childNodes-idempotence.html
 test/reftest/vendor/blink/fast/dom/node-item.html
 test/reftest/vendor/blink/fast/dom/node-legacy-event-listener.html
 test/reftest/vendor/blink/fast/dom/Node/append-child-error.html
+test/reftest/vendor/blink/fast/dom/Node/textContent-set-undefined.html
 test/reftest/vendor/blink/fast/dom/NodeList/5725058-crash-scenario-1.html
 test/reftest/vendor/blink/fast/dom/NodeList/5725058-crash-scenario-2.html
 test/reftest/vendor/blink/fast/dom/NodeList/5725058-crash-scenario-3.html
