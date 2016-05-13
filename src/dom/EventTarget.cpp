@@ -15,11 +15,14 @@ ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eve
 ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eventType, bool& error)
 {
     if (m_listener == ScriptValueNull && target) {
-        // In case of onload Event with null listener, target cannot be Window!!
         STARFISH_ASSERT(isAttribute());
-        STARFISH_ASSERT(target->isNode());
-        STARFISH_ASSERT(target->asNode()->isElement());
-        Element* element = target->asNode()->asElement();
+        Element* element = nullptr;
+        if (target->isWindow()) {
+            element = (Element*) target->asWindow()->document()->bodyElement();
+        } else if (target->isNode()) {
+            element = target->asNode()->asElement();
+        }
+        STARFISH_ASSERT(element != nullptr);
         String* eventName = String::createASCIIString("on")->concat(const_cast<String*>(eventType));
         size_t idx = element->hasAttribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(element->document()->window()->starFish(), eventName)));
         if (idx == SIZE_MAX) {
