@@ -3205,8 +3205,15 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
             originalObj->set##name(v.asESString()->utf8Data());                                                                  \
         } else if (v.isNumber()) {                                                                                               \
             originalObj->set##name(std::to_string(v.toNumber()).c_str());                                                        \
-        }                                                                                                                        \
-        return escargot::ESValue();                                                                                              \
+        } else if (v.isObject()) { \
+            escargot::ESObject* vObj = v.asESPointer()->asESObject(); \
+            escargot::ESValue toStringFunc = vObj->get(escargot::ESString::create("toString")); \
+            STARFISH_ASSERT(toStringFunc.asESPointer()->isESFunctionObject()); \
+            escargot::ESValue convertedStr =  escargot::ESFunctionObject::call(instance, toStringFunc, vObj, NULL, 0, false); \
+            STARFISH_ASSERT(convertedStr.isESString()); \
+            originalObj->set##name(convertedStr.asESString()->utf8Data()); \
+        } \
+        return escargot::ESValue(); \
     });
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
 
