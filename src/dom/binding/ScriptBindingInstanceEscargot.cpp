@@ -2446,42 +2446,12 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
             instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         } else if (argCount == 1) {
-            escargot::ESString* type;
-            if (firstArg.isESString()) {
-                type = firstArg.asESString();
-            } else if (firstArg.isNumber()) {
-                type = escargot::ESString::create(firstArg.asNumber());
-            } else if (firstArg.isBoolean()) {
-                type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
-            } else if (firstArg.isObject()) {
-                type = escargot::ESString::create("[object Object]");
-            } else if (firstArg.isNull()) {
-                type = escargot::ESString::create("null");
-            } else if (firstArg.isUndefined()) {
-                type = escargot::ESString::create("undefined");
-            } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
+            escargot::ESString* type = firstArg.toString();
             auto event = new Event(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
         } else {
             if (secondArg.isObject() || secondArg.isUndefinedOrNull()) {
-                escargot::ESString* type;
-                if (firstArg.isESString()) {
-                    type = firstArg.asESString();
-                } else if (firstArg.isNumber()) {
-                    type = escargot::ESString::create(firstArg.asNumber());
-                } else if (firstArg.isBoolean()) {
-                    type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
-                } else if (firstArg.isObject()) {
-                    type = escargot::ESString::create("[object Object]");
-                } else if (firstArg.isNull()) {
-                    type = escargot::ESString::create("null");
-                } else if (firstArg.isUndefined()) {
-                    type = escargot::ESString::create("undefined");
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
+                escargot::ESString* type = firstArg.toString();
                 bool canBubbles = false;
                 bool canCancelable = false;
                 if (!secondArg.isUndefinedOrNull()) {
@@ -2490,7 +2460,6 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                     canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : canBubbles;
                     canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : canCancelable;
                 }
-
                 auto event = new Event(String::fromUTF8(type->utf8Data()), EventInit(canBubbles, canCancelable));
                 return event->scriptValue();
             } else {
@@ -2686,43 +2655,12 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
             instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         } else if (argCount == 1) {
-            escargot::ESString* type;
-            if (firstArg.isESString()) {
-                type = firstArg.asESString();
-            } else if (firstArg.isNumber()) {
-                type = escargot::ESString::create(firstArg.asNumber());
-            } else if (firstArg.isBoolean()) {
-                type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
-            } else if (firstArg.isObject()) {
-                type = escargot::ESString::create("[object Object]");
-            } else if (firstArg.isNull()) {
-                type = escargot::ESString::create("null");
-            } else if (firstArg.isUndefined()) {
-                type = escargot::ESString::create("undefined");
-            } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
+            escargot::ESString* type = firstArg.toString();
             auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()));
             return event->scriptValue();
         } else {
             if (secondArg.isObject()) {
-                escargot::ESString* type;
-                if (firstArg.isESString()) {
-                    type = firstArg.asESString();
-                } else if (firstArg.isNumber()) {
-                    type = escargot::ESString::create(firstArg.asNumber());
-                } else if (firstArg.isBoolean()) {
-                    type = firstArg.asBoolean() ? escargot::ESString::create("true") : escargot::ESString::create("false");
-                } else if (firstArg.isObject()) {
-                    type = escargot::ESString::create("[object Object]");
-                } else if (firstArg.isNull()) {
-                    type = escargot::ESString::create("null");
-                } else if (firstArg.isUndefined()) {
-                    type = escargot::ESString::create("undefined");
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-
+                escargot::ESString* type = firstArg.toString();
                 escargot::ESObject* obj = secondArg.asESPointer()->asESObject();
                 escargot::ESValue bubbles = obj->get(escargot::ESString::create("bubbles"));
                 escargot::ESValue cancelable = obj->get(escargot::ESString::create("cancelable"));
