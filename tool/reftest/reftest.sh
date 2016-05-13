@@ -20,8 +20,6 @@ if [ "$1" = "" ]; then
     exit
 fi
 
-TESTSUITE=0
-
 # Test Suites
 # 0: W3C DOM Conformace Test Suites
 # 1: Web Platform Tests
@@ -48,7 +46,8 @@ elif [[ "$1" = *"vendor/blink/fast"*".htm"* || "$1" = *"vendor/webkit/fast"*".ht
     TESTSUITE=2
     tc=$1
 else
-    echo "???"
+    echo "Unsupported tests"
+    exit
 fi
 
 if [ "$2" = true ]; then
