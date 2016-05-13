@@ -10,9 +10,11 @@ function shouldInclude(s, d) {
     debug('<span><span class="pass">FAIL</span> ' + s + ' Should include ' + d + '</span>');
 }
 
-function wptTestEnd() {
+function wpt_test_end() {
 	try {
-    	wptTestEnd();
+		if (typeof wptTestEnd == "function") {
+    		wptTestEnd();
+    	}
 	} catch(e) {
 	    console.log(e);
 	}
