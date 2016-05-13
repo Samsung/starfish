@@ -104,6 +104,7 @@ test/reftest/vendor/blink/fast/dom/Window/window-constructor.html
 test/reftest/vendor/blink/fast/dom/Window/window-constructor-presence.html
 test/reftest/vendor/blink/fast/dom/Window/window-constructor-settable.html
 test/reftest/vendor/blink/fast/dom/Window/window-custom-prototype-crash.html
+test/reftest/vendor/blink/fast/dom/Window/element-constructors-to-string.html
 test/reftest/vendor/blink/fast/dom/XMLHttpRequest-constants.html
 test/reftest/vendor/blink/fast/dom/compatMode-Strict.html
 test/reftest/vendor/blink/fast/dom/XMLHttpRequest-legacy-event-listener.html
