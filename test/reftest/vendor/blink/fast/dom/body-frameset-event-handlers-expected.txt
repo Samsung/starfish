@@ -1,0 +1,4 @@
+PASS Set HTMLBodyElement.onload
+PASS Enumerate HTMLBodyElement.onload
+PASS Reflect HTMLBodyElement.onload
+PASS Forward HTMLBodyElement.onload to Window

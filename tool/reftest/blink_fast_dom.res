@@ -118,3 +118,4 @@ test/reftest/vendor/blink/fast/dom/everything-to-string.html
 test/reftest/vendor/blink/fast/dom/clone-node-default-argument.html
 test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-declaration-named-setter.html
 test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-declaration-named-getter.html
+test/reftest/vendor/blink/fast/dom/body-frameset-event-handlers.html
