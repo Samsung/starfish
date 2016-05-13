@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<script src="../../../resources/wpt-test-pre.js"></script>
+<script src="../../../resources/js-test-pre.js"></script>
+<script>
+debug("Check the classlist length attribute for empty strings");
+var div = document.createElement('div');
+div.className = '   ';
+shouldBe("div.className.length", "3");
+
+div.className = '     ';
+shouldBe("div.className.length", "5");
+</script>
+<script src="../../../resources/js-test-post.js"></script>
+<script src="../../../resources/wpt-test-post.js"></script>
+</html>

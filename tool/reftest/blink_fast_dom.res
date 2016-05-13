@@ -22,6 +22,7 @@ test/reftest/vendor/blink/fast/dom/domstring-attribute-reflection.html
 test/reftest/vendor/blink/fast/dom/domtimestamp-is-number.html
 test/reftest/vendor/blink/fast/dom/duplicate-ids-document-order.html
 test/reftest/vendor/blink/fast/dom/duplicate-ids.html
+test/reftest/vendor/blink/fast/dom/Element/classlist-empty-string.html
 test/reftest/vendor/blink/fast/dom/Element/id-in-getelement01.html
 test/reftest/vendor/blink/fast/dom/Element/id-in-map.html
 test/reftest/vendor/blink/fast/dom/Element/id-in-node-list-index01.html
