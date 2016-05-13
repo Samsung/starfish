@@ -4,3 +4,4 @@ test/reftest/vendor/blink/fast/dom/node-legacy-event-listener.html
 test/reftest/vendor/blink/fast/dom/event-target-arguments.html
 test/reftest/vendor/blink/fast/dom/interface-object-proto.html
 test/reftest/vendor/blink/fast/dom/timer-clear-interval-in-handler-and-generate-error.html
+test/reftest/vendor/blink/fast/dom/css-stylesheet-candidate-ordering.html
