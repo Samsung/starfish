@@ -776,7 +776,7 @@ escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInst
             }
             Node* node = obj->cloneNode(deepClone);
             return node->scriptValue();
-        }, escargot::ESString::create("cloneNode"), 1, false));
+        }, escargot::ESString::create("cloneNode"), 0, false));
 
     NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("hasChildNodes"), true, true, true,
         escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
