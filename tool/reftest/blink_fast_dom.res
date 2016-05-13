@@ -57,6 +57,7 @@ test/reftest/vendor/blink/fast/dom/HTMLLinkElement/prefetch-too-many-clients.htm
 test/reftest/vendor/blink/fast/dom/HTMLLinkElement/programmatically-add-link-with-onload-handler.html
 test/reftest/vendor/blink/fast/dom/HTMLMetaElement/meta-attributes.html
 test/reftest/vendor/blink/fast/dom/HTMLScriptElement/isURLAttribute.html
+test/reftest/vendor/blink/fast/dom/HTMLScriptElement/append-child-style-crash.html
 test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload2.html
 test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload-before-page-load.html
 test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload.html
