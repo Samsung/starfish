@@ -622,6 +622,10 @@ regression_test_wpt_xhr:
 
 regression_test_blink_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/blink_dom_conformance_test_regression.res
+regression_test_blink_fast_dom:
+	./tool/reftest/reftest.sh tool/reftest/blink_dom_fast_dom.res
+regression_test_blink_fast_html:
+	./tool/reftest/reftest.sh tool/reftest/blink_dom_fast_html.res
 regression_test_gecko_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/gecko_dom_conformance_test_regression.res
 regression_test_webkit_dom_conformance_test:
