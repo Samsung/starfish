@@ -1,4 +1,5 @@
-/*global self*/
+// XXX: `self` is changed to `this` because escargot doesn't support it
+/*global this*/
 /*jshint latedef: nofunc*/
 /*
 Distributed under both the W3C Test Suite License [1] and the W3C
@@ -19,7 +20,8 @@ policies and contribution forms [3].
     var settings = {
         output:true,
         harness_timeout:{
-            "normal":10000,
+            // XXX
+            "normal":1000,
             "long":60000
         },
         test_timeout:null,
@@ -125,23 +127,24 @@ policies and contribution forms [3].
                             }
                         }
                     }
-                    if (supports_post_message(w) && w !== self) {
+                    if (supports_post_message(w) && w !== this) {
                         w.postMessage(message_arg, "*");
                     }
                 });
     };
 
     WindowTestEnvironment.prototype._forEach_windows = function(callback) {
-        // Iterate of the the windows [self ... top, opener]. The callback is passed
-        // two objects, the first one is the windows object itself, the second one
+        // Iterate of the the windows [this ... top, opener]. The callback is passed
+        // two objects, the first one is the windows object itthis, the second one
         // is a boolean indicating whether or not its on the same origin as the
         // current window.
         var cache = this.window_cache;
         if (!cache) {
-            cache = [[self, true]];
-            var w = self;
+            cache = [[this, true]];
+            var w = this;
             var i = 0;
             var so;
+            /*
             var origins = location.ancestorOrigins;
             while (w != w.parent) {
                 w = w.parent;
@@ -164,6 +167,7 @@ policies and contribution forms [3].
                 cache.push([w, so]);
                 i++;
             }
+            */
             w = window.opener;
             if (w) {
                 // window.opener isn't included in the `location.ancestorOrigins` prop.
@@ -220,7 +224,9 @@ policies and contribution forms [3].
 
     WindowTestEnvironment.prototype.next_default_test_name = function() {
         //Don't use document.title to work around an Opera bug in XHTML documents
-        var title = document.getElementsByTagName("title")[0];
+        // XXX
+        //var title = document.getElementsByTagName("title")[0];
+        var title = document.getElementsByTagName("body")[0];
         var prefix = (title && title.firstChild && title.firstChild.data) || "Untitled";
         var suffix = this.name_counter > 0 ? " " + this.name_counter : "";
         this.name_counter++;
@@ -239,7 +245,7 @@ policies and contribution forms [3].
     };
 
     WindowTestEnvironment.prototype.test_timeout = function() {
-        var metas = document.getElementsByTagName("meta");
+        /*var metas = document.getElementsByTagName("meta");
         for (var i = 0; i < metas.length; i++) {
             if (metas[i].name == "timeout") {
                 if (metas[i].content == "long") {
@@ -248,6 +254,7 @@ policies and contribution forms [3].
                 break;
             }
         }
+        */
         return settings.harness_timeout.normal;
     };
 
@@ -348,7 +355,7 @@ policies and contribution forms [3].
     };
 
     WorkerTestEnvironment.prototype.global_scope = function() {
-        return self;
+        return this;
     };
 
     /*
@@ -360,10 +367,10 @@ policies and contribution forms [3].
      */
     function DedicatedWorkerTestEnvironment() {
         WorkerTestEnvironment.call(this);
-        // self is an instance of DedicatedWorkerGlobalScope which exposes
+        // this is an instance of DedicatedWorkerGlobalScope which exposes
         // a postMessage() method for communicating via the message channel
         // established when the worker is created.
-        this._add_message_port(self);
+        this._add_message_port(this);
     }
     DedicatedWorkerTestEnvironment.prototype = Object.create(WorkerTestEnvironment.prototype);
 
@@ -386,7 +393,7 @@ policies and contribution forms [3].
         var this_obj = this;
         // Shared workers receive message ports via the 'onconnect' event for
         // each connection.
-        self.addEventListener("connect",
+        this.addEventListener("connect",
                 function(message_event) {
                     this_obj._add_message_port(message_event.source);
                 });
@@ -412,7 +419,7 @@ policies and contribution forms [3].
         this.all_loaded = false;
         this.on_loaded_callback = null;
         var this_obj = this;
-        self.addEventListener("message",
+        this.addEventListener("message",
                 function(event) {
                     if (event.data.type && event.data.type === "connect") {
                         if (event.ports && event.ports[0]) {
@@ -437,7 +444,7 @@ policies and contribution forms [3].
         // equivalent of an onload event for a document. All tests should have
         // been added by the time this event is received, thus it's not
         // necessary to wait until the onactivate event.
-        on_event(self, "install",
+        on_event(this, "install",
                 function(event) {
                     this_obj.all_loaded = true;
                     if (this_obj.on_loaded_callback) {
@@ -456,19 +463,19 @@ policies and contribution forms [3].
     };
 
     function create_test_environment() {
-        if ('document' in self) {
+        if ('document' in this) {
             return new WindowTestEnvironment();
         }
-        if ('DedicatedWorkerGlobalScope' in self &&
-            self instanceof DedicatedWorkerGlobalScope) {
+        if ('DedicatedWorkerGlobalScope' in this &&
+            this instanceof DedicatedWorkerGlobalScope) {
             return new DedicatedWorkerTestEnvironment();
         }
-        if ('SharedWorkerGlobalScope' in self &&
-            self instanceof SharedWorkerGlobalScope) {
+        if ('SharedWorkerGlobalScope' in this &&
+            this instanceof SharedWorkerGlobalScope) {
             return new SharedWorkerTestEnvironment();
         }
-        if ('ServiceWorkerGlobalScope' in self &&
-            self instanceof ServiceWorkerGlobalScope) {
+        if ('ServiceWorkerGlobalScope' in this &&
+            this instanceof ServiceWorkerGlobalScope) {
             return new ServiceWorkerTestEnvironment();
         }
         throw new Error("Unsupported test environment");
@@ -477,11 +484,11 @@ policies and contribution forms [3].
     var test_environment = create_test_environment();
 
     function is_shared_worker(worker) {
-        return 'SharedWorker' in self && worker instanceof SharedWorker;
+        return 'SharedWorker' in this && worker instanceof SharedWorker;
     }
 
     function is_service_worker(worker) {
-        return 'ServiceWorker' in self && worker instanceof ServiceWorker;
+        return 'ServiceWorker' in this && worker instanceof ServiceWorker;
     }
 
     /*
@@ -790,6 +797,7 @@ policies and contribution forms [3].
 
             // Special-case Node objects, since those come up a lot in my tests.  I
             // ignore namespaces.
+            /*
             if (is_node(val)) {
                 switch (val.nodeType) {
                 case Node.ELEMENT_NODE:
@@ -815,6 +823,7 @@ policies and contribution forms [3].
                     return "Node object of unknown type";
                 }
             }
+            */
 
         /* falls through */
         default:
@@ -826,7 +835,6 @@ policies and contribution forms [3].
     /*
      * Assertions
      */
-
     function assert_true(actual, description)
     {
         assert(actual === true, "assert_true", description,
@@ -2075,6 +2083,8 @@ policies and contribution forms [3].
             log.removeChild(log.lastChild);
         }
 
+        // XXX: skip the stylesheet
+        /*
         var harness_url = get_harness_url();
         if (harness_url !== null) {
             var stylesheet = output_document.createElementNS(xhtml_ns, "link");
@@ -2085,6 +2095,7 @@ policies and contribution forms [3].
                 heads[0].appendChild(stylesheet);
             }
         }
+        */
 
         var status_text_harness = {};
         status_text_harness[harness_status.OK] = "OK";
@@ -2092,8 +2103,8 @@ policies and contribution forms [3].
         status_text_harness[harness_status.TIMEOUT] = "Timeout";
 
         var status_text = {};
-        status_text[Test.prototype.PASS] = "Pass";
-        status_text[Test.prototype.FAIL] = "Fail";
+        status_text[Test.prototype.PASS] = "PASS";
+        status_text[Test.prototype.FAIL] = "FAIL";
         status_text[Test.prototype.TIMEOUT] = "Timeout";
         status_text[Test.prototype.NOTRUN] = "Not Run";
 
@@ -2113,6 +2124,8 @@ policies and contribution forms [3].
             return status.replace(/\s/g, '').toLowerCase();
         }
 
+        // XXX: skip below because there are a few unsupported APIs
+        /*
         var summary_template = ["section", {"id":"summary"},
                                 ["h2", {}, "Summary"],
                                 function()
@@ -2179,6 +2192,7 @@ policies and contribution forms [3].
                                  }
                              });
                 });
+        */
 
         // This use of innerHTML plus manual escaping is not recommended in
         // general, but is necessary here for performance.  Using textContent
@@ -2213,7 +2227,9 @@ policies and contribution forms [3].
             return '';
         }
 
-        log.appendChild(document.createElementNS(xhtml_ns, "section"));
+        // XXX
+        //log.appendChild(document.createElementNS(xhtml_ns, "section"));
+        log.appendChild(document.createElement("div"));
         var assertions = has_assertions();
         var html = "<h2>Details</h2><table id='results' " + (assertions ? "class='assertions'" : "" ) + ">" +
             "<thead><tr><th>Result</th><th>Test Name</th>" +
@@ -2234,8 +2250,19 @@ policies and contribution forms [3].
                  escape_html(tests[i].stack) +
                  "</pre>": "") +
                 "</td></tr>";
+
+                // XXX: print the results
+                console.log(status_text[tests[i].status] + " " + tests[i].name);
+
         }
         html += "</tbody></table>";
+        try {
+            wptTestEnd();
+        } catch(e) {
+            console.log(e)
+        }
+        // XXX: skip below
+        /*
         try {
             log.lastChild.innerHTML = html;
         } catch (e) {
@@ -2244,6 +2271,7 @@ policies and contribution forms [3].
             log.appendChild(document.createElementNS(xhtml_ns, "pre"))
                .textContent = html;
         }
+        */
     };
 
     /*
@@ -2561,7 +2589,7 @@ policies and contribution forms [3].
     /** Returns the 'src' URL of the first <script> tag in the page to include the file 'testharness.js'. */
     function get_script_url()
     {
-        if (!('document' in self)) {
+        if (!('document' in this)) {
             return undefined;
         }
 
@@ -2636,7 +2664,8 @@ policies and contribution forms [3].
 
     var tests = new Tests();
 
-    addEventListener("error", function(e) {
+    // XXX: `addEventListener` is changed to `this.addEventListener`
+    this.addEventListener("error", function(e) {
         if (tests.file_is_test) {
             var test = tests.tests[0];
             if (test.phase >= test.phases.HAS_RESULT) {

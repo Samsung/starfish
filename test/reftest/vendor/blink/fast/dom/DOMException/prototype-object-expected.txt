@@ -1,5 +1,5 @@
 <p>This tests the prototype chain of DOMException objects.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-<span><span class="pass">PASS</span> HierarchyRequestError: Failed to execute 'appendChild' on 'Node': Nodes of type '#document' may not be inserted inside nodes of type '#document'.</span><br />
+<span><span class="pass">PASS</span> HierarchyRequestError: Node is a host-including inclusive ancestor of parent.</span><br />
 <span><span class="pass">PASS</span> Object.prototype.toString.call(e) is "[object DOMException]"</span><br />
 <span><span class="pass">PASS</span> Object.prototype.toString.call(e.__proto__) is "[object Object]"</span><br />
 <span><span class="pass">PASS</span> Object.prototype.toString.call(e.__proto__.__proto__) is [object Error]</span><br />

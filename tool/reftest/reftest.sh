@@ -112,8 +112,8 @@ for i in $tc ; do
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
             fi
         elif [ $TESTSUITE -eq 1 ]; then
-            PASS=`grep -o "Pass " $TMPFILE | wc -l`
-            FAIL=`grep -o "Fail " $TMPFILE | wc -l`
+            PASS=`grep -o "PASS " $TMPFILE | wc -l`
+            FAIL=`grep -o "FAIL " $TMPFILE | wc -l`
             SUM=`expr $PASS + $FAIL`
             PASSTC=`expr $PASSTC + $PASS`
             FAILTC=`expr $FAILTC + $FAIL`
