@@ -251,7 +251,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = originalObj;
         if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-            if (value.asESPointer()->isESFunctionObject()) {
+            if (value.isESPointer() && value.asESPointer()->isESFunctionObject()) {
                 wnd->setOnclick(value);
             } else {
                 wnd->clearOnClick();
@@ -274,7 +274,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = originalObj;
         if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-            if (value.asESPointer()->isESFunctionObject()) {
+            if (value.isESPointer() && value.asESPointer()->isESFunctionObject()) {
                 wnd->setOnload(value);
             } else {
                 wnd->clearOnload();
