@@ -56,6 +56,11 @@ public:
         document()->window()->setOnload(f);
     }
 
+    void setOnload(String* bodyStr)
+    {
+        document()->window()->setOnload(bodyStr);
+    }
+
     void clearOnload()
     {
         document()->window()->clearOnload();

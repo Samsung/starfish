@@ -400,6 +400,7 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
 Window::Window(StarFish* starFish)
     : m_touchDownPoint(0, 0)
     , m_starFish(starFish)
+    , m_onloadString(String::emptyString)
 {
     STARFISH_ASSERT(m_starFish->scriptBindingInstance());
 
@@ -984,7 +985,6 @@ void Window::dispatchLoadEvent()
         Window* wnd = (Window*)data;
         String* eventType = wnd->starFish()->staticStrings()->m_load.localName();
         Event* e = new Event(eventType, EventInit(false, false));
-        wnd->parseOnloadIfNeeds();
         wnd->EventTarget::dispatchEvent(e);
 #ifdef STARFISH_ENABLE_PIXEL_TEST
         g_fireOnloadEvent = true;
@@ -1096,15 +1096,5 @@ void Window::close()
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseMoveEventHandler);
 #endif
 }
-
-ScriptValue Window::parseOnloadIfNeeds()
-{
-    auto eventType = starFish()->staticStrings()->m_load.localName();
-    EventListener* l = getAttributeEventListener(eventType);
-    if (!l)
-        return ScriptValueNull;
-    return l->scriptFunction(document()->bodyElement(), eventType);
-}
-
 
 }

@@ -11,11 +11,11 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
     Element::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     StaticStrings* ss = document()->window()->starFish()->staticStrings();
     if (name == ss->m_onclick) {
-        setOnclick(ScriptValueNull);
+        setOnclick(value);
     } else if (name == ss->m_onload) {
-        setOnload(ScriptValueNull);
+        setOnload(value);
     } else if (name == ss->m_onunload) {
-        setOnunload(ScriptValueNull);
+        setOnunload(value);
     } else if (name == ss->m_dir) {
         if (attributeCreated)
             m_hasDirAttribute = true;

@@ -33,6 +33,10 @@ public:
     {
         m_capture = capture;
     }
+    bool needParse()
+    {
+        return (m_listener == ScriptValueNull);
+    }
     ScriptValue scriptValue()
     {
         return m_listener;

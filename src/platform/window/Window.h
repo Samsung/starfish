@@ -188,7 +188,11 @@ public:
 
     ScriptValue onload()
     {
-        return parseOnloadIfNeeds();
+        auto eventType = starFish()->staticStrings()->m_load.localName();
+        EventListener* l = getAttributeEventListener(eventType);
+        if (!l)
+            return ScriptValueNull;
+        return l->scriptFunction(this, eventType);
     }
 
     void setOnload(ScriptValue f)
@@ -198,13 +202,22 @@ public:
         setAttributeEventListener(eventType, l);
     }
 
+    void setOnload(String* bodyStr)
+    {
+        m_onloadString = bodyStr;
+        setOnload(ScriptValueNull);
+    }
+
     void clearOnload()
     {
         auto eventType = starFish()->staticStrings()->m_load.localName();
         clearAttributeEventListener(eventType);
     }
 
-    ScriptValue parseOnloadIfNeeds();
+    String* onloadString()
+    {
+        return m_onloadString;
+    }
 
 protected:
     void setNeedsRendering()
@@ -247,6 +260,22 @@ protected:
         gc_allocator<std::pair<uint32_t, void*> > > m_requestAnimationFrameHandler;
 
     std::vector<Node*, gc_allocator<Node*> > m_activeNodes;
+
+    // [m_onloadString] : onload attribute string
+    //
+    // 1) It should be parsed on demand
+    // 2) bodyElements and window share onload function
+    //    Ex)   body1.onload = func1;
+    //          body2.onload = func2;
+    //          body3.onload = func3;
+    //
+    //          window.onload // --> func3
+    //          body1.onload  // --> func3
+    //          body2.onload  // --> func3
+    //          body3.onload  // --> func3
+    //
+    // TODO? : Store body element instead of string to allow listener have appropriate "this" object when parse.
+    String* m_onloadString;
 };
 
 }

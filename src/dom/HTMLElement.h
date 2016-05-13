@@ -91,6 +91,11 @@ public:
         setAttributeEventListener(eventType, l);
     }
 
+    void setOnclick(String* bodyStr)
+    {
+        setOnclick(ScriptValueNull);
+    }
+
     void clearOnClick()
     {
         auto eventType = document()->window()->starFish()->staticStrings()->m_click.localName();
@@ -113,6 +118,11 @@ public:
         setAttributeEventListener(eventType, l);
     }
 
+    virtual void setOnload(String* bodyStr)
+    {
+        setOnload(ScriptValueNull);
+    }
+
     virtual void clearOnload()
     {
         auto eventType = document()->window()->starFish()->staticStrings()->m_load.localName();
@@ -133,6 +143,11 @@ public:
         auto eventType = document()->window()->starFish()->staticStrings()->m_onunload.localName();
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
+    }
+
+    void setOnunload(String* bodyStr)
+    {
+        setOnunload(ScriptValueNull);
     }
 
     void clearOnunload()

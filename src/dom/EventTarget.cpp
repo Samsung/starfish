@@ -14,23 +14,22 @@ ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eve
 
 ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eventType, bool& error)
 {
-    if (m_listener == ScriptValueNull && target) {
+    if (needParse() && target) {
         STARFISH_ASSERT(isAttribute());
-        Element* element = nullptr;
+        String* name[] = {String::createASCIIString("event")};
         if (target->isWindow()) {
-            element = (Element*) target->asWindow()->document()->bodyElement();
+            STARFISH_ASSERT(eventType->equals(target->asWindow()->starFish()->staticStrings()->m_load.localName())); // Only onload listener can reach here.
+            m_listener = createScriptFunction(name, 1, target->asWindow()->onloadString(), error);
         } else if (target->isNode()) {
-            element = target->asNode()->asElement();
-        }
-        STARFISH_ASSERT(element != nullptr);
-        String* eventName = String::createASCIIString("on")->concat(const_cast<String*>(eventType));
-        size_t idx = element->hasAttribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(element->document()->window()->starFish(), eventName)));
-        if (idx == SIZE_MAX) {
-            error = true;
-        } else {
-            String* bodyStr = element->getAttribute(idx);
-            String* name[] = {String::createASCIIString("event")};
-            m_listener = createScriptFunction(name, 1, bodyStr, error);
+            STARFISH_ASSERT(target->asNode()->isElement());
+            Element* element = target->asNode()->asElement();
+            String* eventName = String::createASCIIString("on")->concat(const_cast<String*>(eventType));
+            size_t idx = element->hasAttribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(element->document()->window()->starFish(), eventName)));
+            if (idx == SIZE_MAX) {
+                error = true;
+                return ScriptValueNull;
+            }
+            m_listener = createScriptFunction(name, 1, element->getAttribute(idx), error);
         }
     }
     return m_listener;
