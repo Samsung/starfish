@@ -2414,12 +2414,19 @@ escargot::ESFunctionObject* bindingHTMLCollection(ScriptBindingInstance* scriptB
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::HTMLCollectionObject);
 
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        escargot::ESString* argStr = argValue.toString();
-        Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject()->extraPointerData())->namedItem(toBrowserString(argStr));
-        if (elem != nullptr)
-            return elem->scriptValue();
-        return escargot::ESValue(escargot::ESValue::ESNull);
+        size_t count = instance->currentExecutionContext()->argumentCount();
+        if (count > 0) {
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESString* argStr = argValue.toString();
+            Element* elem = ((HTMLCollection*) thisValue.asESPointer()->asESObject()->extraPointerData())->namedItem(toBrowserString(argStr));
+            if (elem != nullptr)
+                return elem->scriptValue();
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } else {
+            auto msg = escargot::ESString::create("Failed to execute 'namedItem' on 'HTMLCollection': 1 argument required, but only 0 present.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     }, escargot::ESString::create("namedItem"), 1, false);
     HTMLCollectionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("namedItem"), true, true, true, namedItemFunction);
 
