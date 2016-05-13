@@ -101,3 +101,11 @@ test/reftest/vendor/blink/fast/dom/Window/window-constructor-presence.html
 test/reftest/vendor/blink/fast/dom/Window/window-constructor-settable.html
 test/reftest/vendor/blink/fast/dom/Window/window-custom-prototype-crash.html
 test/reftest/vendor/blink/fast/dom/XMLHttpRequest-constants.html
+test/reftest/vendor/blink/fast/dom/compatMode-Strict.html
+test/reftest/vendor/blink/fast/dom/XMLHttpRequest-legacy-event-listener.html
+test/reftest/vendor/blink/fast/dom/replace-child-siblings.html
+test/reftest/vendor/blink/fast/dom/html-collections-named-getter-mandatory-arg.html
+test/reftest/vendor/blink/fast/dom/constructor-proto.html
+test/reftest/vendor/blink/fast/dom/compatMode-AlmostStrict.html
+test/reftest/vendor/blink/fast/dom/everything-to-string.html
+test/reftest/vendor/blink/fast/dom/clone-node-default-argument.html
