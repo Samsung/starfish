@@ -51,7 +51,9 @@ void ScriptBindingInstance::exit()
 
 void ScriptBindingInstance::close()
 {
+    #ifdef TIZEN_DEVICE_API
     ((DeviceAPI::NativePluginManager*)fetchData(this)->m_deviceAPIObject)->close();
+    #endif
 }
 
 #define INVALID_INDEX (escargot::ESValue::ESInvalidIndexValue)
