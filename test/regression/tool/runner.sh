@@ -16,7 +16,7 @@ TCFILE=0
 PASSTCFILE=0
 
 PLATFORM=`uname -m`
-if [[ "$PLATFORM" != "i686" ]]; then
+if [[ "$PLATFORM" != "i686" && "$PLATFORM" != "armv7l" ]]; then
     echo "Not supported platform"
     exit
 fi
@@ -80,10 +80,12 @@ filenames=()
 array=( $tc )
 pos=$(( ${#array[*]} - 1 ))
 last=${array[$pos]}
+ROTATE=1
 
 if [[ "$PLATFORM" == "i686" ]]; then
    	STARFISH="./test/bin/tizen_emulator/StarFish"
-	ROTATE=1
+elif [[ "$PLATFORM" == "armv7l" ]]; then
+    STARFISH="./test/bin/tizen_arm/StarFish"
 fi
 
 for i in $tc ; do
@@ -93,7 +95,7 @@ for i in $tc ; do
     fi
     RESFILE="tmp"$cnt
 
-	if [[ "$PLATFORM" == "i686" ]]; then
+	if [[ "$PLATFORM" == "armv7l" || "$PLATFORM" == "i686" ]]; then
 		dlogutil -c
 	fi
 
@@ -105,14 +107,16 @@ for i in $tc ; do
     fi
     wait;
 
-    if [[ "$PLATFORM" == "i686" ]]; then
+    if [[ "$PLATFORM" == "armv7l" || "$PLATFORM" == "i686" ]]; then
         if [ $TESTSUITE -eq 0 ]; then
             EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
             EXPECTED=$(cat $EXPECTED_FILE)
             EXPECTED=${EXPECTED##*Status:}
-            EXPECTED=${EXPECTED%Detail*}
-            RESULT=`dlogutil -d | grep -E $EXPECTED | wc -l`
-            SKIP=`dlogutil -d | grep -E "Skipped" | wc -l`
+            EXPECTED=${EXPECTED%*Detail*}
+            EXPECTED=$(sed 's/[[:space:]]//g' <<< "$EXPECTED")
+            EXPECTED="console.*"$EXPECTED
+            RESULT=`dlogutil -d | grep -Eo $EXPECTED | wc -l`
+            SKIP=`dlogutil -d | grep -Eo "console.*Skipped" | wc -l`
 
             if [ $SKIP -eq 1 ]; then
                 SKIPTC=`expr $SKIPTC + 1`
@@ -128,8 +132,8 @@ for i in $tc ; do
                 echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
             fi
         elif [ $TESTSUITE -eq 1 ]; then
-            PASS=`dlogutil -d | grep -Eo "PASS" | wc -l`
-            FAIL=`dlogutil -d | grep -Eo "FAIL" | wc -l`
+            PASS=`dlogutil -d | grep -Eo "console.*PASS" | wc -l`
+            FAIL=`dlogutil -d | grep -Eo "console.*FAIL" | wc -l`
             SUM=`expr $PASS + $FAIL`
             PASSTC=`expr $PASSTC + $PASS`
             FAILTC=`expr $FAILTC + $FAIL`
