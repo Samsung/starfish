@@ -2103,8 +2103,8 @@ policies and contribution forms [3].
         status_text_harness[harness_status.TIMEOUT] = "Timeout";
 
         var status_text = {};
-        status_text[Test.prototype.PASS] = "Pass";
-        status_text[Test.prototype.FAIL] = "Fail";
+        status_text[Test.prototype.PASS] = "PASS";
+        status_text[Test.prototype.FAIL] = "FAIL";
         status_text[Test.prototype.TIMEOUT] = "Timeout";
         status_text[Test.prototype.NOTRUN] = "Not Run";
 

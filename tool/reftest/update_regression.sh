@@ -7,6 +7,8 @@ cp test/reftest/dom-conformance-test/html test/regression/reftest/dom-conformanc
 
 ## Web Platform Tests
 # DOM
+rm test/regression/reftest/web-platform-tests/resources -rf
+cp test/reftest/web-platform-tests/resources test/regression/reftest/web-platform-tests/ -rf
 cp tool/reftest/wpt_dom_regression.res test/regression/tool/web-platform-tests/test_wpt_dom
 rm test/regression/reftest/web-platform-tests/dom -rf
 cp test/reftest/web-platform-tests/dom test/regression/reftest/web-platform-tests/ -rf

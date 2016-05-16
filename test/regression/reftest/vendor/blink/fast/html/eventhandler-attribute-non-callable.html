@@ -1,0 +1,77 @@
+<html>
+<head>
+<link rel="help" href="http://www.whatwg.org/specs/web-apps/current-work/multipage/webappapis.html#eventhandler">
+<script src="../../resources/wpt-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
+</head>
+<body>
+<div id="div"></div>
+<script>
+description("This test checks that EventHandler attributes only accept JS functions as input.");
+
+var div = document.getElementById("div");
+var callbackCount = 0;
+
+function callback() {
+    ++callbackCount;
+}
+
+function dispatchKeyEvent()
+{
+    // var event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, view: null, keyIdentifier: 'Enter' });
+    var event = new Event('click', { bubbles: true, cancelable: true });
+    div.dispatchEvent(event);
+}
+
+// // Input is a JS function, this should work.
+// shouldBeNull('div.onkeydown');
+// shouldNotThrow('div.onkeydown = callback');
+// shouldBe('div.onkeydown', 'callback');
+// shouldBe('callbackCount', '0');
+// dispatchKeyEvent();
+// shouldBe('callbackCount', '1');
+shouldBeNull('div.onclick');
+shouldNotThrow('div.onclick = callback');
+shouldBe('div.onclick', 'callback');
+shouldBe('callbackCount', '0');
+dispatchKeyEvent();
+shouldBe('callbackCount', '1');
+
+// // Non callable input should be treated as null.
+// var o = { handleEvent: callback };
+// shouldNotBe('div.onkeydown', 'null');
+// shouldNotThrow('div.onkeydown = o');
+// shouldBe('div.onkeydown', 'o');
+// dispatchKeyEvent();
+// shouldBe('callbackCount', '1');
+var o = { adsfasdg: 1 };
+shouldNotBe('div.onclick', 'null');
+shouldNotThrow('div.onclick = o');
+shouldBe('div.onclick', 'o');
+dispatchKeyEvent();
+shouldBe('callbackCount', '1');
+
+// // Test non-object assignment.
+// shouldNotThrow('div.onkeydown = callback');
+// shouldBe('div.onkeydown', 'callback');
+// shouldNotThrow('div.onkeydown = "non-object"');
+// shouldBeNull('div.onkeydown');
+shouldNotThrow('div.onclick = callback');
+shouldBe('div.onclick', 'callback');
+shouldNotThrow('div.onclick = "non-object"');
+shouldBeNull('div.onclick');
+
+// // Test null assignment.
+// shouldNotThrow('div.onkeydown = callback');
+// shouldBe('div.onkeydown', 'callback');
+// shouldNotThrow('div.onkeydown = null');
+// shouldBeNull('div.onkeydown');
+shouldNotThrow('div.onclick = callback');
+shouldBe('div.onclick', 'callback');
+shouldNotThrow('div.onclick = null');
+shouldBeNull('div.onclick');
+</script>
+<script src="../../resources/js-test-post.js"></script>
+<script src="../../resources/wpt-test-post.js"></script>
+</body>
+</html>
