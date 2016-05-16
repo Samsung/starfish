@@ -1,4 +1,0 @@
-PASS: document.body.style.background == 'green' should be true and is.
-PASS: document.getElementById('div1').style.background == '' should be true and is.
-PASS: document.getElementById('div2').style.background == 'blue' should be true and is.
-PASS: document.getElementById('div3').style.background == 'none repeat rgb(255, 255, 255)' should be true and is.

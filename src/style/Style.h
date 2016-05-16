@@ -667,7 +667,6 @@ public:
 
     CSSStyleValuePair()
         : m_value {0}
-        , m_shortHandValue(false)
     {
     }
 
@@ -691,16 +690,6 @@ public:
     void setValueKind(ValueKind kind)
     {
         m_valueKind = kind;
-    }
-
-    bool isShortHandValue()
-    {
-        return m_shortHandValue;
-    }
-
-    void setShortHandValue(bool shortHandValue)
-    {
-        m_shortHandValue = shortHandValue;
     }
 
     bool isAuto()
@@ -1044,7 +1033,6 @@ protected:
     KeyKind m_keyKind;
     ValueKind m_valueKind;
     ValueData m_value;
-    bool m_shortHandValue;
 };
 
 class ValueList : public gc {
@@ -1159,13 +1147,11 @@ public:
     bool checkInputErrorBorderLeft(std::vector<String*, gc_allocator<String*> >* tokens);
     bool checkHavingOneTokenAndLengthOrPercentage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
 #define ATTRIBUTE_GETTER(name, nameCSSCase)                                      \
-    String* name(bool isShortHandValue = false)                                    \
+    String* name()                                                               \
     {                                                                            \
         for (unsigned i = 0; i < m_cssValues.size(); i++) {                      \
             if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) \
-                if (!isShortHandValue || (isShortHandValue&&(m_cssValues.at(i).isShortHandValue()))) {    \
-                    return m_cssValues.at(i).toString();                         \
-                }                                                                \
+                return m_cssValues.at(i).toString();                             \
         }                                                                        \
         return String::emptyString;                                              \
     }
@@ -1174,7 +1160,7 @@ public:
 #undef ATTRIBUTE_GETTER
 
 #define ATTRIBUTE_SETTER(name, nameCSSCase)                                            \
-    void set##name(const char* value, bool isShortHandValue = false)                                                  \
+    void set##name(const char* value)                                                  \
     {                                                                                  \
         if (*value == '\0') {                                                          \
             for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
@@ -1198,8 +1184,6 @@ public:
             CSSStyleValuePair ret;                                                     \
             ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                          \
             ret.setValue##name(&tokens);                                               \
-            if (isShortHandValue)                                                       \
-                ret.setShortHandValue(isShortHandValue);                               \
             notifyNeedsStyleRecalc();                                                  \
             m_cssValues.push_back(ret);                                                \
         }                                                                              \
@@ -1227,8 +1211,8 @@ public:
     void setBorderStyle(const char* value);
     void setBorderColor(const char* value);
 
-    String* BackgroundRepeat(bool isShortHandValue = false);
-    void setBackgroundRepeat(const char* value, bool isShortHandValue = false);
+    String* BackgroundRepeat();
+    void setBackgroundRepeat(const char* value);
 
     String* Background();
     void setBackground(const char* value);
