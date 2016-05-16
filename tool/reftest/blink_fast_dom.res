@@ -61,7 +61,6 @@ test/reftest/vendor/blink/fast/dom/HTMLScriptElement/append-child-style-crash.ht
 test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload2.html
 test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload-before-page-load.html
 test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload.html
-test/reftest/vendor/blink/fast/dom/HTMLImageElement/image-innerHTML.html
 test/reftest/vendor/blink/fast/dom/inline-event-attributes-crash.html
 test/reftest/vendor/blink/fast/dom/inline-event-attributes-moved.html
 test/reftest/vendor/blink/fast/dom/interface-object-proto.html
