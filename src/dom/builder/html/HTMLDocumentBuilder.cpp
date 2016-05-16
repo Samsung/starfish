@@ -1,32 +1,49 @@
 #include "StarFishConfig.h"
 #include "HTMLDocumentBuilder.h"
-#include "tinyxml2.h"
 
 #include "dom/DOM.h"
 #include "dom/binding/ScriptBindingInstance.h"
-#include "platform/file_io/FileIO.h"
-
 #include "dom/parser/HTMLParser.h"
 
 namespace StarFish {
 
-void HTMLDocumentBuilder::build(Document* document, String* filePath)
-{
-    FileIO* fio = FileIO::create();
-    String* string = String::emptyString;
-    if (fio->open(filePath)) {
-        size_t len = fio->length();
-        char* fileContents = (char*)malloc(len + 1);
-        fio->read(fileContents, sizeof(char), len);
-        fileContents[len] = 0;
-        string = String::fromUTF8(fileContents, len);
-        free(fileContents);
-        fio->close();
-    } else
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+class HTMLResourceClient : public ResourceClient {
+public:
+    HTMLResourceClient(Resource* res, HTMLDocumentBuilder& builder)
+        : ResourceClient(res)
+        , m_builder(builder)
 
-    HTMLParser parser(document->window()->starFish(), document, string);
-    parser.parse();
+    {
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        load();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        load();
+    }
+
+    void load()
+    {
+        Document* document = m_builder.document();
+        HTMLParser parser(document->window()->starFish(), document, resource()->asTextResource()->text());
+        parser.parse();
+    }
+
+protected:
+    HTMLDocumentBuilder& m_builder;
+};
+
+void HTMLDocumentBuilder::build(const URL& url)
+{
+    TextResource* res = m_document->resourceLoader()->fetchText(url);
+    res->addResourceClient(new HTMLResourceClient(res, *this));
+    res->request(true);
 }
 
 }

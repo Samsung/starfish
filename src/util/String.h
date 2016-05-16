@@ -49,13 +49,21 @@ public:
     ASCIIString* asASCIIString() const
     {
         STARFISH_ASSERT(m_isASCIIString);
+#ifndef NDEBUG
+        return (ASCIIString*)((size_t)this + (sizeof(size_t)*2));
+#else
         return (ASCIIString*)((size_t)this + sizeof(size_t));
+#endif
     }
 
     UTF32String* asUTF32String() const
     {
         STARFISH_ASSERT(!m_isASCIIString);
+#ifndef NDEBUG
+        return (UTF32String*)((size_t)this + (sizeof(size_t)*2));
+#else
         return (UTF32String*)((size_t)this + sizeof(size_t));
+#endif
     }
 
     UTF16String toUTF16String() const;
@@ -209,6 +217,19 @@ public:
     bool startsWith(const char* str, bool caseSensitive = true);
     bool startsWith(String* str, bool caseSensitive = true);
 
+    bool contains(const char* str, bool caseSensitive = true);
+    bool contains(String* str, bool caseSensitive = true);
+
+    ALWAYS_INLINE void putDebugInfo()
+    {
+#ifndef NDEBUG
+        if (m_isASCIIString) {
+            m_debugInfo.string8Ptr = asASCIIString()->data();
+        } else {
+            m_debugInfo.string32Ptr = asUTF32String()->data();
+        }
+#endif
+    }
 protected:
     template <typename T>
     static bool stringEqual(const T* s, const T* s1, const size_t& len)
@@ -233,6 +254,13 @@ protected:
     }
 
     size_t m_isASCIIString;
+
+#ifndef NDEBUG
+    union {
+        const char* string8Ptr;
+        const char32_t* string32Ptr;
+    } m_debugInfo;
+#endif
 };
 
 class StringDataASCII : public String, public ASCIIString, public gc {
@@ -240,16 +268,19 @@ public:
     StringDataASCII(ASCIIString&& str)
         : ASCIIString(str)
     {
+        putDebugInfo();
     }
 
     StringDataASCII(const char* str)
         : ASCIIString(str)
     {
+        putDebugInfo();
     }
 
     StringDataASCII(const char* str, size_t len)
         : ASCIIString(str, &str[len])
     {
+        putDebugInfo();
     }
 };
 
@@ -259,17 +290,20 @@ public:
         : UTF32String(str)
     {
         m_isASCIIString = false;
+        putDebugInfo();
     }
     StringDataUTF32(UTF32String&& str)
         : UTF32String(str)
     {
         m_isASCIIString = false;
+        putDebugInfo();
     }
     StringDataUTF32(const char* src, size_t len);
     StringDataUTF32(const char32_t* str)
         : UTF32String(str)
     {
         m_isASCIIString = false;
+        putDebugInfo();
     }
 };
 

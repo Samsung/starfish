@@ -4,9 +4,32 @@
 #include "CharacterData.h"
 
 #include "platform/message_loop/MessageLoop.h"
-#include "platform/file_io/FileIO.h"
+#include "loader/ElementResourceClient.h"
 
 namespace StarFish {
+
+class ScriptDownloadClient : public ResourceClient {
+public:
+    ScriptDownloadClient(HTMLScriptElement* script, Resource* res)
+        : ResourceClient(res)
+        , m_element(script)
+    {
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        String* text = m_resource->asTextResource()->text();
+        m_element->document()->window()->starFish()->evaluate(text);
+    }
+protected:
+    HTMLScriptElement* m_element;
+};
 
 void HTMLScriptElement::executeScript()
 {
@@ -28,42 +51,15 @@ void HTMLScriptElement::executeScript()
             if (!url->length())
                 return;
 
+            TextResource* res = document()->resourceLoader()->fetchText(URL(document()->documentURI().string(), url));
+            res->addResourceClient(new ScriptDownloadClient(this, res));
+            res->addResourceClient(new ElementResourceClient(this, res, true));
             if (m_isParserInserted) {
-                executeExternalScript();
+                res->request(true);
             } else {
-                document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
-                    HTMLScriptElement* element = (HTMLScriptElement*)data;
-                    if (element->isInDocumentScope())
-                        element->executeExternalScript();
-                }, this);
+                res->request(false);
             }
         }
-    }
-}
-
-void HTMLScriptElement::executeExternalScript()
-{
-    String* url = getAttribute(document()->window()->starFish()->staticStrings()->m_src);
-    FileIO* fio = FileIO::create();
-    if (fio->open(document()->window()->starFish()->makeResourcePath(url))) {
-        size_t siz = fio->length();
-
-        char* fileContents = (char*)malloc(siz + 1);
-        fio->read(fileContents, sizeof(char), siz);
-
-        fileContents[siz] = 0;
-
-        document()->window()->starFish()->evaluate(String::fromUTF8(fileContents));
-
-        free(fileContents);
-        fio->close();
-
-        document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
-            HTMLScriptElement* element = (HTMLScriptElement*)data;
-            String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.localName();
-            Event* e = new Event(eventType, EventInit(false, false));
-            element->EventTarget::dispatchEvent(element, e);
-        }, this);
     }
 }
 

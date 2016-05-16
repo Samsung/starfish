@@ -14,7 +14,8 @@ public:
 
     }
 
-    void addIdler(void (*fn)(void*), void* data);
+    void* addIdler(void (*fn)(void*), void* data);
+    void removeIdler(void* handle);
 protected:
     StarFish* m_starFish;
     void run();

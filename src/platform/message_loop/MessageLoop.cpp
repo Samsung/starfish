@@ -13,20 +13,21 @@ void MessageLoop::run()
 #endif
 }
 
-void MessageLoop::addIdler(void (*fn)(void*), void* data)
+struct IdlerData {
+    void (*m_fn)(void*);
+    void* m_data;
+    Ecore_Idler* m_idler;
+    MessageLoop* m_ml;
+};
+
+void* MessageLoop::addIdler(void (*fn)(void*), void* data)
 {
-    struct IdlerData {
-        void (*m_fn)(void*);
-        void* m_data;
-        MessageLoop* m_ml;
-    };
 
     IdlerData* id = new(NoGC) IdlerData;
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
-
-    ecore_idler_add([](void* data) -> Eina_Bool {
+    id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->scriptBindingInstance());
         id->m_fn(id->m_data);
@@ -34,6 +35,15 @@ void MessageLoop::addIdler(void (*fn)(void*), void* data)
         GC_FREE(id);
         return ECORE_CALLBACK_CANCEL;
     }, id);
+
+    return id;
+}
+
+void MessageLoop::removeIdler(void* handle)
+{
+    IdlerData* id = (IdlerData*)handle;
+    ecore_idler_del(id->m_idler);
+    GC_FREE(id);
 }
 
 }

@@ -81,7 +81,6 @@ public:
     escargot::ESFunctionObject* codeName() \
     { \
         if (UNLIKELY(m_##codeName == nullptr)) { \
-            STARFISH_LOG_INFO("binding..."#exportName"\n"); \
             m_##codeName = binding##exportName(m_bindingInstance); \
             m_value##codeName = m_##codeName; \
         } \
@@ -94,7 +93,6 @@ public:
     escargot::ESValue codeName##Value() \
     { \
         if (UNLIKELY(m_##codeName == nullptr)) { \
-            STARFISH_LOG_INFO("binding..."#exportName"\n"); \
             m_##codeName = binding##exportName(m_bindingInstance); \
             m_value##codeName = m_##codeName; \
         } \

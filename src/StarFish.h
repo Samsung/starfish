@@ -188,6 +188,7 @@ public:
     QualifiedName m_click;
     QualifiedName m_onclick;
     QualifiedName m_load;
+    QualifiedName m_error;
     QualifiedName m_onload;
     QualifiedName m_unload;
     QualifiedName m_onunload;
@@ -196,7 +197,6 @@ protected:
 };
 
 enum StarFishStartUpFlag {
-    enableBlackTheme = 1,
     enableComputedStyleDump = 1 << 1,
     enableFrameTreeDump = 1 << 2,
     enableStackingContextDump = 1 << 3,
@@ -214,11 +214,7 @@ class StarFish : public gc_cleanup {
     friend class AtomicString;
     friend class StaticStrings;
 public:
-#ifndef STARFISH_TIZEN_WEARABLE_APP
-    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, int w, int h);
-#else
-    StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, void* win, int w, int h);
-#endif
+    StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h);
     ~StarFish()
     {
         delete m_lineBreaker;
@@ -235,35 +231,12 @@ public:
         return m_scriptBindingInstance;
     }
 
-    String* currentPath()
-    {
-        return m_currentPath;
-    }
-
-    String* makeResourcePath(String* src)
-    {
-        std::string p = m_currentPath->utf8Data();
-        std::string strSrc = src->utf8Data();
-
-        if (posPrefix(strSrc, "file://") != std::string::npos)
-            p = strSrc.substr(7);
-        else if (posPrefix(strSrc, "blob:") != std::string::npos)
-            p = strSrc;
-        else
-            p.append(strSrc);
-
-        return String::fromUTF8(p.data());
-    }
-
-    void loadPreprocessedXMLDocument(String* filePath);
     void loadHTMLDocument(String* filePath);
 
     void resume();
     void pause();
     void close();
     void evaluate(String* s);
-
-    ImageData* fetchImage(String* str);
 
     Font* fetchFont(String* familyName, float size, char style = FontStyle::FontStyleNormal, char weight = FontWeight::FontWeightNormal)
     {
@@ -311,7 +284,6 @@ public:
     void removePointerFromRootSet(void *ptr);
 
 protected:
-    void init(int w, int h);
     size_t posPrefix(std::string str, std::string prefix)
     {
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -326,14 +298,11 @@ protected:
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
     ScriptBindingInstance* m_scriptBindingInstance;
+    void* m_nativeWindow;
     Window* m_window;
-    String* m_currentPath;
-    std::unordered_map<std::string, ImageData*, std::hash<std::string>, std::equal_to<std::string>,
-        gc_allocator<std::pair<std::string, ImageData*>>> m_imageCache;
     FontSelector m_fontSelector;
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
         gc_allocator<std::pair<void*, size_t>>> m_rootMap;
-
     std::unordered_map<std::string, AtomicString,
         std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString>>> m_atomicStringMap;
 };

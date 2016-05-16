@@ -1,8 +1,6 @@
 #include "StarFishConfig.h"
 #include "Window.h"
 
-#include "dom/builder/html/HTMLDocumentBuilder.h"
-#include "dom/builder/preprocessed_xml/PreprocessedXMLDocumentBuilder.h"
 #include "dom/binding/ScriptBindingInstance.h"
 #include "dom/HTMLDocument.h"
 #include "layout/FrameTreeBuilder.h"
@@ -133,8 +131,8 @@ namespace {
 
 class WindowImplEFL : public Window {
 public:
-    WindowImplEFL(StarFish* sf)
-        : Window(sf)
+    WindowImplEFL(StarFish* sf, const URL& url)
+        : Window(sf, url)
     {
         m_renderingAnimator = nullptr;
     }
@@ -250,31 +248,27 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
         wnd->setNeedsLayout();
 }
 
-#ifndef STARFISH_TIZEN_WEARABLE_APP
-Window* Window::create(StarFish* sf, size_t w, size_t h)
-{
-    Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
-    initInternalCanvas();
-    auto wnd = new WindowImplEFL(sf);
-    wnd->m_starFish = sf;
-    wnd->m_window = wndObj;
-    elm_win_title_set(wnd->m_window, "StarFish");
 
+Window* Window::create(StarFish* sf, void* win, const URL& url)
+{
+#ifndef STARFISH_TIZEN_WEARABLE_APP
+    initInternalCanvas();
+#endif
+    auto wnd = new WindowImplEFL(sf, url);
+    wnd->m_starFish = sf;
+    wnd->m_window = (Evas_Object*)win;
+
+#ifndef STARFISH_TIZEN_WEARABLE_APP
     Evas* e = evas_object_evas_get(wnd->m_window);
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
     Ecore_Window ew = ecore_evas_window_get(ee);
     wnd->m_handle = (uintptr_t)ew;
-
-    elm_win_autodel_set(wnd->m_window, EINA_TRUE);
 
     wnd->m_dummyBox = elm_box_add(wnd->m_window);
     evas_object_size_hint_weight_set(wnd->m_dummyBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     elm_win_resize_object_add(wnd->m_window, wnd->m_dummyBox);
     elm_box_layout_set(wnd->m_dummyBox, mainRenderingFunction, wnd, NULL);
     evas_object_show(wnd->m_dummyBox);
-
-    if (w != SIZE_MAX && h != SIZE_MAX)
-        evas_object_resize(wnd->m_window, (int)w, (int)h);
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
@@ -332,16 +326,8 @@ Window* Window::create(StarFish* sf, size_t w, size_t h)
         return EINA_TRUE;
     }, wnd);
 
-    return wnd;
-}
 #else
-Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
-{
     g_internalCanvas = evas_object_evas_get((Evas_Object*)win);
-    auto wnd = new WindowImplEFL(sf);
-    wnd->m_starFish = sf;
-    wnd->m_window = (Evas_Object*)win;
-
     Evas* e = evas_object_evas_get(wnd->m_window);
     Evas_Object* mainBox = elm_box_add(wnd->m_window);
     evas_object_size_hint_weight_set(mainBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
@@ -394,39 +380,35 @@ Window* Window::create(StarFish* sf, size_t w, size_t h, void* win)
         return EINA_TRUE;
     }, this);
     */
-
+#endif
     return wnd;
 }
-#endif
 
-Window::Window(StarFish* starFish)
-    : m_touchDownPoint(0, 0)
-    , m_starFish(starFish)
-    , m_onloadString(String::emptyString)
+Window::Window(StarFish* starFish, const URL& url)
+    : m_starFish(starFish)
+    , m_document(nullptr)
+    , m_touchDownPoint(0, 0)
 {
-    STARFISH_ASSERT(m_starFish->scriptBindingInstance());
-
-    m_document = new HTMLDocument(this, m_starFish->scriptBindingInstance());
     initScriptWrappable(this);
+    STARFISH_ASSERT(m_starFish->scriptBindingInstance());
     m_timeoutCounter = 0;
+    m_requestAnimationFrameCounter = 0;
 
     m_needsRendering = false;
-    m_needsStyleRecalc = true;
+    m_inRendering = false;
+    m_needsStyleRecalc = false;
     m_needsStyleRecalcForWholeDocument = false;
-    m_needsFrameTreeBuild = true;
-    m_needsLayout = true;
-    m_needsPainting = true;
+    m_needsFrameTreeBuild = false;
+    m_needsLayout = false;
+    m_needsPainting = false;
+    m_needsComposite = false;
 
     m_hasRootElementBackground = false;
     m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
 
-    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme) {
-        m_document->style()->setColor(Color(255, 255, 255, 255));
-    }
-
-    setNeedsRendering();
+    m_document = new HTMLDocument(this, starFish->scriptBindingInstance(), url);
 }
 
 // #define STARFISH_ENABLE_TIMER
@@ -525,10 +507,7 @@ Canvas* preparePainting(WindowImplEFL* eflWindow)
 
 void Window::paintWindowBackground(Canvas* canvas)
 {
-    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableBlackTheme)
-        canvas->clearColor(Color(0, 0, 0, 255));
-    else
-        canvas->clearColor(Color(255, 255, 255, 255));
+    canvas->clearColor(Color(255, 255, 255, 255));
 
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
@@ -604,7 +583,8 @@ void Window::rendering()
             m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
                 box->establishesStackingContextIfNeeds();
             });
-            m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
+            if (m_document->frame()->firstChild())
+                m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
         }
         m_needsLayout = false;
     }
@@ -669,7 +649,10 @@ void Window::rendering()
         paintWindowBackground(canvas);
         m_document->frame()->paint(canvas, PaintingStageEnd);
         m_needsPainting = false;
-        m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
+        if (m_document->frame()->firstChild())
+            m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
+        else
+            m_needsComposite = false;
 
         delete canvas;
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -756,20 +739,6 @@ void Window::setWholeDocumentNeedsStyleRecalc()
 {
     m_needsStyleRecalcForWholeDocument = true;
     setNeedsRendering();
-}
-
-void Window::loadPreprocessedXMLDocument(String* filePath)
-{
-    PreprocessedXMLDocumentBuilder* builder = new PreprocessedXMLDocumentBuilder;
-    builder->build(m_document, filePath);
-    dispatchLoadEvent();
-}
-
-void Window::navigate(String* filePath)
-{
-    HTMLDocumentBuilder* builder = new HTMLDocumentBuilder;
-    builder->build(m_document, filePath);
-    dispatchLoadEvent();
 }
 
 struct TimeoutData {

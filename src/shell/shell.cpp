@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
     }
     // printf("%d", (int)sizeof (StarFish::ComputedStyle));
 
-    std::string path = "";
     std::string screenShot;
     int width = 360, height = 360;
     for (int i = 2; i < argc; i ++) {
@@ -45,10 +44,6 @@ int main(int argc, char *argv[])
             flag |= StarFish::enableStackingContextDump;
         } else if (strcmp(argv[i], "--dump-hittest") == 0) {
             flag |= StarFish::enableHitTestDump;
-        } else if (strcmp(argv[i], "--enable-black-theme") == 0) {
-            flag |= StarFish::enableBlackTheme;
-        } else if (strstr(argv[i], "--working-directory=") == argv[i]) {
-            path = argv[i] + strlen("--working-directory=");
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
 #ifdef STARFISH_ENABLE_PIXEL_TEST
             g_enablePixelTest = true;
@@ -72,28 +67,13 @@ int main(int argc, char *argv[])
         // setenv("ELM_ENGINE", screenShot.data(), 1);
         setenv("SCREEN_SHOT", screenShot.data(), 1);
     }
-    if (!hasEnding(argv[1], "xml")) {
-        std::string d = argv[1];
-        if (d.find('/') == std::string::npos) {
-            path = "";
-        } else {
-            // path += "./";
-            path += d.substr(0, d.find_last_of('/'));
-            path += "/";
-            char* p = realpath(path.c_str(), NULL);
-            path = p;
-            path += "/";
-            free(p);
-        }
-    }
 
-    printf("running StarFish (working directory = %s)\n", path.c_str());
-    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, String::fromUTF8(path.c_str()), "en-us", "Asia/Seoul", width, height);
+    elm_init(0, 0);
+    elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
-    if (hasEnding(argv[1], "xml")) {
-        sf->loadPreprocessedXMLDocument(String::createASCIIString(argv[1]));
-    } else
-        sf->loadHTMLDocument(String::createASCIIString(argv[1]));
+    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "en-us", "Asia/Seoul", nullptr, width, height);
+
+    sf->loadHTMLDocument(String::createASCIIString(argv[1]));
 
     pthread_t t;
     pthread_attr_t attr;

@@ -19,12 +19,7 @@ class Window : public EventTarget {
     friend class HTMLBodyElement;
     friend class Node;
 public:
-#ifndef STARFISH_TIZEN_WEARABLE_APP
-    static Window* create(StarFish* sf, size_t w = SIZE_MAX, size_t h = SIZE_MAX);
-#else
-    static Window* create(StarFish* sf, size_t w = SIZE_MAX, size_t h = SIZE_MAX, void* win = nullptr);
-#endif
-
+    static Window* create(StarFish* sf, void* win, const URL& url);
     virtual bool isWindow()
     {
         return true;
@@ -102,8 +97,6 @@ public:
         return m_starFish;
     }
 
-    void loadPreprocessedXMLDocument(String* filePath);
-    void navigate(String* filePath);
     uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
     void clearTimeout(uint32_t id);
     uint32_t setInterval(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
@@ -229,7 +222,7 @@ protected:
     }
 
     void setNeedsRenderingSlowCase();
-    Window(StarFish* starFish);
+    Window(StarFish* starFish, const URL& url);
     void rendering();
     void paintWindowBackground(Canvas* canvas);
 
@@ -245,11 +238,10 @@ protected:
     bool m_hasBodyElementBackground;
     bool m_isRunning;
 
+    StarFish* m_starFish;
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
     Location m_touchDownPoint;
-
-    StarFish* m_starFish;
 
     uint32_t m_timeoutCounter;
     std::unordered_map<uint32_t, void*, std::hash<uint32_t>, std::equal_to<uint32_t>,

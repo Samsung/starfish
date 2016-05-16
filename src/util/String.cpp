@@ -171,6 +171,7 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
         src += utf8ToUtf32(src, c);
         UTF32String::operator+=(c);
     }
+    putDebugInfo();
 }
 
 const char* String::utf8DataSlowCase()
@@ -590,6 +591,104 @@ bool String::startsWith(String* str, bool caseSensitive)
     }
 
     return result;
+}
+
+bool String::contains(const char* str, bool caseSensitive)
+{
+    size_t len = length();
+    size_t strLen = strlen(str);
+
+    if (strLen == 0)
+        return true;
+
+    if (caseSensitive) {
+        if (strLen <= len) {
+            char32_t src0 = str[0];
+            size_t pos = 0;
+            for (; pos <= len - strLen; ++pos) {
+                if (charAt(pos) == src0) {
+                    bool same = true;
+                    for (size_t k = 1; k < strLen; k++) {
+                        if (charAt(pos + k) != (char32_t)str[k]) {
+                            same = false;
+                            break;
+                        }
+                    }
+                    if (same)
+                        return true;
+                }
+            }
+        }
+    } else {
+        if (strLen <= len) {
+            char32_t src0 = str[0];
+            size_t pos = 0;
+            for (; pos <= len - strLen; ++pos) {
+                if (charAt(pos) == src0) {
+                    bool same = true;
+                    for (size_t k = 1; k < strLen; k++) {
+                        if (tolower(charAt(pos + k)) != tolower(str[k])) {
+                            same = false;
+                            break;
+                        }
+                    }
+                    if (same)
+                        return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool String::contains(String* str, bool caseSensitive)
+{
+    size_t len = length();
+    size_t strLen = str->length();
+
+    if (strLen == 0)
+        return true;
+
+    if (caseSensitive) {
+        if (strLen <= len) {
+            char32_t src0 = str->charAt(0);
+            size_t pos = 0;
+            for (; pos <= len - strLen; ++pos) {
+                if (charAt(pos) == src0) {
+                    bool same = true;
+                    for (size_t k = 1; k < strLen; k++) {
+                        if (charAt(pos + k) != str->charAt(k)) {
+                            same = false;
+                            break;
+                        }
+                    }
+                    if (same)
+                        return true;
+                }
+            }
+        }
+    } else {
+        if (strLen <= len) {
+            char32_t src0 = str->charAt(0);
+            size_t pos = 0;
+            for (; pos <= len - strLen; ++pos) {
+                if (charAt(pos) == src0) {
+                    bool same = true;
+                    for (size_t k = 1; k < strLen; k++) {
+                        if (tolower(charAt(pos + k)) != tolower(str->charAt(k))) {
+                            same = false;
+                            break;
+                        }
+                    }
+                    if (same)
+                        return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 
 unsigned SegmentedString::length() const

@@ -1,5 +1,6 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "dom/Document.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/window/Window.h"
 #include "platform/canvas/image/ImageData.h"
@@ -18,36 +19,21 @@ namespace StarFish {
 bool g_enablePixelTest = false;
 #endif
 
-#ifndef STARFISH_TIZEN_WEARABLE_APP
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, int w, int h)
+StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h)
     : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
 {
-    GC_set_on_collection_event([](GC_EventType evtType) {
-        if (GC_EVENT_PRE_START_WORLD == evtType) {
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
-        }
-    });
+    if (!win) {
+        Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+        elm_win_title_set(wndObj, "StarFish");
+        elm_win_autodel_set(wndObj, EINA_TRUE);
+        evas_object_resize(wndObj, w, h);
+        win = wndObj;
+    }
 
-    GC_set_free_space_divisor(64);
-    // STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
-    m_deviceKind = deviceKindUseMouse;
-    m_startUpFlag = flag;
-    m_currentPath = currentPath;
-    elm_init(0, 0);
-    elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+    m_nativeWindow = win;
 
-    init(w, h);
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
-    m_window = Window::create(this, w, h);
-}
-#else
-StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* locale, const char* timezoneID, void* win, int w, int h)
-    : m_locale(icu::Locale::createFromName(locale))
-    , m_lineBreaker(nullptr)
-    , m_timezoneID(String::fromUTF8(timezoneID))
-{
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
             STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
@@ -57,16 +43,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, String* currentPath, const char* lo
     // STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
-    m_currentPath = currentPath;
 
-    init(w, h);
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
-    m_window = Window::create(this, w, h, win);
-}
-#endif
-
-void StarFish::init(int w, int h)
-{
     String* s = String::emptyString;
     AtomicString emptyAtom(s);
     m_atomicStringMap.insert(std::make_pair(std::string(), emptyAtom));
@@ -77,8 +54,6 @@ void StarFish::init(int w, int h)
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     m_messageLoop = new MessageLoop(this);
-    m_scriptBindingInstance = new ScriptBindingInstance();
-    m_scriptBindingInstance->initBinding(this);
 }
 
 void StarFish::run()
@@ -86,16 +61,33 @@ void StarFish::run()
     m_messageLoop->run();
 }
 
-void StarFish::loadPreprocessedXMLDocument(String* filePath)
-{
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
-    m_window->loadPreprocessedXMLDocument(filePath);
-}
-
 void StarFish::loadHTMLDocument(String* filePath)
 {
+    std::string d = filePath->utf8Data();
+    std::string path;
+    std::string fileName;
+    if (d.find('/') == std::string::npos) {
+        path = "./";
+        fileName = d;
+    } else {
+        path += d.substr(0, d.find_last_of('/'));
+        fileName = d.substr(d.find_last_of('/') + 1);
+        path += "/";
+    }
+
+    char* p = realpath(path.c_str(), NULL);
+    path = p;
+    path += "/";
+    free(p);
+
+    path = std::string("file://") + path + fileName;
+    STARFISH_LOG_INFO("loadHTMLDocument %s\n", path.data());
+    m_scriptBindingInstance = new ScriptBindingInstance();
     ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
-    m_window->navigate(filePath);
+    m_scriptBindingInstance->initBinding(this);
+    m_window = Window::create(this, m_nativeWindow, URL(String::emptyString, String::fromUTF8(path.c_str())));
+
+    m_window->document()->open();
 }
 
 void StarFish::resume()
@@ -116,22 +108,15 @@ void StarFish::close()
     ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->close();
     m_scriptBindingInstance->close();
+
+    m_window = nullptr;
+    m_scriptBindingInstance = nullptr;
 }
 
 void StarFish::evaluate(String* s)
 {
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_scriptBindingInstance->evaluate(s);
-}
-
-ImageData* StarFish::fetchImage(String* str)
-{
-    auto iter = m_imageCache.find(str->utf8Data());
-    if (iter == m_imageCache.end()) {
-        ImageData* id = ImageData::create(str);
-        m_imageCache.insert(std::make_pair(std::string(str->utf8Data()), id));
-        return id;
-    }
-    return iter->second;
 }
 
 void StarFish::addPointerInRootSet(void *ptr)
@@ -185,6 +170,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_click = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "click"));
     m_onclick = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onclick"));
     m_load = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "load"));
+    m_error = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "error"));
     m_onload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onload"));
     m_unload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "unload"));
     m_onunload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onunload"));

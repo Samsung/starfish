@@ -1,13 +1,16 @@
-
 #include "StarFishConfig.h"
 #include "ComputedStyle.h"
 
 #include "StarFish.h"
+#include "dom/Node.h"
+#include "dom/Document.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
-void ComputedStyle::loadResources(StarFish* sf)
+void ComputedStyle::loadResources(Node* consumer)
 {
+    StarFish* sf = consumer->document()->window()->starFish();
     float fontSize = m_inheritedStyles.m_fontSize.fixed();
 
     char style = m_inheritedStyles.m_fontStyle;
@@ -60,12 +63,17 @@ void ComputedStyle::loadResources(StarFish* sf)
     m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
 #endif
 
+    // TODO use async fetch for loading images
     if (!backgroundImage()->equals(String::emptyString)) {
-        setBackgroundImageData(sf->fetchImage(sf->makeResourcePath(backgroundImage())));
+        ImageResource* res = consumer->document()->resourceLoader()->fetchImage(URL(consumer->document()->documentURI().baseURI(), backgroundImage()));
+        res->request(true);
+        setBackgroundImageData(res->imageData());
     }
 
     if (!borderImageSource()->equals(String::emptyString)) {
-        setBorderImageData(sf->fetchImage(sf->makeResourcePath(borderImageSource())));
+        ImageResource* res = consumer->document()->resourceLoader()->fetchImage(URL(consumer->document()->documentURI().baseURI(), borderImageSource()));
+        res->request(true);
+        setBorderImageData(res->imageData());
         setBorderLeftStyle(BorderStyleValue::BSolid);
         setBorderTopStyle(BorderStyleValue::BSolid);
         setBorderRightStyle(BorderStyleValue::BSolid);

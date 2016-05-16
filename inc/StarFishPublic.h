@@ -11,11 +11,10 @@ typedef struct StarFishInstance {
     void* m_starfish;
 } StarFishInstance;
 
-STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* workingDirectory, const char* locale, const char* timezoneID);
+STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* locale, const char* timezoneID);
 STARFISH_EXPORT void starfishRemove(StarFishInstance* instance);
 
 STARFISH_EXPORT void starfishLoadHTMLDocument(StarFishInstance* instance, const char* path);
-STARFISH_EXPORT void starfishLoadXMLDocument(StarFishInstance* instance, const char* xmlPath);
 
 STARFISH_EXPORT void starfishNotifyPause(StarFishInstance* instance);
 STARFISH_EXPORT void starfishNotifyResume(StarFishInstance* instance);

@@ -6,11 +6,13 @@
 namespace StarFish {
 
 class URL {
-public:
     STARFISH_MAKE_STACK_ALLOCATED();
-    URL(String* url = String::emptyString)
-        : m_string(url)
+public:
+    URL(String* baseURL, String* url);
+    String* baseURI() const;
+    bool isFileURL() const
     {
+        return m_urlString->startsWith("file://");
     }
 
     String* string() const
@@ -18,19 +20,18 @@ public:
         return m_string;
     }
 
-    String* path() const // directory name (with slash)
+    String* urlString() const
     {
-        size_t idx = m_string->lastIndexOf('/');
-        if (idx == SIZE_MAX)
-            return String::emptyString;
-        STARFISH_ASSERT(m_string->substring(0, idx + 1)->charAt(idx) == '/');
-        return m_string->substring(0, idx + 1);
+        return m_urlString;
+    }
+
+    operator bool()
+    {
+        return m_string->length();
     }
 protected:
     String* m_string;
-    // String* m_protocol;
-    // String* m_host;
-    // String* m_path;
+    String* m_urlString;
 };
 }
 

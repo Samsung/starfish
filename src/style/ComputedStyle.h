@@ -863,7 +863,7 @@ public:
     static bool initialBorderImageSliceFill() { return false; }
     static BorderImageRepeatValue initialBorderImageRepeat() { return BorderImageRepeatValue::StretchValue; }
 
-    void loadResources(StarFish* sf);
+    void loadResources(Node* consumer);
     void arrangeStyleValues(ComputedStyle* parentStyle)
     {
         // 9.7 Relationships between 'display', 'position', and 'float'

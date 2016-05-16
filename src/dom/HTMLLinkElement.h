@@ -2,14 +2,17 @@
 #define __StarFishHTMLLinkElement__
 
 #include "dom/HTMLElement.h"
+#include "loader/TextResource.h"
 
 namespace StarFish {
 
 class HTMLLinkElement : public HTMLElement {
+    friend class StyleSheetDownloadClient;
 public:
     HTMLLinkElement(Document* document)
         : HTMLElement(document)
         , m_generatedSheet(nullptr)
+        , m_styleSheetTextResource(nullptr)
     {
     }
 
@@ -51,6 +54,7 @@ public:
     }
 protected:
     CSSStyleSheet* m_generatedSheet;
+    TextResource* m_styleSheetTextResource;
 };
 
 }

@@ -1,6 +1,7 @@
 #include "StarFishConfig.h"
 #include "XMLHttpRequest.h"
 #include "dom/Event.h"
+#include "dom/Document.h"
 #include "extra/Blob.h"
 #include "dom/DOMException.h"
 #include <future>
@@ -8,6 +9,7 @@
 #include <fcntl.h>
 #include "platform/file_io/FileIO.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "platform/window/Window.h"
 
 namespace StarFish {
 
@@ -116,7 +118,8 @@ void XMLHttpRequest::send(String* body)
         } else {
             ecore_thread_main_loop_begin();
             STARFISH_ASSERT(!curl);
-            std::string path = xhrobj->m_starfish->currentPath()->utf8Data();
+            std::string path = xhrobj->m_starfish->window()->document()->documentURI().baseURI()->utf8Data();
+            path = path.substr(7);
             if ((path.length() != 0)&&(path.back() != '/')) {
                 path += '/';
             }

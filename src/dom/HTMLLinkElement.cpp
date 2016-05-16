@@ -2,6 +2,7 @@
 #include "dom/Document.h"
 #include "HTMLLinkElement.h"
 
+#include "loader/ElementResourceClient.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "style/CSSParser.h"
 #include "platform/file_io/FileIO.h"
@@ -13,9 +14,9 @@ URL HTMLLinkElement::href()
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
     if (href != SIZE_MAX) {
         String* url = getAttribute(href);
-        return URL(url);
+        return URL(document()->documentURI().baseURI(), url);
     }
-    return URL();
+    return URL(String::emptyString, String::emptyString);
 }
 
 void HTMLLinkElement::didNodeInsertedToDocumenTree()
@@ -50,43 +51,59 @@ void HTMLLinkElement::checkLoadStyleSheet()
     }
 }
 
+class StyleSheetDownloadClient : public ResourceClient {
+public:
+    StyleSheetDownloadClient(HTMLLinkElement* element, Resource* res)
+        : ResourceClient(res)
+        , m_element(element)
+    {
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        m_element->m_styleSheetTextResource = nullptr;
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        String* text = m_resource->asTextResource()->text();
+
+        CSSParser parser(m_element->document());
+        CSSStyleSheet* sheet = parser.parseStyleSheet(text, m_element);
+        if (sheet) {
+            m_element->m_generatedSheet = sheet;
+            m_element->document()->styleResolver()->addSheet(sheet);
+            m_element->document()->window()->setWholeDocumentNeedsStyleRecalc();
+        }
+    }
+protected:
+    HTMLLinkElement* m_element;
+};
+
 void HTMLLinkElement::loadStyleSheet()
 {
     unloadStyleSheetIfExists();
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
 
-    String* url = getAttribute(href);
-    FileIO* fio = FileIO::create();
-    if (fio->open(document()->window()->starFish()->makeResourcePath(url))) {
-        size_t siz = fio->length();
+    String* urlString = getAttribute(href);
+    URL url = URL(document()->documentURI().baseURI(), urlString);
 
-        char* fileContents = (char*)malloc(siz + 1);
-        fio->read(fileContents, sizeof(char), siz);
-
-        fileContents[siz] = 0;
-        String* source = String::fromUTF8(fileContents);
-        free(fileContents);
-        fio->close();
-
-        CSSParser parser(document());
-        CSSStyleSheet* sheet = parser.parseStyleSheet(source, this);
-        if (sheet) {
-            m_generatedSheet = sheet;
-            document()->styleResolver()->addSheet(sheet);
-            document()->window()->setWholeDocumentNeedsStyleRecalc();
-        }
-
-        document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
-            HTMLLinkElement* element = (HTMLLinkElement*)data;
-            String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.localName();
-            Event* e = new Event(eventType, EventInit(false, false));
-            element->EventTarget::dispatchEvent(element, e);
-        }, this);
+    if (url) {
+        m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
+        m_styleSheetTextResource->addResourceClient(new StyleSheetDownloadClient(this, m_styleSheetTextResource));
+        m_styleSheetTextResource->addResourceClient(new ElementResourceClient(this, m_styleSheetTextResource));
+        m_styleSheetTextResource->request();
     }
 }
 
 void HTMLLinkElement::unloadStyleSheetIfExists()
 {
+    if (m_styleSheetTextResource) {
+        m_styleSheetTextResource->cancel();
+        m_styleSheetTextResource = nullptr;
+    }
     if (m_generatedSheet) {
         document()->styleResolver()->removeSheet(m_generatedSheet);
         document()->window()->setWholeDocumentNeedsStyleRecalc();
@@ -98,7 +115,8 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old, Strin
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_href) {
-        checkLoadStyleSheet();
+        if (!old->equals(value))
+            checkLoadStyleSheet();
     } else if (name == document()->window()->starFish()->staticStrings()->m_type) {
         checkLoadStyleSheet();
     } else if (name == document()->window()->starFish()->staticStrings()->m_rel) {

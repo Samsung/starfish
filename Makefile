@@ -185,9 +185,6 @@ else
 endif
 
 
-# tinyxml
-CXXFLAGS += -Ithird_party/tinyxml2/
-
 #skia_matrix
 CXXFLAGS += -Ithird_party/skia_matrix/
 
@@ -205,9 +202,9 @@ SRC += $(foreach dir, src/extra , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/parser , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/builder , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/builder/html , $(wildcard $(dir)/*.cpp))
-SRC += $(foreach dir, src/dom/builder/preprocessed_xml , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/binding , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/layout , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/loader , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/style , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/util , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/message_loop , $(wildcard $(dir)/*.cpp))
@@ -223,8 +220,6 @@ else
   SRC += $(foreach dir, src/shell , $(wildcard $(dir)/*.cpp))
 endif
 
-# tinyxml
-SRC += third_party/tinyxml2/tinyxml2.cpp
 
 # skia_matrix
 SRC += third_party/skia_matrix/SkMath.cpp

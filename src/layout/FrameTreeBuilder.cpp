@@ -158,7 +158,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
 
             if (last->node()) {
                 ComputedStyle* newStyle = new ComputedStyle(currentFrame->style());
-                newStyle->loadResources(last->node()->document()->window()->starFish());
+                newStyle->loadResources(last->node());
                 newStyle->arrangeStyleValues(currentFrame->style());
                 newStyle->setDisplay(DisplayValue::BlockDisplayValue);
 
@@ -180,7 +180,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
 
             ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
             newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-            newStyle->loadResources(currentNode->document()->window()->starFish());
+            newStyle->loadResources(currentNode);
             newStyle->arrangeStyleValues(frameBlockBox->style());
 
             FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
@@ -339,7 +339,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 
                 ComputedStyle* newStyle = new ComputedStyle(ctx.currentBlockContainer()->style());
                 newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-                newStyle->loadResources(current->document()->window()->starFish());
+                newStyle->loadResources(current);
                 newStyle->arrangeStyleValues(ctx.currentBlockContainer()->style());
 
                 FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);

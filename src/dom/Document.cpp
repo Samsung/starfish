@@ -2,6 +2,7 @@
 #include "Document.h"
 #include "Traverse.h"
 
+#include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "layout/FrameDocument.h"
 #include "dom/Attribute.h"
 
@@ -11,17 +12,19 @@
 
 namespace StarFish {
 
-Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
+Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& uri)
     : Node(this, scriptBindingInstance)
     , m_inParsing(false)
     , m_compatibilityMode(Document::NoQuirksMode)
+    , m_documentURI(uri)
+    , m_resourceLoader(*this)
     , m_styleResolver(*this)
     , m_pageVisibilityState(PageVisibilityStateVisible)
     , m_domVersion(0)
 {
     m_window = window;
     m_scriptBindingInstance = scriptBindingInstance;
-    setStyle(m_styleResolver.resolveDocumentStyle(window->starFish()));
+    setStyle(m_styleResolver.resolveDocumentStyle(this));
 
     CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet(this);
 
@@ -186,6 +189,17 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance)
 #ifdef STARFISH_EXP
     m_domImplementation = new DOMImplementation(m_window, m_scriptBindingInstance);
 #endif
+
+}
+
+void Document::open()
+{
+    m_resourceLoader.markDocumentOpenState();
+    HTMLDocumentBuilder builder(this);
+    builder.build(documentURI());
+
+    // FIXME
+    m_resourceLoader.notifyEndParseDocument();
 }
 
 String* Document::nodeName()

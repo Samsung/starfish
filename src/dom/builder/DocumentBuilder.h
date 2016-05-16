@@ -7,7 +7,8 @@ namespace StarFish {
 
 class DocumentBuilder : public gc {
 public:
-    DocumentBuilder()
+    DocumentBuilder(Document* document)
+        : m_document(document)
     {
     }
 
@@ -16,7 +17,13 @@ public:
 
     }
 
-    virtual void build(Document* element, String* filePath) = 0;
+    virtual void build(const URL& filePath) = 0;
+    Document* document()
+    {
+        return m_document;
+    }
+protected:
+    Document* m_document;
 };
 
 

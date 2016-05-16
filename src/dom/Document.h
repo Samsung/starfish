@@ -3,6 +3,7 @@
 
 #include "dom/Node.h"
 #include "platform/window/Window.h"
+#include "loader/ResourceLoader.h"
 
 namespace StarFish {
 
@@ -25,7 +26,7 @@ class Document : public Node {
 friend DOMImplementation;
 #endif
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance);
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url);
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
     void setCompatibilityMode(CompatibilityMode m) { m_compatibilityMode = m; }
@@ -101,6 +102,11 @@ public:
         return m_window;
     }
 
+    ResourceLoader* resourceLoader()
+    {
+        return &m_resourceLoader;
+    }
+
     StyleResolver* styleResolver()
     {
         return &m_styleResolver;
@@ -136,15 +142,22 @@ public:
         m_inParsing = b;
     }
 
+    const URL& documentURI()
+    {
+        return m_documentURI;
+    }
+
+    void open();
 protected:
     bool m_inParsing : 1;
     CompatibilityMode m_compatibilityMode;
+    URL m_documentURI;
+    ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
     Window* m_window;
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;
     size_t m_domVersion;
-
 #ifdef STARFISH_EXP
 private:
     DOMImplementation* m_domImplementation;

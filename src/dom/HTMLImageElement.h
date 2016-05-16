@@ -2,10 +2,12 @@
 #define __StarFishHTMLImageElement__
 
 #include "dom/HTMLElement.h"
+#include "loader/ImageResource.h"
 
 namespace StarFish {
 
 class HTMLImageElement : public HTMLElement {
+    friend class ImageDownloadClient;
 public:
     HTMLImageElement(Document* document)
         : HTMLElement(document)
@@ -98,6 +100,7 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
 
 private:
+    ImageResource* m_imageResource;
     ImageData* m_imageData;
 };
 

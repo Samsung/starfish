@@ -790,7 +790,13 @@ public:
     String* urlValue(const URL& urlOfStyleSheet)
     {
         STARFISH_ASSERT(m_valueKind == UrlValueKind);
-        return urlOfStyleSheet.path()->concat(m_value.m_stringValue);
+        return URL(urlOfStyleSheet.baseURI(), m_value.m_stringValue).urlString();
+    }
+
+    String* urlStringValue()
+    {
+        STARFISH_ASSERT(m_valueKind == UrlValueKind);
+        return m_value.m_stringValue;
     }
 
     void setStringValue(String* value)
@@ -1361,7 +1367,7 @@ public:
 
     void resolveDOMStyle(Document* document, bool force = false);
     void dumpDOMStyle(Document* document);
-    ComputedStyle* resolveDocumentStyle(StarFish* sf);
+    ComputedStyle* resolveDocumentStyle(Document* doc);
     friend Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data);
     ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
 

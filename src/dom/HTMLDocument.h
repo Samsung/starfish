@@ -10,8 +10,8 @@ class Window;
 
 class HTMLDocument : public Document {
 public:
-    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance)
-        : Document(window, scriptBindingInstance)
+    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url)
+        : Document(window, scriptBindingInstance, url)
     {
     }
 

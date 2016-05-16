@@ -11,12 +11,14 @@ void FrameDocument::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     style()->setWidth(Length(Length::Fixed, w));
     style()->setHeight(Length(Length::Fixed, h));
 
-    STARFISH_ASSERT(firstChild() == lastChild());
-    STARFISH_ASSERT(firstChild()->isRootElement());
+    if (firstChild()) {
+        STARFISH_ASSERT(firstChild() == lastChild());
+        STARFISH_ASSERT(firstChild()->isRootElement());
 
-    FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+        FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
-    firstChild()->asFrameBox()->asFrameBlockBox()->m_visibleRect.unite(m_visibleRect);
+        firstChild()->asFrameBox()->asFrameBlockBox()->m_visibleRect.unite(m_visibleRect);
+    }
 }
 
 }

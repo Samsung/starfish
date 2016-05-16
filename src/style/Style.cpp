@@ -1171,7 +1171,7 @@ URL CSSStyleSheet::url()
             return m_origin->asElement()->asHTMLElement()->asHTMLLinkElement()->href();
         }
     }
-    return URL();
+    return URL(m_origin->document()->documentURI());
 }
 
 String* CSSStyleDeclaration::generateCSSText()
@@ -1926,7 +1926,7 @@ String* CSSStyleValuePair::toString()
         } else if (m_valueKind == CSSStyleValuePair::ValueKind::Initial) {
             return String::fromUTF8("initial");
         } else if (m_valueKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
-            return urlValue(URL());
+            return urlStringValue();
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -2208,7 +2208,7 @@ String* CSSStyleValuePair::toString()
         switch (valueKind()) {
         case CSSStyleValuePair::ValueKind::UrlValueKind: {
             String* str = String::fromUTF8("url(\"");
-            str = str->concat(urlValue(URL()));
+            str = str->concat(urlStringValue());
             str = str->concat(String::fromUTF8("\")"));
             return str;
         }
@@ -3485,14 +3485,14 @@ void CSSStyleDeclaration::notifyNeedsStyleRecalc()
         m_element->notifyInlineStyleChanged();
 }
 
-ComputedStyle* StyleResolver::resolveDocumentStyle(StarFish* sf)
+ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 {
     ComputedStyle* ret = new ComputedStyle();
     ret->m_display = DisplayValue::BlockDisplayValue;
     ret->m_inheritedStyles.m_color = Color(0, 0, 0, 255);
     ret->m_inheritedStyles.m_textAlign = TextAlignValue::NamelessTextAlignValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
-    ret->loadResources(sf);
+    ret->loadResources(doc);
     return ret;
 }
 
@@ -4662,10 +4662,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
     // inline style
     if (element->inlineStyleWithoutCreation()) {
         auto inlineCssValues = element->inlineStyleWithoutCreation()->m_cssValues;
-        apply(URL(), inlineCssValues, ret, parent);
+        apply(element->document()->documentURI(), inlineCssValues, ret, parent);
     }
 
-    ret->loadResources(element->document()->window()->starFish());
+    ret->loadResources(element);
     ret->arrangeStyleValues(parent);
     return ret;
 }
@@ -4717,7 +4717,7 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
                 if (inheritedStyleChanged || child->needsStyleRecalc()) {
                     if (childStyle == nullptr) {
                         childStyle = new ComputedStyle(element->style());
-                        childStyle->loadResources(element->document()->window()->starFish());
+                        childStyle->loadResources(element);
                         childStyle->arrangeStyleValues(element->style());
                     }
 

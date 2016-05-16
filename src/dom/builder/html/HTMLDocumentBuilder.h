@@ -8,11 +8,12 @@ namespace StarFish {
 class Window;
 class HTMLDocumentBuilder : public DocumentBuilder {
 public:
-    HTMLDocumentBuilder()
+    HTMLDocumentBuilder(Document* document)
+        : DocumentBuilder(document)
     {
     }
 
-    virtual void build(Document* element, String* filePath);
+    virtual void build(const URL& url);
 
 protected:
 };
