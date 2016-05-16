@@ -119,3 +119,5 @@ test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-declaration-nam
 test/reftest/vendor/blink/fast/dom/CSSStyleDeclaration/css-style-declaration-named-getter.html
 test/reftest/vendor/blink/fast/dom/body-frameset-event-handlers.html
 test/reftest/vendor/blink/fast/dom/background-shorthand-csstext.html
+test/reftest/vendor/blink/fast/dom/Window/window-function-name-getter-precedence.html
+test/reftest/vendor/blink/fast/dom/Window/window-legacy-event-listener.html
