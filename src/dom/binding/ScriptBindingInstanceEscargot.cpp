@@ -2032,7 +2032,7 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
                 element->setOnclick(v);
             } else {
                 element->clearOnClick();
@@ -2069,7 +2069,7 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
                 element->setOnload(v);
             } else {
                 element->clearOnload();
@@ -2096,7 +2096,7 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
                 element->setOnunload(v);
             } else {
                 element->clearOnunload();
