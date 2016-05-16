@@ -456,7 +456,6 @@ escargot::ESFunctionObject* binding##exportName(ScriptBindingInstance* scriptBin
 }
 
 IMPL_EMPTY_BINDING(htmlDocument, HTMLDocument, document);
-IMPL_EMPTY_BINDING(comment, Comment, characterData);
 IMPL_EMPTY_BINDING(htmlHtmlElement, HTMLHtmlElement, htmlElement);
 IMPL_EMPTY_BINDING(htmlHeadElement, HTMLHeadElement, htmlElement);
 IMPL_EMPTY_BINDING(htmlDivElement, HTMLDivElement, htmlElement);
@@ -1435,9 +1434,21 @@ escargot::ESFunctionObject* bindingCharacterData(ScriptBindingInstance* scriptBi
 
 escargot::ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Text, fetchData(scriptBindingInstance)->characterData());
-
     /* 4.10 Interface Text */
+    auto TextFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        if (argCount > 0) {
+            escargot::ESString* data = firstArg.toString();
+            Text* text = new Text((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document(), String::fromUTF8(data->utf8Data()));
+            return text->scriptValue();
+        }
+        return escargot::ESValue();
+    }, escargot::ESString::create("Text"), 0, true, true);
+    TextFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
+    TextFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    TextFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->characterData()->protoType());
+    TextFunction->set__proto__(fetchData(scriptBindingInstance)->characterData());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         TextFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("wholeText"),
@@ -1452,6 +1463,27 @@ escargot::ESFunctionObject* bindingText(ScriptBindingInstance* scriptBindingInst
     }, nullptr);
 
     return TextFunction;
+}
+
+escargot::ESFunctionObject* bindingComment(ScriptBindingInstance* scriptBindingInstance)
+{
+    /* 4.10 Interface Comment */
+    auto CommentFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        if (argCount > 0) {
+            escargot::ESString* data = firstArg.toString();
+            Comment* comment = new Comment((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document(), String::fromUTF8(data->utf8Data()));
+            return comment->scriptValue();
+        }
+        return escargot::ESValue();
+    }, escargot::ESString::create("Comment"), 0, true, true);
+    CommentFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
+    CommentFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);                                                                                                                     \
+    CommentFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->characterData()->protoType()); \
+    CommentFunction->set__proto__(fetchData(scriptBindingInstance)->characterData());
+
+    return CommentFunction;
 }
 
 escargot::ESFunctionObject* bindingDocumentFragment(ScriptBindingInstance* scriptBindingInstance)
