@@ -37,6 +37,7 @@ extern Evas* g_internalCanvas;
 
 bool g_fireOnloadEvent = false;
 
+/*
 #define PNG_SKIP_SETJMP_CHECK
 #include <png.h>
 
@@ -108,6 +109,7 @@ int writeImage(const char* filename, int width, int height, void *buffer)
 
     return code;
 }
+*/
 #endif
 
 

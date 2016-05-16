@@ -123,7 +123,7 @@ ifeq ($(HOST), tizen)
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
 endif
 
-# fixme 
+# fixme
 # this causes
 # /home/ksh8281/tizen-sdk-2.4.r2/tools/arm-linux-gnueabi-gcc-4.9/bin/../lib/gcc/arm-linux-gnueabi/4.9.2/../../../../arm-linux-gnueabi/bin/ld: BFD (GNU Binutils) 2.22 assertion fail ../../bfd/elf32-arm.c:12049
 # LDFLAGS += -Wl,--gc-sections
@@ -333,7 +333,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
   CXXFLAGS += -Os -g0 -finline-limit=64
   ifeq ($(MODE), debug)
-    CXXFLAGS += -g3 -Wno-literal-suffix
+    CXXFLAGS += -g3 -Wno-literal-suffix -DSTARFISH_ENABLE_PIXEL_TEST
   endif
     TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
@@ -359,7 +359,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-$(VERSION)-target-arm
   LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
   ifneq ($(VERSION), 3.0)
-    LDFLAGS += -static-libstdc++
+    LDFLAGS +=
   endif
   ifeq ($(TYPE), lib)
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
@@ -464,6 +464,7 @@ tizen_arm.exe.debug: $(OUTDIR)/$(BIN)
 tizen_arm.exe.release: $(OUTDIR)/$(BIN)
 	cp -f $< .
 tizen_wearable_arm.exe.debug: $(OUTDIR)/$(BIN)
+	$(STRIP) $<
 	cp -f $< .
 tizen_wearable_arm.exe.release: $(OUTDIR)/$(BIN)
 	cp -f $< .
@@ -501,7 +502,7 @@ tizen3_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
 tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $< .
 
-$(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS) 
+$(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS)
 	@echo "[LINK] $@"
 	ln -sf deps/tizen/lib/tizen-wearable-$(VERSION)-emulator-x86/libstdc++.a.0 libstdc++.a
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
