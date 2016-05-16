@@ -71,5 +71,18 @@ make wpt_test_*[dom | etc.]             // specific test suite
 make wpt_test [tc=xxx]                  // specific directory or file
 ```
 
+### Bidi Tests
+Bidi tests perform pixel tests on a device. To run the tests,
+- Connect your device
+- run the following
+
+```sh
+make regression_test_bidi.tizen_wearable_arm.debug
+sdb shell
+cd /home/developer
+./bidi_test_run.sh
+./bidi_test_clean.sh
+```
+
 [Wiki](http://10.113.64.203/StarFish/starfish/wikis/home)
 

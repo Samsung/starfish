@@ -647,6 +647,10 @@ regression_test_css3_backgrounds:
 regression_test_css3_transforms:
 	./tool/reftest/css_test.sh css-transforms-1 true
 
+regression_test_bidi.tizen_wearable_arm.debug:
+	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp
+	./tool/reftest/setup_bidi_test.sh true
+
 regression_test:
 	make regression_test_dom_conformance_test
 	make regression_test_wpt_dom
