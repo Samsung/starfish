@@ -58,6 +58,7 @@ test/reftest/vendor/blink/fast/dom/getElementsByClassName/array/001.html
 test/reftest/vendor/blink/fast/dom/getElementsByClassName/array/002.html
 test/reftest/vendor/blink/fast/dom/getElementsByClassName/array/003.html
 test/reftest/vendor/blink/fast/dom/getElementsByClassName/array/004.html
+test/reftest/vendor/blink/fast/dom/HTMLCollection/HTMLCollection-namedItem-invalidate-no-crash.html
 test/reftest/vendor/blink/fast/dom/htmlcollection-length-after-item.html
 test/reftest/vendor/blink/fast/dom/html-collections-named-getter-mandatory-arg.html
 test/reftest/vendor/blink/fast/dom/HTMLLinkElement/link-onload2.html
@@ -123,4 +124,3 @@ test/reftest/vendor/blink/fast/dom/Window/window-function-name-getter-precedence
 test/reftest/vendor/blink/fast/dom/Window/window-legacy-event-listener.html
 test/reftest/vendor/blink/fast/dom/XMLHttpRequest-constants.html
 test/reftest/vendor/blink/fast/dom/XMLHttpRequest-legacy-event-listener.html
-test/reftest/vendor/blink/fast/dom/HTMLCollection/HTMLCollection-namedItem-invalidate-no-crash.html

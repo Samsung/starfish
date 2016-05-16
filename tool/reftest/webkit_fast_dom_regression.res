@@ -61,6 +61,7 @@ test/reftest/vendor/webkit/fast/dom/getElementsByClassName/ASCII-case-insensitiv
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/case-sensitive.html
 test/reftest/vendor/webkit/fast/dom/getElementsByClassName/conflict-tag-name.html
 test/reftest/vendor/webkit/fast/dom/htmlcollection-children-mutation.html
+test/reftest/vendor/webkit/fast/dom/htmlcollection-getownproperty.html
 test/reftest/vendor/webkit/fast/dom/htmlcollection-length-after-item-2.html
 test/reftest/vendor/webkit/fast/dom/htmlcollection-length-after-item.html
 test/reftest/vendor/webkit/fast/dom/HTMLDocument/constructor-setter-crash.html
@@ -77,9 +78,11 @@ test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload-before-page-lo
 test/reftest/vendor/webkit/fast/dom/HTMLStyleElement/style-onload.html
 test/reftest/vendor/webkit/fast/dom/inline-event-attributes-crash.html
 test/reftest/vendor/webkit/fast/dom/inline-event-attributes-moved.html
+test/reftest/vendor/webkit/fast/dom/interface-name-property.html
 test/reftest/vendor/webkit/fast/dom/isEqualNode-after-removeAttribute.html
 test/reftest/vendor/webkit/fast/dom/multiple-ids.html
 test/reftest/vendor/webkit/fast/dom/NamedNodeMap-named-getter-caching.html
+test/reftest/vendor/webkit/fast/dom/namednodemap-namelookup.html
 test/reftest/vendor/webkit/fast/dom/NamedNodeMap-setNamedItem-crash.html
 test/reftest/vendor/webkit/fast/dom/node-childNodes-idempotence.html
 test/reftest/vendor/webkit/fast/dom/node-item.html
@@ -92,6 +95,7 @@ test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-assignment.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-call-as-function.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-with-index.html
 test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-item-with-name.html
+test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-name-getter-properties.html
 test/reftest/vendor/webkit/fast/dom/NodeList/no-named-getter.html
 test/reftest/vendor/webkit/fast/dom/no-elements.html
 test/reftest/vendor/webkit/fast/dom/objc-big-method-name.html
@@ -129,7 +133,3 @@ test/reftest/vendor/webkit/fast/dom/Window/window-legacy-event-listener.html
 test/reftest/vendor/webkit/fast/dom/Window/window-properties-configurable.html
 test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-constants.html
 test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-legacy-event-listener.html
-test/reftest/vendor/webkit/fast/dom/interface-name-property.html
-test/reftest/vendor/webkit/fast/dom/namednodemap-namelookup.html
-test/reftest/vendor/webkit/fast/dom/htmlcollection-getownproperty.html
-test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-name-getter-properties.html
