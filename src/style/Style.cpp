@@ -2489,10 +2489,10 @@ void CSSStyleDeclaration::setMargin(const char* value)
     }
 }
 
-String* CSSStyleDeclaration::BackgroundRepeat()
+String* CSSStyleDeclaration::BackgroundRepeat(bool isShortHandValue)
 {
-    String* repeatX = BackgroundRepeatX();
-    String* repeatY = BackgroundRepeatY();
+    String* repeatX = BackgroundRepeatX(isShortHandValue);
+    String* repeatY = BackgroundRepeatY(isShortHandValue);
 
     if (repeatX->equals("repeat") && repeatY->equals("repeat"))
         return String::fromUTF8("repeat");
@@ -2510,27 +2510,27 @@ String* CSSStyleDeclaration::BackgroundRepeat()
     return String::emptyString;
 }
 
-void CSSStyleDeclaration::setBackgroundRepeat(const char* value)
+void CSSStyleDeclaration::setBackgroundRepeat(const char* value, bool isShortHandValue)
 {
     std::vector<String*, gc_allocator<String*> > tokens;
     DOMTokenList::tokenize(&tokens, String::fromUTF8(value));
 
     if (checkInputErrorBackgroundRepeat(&tokens)) {
         if (VALUE_IS_STRING("repeat")) {
-            setBackgroundRepeatX("repeat");
-            setBackgroundRepeatY("repeat");
+            setBackgroundRepeatX("repeat", isShortHandValue);
+            setBackgroundRepeatY("repeat", isShortHandValue);
         } else if (VALUE_IS_STRING("repeat-x")) {
-            setBackgroundRepeatX("repeat");
-            setBackgroundRepeatY("no-repeat");
+            setBackgroundRepeatX("repeat", isShortHandValue);
+            setBackgroundRepeatY("no-repeat", isShortHandValue);
         } else if (VALUE_IS_STRING("repeat-y")) {
-            setBackgroundRepeatX("no-repeat");
-            setBackgroundRepeatY("repeat");
+            setBackgroundRepeatX("no-repeat", isShortHandValue);
+            setBackgroundRepeatY("repeat", isShortHandValue);
         } else if (VALUE_IS_STRING("no-repeat")) {
-            setBackgroundRepeatX("no-repeat");
-            setBackgroundRepeatY("no-repeat");
+            setBackgroundRepeatX("no-repeat", isShortHandValue);
+            setBackgroundRepeatY("no-repeat", isShortHandValue);
         } else {
-            setBackgroundRepeatX(value);
-            setBackgroundRepeatY(value);
+            setBackgroundRepeatX(value, isShortHandValue);
+            setBackgroundRepeatY(value, isShortHandValue);
         }
     }
 }
@@ -2538,9 +2538,9 @@ void CSSStyleDeclaration::setBackgroundRepeat(const char* value)
 String* CSSStyleDeclaration::Background()
 {
     String* result = String::emptyString;
-    String* image = BackgroundImage();
-    String* repeat = BackgroundRepeat();
-    String* color = BackgroundColor();
+    String* image = BackgroundImage(true);
+    String* repeat = BackgroundRepeat(true);
+    String* color = BackgroundColor(true);
 
     if (image->length() != 0 && !image->equals("initial"))
         result = result->concat(image);
@@ -2568,21 +2568,21 @@ void CSSStyleDeclaration::setBackground(const char* value)
         size_t len = tokens.size();
         if (len == 1) {
             if (checkInputErrorBackgroundColor(&tokens)) {
-                setBackgroundColor(value);
+                setBackgroundColor(value, true);
                 setBackgroundImage("initial");
                 setBackgroundRepeat("initial");
             } else if (checkInputErrorBackgroundImage(&tokens)) {
-                setBackgroundImage(value);
+                setBackgroundImage(value, true);
                 setBackgroundRepeat("initial");
                 setBackgroundColor("initial");
             } else if (checkInputErrorBackgroundRepeat(&tokens)) {
-                setBackgroundRepeat(value);
+                setBackgroundRepeat(value, true);
                 setBackgroundImage("initial");
                 setBackgroundColor("initial");
             } else {
-                setBackgroundRepeat(value);
-                setBackgroundImage(value);
-                setBackgroundColor(value);
+                setBackgroundRepeat(value, true);
+                setBackgroundImage(value, true);
+                setBackgroundColor(value, true);
             }
         } else if (len == 2) {
             std::vector<String*, gc_allocator<String*> > token0;
@@ -2592,28 +2592,28 @@ void CSSStyleDeclaration::setBackground(const char* value)
             token1.assign(tokens.begin() + 1, tokens.end());
 
             if (checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundImage(&token1)) {
-                setBackgroundColor(token0[0]->utf8Data());
-                setBackgroundImage(token1[0]->utf8Data());
+                setBackgroundColor(token0[0]->utf8Data(), true);
+                setBackgroundImage(token1[0]->utf8Data(), true);
                 setBackgroundRepeat("initial");
             } else if (checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundColor(&token1)) {
-                setBackgroundImage(token0[0]->utf8Data());
-                setBackgroundColor(token1[0]->utf8Data());
+                setBackgroundImage(token0[0]->utf8Data(), true);
+                setBackgroundColor(token1[0]->utf8Data(), true);
                 setBackgroundRepeat("initial");
             } else if (checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundRepeat(&token1)) {
-                setBackgroundColor(token0[0]->utf8Data());
-                setBackgroundRepeat(token1[0]->utf8Data());
+                setBackgroundColor(token0[0]->utf8Data(), true);
+                setBackgroundRepeat(token1[0]->utf8Data(), true);
                 setBackgroundImage("initial");
             } else if (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundColor(&token1)) {
-                setBackgroundRepeat(token0[0]->utf8Data());
-                setBackgroundColor(token1[0]->utf8Data());
+                setBackgroundRepeat(token0[0]->utf8Data(), true);
+                setBackgroundColor(token1[0]->utf8Data(), true);
                 setBackgroundImage("initial");
             } else if (checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundRepeat(&token1)) {
-                setBackgroundImage(token0[0]->utf8Data());
-                setBackgroundRepeat(token1[0]->utf8Data());
+                setBackgroundImage(token0[0]->utf8Data(), true);
+                setBackgroundRepeat(token1[0]->utf8Data(), true);
                 setBackgroundColor("initial");
             } else if (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundImage(&token1)) {
-                setBackgroundRepeat(token0[0]->utf8Data());
-                setBackgroundImage(token1[0]->utf8Data());
+                setBackgroundRepeat(token0[0]->utf8Data(), true);
+                setBackgroundImage(token1[0]->utf8Data(), true);
                 setBackgroundColor("initial");
             }
         } else if (len == 3) {
@@ -2626,29 +2626,29 @@ void CSSStyleDeclaration::setBackground(const char* value)
             token2.assign(tokens.begin() + 2, tokens.end());
 
             if (checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundImage(&token1) && checkInputErrorBackgroundRepeat(&token2)) {
-                setBackgroundColor(token0[0]->utf8Data());
-                setBackgroundImage(token1[0]->utf8Data());
-                setBackgroundRepeat(token2[0]->utf8Data());
+                setBackgroundColor(token0[0]->utf8Data(), true);
+                setBackgroundImage(token1[0]->utf8Data(), true);
+                setBackgroundRepeat(token2[0]->utf8Data(), true);
             } else if (checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundRepeat(&token1) && checkInputErrorBackgroundImage(&token2)) {
-                setBackgroundColor(token0[0]->utf8Data());
-                setBackgroundRepeat(token1[0]->utf8Data());
-                setBackgroundImage(token2[0]->utf8Data());
+                setBackgroundColor(token0[0]->utf8Data(), true);
+                setBackgroundRepeat(token1[0]->utf8Data(), true);
+                setBackgroundImage(token2[0]->utf8Data(), true);
             } else if (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundColor(&token1) && checkInputErrorBackgroundImage(&token2)) {
-                setBackgroundRepeat(token0[0]->utf8Data());
-                setBackgroundColor(token1[0]->utf8Data());
-                setBackgroundImage(token2[0]->utf8Data());
+                setBackgroundRepeat(token0[0]->utf8Data(), true);
+                setBackgroundColor(token1[0]->utf8Data(), true);
+                setBackgroundImage(token2[0]->utf8Data(), true);
             } else if (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundImage(&token1) && checkInputErrorBackgroundColor(&token2)) {
-                setBackgroundRepeat(token0[0]->utf8Data());
-                setBackgroundImage(token1[0]->utf8Data());
-                setBackgroundColor(token2[0]->utf8Data());
+                setBackgroundRepeat(token0[0]->utf8Data(), true);
+                setBackgroundImage(token1[0]->utf8Data(), true);
+                setBackgroundColor(token2[0]->utf8Data(), true);
             } else if (checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundColor(&token1) && checkInputErrorBackgroundRepeat(&token2)) {
-                setBackgroundImage(token0[0]->utf8Data());
-                setBackgroundColor(token1[0]->utf8Data());
-                setBackgroundRepeat(token2[0]->utf8Data());
+                setBackgroundImage(token0[0]->utf8Data(), true);
+                setBackgroundColor(token1[0]->utf8Data(), true);
+                setBackgroundRepeat(token2[0]->utf8Data(), true);
             } else if (checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundRepeat(&token1) && checkInputErrorBackgroundColor(&token2)) {
-                setBackgroundImage(token0[0]->utf8Data());
-                setBackgroundRepeat(token1[0]->utf8Data());
-                setBackgroundColor(token2[0]->utf8Data());
+                setBackgroundImage(token0[0]->utf8Data(), true);
+                setBackgroundRepeat(token1[0]->utf8Data(), true);
+                setBackgroundColor(token2[0]->utf8Data(), true);
             }
         }
     }
