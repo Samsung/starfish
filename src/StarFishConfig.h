@@ -129,6 +129,7 @@
 #define STARFISH_LOG_INFO(...) fprintf(stdout, __VA_ARGS__);
 #ifdef STARFISH_TIZEN_WEARABLE
 #undef STARFISH_LOG_INFO
+#define TIZEN_ENGINEER_MODE
 #include <dlog.h>
 #define STARFISH_LOG_INFO(...) dlog_print(DLOG_INFO, "StarFish", __VA_ARGS__);
 #endif
@@ -136,6 +137,7 @@
 #define STARFISH_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__);
 #ifdef STARFISH_TIZEN_WEARABLE
 #undef STARFISH_LOG_ERROR
+#define TIZEN_ENGINEER_MODE
 #include <dlog.h>
 #define STARFISH_LOG_ERROR(...) dlog_print(DLOG_ERROR, "StarFish", __VA_ARGS__);
 #endif

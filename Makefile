@@ -234,7 +234,7 @@ SRC += third_party/skia_matrix/SkDebug.cpp
 SRC += third_party/clipper/cpp/clipper.cpp
 
 ifeq ($(TIZEN_DEVICE_API), true)
-  SRC += third_party/deviceapi/src/TizenDeviceAPILoaderForEscargot.cpp
+  SRC += $(foreach dir, third_party/deviceapi/src , $(wildcard $(dir)/*.cpp))
 endif
 
 SRC_CC =

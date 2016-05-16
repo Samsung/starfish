@@ -52,7 +52,7 @@ void ScriptBindingInstance::exit()
 void ScriptBindingInstance::close()
 {
 #ifdef TIZEN_DEVICE_API
-    ((DeviceAPI::NativePluginManager*)fetchData(this)->m_deviceAPIObject)->close();
+    DeviceAPI::close(fetchData(this)->m_instance);
 #endif
 }
 
@@ -421,31 +421,10 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         NULL, true, true, false);
 #endif
 
-
 #ifdef TIZEN_DEVICE_API
-    fetchData(this)->m_deviceAPIObject = new DeviceAPI::NativePluginManager(fetchData(this)->m_instance);
+    DeviceAPI::initialize(fetchData(this)->m_instance);
 #endif
 
-#ifdef TIZEN_DEVICE_API
-    {
-        escargot::ESValue loadFunction = fetchData(this)->m_instance->globalObject()->get(escargot::ESString::create("load"));
-        escargot::ESValue pathValue = escargot::ESString::create("/usr/lib/webapi-plugins/include.js");
-
-        ScriptValue result;
-        escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-
-        std::jmp_buf tryPosition;
-        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-            result = escargot::ESFunctionObject::call(instance, loadFunction, escargot::ESValue(), &pathValue, 1, false);
-            instance->unregisterTryPos(&tryPosition);
-            STARFISH_LOG_INFO("Tizen device api load ok");
-        } else {
-            result = instance->getCatchedError();
-            STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
-        }
-    }
-
-#endif
 }
 
 #define IMPL_EMPTY_BINDING(codeName, exportName, fromCodeName) \

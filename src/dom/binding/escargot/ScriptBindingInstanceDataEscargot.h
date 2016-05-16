@@ -61,9 +61,6 @@ public:
     escargot::ESFunctionObject* m_orgToString;
     escargot::ESFunctionObject* m_eventTarget;
     escargot::ESFunctionObject* m_window;
-#ifdef TIZEN_DEVICE_API
-    escargot::ESObject* m_deviceAPIObject;
-#endif
 #ifdef STARFISH_EXP
     escargot::ESFunctionObject* m_domImplementation;
 #endif
