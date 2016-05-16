@@ -1,0 +1,7 @@
+<p>This tests that items in a NodeList can be retrieved directly by name.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> div1 instanceof HTMLDivElement is true</span><br />
+<span><span class="pass">PASS</span> div2 instanceof HTMLDivElement is true</span><br />
+<span><span class="pass">PASS</span> div1.textContent is 'text1'</span><br />
+<span><span class="pass">PASS</span> div2.textContent is 'text2'</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />

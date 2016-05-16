@@ -1,0 +1,9 @@
+<p>This tests that items in a NodeList can be retrieved by index.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> div0 == div0s is true</span><br />
+<span><span class="pass">PASS</span> div0 == div0s_ is false</span><br />
+<span><span class="pass">PASS</span> div0 == div1 is false</span><br />
+<span><span class="pass">PASS</span> div0s == div0s_ is false</span><br />
+<span><span class="pass">PASS</span> div0s == div1 is false</span><br />
+<span><span class="pass">PASS</span> div0s_ == div1 is false</span><br />
+<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
+<br /><span class="pass">TEST COMPLETE</span><br />

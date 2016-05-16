@@ -129,3 +129,7 @@ test/reftest/vendor/webkit/fast/dom/Window/window-legacy-event-listener.html
 test/reftest/vendor/webkit/fast/dom/Window/window-properties-configurable.html
 test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-constants.html
 test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-legacy-event-listener.html
+test/reftest/vendor/webkit/fast/dom/interface-name-property.html
+test/reftest/vendor/webkit/fast/dom/namednodemap-namelookup.html
+test/reftest/vendor/webkit/fast/dom/htmlcollection-getownproperty.html
+test/reftest/vendor/webkit/fast/dom/NodeList/nodelist-name-getter-properties.html

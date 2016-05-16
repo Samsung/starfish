@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="../../../resources/wpt-test-pre.js"></script>
+    <script src="resources/WindowProperties.js"></script>
+    <script>
+        if (window.testRunner)
+            testRunner.dumpAsText();
+
+        function log(message, color)
+        {
+            // var paragraph = document.createElement("div");
+            // paragraph.appendChild(document.createTextNode(message));
+            // paragraph.style.fontFamily = "monospace";
+            // if (color)
+            //    paragraph.style.color = color;
+            // document.getElementById("console").appendChild(paragraph);
+            console.log(message);
+        }
+
+        function shouldBe(a, b, printOnlyOnFailure)
+        {
+            var evalA;
+            try {
+                evalA = eval(a);
+            } catch(e) {
+                evalA = e;
+            }
+            if (evalA == b) {
+                if (!printOnlyOnFailure)
+                    log("PASS: " + a + " should be " + b + " and is.", "green");
+            } else
+                log("FAIL: " + a + " should be " + b + " but instead is " + evalA, "red");
+        }
+
+        function testFunction(functionName)
+        {
+            var element = document.createElement('div');
+            element.id = functionName;
+            document.body.appendChild(element);
+
+            shouldBe("typeof window." + functionName, "function");
+
+            document.body.removeChild(element);
+        }
+
+        function runTests()
+        {
+            var windowFunctions = [
+                "print",
+                "setTimeout",
+                "clearTimeout",
+                "setInterval",
+                "clearInterval",
+                "addEventListener",
+                "removeEventListener",
+                "eval",
+                "parseInt",
+                "parseFloat",
+                "isNaN",
+                "isFinite",
+                "escape",
+                "unescape",
+                "decodeURI",
+                "decodeURIComponent",
+                "encodeURI",
+                "encodeURIComponent",
+                "toString",
+                "toLocaleString",
+                "valueOf",
+                "hasOwnProperty",
+                "propertyIsEnumerable",
+                "isPrototypeOf",
+            ];
+            for (var func in windowFunctions) {
+                testFunction(windowFunctions[func])
+            }
+
+            window.myFunction = function() { return "myFunction"; }
+            testFunction("myFunction");
+            window.__proto__.myPrototypeFunction = function() { return "myPrototypeFunction"; }
+            testFunction("myPrototypeFunction");
+
+            try {
+                wptTestEnd();
+            } catch(e) {
+                console.log(e);
+            }
+        }
+    </script>
+</head>
+<body onload="runTests();">
+    <p>This tests that functions of the window object and it's prototype have precedence in lookup over elements with id's of the same name.</p>
+    <pre id="console"></pre>
+</body>
+</html>

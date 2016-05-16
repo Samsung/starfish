@@ -660,6 +660,8 @@ regression_test:
 	make regression_test_wpt_progress_events
 	make regression_test_wpt_xhr
 	make regression_test_blink_dom_conformance_test
+	make regression_test_blink_fast_dom
+	make regression_test_blink_fast_html
 	make regression_test_gecko_dom_conformance_test
 	make regression_test_webkit_dom_conformance_test
 	make regression_test_webkit_fast_dom

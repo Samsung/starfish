@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<script src="../../resources/wpt-test-pre.js"></script>
+<script src="../../resources/js-test-pre.js"></script>
+<script>
+description('Adding stylesheet candidates should not crash in case the html parser decides to reorder the DOM tree.');
+testPassed('Did not crash');
+</script>
+<div>
+  <style></style>
+  <link>
+</div>
+<script src="../../resources/js-test-post.js"></script>
+<script src="../../resources/wpt-test-post.js"></script>

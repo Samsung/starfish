@@ -1,0 +1,4 @@
+<p>This tests accessing the length after accessing (length + 1)-th item in HTMLCollection doesn't cache a wrong length.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
+<span><span class="pass">PASS</span> children = container.children; children.length is 0</span><br />
+<span><span class="pass">PASS</span> container.appendChild(span); children[1]; children.length is 1</span><br />
+<span><span class="pass">PASS</span> container.removeChild(span); children.length is 0</span><br />

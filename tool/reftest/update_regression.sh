@@ -42,6 +42,20 @@ cp tool/reftest/blink_dom_conformance_test_regression.res test/regression/tool/v
 rm test/regression/reftest/vendor/blink/dom/html -rf
 cp test/reftest/vendor/blink/dom/html test/regression/reftest/vendor/blink/dom/ -rf
 
+# fast/dom
+rm test/regression/reftest/vendor/blink/resources -rf
+cp test/reftest/vendor/blink/resources test/regression/reftest/vendor/blink -rf
+cp tool/reftest/blink_fast_dom.res test/regression/tool/vendor/blink/test_blink_fast_dom
+rm test/regression/reftest/vendor/blink/fast/dom -rf
+mkdir -p test/regression/reftest/vendor/blink/fast/dom
+cp test/reftest/vendor/blink/fast/dom test/regression/reftest/vendor/blink/fast -rf
+
+# fast/html
+cp tool/reftest/blink_fast_html.res test/regression/tool/vendor/blink/test_blink_fast_html
+rm test/regression/reftest/vendor/blink/fast/html -rf
+mkdir -p test/regression/reftest/vendor/blink/fast/html
+cp test/reftest/vendor/blink/fast/html test/regression/reftest/vendor/blink/fast -rf
+
 ## Gecko
 # Mochitest - W3C DOM Conformance Test Suites
 cp tool/reftest/gecko_dom_conformance_test_regression.res test/regression/tool/vendor/gecko/test_gecko_dom_conformance
@@ -62,3 +76,8 @@ rm test/regression/reftest/vendor/webkit/fast/dom -rf
 mkdir -p test/regression/reftest/vendor/webkit/fast/dom
 cp test/reftest/vendor/webkit/fast/dom test/regression/reftest/vendor/webkit/fast -rf
 
+# fast/html
+cp tool/reftest/webkit_fast_html_regression.res test/regression/tool/vendor/webkit/test_webkit_fast_html
+rm test/regression/reftest/vendor/webkit/fast/html -rf
+mkdir -p test/regression/reftest/vendor/webkit/fast/html
+cp test/reftest/vendor/webkit/fast/html test/regression/reftest/vendor/webkit/fast -rf
