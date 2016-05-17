@@ -484,7 +484,8 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         return;
     }
 
-    if (style()->overflow() == OverflowValue::HiddenOverflow) {
+    bool shouldApplyOverflowHidden = (style()->overflow() == OverflowValue::HiddenOverflow) && !parent()->isFrameDocument();
+    if (shouldApplyOverflowHidden) {
         canvas->save();
         canvas->clip(Rect(0, 0, width(), height()));
     }
@@ -525,7 +526,7 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         canvas->restore();
     }
 
-    if (style()->overflow() == OverflowValue::HiddenOverflow) {
+    if (shouldApplyOverflowHidden) {
         canvas->restore();
     }
 }
