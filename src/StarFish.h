@@ -193,6 +193,8 @@ public:
     QualifiedName m_unload;
     QualifiedName m_onunload;
     QualifiedName m_visibilitychange;
+    QualifiedName m_DOMContentLoaded;
+
 protected:
 };
 

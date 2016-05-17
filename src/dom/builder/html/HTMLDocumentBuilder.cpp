@@ -33,6 +33,10 @@ public:
         Document* document = m_builder.document();
         HTMLParser parser(document->window()->starFish(), document, resource()->asTextResource()->text());
         parser.parse();
+
+        String* eventType = document->window()->starFish()->staticStrings()->m_DOMContentLoaded.localName();
+        Event* e = new Event(eventType, EventInit(true, true));
+        document->EventTarget::dispatchEvent(e);
     }
 
 protected:
