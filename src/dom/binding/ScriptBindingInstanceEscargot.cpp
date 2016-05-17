@@ -2120,7 +2120,7 @@ escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* script
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLBodyElement, fetchData(scriptBindingInstance)->htmlElement());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-            HTMLBodyElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
+        HTMLBodyElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
@@ -2149,7 +2149,7 @@ escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* script
     });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-            HTMLBodyElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onunload"),
+        HTMLBodyElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onunload"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;

@@ -10,6 +10,8 @@ void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old, Strin
     StaticStrings* ss = document()->window()->starFish()->staticStrings();
     if (name == ss->m_onload) {
         document()->window()->setAttributeEventListener(ss->m_load, value);
+    } else if (name == ss->m_onunload) {
+        document()->window()->setAttributeEventListener(ss->m_unload, value);
     }
 }
 
