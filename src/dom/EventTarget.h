@@ -12,9 +12,18 @@ class Window;
 class EventListener : public gc {
 public:
     EventListener(ScriptValue fn, bool isAttribute = false, bool useCapture = false)
-        : m_listener(fn)
-        , m_isAttribute(isAttribute)
+        : m_isAttribute(isAttribute)
         , m_capture(useCapture)
+        , m_isNeedToParse(false)
+        , m_listener(fn)
+    {
+    }
+
+    EventListener(String* scriptString, bool isAttribute = false, bool useCapture = false)
+        : m_isAttribute(isAttribute)
+        , m_capture(useCapture)
+        , m_isNeedToParse(true)
+        , m_scriptStringNeedToParse(scriptString)
     {
     }
     bool isAttribute() const
@@ -23,7 +32,7 @@ public:
     }
     bool compare(const EventListener* other) const
     {
-        return (m_isAttribute == other->m_isAttribute) && (m_listener == other->m_listener) && (m_capture == other->m_capture);
+        return (m_isAttribute == other->m_isAttribute) && (scriptValue() == other->scriptValue()) && (m_capture == other->m_capture);
     }
     bool capture() const
     {
@@ -35,20 +44,28 @@ public:
     }
     bool needParse()
     {
-        return (m_listener == ScriptValueNull);
+        return m_isNeedToParse;
     }
-    ScriptValue scriptValue()
+
+    void setScriptString(String* str)
     {
-        return m_listener;
+        m_isNeedToParse = true;
+        m_scriptStringNeedToParse = str;
     }
-    ScriptValue scriptFunction(EventTarget* target, const String* eventType);
-    ScriptValue scriptFunction(EventTarget* target, const String* eventType, bool& error);
+
+    ScriptValue scriptValue() const;
     ScriptValue call(Event* event);
 
 protected:
-    ScriptValue m_listener;
-    bool m_isAttribute;
-    bool m_capture;
+    bool m_isAttribute : 1;
+    bool m_capture : 1;
+    mutable bool m_isNeedToParse : 1;
+
+    union {
+        mutable String* m_scriptStringNeedToParse;
+        mutable ScriptValue m_listener;
+    };
+
 };
 
 typedef std::vector<EventListener*, gc_allocator<EventListener*>> EventListenerVector;
@@ -96,9 +113,39 @@ public:
     virtual bool dispatchEvent(Event* event);
     bool dispatchEvent(EventTarget* origin, Event* event);
 
+    void setAttributeEventListener(const QualifiedName& eventTypeName, ScriptValue f)
+    {
+        auto eventType = eventTypeName.localName();
+        EventListener* l = new EventListener(f, true);
+        setAttributeEventListener(eventType, l);
+    }
+    void setAttributeEventListener(const QualifiedName& eventTypeName, String* str)
+    {
+        auto eventType = eventTypeName.localName();
+        EventListener* l = new EventListener(str, true);
+        setAttributeEventListener(eventType, l);
+    }
     bool setAttributeEventListener(const String* eventType, EventListener* listener);
+    EventListener* getAttributeEventListener(const QualifiedName& eventType)
+    {
+        return getAttributeEventListener(eventType.localName());
+    }
     EventListener* getAttributeEventListener(const String* eventType);
+
+    void clearAttributeEventListener(const QualifiedName& name)
+    {
+        clearAttributeEventListener(name.localName());
+    }
     bool clearAttributeEventListener(const String* eventType);
+
+    ScriptValue attributeEventListener(const QualifiedName& name)
+    {
+        auto eventType = name.localName();
+        EventListener* l = getAttributeEventListener(eventType);
+        if (!l)
+            return ScriptValueNull;
+        return l->scriptValue();
+    }
 
 protected:
     std::unordered_map<String*, EventListenerVector*, std::hash<String*>, std::equal_to<String*>,

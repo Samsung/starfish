@@ -46,26 +46,7 @@ public:
         }
     }
 
-    ScriptValue onload()
-    {
-        return document()->window()->onload();
-    }
-
-    void setOnload(ScriptValue f)
-    {
-        document()->window()->setOnload(f);
-    }
-
-    void setOnload(String* bodyStr)
-    {
-        document()->window()->setOnload(bodyStr);
-    }
-
-    void clearOnload()
-    {
-        document()->window()->clearOnload();
-    }
-
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
 protected:
 };
 

@@ -6,40 +6,23 @@
 
 namespace StarFish {
 
-ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eventType)
+ScriptValue EventListener::scriptValue() const
 {
-    bool error = false;
-    return scriptFunction(target, eventType, error);
-}
-
-ScriptValue EventListener::scriptFunction(EventTarget* target, const String* eventType, bool& error)
-{
-    if (needParse() && target) {
-        STARFISH_ASSERT(isAttribute());
+    if (m_isNeedToParse) {
         String* name[] = {String::createASCIIString("event")};
-        if (target->isWindow()) {
-            STARFISH_ASSERT(eventType->equals(target->asWindow()->starFish()->staticStrings()->m_load.localName())); // Only onload listener can reach here.
-            m_listener = createScriptFunction(name, 1, target->asWindow()->onloadString(), error);
-        } else if (target->isNode()) {
-            STARFISH_ASSERT(target->asNode()->isElement());
-            Element* element = target->asNode()->asElement();
-            String* eventName = String::createASCIIString("on")->concat(const_cast<String*>(eventType));
-            size_t idx = element->hasAttribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(element->document()->window()->starFish(), eventName)));
-            if (idx == SIZE_MAX) {
-                error = true;
-                return ScriptValueNull;
-            }
-            m_listener = createScriptFunction(name, 1, element->getAttribute(idx), error);
-        }
+        bool error = false;
+        m_listener = createScriptFunction(name, 1, m_scriptStringNeedToParse, error);
+        if (error)
+            m_listener = ScriptValueNull;
+        m_isNeedToParse = false;
     }
     return m_listener;
 }
 
 ScriptValue EventListener::call(Event* event)
 {
-    bool hasError = false;
-    ScriptValue listenerFunc = scriptFunction(event->target(), event->type(), hasError);
-    if (!hasError) {
+    ScriptValue listenerFunc = scriptValue();
+    if (isCallableScriptValue(listenerFunc)) {
         ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
         callScriptFunction(listenerFunc, argv, 1, event->target()->scriptValue());
     }

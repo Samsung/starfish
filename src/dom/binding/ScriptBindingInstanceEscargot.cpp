@@ -2023,7 +2023,7 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            return element->onclick();
+            return element->attributeEventListener(element->document()->window()->starFish()->staticStrings()->m_click);
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
@@ -2032,10 +2032,11 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_click;
             if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-                element->setOnclick(v);
+                element->setAttributeEventListener(eventType, v);
             } else {
-                element->clearOnClick();
+                element->clearAttributeEventListener(eventType);
             }
         } else {
             THROW_ILLEGAL_INVOCATION();
@@ -2060,7 +2061,8 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            return element->onload();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_load;
+            return element->attributeEventListener(eventType);
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
@@ -2069,10 +2071,11 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_load;
             if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-                element->setOnload(v);
+                element->setAttributeEventListener(eventType, v);
             } else {
-                element->clearOnload();
+                element->clearAttributeEventListener(eventType);
             }
         } else {
             THROW_ILLEGAL_INVOCATION();
@@ -2087,7 +2090,8 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
-            return element->onunload();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_unload;
+            return element->attributeEventListener(eventType);
         } else {
             THROW_ILLEGAL_INVOCATION();
         }
@@ -2096,10 +2100,11 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_unload;
             if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-                element->setOnunload(v);
+                element->setAttributeEventListener(eventType, v);
             } else {
-                element->clearOnunload();
+                element->clearAttributeEventListener(eventType);
             }
         } else {
             THROW_ILLEGAL_INVOCATION();
@@ -2113,6 +2118,65 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
 escargot::ESFunctionObject* bindingHTMLBodyElement(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLBodyElement, fetchData(scriptBindingInstance)->htmlElement());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+            HTMLBodyElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_load;
+            return element->document()->window()->attributeEventListener(eventType);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_load;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                element->document()->window()->setAttributeEventListener(eventType, v);
+            } else {
+                element->document()->window()->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+            HTMLBodyElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onunload"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_unload;
+            return element->document()->window()->attributeEventListener(eventType);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            auto element = nd->asElement()->asHTMLElement()->asHTMLBodyElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_unload;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                element->document()->window()->setAttributeEventListener(eventType, v);
+            } else {
+                element->document()->window()->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
     return HTMLBodyElementFunction;
 }
 

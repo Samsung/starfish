@@ -242,7 +242,8 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = originalObj;
         if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-            return wnd->onclick();
+            auto eventType = wnd->starFish()->staticStrings()->m_click;
+            return wnd->attributeEventListener(eventType);
         }
         return escargot::ESValue();
         },
@@ -251,10 +252,11 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = originalObj;
         if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            auto eventType = wnd->starFish()->staticStrings()->m_click;
             if (value.isObject() || (value.isESPointer() && value.asESPointer()->isESFunctionObject())) {
-                wnd->setOnclick(value);
+                wnd->setAttributeEventListener(eventType, value);
             } else {
-                wnd->clearOnClick();
+                wnd->clearAttributeEventListener(eventType);
             }
         }
         },
@@ -265,7 +267,8 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = originalObj;
         if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-            return wnd->onload();
+            auto eventType = wnd->starFish()->staticStrings()->m_load;
+            return wnd->attributeEventListener(eventType);
         }
         return escargot::ESValue();
         },
@@ -274,10 +277,36 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = originalObj;
         if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            auto eventType = wnd->starFish()->staticStrings()->m_load;
             if (value.isObject() || (value.isESPointer() && value.asESPointer()->isESFunctionObject())) {
-                wnd->setOnload(value);
+                wnd->setAttributeEventListener(eventType, value);
             } else {
-                wnd->clearOnload();
+                wnd->clearAttributeEventListener(eventType);
+            }
+        }
+        },
+        true, true, true);
+
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("onunload"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            auto eventType = wnd->starFish()->staticStrings()->m_unload;
+            return wnd->attributeEventListener(eventType);
+        }
+        return escargot::ESValue();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const escargot::ESValue& value)
+        {
+        escargot::ESValue v = originalObj;
+        if (v.isObject() && v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            auto eventType = wnd->starFish()->staticStrings()->m_unload;
+            if (value.isObject() || (value.isESPointer() && value.asESPointer()->isESFunctionObject())) {
+                wnd->setAttributeEventListener(eventType, value);
+            } else {
+                wnd->clearAttributeEventListener(eventType);
             }
         }
         },
@@ -827,4 +856,13 @@ ScriptValue parseJSON(String* jsonData)
     ScriptValue json_parse_fn = instance->globalObject()->json()->get(ScriptValue(createScriptString(String::fromUTF8("parse"))));
     return callScriptFunction(json_parse_fn, json_arg, 1, instance->globalObject()->json());
 }
+
+bool isCallableScriptValue(ScriptValue v)
+{
+    if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {
+        return true;
+    }
+    return false;
+}
+
 }
