@@ -253,6 +253,8 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
 {
 #ifndef STARFISH_TIZEN_WEARABLE_APP
     initInternalCanvas();
+#else
+    g_internalCanvas = evas_object_evas_get((Evas_Object*)win);
 #endif
     auto wnd = new WindowImplEFL(sf, url);
     wnd->m_starFish = sf;
@@ -337,7 +339,10 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
 
     wnd->m_dummyBox = evas_object_rectangle_add(e);
     evas_object_color_set(wnd->m_dummyBox, 0, 0, 0, 0); // opaque background
-    evas_object_resize(wnd->m_dummyBox, w, h);
+    int w, h;
+    evas_object_geometry_get(wnd->m_window, &w, &h, NULL, NULL);
+    evas_object_resize(wnd->m_dummyBox, 360, 360); // FIXME: temporary for click-event listener
+    evas_object_move(wnd->m_dummyBox, 0, 0);
     evas_object_show(wnd->m_dummyBox);
     evas_object_show(wnd->m_window);
 

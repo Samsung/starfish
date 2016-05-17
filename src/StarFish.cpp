@@ -30,6 +30,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
         elm_win_autodel_set(wndObj, EINA_TRUE);
         evas_object_resize(wndObj, w, h);
         win = wndObj;
+    } else {
+        evas_object_resize((Evas_Object*)win, w, h);
     }
 
     m_nativeWindow = win;
