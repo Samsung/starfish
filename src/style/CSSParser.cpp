@@ -1134,6 +1134,12 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
         String::Vector tokens;
         selector->split(',', tokens);
         for (unsigned i = 0; i < tokens.size(); i++) {
+            // Declarations with bad selectors are ignored
+            // Reference : css21/syntax/bad-selector-001.htm
+            if (tokens[i]->length() == 0 || tokens[i]->containsOnlyWhitespace())
+                return;
+        }
+        for (unsigned i = 0; i < tokens.size(); i++) {
             const char* selectorText = tokens[i]->trim()->utf8Data();
             CSSStyleRule::Kind kind;
             String** st;
