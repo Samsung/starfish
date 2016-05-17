@@ -145,6 +145,11 @@ public:
         return isOfType(CSSToken::COMMENT_TYPE);
     }
 
+    bool isSGMLComment()
+    {
+        return isOfType(CSSToken::SGML_COMMENT_TYPE);
+    }
+
     bool isNumber(String* n = nullptr)
     {
         return isOfType(CSSToken::NUMBER_TYPE, n);
@@ -261,6 +266,7 @@ public:
     static const char DIMENSION_TYPE = 14;
     static const char PERCENTAGE_TYPE = 15;
     static const char HEX_TYPE = 16;
+    static const char SGML_COMMENT_TYPE = 17;
 };
 
 
@@ -550,6 +556,29 @@ public:
                 if (startsWithIdent(nextChar, followingChar))
                     return parseAtKeyword(c);
             }
+        }
+
+        if (c == '<') {
+            if (read() == '!') {
+                if (read() == '-') {
+                    if (read() == '-') {
+                        return new CSSToken(CSSToken::SGML_COMMENT_TYPE, String::createASCIIString("<!--"));
+                    }
+                    pushback();
+                }
+                pushback();
+            }
+            pushback();
+        }
+
+        if (c == '-') {
+            if (read() == '-') {
+                if (read() == '>') {
+                    return new CSSToken(CSSToken::SGML_COMMENT_TYPE, String::createASCIIString("-->"));
+                }
+                pushback();
+            }
+            pushback();
         }
 
         if (c == '.' || c == '+' || c == '-') {
@@ -845,6 +874,10 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly)
     CSSToken* token = aToken;
     bool valid = false;
     bool combinatorFound = false;
+
+    while(token->isSGMLComment() || token->isWhiteSpace()) {
+        token = getToken(false, true);
+    }
 
     while (true) {
         if (!token->isNotNull()) {
