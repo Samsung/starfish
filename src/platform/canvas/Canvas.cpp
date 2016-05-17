@@ -808,8 +808,21 @@ public:
 
                     } else {
                         if (ch != 'p') {
-                            Rect rt(xx, y, h, h);
-                            drawRect(rt);
+                            Font* fnt = lastState().m_font;
+                            if (fnt->style() == FontStyleItalic) {
+                                float offset = h * 0.3;
+                                float littleLeft = offset * 0.167;
+                                drawRect(
+                                    LayoutLocation(xx + offset - littleLeft, y),
+                                    LayoutLocation(xx + h + offset - littleLeft, y),
+                                    LayoutLocation(xx + h - littleLeft, y + h),
+                                    LayoutLocation(xx - littleLeft, y + h)
+                                );
+                            } else {
+                                // left, top, w, h
+                                Rect rt(xx, y, h, h);
+                                drawRect(rt);
+                            }
                         } else {
                             // To sync with phantom-webkit
                             int ph = h * 0.2;
