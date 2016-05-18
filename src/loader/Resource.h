@@ -70,35 +70,26 @@ public:
     virtual void request(bool needsSyncRequest = false);
     virtual void cancel();
 
-    virtual void didDataReceived(const char*, size_t length)
-    {
-        m_state = Receiving;
-    }
-
-    virtual void didLoadFinished()
-    {
-        m_state = Finished;
-        auto iter = m_resourceClients.begin();
-        while (iter != m_resourceClients.end()) {
-            (*iter)->didLoadFinished();
-            iter++;
-        }
-    }
-
-    virtual void didLoadFailed()
-    {
-        m_state = Failed;
-        auto iter = m_resourceClients.begin();
-        while (iter != m_resourceClients.end()) {
-            (*iter)->didLoadFailed();
-            iter++;
-        }
-    }
-
+    virtual void didDataReceived(const char*, size_t length);
+    virtual void didLoadFinished();
+    virtual void didLoadFailed();
     virtual void didLoadCanceled();
+
+    static void doLoad(void*);
+
     ResourceLoader* loader()
     {
         return m_loader;
+    }
+
+    void pushIdlerHandle(size_t handle)
+    {
+        m_requstedIdlers.push_back(handle);
+    }
+
+    void removeIdlerHandle(size_t handle)
+    {
+        m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle));
     }
 protected:
     Resource(const URL& url, ResourceLoader* loader)
@@ -108,16 +99,11 @@ protected:
     {
     }
 
-    void pushIdlerHandle(void* handle)
-    {
-        m_requstedIdlers.push_back(handle);
-    }
-
     State m_state;
     URL m_url;
     ResourceLoader* m_loader;
     ResourceClientVector m_resourceClients;
-    std::vector<void*, gc_allocator<void*>> m_requstedIdlers;
+    std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;
 };
 }
 

@@ -44,4 +44,14 @@ String* URL::baseURI() const
     return m_urlString->substring(0, m_urlString->lastIndexOf('/') + 1);
 }
 
+String* URL::urlStringWithoutSearchPart() const
+{
+    size_t idx = m_urlString->lastIndexOf('?');
+    if (idx != SIZE_MAX) {
+        return m_urlString->substring(0, idx);
+    } else {
+        return m_urlString;
+    }
+}
+
 }

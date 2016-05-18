@@ -957,7 +957,7 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 
 void Window::dispatchLoadEvent()
 {
-    starFish()->messageLoop()->addIdler([](void* data) {
+    starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         Window* wnd = (Window*)data;
         String* eventType = wnd->starFish()->staticStrings()->m_load.localName();
         Event* e = new Event(eventType, EventInit(false, false));
@@ -1035,6 +1035,8 @@ void Window::close()
 {
     STARFISH_LOG_INFO("onClose");
     dispatchUnloadEvent();
+
+    document()->resourceLoader()->cancelAllOfPendingRequests();
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 

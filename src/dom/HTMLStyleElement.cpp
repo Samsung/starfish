@@ -97,7 +97,7 @@ void HTMLStyleElement::removeStyleSheet()
 
 void HTMLStyleElement::dispatchLoadEvent()
 {
-    document()->window()->starFish()->messageLoop()->addIdler([](void* data) {
+    document()->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         HTMLStyleElement* element = (HTMLStyleElement*)data;
         if (!element->hasLoaded()) {
             String* eventType = element->document()->window()->starFish()->staticStrings()->m_load.localName();

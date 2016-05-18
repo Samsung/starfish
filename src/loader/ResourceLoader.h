@@ -11,6 +11,7 @@ class ResourceLoader : public gc_cleanup {
     friend class Resource;
     friend class ImageResource;
     friend class DocumentOnLoadChecker;
+    friend class ResourceAliveChecker;
 public:
     ResourceLoader(Document& doc);
 
@@ -29,6 +30,12 @@ public:
         m_pendingResourceCountWhileDocumentOpening--;
         fireDocumentOnLoadEventIfNeeded();
     }
+
+    void cancelAllOfPendingRequests();
+    Document* document()
+    {
+        return m_document;
+    }
 private:
     void fetchResourcePreprocess(Resource* res);
     void fireDocumentOnLoadEventIfNeeded();
@@ -38,6 +45,7 @@ private:
     URL m_baseURL;
     std::unordered_map<std::string, ImageData*, std::hash<std::string>, std::equal_to<std::string>,
         gc_allocator<std::pair<std::string, ImageData*>>> m_offlineImageCache;
+    std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;
 };
 }
 

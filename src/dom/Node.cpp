@@ -668,7 +668,8 @@ Node* Node::parserAppendChild(Node* child)
     }
     m_lastChild = child;
     child->setParentNode(this);
-
+    child->setNeedsStyleRecalc();
+    setNeedsFrameTreeBuild();
     if (isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(child);
     }
@@ -747,6 +748,8 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     child->setParentNode(this);
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
+    child->setNeedsStyleRecalc();
+    setNeedsFrameTreeBuild();
 
     notifyDOMEventToParentTree(this, [this, child](Node* parent) {
         parent->didNodeInserted(this, child);

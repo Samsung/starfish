@@ -60,11 +60,47 @@ public:
     }
 };
 
+class ResourceAliveChecker : public ResourceClient {
+public:
+    ResourceAliveChecker(Resource* res)
+        : ResourceClient(res)
+    {
+        std::vector<Resource*, gc_allocator<Resource*>>& v =  m_resource->loader()->m_currentLoadingResources;
+        v.push_back(m_resource);
+    }
+
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        clearAlive();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        clearAlive();
+    }
+
+    virtual void didLoadCanceled()
+    {
+        ResourceClient::didLoadCanceled();
+        clearAlive();
+    }
+
+    void clearAlive()
+    {
+        std::vector<Resource*, gc_allocator<Resource*>>& v =  m_resource->loader()->m_currentLoadingResources;
+        STARFISH_ASSERT(std::find(v.begin(), v.end(), m_resource) != v.end());
+        v.erase(std::find(v.begin(), v.end(), m_resource));
+    }
+};
+
 void ResourceLoader::fetchResourcePreprocess(Resource* res)
 {
     if (m_inDocumentOpenState) {
         m_pendingResourceCountWhileDocumentOpening++;
         res->addResourceClient(new DocumentOnLoadChecker(res));
+        res->addResourceClient(new ResourceAliveChecker(res));
     }
 }
 
@@ -73,6 +109,14 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
     if (m_pendingResourceCountWhileDocumentOpening == 0 && m_inDocumentOpenState) {
         m_inDocumentOpenState = false;
         m_document->window()->dispatchLoadEvent();
+    }
+}
+
+void ResourceLoader::cancelAllOfPendingRequests()
+{
+    std::vector<Resource*, gc_allocator<Resource*>>& v = m_currentLoadingResources;
+    while (v.size()) {
+        v[0]->cancel();
     }
 }
 

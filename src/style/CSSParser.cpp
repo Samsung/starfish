@@ -875,7 +875,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly)
     bool valid = false;
     bool combinatorFound = false;
 
-    while(token->isSGMLComment() || token->isWhiteSpace()) {
+    while (token->isSGMLComment() || token->isWhiteSpace()) {
         token = getToken(false, true);
     }
 

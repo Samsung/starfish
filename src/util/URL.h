@@ -25,6 +25,9 @@ public:
         return m_urlString;
     }
 
+    // http://foo.com/asdf?asdf=1 -> http://foo.com/asdf
+    String* urlStringWithoutSearchPart() const;
+
     operator bool()
     {
         return m_string->length();

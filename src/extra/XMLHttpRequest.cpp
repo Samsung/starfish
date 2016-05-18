@@ -170,7 +170,7 @@ void XMLHttpRequest::send(String* body)
 
                 xhrobj->setStatus(res_code);
                 xhrobj->m_starfish->addPointerInRootSet(xhrobj);
-                xhrobj->m_starfish->messageLoop()->addIdler([](void *data) {
+                xhrobj->m_starfish->messageLoop()->addIdler([](size_t handle, void *data) {
                     XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
                     this_obj->m_readyState = HEADERS_RECEIVED;
                     this_obj->callEventHandler(NONE, true, 0, 0, this_obj->m_readyState);
@@ -221,7 +221,7 @@ void XMLHttpRequest::send(String* body)
             pass->total = progressData.total;
 
             xhrobj->m_starfish->addPointerInRootSet(xhrobj);
-            xhrobj->m_starfish->messageLoop()->addIdler([](void *data) {
+            xhrobj->m_starfish->messageLoop()->addIdler([](size_t handle, void *data) {
                 Pass* pass = (Pass*)data;
                 XMLHttpRequest* this_obj = pass->obj;
 
@@ -272,7 +272,7 @@ void XMLHttpRequest::send(String* body)
             */
 
             xhrobj->m_starfish->addPointerInRootSet(xhrobj);
-            xhrobj->m_starfish->messageLoop()->addIdler([](void *data) {
+            xhrobj->m_starfish->messageLoop()->addIdler([](size_t handle, void *data) {
                 XMLHttpRequest* this_obj = (XMLHttpRequest*)data;
                 this_obj->callEventHandler(ERROR, true, 0, 0);
                 this_obj->m_starfish->removePointerFromRootSet(this_obj);
