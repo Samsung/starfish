@@ -356,7 +356,9 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   LDFLAGS += -Ldeps/tizen/lib/tizen-wearable-$(VERSION)-target-arm
   LDFLAGS += --sysroot=$(TIZEN_SYSROOT) -L$(DEPENDENCY_ROOT_DIR)/lib
   ifneq ($(VERSION), 3.0)
-    LDFLAGS +=
+    ifeq ($(TYPE), lib)
+      LDFLAGS += -static-libstdc++
+    endif
   endif
   ifeq ($(TYPE), lib)
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
