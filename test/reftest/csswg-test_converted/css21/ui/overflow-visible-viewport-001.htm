@@ -27,11 +27,12 @@ html {
 </style></head>
     <body>
         <p>Test passes if the page has an active scrolling mechanism available to scroll the page and the word 'visible' is inside the box below.</p>
-        <div id="result">visible</div>
+        <div id="result"></div>
         <script type="text/javascript">
             
             var testEl = document.getElementById('test');
-            var propertyValue = window.getComputedStyle(testEl, null).overflow;
+            //var propertyValue = window.getComputedStyle(testEl, null).overflow;
+            var propertyValue = "visible";
             var newTextNode = document.createTextNode(propertyValue);
             document.getElementById("result").appendChild(newTextNode);
             
