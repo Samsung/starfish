@@ -1,0 +1,26 @@
+ Item
+# ** These tags do NOT support read/write in dom.
+ class
+ dir
+ id
+ style
+ onclick
+ onload
+ onunload
+ !DOCTYPE
+ html
+ head
+ link
+
+
+ meta
+ style
+ body
+ p
+ div
+ span
+ br
+ img
+
+
+ script

@@ -1,0 +1,5 @@
+To generate coverage, run:
+./genDomSpecList.sh
+./genCoverage.sh
+
+*.csv files are generated in `out'
