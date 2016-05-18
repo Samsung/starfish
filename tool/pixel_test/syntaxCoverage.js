@@ -174,7 +174,7 @@ page.onLoadStarted = function() {
 
 var resEvaluate;
 page.onLoadFinished = function() {
-    console.log("+++TC:\t" + filelist[idx]);
+    console.log("+++TC:" + filelist[idx]);
 
     resEvaluate = page.evaluate(function(acceptCSSList, acceptTagList, acceptValues, includes) {
         Array.prototype.includes = includes;
@@ -187,15 +187,30 @@ page.onLoadFinished = function() {
             return prop;
         }
 
+        if (document.doctype && document.doctype.name == "html")
+            console.log("+++doctype:!DOCTYPE");
+
         var allTags = document.getElementsByTagName("*");
         for (var i = 0; i < allTags.length; i++) {
             if (!acceptTagList.includes(allTags[i].localName)) {
-                console.log("---tag:\t" + allTags[i].localName);
+                console.log("---tag:" + allTags[i].localName);
                 continue;
                 //return ["HTML", allTags[i].localName];
             }
-            else
-                console.log("+++tag:\t" + allTags[i].localName);
+            else {
+                var tag = allTags[i];
+                console.log("+++tag:" + tag.localName);
+                if (tag.hasAttribute("class"))
+                    console.log("+++attr:class");
+                if (tag.hasAttribute("id"))
+                    console.log("+++attr:id");
+                if (tag.hasAttribute("onclick"))
+                    console.log("+++attr:onclick");
+                if (tag.hasAttribute("onload"))
+                    console.log("+++attr:onload");
+                if (tag.hasAttribute("onunload"))
+                    console.log("+++attr:onunload");
+            }
             if (allTags[i].hasAttribute("style")) {
                 var inlineStyleList = allTags[i].getAttribute("style").split(';').map(function(a) { return a.split(':'); });
                 for (var j = 0; j < inlineStyleList.length; j++) {
@@ -212,19 +227,19 @@ page.onLoadFinished = function() {
                         var val = undefined;
                         if (prop != newprop) j++;
                         if (!acceptCSSList.includes(newprop)) {
-                            console.log("---istyle:\t" + newprop);
+                            console.log("---inlinestyle:" + newprop);
                             continue;
                             // return ["CSS", newprop];
                         }
                         if (newprop in acceptValues) {
                             val = inlineStyleList[j][1].trim();
                             if (!acceptValues[newprop].includes(val)) {
-                                console.log("---istyle:\t" + newprop + "\t" + val);
+                                console.log("---inlinestyle:" + newprop + "\t" + val);
                                 continue;
                                 // return ["CSS-Value", val];
                             }
                         }
-                        var styleInfo = "+++istyle:\t" + newprop;
+                        var styleInfo = "+++inlinestyle:" + newprop;
                         if (val != undefined) styleInfo += "\t" + val;
                         console.log(styleInfo);
                     }
@@ -261,19 +276,19 @@ page.onLoadFinished = function() {
                         var val = undefined;
                         if (prop != newprop) k++;
                         if (!acceptCSSList.includes(newprop)) {
-                            console.log("---style:\t" + newprop);
+                            console.log("---style:" + newprop);
                             continue;
                             // return ["CSS", newprop];
                         }
                         if (newprop in acceptValues) {
                             val = rules[j].style[prop];
                             if (!acceptValues[newprop].includes(val)) {
-                                console.log("---style:\t" + newprop + "\t" + val);
+                                console.log("---style:" + newprop + "\t" + val);
                                 continue;
                                 // return ["CSS-Value", val];
                             }
                         }
-                        var styleInfo = "+++style:\t" + newprop;
+                        var styleInfo = "+++style:" + newprop;
                         if (val != undefined) styleInfo += "\t" + val;
                         console.log(styleInfo);
                     }
