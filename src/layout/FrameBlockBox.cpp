@@ -491,8 +491,9 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
     }
 
     if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
-        canvas->save();
         canvas->setVisible(false);
+    } else {
+        canvas->setVisible(true);
     }
 
     if (isPositionedElement()) {
@@ -520,10 +521,6 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         } else {
             paintChildrenWith(canvas, stage);
         }
-    }
-
-    if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
-        canvas->restore();
     }
 
     if (shouldApplyOverflowHidden) {
