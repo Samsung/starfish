@@ -77,6 +77,8 @@ public:
             m_element->document()->styleResolver()->addSheet(sheet);
             m_element->document()->window()->setWholeDocumentNeedsStyleRecalc();
         }
+
+        m_element->m_styleSheetTextResource = nullptr;
     }
 protected:
     HTMLLinkElement* m_element;
@@ -90,6 +92,9 @@ void HTMLLinkElement::loadStyleSheet()
     String* urlString = getAttribute(href);
     URL url = URL(document()->documentURI().baseURI(), urlString);
 
+    if (m_styleSheetTextResource) {
+        m_styleSheetTextResource->cancel();
+    }
     if (url) {
         m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
         m_styleSheetTextResource->addResourceClient(new StyleSheetDownloadClient(this, m_styleSheetTextResource));

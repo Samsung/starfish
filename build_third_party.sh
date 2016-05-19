@@ -55,7 +55,9 @@ make x64.interpreter.release.static -j8
 make x64.interpreter.debug.static -j8
 
 if [ -n "$TIZEN_SDK_HOME" ]; then
+make tizen_wearable_arm.interpreter.debug.static -j8
 make tizen_wearable_arm.interpreter.release.static -j8
+make tizen_wearable_emulator.interpreter.debug.static -j8
 make tizen_wearable_emulator.interpreter.release.static -j8
 fi
 if [ -n "$TIZEN3_SDK_HOME" ]; then

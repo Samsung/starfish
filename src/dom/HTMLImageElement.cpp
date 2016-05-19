@@ -45,6 +45,7 @@ public:
         } else {
             m_element->setNeedsFrameTreeBuild();
         }
+        m_element->m_imageResource = nullptr;
     }
 protected:
     HTMLImageElement* m_element;
