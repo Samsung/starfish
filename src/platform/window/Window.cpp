@@ -955,27 +955,6 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 {
 }
 
-void Window::dispatchLoadEvent()
-{
-    starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-        Window* wnd = (Window*)data;
-        String* eventType = wnd->starFish()->staticStrings()->m_load.localName();
-        Event* e = new Event(eventType, EventInit(false, false));
-        wnd->EventTarget::dispatchEvent(e);
-#ifdef STARFISH_ENABLE_PIXEL_TEST
-        g_fireOnloadEvent = true;
-        wnd->setNeedsPainting();
-#endif
-    }, this);
-}
-
-void Window::dispatchUnloadEvent()
-{
-    String* eventType = starFish()->staticStrings()->m_unload.localName();
-    Event* e = new Event(eventType, EventInit(false, false));
-    EventTarget::dispatchEvent(document()->bodyElement(), e);
-}
-
 void Window::pause()
 {
     STARFISH_LOG_INFO("onPause");
@@ -1034,10 +1013,6 @@ void Window::resume()
 void Window::close()
 {
     STARFISH_LOG_INFO("onClose");
-    dispatchUnloadEvent();
-
-    document()->resourceLoader()->cancelAllOfPendingRequests();
-
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 
     auto timerIter = m_timeoutHandler.begin();

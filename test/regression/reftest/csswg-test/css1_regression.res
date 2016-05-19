@@ -4,6 +4,7 @@ test/reftest/csswg-test_converted/css1/c16-descendant-002.htm
 test/reftest/csswg-test_converted/css1/c17-comments-000.htm
 test/reftest/csswg-test_converted/css1/c17-comments-001.htm
 test/reftest/csswg-test_converted/css1/c43-rpl-bbx-000.htm
+test/reftest/csswg-test_converted/css1/c43-rpl-bbx-001.htm
 test/reftest/csswg-test_converted/css1/c45-bg-canvas-000.htm
 test/reftest/csswg-test_converted/css1/c531-color-000.htm
 test/reftest/csswg-test_converted/css1/c532-bgcolor-000.htm

@@ -178,6 +178,12 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_onunload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onunload"));
     m_visibilitychange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "visibilitychange"));
     m_DOMContentLoaded = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "DOMContentLoaded"));
+    m_readystatechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "readystatechange"));
+    m_progress = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "progress"));
+    m_abort = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "abort"));
+    m_timeout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "timeout"));
+    m_loadend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadend"));
+    m_loadstart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadstart"));
 }
 
 }

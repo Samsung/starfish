@@ -79,12 +79,14 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*), void* data
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdlerWithNoGCRooting(void (*fn)(size_t, void*), void* data)
+size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new IdlerData;
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
+
+    ecore_thread_main_loop_begin();
     id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->scriptBindingInstance());
@@ -93,6 +95,7 @@ size_t MessageLoop::addIdlerWithNoGCRooting(void (*fn)(size_t, void*), void* dat
         delete id;
         return ECORE_CALLBACK_CANCEL;
     }, id);
+    ecore_thread_main_loop_end();
 
     return (size_t)id;
 }

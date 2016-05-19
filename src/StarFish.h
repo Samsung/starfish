@@ -194,7 +194,12 @@ public:
     QualifiedName m_onunload;
     QualifiedName m_visibilitychange;
     QualifiedName m_DOMContentLoaded;
-
+    QualifiedName m_readystatechange;
+    QualifiedName m_progress;
+    QualifiedName m_abort;
+    QualifiedName m_timeout;
+    QualifiedName m_loadend;
+    QualifiedName m_loadstart;
 protected:
 };
 

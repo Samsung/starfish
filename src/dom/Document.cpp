@@ -202,6 +202,18 @@ void Document::open()
     m_resourceLoader.notifyEndParseDocument();
 }
 
+void Document::close()
+{
+    String* eventType = window()->starFish()->staticStrings()->m_unload.localName();
+    Event* e = new Event(eventType, EventInit(false, false));
+    EventTarget::dispatchEvent(bodyElement(), e);
+    resourceLoader()->cancelAllOfPendingRequests();
+
+    while (m_activeNetworkRequests.size()) {
+        (*m_activeNetworkRequests.begin())->abort();
+    }
+}
+
 String* Document::nodeName()
 {
     return window()->starFish()->staticStrings()->m_documentLocalName.string();

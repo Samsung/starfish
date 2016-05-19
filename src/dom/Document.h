@@ -9,6 +9,8 @@ namespace StarFish {
 
 class Window;
 class Attribute;
+class NetworkRequest;
+
 #ifdef STARFISH_EXP
 class DOMImplementation;
 #endif
@@ -23,8 +25,9 @@ enum PageVisibilityState {
 
 class Document : public Node {
 #ifdef STARFISH_EXP
-friend DOMImplementation;
+    friend class DOMImplementation;
 #endif
+    friend class ActiveNetworkRequestTracker;
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url);
 public:
@@ -148,6 +151,7 @@ public:
     }
 
     void open();
+    void close();
 protected:
     bool m_inParsing : 1;
     CompatibilityMode m_compatibilityMode;
@@ -158,6 +162,7 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;
     size_t m_domVersion;
+    std::vector<NetworkRequest*, gc_allocator<NetworkRequest*>> m_activeNetworkRequests;
 #ifdef STARFISH_EXP
 private:
     DOMImplementation* m_domImplementation;

@@ -118,9 +118,6 @@ public:
     };
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
-    void dispatchLoadEvent();
-    void dispatchUnloadEvent();
-
     Node* hitTest(float x, float y);
     Node* activeNodeWithTouchDown()
     {

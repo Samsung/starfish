@@ -3313,190 +3313,60 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
 {
     /* XMLHttpRequest */
     escargot::ESFunctionObject* xhrElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        auto xhr = new XMLHttpRequest();
-        xhr->initScriptWrappable(xhr);
+        Window* wnd = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData());
+        auto xhr = new XMLHttpRequest(wnd->document());
         return xhr->scriptValue();
     }, escargot::ESString::create("XMLHttpRequest"), 0, true, false);
+
     xhrElementFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget->protoType());
     fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseType"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        String* c = originalObj->getResponseTypeStr();
-        return toJSString(c);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("loadstart");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
+#define DEFINE_XHR_EVENT_HANDLER(eventName) \
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction( \
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("on" #eventName), \
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest); \
+        auto eventType = originalObj->networkRequest().starFish()->staticStrings()->m_##eventName; \
+        return originalObj->attributeEventListener(eventType); \
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest); \
+        auto eventType = originalObj->networkRequest().starFish()->staticStrings()->m_##eventName; \
+        originalObj->setAttributeEventListener(eventType, v); \
+        return escargot::ESValue(); \
     });
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onloadstart"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("loadstart"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("loadstart");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onprogress"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("progress"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("progress");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onabort"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("abort"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("abort");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onerror"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("error"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("error");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("load"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("load");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("ontimeout"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("timeout"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("timeout");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onloadend"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("loadend"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("loadend");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onreadystatechange"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        escargot::ESValue c = originalObj->getHandler(String::fromUTF8("readystatechange"), originalObj->starfishInstance());
-        if (c.isObject())
-            return c;
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        if (v.isObject()) {
-            String* eventType = String::fromUTF8("readystatechange");
-            originalObj->setHandler(eventType, v);
-        }
-        return escargot::ESValue();
-    });
+    DEFINE_XHR_EVENT_HANDLER(loadstart);
+    DEFINE_XHR_EVENT_HANDLER(progress);
+    DEFINE_XHR_EVENT_HANDLER(abort);
+    DEFINE_XHR_EVENT_HANDLER(error);
+    DEFINE_XHR_EVENT_HANDLER(load);
+    DEFINE_XHR_EVENT_HANDLER(timeout);
+    DEFINE_XHR_EVENT_HANDLER(loadend);
+    DEFINE_XHR_EVENT_HANDLER(readystatechange);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("timeout"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        uint32_t c = originalObj->getTimeout();
+        uint32_t c = originalObj->networkRequest().timeout();
         return escargot::ESValue(c);
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         try {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-
-            if (v.isNumber()) {
-                originalObj->setTimeout(v.toInt32());
-            }
-            return escargot::ESValue();
+            originalObj->setTimeout(v.toUint32());
         } catch(DOMException* e) {
             escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        return escargot::ESValue();
     });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("readyState"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        int c = originalObj->getReadyState();
+        int c = originalObj->networkRequest().readyState();
         return escargot::ESValue(c);
     }, nullptr);
 
@@ -3504,48 +3374,15 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
         xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("status"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        int c = originalObj->getStatus();
+        int c = originalObj->networkRequest().status();
         return escargot::ESValue(c);
-    }, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("statusText"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        String* c = originalObj->getStatusText();
-        return toJSString(c);
-    }, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("response"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        try {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-            return originalObj->getResponse();
-        } catch(DOMException* e) {
-            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseText"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        try {
-            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-            String* c = originalObj->getResponseText();
-            return toJSString(c);
-        } catch(DOMException* e) {
-            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseXML"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        String* c = originalObj->getResponseXML();
+        String* c = originalObj->responseText();
         return toJSString(c);
     }, nullptr);
 
@@ -3561,49 +3398,42 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, false, false, escargot::ESValue(3));
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, false, false, escargot::ESValue(4));
 
-    escargot::ESFunctionObject* xhrGetResponseHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-        if (v.isObject()) {
-            if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject && instance->currentExecutionContext()->argumentCount() == 1) {
-                char* rh = ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->getResponseHeader(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data());
-                if (rh)
-                    toJSString(String::fromUTF8(rh));
-                else
-                    toJSString(String::emptyString);
-            }
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("getResponseHeader"), 1, false);
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getResponseHeader"), false, false, false, xhrGetResponseHeaderFunction);
-
-    escargot::ESFunctionObject* xhrGetAllResponseHeadersFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-        if (v.isObject()) {
-            if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
-                char* arh = xhr->getAllResponseHeadersStr();
-                if (arh)
-                    return toJSString(String::fromUTF8(xhr->getAllResponseHeadersStr()));
-                else
-                    return toJSString(String::emptyString);
-            }
-        }
-        return escargot::ESValue(escargot::ESValue::ESNull);
-    }, escargot::ESString::create("getAllResponseHeaders"), 1, false);
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getAllResponseHeaders"), false, false, false, xhrGetAllResponseHeadersFunction);
-
     escargot::ESFunctionObject* xhrOpenFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         try {
-            escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-            if (v.isObject()) {
-                if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                    XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
-                    if (instance->currentExecutionContext()->argumentCount() == 2)
-                        xhr->setOpen(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(), String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()), true);
-                    else if (instance->currentExecutionContext()->argumentCount() >= 3)
-                        if (instance->currentExecutionContext()->readArgument(2).isBoolean())
-                            xhr->setOpen(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(), String::createASCIIString(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data()), instance->currentExecutionContext()->readArgument(2).toBoolean());
+            if (instance->currentExecutionContext()->argumentCount() >= 2) {
+                bool async = true;
+                if (instance->currentExecutionContext()->argumentCount() >= 3) {
+                    async = instance->currentExecutionContext()->readArgument(2).toBoolean();
                 }
+                // https://xhr.spec.whatwg.org/#the-open()-method
+                // TOOD If method is not a method, throw a SyntaxError exception.
+                // TODO If method is a forbidden method, throw a SecurityError exception.
+                // Let parsedURL be the result of parsing url with context object's relevant settings object's API base URL.
+                // If parsedURL is failure, throw a SyntaxError exception.
+                std::string method = instance->currentExecutionContext()->readArgument(0).toString()->utf8Data();
+                std::transform(method.begin(), method.end(), method.begin(), ::tolower);
+                NetworkRequest::MethodType mt;
+                if (method == "post") {
+                    mt = NetworkRequest::POST_METHOD;
+                } else {
+                    mt = NetworkRequest::GET_METHOD;
+                }
+
+                String* userName = String::emptyString;
+                String* password = String::emptyString;
+                if (instance->currentExecutionContext()->argumentCount() == 0) {
+                } else if (instance->currentExecutionContext()->argumentCount() >= 1) {
+                } else if (instance->currentExecutionContext()->argumentCount() == 2) {
+                    userName = toBrowserString(instance->currentExecutionContext()->readArgument(1));
+                } else if (instance->currentExecutionContext()->argumentCount() >= 3) {
+                    userName = toBrowserString(instance->currentExecutionContext()->readArgument(1));
+                    password = toBrowserString(instance->currentExecutionContext()->readArgument(2));
+                }
+                originalObj->open(mt, toBrowserString(instance->currentExecutionContext()->readArgument(1)), async, userName, password);
+            } else {
+                auto msg = escargot::ESString::create("Failed to execute 'open' on 'XMLHttpRequest': 2 arguments required.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
         } catch(DOMException* e) {
@@ -3614,19 +3444,12 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("open"), false, false, false, xhrOpenFunction);
 
     escargot::ESFunctionObject* xhrSendFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         try {
-            escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-            if (v.isObject()) {
-                if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                    XMLHttpRequest* xhr = (XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData();
-                    escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-                    if (argValue.isESString()) {
-                        escargot::ESString* argStr = argValue.asESString();
-                        xhr->send(toBrowserString(argStr));
-                    } else {
-                        xhr->send(String::emptyString);
-                    }
-                }
+            if (instance->currentExecutionContext()->argumentCount() == 0) {
+                originalObj->send();
+            } else {
+                originalObj->send(toBrowserString(instance->currentExecutionContext()->readArgument(0)));
             }
             return escargot::ESValue(escargot::ESValue::ESNull);
         } catch(DOMException* e) {
@@ -3637,33 +3460,16 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("send"), false, false, false, xhrSendFunction);
 
     escargot::ESFunctionObject* xhrAbortFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-        if (v.isObject()) {
-            if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject) {
-                ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->abort();
-            }
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        try {
+            originalObj->abort();
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("abort"), 1, false);
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("abort"), false, false, false, xhrAbortFunction);
-
-    escargot::ESFunctionObject* xhrSetRequestHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        try {
-            escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
-                if (v.isObject()) {
-                    if (v.asESPointer()->asESObject()->extraData() == ScriptWrappable::XMLHttpRequestObject && instance->currentExecutionContext()->argumentCount() == 2) {
-                        ((XMLHttpRequest*)v.asESPointer()->asESObject()->extraPointerData())->setRequestHeader(
-                            instance->currentExecutionContext()->readArgument(0).toString()->utf8Data(),
-                            instance->currentExecutionContext()->readArgument(1).toString()->utf8Data());
-                    }
-                }
-                return escargot::ESValue(escargot::ESValue::ESNull);
-            } catch(DOMException* e) {
-                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-    }, escargot::ESString::create("setRequestHeader"), 1, false);
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setRequestHeader"), false, false, false, xhrSetRequestHeaderFunction);
 
     return xhrElementFunction;
 }

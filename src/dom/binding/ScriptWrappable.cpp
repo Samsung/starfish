@@ -528,11 +528,8 @@ void ScriptWrappable::initScriptWrappable(HTMLUnknownElement* ptr)
 
 void ScriptWrappable::initScriptWrappable(XMLHttpRequest* xhr)
 {
-    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
+    ScriptBindingInstance* instance = xhr->networkRequest().document()->window()->starFish()->scriptBindingInstance();
     auto data = fetchData(instance);
-    xhr->setScriptBindingInstance(instance);
-    xhr->setStarfishInstance(window->starFish());
     scriptObject()->set__proto__(data->xhrElement()->protoType());
     scriptObject()->setExtraData(XMLHttpRequestObject);
 }

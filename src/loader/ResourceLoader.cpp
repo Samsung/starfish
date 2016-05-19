@@ -5,6 +5,10 @@
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/file_io/FileIO.h"
 
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+extern bool g_fireOnloadEvent;
+#endif
+
 namespace StarFish {
 
 ResourceLoader::ResourceLoader(Document& document)
@@ -108,7 +112,16 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
 {
     if (m_pendingResourceCountWhileDocumentOpening == 0 && m_inDocumentOpenState) {
         m_inDocumentOpenState = false;
-        m_document->window()->dispatchLoadEvent();
+        m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
+            Window* wnd = (Window*)data;
+            String* eventType = wnd->starFish()->staticStrings()->m_load.localName();
+            Event* e = new Event(eventType, EventInit(false, false));
+            wnd->EventTarget::dispatchEvent(e);
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+            g_fireOnloadEvent = true;
+            wnd->setNeedsPainting();
+#endif
+        }, m_document->window());
     }
 }
 

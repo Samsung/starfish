@@ -89,6 +89,8 @@ public:
 
     void removeIdlerHandle(size_t handle)
     {
+        STARFISH_ASSERT(m_requstedIdlers.size());
+        STARFISH_ASSERT(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle) != m_requstedIdlers.end());
         m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle));
     }
 protected:

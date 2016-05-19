@@ -17,15 +17,10 @@
         assert_equals(client.test(), "TEH")
         var members = ["onreadystatechange",
                        "open",
-                       "setRequestHeader",
                        "send",
                        "abort",
                        "status",
-                       "statusText",
-                       "getResponseHeader",
-                       "getAllResponseHeaders",
-                       "responseText",
-                       "responseXML"]
+                       "responseText"]
         for(var x in members)
           assert_true(members[x] in client, members[x])
         var constants = ["UNSENT",
