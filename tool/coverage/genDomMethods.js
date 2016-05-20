@@ -27,7 +27,7 @@ function main() {
 function cleanContent(content) {
     var c = content;
     c = removeComment(c, "<!--", "-->");
-    c = removeComment(c, "//", "\n");
+    c = removeComment(c, "^//", "\n");
     c = removeComment(c, "/*", "*/");
     return c;
 }

@@ -29,7 +29,7 @@ function run(spec, file) {
 
     // create a table containing all features
     var table = {};
-    var keys = Object.keys(features).sort();
+    var keys = Object.keys(features);
     var methodList = fs.readFileSync(file, "utf8").split("\n");
     for (var i=0; i < methodList.length; i++) {
         var tokens = methodList[i].split("\t");
