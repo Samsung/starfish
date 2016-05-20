@@ -7,10 +7,11 @@ URL::URL(String* baseURL, String* url)
     : m_string(url)
 {
     bool isAbsolute = url->contains("://");
-    if (!isAbsolute) {
-        isAbsolute = url->startsWith("data:");
-    }
 
+    // TODO // form
+    STARFISH_ASSERT(!url->startsWith("//"));
+    // TODO data uri
+    STARFISH_ASSERT(!url->startsWith("data:"));
     if (baseURL->equals(String::emptyString)) {
         STARFISH_ASSERT(isAbsolute);
     }

@@ -131,6 +131,7 @@ public:
 
 protected:
     void initVariables();
+    void clearIdlers();
     static void fileWorker(NetworkRequest* res, String* filePath);
     static int curlProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);
     static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb, void* data);

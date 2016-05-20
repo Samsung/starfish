@@ -65,24 +65,29 @@ void StarFish::run()
 
 void StarFish::loadHTMLDocument(String* filePath)
 {
-    std::string d = filePath->utf8Data();
     std::string path;
-    std::string fileName;
-    if (d.find('/') == std::string::npos) {
-        path = "./";
-        fileName = d;
+    if (filePath->startsWith("http")) {
+        path = filePath->utf8Data();
     } else {
-        path += d.substr(0, d.find_last_of('/'));
-        fileName = d.substr(d.find_last_of('/') + 1);
+        std::string d = filePath->utf8Data();
+        std::string fileName;
+        if (d.find('/') == std::string::npos) {
+            path = "./";
+            fileName = d;
+        } else {
+            path += d.substr(0, d.find_last_of('/'));
+            fileName = d.substr(d.find_last_of('/') + 1);
+            path += "/";
+        }
+
+        char* p = realpath(path.c_str(), NULL);
+        path = p;
         path += "/";
+        free(p);
+
+        path = std::string("file://") + path + fileName;
     }
 
-    char* p = realpath(path.c_str(), NULL);
-    path = p;
-    path += "/";
-    free(p);
-
-    path = std::string("file://") + path + fileName;
     STARFISH_LOG_INFO("loadHTMLDocument %s\n", path.data());
     m_scriptBindingInstance = new ScriptBindingInstance();
     ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);

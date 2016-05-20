@@ -50,10 +50,7 @@ NetworkRequest::NetworkRequest(Document* document)
 
 NetworkRequest::~NetworkRequest()
 {
-    STARFISH_ASSERT(m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX);
-    STARFISH_ASSERT(m_pendingOnProgressEventIdlerHandle == SIZE_MAX);
-    STARFISH_ASSERT(m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
-    STARFISH_ASSERT(m_requstedIdlers.size() == 0);
+    clearIdlers();
 }
 
 void NetworkRequest::initVariables()
@@ -70,6 +67,31 @@ void NetworkRequest::initVariables()
     m_status = 0;
     m_timeout = 0;
 
+}
+
+void NetworkRequest::clearIdlers()
+{
+    auto iter2 = m_requstedIdlers.begin();
+    while (iter2 != m_requstedIdlers.end()) {
+        m_starFish->messageLoop()->removeIdler(*iter2);
+        iter2++;
+    }
+    m_requstedIdlers.clear();
+
+    if (m_pendingOnHeaderReceivedEventIdlerHandle != SIZE_MAX) {
+        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingOnHeaderReceivedEventIdlerHandle);
+        m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
+    }
+
+    if (m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
+        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingOnProgressEventIdlerHandle);
+        m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
+    }
+
+    if (m_pendingNetworkWorkerEndIdlerHandle != SIZE_MAX) {
+        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingNetworkWorkerEndIdlerHandle);
+        m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+    }
 }
 
 void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitAction)
@@ -129,22 +151,7 @@ void NetworkRequest::open(MethodType method, String* url, bool async, String* us
 void NetworkRequest::abort(bool isExplicitAction)
 {
     Locker<Mutex> locker(m_mutex);
-    auto iter2 = m_requstedIdlers.begin();
-    while (iter2 != m_requstedIdlers.end()) {
-        m_starFish->messageLoop()->removeIdler(*iter2);
-        iter2++;
-    }
-    m_requstedIdlers.clear();
-
-    if (m_pendingOnHeaderReceivedEventIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingOnHeaderReceivedEventIdlerHandle);
-        m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
-    }
-
-    if (m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
-        m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingOnProgressEventIdlerHandle);
-        m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
-    }
+    clearIdlers();
 
     m_isAborted = true;
     if (m_readyState >= UNSENT) {
@@ -300,6 +307,11 @@ void NetworkRequest::send(String* body)
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
             data->headerList = list;
 
+            curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+            // TODO
+            // we should prevent infinite redirect
+            curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 128);
+
             curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curlProgressCallback);
             curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
@@ -322,7 +334,6 @@ void NetworkRequest::send(String* body)
             } else {
                 STARFISH_ASSERT(m_method == GET_METHOD);
             }
-
 
             m_starFish->addPointerInRootSet(this);
         }

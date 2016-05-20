@@ -12,28 +12,30 @@ public:
     HTMLResourceClient(Resource* res, HTMLDocumentBuilder& builder)
         : ResourceClient(res)
         , m_builder(builder)
-
+        , m_htmlSource(String::emptyString)
     {
     }
 
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
+        m_htmlSource = String::createASCIIString("Cannot open page ");
+        m_htmlSource = m_htmlSource->concat(m_resource->url().urlString());
         load();
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
+        m_htmlSource = m_resource->asTextResource()->text();
         load();
     }
 
     void load()
     {
         Document* document = m_builder.document();
-        HTMLParser parser(document->window()->starFish(), document, resource()->asTextResource()->text());
+        HTMLParser parser(document->window()->starFish(), document, m_htmlSource);
         parser.parse();
-
         String* eventType = document->window()->starFish()->staticStrings()->m_DOMContentLoaded.localName();
         Event* e = new Event(eventType, EventInit(true, true));
         document->EventTarget::dispatchEvent(e);
@@ -41,6 +43,7 @@ public:
 
 protected:
     HTMLDocumentBuilder& m_builder;
+    String* m_htmlSource;
 };
 
 void HTMLDocumentBuilder::build(const URL& url)

@@ -130,8 +130,8 @@ size_t utf32ToUtf8(char32_t uc, char* UTF8)
         }
         tRequiredSize = 6;
     } else {
-        // TODO
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        tRequiredSize = 1;
+        uc = 0xFFFD;
     }
 
     return tRequiredSize;

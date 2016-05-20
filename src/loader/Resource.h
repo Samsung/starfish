@@ -9,6 +9,7 @@ namespace StarFish {
 class TextResource;
 class ImageResource;
 class ResourceLoader;
+class NetworkRequest;
 
 class Resource : public gc {
 public:
@@ -75,8 +76,6 @@ public:
     virtual void didLoadFailed();
     virtual void didLoadCanceled();
 
-    static void doLoad(void*);
-
     ResourceLoader* loader()
     {
         return m_loader;
@@ -98,12 +97,14 @@ protected:
         : m_state(BeforeSend)
         , m_url(url)
         , m_loader(loader)
+        , m_networkRequest(nullptr)
     {
     }
 
     State m_state;
     URL m_url;
     ResourceLoader* m_loader;
+    NetworkRequest* m_networkRequest;
     ResourceClientVector m_resourceClients;
     std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;
 };

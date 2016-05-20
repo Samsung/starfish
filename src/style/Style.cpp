@@ -568,7 +568,7 @@ void CSSStyleValuePair::setValuePosition(std::vector<String*, gc_allocator<Strin
     } else if (VALUE_IS_STRING("absolute")) {
         m_value.m_position = PositionValue::AbsolutePositionValue;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        m_value.m_position = PositionValue::StaticPositionValue;
     }
 }
 
@@ -4764,7 +4764,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
                         }
                     } else if (node->asElement()->asHTMLElement()->isHTMLLinkElement()) {
                         if (node->asElement()->asHTMLElement()->asHTMLLinkElement()->generatedSheet()) {
-                            auto sheet2 = node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet();
+                            auto sheet2 = node->asElement()->asHTMLElement()->asHTMLLinkElement()->generatedSheet();
                             auto iter = std::find(m_sheets.begin(), m_sheets.end(), sheet2);
                             STARFISH_ASSERT(iter != m_sheets.end());
                             m_sheets.insert(iter, sheet);

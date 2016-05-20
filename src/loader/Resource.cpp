@@ -5,43 +5,40 @@
 #include "platform/file_io/FileIO.h"
 #include "dom/Document.h"
 #include "loader/ResourceLoader.h"
+#include "platform/network/NetworkRequest.h"
 
 namespace StarFish {
 
-void Resource::doLoad(void* data)
-{
-    Resource* res = (Resource*)data;
-    FileIO* fio = FileIO::create();
-    String* path = res->m_url.urlStringWithoutSearchPart();
-    if (fio->open(path->substring(7, path->length() - 7))) {
-        size_t siz = fio->length();
-
-        char* fileContents = (char*)malloc(siz + 1);
-        fio->read(fileContents, sizeof(char), siz);
-        fileContents[siz] = 0;
-        res->didDataReceived(fileContents, siz);
-        free(fileContents);
-        fio->close();
-        res->didLoadFinished();
-    } else {
-        STARFISH_LOG_ERROR("failed to load %s\n", res->m_url.urlString()->utf8Data());
-        res->didLoadFailed();
+class ResourceNetworkRequestClient : public NetworkRequestClient {
+public:
+    ResourceNetworkRequestClient(Resource* resource)
+        : m_resource(resource)
+    {
     }
-    delete fio;
-}
+
+    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
+    {
+        if (request->progressState() == NetworkRequest::LOAD) {
+            m_resource->didDataReceived(request->responseData().data(), request->responseData().size());
+            m_resource->didLoadFinished();
+        } else if (request->progressState() == NetworkRequest::ERROR) {
+            m_resource->didLoadFailed();
+        } else if (request->progressState() == NetworkRequest::TIMEOUT) {
+            m_resource->didLoadFailed();
+        }
+    }
+
+protected:
+    Resource* m_resource;
+};
 
 void Resource::request(bool needsSyncRequest)
 {
     loader()->fetchResourcePreprocess(this);
-    if (needsSyncRequest) {
-        doLoad(this);
-    } else {
-        pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-            Resource* res = (Resource*)data;
-            res->removeIdlerHandle(handle);
-            doLoad(data);
-        }, this));
-    }
+    m_networkRequest = new NetworkRequest(m_loader->document());
+    m_networkRequest->addNetworkRequestClient(new ResourceNetworkRequestClient(this));
+    m_networkRequest->open(NetworkRequest::GET_METHOD, m_url.urlString(), !needsSyncRequest);
+    m_networkRequest->send();
 }
 
 void Resource::cancel()
@@ -63,6 +60,7 @@ void Resource::didLoadFinished()
         (*iter)->didLoadFinished();
         iter++;
     }
+    m_networkRequest = nullptr;
 }
 
 void Resource::didLoadFailed()
@@ -73,6 +71,7 @@ void Resource::didLoadFailed()
         (*iter)->didLoadFailed();
         iter++;
     }
+    m_networkRequest = nullptr;
 }
 
 void Resource::didLoadCanceled()
@@ -89,6 +88,7 @@ void Resource::didLoadCanceled()
         iter2++;
     }
     m_requstedIdlers.clear();
+    m_networkRequest = nullptr;
 }
 
 }

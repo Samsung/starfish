@@ -25,8 +25,9 @@ public:
     }
 
     virtual void request(bool needsSyncRequest = false);
+    virtual void didLoadFinished();
 
-    static void doLoad(void*);
+    static void doLoadFile(void*);
 protected:
     ImageData* m_imageData;
 };

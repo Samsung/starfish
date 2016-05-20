@@ -5,10 +5,11 @@
 #include "platform/file_io/FileIO.h"
 #include "dom/Document.h"
 #include "loader/ResourceLoader.h"
+#include "platform/network/NetworkRequest.h"
 
 namespace StarFish {
 
-void ImageResource::doLoad(void* data)
+void ImageResource::doLoadFile(void* data)
 {
     Resource* res = (Resource*)data;
     // special path for image resource
@@ -44,17 +45,28 @@ void ImageResource::doLoad(void* data)
 
 void ImageResource::request(bool needsSyncRequest)
 {
-    loader()->fetchResourcePreprocess(this);
-
-    if (needsSyncRequest) {
-        doLoad(this);
+    if (m_url.isFileURL()) {
+        loader()->fetchResourcePreprocess(this);
+        if (needsSyncRequest) {
+            doLoadFile(this);
+        } else {
+            pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
+                Resource* res = (Resource*)data;
+                res->removeIdlerHandle(handle);
+                doLoadFile(data);
+            }, this));
+        }
     } else {
-        pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-            Resource* res = (Resource*)data;
-            res->removeIdlerHandle(handle);
-            doLoad(data);
-        }, this));
+        Resource::request(needsSyncRequest);
     }
+}
+
+void ImageResource::didLoadFinished()
+{
+    if (!m_url.isFileURL()) {
+        m_imageData = ImageData::create(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+    }
+    Resource::didLoadFinished();
 }
 
 }

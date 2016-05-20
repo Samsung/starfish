@@ -21,6 +21,18 @@ public:
         m_height = h;
     }
 
+    ImageDataEFL(const char* buf, size_t len)
+    {
+        m_image = evas_object_image_add(internalCanvas());
+        char format[4] = "";
+        evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format, NULL);
+        STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
+        int w, h;
+        evas_object_image_size_get(m_image, &w, &h);
+        m_width = w;
+        m_height = h;
+    }
+
     ~ImageDataEFL()
     {
         evas_object_hide(m_image);
@@ -59,6 +71,11 @@ protected:
 ImageData* ImageData::create(String* imageSrc)
 {
     return new ImageDataEFL(imageSrc);
+}
+
+ImageData* ImageData::create(const char* buf, size_t len)
+{
+    return new ImageDataEFL(buf, len);
 }
 
 }
