@@ -6,6 +6,10 @@
 #include "dom/Document.h"
 #include "platform/message_loop/MessageLoop.h"
 
+#ifdef STARFISH_TIZEN_WEARABLE
+#include <net_connection.h>
+#endif
+
 namespace StarFish {
 
 class ActiveNetworkRequestTracker : public NetworkRequestClient {
@@ -260,6 +264,24 @@ void NetworkRequest::send(String* body)
             data->request = this;
             data->curl = curl;
 
+#ifdef STARFISH_TIZEN_WEARABLE
+            connection_h connection;
+            int conn_err;
+            conn_err = connection_create(&connection);
+            char* proxy_address = NULL;
+            if (conn_err == CONNECTION_ERROR_NONE) {
+                connection_get_proxy(connection, CONNECTION_ADDRESS_FAMILY_IPV4, &proxy_address);
+                if (proxy_address) {
+                    STARFISH_LOG_INFO("tizen proxy address is %s\n", proxy_address);
+                    curl_easy_setopt(curl, CURLOPT_PROXY, proxy_address);
+                    free(proxy_address);
+                }
+                connection_destroy(connection);
+            } else {
+                STARFISH_LOG_INFO("got error while opening tizen network connection\n");
+            }
+#endif
+
             curl_easy_setopt(curl, CURLOPT_URL, m_url.urlString()->utf8Data());
             curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(m_timeout));
 
@@ -331,6 +353,7 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
         res->changeProgress(LOAD, true);
         res->changeProgress(LOADEND, true);
     } else {
+        STARFISH_LOG_INFO("failed to open %s\n", res->m_url.urlString()->utf8Data());
         res->m_status = 0;
         res->changeProgress(ERROR, true);
         res->changeProgress(LOADEND, true);
@@ -342,13 +365,17 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
 void* NetworkRequest::networkWorker(void* data)
 {
     NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+    bool isSync;
     CURL* curl = requestData->curl;
     curl_slist* list = requestData->headerList;
-    auto res = curl_easy_perform(curl);
-    if (res == 0) {
+    {
         Locker<Mutex> locker(requestData->request->m_mutex);
-        requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-            NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+        isSync = requestData->request->m_isSync;
+    }
+    auto res = curl_easy_perform(curl);
+    // FIXME duplicate code block sync, async
+    if (isSync) {
+        if (res == 0) {
             Locker<Mutex> locker(requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
 
@@ -362,23 +389,15 @@ void* NetworkRequest::networkWorker(void* data)
             requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
 
             GC_FREE(requestData);
-        }, requestData);
-
-    } else if (res == CURLE_ABORTED_BY_CALLBACK) {
-        Locker<Mutex> locker(requestData->request->m_mutex);
-        requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-            NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+        } else if (res == CURLE_ABORTED_BY_CALLBACK) {
             requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
             GC_FREE(requestData);
-        }, requestData);
-    } else {
-        // handle error
-        Locker<Mutex> locker(requestData->request->m_mutex);
-        requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+        } else {
             NetworkWorkerData* requestData = (NetworkWorkerData*)data;
             Locker<Mutex> locker(requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
 
+            STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url.urlString()->utf8Data());
             long code;
             curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
             requestData->request->m_status = code;
@@ -389,7 +408,55 @@ void* NetworkRequest::networkWorker(void* data)
             requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
 
             GC_FREE(requestData);
-        }, requestData);
+        }
+    } else {
+        if (res == 0) {
+            Locker<Mutex> locker(requestData->request->m_mutex);
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+                NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+                Locker<Mutex> locker(requestData->request->m_mutex);
+                requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+
+                long code;
+                curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
+                requestData->request->m_status = code;
+                requestData->request->changeProgress(LOAD, true);
+                requestData->request->changeProgress(LOADEND, true);
+                requestData->request->changeReadyState(DONE, true);
+
+                requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+
+                GC_FREE(requestData);
+            }, requestData);
+
+        } else if (res == CURLE_ABORTED_BY_CALLBACK) {
+            Locker<Mutex> locker(requestData->request->m_mutex);
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+                NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+                requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+                GC_FREE(requestData);
+            }, requestData);
+        } else {
+            // handle error
+            Locker<Mutex> locker(requestData->request->m_mutex);
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+                NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+                Locker<Mutex> locker(requestData->request->m_mutex);
+                requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+
+                long code;
+                curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
+                STARFISH_LOG_INFO("failed to open %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)code);
+                requestData->request->m_status = code;
+                requestData->request->changeProgress(ERROR, true);
+                requestData->request->changeProgress(LOADEND, true);
+                requestData->request->changeReadyState(DONE, true);
+
+                requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+
+                GC_FREE(requestData);
+            }, requestData);
+        }
     }
 
     curl_slist_free_all(list);
