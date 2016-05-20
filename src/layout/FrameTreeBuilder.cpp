@@ -250,7 +250,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         }
 
         bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
-        if (isBlockChild && !ctx.currentBlockContainer()->hasBlockFlow() && ctx.isInFrameInlineFlow() && currentFrame->isNormalFlow()) {
+        if (isBlockChild && ctx.isInFrameInlineFlow() && currentFrame->isNormalFlow()) {
             // divide block. when comes Inline.. + Block(normal flow)
             didSplitBlock = true;
             Frame* parent = current->parentNode()->frame();
