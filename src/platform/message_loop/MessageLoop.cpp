@@ -20,6 +20,7 @@ struct IdlerData {
     void* m_data2;
     Ecore_Idler* m_idler;
     MessageLoop* m_ml;
+    bool m_shouldExecute;
 };
 
 size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
@@ -85,18 +86,18 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t, void
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
-
-    ecore_thread_main_loop_begin();
-    id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
-        IdlerData* id = (IdlerData*)data;
-        ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->scriptBindingInstance());
-        id->m_fn((size_t)id, id->m_data);
-
-        delete id;
-        return ECORE_CALLBACK_CANCEL;
+    id->m_shouldExecute = true;
+    ecore_main_loop_thread_safe_call_async([](void* data) -> void {
+        ecore_idler_add([](void* data) -> Eina_Bool {
+            IdlerData* id = (IdlerData*)data;
+            if (id->m_shouldExecute) {
+                ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->scriptBindingInstance());
+                id->m_fn((size_t)id, id->m_data);
+            }
+            delete id;
+            return ECORE_CALLBACK_CANCEL;
+        }, data);
     }, id);
-    ecore_thread_main_loop_end();
-
     return (size_t)id;
 }
 
@@ -110,8 +111,7 @@ void MessageLoop::removeIdler(size_t handle)
 void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
 {
     IdlerData* id = (IdlerData*)handle;
-    ecore_idler_del(id->m_idler);
-    delete id;
+    id->m_shouldExecute = false;
 }
 
 }

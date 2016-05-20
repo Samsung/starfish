@@ -10,14 +10,10 @@ public:
     Locker(T& lock)
         : m_lock(lock)
     {
-    }
-
-    void lock()
-    {
         m_lock.lock();
     }
 
-    void unlock()
+    ~Locker()
     {
         m_lock.unlock();
     }

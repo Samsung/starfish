@@ -96,8 +96,6 @@ void NetworkRequest::clearIdlers()
 
 void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitAction)
 {
-    Locker<Mutex> locker(m_mutex);
-
     if (readyState != m_readyState) {
         m_readyState = readyState;
         for (size_t i = 0; i < m_clients.size(); i ++) {
@@ -112,7 +110,6 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
 
 void NetworkRequest::changeProgress(ProgressState progress, bool isExplicitAction)
 {
-    Locker<Mutex> locker(m_mutex);
     if (m_progressState != progress || (progress == PROGRESS)) {
         m_progressState = progress;
         for (size_t i = 0; i < m_clients.size(); i ++) {
@@ -129,7 +126,6 @@ void NetworkRequest::open(MethodType method, String* url, bool async, String* us
 {
     bool shouldAbort = false;
     {
-        Locker<Mutex> locker(m_mutex);
         STARFISH_ASSERT(!(!async && m_timeout != 0));
         shouldAbort = m_progressState >= LOADSTART;
     }
@@ -138,19 +134,17 @@ void NetworkRequest::open(MethodType method, String* url, bool async, String* us
     }
     {
         initVariables();
-        Locker<Mutex> locker(m_mutex);
         m_method = method;
         m_url = URL(m_starFish->window()->document()->documentURI().urlString(), url);
         m_userName = userName;
         m_password = password;
         m_isSync = !async;
-        changeReadyState(OPENED, true);
     }
+    changeReadyState(OPENED, true);
 }
 
 void NetworkRequest::abort(bool isExplicitAction)
 {
-    Locker<Mutex> locker(m_mutex);
     clearIdlers();
 
     m_isAborted = true;
@@ -176,6 +170,7 @@ struct NetworkWorkerData {
     NetworkRequest* request;
     CURL* curl;
     curl_slist* headerList;
+    bool isSync;
 };
 
 
@@ -192,11 +187,13 @@ int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX && request->m_isReceivedHeader) {
         request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
             NetworkRequest* request = (NetworkRequest*)data;
-            Locker<Mutex> locker(request->m_mutex);
-            STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
+            {
+                Locker<Mutex> locker(request->m_mutex);
+                STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
+                request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
+            }
             request->changeReadyState(LOADING, true);
             request->changeProgress(PROGRESS, true);
-            request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
         }, request);
     }
     return 0;
@@ -225,10 +222,12 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
         request->m_isReceivedHeader = true;
         request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
             NetworkRequest* request = (NetworkRequest*)data;
-            Locker<Mutex> locker(request->m_mutex);
-            STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
+            {
+                Locker<Mutex> locker(request->m_mutex);
+                STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
+                request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
+            }
             request->changeReadyState(HEADERS_RECEIVED, true);
-            request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
         }, request);
     }
     return realsize;
@@ -238,13 +237,10 @@ void NetworkRequest::send(String* body)
 {
     bool isFileURL = false;
     bool isSync = false;
-    {
-        Locker<Mutex> locker(m_mutex);
-        changeProgress(LOADSTART, true);
-        isFileURL = m_url.isFileURL();
-        isSync = m_isSync;
-        m_didSend = true;
-    }
+    isFileURL = m_url.isFileURL();
+    isSync = m_isSync;
+    m_didSend = true;
+    changeProgress(LOADSTART, true);
     if (isFileURL) {
         // this area doesn't require lock.
         // reading file is not require thread
@@ -264,12 +260,12 @@ void NetworkRequest::send(String* body)
     } else {
         NetworkWorkerData* data = new(NoGC) NetworkWorkerData;
         {
-            Locker<Mutex> locker(m_mutex);
             CURL* curl = curl_easy_init();
             STARFISH_ASSERT(curl);
 
             data->request = this;
             data->curl = curl;
+            data->isSync = m_isSync;
 
 #ifdef STARFISH_TIZEN_WEARABLE
             connection_h connection;
@@ -376,20 +372,15 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
 void* NetworkRequest::networkWorker(void* data)
 {
     NetworkWorkerData* requestData = (NetworkWorkerData*)data;
-    bool isSync;
+    bool isSync = requestData->isSync;
     CURL* curl = requestData->curl;
     curl_slist* list = requestData->headerList;
-    {
-        Locker<Mutex> locker(requestData->request->m_mutex);
-        isSync = requestData->request->m_isSync;
-    }
     auto res = curl_easy_perform(curl);
     // FIXME duplicate code block sync, async
     if (isSync) {
         if (res == 0) {
-            Locker<Mutex> locker(requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
-
+            NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+            STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
             long code;
             curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
             requestData->request->m_status = code;
@@ -405,9 +396,7 @@ void* NetworkRequest::networkWorker(void* data)
             GC_FREE(requestData);
         } else {
             NetworkWorkerData* requestData = (NetworkWorkerData*)data;
-            Locker<Mutex> locker(requestData->request->m_mutex);
-            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
-
+            STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle);
             STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url.urlString()->utf8Data());
             long code;
             curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
@@ -425,9 +414,10 @@ void* NetworkRequest::networkWorker(void* data)
             Locker<Mutex> locker(requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
                 NetworkWorkerData* requestData = (NetworkWorkerData*)data;
-                Locker<Mutex> locker(requestData->request->m_mutex);
-                requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
-
+                {
+                    Locker<Mutex> locker(requestData->request->m_mutex);
+                    requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+                }
                 long code;
                 curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
                 requestData->request->m_status = code;
@@ -452,8 +442,10 @@ void* NetworkRequest::networkWorker(void* data)
             Locker<Mutex> locker(requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
                 NetworkWorkerData* requestData = (NetworkWorkerData*)data;
-                Locker<Mutex> locker(requestData->request->m_mutex);
-                requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+                {
+                    Locker<Mutex> locker(requestData->request->m_mutex);
+                    requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+                }
 
                 long code;
                 curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);

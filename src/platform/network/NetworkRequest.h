@@ -169,13 +169,13 @@ protected:
         m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle));
     }
 
-    size_t m_pendingOnHeaderReceivedEventIdlerHandle;
-    size_t m_pendingOnProgressEventIdlerHandle;
+    volatile size_t m_pendingOnHeaderReceivedEventIdlerHandle;
+    volatile size_t m_pendingOnProgressEventIdlerHandle;
     // progress event data
-    size_t m_loaded;
-    size_t m_total;
+    volatile size_t m_loaded;
+    volatile size_t m_total;
 
-    size_t m_pendingNetworkWorkerEndIdlerHandle;
+    volatile size_t m_pendingNetworkWorkerEndIdlerHandle;
 
     std::vector<NetworkRequestClient*, gc_allocator<NetworkRequestClient*>> m_clients;
     std::vector<NetworkRequestClient*> m_clientsWithNoGC;
