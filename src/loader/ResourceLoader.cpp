@@ -110,7 +110,7 @@ public:
 
 void ResourceLoader::fetchResourcePreprocess(Resource* res)
 {
-    if (m_inDocumentOpenState) {
+    if (m_inDocumentOpenState && res->isThisResourceDoesNotAffectWindowOnLoad()) {
         m_pendingResourceCountWhileDocumentOpening++;
         res->addResourceClient(new DocumentOnLoadChecker(res));
         res->addResourceClient(new ResourceAliveChecker(res));

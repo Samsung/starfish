@@ -12,6 +12,8 @@ namespace StarFish {
 #define DEFAULT_VALUE_IMAGE_REPEAT() \
     (StretchValue)
 
+class ImageResource;
+
 class BorderImageImpl : public gc {
 public:
     BorderImageImpl()
@@ -21,7 +23,7 @@ public:
         , m_sliceFill(false)
         , m_slices(DEFAULT_VALUE_IMAGE_SLICE())
         , m_widths(DEFAULT_VALUE_IMAGE_WIDTH())
-        , m_imageData(NULL)
+        , m_imageResource(NULL)
     {
     }
 
@@ -36,8 +38,7 @@ public:
             && m_url->equals(o.m_url)
             && m_sliceFill == o.m_sliceFill
             && m_slices == o.m_slices
-            && m_widths == o.m_widths
-            && m_imageData == o.m_imageData;
+            && m_widths == o.m_widths;
     }
 
     bool operator!=(const BorderImageImpl& o)
@@ -54,7 +55,7 @@ public:
     bool m_sliceFill; // [border-image-slice]
     LengthBox m_slices; // [border-image-slice]
     BorderImageLengthBox m_widths; // [border-image-width]
-    ImageData* m_imageData;
+    ImageResource* m_imageResource;
 };
 
 class BorderImage {
@@ -70,7 +71,21 @@ public:
     BorderImageRepeatValue repeatX() { return isNull() ? DEFAULT_VALUE_IMAGE_REPEAT() : m_data->m_repeatX; }
     BorderImageRepeatValue repeatY() { return isNull() ? DEFAULT_VALUE_IMAGE_REPEAT() : m_data->m_repeatY; }
     BorderImageLengthBox widths() { return isNull() ? DEFAULT_VALUE_IMAGE_WIDTH() : m_data->m_widths; }
-    ImageData* imageData() { return isNull() ? NULL : data()->m_imageData; }
+    ImageData* imageData()
+    {
+        if (!isNull() && data()->m_imageResource) {
+            return data()->m_imageResource->imageData();
+        }
+        return NULL;
+    }
+
+    ImageResource* imageResource()
+    {
+        if (!isNull() && data()->m_imageResource) {
+            return data()->m_imageResource;
+        }
+        return NULL;
+    }
 
     void setUrl(String* url) { data()->m_url = url; }
     void setSlices(const LengthBox& slices) { data()->m_slices = slices; }
@@ -78,7 +93,7 @@ public:
     void setRepeatX(BorderImageRepeatValue value) { data()->m_repeatX = value; }
     void setRepeatY(BorderImageRepeatValue value) { data()->m_repeatY = value; }
     void setWidths(BorderImageLengthBox value) { data()->m_widths = value; }
-    void setImageData(ImageData* value) { data()->m_imageData = value; }
+    void setImageResource(ImageResource* value) { data()->m_imageResource = value; }
 
     void checkComputed(Length fontSize, Font* font)
     {

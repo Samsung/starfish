@@ -192,8 +192,6 @@ FontWeightValue bolderWeight(FontWeightValue weight)
         || weight == FontWeightValue::NineHundredsFontWeightValue) {
         return FontWeightValue::NineHundredsFontWeightValue;
     }
-
-    ASSERT_NOT_REACHED();
     return FontWeightValue::NormalFontWeightValue;
 }
 
@@ -4665,7 +4663,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         apply(element->document()->documentURI(), inlineCssValues, ret, parent);
     }
 
-    ret->loadResources(element);
+    ret->loadResources(element, element->style());
     ret->arrangeStyleValues(parent);
     return ret;
 }

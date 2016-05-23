@@ -2,18 +2,21 @@
 #define __StarFishStyleBackgroundData__
 
 #include "style/Style.h"
+#include "loader/ImageResource.h"
 
 namespace StarFish {
 
-class ImageData;
+class ImageResource;
 
 class StyleBackgroundData : public gc {
 public:
     StyleBackgroundData()
         : m_image(String::emptyString)
-        , m_imageData(NULL)
+        , m_imageResource(NULL)
         , m_sizeType(BackgroundSizeType::SizeValue)
         , m_sizeValue(new LengthSize())
+        , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
+        , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
     {
     }
 
@@ -42,9 +45,9 @@ public:
         m_image = img;
     }
 
-    void setBgImageData(ImageData* data)
+    void setBgImageResource(ImageResource* data)
     {
-        m_imageData = data;
+        m_imageResource = data;
     }
 
     void setRepeatX(BackgroundRepeatValue repeat)
@@ -69,7 +72,14 @@ public:
 
     ImageData* bgImageData()
     {
-        return m_imageData;
+        if (m_imageResource)
+            return m_imageResource->imageData();
+        return nullptr;
+    }
+
+    ImageResource* bgImageResource()
+    {
+        return m_imageResource;
     }
 
     BackgroundSizeType sizeType()
@@ -108,7 +118,7 @@ private:
     Color m_color;
 
     String* m_image;
-    ImageData* m_imageData;
+    ImageResource* m_imageResource;
 
     // background-size
     BackgroundSizeType m_sizeType;
@@ -122,9 +132,6 @@ private:
 bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
 {
     if (a.m_color != b.m_color)
-        return false;
-
-    if (a.m_imageData != b.m_imageData)
         return false;
 
     if (a.m_sizeType != b.m_sizeType)

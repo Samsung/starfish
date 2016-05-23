@@ -8,7 +8,21 @@
 
 namespace StarFish {
 
-void ComputedStyle::loadResources(Node* consumer)
+class StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion : public ResourceClient {
+public:
+    StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(Resource* res, Document* document)
+        : ResourceClient(res)
+        , m_document(document)
+    { }
+    virtual void didLoadFinished()
+    {
+        m_document->setNeedsPainting();
+    }
+
+    Document* m_document;
+};
+
+void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
     StarFish* sf = consumer->document()->window()->starFish();
     float fontSize = m_inheritedStyles.m_fontSize.fixed();
@@ -63,17 +77,47 @@ void ComputedStyle::loadResources(Node* consumer)
     m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
 #endif
 
-    // TODO use async fetch for loading images
     if (!backgroundImage()->equals(String::emptyString)) {
-        ImageResource* res = consumer->document()->resourceLoader()->fetchImage(URL(consumer->document()->documentURI().baseURI(), backgroundImage()));
-        res->request(true);
-        setBackgroundImageData(res->imageData());
+
+        URL u(consumer->document()->documentURI().baseURI(), backgroundImage());
+
+        if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->background()
+            && prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()
+            && prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()->url() == u) {
+            setBackgroundImageResource(prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource());
+        } else {
+            ImageResource* res = consumer->document()->resourceLoader()->fetchImage(u);
+            res->markThisResourceIsDoesNotAffectWindowOnLoad();
+            setBackgroundImageResource(res);
+            res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+            res->request(g_enablePixelTest);
+#else
+            res->request();
+#endif
+        }
     }
 
     if (!borderImageSource()->equals(String::emptyString)) {
-        ImageResource* res = consumer->document()->resourceLoader()->fetchImage(URL(consumer->document()->documentURI().baseURI(), borderImageSource()));
-        res->request(true);
-        setBorderImageData(res->imageData());
+        URL u(consumer->document()->documentURI().baseURI(), borderImageSource());
+
+        if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->hasBorderImageData()
+            && prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource()
+            && prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource()->url() == u) {
+            ImageResource* res = prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource();
+            setBorderImageResource(res);
+        } else {
+            ImageResource* res = consumer->document()->resourceLoader()->fetchImage(u);
+            res->markThisResourceIsDoesNotAffectWindowOnLoad();
+            res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+            res->request(g_enablePixelTest);
+#else
+            res->request();
+#endif
+            setBorderImageResource(res);
+        }
+
         setBorderLeftStyle(BorderStyleValue::BSolid);
         setBorderTopStyle(BorderStyleValue::BSolid);
         setBorderRightStyle(BorderStyleValue::BSolid);

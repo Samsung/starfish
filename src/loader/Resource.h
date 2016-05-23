@@ -92,16 +92,27 @@ public:
         STARFISH_ASSERT(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle) != m_requstedIdlers.end());
         m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle));
     }
+
+    void markThisResourceIsDoesNotAffectWindowOnLoad()
+    {
+        m_isIncludedInComputingWindowOnLoadEvent = false;
+    }
+
+    bool isThisResourceDoesNotAffectWindowOnLoad()
+    {
+        return m_isIncludedInComputingWindowOnLoadEvent;
+    }
 protected:
     Resource(const URL& url, ResourceLoader* loader)
         : m_state(BeforeSend)
+        , m_isIncludedInComputingWindowOnLoadEvent(true)
         , m_url(url)
         , m_loader(loader)
         , m_networkRequest(nullptr)
     {
     }
-
     State m_state;
+    bool m_isIncludedInComputingWindowOnLoadEvent;
     URL m_url;
     ResourceLoader* m_loader;
     NetworkRequest* m_networkRequest;

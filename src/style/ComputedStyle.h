@@ -249,10 +249,10 @@ public:
         m_background->setBgImage(img);
     }
 
-    void setBackgroundImageData(ImageData* imgdata)
+    void setBackgroundImageResource(ImageResource* img)
     {
         setBackgroundIfNeeded();
-        m_background->setBgImageData(imgdata);
+        m_background->setBgImageResource(img);
     }
 
     void setBackgroundRepeatX(BackgroundRepeatValue repeat)
@@ -610,7 +610,7 @@ public:
     void setBorderImageRepeatX(BorderImageRepeatValue value) { surround()->border.image().setRepeatX(value); }
     void setBorderImageRepeatY(BorderImageRepeatValue value) { surround()->border.image().setRepeatY(value); }
     void setBorderImageWidths(BorderImageLengthBox value) { surround()->border.image().setWidths(value); }
-    void setBorderImageData(ImageData* value) { surround()->border.image().setImageData(value); }
+    void setBorderImageResource(ImageResource* value) { surround()->border.image().setImageResource(value); }
 
     void setBorderImageSliceFromOther(ComputedStyle* other)
     {
@@ -863,7 +863,7 @@ public:
     static bool initialBorderImageSliceFill() { return false; }
     static BorderImageRepeatValue initialBorderImageRepeat() { return BorderImageRepeatValue::StretchValue; }
 
-    void loadResources(Node* consumer);
+    void loadResources(Node* consumer, ComputedStyle* prevComputedStyleValueForReferenceLoadedResources = nullptr);
     void arrangeStyleValues(ComputedStyle* parentStyle)
     {
         // 9.7 Relationships between 'display', 'position', and 'float'

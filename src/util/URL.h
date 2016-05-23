@@ -37,6 +37,11 @@ public:
     {
         return m_urlString->length();
     }
+
+    bool operator==(const URL& other) const
+    {
+        return other.urlString()->equals(m_urlString);
+    }
 protected:
     String* m_string;
     String* m_urlString;

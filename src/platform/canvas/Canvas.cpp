@@ -1089,9 +1089,10 @@ public:
                 m_objList->push_back(eo);
 
             Evas_Object* imgData = (Evas_Object*)data->unwrap();
-            const char* buf;
-            evas_object_image_file_get(imgData, &buf, NULL);
-            evas_object_image_file_set(eo, buf, NULL);
+            void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
+            evas_object_image_size_set(eo, data->width(), data->height());
+            evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
+            evas_object_image_data_set(eo, imgBuf);
 
             evas_object_image_size_set(eo, data->width(), data->height());
             evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
@@ -1166,14 +1167,22 @@ public:
             m_objList->push_back(eo);
 
         Evas_Object* imgData = (Evas_Object*)data->unwrap();
-        const char* buf;
-        evas_object_image_file_get(imgData, &buf, NULL);
-        evas_object_image_file_set(eo, buf, NULL);
+        // const char* buf;
+        // evas_object_image_file_get(imgData, &buf, NULL);
+        // evas_object_image_file_set(eo, buf, NULL);
+
+        void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
+        evas_object_image_size_set(eo, data->width(), data->height());
+        evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
+        evas_object_image_data_set(eo, imgBuf);
+        evas_object_image_filled_set(eo, EINA_TRUE);
+        evas_object_image_alpha_set(eo, EINA_TRUE);
+
         evas_object_image_filled_set(eo, EINA_FALSE);
         evas_object_image_fill_set(eo, 0, 0, imageWidth, imageHeight);
-        evas_object_image_alpha_set(eo, EINA_TRUE);
+        // evas_object_image_alpha_set(eo, EINA_TRUE);
         // evas_object_anti_alias_set(eo, EINA_TRUE);
-        // evas_object_image_size_set(eo, imageWidth, imageHeight);
+
 
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
