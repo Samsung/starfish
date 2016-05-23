@@ -9,7 +9,7 @@ XMLHttpRequest::XMLHttpRequest(Document* document)
     : m_networkRequest(new NetworkRequest(document))
     , m_resposeText(String::emptyString)
 {
-    m_networkRequest->addNetworkRequestClientInNonGCArea(this);
+    m_networkRequest->addNetworkRequestClient(this);
 }
 
 void XMLHttpRequest::send(String* body)

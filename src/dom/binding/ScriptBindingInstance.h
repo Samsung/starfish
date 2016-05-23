@@ -7,6 +7,7 @@ namespace StarFish {
 class ScriptBindingInstance : public gc {
 public:
     ScriptBindingInstance();
+    ~ScriptBindingInstance();
     void enter();
     void exit();
     void close();

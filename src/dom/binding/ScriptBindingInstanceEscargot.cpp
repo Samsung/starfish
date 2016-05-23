@@ -18,6 +18,7 @@
 
 namespace StarFish {
 
+
 static ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
 {
     return (ScriptBindingInstanceDataEscargot*)instance->data();
@@ -28,6 +29,11 @@ ScriptBindingInstance::ScriptBindingInstance()
     m_enterCount = 0;
     m_data = new ScriptBindingInstanceDataEscargot(this);
     fetchData(this)->m_instance = new escargot::ESVMInstance();
+}
+
+ScriptBindingInstance::~ScriptBindingInstance()
+{
+    delete fetchData(this)->m_instance;
 }
 
 

@@ -13,6 +13,9 @@
 #include <Ecore_X.h>
 #endif
 
+#ifdef STARFISH_TIZEN_WEARABLE
+#include <tizen.h>
+#endif
 namespace StarFish {
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
@@ -24,6 +27,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
 {
+    STARFISH_LOG_INFO("StarFish::StarFish %p", this);
     if (!win) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
         elm_win_title_set(wndObj, "StarFish");
@@ -36,6 +40,12 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 
     m_nativeWindow = win;
 
+#ifdef STARFISH_TIZEN_WEARABLE
+    GC_set_warn_proc([](char *msg, GC_word arg)
+    {
+        dlog_print(DLOG_ERROR, "StarFish", msg, arg);
+    });
+#endif
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
             STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
@@ -56,6 +66,14 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     m_messageLoop = new MessageLoop(this);
+}
+
+StarFish::~StarFish()
+{
+    STARFISH_LOG_INFO("StarFish::~StarFish");
+    close();
+    delete m_lineBreaker;
+    delete m_scriptBindingInstance;
 }
 
 void StarFish::run()
@@ -115,9 +133,6 @@ void StarFish::close()
     ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->close();
     m_scriptBindingInstance->close();
-
-    m_window = nullptr;
-    m_scriptBindingInstance = nullptr;
 }
 
 void StarFish::evaluate(String* s)

@@ -39,9 +39,15 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const ch
 
 extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 {
-    TO_STARFISH(instance)->close();
     starfishGCRemoveRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
+    delete TO_STARFISH(instance);
     free(instance);
+
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
 }
 
 extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(StarFishInstance* instance, const char* path)

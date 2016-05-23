@@ -3,7 +3,8 @@
 
 namespace StarFish {
 
-class Mutex : public gc_cleanup {
+class Mutex {
+    STARFISH_MAKE_STACK_ALLOCATED();
 public:
     Mutex();
     ~Mutex();

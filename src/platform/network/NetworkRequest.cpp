@@ -43,6 +43,7 @@ NetworkRequest::NetworkRequest(Document* document)
     , m_total(0)
     , m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
 {
+    STARFISH_LOG_INFO("NetworkRequest::NetworkRequest %p", this);
     initVariables();
     addNetworkRequestClient(new ActiveNetworkRequestTracker());
 }
@@ -101,10 +102,6 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
         for (size_t i = 0; i < m_clients.size(); i ++) {
             m_clients[i]->onReadyStateChange(this, isExplicitAction);
         }
-
-        for (size_t i = 0; i < m_clientsWithNoGC.size(); i ++) {
-            m_clientsWithNoGC[i]->onReadyStateChange(this, isExplicitAction);
-        }
     }
 }
 
@@ -114,10 +111,6 @@ void NetworkRequest::changeProgress(ProgressState progress, bool isExplicitActio
         m_progressState = progress;
         for (size_t i = 0; i < m_clients.size(); i ++) {
             m_clients[i]->onProgressEvent(this, isExplicitAction);
-        }
-
-        for (size_t i = 0; i < m_clientsWithNoGC.size(); i ++) {
-            m_clientsWithNoGC[i]->onProgressEvent(this, isExplicitAction);
         }
     }
 }

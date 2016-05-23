@@ -18,7 +18,7 @@ public:
     virtual void onReadyStateChange(NetworkRequest* request, bool isExplicitAction) { }
 };
 
-class NetworkRequest : public gc_cleanup {
+class NetworkRequest : public gc {
     friend class XMLHttpRequest;
 public:
     enum MethodType {
@@ -111,7 +111,7 @@ public:
         return m_starFish;
     }
 
-    const std::vector<char>& responseData()
+    const std::vector<char, gc_allocator<char>>& responseData()
     {
         return m_response;
     }
@@ -119,14 +119,6 @@ public:
     void addNetworkRequestClient(NetworkRequestClient* client)
     {
         m_clients.push_back(client);
-    }
-
-    // this is for XHR
-    // direct reference of NetworkRequest with client
-    // cause gc-cycle
-    void addNetworkRequestClientInNonGCArea(NetworkRequestClient* client)
-    {
-        m_clientsWithNoGC.push_back(client);
     }
 
 protected:
@@ -157,7 +149,7 @@ protected:
     int m_status;
     uint32_t m_timeout;
     Mutex m_mutex;
-    std::vector<char> m_response;
+    std::vector<char, gc_allocator<char>> m_response;
 
     std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;
     void pushIdlerHandle(size_t handle)
@@ -179,7 +171,6 @@ protected:
     volatile size_t m_pendingNetworkWorkerEndIdlerHandle;
 
     std::vector<NetworkRequestClient*, gc_allocator<NetworkRequestClient*>> m_clients;
-    std::vector<NetworkRequestClient*> m_clientsWithNoGC;
 };
 }
 

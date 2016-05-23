@@ -217,15 +217,13 @@ enum StarFishDeviceKind {
     deviceKindUseTouchScreen = 1 << 0,
 };
 
-class StarFish : public gc_cleanup {
+// must call delete
+class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h);
-    ~StarFish()
-    {
-        delete m_lineBreaker;
-    }
+    ~StarFish();
     void run();
 
     Window* window()

@@ -7,7 +7,7 @@
 
 namespace StarFish {
 
-class ResourceLoader : public gc_cleanup {
+class ResourceLoader : public gc {
     friend class Resource;
     friend class ImageResource;
     friend class DocumentOnLoadChecker;
