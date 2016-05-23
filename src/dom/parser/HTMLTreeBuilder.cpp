@@ -272,6 +272,7 @@ HTMLTreeBuilder::HTMLTreeBuilder(HTMLParser* parser, DocumentFragment* fragment,
     , m_parser(parser)
     , m_scriptToProcessStartPosition(uninitializedPositionValue1())
 {
+    m_scriptToProcess = nullptr;
     // FIXME: This assertion will become invalid if <http://webkit.org/b/60316> is fixed.
     ASSERT(contextElement);
     if (contextElement) {
@@ -335,6 +336,11 @@ Element* HTMLTreeBuilder::takeScriptToProcess(TextPosition& scriptStartPosition)
     auto ret = m_scriptToProcess;
     m_scriptToProcess = nullptr;
     return ret;
+}
+
+Element* HTMLTreeBuilder::lookScriptToProcess()
+{
+    return m_scriptToProcess;
 }
 
 void HTMLTreeBuilder::constructTree(AtomicHTMLToken* token)
@@ -2087,8 +2093,8 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken* token)
             ASSERT(m_tree.currentStackItem()->hasTagName(s->m_scriptTagName));
             // if (scriptingContentIsAllowed(m_tree.parserContentPolicy()))
             if (true) {
-                // m_scriptToProcess = m_tree.currentElement();
-                m_tree.currentElement()->asHTMLElement()->asHTMLScriptElement()->executeScript();
+                STARFISH_ASSERT(!m_scriptToProcess);
+                m_scriptToProcess = m_tree.currentElement();
             }
             m_tree.openElements()->pop();
             setInsertionMode(m_originalInsertionMode);

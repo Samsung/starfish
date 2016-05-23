@@ -235,13 +235,11 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
 
 void NetworkRequest::send(String* body)
 {
-    bool isFileURL = false;
     bool isSync = false;
-    isFileURL = m_url.isFileURL();
     isSync = m_isSync;
     m_didSend = true;
     changeProgress(LOADSTART, true);
-    if (isFileURL) {
+    if (m_url.isFileURL()) {
         // this area doesn't require lock.
         // reading file is not require thread
         String* path = m_url.urlStringWithoutSearchPart();
@@ -257,6 +255,20 @@ void NetworkRequest::send(String* body)
             }, this, filePath);
             pushIdlerHandle(handle);
         }
+    } else if (m_url.isDataURL())  {
+        // this area doesn't require lock.
+        // reading file is not require thread
+        if (m_isSync) {
+            dataURLWorker(this, m_url.urlString());
+        } else {
+            size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
+                NetworkRequest* request = (NetworkRequest*)data;
+                request->removeIdlerHandle(handle);
+                dataURLWorker((NetworkRequest*)data, (String*)data1);
+            }, this, m_url.urlString());
+            pushIdlerHandle(handle);
+        }
+
     } else {
         NetworkWorkerData* data = new(NoGC) NetworkWorkerData;
         {
@@ -367,6 +379,114 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
         res->changeReadyState(DONE, true);
     }
     delete fio;
+}
+
+static size_t base64Table[128] =
+{
+    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 0~9
+    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 10~19
+    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 20~29
+    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 30~39
+    std::string::npos, std::string::npos, std::string::npos, 62, std::string::npos, std::string::npos, std::string::npos, 63, 52, 53, // 40~49
+    54, 55, 56, 57, 58, 59, 60, 61, std::string::npos, std::string::npos, // 50~59
+    std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, 0, 1, 2, 3, 4, // 60~69
+    5, 6, 7, 8, 9, 10, 11, 12, 13, 14, // 70~79
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, // 80~89
+    25, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, 26, 27, 28, // 90~99
+    29, 30, 31, 32, 33, 34, 35, 36, 37, 38, // 100~109
+    39, 40, 41, 42, 43, 44, 45, 46, 47, 48, // 110~119
+    49, 50, 51, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos,
+};
+
+#ifndef NDEBUG
+static const std::string base64CharsDebug =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/";
+#endif
+
+static inline bool isBase64(unsigned char c)
+{
+    return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
+{
+    res->m_status = 200;
+    res->changeReadyState(HEADERS_RECEIVED, true);
+    res->changeReadyState(LOADING, true);
+
+    size_t idx = url->indexOf(',');
+
+    if (idx != SIZE_MAX) {
+        size_t base64 = url->find("base64");
+
+        if (base64 < idx) {
+            size_t inLen = url->length() - base64 - 6;
+            size_t i = 0;
+            size_t j = 0;
+            size_t in_ = base64 + 1 + 6;
+            unsigned char charArray4[4], charArray3[3];
+
+            while (inLen--) {
+                if (((unsigned char) url->charAt(in_) != '=') && isBase64((unsigned char) url->charAt(in_))) {
+                    charArray4[i++] = url->charAt(in_);
+                    in_++;
+                    if (i == 4) {
+                        for (i = 0; i < 4; i++) {
+#ifndef NDEBUG
+                            STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[i]) == (char)base64Table[charArray4[i]]);
+#endif
+                            charArray4[i] = base64Table[charArray4[i]];
+                        }
+
+                        charArray3[0] = (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
+                        charArray3[1] = ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
+                        charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
+
+                        for (i = 0; (i < 3); i++) {
+                            res->m_response.push_back((char)charArray3[i]);
+                        }
+                        i = 0;
+                    }
+                }
+            }
+
+            if (i) {
+                for (j = i; j < 4; j++)
+                    charArray4[j] = 0;
+                for (j = 0; j < 4; j++) {
+#ifndef NDEBUG
+                    auto ret = base64CharsDebug.find(charArray4[j]);
+                    STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[j]) == (char)base64Table[charArray4[j]]);
+                    ret = !ret;
+#endif
+                    charArray4[j] = base64Table[charArray4[j]];
+                }
+
+                charArray3[0] = (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
+                charArray3[1] = ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
+                charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
+
+                for (j = 0; (j < i - 1); j++) {
+                    res->m_response.push_back((char)charArray3[i]);
+                }
+            }
+        } else {
+            for (size_t i = idx + 1; i < url->length(); i++) {
+                char32_t c = url->charAt(i);
+                // TODO filter url string correctly according RFC 3986
+                if (c < 128) {
+                    res->m_response.push_back((char)c);
+                }
+            }
+        }
+    }
+
+    res->changeReadyState(DONE, true);
+    res->changeProgress(PROGRESS, true);
+    res->changeProgress(LOAD, true);
+    res->changeProgress(LOADEND, true);
 }
 
 void* NetworkRequest::networkWorker(void* data)

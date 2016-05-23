@@ -60,6 +60,7 @@ public:
     bool hasParserBlockingScript() const { return !!m_scriptToProcess; }
     // Must be called to take the parser-blocking script before calling the parser again.
     Element* takeScriptToProcess(TextPosition& scriptStartPosition);
+    Element* lookScriptToProcess();
 
     // Done, close any open tags, etc.
     void finished();

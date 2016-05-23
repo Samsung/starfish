@@ -5,6 +5,7 @@
 #include "dom/builder/html/HTMLDocumentBuilder.h"
 #include "layout/FrameDocument.h"
 #include "dom/Attribute.h"
+#include "platform/message_loop/MessageLoop.h"
 
 #ifdef STARFISH_EXP
 #include "dom/DOMImplementation.h"
@@ -19,6 +20,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_documentURI(uri)
     , m_resourceLoader(*this)
     , m_styleResolver(*this)
+    , m_documentBuilder(nullptr)
     , m_pageVisibilityState(PageVisibilityStateVisible)
     , m_domVersion(0)
 {
@@ -195,11 +197,33 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 void Document::open()
 {
     m_resourceLoader.markDocumentOpenState();
-    HTMLDocumentBuilder builder(this);
-    builder.build(documentURI());
 
-    // FIXME
+    m_documentBuilder = new HTMLDocumentBuilder(this);
+    m_documentBuilder->build(documentURI());
+
+}
+
+void Document::resumeDocumentParsing()
+{
+    window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
+        Document* document = (Document*)data;
+        STARFISH_ASSERT(document->m_documentBuilder);
+        // FIXME
+        if (document->m_documentBuilder)
+            document->m_documentBuilder->resume();
+    }, this);
+}
+
+void Document::notifyDomContentLoaded()
+{
+    String* eventType = window()->starFish()->staticStrings()->m_DOMContentLoaded.localName();
+    Event* e = new Event(eventType, EventInit(true, true));
+    EventTarget::dispatchEvent(e);
+
     m_resourceLoader.notifyEndParseDocument();
+    m_documentBuilder = nullptr;
+
+    STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
 }
 
 void Document::close()

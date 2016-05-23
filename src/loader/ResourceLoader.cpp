@@ -36,6 +36,7 @@ class DocumentOnLoadChecker : public ResourceClient {
 public:
     DocumentOnLoadChecker(Resource* res)
         : ResourceClient(res)
+        , m_didFire(false)
     {
     }
     virtual void didLoadFailed()
@@ -58,10 +59,15 @@ public:
 
     void checkFire()
     {
+        if (m_didFire)
+            return;
+        m_didFire = true;
         STARFISH_ASSERT(m_resource->loader()->m_pendingResourceCountWhileDocumentOpening > 0);
         m_resource->loader()->m_pendingResourceCountWhileDocumentOpening--;
         m_resource->loader()->fireDocumentOnLoadEventIfNeeded();
     }
+
+    bool m_didFire;
 };
 
 class ResourceAliveChecker : public ResourceClient {
@@ -94,8 +100,11 @@ public:
     void clearAlive()
     {
         std::vector<Resource*, gc_allocator<Resource*>>& v =  m_resource->loader()->m_currentLoadingResources;
-        STARFISH_ASSERT(std::find(v.begin(), v.end(), m_resource) != v.end());
-        v.erase(std::find(v.begin(), v.end(), m_resource));
+        auto iter = std::find(v.begin(), v.end(), m_resource);
+        // TODO prevent remove twice
+        if (iter != v.end()) {
+            v.erase(iter);
+        }
     }
 };
 

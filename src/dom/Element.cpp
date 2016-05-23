@@ -141,8 +141,10 @@ void Element::setInnerHTML(String* html)
     }
 
     DocumentFragment* df = document()->createDocumentFragment();
+
     HTMLParser parser(document()->window()->starFish(), df, this, html);
-    parser.parse();
+    parser.startParse();
+    parser.parseStep();
     appendChild(df);
 }
 

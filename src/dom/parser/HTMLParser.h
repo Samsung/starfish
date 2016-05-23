@@ -11,6 +11,7 @@ namespace StarFish {
 class HTMLParser : public gc {
 public:
     HTMLParser(StarFish* sf, Document* document, String* sourceString)
+        : m_treeBuilder(this, document, false)
     {
         m_starFish = sf;
         m_document = document;
@@ -22,6 +23,7 @@ public:
     }
 
     HTMLParser(StarFish* sf, DocumentFragment* df, Element* contextElement, String* sourceString)
+        : m_treeBuilder(this, df, contextElement)
     {
         m_starFish = sf;
         m_documentFragment = df;
@@ -32,8 +34,12 @@ public:
         m_token = new HTMLToken();
     }
 
-    void parse();
+    void startParse();
+    void parseStep();
+    void endParse();
+
     HTMLTokenizer* tokenizer() { return &m_tokenizer; }
+    HTMLTreeBuilder* treeBuilder() { return &m_treeBuilder; }
 
     TextPosition textPosition() const
     {
@@ -50,6 +56,7 @@ private:
     DocumentFragment* m_documentFragment;
     Element* m_contextElement;
     HTMLToken* m_token;
+    HTMLTreeBuilder m_treeBuilder;
     HTMLTokenizer m_tokenizer;
     HTMLInputStream m_input;
     String* m_source;

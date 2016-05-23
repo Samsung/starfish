@@ -35,6 +35,11 @@ public:
 
     }
 
+    virtual void didDataReceived(const char*, size_t length)
+    {
+
+    }
+
     Resource* resource()
     {
         return m_resource;

@@ -18,6 +18,8 @@ public:
     }
 
     virtual void build(const URL& filePath) = 0;
+    virtual void resume() = 0;
+
     Document* document()
     {
         return m_document;

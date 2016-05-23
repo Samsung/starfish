@@ -7,11 +7,13 @@
 namespace StarFish {
 
 class HTMLScriptElement : public HTMLElement {
+    friend class ScriptDownloadClient;
 public:
     HTMLScriptElement(Document* document)
         : HTMLElement(document)
         , m_isAlreadyStarted(false)
         , m_isParserInserted(false)
+        , m_didScriptExecuted(false)
     {
     }
 
@@ -51,11 +53,20 @@ public:
     {
         m_isParserInserted = true;
     }
-    void executeScript();
+    void clearParserInserted()
+    {
+        m_isParserInserted = false;
+    }
+    bool didScriptExecuted()
+    {
+        return m_didScriptExecuted;
+    }
+    bool executeScript(bool forceSync = false, bool inParser = false);
 
 protected:
     bool m_isAlreadyStarted;
     bool m_isParserInserted;
+    bool m_didScriptExecuted;
 };
 
 }

@@ -8,10 +8,18 @@ URL::URL(String* baseURL, String* url)
 {
     bool isAbsolute = url->contains("://");
 
-    // TODO // form
-    STARFISH_ASSERT(!url->startsWith("//"));
-    // TODO data uri
-    STARFISH_ASSERT(!url->startsWith("data:"));
+    if (url->startsWith("//")) {
+        isAbsolute = true;
+        STARFISH_ASSERT(baseURL->length());
+        size_t idx = baseURL->indexOf(':');
+        url = baseURL->substring(0, idx + 1)->concat(url);
+    }
+
+    if (url->startsWith("data:")) {
+        m_urlString = m_string = url;
+        return;
+    }
+
     if (baseURL->equals(String::emptyString)) {
         STARFISH_ASSERT(isAbsolute);
     }

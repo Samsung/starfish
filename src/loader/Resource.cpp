@@ -2,7 +2,6 @@
 #include "Resource.h"
 
 #include "platform/message_loop/MessageLoop.h"
-#include "platform/file_io/FileIO.h"
 #include "dom/Document.h"
 #include "loader/ResourceLoader.h"
 #include "platform/network/NetworkRequest.h"
@@ -47,9 +46,14 @@ void Resource::cancel()
     didLoadCanceled();
 }
 
-void Resource::didDataReceived(const char*, size_t length)
+void Resource::didDataReceived(const char* buf, size_t length)
 {
     m_state = Receiving;
+    auto iter = m_resourceClients.begin();
+    while (iter != m_resourceClients.end()) {
+        (*iter)->didDataReceived(buf, length);
+        iter++;
+    }
 }
 
 void Resource::didLoadFinished()

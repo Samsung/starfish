@@ -15,6 +15,11 @@ public:
         return m_urlString->startsWith("file://");
     }
 
+    bool isDataURL() const
+    {
+        return m_urlString->startsWith("data:");
+    }
+
     String* string() const
     {
         return m_string;
@@ -30,7 +35,7 @@ public:
 
     operator bool()
     {
-        return m_string->length();
+        return m_urlString->length();
     }
 protected:
     String* m_string;

@@ -12,6 +12,7 @@ public:
     HTMLResourceClient(Resource* res, HTMLDocumentBuilder& builder)
         : ResourceClient(res)
         , m_builder(builder)
+        , m_parser(nullptr)
         , m_htmlSource(String::emptyString)
     {
     }
@@ -34,23 +35,27 @@ public:
     void load()
     {
         Document* document = m_builder.document();
-        HTMLParser parser(document->window()->starFish(), document, m_htmlSource);
-        parser.parse();
-        String* eventType = document->window()->starFish()->staticStrings()->m_DOMContentLoaded.localName();
-        Event* e = new Event(eventType, EventInit(true, true));
-        document->EventTarget::dispatchEvent(e);
+        m_builder.m_parser = m_parser = new HTMLParser(document->window()->starFish(), document, m_htmlSource);
+        m_parser->startParse();
+        m_parser->parseStep();
     }
 
 protected:
     HTMLDocumentBuilder& m_builder;
+    HTMLParser* m_parser;
     String* m_htmlSource;
 };
 
 void HTMLDocumentBuilder::build(const URL& url)
 {
-    TextResource* res = m_document->resourceLoader()->fetchText(url);
-    res->addResourceClient(new HTMLResourceClient(res, *this));
-    res->request(true);
+    m_textResource = m_document->resourceLoader()->fetchText(url);
+    m_textResource->addResourceClient(new HTMLResourceClient(m_textResource, *this));
+    m_textResource->request();
+}
+
+void HTMLDocumentBuilder::resume()
+{
+    m_parser->parseStep();
 }
 
 }

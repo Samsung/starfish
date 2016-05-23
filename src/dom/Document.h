@@ -10,6 +10,7 @@ namespace StarFish {
 class Window;
 class Attribute;
 class NetworkRequest;
+class DocumentBuilder;
 
 #ifdef STARFISH_EXP
 class DOMImplementation;
@@ -151,13 +152,23 @@ public:
     }
 
     void open();
+    // method for script element
+    void resumeDocumentParsing();
+    void notifyDomContentLoaded();
     void close();
+
+    DocumentBuilder* documentBuilder()
+    {
+        return m_documentBuilder;
+    }
+
 protected:
     bool m_inParsing : 1;
     CompatibilityMode m_compatibilityMode;
     URL m_documentURI;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
+    DocumentBuilder* m_documentBuilder;
     Window* m_window;
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;

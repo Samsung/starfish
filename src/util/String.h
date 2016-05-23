@@ -217,6 +217,9 @@ public:
     bool startsWith(const char* str, bool caseSensitive = true);
     bool startsWith(String* str, bool caseSensitive = true);
 
+    size_t find(const char* str, size_t pos = 0);
+    size_t find(String* str, size_t pos = 0);
+
     bool contains(const char* str, bool caseSensitive = true);
     bool contains(String* str, bool caseSensitive = true);
 
