@@ -257,6 +257,10 @@ ifeq ($(HOST), linux)
   CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
   CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n)
   LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n)
+  # TC Coverage
+  # ifeq ($(MODE), debug)
+  #   CXXFLAGS += -DSTARFISH_TC_COVERAGE
+  # endif
 else ifneq ($(filter $(HOST),tizen_arm tizen3_arm), )
   ifeq ($(HOST), tizen_arm)
     ifndef TIZEN_SDK_HOME

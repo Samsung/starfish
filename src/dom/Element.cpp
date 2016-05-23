@@ -85,6 +85,10 @@ void Element::removeAttribute(QualifiedName name)
 
 void Element::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
+#ifdef STARFISH_TC_COVERAGE
+    STARFISH_LOG_INFO("+++attr:%s\n", name.localName()->utf8Data());
+#endif
+
     StaticStrings* ss = document()->window()->starFish()->staticStrings();
     if (name == ss->m_id) {
         m_id = value;

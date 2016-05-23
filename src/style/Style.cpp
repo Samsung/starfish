@@ -4511,6 +4511,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // * selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::UniversalSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:universal-selector\n");
+#endif
                 auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                 apply(sheet->url(), cssValues, ret, parent);
             }
@@ -4519,6 +4522,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // type selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:type-selector\n");
+#endif
                 if (sheet->m_rules[j]->m_ruleText[0]->equalsWithoutCase(element->localName())) {
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                     apply(sheet->url(), cssValues, ret, parent);
@@ -4529,6 +4535,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // class selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::ClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:class-selector\n");
+#endif
                 auto className = element->classNames();
                 for (unsigned f = 0; f < className.size(); f++) {
                     if (className[f]->equals(sheet->m_rules[j]->m_ruleText[0])) {
@@ -4542,6 +4551,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // type.class selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:class-selector\n");
+#endif
                 if (element->localName()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                     auto className = element->classNames();
                     for (unsigned f = 0; f < className.size(); f++) {
@@ -4557,6 +4569,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // id selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::IdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:id-selector\n");
+#endif
                 if (element->id()->equals(sheet->m_rules[j]->m_ruleText[0])) {
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                     apply(sheet->url(), cssValues, ret, parent);
@@ -4567,6 +4582,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // type#id selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeIdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:id-selector\n");
+#endif
                 if (element->localName()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                     if (element->id()->equals(sheet->m_rules[j]->m_ruleText[1])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
@@ -4584,6 +4602,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         if ((element->state() & Node::NodeState::NodeStateActive)) {
             for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::UniversalSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+#ifdef STARFISH_TC_COVERAGE
+                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
+#endif
                     auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                     apply(sheet->url(), cssValues, ret, parent);
                 }
@@ -4594,6 +4615,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         if ((element->state() & Node::NodeState::NodeStateActive)) {
             for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+#ifdef STARFISH_TC_COVERAGE
+                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
+#endif
                     if (sheet->m_rules[j]->m_ruleText[0]->equalsWithoutCase(element->localName())) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                         apply(sheet->url(), cssValues, ret, parent);
@@ -4606,6 +4630,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         if ((element->state() & Node::NodeState::NodeStateActive)) {
             for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::ClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+#ifdef STARFISH_TC_COVERAGE
+                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
+#endif
                     auto className = element->classNames();
                     for (unsigned f = 0; f < className.size(); f++) {
                         if (className[f]->equals(sheet->m_rules[j]->m_ruleText[0])) {
@@ -4620,6 +4647,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // type.class:active selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeClassSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
+#endif
                 if (element->localName()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                     auto className = element->classNames();
                     for (unsigned f = 0; f < className.size(); f++) {
@@ -4636,6 +4666,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         if ((element->state() & Node::NodeState::NodeStateActive)) {
             for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
                 if (sheet->m_rules[j]->m_kind == CSSStyleRule::IdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+#ifdef STARFISH_TC_COVERAGE
+                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
+#endif
                     if (element->id()->equals(sheet->m_rules[j]->m_ruleText[0])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;
                         apply(sheet->url(), cssValues, ret, parent);
@@ -4647,6 +4680,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         // type#id:active selector
         for (unsigned j = 0; j < sheet->m_rules.size(); j++) {
             if (sheet->m_rules[j]->m_kind == CSSStyleRule::TypeIdSelector && sheet->m_rules[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
+#endif
                 if (element->localName()->equalsWithoutCase(sheet->m_rules[j]->m_ruleText[0])) {
                     if (element->id()->equals(sheet->m_rules[j]->m_ruleText[1])) {
                         auto cssValues = sheet->m_rules[j]->styleDeclaration()->m_cssValues;

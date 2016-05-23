@@ -273,6 +273,10 @@ Element* Document::createElement(QualifiedName localName)
     if (!QualifiedName::checkNameProductionRule(localName.localName(), localName.localName()->length()))
         throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
+#ifdef STARFISH_TC_COVERAGE
+    STARFISH_LOG_INFO("+++tag:%s\n", localName.localName()->utf8Data());
+#endif
+
     if (localName == window()->starFish()->staticStrings()->m_htmlTagName) {
         return new HTMLHtmlElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_headTagName) {

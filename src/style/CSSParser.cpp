@@ -1043,6 +1043,9 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
     std::vector<String*, gc_allocator<String*>> blocks;
     if (aToken->isIdent()) {
         String* descriptor = aToken->m_value->toLower();
+#ifdef STARFISH_TC_COVERAGE
+        STARFISH_LOG_INFO("+++style:%s\n", descriptor->utf8Data());
+#endif
         CSSToken* token = getToken(true, true);
         if (token->isSymbol(':')) {
             token = getToken(true, true);

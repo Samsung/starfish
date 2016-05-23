@@ -14,6 +14,9 @@ public:
         , m_publicId(String::emptyString)
         , m_systemId(String::emptyString)
     {
+#ifdef STARFISH_TC_COVERAGE
+        STARFISH_LOG_INFO("+++doctype:!DOCTYPE\n");
+#endif
     }
 
     DocumentType(Document* document, String* name, String* publicId, String* systemId)
@@ -22,6 +25,10 @@ public:
         , m_publicId(publicId)
         , m_systemId(systemId)
     {
+#ifdef STARFISH_TC_COVERAGE
+        if (name->equals("html"))
+            STARFISH_LOG_INFO("+++doctype:!DOCTYPE\n");
+#endif
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)

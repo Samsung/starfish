@@ -15,6 +15,9 @@ public:
         , m_isParserInserted(false)
         , m_didScriptExecuted(false)
     {
+#ifdef STARFISH_TC_COVERAGE
+        STARFISH_LOG_INFO("+++tag:script\n");
+#endif
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
