@@ -8,8 +8,7 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 # Variables
-PASSFILE="test/regression/reftest/dom/dom_regression.res"
-PASSFILENEW="dom_regression.res"
+PASSFILENEW="tmp.res"
 PASSTC=0
 SKIPTC=0
 FAILTC=0
@@ -24,7 +23,7 @@ fi
 # 0: W3C DOM Conformace Test Suites
 # 1: Web Platform Tests
 # 2: Vendor Tests
-if [[ "$1" = *"dom_conformance_test_regression.res" ]]; then
+if [[ "$1" = *"dom_conformance_test.res" ]]; then
     TESTSUITE=0
     tc=$(cat $1)
 elif [[ "$1" = *"dom-conformance-test"*".htm"* ]]; then
@@ -52,6 +51,35 @@ fi
 
 if [ "$2" = true ]; then
     REGRESSION=true
+    if [[ "$1" = *"/dom_conformance_test.res" ]]; then
+        PASSFILE="test/regression/tool/dom-conformance-test/test_dom_conformance"
+    elif [[ "$1" = *"wpt_dom.res" ]]; then
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_dom"
+    elif [[ "$1" = *"wpt_dom_events.res" ]]; then
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_dom_events"
+    elif [[ "$1" = *"wpt_html.res" ]]; then
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_html"
+    elif [[ "$1" = *"wpt_page_visibility.res" ]]; then
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_page_visibility"
+    elif [[ "$1" = *"wpt_progress_events.res" ]]; then
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_progress_events"
+    elif [[ "$1" = *"wpt_xhr.res" ]]; then
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_xhr"
+    elif [[ "$1" = *"blink_dom_conformance_test.res" ]]; then
+        PASSFILE="test/regression/tool/vendor/blink/test_blink_dom_conformance"
+    elif [[ "$1" = *"blink_fast_dom.res" ]]; then
+        PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_dom"
+    elif [[ "$1" = *"blink_fast_html.res" ]]; then
+        PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_html"
+    elif [[ "$1" = *"gecko_dom_conformance_test.res" ]]; then
+        PASSFILE="test/regression/tool/vendor/gecko/test_gecko_dom_conformance"
+    elif [[ "$1" = *"webkit_dom_conformance_test.res" ]]; then
+        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_dom_conformance"
+    elif [[ "$1" = *"webkit_fast_dom.res" ]]; then
+        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_dom"
+    elif [[ "$1" = *"webkit_fast_html.res" ]]; then
+        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_html"
+    fi
 fi
 
 echo -e "${BOLD}###### Ref Tests ######${RESET}\n"
@@ -171,8 +199,8 @@ fi
 if [ "$REGRESSION" = true ]; then
     echo -e "${BOLD}###### Regression Test ######${RESET}\n"
 
-    diff=`diff -u $PASSFILE $PASSFILENEW`
-    if [ "$diff" = "" ] ; then
+    DIFF=`diff -u $PASSFILE $PASSFILENEW`
+    if [ "$DIFF" = "" ] ; then
         echo -e "${GREEN}[PASSED] no change${RESET}\n"
     else
         echo -e "${RED}[CHECKED] some changes${RESET}\n"
@@ -180,38 +208,7 @@ if [ "$REGRESSION" = true ]; then
         echo
 
         # Update the regression lists
-        cp $PASSFILENEW test/regression/reftest/dom
-
-        # Copy the converted files
-        file=$(cat $PASSFILENEW)
-        for i in $file ; do
-            dest=test/regression/${i#*/}
-            destdir=${dest%/*}
-            mkdir -p $destdir
-            tc=${i%.*}
-            dest=${dest%.*}
-            cp $tc".html" $dest".html"
-            cp $tc".js" $dest".js"
-            cp $tc"-expected.txt" $dest"-expected.txt"
-        done
-
-        # Copy the original files
-        replace='s/html_converted/html/g'
-        perl -i -pe $replace $PASSFILENEW
-        file=$(cat $PASSFILENEW)
-        for i in $file ; do
-            dest=test/regression/${i#*/}
-            destdir=${dest%/*}
-            mkdir -p $destdir
-            tc=${i%.*}
-            dest=${dest%.*}
-            cp $tc".html" $dest".html"
-            cp $tc".js" $dest".js"
-            cp $tc"-expected.txt" $dest"-expected.txt"
-        done
-
-        # Copy the resource files
-        #cp -rf test/reftest/web-platform-tests/resources test/regression/reftest/web-platform-tests/
+        #cp $PASSFILENEW test/regression/reftest/dom
     fi
 
     # Remove temporary file

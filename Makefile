@@ -608,35 +608,35 @@ regression_test_demo:
 	./tool/reftest/css_test.sh demo true
 
 regression_test_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/dom_conformance_test.res true
 
 regression_test_wpt_dom:
-	./tool/reftest/reftest.sh tool/reftest/wpt_dom_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_dom.res true
 regression_test_wpt_dom_events:
-	./tool/reftest/reftest.sh tool/reftest/wpt_dom_events_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_dom_events.res true
 regression_test_wpt_html:
-	./tool/reftest/reftest.sh tool/reftest/wpt_html_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_html.res true
 regression_test_wpt_page_visibility:
-	./tool/reftest/reftest.sh tool/reftest/wpt_page_visibility_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_page_visibility.res true
 regression_test_wpt_progress_events:
-	./tool/reftest/reftest.sh tool/reftest/wpt_progress_events_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_progress_events.res true
 regression_test_wpt_xhr:
-	./tool/reftest/reftest.sh tool/reftest/wpt_xhr_regression.res
+	./tool/reftest/reftest.sh tool/reftest/wpt_xhr.res true
 
 regression_test_blink_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/blink_dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/blink_dom_conformance_test.res true
 regression_test_blink_fast_dom:
-	./tool/reftest/reftest.sh tool/reftest/blink_fast_dom.res
+	./tool/reftest/reftest.sh tool/reftest/blink_fast_dom.res true
 regression_test_blink_fast_html:
-	./tool/reftest/reftest.sh tool/reftest/blink_fast_html.res
+	./tool/reftest/reftest.sh tool/reftest/blink_fast_html.res true
 regression_test_gecko_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/gecko_dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/gecko_dom_conformance_test.res true
 regression_test_webkit_dom_conformance_test:
-	./tool/reftest/reftest.sh tool/reftest/webkit_dom_conformance_test_regression.res
+	./tool/reftest/reftest.sh tool/reftest/webkit_dom_conformance_test.res true
 regression_test_webkit_fast_dom:
-	./tool/reftest/reftest.sh tool/reftest/webkit_fast_dom_regression.res
+	./tool/reftest/reftest.sh tool/reftest/webkit_fast_dom.res true
 regression_test_webkit_fast_html:
-	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html_regression.res
+	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html.res true
 
 regression_test_css1:
 	./tool/reftest/css_test.sh css1 true
