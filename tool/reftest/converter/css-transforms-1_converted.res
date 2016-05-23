@@ -18,7 +18,6 @@ test/reftest/csswg-test_converted/css-transforms-1/rotate_x_45deg.html
 test/reftest/csswg-test_converted/css-transforms-1/rotate_y_45deg.html
 test/reftest/csswg-test_converted/css-transforms-1/scalex.html
 test/reftest/csswg-test_converted/css-transforms-1/scaley.html
-test/reftest/csswg-test_converted/css-transforms-1/transform-2d-getComputedStyle-001.html
 test/reftest/csswg-test_converted/css-transforms-1/transform-applies-to-001.htm
 test/reftest/csswg-test_converted/css-transforms-1/transform-compound-001.html
 test/reftest/csswg-test_converted/css-transforms-1/transform-compound-notref-2.html
@@ -64,15 +63,7 @@ test/reftest/csswg-test_converted/css-transforms-1/transform-translatey-004.html
 test/reftest/csswg-test_converted/css-transforms-1/transform-translatey-005.html
 test/reftest/csswg-test_converted/css-transforms-1/transform3d-rotatex-perspective-notref.html
 test/reftest/csswg-test_converted/css-transforms-1/transform3d-scale-001-notref.html
-test/reftest/csswg-test_converted/css-transforms-1/transform_translate.html
-test/reftest/csswg-test_converted/css-transforms-1/transform_translate_invalid.html
-test/reftest/csswg-test_converted/css-transforms-1/transform_translate_max.html
-test/reftest/csswg-test_converted/css-transforms-1/transform_translate_min.html
-test/reftest/csswg-test_converted/css-transforms-1/transform_translate_neg.html
-test/reftest/csswg-test_converted/css-transforms-1/transform_translate_second_omited.html
-test/reftest/csswg-test_converted/css-transforms-1/transform_translate_zero.html
 test/reftest/csswg-test_converted/css-transforms-1/transforms-rotateY-degree-60.html
-test/reftest/csswg-test_converted/css-transforms-1/translate.html
 test/reftest/csswg-test_converted/css-transforms-1/transofrmed-rotateX-3.html
 test/reftest/csswg-test_converted/css-transforms-1/transofrmed-rotateY-1.html
 test/reftest/csswg-test_converted/css-transforms-1/ttwf-css-3d-polygon-cycle-mismatch.html

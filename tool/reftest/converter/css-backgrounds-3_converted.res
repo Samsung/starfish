@@ -1,11 +1,7 @@
-test/reftest/csswg-test_converted/css-backgrounds-3/background-331.html
-test/reftest/csswg-test_converted/css-backgrounds-3/background-332.html
-test/reftest/csswg-test_converted/css-backgrounds-3/background-clip-001.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-image-001.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-image-002.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-image-005.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-image-006.html
-test/reftest/csswg-test_converted/css-backgrounds-3/background-origin-001.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-paint-order-001.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-repeat/background-repeat-no-repeat.htm
 test/reftest/csswg-test_converted/css-backgrounds-3/background-repeat/background-repeat-repeat-x.htm
@@ -254,7 +250,6 @@ test/reftest/csswg-test_converted/css-backgrounds-3/background-size/vector/zero-
 test/reftest/csswg-test_converted/css-backgrounds-3/background-size/vector/zero-width-ratio-auto-auto.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-size/vector/zero-width-ratio-contain.html
 test/reftest/csswg-test_converted/css-backgrounds-3/background-size/vector/zero-width-ratio-cover.html
-test/reftest/csswg-test_converted/css-backgrounds-3/background-size-001.html
 test/reftest/csswg-test_converted/css-backgrounds-3/border-color_transparent.html
 test/reftest/csswg-test_converted/css-backgrounds-3/border-image-1.html
 test/reftest/csswg-test_converted/css-backgrounds-3/border-image-10.html

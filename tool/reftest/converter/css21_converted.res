@@ -739,7 +739,6 @@ test/reftest/csswg-test_converted/css21/borders/ltr-borders-001.htm
 test/reftest/csswg-test_converted/css21/box-display/block-in-inline-005.htm
 test/reftest/csswg-test_converted/css21/box-display/block-in-inline-006.htm
 test/reftest/csswg-test_converted/css21/box-display/containing-block-030.htm
-test/reftest/csswg-test_converted/css21/box-display/viewport-001.htm
 test/reftest/csswg-test_converted/css21/box-display/viewport-002.htm
 test/reftest/csswg-test_converted/css21/cascade/at-import-001.htm
 test/reftest/csswg-test_converted/css21/cascade/at-import-009.htm
@@ -761,9 +760,7 @@ test/reftest/csswg-test_converted/css21/cascade/support/html-attribute-017-frame
 test/reftest/csswg-test_converted/css21/cascade/support/html-attribute-021-frame.htm
 test/reftest/csswg-test_converted/css21/cascade/support/html-attribute-022-frame.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-001.htm
-test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-002.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-003.htm
-test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-004.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-005.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-006.htm
 test/reftest/csswg-test_converted/css21/cascade-import/cascade-import-dynamic-control.htm
@@ -1128,8 +1125,6 @@ test/reftest/csswg-test_converted/css21/syntax/uri-018.htm
 test/reftest/csswg-test_converted/css21/syntax/whitespace-001.htm
 test/reftest/csswg-test_converted/css21/syntax/whitespace-002.htm
 test/reftest/csswg-test_converted/css21/tables/support/frameset-border-spacing-001.htm
-test/reftest/csswg-test_converted/css21/tables/table-anonymous-objects-013.htm
-test/reftest/csswg-test_converted/css21/tables/table-anonymous-objects-014.htm
 test/reftest/csswg-test_converted/css21/tables/table-anonymous-objects-115.htm
 test/reftest/csswg-test_converted/css21/tables/table-anonymous-objects-116.htm
 test/reftest/csswg-test_converted/css21/tables/table-anonymous-objects-121.htm
@@ -1187,7 +1182,6 @@ test/reftest/csswg-test_converted/css21/ui/cursor-022.htm
 test/reftest/csswg-test_converted/css21/ui/overflow-html-body-001.htm
 test/reftest/csswg-test_converted/css21/ui/overflow-parent-001.htm
 test/reftest/csswg-test_converted/css21/ui/overflow-root-001.htm
-test/reftest/csswg-test_converted/css21/ui/overflow-visible-viewport-001.htm
 test/reftest/csswg-test_converted/css21/values/color-000.htm
 test/reftest/csswg-test_converted/css21/values/units-002.htm
 test/reftest/csswg-test_converted/css21/values/units-003.htm
