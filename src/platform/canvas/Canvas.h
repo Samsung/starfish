@@ -6,7 +6,7 @@ namespace StarFish {
 class ImageData;
 class Font;
 class Window;
-class CanvasSurface : public gc_cleanup {
+class CanvasSurface : public gc {
 protected:
     CanvasSurface()
     {

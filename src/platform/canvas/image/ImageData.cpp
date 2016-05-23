@@ -37,6 +37,12 @@ public:
     {
         evas_object_hide(m_image);
         evas_object_del(m_image);
+
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            Evas_Object* m = (Evas_Object*)obj;
+            evas_object_hide(m);
+            evas_object_del(m);
+        }, m_image, NULL, NULL);
     }
 
     virtual void* unwrap()

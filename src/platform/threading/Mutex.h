@@ -11,7 +11,7 @@ public:
     void lock();
     void unlock();
 protected:
-    pthread_mutex_t m_mutex;
+    pthread_mutex_t* m_mutex;
 };
 
 }

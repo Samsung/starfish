@@ -3,7 +3,7 @@
 
 namespace StarFish {
 
-class ImageData : public gc_cleanup {
+class ImageData : public gc {
 protected:
     ImageData()
     {
