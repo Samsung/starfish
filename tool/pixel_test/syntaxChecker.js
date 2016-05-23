@@ -93,11 +93,11 @@ function initialize() {
     stream2.close();
 
     if (args.length == 1) {
-        testPath = "test/reftest/csswg-test/";
+        testPath = "test/reftest/csswg-test_converted/";
     }
     else if (args.length == 2) {
         if (args[1] != "-f") {
-            testPath = "test/reftest/csswg-test/" + args[1];
+            testPath = "test/reftest/csswg-test_converted/" + args[1];
             return true;
         }
     }
@@ -177,6 +177,10 @@ page.onLoadFinished = function() {
     resEvaluate = page.evaluate(function(acceptCSSList, acceptTagList, acceptValues, includes) {
         Array.prototype.includes = includes;
         var changePropName = function(prop, nextprop) {
+            if (prop == "-webkit-transform")
+                prop = "transform";
+            if (prop == "-webkit-transform-origin-x" || prop == "-webkit-transform-origin-y")
+                prop = "transform-origin";
             if (!nextprop) return prop;
             if (prop == "overflow-x" && nextprop.trim() == "overflow-y")
                 prop = "overflow";
@@ -196,6 +200,7 @@ page.onLoadFinished = function() {
                         var prop = inlineStyleList[j][0].trim();
                         if ((prop == "background-attachment") || (prop == "background-clip")
                                 || (prop == "background-origin") || (prop == "background-position")
+                                || (prop == "border-image-outset") || (prop == "border-image-repeat")
                            ) {
                             if (inlineStyleList[j][1].trim() == "initial"
                                     || inlineStyleList[j][1].trim() == "initial initial")
@@ -207,6 +212,8 @@ page.onLoadFinished = function() {
                             return ["CSS", newprop];
                         if (newprop in acceptValues) {
                             var val = inlineStyleList[j][1].trim();
+                            if (newprop == "transform")
+                                val = val.substring(0, val.indexOf("("));
                             if (!acceptValues[newprop].includes(val))
                                 return ["CSS-Value", val];
                         }
@@ -229,6 +236,7 @@ page.onLoadFinished = function() {
                         var prop = rules[j].style[k].trim();
                         if ((prop == "background-attachment") || (prop == "background-clip")
                                 || (prop == "background-origin") || (prop == "background-position")
+                                || (prop == "border-image-outset") || (prop == "border-image-repeat")
                            ) {
                             if (rules[j].style[prop].trim() == "initial")
                                 continue;
@@ -239,6 +247,8 @@ page.onLoadFinished = function() {
                             return ["CSS", newprop];
                         if (newprop in acceptValues) {
                             var val = rules[j].style[prop];
+                            if (newprop == "transform")
+                                val = val.substring(0, val.indexOf("("));
                             if (!acceptValues[newprop].includes(val))
                                 return ["CSS-Value", val];
                         }
