@@ -1,0 +1,27 @@
+Version     , Chapter       , Interface                 , Attribute/Method
+1           , 4             , XMLHttpRequestEventTarget , onloadstart
+            ,               ,                           , onprogress
+            ,               ,                           , onabort
+            ,               ,                           , onerror
+            ,               ,                           , onload
+            ,               ,                           , ontimeout
+            ,               ,                           , onloadend
+            ,               , XMLHttpRequest            , onreadyStatechange
+            ,               ,                           , UNSENT
+            ,               ,                           , OPENED
+            ,               ,                           , HEADERS_RECEIVED
+            ,               ,                           , LOADING
+            ,               ,                           , DONE
+            ,               ,                           , readyState
+            ,               ,                           , open
+            ,               ,                           , timeout
+            ,               ,                           , send
+            ,               ,                           , abort
+            ,               ,                           , status
+            ,               ,                           , responseText
+            , 4             , ProgressEvent             , lengthComputable
+            ,               ,                           , loaded
+            ,               ,                           , total
+            ,               , ProgressEventInit         , lengthComputable
+            ,               ,                           , loaded
+            ,               ,                           , total

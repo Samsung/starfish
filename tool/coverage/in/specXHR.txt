@@ -19,7 +19,6 @@
  abort
  status
  responseText
- type
  lengthComputable
  loaded
  total
