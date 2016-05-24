@@ -11,35 +11,24 @@ list2=`find $path/test/regression/reftest/vendor/webkit/dom/html  -name '*.htm*'
 list4=`find $path/test/regression/reftest/vendor/gecko  -name '*.htm*' | sort `;
 list3=`find $path/test/regression/reftest/dom-conformance-test/html -name '*.htm*' | sort`;
 
-for f in $list1; do
-    js=`echo $f | sed -e 's/\.html/\.js/g'`
-    cat $f $js > $f.js
-    node genDomMethods.js $f.js >> in/dom.blink.raw
-    rm -f $f.js
-done
+run() {
+    res=$1
+    shift
+    list="$@"
+    for f in $list; do
+        echo $f
+        echo $res
+        $path/StarFish $f --screen-shot="out/tmp.png" > out/t.txt
+        grep '&&&' out/t.txt | sort | uniq | tr '\n' '\t' > out/tt.txt
+        echo $f > out/t
+        paste out/t out/tt.txt >> $res
+    done
+}
 
-
-for f in $list2; do
-    js=`echo $f | sed -e 's/\.html/\.js/g'`
-    cat $f $js > $f.js
-    node genDomMethods.js $f.js >> in/dom.webkit.raw
-    rm -f $f.js
-done
-
-for f in $list4; do
-    js=`echo $f | sed -e 's/\.html/\.js/g'`
-    cat $f $js > $f.js
-    node genDomMethods.js $f.js >> in/dom.gecko.raw
-    rm -f $f.js
-done
-
-for f in $list3; do
-    js=`echo $f | sed -e 's/\.html/\.js/g'`
-    cat $f $js > $f.js
-    node genDomMethods.js $f.js >> in/dom.dct.raw
-    rm -f $f.js
-done
-
+run "in/dom.blink.raw" $list1
+run "in/dom.webkit.raw" $list2
+run "in/dom.gecko.raw" $list4
+run "in/dom.dct.raw" $list3
 
 # run .html
 list1=`find $path/test/regression/reftest/vendor/blink/fast/dom -name '*.htm*' | sort `
@@ -49,27 +38,10 @@ list22=`find $path/test/regression/reftest/vendor/webkit/fast/html -name '*.htm*
 list3=`find $path/test/regression/reftest/bidi/International/tests/html-css -name '*.html' | sort `
 list4=`find $path/test/regression/reftest/web-platform-tests -name '*.htm*' | sort `
 
-for f in $list1; do
-    node genDomMethods.js $f >> in/dom.blink.fast.raw
-done
 
-for f in $list11; do
-    node genDomMethods.js $f >> in/dom.blink.fast.html.raw
-done
-
-for f in $list2; do
-    node genDomMethods.js $f >> in/dom.webkit.fast.raw
-done
-
-for f in $list22; do
-    node genDomMethods.js $f >> in/dom.webkit.fast.html.raw
-done
-
-for f in $list3; do
-    node genDomMethods.js $f >> in/dom.bidi.raw
-done
-
-for f in $list4; do
-    node genDomMethods.js $f >> in/dom.wpt.raw
-done
-
+run "in/dom.blink.fast.raw" $list1
+run "in/dom.blink.fast.html.raw" $list11
+run "in/dom.webkit.fast.raw" $list2
+run "in/dom.webkit.fast.html.raw" $list22
+run "in/dom.bidi.raw" $list3
+run "in/dom.wpt.raw" $list4

@@ -1,101 +1,141 @@
- Attribute/Method
- type
- target
- currentTarget
- NONE
- CAPTURING_PHASE
- AT_TARGET
- BUBBLING_PHASE
- eventPhase
- stopPropagation
- stopImmediatePropagation
- bubbles
- cancelable
- preventDefault
- defaultPrevented
- timeStamp
- initEvent::bubbles
- initEvent::cancelable
- addEventListener
- removeEventListener
- dispatchEvent
- handleEvent
- getElementById
- children
- firstElementChild
- lastElementChild
- childElementCount
- previousElementSibling
- nextElementSibling
- remove
- item
- length
- length
- item
- namedItem
- nodeType
- nodeName
- ownerDocument
- parentNode
- hasChildNodes
- childNodes
- firstChild
- lastChild
- previousSibling
- nextSibling
- nodeValue
- textContent
- cloneNode
- isEqualNode
- compareDocumentPosition
- contains
- insertBefore
- appendChild
- replaceChild
- removeChild
- URL
- documentURI
- origin
- compatMode
- characterSet
- contentType
- doctype
- documentElement
- getElementsByTagName
- getElementsByClassName
- createElement
- createTextNode
- createComment
- name
- publicId
- systemId
- tagName
- localName
- id
- className
- classList
- attributes
- getAttribute
- setAttribute
- removeAttribute
- hasAttribute
- getElementsByTagName
- getElementsByClassName
- name
- value
- specified
- data
- length
- substringData
- appendData
- insertData
- deleteData
- replaceData
- wholeText
-
- length
- item
- contains
- add
- remove
- toggle
+ Interface                 , Attribute/Method
+ NonElementParentNode      , getElementById
+ ParentNode                , children
+                           , firstElementChild
+                           , lastElementChild
+                           , childElementCount
+ NonDocumentTypeChildNode  , previousElementSibling
+                           , nextElementSibling
+ ChildNode                 , *&&&remove
+ NodeList                  , NodeList&&&item
+                           , NodeList&&&length
+ HTMLCollection            , HTMLCollection&&&length
+                           , HTMLCollection&&&item
+                           , namedItem
+ Node                      , nodeType
+                           , nodeName
+                           , ownerDocument
+                           , parentNode
+                           , hasChildNodes
+                           , childNodes
+                           , firstChild
+                           , lastChild
+                           , previousSibling
+                           , nextSibling
+                           , nodeValue
+                           , textContent
+                           , cloneNode
+                           , isEqualNode
+                           , compareDocumentPosition
+                           , *&&&contains
+                           , insertBefore
+                           , appendChild
+                           , replaceChild
+                           , removeChild
+ Document                  , URL
+                           , documentURI
+                           , origin
+                           , compatMode
+                           , characterSet
+                           , contentType
+                           , doctype
+                           , documentElement
+                           , HTMLDocument&&&getElementsByTagName
+                           , HTMLDocument&&&getElementsByClassName
+                           , createElement
+                           , createTextNode
+                           , createComment
+ DocumentType              , DocumentType&&&name
+                           , publicId
+                           , systemId
+ Element                   , tagName
+                           , localName
+                           , id
+                           , className
+                           , classList
+                           , attributes
+                           , getAttribute
+                           , setAttribute
+                           , removeAttribute
+                           , hasAttribute
+                           , *&&&getElementsByTagName
+                           , *&&&getElementsByClassName
+ Attr                      , Attr&&&name
+                           , value
+                           , specified
+ CharacterData             , data
+                           , *&&&length
+                           , substringData
+                           , appendData
+                           , insertData
+                           , deleteData
+                           , replaceData
+                           , wholeText
+ Comment                   ,
+ DOMTokenList              , DOMTokenList&&&length
+                           , DOMTokenList&&&item
+                           , DOMTokenList&&&contains
+                           , add
+                           , DOMTokenList&&&remove
+                           , toggle
+Window                     , window
+                           , document
+                           , innnerWidth
+                           , innerHeight
+WindowTimers               , setTimeout
+                           , clearTimeout
+                           , setInterval
+                           , clearInterval
+ Event                     , type
+                           , target
+                           , currentTarget
+                           , NONE
+                           , CAPTURING_PHASE
+                           , AT_TARGET
+                           , BUBBLING_PHASE
+                           , eventPhase
+                           , stopPropagation
+                           , stopImmediatePropagation
+                           , bubbles
+                           , cancelable
+                           , preventDefault
+                           , defaultPrevented
+                           , timeStamp
+                           , initEvent::bubbles
+                           , initEvent::cancelable
+ EventTarget               , addEventListener
+                           , removeEventListener
+                           , dispatchEvent
+ EventListener             , handleEvent
+ XMLHttpRequestEventTarget , onloadstart
+                           , onprogress
+                           , onabort
+                           , onerror
+                           , onload
+                           , ontimeout
+                           , onloadend
+ XMLHttpRequest            , onreadyStatechange
+                           , UNSENT
+                           , OPENED
+                           , HEADERS_RECEIVED
+                           , LOADING
+                           , DONE
+                           , readyState
+                           , open
+                           , timeout
+                           , send
+                           , abort
+                           , status
+                           , responseText
+ ProgressEvent             , ProgressEvent&&&lengthComputable
+                           , ProgressEvent&&&loaded
+                           , progressEvent&&&total
+ ProgressEventInit         , lengthComputable
+                           , loaded
+                           , total
+Page Visibility            , hidden
+                           , visibilityState
+Timeing Control for Script-based Animations , requestAnimationFrame
+                                            , cancelAnimationFrame
+ Other                     , Array&&&length
+                           , Object&&&length

@@ -70,6 +70,7 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , publicId
             ,               ,                           , systemId
             , 4.8           , Element                   , tagName
+            ,               ,                           , localName
             ,               ,                           , id
             ,               ,                           , className
             ,               ,                           , classList
@@ -91,7 +92,7 @@ Version     , Chapter       , Interface                 , Attribute/Method
             ,               ,                           , deleteData
             ,               ,                           , replaceData
             ,               ,                           , wholeText
-            , 4.12          , Comment                   , 
+            , 4.12          , Comment                   ,
             , 7.1           , DOMTokenList              , length
             ,               ,                           , item
             ,               ,                           , contains
