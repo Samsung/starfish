@@ -209,6 +209,31 @@ public:
         }
     }
 
+    virtual void computePreferredWidth(ComputePreferredWidthContext& ctx)
+    {
+        LayoutSize s = intrinsicSize();
+        if (style()->width().isAuto() && style()->height().isAuto()) {
+            ctx.setResult(s.width());
+        } else if (style()->width().isSpecified()) {
+            if (style()->width().isFixed()) {
+                ctx.setResult(style()->width().fixed());
+            } else {
+                ctx.setResult(s.width());
+            }
+        } else if (style()->height().isSpecified()) {
+            if (style()->height().isFixed()) {
+                LayoutUnit h = style()->height().fixed();
+                LayoutUnit w = h * (s.width() / s.height());
+                ctx.setResult(w);
+            } else {
+                ctx.setResult(s.width());
+            }
+        } else {
+            // TODO support width, height attribute
+            ctx.setResult(s.width());
+        }
+    }
+
     virtual LayoutSize intrinsicSize() = 0;
 
     virtual void paintReplaced(Canvas* canvas)

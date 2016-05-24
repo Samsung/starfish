@@ -17,7 +17,6 @@ ResourceLoader::ResourceLoader(Document& document)
     , m_document(&document)
     , m_baseURL(String::emptyString, document.documentURI().baseURI())
 {
-    STARFISH_LOG_INFO("ResourceLoader::ResourceLoader %p", this);
 }
 
 TextResource* ResourceLoader::fetchText(const URL& url)

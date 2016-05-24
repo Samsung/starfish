@@ -27,7 +27,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
 {
-    STARFISH_LOG_INFO("StarFish::StarFish %p", this);
     if (!win) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
         elm_win_title_set(wndObj, "StarFish");

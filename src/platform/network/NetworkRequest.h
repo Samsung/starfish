@@ -11,6 +11,8 @@ namespace StarFish {
 class Document;
 class NetworkRequest;
 
+typedef std::vector<char> NetworkRequestResponse;
+
 class NetworkRequestClient : public gc {
 public:
     virtual ~NetworkRequestClient() { }
@@ -56,7 +58,6 @@ public:
     };
 
     NetworkRequest(Document* document);
-    ~NetworkRequest();
     void open(MethodType method, String* url, bool async, String* userName = String::emptyString, String* password = String::emptyString);
     void abort(bool isExplicitAction = true);
     void send(String* body = String::emptyString);
@@ -111,7 +112,7 @@ public:
         return m_starFish;
     }
 
-    const std::vector<char, gc_allocator<char>>& responseData()
+    const NetworkRequestResponse& responseData()
     {
         return m_response;
     }
@@ -149,7 +150,7 @@ protected:
     int m_status;
     uint32_t m_timeout;
     Mutex m_mutex;
-    std::vector<char, gc_allocator<char>> m_response;
+    NetworkRequestResponse m_response;
 
     std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;
     void pushIdlerHandle(size_t handle)

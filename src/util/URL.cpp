@@ -20,6 +20,23 @@ URL::URL(String* baseURL, String* url)
         return;
     }
 
+    if (url->startsWith("/")) {
+        isAbsolute = true;
+        if (baseURL->startsWith("file://")) {
+            url = String::createASCIIString("file://")->concat(url);
+        } else {
+            size_t pos = baseURL->find("://");
+            STARFISH_ASSERT(pos != SIZE_MAX);
+            size_t pos2 = baseURL->find("/", pos + 3);
+            if (pos2 != SIZE_MAX) {
+                baseURL = baseURL->substring(0, baseURL->lastIndexOf('/'));
+                url = baseURL->concat(String::createASCIIString("/"))->concat(url);
+            } else {
+                url = baseURL->concat(url);
+            }
+        }
+    }
+
     if (baseURL->equals(String::emptyString)) {
         STARFISH_ASSERT(isAbsolute);
     }
@@ -32,8 +49,6 @@ URL::URL(String* baseURL, String* url)
 
         if (url->startsWith("./")) {
             url = url->substring(2, url->length() - 2);
-        } else if (url->startsWith("/")) {
-            url = url->substring(1, url->length() - 1);
         }
 
         if (baseEndsWithSlash) {
@@ -50,7 +65,15 @@ String* URL::baseURI() const
     if (m_urlString->startsWith("data:")) {
         return String::emptyString;
     }
-    return m_urlString->substring(0, m_urlString->lastIndexOf('/') + 1);
+
+    size_t pos = m_urlString->find("://");
+    STARFISH_ASSERT(pos != SIZE_MAX);
+    size_t pos2 = m_urlString->find("/", pos + 3);
+    if (pos2 != SIZE_MAX) {
+        return m_urlString->substring(0, m_urlString->lastIndexOf('/') + 1);
+    } else {
+        return m_urlString;
+    }
 }
 
 String* URL::urlStringWithoutSearchPart() const

@@ -966,23 +966,23 @@ void Window::pause()
 
 void Window::resume()
 {
-    StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
-
-    std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
-    {
-        ctx->clearOwnBuffer();
-        auto iter = ctx->childContexts().begin();
-        while (iter != ctx->childContexts().end()) {
-            auto iter2 = iter->second->begin();
-            while (iter2 != iter->second->end()) {
-                clearSC(*iter2);
-                iter2++;
+    if (m_document && m_document->frame() && m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()) {
+        StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
+        std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
+        {
+            ctx->clearOwnBuffer();
+            auto iter = ctx->childContexts().begin();
+            while (iter != ctx->childContexts().end()) {
+                auto iter2 = iter->second->begin();
+                while (iter2 != iter->second->end()) {
+                    clearSC(*iter2);
+                    iter2++;
+                }
+                iter++;
             }
-            iter++;
-        }
-    };
-
-    clearSC(ctx);
+        };
+        clearSC(ctx);
+    }
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     auto a = eflWindow->m_drawnImageList.begin();

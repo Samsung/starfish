@@ -743,23 +743,44 @@ public:
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2, LayoutLocation p3, LayoutLocation p4)
     {
-        STARFISH_ASSERT(!hasMatrixAffine());
-        STARFISH_ASSERT(!lastState().m_mapMode);
         if (!lastState().m_visible) {
             return;
         }
 
-        p1.setX(p1.x() + lastState().m_baseX);
-        p1.setY(p1.y() + lastState().m_baseY);
+        if (lastState().m_mapMode) {
+            SkPoint pt;
+            pt = SkPoint::Make((float)p1.x(), (float)p1.y());
+            lastState().m_matrix.mapPoints(&pt, 1);
+            p1.setX(pt.x());
+            p1.setY(pt.y());
 
-        p2.setX(p2.x() + lastState().m_baseX);
-        p2.setY(p2.y() + lastState().m_baseY);
+            pt = SkPoint::Make((float)p2.x(), (float)p2.y());
+            lastState().m_matrix.mapPoints(&pt, 1);
+            p2.setX(pt.x());
+            p2.setY(pt.y());
 
-        p3.setX(p3.x() + lastState().m_baseX);
-        p3.setY(p3.y() + lastState().m_baseY);
+            pt = SkPoint::Make((float)p3.x(), (float)p3.y());
+            lastState().m_matrix.mapPoints(&pt, 1);
+            p3.setX(pt.x());
+            p3.setY(pt.y());
 
-        p4.setX(p4.x() + lastState().m_baseX);
-        p4.setY(p4.y() + lastState().m_baseY);
+            pt = SkPoint::Make((float)p4.x(), (float)p4.y());
+            lastState().m_matrix.mapPoints(&pt, 1);
+            p4.setX(p4.x() + lastState().m_baseX);
+            p4.setY(p4.y() + lastState().m_baseY);
+        } else {
+            p1.setX(p1.x() + lastState().m_baseX);
+            p1.setY(p1.y() + lastState().m_baseY);
+
+            p2.setX(p2.x() + lastState().m_baseX);
+            p2.setY(p2.y() + lastState().m_baseY);
+
+            p3.setX(p3.x() + lastState().m_baseX);
+            p3.setY(p3.y() + lastState().m_baseY);
+
+            p4.setX(p4.x() + lastState().m_baseX);
+            p4.setY(p4.y() + lastState().m_baseY);
+        }
 
         Evas_Object* eo = evas_object_polygon_add(m_canvas);
         if (m_objList)

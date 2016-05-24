@@ -43,16 +43,17 @@ NetworkRequest::NetworkRequest(Document* document)
     , m_total(0)
     , m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
 {
-    STARFISH_LOG_INFO("NetworkRequest::NetworkRequest %p", this);
+    GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+        STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest");
+        std::vector<char>* m = (std::vector<char>*)((size_t)cd - 1);
+        m->clear();
+        m->shrink_to_fit();
+    }, (void*)((size_t)&m_response + 1), NULL, NULL);
+
     initVariables();
     addNetworkRequestClient(new ActiveNetworkRequestTracker());
 }
 
-
-NetworkRequest::~NetworkRequest()
-{
-    clearIdlers();
-}
 
 void NetworkRequest::initVariables()
 {
@@ -113,6 +114,11 @@ void NetworkRequest::changeProgress(ProgressState progress, bool isExplicitActio
             m_clients[i]->onProgressEvent(this, isExplicitAction);
         }
     }
+
+    if (m_progressState == LOADEND) {
+        m_response.clear();
+        m_response.shrink_to_fit();
+    }
 }
 
 void NetworkRequest::open(MethodType method, String* url, bool async, String* userName, String* password)
@@ -164,6 +170,7 @@ struct NetworkWorkerData {
     CURL* curl;
     curl_slist* headerList;
     bool isSync;
+    long responseCode;
 };
 
 
@@ -280,7 +287,6 @@ void NetworkRequest::send(String* body)
             if (conn_err == CONNECTION_ERROR_NONE) {
                 connection_get_proxy(connection, CONNECTION_ADDRESS_FAMILY_IPV4, &proxy_address);
                 if (proxy_address) {
-                    STARFISH_LOG_INFO("tizen proxy address is %s\n", proxy_address);
                     curl_easy_setopt(curl, CURLOPT_PROXY, proxy_address);
                     free(proxy_address);
                 }
@@ -290,7 +296,9 @@ void NetworkRequest::send(String* body)
             }
 #endif
 
-            curl_easy_setopt(curl, CURLOPT_URL, m_url.urlString()->utf8Data());
+            const char* url = m_url.urlString()->utf8Data();
+            curl_easy_setopt(curl, CURLOPT_URL, url);
+            STARFISH_LOG_INFO("sending network request to %s\n", url);
             curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(m_timeout));
 
             std::string headerText;
@@ -302,8 +310,15 @@ void NetworkRequest::send(String* body)
             headerText.replace(headerText.begin(), headerText.end(), '_', '-');
             list = curl_slist_append(list, headerText.data());
             list = curl_slist_append(list, "Connection:keep-alive");
-            list = curl_slist_append(list, "Origin:null");
             list = curl_slist_append(list, "User-Agent:" USER_AGENT(APP_CODE_NAME, VERSION));
+
+            if (m_document->documentURI().isFileURL() || m_document->documentURI().isDataURL()) {
+                list = curl_slist_append(list, "Origin:null");
+            } else {
+                headerText = "Referer:";
+                headerText += m_document->documentURI().urlString()->utf8Data();
+                list = curl_slist_append(list, headerText.data());
+            }
 
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
             data->headerList = list;
@@ -489,14 +504,16 @@ void* NetworkRequest::networkWorker(void* data)
     CURL* curl = requestData->curl;
     curl_slist* list = requestData->headerList;
     auto res = curl_easy_perform(curl);
+    long code;
+    curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
+    requestData->responseCode = code;
+
     // FIXME duplicate code block sync, async
     if (isSync) {
         if (res == 0) {
             NetworkWorkerData* requestData = (NetworkWorkerData*)data;
             STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
-            long code;
-            curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
-            requestData->request->m_status = code;
+            requestData->request->m_status = requestData->responseCode;
             requestData->request->changeProgress(LOAD, true);
             requestData->request->changeProgress(LOADEND, true);
             requestData->request->changeReadyState(DONE, true);
@@ -511,9 +528,7 @@ void* NetworkRequest::networkWorker(void* data)
             NetworkWorkerData* requestData = (NetworkWorkerData*)data;
             STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle);
             STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url.urlString()->utf8Data());
-            long code;
-            curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
-            requestData->request->m_status = code;
+            requestData->request->m_status = requestData->responseCode;
             requestData->request->changeProgress(ERROR, true);
             requestData->request->changeProgress(LOADEND, true);
             requestData->request->changeReadyState(DONE, true);
@@ -531,9 +546,7 @@ void* NetworkRequest::networkWorker(void* data)
                     Locker<Mutex> locker(requestData->request->m_mutex);
                     requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
                 }
-                long code;
-                curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
-                requestData->request->m_status = code;
+                requestData->request->m_status = requestData->responseCode;
                 requestData->request->changeProgress(LOAD, true);
                 requestData->request->changeProgress(LOADEND, true);
                 requestData->request->changeReadyState(DONE, true);
@@ -560,10 +573,8 @@ void* NetworkRequest::networkWorker(void* data)
                     requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
                 }
 
-                long code;
-                curl_easy_getinfo(requestData->curl, CURLINFO_RESPONSE_CODE, &code);
-                STARFISH_LOG_INFO("failed to open %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)code);
-                requestData->request->m_status = code;
+                STARFISH_LOG_INFO("failed to open %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)requestData->responseCode);
+                requestData->request->m_status = requestData->responseCode;
                 requestData->request->changeProgress(ERROR, true);
                 requestData->request->changeProgress(LOADEND, true);
                 requestData->request->changeReadyState(DONE, true);

@@ -42,6 +42,7 @@ public:
     {
         return other.urlString()->equals(m_urlString);
     }
+
 protected:
     String* m_string;
     String* m_urlString;
