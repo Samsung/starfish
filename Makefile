@@ -99,6 +99,7 @@ ifeq ($(ARCH), x86)
 else ifeq ($(ARCH), arm)
   CXXFLAGS += -DESCARGOT_32=1 -march=armv7-a -mthumb
 else
+  CXXFLAGS += -DESCARGOT_64=1
 endif
 
 CXXFLAGS +=  -DUSE_ES6_FEATURE
