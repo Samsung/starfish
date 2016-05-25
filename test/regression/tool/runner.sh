@@ -21,10 +21,13 @@ if [[ "$PLATFORM" != "i686" && "$PLATFORM" != "armv7l" ]]; then
     exit
 fi
 
+export LD_LIBRARY_PATH=./test/lib
+
 # Test Suites
 # 0: W3C DOM Conformance Test Suites
 # 1: Web Platform Tests
 # 2: Vendor Tests(Blink, Gechko, WebKit)
+# 3: Pixel Test
 tc=$1
 if [[ "$tc" == "dom_conformance" ]]; then
     tc=$(cat test/tool/dom-conformance-test/test_$tc)
@@ -50,6 +53,9 @@ elif [[ "$tc" == "wpt_html" ]]; then
 elif [[ "$tc" == "wpt_page_visibility" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
     TESTSUITE=1
+elif [[ "$tc" == "wpt_progress_events" ]]; then
+    tc=$(cat test/tool/web-platform-tests/test_$tc)
+    TESTSUITE=1
 elif [[ "$tc" == "wpt_xhr" ]]; then
     tc=$(cat test/tool/web-platform-tests/test_$tc)
     TESTSUITE=1
@@ -65,9 +71,12 @@ elif [[ "$tc" == "webkit_fast_dom" ]]; then
 elif [[ "$tc" == "webkit_fast_html" ]]; then
     tc=$(cat test/tool/vendor/webkit/test_$tc)
     TESTSUITE=2
+elif [[ "$tc" == "bidi" ]]; then
+    tc=$(cat test/tool/bidi/test_$tc)
+    TESTSUITE=3
 else
     echo "Usage: ./runner.js [test_input]"
-    echo "test_input: [ dom_conformance | wpt_dom | wpt_dom_events | wpt_html | wpt_page_visibility | wpt_xhr | blink_dom_conformance | blink_fast_dom | blink_fast_html | gecko_dom_conformance | webkit_dom_conformance | webkit_fast_dom | webkit_fast_html ]"
+    echo "test_input: [ dom_conformance | wpt_dom | wpt_dom_events | wpt_html | wpt_page_visibility | wpt_progress_event | wpt_xhr | blink_dom_conformance | blink_fast_dom | blink_fast_html | gecko_dom_conformance | webkit_dom_conformance | webkit_fast_dom | webkit_fast_html | bidi ]"
     exit
 fi
 
@@ -93,7 +102,6 @@ for i in $tc ; do
     if [[ $cnt == $ROTATE ]]; then
         cnt=0
     fi
-    RESFILE="tmp"$cnt
 
 	if [[ "$PLATFORM" == "armv7l" || "$PLATFORM" == "i686" ]]; then
 		dlogutil -c
@@ -101,7 +109,13 @@ for i in $tc ; do
 
     # Running the tests
     filenames[$cnt]=$i
-	$STARFISH $i --hide-window > $RESFILE &
+    if [ $TESTSUITE -eq 3 ]; then
+        RESIMG="./out.png"
+        ELM_ENGINE="shot:file="$RESIMG $StarFish $i --width=900 --height=900 > /dev/null 2&>1 &
+    else
+        $STARFISH $i --hide-window &
+    fi
+
     if [[ $cnt != $((ROTATE-1)) ]] && [[ $i != $last ]]; then
         continue;
     fi
@@ -166,6 +180,19 @@ for i in $tc ; do
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
                 echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
             fi
+        elif [ $TESTSUITE -eq 3 ]; then
+            EXPIMG=${filenames[$c]%.*}"-expected.png"
+            IMGDIFF="./test/tool/imgdiffEvas"
+            DIFF=`$IMGDIFF $RESIMG $EXPIMG`
+            if [[ "$DIFF" = *"passed"* ]]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                echo -e "[PASS]" ${filenames[$c]} >> $RESULTFILE
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+                echo -e "[FAIL]" ${filenames[$c]} >> $RESULTFILE
+            fi
         fi
 
         TCFILE=`expr $TCFILE + 1`
@@ -184,7 +211,7 @@ if [ $TESTSUITE -eq 0 ]; then
 elif [ $TESTSUITE -eq 1 ]; then
     echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
     echo -e "Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.\n" >> $RESULTFILE
-elif [ $TESTSUITE -eq 2 ]; then
+else
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
     echo -e "Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.\n" >> $RESULTFILE
 fi
