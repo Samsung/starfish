@@ -3420,7 +3420,7 @@ bool CSSStyleDeclaration::checkInputErrorTransform(std::vector<String*, gc_alloc
             if (!CSSPropertyParser::assureNumberList(str0 + 7, true, 6, 6))
                 return false;
         } else if (startsWith(str0, "translate(")) {
-            if (!CSSPropertyParser::assureLengthOrPercentList(str0 + 11, true, 1, 2))
+            if (!CSSPropertyParser::assureLengthOrPercentList(str0 + 10, true, 1, 2))
                 return false;
         } else if (startsWith(str0, "translatex(")) {
             if (!CSSPropertyParser::assureLengthOrPercent(str0 + 11, true))
