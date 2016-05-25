@@ -2541,6 +2541,14 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                     canBubbles = bubbles.isBoolean() ? bubbles.asBoolean() : canBubbles;
                     canCancelable = cancelable.isBoolean() ? cancelable.asBoolean() : canCancelable;
                 }
+#ifdef STARFISH_TC_COVERAGE
+                if (canBubbles) {
+                    STARFISH_LOG_INFO("initEvent::bubbles\n");
+                }
+                if (cancelable) {
+                    STARFISH_LOG_INFO("initEvent::cancelable\n");
+                }
+#endif
                 auto event = new Event(String::fromUTF8(type->utf8Data()), EventInit(canBubbles, canCancelable));
                 return event->scriptValue();
             } else {
