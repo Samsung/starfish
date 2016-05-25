@@ -1,26 +1,21 @@
- Item
-# ** These tags do NOT support read/write in dom.
- class
- dir
- id
- style
- onclick
- onload
- onunload
- !DOCTYPE
- html
- head
- link
-
-
- meta
- style
- body
- p
- div
- span
- br
- img
-
-
- script
+Category        , Item
+Global Attr     , class
+                , dir
+                , id
+                , style
+                , onclick
+                , onload
+Scripting       , onunload
+Doctype         , !DOCTYPE
+Element         , html
+                , head
+                , link
+                , meta
+                , style
+                , body
+                , p
+                , div
+                , span
+                , br
+                , img
+                , script

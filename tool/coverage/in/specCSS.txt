@@ -1,88 +1,73 @@
- Property              
- margin
- margin-bottom
- margin-left
- margin-right
- margin-top
- padding
- padding-bottom
- padding-left
- padding-right
- padding-top
- border
- border-top
- border-right
- border-bottom
- border-left
- border-color
- border-top-color
- border-right-color
- border-bottom-color
- border-left-color
- border-style
- border-top-style      
-                       
- border-right-style    
-                       
- border-bottom-style   
-                       
- border-left-style     
-                       
- border-width
- border-top-width
- border-right-width
- border-bottom-width
- border-left-width
- display               
-                       
-                       
-                       
- position              
-                       
-                       
- top
- right
- bottom
- left
- z-index
- direction             
- width
- height
- line-height
- vertical-align
- overflow              
-                       
- visibility            
-                       
- color
- background
- background-color
- background-image
- background-repeat
- font-style
- font-weight
- font-size
- text-align            
-                       
-                       
- text-decoration       
-                       
-                       
- opacity
- background-size
- border-image-source
- border-image-slice
- border-image-width
- transform             
- transform             
- transform             
- transform             
- transform             
- transform             
- transform             
- transform             
- transform             
- transform             
- transform             
- transform             
- transform-origin
+CSS Version      , Property
+CSS 2.1          , margin
+                 , margin-bottom
+                 , margin-left
+                 , margin-right
+                 , margin-top
+                 , padding
+                 , padding-bottom
+                 , padding-left
+                 , padding-right
+                 , padding-top
+                 , border
+                 , border-top
+                 , border-right
+                 , border-bottom
+                 , border-left
+                 , border-color
+                 , border-top-color
+                 , border-right-color
+                 , border-bottom-color
+                 , border-left-color
+                 , border-style
+                 , border-top-style
+                 , border-right-style
+                 , border-bottom-style
+                 , border-left-style
+                 , border-width
+                 , border-top-width
+                 , border-right-width
+                 , border-bottom-width
+                 , border-left-width
+                 , display
+                 , position
+                 , top
+                 , right
+                 , bottom
+                 , left
+                 , z-index
+                 , direction
+                 , width
+                 , height
+                 , line-height
+                 , vertical-align
+                 , overflow
+                 , visibility
+                 , color
+                 , background
+                 , background-color
+                 , background-image
+                 , background-repeat
+                 , font-style
+                 , font-weight
+                 , font-size
+                 , text-align
+                 , text-decoration
+CSS3-COLOR       , opacity
+CSS3-BACKGROUND  , background-size
+                 , border-image-source
+                 , border-image-slice
+                 , border-image-width
+CSS3-TRANSFORM   , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform
+                 , transform-origin
