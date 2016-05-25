@@ -166,27 +166,8 @@ ifeq ($(TIZEN_DEVICE_API), true)
 	include third_party/deviceapi/build/Include.mk
 endif
 
-ifeq ($(MODE), debug)
-    ifeq ($(ARCH), x64)
-    LDFLAGS += third_party/escargot/out/x64/interpreter/debug/libescargot.a
-    else
-    LDFLAGS += third_party/escargot/out/tizen_$(VERSION)/$(ARCH)/interpreter/debug/libescargot.a
-    endif
-    LDFLAGS += third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/debug.shared/.libs/libgc.a
-
-    # TODO : use this option only for HOST=linux
-    # LDFLAGS += -Wl,-rpath=$(LOCAL_PATH)/third_party/escargot/out/x64/interpreter/debug
-else
-    ifeq ($(ARCH), x64)
-    LDFLAGS += third_party/escargot/out/x64/interpreter/release/libescargot.a
-    # TODO : use this option only for HOST=linux
-    # LDFLAGS += -Wl,-rpath=$(LOCAL_PATH)/third_party/escargot/out/x64/interpreter/release
-    else
-    LDFLAGS += third_party/escargot/out/tizen_$(VERSION)/$(ARCH)/interpreter/release/libescargot.a
-    endif
-    LDFLAGS += third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/release.shared/.libs/libgc.a
-endif
-
+JSLIBS = third_party/escargot/out/$(HOST)/$(ARCH)/interpreter/$(MODE)/libescargot.a
+GCLIBS = third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/$(MODE).shared/.libs/libgc.a
 
 #skia_matrix
 CXXFLAGS += -Ithird_party/skia_matrix/
@@ -248,7 +229,7 @@ OBJS += $(SRC_C:%.c= $(OUTDIR)/%.o)
 
 
 LDFLAGS += -lpthread -lcurl
-THIRD_PARTY_LIBS= $(GCLIBS)
+THIRD_PARTY_LIBS= $(JSLIBS) $(GCLIBS)
 
 ifeq ($(HOST), linux)
   CC           = gcc
