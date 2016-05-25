@@ -23,6 +23,7 @@ fi
 # 0: W3C DOM Conformace Test Suites
 # 1: Web Platform Tests
 # 2: Vendor Tests
+# 3: Pixel Tests
 if [[ "$1" = *"dom_conformance_test.res" ]]; then
     TESTSUITE=0
     tc=$(cat $1)
@@ -43,6 +44,12 @@ elif [[ "$1" = *"blink_fast"*".res" || "$1" = *"webkit_fast"*".res" ]]; then
     tc=$(cat $1)
 elif [[ "$1" = *"vendor/blink/fast"*".htm"* || "$1" = *"vendor/webkit/fast"*".htm"* ]]; then
     TESTSUITE=2
+    tc=$1
+elif [[ "$1" = *"bidi.res" ]]; then
+    TESTSUITE=3
+    tc=$(cat $1)
+elif [[ "$i" = *"bidi/International/tests/html-css/"*".htm"* ]]; then
+    TESTSUITE=3
     tc=$1
 else
     echo "Unsupported tests"
@@ -79,13 +86,19 @@ if [ "$2" = true ]; then
         PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_dom"
     elif [[ "$1" = *"webkit_fast_html.res" ]]; then
         PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_html"
+    elif [[ "$1" = *"bidi.res" ]]; then
+        PASSFILE="test/regression/tool/bidi/test_bidi"
     fi
 fi
 
 echo -e "${BOLD}###### Ref Tests ######${RESET}\n"
 
 cnt=-1
-ROTATE="$(nproc)"
+if [ $TESTSUITE -eq 3 ]; then
+    ROTATE=1
+else
+    ROTATE="$(nproc)"
+fi
 filenames=()
 array=( $tc )
 pos=$(( ${#array[*]} - 1 ))
@@ -99,7 +112,12 @@ for i in $tc ; do
 
     # Running the tests
     filenames[$cnt]=$i
-    ./StarFish $i --result-folder="out/$i" --hide-window &> $RESFILE &
+    if [ $TESTSUITE -eq 3 ]; then
+        RESIMG="./out.png"
+        ELM_ENGINE="shot:file="$RESIMG ./StarFish $i --width=900 --height=900 > /dev/null 2&>1 &
+    else
+        ./StarFish $i --result-folder="out/$i" --hide-window &> $RESFILE &
+    fi
     if [[ $cnt != $((ROTATE-1)) ]] && [[ $i != $last ]]; then
         continue;
     fi
@@ -109,14 +127,16 @@ for i in $tc ; do
         TMPFILE="tmp"$c
 
         # Collect the result
-        replace1='s/\\n"//g'
-        replace2='s/"//g'
-        replace3='s/\n//g'
-        replace4='s/spawnSTDOUT:\s//g'
-        perl -i -pe $replace1 $TMPFILE
-        perl -i -pe $replace2 $TMPFILE
-        perl -i -pe $replace3 $TMPFILE
-        perl -i -pe $replace4 $TMPFILE
+        if [ $TESTSUITE -ne 3 ]; then
+            replace1='s/\\n"//g'
+            replace2='s/"//g'
+            replace3='s/\n//g'
+            replace4='s/spawnSTDOUT:\s//g'
+            perl -i -pe $replace1 $TMPFILE
+            perl -i -pe $replace2 $TMPFILE
+            perl -i -pe $replace3 $TMPFILE
+            perl -i -pe $replace4 $TMPFILE
+        fi
 
         if [ $TESTSUITE -eq 0 ]; then
             EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
@@ -175,10 +195,28 @@ for i in $tc ; do
                 FAILTC=`expr $FAILTC + 1`
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
             fi
+        elif [ $TESTSUITE -eq 3 ]; then
+            EXPIMG=${filenames[$c]%.*}"-expected.png"
+            EXPIMG="test/regression/reftest"${EXPIMG##*test/reftest}
+            IMGDIFF="./tool/pixel_test/bin/image_diff"
+            DIFF=`$IMGDIFF $RESIMG $EXPIMG`
+            if [[ "$DIFF" = *"0.00% passed" ]]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                if [ "$REGRESSION" = true ]; then
+                    echo -e ${filenames[$c]} >> $PASSFILENEW
+                fi
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+            fi
+            rm $RESIMG
         fi
 
         TCFILE=`expr $TCFILE + 1`
-        rm $TMPFILE
+        if [ $TESTSUITE -ne 3 ]; then
+            rm $TMPFILE
+        fi
     done
 done
 
@@ -191,7 +229,7 @@ if [ $TESTSUITE -eq 0 ]; then
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
 elif [ $TESTSUITE -eq 1 ]; then
     echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
-elif [ $TESTSUITE -eq 2 ]; then
+else
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed.${RESET}\n"
 fi
 
