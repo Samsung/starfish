@@ -8,7 +8,9 @@ TC=1 make x64.interpreter.debug.static -j
 make x64.exe.debug -j
 
 3. run:
+To generate coverage, run:
 ./genDomSpecList.sh
+./genCssHtmlSpecList.sh
 ./genCoverage.sh
 
 *.csv files are generated in `out'

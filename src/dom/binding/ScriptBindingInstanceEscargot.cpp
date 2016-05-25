@@ -2545,7 +2545,7 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                 if (canBubbles) {
                     STARFISH_LOG_INFO("initEvent::bubbles\n");
                 }
-                if (cancelable) {
+                if (canCancelable) {
                     STARFISH_LOG_INFO("initEvent::cancelable\n");
                 }
 #endif

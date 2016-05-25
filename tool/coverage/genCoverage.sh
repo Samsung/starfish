@@ -48,5 +48,73 @@ node genTable.js "" in/specDOM.txt out/dom.raw | tail -1 > t.txt
 cat out/head.txt out/dom.csv.tmp t.txt > out/dom.csv
 rm out/dom.csv.tmp t.txt
 
-node genTable.js "" in/specHTML.txt in/html.res > out/html.csv
-node genTable.js "" in/specCSS.txt in/css.res > out/css.csv
+csslist="
+css.wpt.raw
+css.dct.raw
+css.blink.dom.raw
+css.blink.fast.dom.raw
+css.blink.fast.html.raw
+css.webkit.dom.raw
+css.webkit.fast.dom.raw
+css.webkit.fast.html.raw
+css.gecko.dom.raw
+css.bidi.raw
+"
+
+i=0;
+for f in $csslist; do
+    node genTable.js "${list2[i]}" in/specCSS.txt in/$f > out/$f.csv
+    i=$((i+1));
+done
+
+rm -f out/css.raw
+for f in $csslist; do
+    cat in/$f >> out/css.raw
+done
+
+rm -f out/css.csv.tmp
+for f in $csslist; do
+    cat out/$f.csv | tail -n +3 >> out/css.csv.tmp
+done
+
+head -n 2 out/css.dct.raw.csv > out/head.txt
+node genTable.js "" in/specCSS.txt out/css.raw | tail -1 > t.txt
+
+cat out/head.txt out/css.csv.tmp t.txt > out/css.csv
+rm out/css.csv.tmp t.txt
+
+htmllist="
+html.wpt.raw
+html.dct.raw
+html.blink.dom.raw
+html.blink.fast.dom.raw
+html.blink.fast.html.raw
+html.webkit.dom.raw
+html.webkit.fast.dom.raw
+html.webkit.fast.html.raw
+html.gecko.dom.raw
+html.bidi.raw
+"
+
+i=0;
+for f in $htmllist; do
+    node genTable.js "${list2[i]}" in/specHTML.txt in/$f > out/$f.csv
+    i=$((i+1));
+done
+
+rm -f out/html.raw
+for f in $htmllist; do
+    cat in/$f >> out/html.raw
+done
+
+rm -f out/html.csv.tmp
+for f in $htmllist; do
+    cat out/$f.csv | tail -n +3 >> out/html.csv.tmp
+done
+
+head -n 2 out/html.dct.raw.csv > out/head.txt
+node genTable.js "" in/specHTML.txt out/html.raw | tail -1 > t.txt
+
+cat out/head.txt out/html.csv.tmp t.txt > out/html.csv
+rm out/html.csv.tmp t.txt
+
