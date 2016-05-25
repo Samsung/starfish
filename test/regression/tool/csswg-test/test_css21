@@ -822,6 +822,8 @@ test/reftest/csswg-test/css21_converted/linebox/vertical-align-118.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-120.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-001.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-002.htm
+test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-004a.htm
+test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-005a.htm
 test/reftest/csswg-test/css21_converted/margin-padding-clear/margin-applies-to-008.htm
 test/reftest/csswg-test/css21_converted/margin-padding-clear/margin-applies-to-009.htm
 test/reftest/csswg-test/css21_converted/margin-padding-clear/margin-bottom-applies-to-009.htm

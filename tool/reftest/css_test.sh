@@ -147,8 +147,9 @@ for i in $tc ; do
         if [ ! -f ${GOAL_PNG} ]
         then
             mv result.png ${GOAL_PNG}
-            #echo $html
-            passedhtml=${html//_converted\//\/}
+        fi
+        passedhtml=${html//_converted\//\/}
+        if [ ! -f ${passedhtml} ]; then
             #echo ${passedhtml%/*}
             mkdir -p ${passedhtml%/*}
             htmlpath=${html%/*}

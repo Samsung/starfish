@@ -21,6 +21,7 @@ test/reftest/csswg-test/css-transforms-1_converted/transform-translate-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-translate-002.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-translate-003.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-translate-004.html
+test/reftest/csswg-test/css-transforms-1_converted/transform-translate-005.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-translatex-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-translatex-002.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-translatex-003.html
