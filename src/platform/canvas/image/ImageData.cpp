@@ -19,6 +19,13 @@ public:
         evas_object_image_size_get(m_image, &w, &h);
         m_width = w;
         m_height = h;
+
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL");
+            Evas_Object* m = (Evas_Object*)cd;
+            evas_object_hide(m);
+            evas_object_del(m);
+        }, m_image, NULL, NULL);
     }
 
     ImageDataEFL(const char* buf, size_t len)
@@ -31,15 +38,10 @@ public:
         evas_object_image_size_get(m_image, &w, &h);
         m_width = w;
         m_height = h;
-    }
-
-    ~ImageDataEFL()
-    {
-        evas_object_hide(m_image);
-        evas_object_del(m_image);
 
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            Evas_Object* m = (Evas_Object*)obj;
+            STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL");
+            Evas_Object* m = (Evas_Object*)cd;
             evas_object_hide(m);
             evas_object_del(m);
         }, m_image, NULL, NULL);

@@ -149,7 +149,7 @@ protected:
     ResponseType m_responseType;
     int m_status;
     uint32_t m_timeout;
-    Mutex m_mutex;
+    Mutex* m_mutex;
     NetworkRequestResponse m_response;
 
     std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;

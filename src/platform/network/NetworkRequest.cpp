@@ -37,6 +37,7 @@ NetworkRequest::NetworkRequest(Document* document)
     , m_responseType(DEFAULT_RESPONSE)
     , m_status(0)
     , m_timeout(0)
+    , m_mutex(new Mutex())
     , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
     , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
     , m_loaded(0)
@@ -177,7 +178,7 @@ struct NetworkWorkerData {
 int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
     NetworkRequest* request = (NetworkRequest*)clientp;
-    Locker<Mutex> locker(request->m_mutex);
+    Locker<Mutex> locker(*request->m_mutex);
     // check abort
     if (request->m_isAborted)
         return 1;
@@ -188,7 +189,7 @@ int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl
         request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
             NetworkRequest* request = (NetworkRequest*)data;
             {
-                Locker<Mutex> locker(request->m_mutex);
+                Locker<Mutex> locker(*request->m_mutex);
                 STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
                 request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
             }
@@ -202,7 +203,7 @@ int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl
 size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb, void* data)
 {
     NetworkRequest* request = (NetworkRequest*)data;
-    Locker<Mutex> locker(request->m_mutex);
+    Locker<Mutex> locker(*request->m_mutex);
     size_t realSize = size * nmemb;
 
     const char* memPtr = (const char*)ptr;
@@ -215,7 +216,7 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
 {
     size_t realsize = size * nmemb;
     NetworkRequest* request = (NetworkRequest*)data;
-    Locker<Mutex> locker(request->m_mutex);
+    Locker<Mutex> locker(*request->m_mutex);
 
     // TODO read header info
     if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX) {
@@ -223,7 +224,7 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
         request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
             NetworkRequest* request = (NetworkRequest*)data;
             {
-                Locker<Mutex> locker(request->m_mutex);
+                Locker<Mutex> locker(*request->m_mutex);
                 STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
                 request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
             }
@@ -539,11 +540,11 @@ void* NetworkRequest::networkWorker(void* data)
         }
     } else {
         if (res == 0) {
-            Locker<Mutex> locker(requestData->request->m_mutex);
+            Locker<Mutex> locker(*requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
                 NetworkWorkerData* requestData = (NetworkWorkerData*)data;
                 {
-                    Locker<Mutex> locker(requestData->request->m_mutex);
+                    Locker<Mutex> locker(*requestData->request->m_mutex);
                     requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
                 }
                 requestData->request->m_status = requestData->responseCode;
@@ -557,7 +558,7 @@ void* NetworkRequest::networkWorker(void* data)
             }, requestData);
 
         } else if (res == CURLE_ABORTED_BY_CALLBACK) {
-            Locker<Mutex> locker(requestData->request->m_mutex);
+            Locker<Mutex> locker(*requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
                 NetworkWorkerData* requestData = (NetworkWorkerData*)data;
                 requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
@@ -565,11 +566,11 @@ void* NetworkRequest::networkWorker(void* data)
             }, requestData);
         } else {
             // handle error
-            Locker<Mutex> locker(requestData->request->m_mutex);
+            Locker<Mutex> locker(*requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
                 NetworkWorkerData* requestData = (NetworkWorkerData*)data;
                 {
-                    Locker<Mutex> locker(requestData->request->m_mutex);
+                    Locker<Mutex> locker(*requestData->request->m_mutex);
                     requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
                 }
 

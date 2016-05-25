@@ -3,11 +3,10 @@
 
 namespace StarFish {
 
-class Mutex {
-    STARFISH_MAKE_STACK_ALLOCATED();
+class Mutex : public gc {
 public:
     Mutex();
-    ~Mutex();
+    ~Mutex() { }
     void lock();
     void unlock();
 protected:
