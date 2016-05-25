@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# coverage
+# Generating DOM coverage
+mkdir -p out
+
 list="
 dom.wpt.raw
 dom.dct.raw
@@ -45,8 +47,10 @@ done
 head -n 2 out/dom.dct.raw.csv > out/head.txt
 node genTable.js "" in/specDOM.txt out/dom.raw | tail -1 > t.txt
 
-cat out/head.txt out/dom.csv.tmp t.txt > out/dom.csv
+cat out/head.txt out/dom.csv.tmp t.txt > dom.csv
 rm out/dom.csv.tmp t.txt
+
+## Generating CSS coverage Data
 
 csslist="
 css.wpt.raw
@@ -80,8 +84,11 @@ done
 head -n 2 out/css.dct.raw.csv > out/head.txt
 node genTable.js "" in/specCSS.txt out/css.raw | tail -1 > t.txt
 
-cat out/head.txt out/css.csv.tmp t.txt > out/css.csv
+cat out/head.txt out/css.csv.tmp t.txt > css.csv
 rm out/css.csv.tmp t.txt
+
+
+# Generating HTML coverage
 
 htmllist="
 html.wpt.raw
@@ -115,6 +122,8 @@ done
 head -n 2 out/html.dct.raw.csv > out/head.txt
 node genTable.js "" in/specHTML.txt out/html.raw | tail -1 > t.txt
 
-cat out/head.txt out/html.csv.tmp t.txt > out/html.csv
+cat out/head.txt out/html.csv.tmp t.txt > html.csv
 rm out/html.csv.tmp t.txt
+
+rm -fr out
 

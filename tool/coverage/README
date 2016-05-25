@@ -13,5 +13,5 @@ To generate coverage, run:
 ./genCssHtmlSpecList.sh
 ./genCoverage.sh
 
-*.csv files are generated in `out'
+dom.csv, html.csv, css.csv files are generated.
 
