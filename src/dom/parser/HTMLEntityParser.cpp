@@ -26,13 +26,12 @@ static UChar adjustEntity(UChar32 value)
 
 static void appendLegalEntityFor(char32_t c, DecodedHTMLEntity& decodedEntity)
 {
-    /*
     // FIXME: A number of specific entity values generate parse errors.
     if (c <= 0 || c > 0x10FFFF || (c >= 0xD800 && c <= 0xDFFF)) {
         decodedEntity.append(0xFFFD);
         return;
     }
-    if (U_IS_BMP(c)) {
+    /*if (U_IS_BMP(c)) {
         decodedEntity.append(adjustEntity(c));
         return;
     }*/
