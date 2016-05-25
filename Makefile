@@ -98,12 +98,10 @@ ifeq ($(ARCH), x86)
   LDFLAGS += -m32
 else ifeq ($(ARCH), arm)
   CXXFLAGS += -DESCARGOT_32=1 -march=armv7-a -mthumb
-  CXXFLAGS +=  -DUSE_ES6_FEATURE
 else
-CXXFLAGS += -DESCARGOT_64=1
-CXXFLAGS +=  -DUSE_ES6_FEATURE
 endif
 
+CXXFLAGS +=  -DUSE_ES6_FEATURE
 
 ifeq ($(MODE), debug)
   CXXFLAGS += $(CXXFLAGS_DEBUG)
