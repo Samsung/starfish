@@ -129,12 +129,19 @@ namespace {
     __GET_TICK_COUNT timeStart;
 }
 
+struct IdlerData {
+    void (*m_fn)(void*);
+    void* m_data;
+};
+
 class WindowImplEFL : public Window {
 public:
     WindowImplEFL(StarFish* sf, const URL& url)
         : Window(sf, url)
     {
+        m_isActive = true;
         m_renderingAnimator = nullptr;
+        m_renderingIdlerData = nullptr;
     }
 
     virtual int width()
@@ -153,6 +160,7 @@ public:
         return height;
     }
 
+    bool m_isActive;
     uintptr_t m_handle;
     Evas_Object* m_window;
     Evas_Object* m_background;
@@ -173,6 +181,7 @@ public:
     void (*m_mobileMouseUpEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
 
     Ecore_Animator* m_renderingAnimator;
+    IdlerData* m_renderingIdlerData;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -717,11 +726,6 @@ void Window::setNeedsRenderingSlowCase()
     STARFISH_ASSERT(!m_needsRendering);
     m_needsRendering = true;
 
-    struct IdlerData {
-        void (*m_fn)(void*);
-        void* m_data;
-    };
-
     IdlerData* id = new(NoGC) IdlerData;
     id->m_fn = [](void* data) -> void {
         Window* wnd = (Window*) data;
@@ -735,6 +739,7 @@ void Window::setNeedsRenderingSlowCase()
         ScriptBindingInstanceEnterer enter(wnd->starFish()->scriptBindingInstance());
         id->m_fn(id->m_data);
         ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
+        ((WindowImplEFL*)wnd)->m_renderingIdlerData = nullptr;
         GC_FREE(id);
         return ECORE_CALLBACK_CANCEL;
     }, id);
@@ -756,6 +761,9 @@ struct TimeoutData {
 
 uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data)
 {
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+
     TimeoutData* td = new(NoGC) TimeoutData;
     td->m_window = this;
     uint32_t id = ++m_timeoutCounter;
@@ -779,6 +787,9 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
 
 void Window::clearTimeout(uint32_t id)
 {
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+
     auto handlerData = m_timeoutHandler.find(id);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
@@ -790,6 +801,9 @@ void Window::clearTimeout(uint32_t id)
 
 uint32_t Window::setInterval(WindowSetTimeoutHandler handler, uint32_t delay, void* data)
 {
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+
     TimeoutData* td = new(NoGC) TimeoutData;
     td->m_window = this;
     uint32_t id = ++m_timeoutCounter;
@@ -810,6 +824,9 @@ uint32_t Window::setInterval(WindowSetTimeoutHandler handler, uint32_t delay, vo
 
 void Window::clearInterval(uint32_t id)
 {
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+
     auto handlerData = m_timeoutHandler.find(id);
     if (handlerData != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)handlerData->second;
@@ -821,6 +838,9 @@ void Window::clearInterval(uint32_t id)
 
 uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* data)
 {
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
+
     TimeoutData* td = new(NoGC) TimeoutData;
     td->m_window = this;
     uint32_t id = m_requestAnimationFrameCounter++;
@@ -1013,12 +1033,16 @@ void Window::resume()
 void Window::close()
 {
     STARFISH_LOG_INFO("onClose");
+
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+
+    eflWindow->m_isActive = false;
 
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
         ecore_timer_del(td->m_timerID);
+        GC_FREE(td);
         timerIter++;
     }
     m_timeoutHandler.clear();
@@ -1027,12 +1051,14 @@ void Window::close()
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
         ecore_animator_del((Ecore_Animator*)td->m_timerID);
+        GC_FREE(td);
         aniIter++;
     }
     m_requestAnimationFrameHandler.clear();
 
     if (eflWindow->m_renderingAnimator) {
         ecore_animator_del(eflWindow->m_renderingAnimator);
+        GC_FREE(eflWindow->m_renderingIdlerData);
     }
 
 #ifndef STARFISH_TIZEN_WEARABLE
