@@ -73,6 +73,7 @@ StarFish::~StarFish()
     close();
     delete m_lineBreaker;
     delete m_scriptBindingInstance;
+    delete m_window;
 }
 
 void StarFish::run()

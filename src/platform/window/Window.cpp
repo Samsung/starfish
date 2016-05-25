@@ -160,6 +160,41 @@ public:
         return height;
     }
 
+
+    void clearEFLResources()
+    {
+        if (m_document && m_document->frame() && m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()) {
+            StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
+            std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
+            {
+                ctx->clearOwnBuffer();
+                auto iter = ctx->childContexts().begin();
+                while (iter != ctx->childContexts().end()) {
+                    auto iter2 = iter->second->begin();
+                    while (iter2 != iter->second->end()) {
+                        clearSC(*iter2);
+                        iter2++;
+                    }
+                    iter++;
+                }
+            };
+            clearSC(ctx);
+        }
+
+        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+        auto a = eflWindow->m_drawnImageList.begin();
+        while (a != eflWindow->m_drawnImageList.end()) {
+            std::vector<std::pair<Evas_Object*, bool> > & vec = a->second;
+
+            for (size_t i = 0; i < vec.size(); i ++) {
+                Evas_Object* obj = vec[i].first;
+                evas_object_del(obj);
+            }
+            a++;
+        }
+        eflWindow->m_drawnImageList.clear();
+    }
+
     bool m_isActive;
     uintptr_t m_handle;
     Evas_Object* m_window;
@@ -732,7 +767,7 @@ void Window::setNeedsRenderingSlowCase()
         wnd->rendering();
     };
     id->m_data = this;
-
+    ((WindowImplEFL*)this)->m_renderingIdlerData = id;
     ((WindowImplEFL*)this)->m_renderingAnimator = ecore_animator_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         Window* wnd = (Window*)id->m_data;
@@ -986,38 +1021,8 @@ void Window::pause()
 
 void Window::resume()
 {
-    if (m_document && m_document->frame() && m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()) {
-        StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
-        std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
-        {
-            ctx->clearOwnBuffer();
-            auto iter = ctx->childContexts().begin();
-            while (iter != ctx->childContexts().end()) {
-                auto iter2 = iter->second->begin();
-                while (iter2 != iter->second->end()) {
-                    clearSC(*iter2);
-                    iter2++;
-                }
-                iter++;
-            }
-        };
-        clearSC(ctx);
-    }
-
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    auto a = eflWindow->m_drawnImageList.begin();
-    while (a != eflWindow->m_drawnImageList.end()) {
-        std::vector<std::pair<Evas_Object*, bool> > & vec = a->second;
-
-        for (size_t i = 0; i < vec.size(); i ++) {
-            Evas_Object* obj = vec[i].first;
-            evas_object_del(obj);
-        }
-        a++;
-    }
-    eflWindow->m_drawnImageList.clear();
-
-
+    eflWindow->clearEFLResources();
     STARFISH_LOG_INFO("onResume");
     m_isRunning = true;
     m_needsRendering = true;
@@ -1060,6 +1065,14 @@ void Window::close()
         ecore_animator_del(eflWindow->m_renderingAnimator);
         GC_FREE(eflWindow->m_renderingIdlerData);
     }
+
+    eflWindow->clearEFLResources();
+
+    eflWindow->m_objectList.clear();
+    eflWindow->m_objectList.shrink_to_fit();
+    eflWindow->m_surfaceList.clear();
+    eflWindow->m_surfaceList.shrink_to_fit();
+    eflWindow->m_drawnImageList.clear();
 
 #ifndef STARFISH_TIZEN_WEARABLE
     ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
