@@ -327,7 +327,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
     TIZEN_INCLUDE += emile-1 ethumb-client-1
   endif
 
-  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player cairo
+  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player cairo capi-network-connection
 
   DEPENDENCY_INCLUDE =
 
@@ -353,7 +353,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   else
     LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
     LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
-    LDFLAGS +=  -ldlog -licui18n -licuuc -licudata -lecore -lecore_input -lecore_evas -levas -lelementary -lrt -lefl-extension -lfreetype -lcapi-media-player -lcairo -lfontconfig
+    LDFLAGS +=  -ldlog -licui18n -licuuc -licudata -lecore -lecore_input -lecore_evas -levas -lelementary -lrt -lefl-extension -lfreetype -lcapi-media-player -lcairo -lfontconfig -lcapi-network-connection
   endif
   LIB = libWebWidgetEngine.so
 else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), )
@@ -387,7 +387,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), 
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
                   efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 e_dbus-1 dbus-1.0 freetype2 media cairo network
 
-  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo
+  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo capi-network-connection
 
   DEPENDENCY_INCLUDE =
 
