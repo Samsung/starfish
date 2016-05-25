@@ -1,23 +1,32 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
- <head>
+<!DOCTYPE html>
+<html><head>
   <title>CSS Test: Keywords v. Strings (width)</title>
   <link rel="author" title="L. David Baron" href="http://dbaron.org/">
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#keywords">
   <link rel="match" href="keywords-001-ref.xht">
-  <style type="text/css">
+  
+ <style>
 
-  p.one, p.two { width: 10em; border: medium solid; }
-  p.two { width: "auto"; }
+  
+.convertedClass1 {  
+  width: 10em;  
+  border: medium solid;
+}
 
-  </style>
- </head>
+  
+.convertedClass2 {  
+  width: "auto";
+}
+
+
+  
+</style></head>
  <body>
 
  <p>The next two paragraphs should look identical:</p>
 
- <p class="one">Test.</p>
- <p class="two">Test.</p>
+ <p class="one convertedClass1">Test.</p>
+ <p class="two convertedClass1 convertedClass2">Test.</p>
 
- </body>
-</html>
+ 
+</body></html>

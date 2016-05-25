@@ -1,13 +1,5 @@
-<!--
-     Any copyright is dedicated to the Public Domain.
-     http://creativecommons.org/publicdomain/zero/1.0/
--->
-
 <!DOCTYPE html>
-
-<html>
-
- <head>
+<html><head>
 
   <!--
   The original and initial filename of this reference file was
@@ -18,41 +10,54 @@
 
   <link rel="author" title="Jeff Walden" href="http://whereswalden.com/">
 
-  <style type="text/css">
-  div#outer
-  {
-  border: black solid 8px;
-  height: 384px;
+  
+
+ <style>
+  
+.convertedClass1 {  
+  border: black solid 8px;  
+  height: 384px;  
   width: 128px;
-  }
+}
 
-  div#inner
-  {
-  height: 384px;
+
+  
+.convertedClass2 {  
+  height: 384px;  
   width: 16px;
-  }
+}
 
-  div#inner > div
-  {
-  height: 192px;
+
+  
+.convertedClass3 {  
+  height: 192px;  
   width: 16px;
-  }
+}
 
-  div#top {background-color: lime;}
 
-  div#bottom {background-color: aqua;}
-  </style>
+  
+.convertedClass4 {  
+  background-color: lime;
+}
 
- </head>
+
+  
+.convertedClass5 {  
+  background-color: aqua;
+}
+
+  
+</style></head>
 
  <body>
 
-  <div id="outer">
-      <div id="inner">
-          <div id="top"></div>
-          <div id="bottom"></div>
+  <div id="outer" class="convertedClass1">
+      <div id="inner" class="convertedClass2">
+          <div id="top" class="convertedClass3 convertedClass4"></div>
+          <div id="bottom" class="convertedClass3 convertedClass5"></div>
       </div>
   </div>
 
- </body>
-</html>
+ 
+
+</body></html>

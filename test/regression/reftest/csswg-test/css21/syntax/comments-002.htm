@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head>
+        <title>CSS Test: Nested comments</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#comments">
+        <link rel="match" href="../reference/filler-text-below-green.xht">
+        <meta name="flags" content="invalid">
+        <meta name="assert" content="Comments cannot be nested.">
+        
+    <style>
+            
+div {  /*/
+}
+
+        
+</style></head>
+    <body>
+        <p>Test passes if the "Filler Text" below is green.</p>
+        <div>Filler Text</div>
+    
+</body></html>

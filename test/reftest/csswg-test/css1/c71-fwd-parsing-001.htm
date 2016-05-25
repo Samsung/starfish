@@ -1,6 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
- <head>
+<!DOCTYPE html>
+<html><head>
   <title>CSS Test: Forward-Compatible Parsing</title>
   <meta name="flags" content="invalid">
   <link rel="help" href="http://www.w3.org/TR/REC-CSS1#forward-compatible-parsing">
@@ -8,20 +7,45 @@
   <link rel="author" title="Ian Hickson" href="mailto:ian@hixie.ch">
   <link rel="match" href="c71-fwd-parsing-001-ref.xht">
 
-  <style type="text/css">
-   body { color: navy; }
-   p.sixa {border-width: medium; border-style: solid;}
-   p.sixb {border-width: funny; border-style: solid;}
-   p.sixc {border-width: 50zu; border-style: solid;}
-   p.sixd {border-width: px; border-style: solid;}
-  </style>
+  
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#parsing-errors" title="4.2 Rules for handling parsing errors">
- </head>
+ <style>
+   
+body {  
+  color: navy;
+}
+
+   
+.convertedClass1 {  
+  border-width: medium;  
+  border-style: solid;
+}
+
+   
+.convertedClass2 {  
+  border-width: funny;  
+  border-style: solid;
+}
+
+   
+.convertedClass3 {  
+  border-width: 50zu;  
+  border-style: solid;
+}
+
+   
+.convertedClass4 {  
+  border-width: px;  
+  border-style: solid;
+}
+
+  
+</style></head>
  <body>
   <p>The next four blocks should look identical, to the pixel.</p>
-  <p class="sixa">Text sample</p>
-  <p class="sixb">Text sample</p>
-  <p class="sixc">Text sample</p>
-  <p class="sixd">Text sample</p>
- </body>
-</html>
+  <p class="sixa convertedClass1">Text sample</p>
+  <p class="sixb convertedClass2">Text sample</p>
+  <p class="sixc convertedClass3">Text sample</p>
+  <p class="sixd convertedClass4">Text sample</p>
+ 
+</body></html>

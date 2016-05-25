@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head>
+        <title>CSS Test: Vertical-align with a keyword, 'text-top'</title>
+        <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#propdef-vertical-align">
+        <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#leading">
+        <meta name="flags" content="ahem">
+        <meta name="assert" content="The 'vertical-align' property sets the keyword 'text-top'.">
+        
+    <style>
+            
+#div1 {  
+  position: relative;
+}
+
+            
+#div2 {  
+  position: absolute;  
+  top: 0;
+}
+
+            
+#span1 {  
+  font: ;
+}
+
+            
+.convertedClass1 {  
+  color: red;  
+  vertical-align: text-top;
+}
+
+            
+.convertedClass2 {  
+  font: ;
+}
+
+        
+</style></head>
+    <body>
+        <p>Test passes if there is a large and small box on the page and there is no red visible on the page.</p>
+        <div id="div1">
+            <div>
+                <span id="span1"><span class="convertedClass1 convertedClass2">X</span>X</span>
+            </div>
+            <div id="div2" class="convertedClass2">X</div>
+        </div>
+    
+</body></html>

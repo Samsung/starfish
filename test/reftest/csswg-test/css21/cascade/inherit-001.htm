@@ -1,28 +1,31 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-    <head>
+<!DOCTYPE html>
+<html><head>
         <title>CSS Test: Inherit keyword</title>
         <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
         <link rel="help" href="http://www.w3.org/TR/CSS21/cascade.html#value-def-inherit">
         <meta name="flags" content="">
         <meta name="assert" content="Children elements inherit the parents color given the 'inherit' keyword.">
-        <style type="text/css">
-            body
-            {
-                color: green;
-            }
-            div
-            {
-                color: red;
-            }
-            body div
-            {
-                color: inherit;
-            }
-        </style>
-    </head>
+        
+    <style>
+            
+body {  
+  color: green;
+}
+
+            
+div {  
+  color: red;
+}
+
+            
+.convertedClass1 {  
+  color: ;
+}
+
+        
+</style></head>
     <body>
         <p>Test passes if the "Filler Text" below is green.</p>
-        <div>Filler Text</div>
-    </body>
-</html>
+        <div class="convertedClass1">Filler Text</div>
+    
+</body></html>

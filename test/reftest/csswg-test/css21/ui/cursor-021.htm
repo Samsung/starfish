@@ -1,20 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-
- <head>
+<!DOCTYPE html>
+<html><head>
 
   <title>CSS Test: cursor - &lt;uri&gt; value</title>
 
-  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
   <link rel="help" href="http://www.w3.org/TR/CSS21/ui.html#cursor-props">
   <meta content="interact invalid" name="flags">
   <meta content="When an user-defined cursor is provided, a generic cursor value must be provided at the end of the list." name="assert">
 
-  <style type="text/css">
-  span {cursor: url("support/fail.cur");}
-  </style>
+  
 
- </head>
+ <style>
+  
+span {  
+  cursor: url("support/fail.cur");
+}
+
+  
+</style></head>
 
  <body>
 
@@ -24,5 +27,5 @@
    <span>text sample</span>
   </div>
 
- </body>
-</html>
+ 
+</body></html>

@@ -1,11 +1,9 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-
- <head>
+<!DOCTYPE html>
+<html><head>
 
   <title>CSS Test: font shorthand - minimal requirements</title>
 
-  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
   <link rel="help" title="15.8 Shorthand font property" href="http://www.w3.org/TR/CSS21/fonts.html#font-shorthand">
   <link rel="help" href="http://www.w3.org/TR/css-fonts-3/#font-prop" title="3.7 Shorthand font property: the font property">
   <link rel="match" href="font-051-ref.xht">
@@ -13,13 +11,22 @@
   <meta content="ahem invalid" name="flags">
   <meta content="Font shorthand requires at minimum 2 font subproperties (unless resorting to a system font): font-size and font-family." name="assert">
 
-  <style type="text/css">
-  div {font: 100px/1 Ahem;}
+  
 
-  span {font: serif;}
-  </style>
+ <style>
+  
+div {  
+  font: ;
+}
 
- </head>
+
+  
+span {  
+  font: ;
+}
+
+  
+</style></head>
 
  <body>
 
@@ -46,5 +53,5 @@ group is optional.
   http://www.w3.org/TR/CSS21/about.html#value-defs
   -->
 
- </body>
-</html>
+ 
+</body></html>

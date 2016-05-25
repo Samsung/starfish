@@ -1,6 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE html>
 <html><head>
-    <title>CSS Test: blocks inside inlines – remove-from-split-inline-3</title>
+    <title>CSS Test: blocks inside inlines â€“ remove-from-split-inline-3</title>
     <link rel="author" title="Boris Zbarsky" href="mailto:bzbarsky@mit.edu">
     <link rel="author" title="Mozilla Corporation" href="http://mozilla.com/">
     <link rel="help" href="http://www.w3.org/TR/CSS21/visuren.html#anonymous-block-level">
@@ -12,15 +12,20 @@
      target.parentNode.removeChild(target);
    }
   </script>
-  <style type="text/css">
-   body > span { border: 3px solid blue }
-  </style>
- </head>
+  
+ <style>
+   
+.convertedClass1 {  
+  border: 3px solid blue;
+}
+
+  
+</style></head>
 
  <body onload="doit()">
-   <span>
+   <span class="convertedClass1">
     One
-    <div>Two</div><span id="target">Three</span></span>
+    <div>Two</div></span>
 
 
 </body></html>

@@ -1,23 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-
- <head>
+<!DOCTYPE html>
+<html><head>
 
   <title>CSS Test: cursor - set to an invalid value</title>
 
   <link rel="help" href="http://www.w3.org/TR/CSS21/ui.html#cursor-props">
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#parsing-errors">
   <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#rule-sets">
-  <link rel="author" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
+  <link rel="author" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/">
   <link rel="author" title="Daniel Schattenkirchner" href="crazy-daniel{at}gmx.de">
   <meta content="The property 'cursor', when set to an invalid value or an illegal value, must be ignored. Then, instead, the cursor to display should be based on the current context." name="assert">
   <meta content="interact invalid" name="flags">
 
-  <style type="text/css">
-  div {cursor: invalid-value, crosshair;}
-  </style>
+  
 
- </head>
+ <style>
+  
+div {  
+  cursor: invalid-value, crosshair;
+}
+
+  
+</style></head>
 
  <body>
 
@@ -25,5 +28,5 @@
 
   <div>Text sample</div>
 
- </body>
-</html>
+ 
+</body></html>

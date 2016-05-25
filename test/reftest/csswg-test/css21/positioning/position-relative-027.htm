@@ -1,9 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-    <head>
+<!DOCTYPE html>
+<html><head>
         <title>CSS Test: Relatively positioned elements with auto positioning with anonymous boxes before and after</title>
         <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
-		<link rel="reviewer" title="Gérard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-07-09 -->
+		<link rel="reviewer" title="GÃ©rard Talbot" href="http://www.gtalbot.org/BrowserBugsSection/css21testsuite/"> <!-- 2012-07-09 -->
         <link rel="help" href="http://www.w3.org/TR/CSS21/visuren.html#relative-positioning">
 		<link rel="match" href="position-relative-027-ref.xht">
 
@@ -20,26 +19,28 @@
 		http://www.w3.org/TR/CSS21/visuren.html#relative-positioning
 		-->
 
-        <style type="text/css">
-            div
-            {
-                width: 5in;
-            }
-            span
-            {
-				 bottom: auto;
-                 left: auto;
-                 position: relative;
-                 right: auto;
-                 top: auto;
+        
+    <style>
+            
+div {  
+  width: 5in;
+}
 
-            }
-        </style>
-    </head>
+            
+span {  
+  bottom: auto;  
+  left: auto;  
+  position: relative;  
+  right: auto;  
+  top: auto;
+}
+
+        
+</style></head>
     <body>
         <p>Test passes if the 3 "Filler Text" are on the same line.</p>
         <div>
             Filler Text <span>Filler Text</span> Filler Text
         </div>
-    </body>
-</html>
+    
+</body></html>

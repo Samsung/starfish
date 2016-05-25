@@ -630,11 +630,11 @@ regression_test_css1:
 regression_test_css21:
 	./tool/reftest/css_test.sh css21 true
 regression_test_css3_color:
-	./tool/reftest/css_test.sh css-color-3 true
+	./tool/reftest/css_test.sh css3_color true
 regression_test_css3_backgrounds:
-	./tool/reftest/css_test.sh css-backgrounds-3 true
+	./tool/reftest/css_test.sh css3_backgrounds true
 regression_test_css3_transforms:
-	./tool/reftest/css_test.sh css-transforms-1 true
+	./tool/reftest/css_test.sh css3_transforms true
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp

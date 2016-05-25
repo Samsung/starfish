@@ -1,6 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-    <head>
+<!DOCTYPE html>
+<html><head>
         <title>CSS Test: Font-weight and 'display: block' elements</title>
         <link rel="author" title="Microsoft" href="http://www.microsoft.com/">
         <link rel="help" href="http://www.w3.org/TR/CSS21/fonts.html#propdef-font-weight">
@@ -9,22 +8,25 @@
         <link rel="match" href="font-weight-bold-ref.html">
         <meta name="flags" content="">
         <meta name="assert" content="Font weights apply to 'display: block' elements.">
-        <style type="text/css">
-            #reference, span
-            {
-                font-weight: bold;
-            }
-            span
-            {
-                display: block;
-            }
-        </style>
-    </head>
+        
+    <style>
+            
+.convertedClass1 {  
+  font-weight: bold;
+}
+
+            
+span {  
+  display: block;
+}
+
+        
+</style></head>
     <body>
         <p>Test passes if the lines of "Filler Text" below match.</p>
-        <div id="reference">Filler Text</div>
+        <div id="reference" class="convertedClass1">Filler Text</div>
         <div>
-            <span>Filler Text</span>
+            <span class="convertedClass1">Filler Text</span>
         </div>
-    </body>
-</html>
+    
+</body></html>
