@@ -196,8 +196,10 @@ for i in $tc ; do
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
             fi
         elif [ $TESTSUITE -eq 3 ]; then
-            EXPIMG=${filenames[$c]%.*}"-expected.png"
-            EXPIMG="test/regression/reftest"${EXPIMG##*test/reftest}
+            EXPIMG=${filenames[$c]}
+            EXPIMG=`echo $A | sed 's/reftest/regression\/reftest/'`
+            EXPIMG=`echo $A | sed 's/html-css/html-css\/x64/'`
+            EXPIMG=`echo $A | sed 's/\.html/-expected\.png/'`
             IMGDIFF="./tool/pixel_test/bin/image_diff"
             DIFF=`$IMGDIFF $RESIMG $EXPIMG`
             if [[ "$DIFF" = *"0.00% passed" ]]; then
