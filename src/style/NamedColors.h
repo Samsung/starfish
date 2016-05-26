@@ -37,6 +37,7 @@
     F(cornflowerblue  , 0x6495ed) \
     F(cornsilk    , 0xfff8dc) \
     F(crimson , 0xdc143c) \
+    F(cyan , 0x00ffff) \
     F(darkblue    , 0x00008b) \
     F(darkcyan    , 0x008b8b) \
     F(darkgoldenrod   , 0xb8860b) \
