@@ -69,7 +69,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 
 StarFish::~StarFish()
 {
-    STARFISH_LOG_INFO("StarFish::~StarFish");
+    STARFISH_LOG_INFO("StarFish::~StarFish\n");
     close();
     delete m_lineBreaker;
     delete m_scriptBindingInstance;

@@ -142,6 +142,11 @@ public:
         m_isActive = true;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
+
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            STARFISH_LOG_INFO("WindowImplEFL::~WindowImplEFL\n");
+        }, NULL, NULL, NULL);
+
     }
 
     virtual int width()
@@ -1037,7 +1042,9 @@ void Window::resume()
 
 void Window::close()
 {
-    STARFISH_LOG_INFO("onClose");
+    STARFISH_LOG_INFO("onClose\n");
+
+    m_document->close();
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 

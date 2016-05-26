@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
 
     StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "en-us", "Asia/Seoul", nullptr, width, height);
 
+
     sf->loadHTMLDocument(String::createASCIIString(argv[1]));
 
     pthread_t t;
@@ -95,6 +96,17 @@ int main(int argc, char *argv[])
             ecore_thread_main_loop_begin();
             ecore_idler_add([](void *data) -> Eina_Bool {
                 Pass* p = (Pass*)data;
+
+                if (strcmp(p->buf, "!exit")) {
+                    delete p->sf;
+
+                    GC_gcollect_and_unmap();
+                    GC_gcollect_and_unmap();
+                    GC_gcollect_and_unmap();
+                    GC_gcollect_and_unmap();
+                    exit(-1);
+                }
+
                 ScriptBindingInstanceEnterer enter(p->sf->scriptBindingInstance());
                 p->sf->evaluate(String::fromUTF8(p->buf));
 

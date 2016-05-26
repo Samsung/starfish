@@ -44,12 +44,14 @@ NetworkRequest::NetworkRequest(Document* document)
     , m_total(0)
     , m_pendingNetworkWorkerEndIdlerHandle(SIZE_MAX)
 {
+
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest");
-        std::vector<char>* m = (std::vector<char>*)((size_t)cd - 1);
+        // STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest\n");
+        NetworkRequest* nr = (NetworkRequest*)obj;
+        std::vector<char>* m = &nr->m_response;
         m->clear();
         m->shrink_to_fit();
-    }, (void*)((size_t)&m_response + 1), NULL, NULL);
+    }, NULL, NULL, NULL);
 
     initVariables();
     addNetworkRequestClient(new ActiveNetworkRequestTracker());

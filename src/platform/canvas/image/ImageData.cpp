@@ -20,12 +20,7 @@ public:
         m_width = w;
         m_height = h;
 
-        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL");
-            Evas_Object* m = (Evas_Object*)cd;
-            evas_object_hide(m);
-            evas_object_del(m);
-        }, m_image, NULL, NULL);
+        reigsterFinalizer();
     }
 
     ImageDataEFL(const char* buf, size_t len)
@@ -39,8 +34,27 @@ public:
         m_width = w;
         m_height = h;
 
+        reigsterFinalizer();
+    }
+
+    ImageDataEFL(size_t w, size_t h)
+    {
+        m_image = evas_object_image_add(internalCanvas());
+        m_width = w;
+        m_height = h;
+
+        evas_object_image_size_set(m_image, w, h);
+        evas_object_image_filled_set(m_image, EINA_TRUE);
+        evas_object_image_colorspace_set(m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
+        evas_object_image_alpha_set(m_image, EINA_TRUE);
+
+        reigsterFinalizer();
+    }
+
+    void reigsterFinalizer()
+    {
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-            STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL");
+            // STARFISH_LOG_INFO("ImageDataEFL::~ImageDataEFL\n");
             Evas_Object* m = (Evas_Object*)cd;
             evas_object_hide(m);
             evas_object_del(m);
@@ -84,6 +98,11 @@ ImageData* ImageData::create(String* imageSrc)
 ImageData* ImageData::create(const char* buf, size_t len)
 {
     return new ImageDataEFL(buf, len);
+}
+
+ImageData* ImageData::create(size_t w, size_t h)
+{
+    return new ImageDataEFL(w, h);
 }
 
 }

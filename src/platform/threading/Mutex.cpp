@@ -9,7 +9,7 @@ Mutex::Mutex()
     pthread_mutex_init(m_mutex, NULL);
 
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        STARFISH_LOG_INFO("Mutex::~Mutex");
+        // STARFISH_LOG_INFO("Mutex::~Mutex\n");
         pthread_mutex_t* m = (pthread_mutex_t*)cd;
         auto check = pthread_mutex_destroy(m);
         delete m;

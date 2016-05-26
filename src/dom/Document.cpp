@@ -192,6 +192,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     m_domImplementation = new DOMImplementation(m_window, m_scriptBindingInstance);
 #endif
 
+    GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+        STARFISH_LOG_INFO("Document::~Document\n");
+    }, NULL, NULL, NULL);
 }
 
 void Document::open()
@@ -228,9 +231,11 @@ void Document::notifyDomContentLoaded()
 
 void Document::close()
 {
-    String* eventType = window()->starFish()->staticStrings()->m_unload.localName();
-    Event* e = new Event(eventType, EventInit(false, false));
-    EventTarget::dispatchEvent(bodyElement(), e);
+    if (bodyElement()) {
+        String* eventType = window()->starFish()->staticStrings()->m_unload.localName();
+        Event* e = new Event(eventType, EventInit(false, false));
+        EventTarget::dispatchEvent(bodyElement(), e);
+    }
     resourceLoader()->cancelAllOfPendingRequests();
 
     while (m_activeNetworkRequests.size()) {

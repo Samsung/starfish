@@ -91,10 +91,16 @@ public:
 
         loadFont(m_size * g_fontSizeAdjuester);
         m_spaceWidth = measureText(String::spaceString);
+
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            // STARFISH_LOG_INFO("FontImplEFL::~FontImplEFL\n");
+            Evas_Object* m = (Evas_Object*)cd;
+            evas_object_hide(m);
+            evas_object_del(m);
+        }, m_text, NULL, NULL);
     }
     ~FontImplEFL()
     {
-        // TODO unref evas_text_object
     }
 
     void loadFont(int size)

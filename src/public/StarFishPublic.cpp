@@ -29,23 +29,18 @@ extern sfmatchLocation_cb matchLocation_cb;
 
 extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* locale, const char* timezoneID)
 {
-    starfishGCAddRoots(String::emptyString, String::emptyString + sizeof(String*));
-    starfishGCAddRoots(String::spaceString, String::spaceString + sizeof(String*));
     StarFishInstance* instance = (StarFishInstance*)malloc(sizeof(StarFishInstance));
     instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, 360, 360);
-    starfishGCAddRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
+    starfishGCAddRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + 1);
     return instance;
 }
 
 extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 {
-    starfishGCRemoveRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + sizeof(StarFish::StarFish*));
+    starfishGCRemoveRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + 1);
     delete TO_STARFISH(instance);
     free(instance);
 
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
 }
