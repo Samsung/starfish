@@ -584,7 +584,9 @@ void Window::rendering()
     if (!m_needsRendering)
         return;
     m_inRendering = true;
+
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
 
     Timer renderingTimer("Window::rendering");
 

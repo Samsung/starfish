@@ -275,7 +275,6 @@ public:
         return m_canCollapseTopWithChildren;
     }
     void setAtTopSideOfBlock(bool b) { m_atTopSideOfBlock = b; }
-    void setAtBottomSideOfBlock(bool b) { m_atBottomSideOfBlock = b; }
     bool atTopSideOfBlock() { return m_atTopSideOfBlock; }
     bool canCollapseWithMarginTop()
     {
@@ -283,7 +282,7 @@ public:
     }
     bool canCollapseWithMarginBottom()
     {
-        return m_atBottomSideOfBlock && m_canCollapseBottomWithChildren;
+        return m_canCollapseBottomWithChildren;
     }
     bool canCollapseBottomWithChildren()
     {
@@ -297,7 +296,6 @@ public:
     bool m_canCollapseTopWithChildren;
     bool m_canCollapseBottomWithChildren;
     bool m_atTopSideOfBlock;
-    bool m_atBottomSideOfBlock;
     LayoutUnit m_positiveMargin;
     LayoutUnit m_negativeMargin;
 };
