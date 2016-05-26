@@ -345,6 +345,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   endif
   ifeq ($(TYPE), lib)
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_APP
+    LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
   else
     LDFLAGS += -Wl,--start-group ${ICU_LIB_PATH} ${DEPENDENCY_LIB_PATH} -Wl,--end-group
     LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
