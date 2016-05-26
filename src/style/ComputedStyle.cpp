@@ -69,7 +69,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
         m_font = sf->fetchFont(String::fromUTF8("Ahem"), fontSize, style, fontWeight);
     else {
         if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest)
-            m_font = sf->fetchFont(String::fromUTF8("CooHew-Roman"), fontSize, style, fontWeight);
+            m_font = sf->fetchFont(String::fromUTF8("CooHew"), fontSize, style, fontWeight);
         else
             m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
     }
