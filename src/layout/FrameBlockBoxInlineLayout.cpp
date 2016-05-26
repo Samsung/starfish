@@ -942,6 +942,14 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
         lineFormattingContext.registerInlineContent();
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
         InlineNonReplacedBox::layoutInline(inlineBox, ctx, this, &lineFormattingContext, nullptr, true);
+
+        if (inlineBox->m_boxes.size() == 0) {
+            if (inlineBox->style()->direction() == LtrDirectionValue) {
+                inlineBox->setWidth(inlineBox->width() + inlineBox->borderLeft() + inlineBox->paddingLeft());
+            } else {
+                inlineBox->setWidth(inlineBox->width() + inlineBox->borderRight() + inlineBox->paddingRight());
+            }
+        }
     });
 
     LineBox* back = m_lineBoxes.back();
@@ -956,6 +964,14 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
 
     if (m_lineBoxes.size() && m_lineBoxes.back()->boxes().size() == 0) {
         m_lineBoxes.erase(m_lineBoxes.end() - 1);
+    }
+
+    size_t p = m_lineBoxes.size();
+    while (p--) {
+        LineBox* lineBox = m_lineBoxes[p];
+        if (lineBox->boxes().size() == 1 && lineBox->boxes().at(0)->width() == 0) {
+            m_lineBoxes.erase(m_lineBoxes.begin() + p);
+        }
     }
 
     // position each line
@@ -1207,6 +1223,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
                 lineFormattingContext.m_currentLineWidth += selfForFinishLayout->paddingLeft() + selfForFinishLayout->borderLeft() + selfForFinishLayout->marginLeft();
             }
 
+            // Q : Should consider LTR/RTL
             selfForFinishLayout->setWidth(selfForFinishLayout->width() + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight());
             if (selfForFinishLayout->width() < 0) {
                 selfForFinishLayout->setWidth(0);
