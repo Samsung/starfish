@@ -426,6 +426,8 @@ public:
     {
         if (strcmp("transparent", token) == 0) {
             return true;
+        } else if (strcmp("currentcolor", token) == 0) {
+            return true;
         } else if (strlen(token) == 7 && token[0] == '#') {
             for (int i = 1; i < 7; i++) {
                 if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'a' && token[i] <= 'f')) {
