@@ -814,14 +814,14 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                 if (isWhiteSpace) {
                     if (offset == 0) {
                         FrameBox* last = findLastInlineBox(lineFormattingContext.currentLine());
+                        if (!last)
+                            return;
                         if (last && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
                             String* str = last->asInlineBox()->asInlineTextBox()->text();
                             if (str->containsOnlyWhitespace()) {
                                 return;
                             }
                         }
-                        if (lineFormattingContext.m_currentLineWidth == 0)
-                            return;
                     } else if (nextOffset == srcTxt->length() && f == origin->lastChild()) {
                         if (origin->isFrameInline()) {
 
