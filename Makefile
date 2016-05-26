@@ -543,12 +543,13 @@ install_pixel_test_dep:
 	javac StarFishTester.java
 	mkdir -p ~/.fonts
 	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
+	cp tool/pixel_test/bin/CooHew-Roman.ttf ~/.fonts/
 	fc-cache -fv
-	@echo ""
-	@echo "============ [ Install Arial Font ] ============"
-	sudo apt-get install ttf-mscorefonts-installer
-	sudo fc-cache
-	fc-match Arial
+	#@echo ""
+	#@echo "============ [ Install Arial Font ] ============"
+	#sudo apt-get install ttf-mscorefonts-installer
+	#sudo fc-cache
+	#fc-match Arial
 
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
