@@ -383,6 +383,21 @@ public:
         canvas->restore();
     }
 
+    bool shouldApplyOverflowHidden()
+    {
+        if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLHtmlElement())
+            return false;
+
+        if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            HTMLHtmlElement* htmlElement = static_cast<HTMLHtmlElement*>(node()->asElement()->asHTMLElement()->asHTMLBodyElement()->parentElement());
+            ASSERT(htmlElement);
+
+            return style()->overflow() == OverflowValue::HiddenOverflow && htmlElement->style()->overflow() == OverflowValue::HiddenOverflow;
+        }
+
+        return style()->overflow() == OverflowValue::HiddenOverflow;
+    }
+
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
         if (x >= 0 && x < m_frameRect.width() && y >= 0 && y < m_frameRect.height()) {
