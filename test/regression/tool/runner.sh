@@ -182,8 +182,8 @@ for i in $tc ; do
             fi
         elif [ $TESTSUITE -eq 3 ]; then
             EXPIMG=${filenames[$c]}
-            EXPIMG=`echo $A | sed 's/html-css/html-css\/tizen_wearable_arm/'
-            EXPIMG=`echo $A | sed 's/\.html/-expected\.png/'
+            EXPIMG=`echo $EXPIMG | sed 's/html-css/html-css\/tizen_wearable_arm/'
+            EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/'
             IMGDIFF="./test/tool/imgdiffEvas"
             DIFF=`$IMGDIFF $RESIMG $EXPIMG`
             if [[ "$DIFF" = *"passed"* ]]; then
