@@ -37,9 +37,7 @@ String* XMLHttpRequest::responseText()
 {
     // if (!(m_responseType == DEFAULT_RESPONSE || m_responseType == TEXT_RESPONSE))
     //     throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
-    if (m_networkRequest->readyState() != NetworkRequest::LOADING && m_networkRequest->readyState() != NetworkRequest::DONE)
-        return String::emptyString;
-    return String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+    return m_resposeText;
 }
 
 void XMLHttpRequest::setTimeout(uint32_t timeout)
@@ -64,9 +62,10 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
         eventName = request->starFish()->staticStrings()->m_abort.localName();
     } else if (progState == NetworkRequest::TIMEOUT)
         eventName = request->starFish()->staticStrings()->m_timeout.localName();
-    else if (progState == NetworkRequest::LOAD)
+    else if (progState == NetworkRequest::LOAD) {
+        m_resposeText =  String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
         eventName = request->starFish()->staticStrings()->m_load.localName();
-    else if (progState == NetworkRequest::LOADEND)
+    } else if (progState == NetworkRequest::LOADEND)
         eventName = request->starFish()->staticStrings()->m_loadend.localName();
     else if (progState == NetworkRequest::LOADSTART)
         eventName = request->starFish()->staticStrings()->m_loadstart.localName();
