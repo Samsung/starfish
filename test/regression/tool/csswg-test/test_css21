@@ -1,3 +1,4 @@
+test/reftest/csswg-test/css21_converted/abspos/abspos-containing-block-initial-001.htm
 test/reftest/csswg-test/css21_converted/abspos/abspos-containing-block-initial-004a.htm
 test/reftest/csswg-test/css21_converted/abspos/abspos-containing-block-initial-005a.htm
 test/reftest/csswg-test/css21_converted/abspos/abspos-containing-block-initial-007.htm
@@ -926,6 +927,7 @@ test/reftest/csswg-test/css21_converted/normal-flow/inlines-003.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inlines-004.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inlines-017.htm
 test/reftest/csswg-test/css21_converted/normal-flow/width-applies-to-012.htm
+test/reftest/csswg-test/css21_converted/normal-flow/width-undefined-001.htm
 test/reftest/csswg-test/css21_converted/other-formats/control-characters-001.html
 test/reftest/csswg-test/css21_converted/page-box/page-container-002.htm
 test/reftest/csswg-test/css21_converted/page-box/page-container-006.htm
@@ -936,6 +938,7 @@ test/reftest/csswg-test/css21_converted/pagination/widows-001.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-003.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-011.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-012.htm
+test/reftest/csswg-test/css21_converted/positioning/left-applies-to-008.htm
 test/reftest/csswg-test/css21_converted/positioning/position-006.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-001.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-003.htm
