@@ -972,7 +972,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
     size_t p = m_lineBoxes.size();
     while (p--) {
         LineBox* lineBox = m_lineBoxes[p];
-        if (lineBox->boxes().size() == 1 && lineBox->boxes().at(0)->width() == 0) {
+        if (lineBox->boxes().size() == 1 && lineBox->boxes().at(0)->isInlineBox() && lineBox->boxes().at(0)->asInlineBox()->isInlineNonReplacedBox() && lineBox->boxes().at(0)->width() == 0) {
             m_lineBoxes.erase(m_lineBoxes.begin() + p);
         }
     }
