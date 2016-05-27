@@ -10,9 +10,9 @@ test/reftest/csswg-test/css-transforms-1_converted/scaley.html
 test/reftest/csswg-test/css-transforms-1_converted/transform3d-rotatex-perspective-notref.html
 test/reftest/csswg-test/css-transforms-1_converted/transform3d-scale-001-notref.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-applies-to-001.htm
+test/reftest/csswg-test/css-transforms-1_converted/transform-compound-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-compound-notref-2.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-display-notref.html
-test/reftest/csswg-test/css-transforms-1_converted/transform-image-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-inline-notref.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-002.html
@@ -22,6 +22,7 @@ test/reftest/csswg-test/css-transforms-1_converted/transform-origin-005.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-006.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-ref-1.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-ref-2.html
+test/reftest/csswg-test/css-transforms-1_converted/transform-propagate-inherit-boolean-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-rotate-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-rotate-001-notref.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-rotate-002.html
