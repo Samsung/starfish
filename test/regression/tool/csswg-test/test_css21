@@ -212,6 +212,7 @@ test/reftest/csswg-test/css21_converted/borders/border-color-008.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-009.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-010.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-011.htm
+test/reftest/csswg-test/css21_converted/borders/border-color-012.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-applies-to-008.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-applies-to-009.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-applies-to-012.htm
@@ -797,6 +798,7 @@ test/reftest/csswg-test/css21_converted/fonts/font-systemfont-rule-003.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-003.htm
+test/reftest/csswg-test/css21_converted/fonts/font-weight-008.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-applies-to-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-applies-to-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-applies-to-005.htm
@@ -863,7 +865,9 @@ test/reftest/csswg-test/css21_converted/margin-padding-clear/padding-top-applies
 test/reftest/csswg-test/css21_converted/media/media-dependency-003.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-formatting-contexts-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-formatting-contexts-010.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-append-002.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-empty-001.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-empty-003.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-001a.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-001b.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-001c.htm
@@ -896,6 +900,7 @@ test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-009.h
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-011.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-margins-001a.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-nested-001.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-nested-002.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-percents-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-000.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-001.htm
@@ -904,10 +909,13 @@ test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-003.h
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-004.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-005.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-006.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-whitespace-001a.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-whitespace-001b.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-non-replaced-width-007.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-replaced-height-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-replaced-width-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/height-percentage-003.htm
+test/reftest/csswg-test/css21_converted/normal-flow/height-percentage-005.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inline-block-000.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inline-block-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inline-block-002.htm
@@ -918,10 +926,13 @@ test/reftest/csswg-test/css21_converted/normal-flow/inlines-003.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inlines-004.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inlines-017.htm
 test/reftest/csswg-test/css21_converted/normal-flow/width-applies-to-012.htm
+test/reftest/csswg-test/css21_converted/other-formats/control-characters-001.html
 test/reftest/csswg-test/css21_converted/page-box/page-container-002.htm
 test/reftest/csswg-test/css21_converted/page-box/page-container-006.htm
 test/reftest/csswg-test/css21_converted/page-box/page-container-009.htm
+test/reftest/csswg-test/css21_converted/pagination/orphans-001.htm
 test/reftest/csswg-test/css21_converted/pagination/page-breaks-100.htm
+test/reftest/csswg-test/css21_converted/pagination/widows-001.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-003.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-011.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-012.htm
@@ -1086,6 +1097,7 @@ test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-173.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-174.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-175.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-176.htm
+test/reftest/csswg-test/css21_converted/text/control-characters-002.htm
 test/reftest/csswg-test/css21_converted/text/text-align-001.htm
 test/reftest/csswg-test/css21_converted/text/text-align-002.htm
 test/reftest/csswg-test/css21_converted/text/text-align-003.htm
@@ -1127,6 +1139,7 @@ test/reftest/csswg-test/css21_converted/text/text-decoration-propagation-007.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-relative-001.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-space-001.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-space-003.htm
+test/reftest/csswg-test/css21_converted/text/text-decoration-thickness-001.htm
 test/reftest/csswg-test/css21_converted/text/text-indent-113-ref-margin.htm
 test/reftest/csswg-test/css21_converted/ui/cursor-021.htm
 test/reftest/csswg-test/css21_converted/ui/cursor-022.htm
