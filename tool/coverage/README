@@ -6,6 +6,7 @@ found in in/*raw. With these files, TC coverage reports are generated
 by running the following command.
 ```
 ./genCoverage.sh
+./combineCsv.sh
 ```
 
 Tab-separated dom.csv, html.csv, css.csv files are generated.
@@ -26,6 +27,7 @@ To generate coverage, run:
 ./genDomSpecList.sh
 ./genCssHtmlSpecList.sh
 ./genCoverage.sh
+./combineCsv.sh
 
 dom.csv, html.csv, css.csv files are generated.
 
