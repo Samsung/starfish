@@ -20,7 +20,7 @@ run() {
         echo $res
         $path/StarFish $f --screen-shot="out/tmp.png" > out/t.txt
         grep '&&&' out/t.txt | sort | uniq | tr '\n' '\t' > out/tt.txt
-        echo $f > out/t
+        echo $f | sed 's/\.\.\/\.\.\/test/test/' > out/t
         paste out/t out/tt.txt >> $res
     done
 }

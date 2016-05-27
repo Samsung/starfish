@@ -59,15 +59,4 @@ CSS3-BACKGROUND  , background-size
                  , border-image-slice
                  , border-image-width
 CSS3-TRANSFORM   , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
-                 , transform
                  , transform-origin
