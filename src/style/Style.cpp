@@ -1061,6 +1061,7 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
                     ValueData data = {.m_angle = CSSAngle(parser->parsedString(), parser->parsedNumber())};
                     values->append(CSSStyleValuePair::ValueKind::Angle, data);
                 } else { // TranslationValue
+                    char* savedPos = parser->m_curPos;
                     parser->consumeNumber();
                     float num = parser->parsedNumber();
                     if (parser->consumeString()) {
@@ -1069,7 +1070,7 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
                             ValueData data = {.m_floatValue = num / 100.f};
                             values->append(CSSStyleValuePair::ValueKind::Percentage, data);
                         } else {
-                            ValueData data = {.m_length = CSSLength(num)};
+                            ValueData data = {.m_length = parseCSSLength(savedPos)};
                             values->append(CSSStyleValuePair::ValueKind::Length, data);
                         }
                     }

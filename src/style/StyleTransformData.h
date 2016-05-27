@@ -155,6 +155,16 @@ public:
         return String::fromUTF8(temp);
     }
 
+    void changeToFixedIfNeeded(Length fontSize, Font* font)
+    {
+        STARFISH_ASSERT(type() == OperationType::Translate);
+        Length x = m_translate->tx();
+        Length y = m_translate->ty();
+        x.changeToFixedIfNeeded(fontSize, font);
+        y.changeToFixedIfNeeded(fontSize, font);
+        m_translate->setData(x, y);
+    }
+
 private:
     friend inline bool operator==(const StyleTransformData& a, const StyleTransformData& b);
     friend inline bool operator!=(const StyleTransformData& a, const StyleTransformData& b);

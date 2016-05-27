@@ -195,8 +195,8 @@ public:
 
             if (style->bgSizeType() == BackgroundSizeType::Cover) {
                 float imgR = id->width() / (float)id->height();
-                if(id->width()<id->height())
-                    canvas->drawImage(id, Rect(0, 0, bw, bh/imgR));
+                if (id->width() < id->height())
+                    canvas->drawImage(id, Rect(0, 0, bw, bh / imgR));
                 else
                     canvas->drawImage(id, Rect(0, 0, bw*imgR, bh));
 
@@ -211,9 +211,9 @@ public:
                     }
                 } else {
                     if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bh/imgR);
+                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bh / imgR);
                     } else {
-                        canvas->drawImage(id, Rect(0, 0, bw, bh/imgR));
+                        canvas->drawImage(id, Rect(0, 0, bw, bh / imgR));
                     }
                 }
 

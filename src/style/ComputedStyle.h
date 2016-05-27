@@ -888,6 +888,15 @@ public:
         m_width.changeToFixedIfNeeded(baseFontSize, font());
         m_height.changeToFixedIfNeeded(baseFontSize, font());
         m_verticalAlignLength.changeToFixedIfNeeded(baseFontSize, font());
+        if (m_transforms) {
+            size_t sz = m_transforms->size();
+            for (size_t i = 0; i < sz; i++) {
+                StyleTransformData std = m_transforms->at(i);
+                if (std.type() != StyleTransformData::OperationType::Translate)
+                    continue;
+                std.changeToFixedIfNeeded(baseFontSize, font());
+            }
+        }
 
         if (m_surround) {
             m_surround->margin.checkComputed(baseFontSize, font());
