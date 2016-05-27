@@ -16,6 +16,47 @@ Evas* internalCanvas();
 static bool g_fontSizeAdjuesterInited = false;
 static float g_fontSizeAdjuester;
 
+static String* convertStyleParamStr(String* familyName, char style, char weight)
+{
+    switch (weight) {
+    case 1:
+        familyName = familyName->concat(String::createASCIIString(":style=thin"));
+        break;
+    case 2:
+        familyName = familyName->concat(String::createASCIIString(":style=ultralight"));
+        break;
+    case 3:
+        familyName = familyName->concat(String::createASCIIString(":style=light"));
+        break;
+    case 4:
+        familyName = familyName->concat(String::createASCIIString(":style=medium"));
+        break;
+    case 5:
+        familyName = familyName->concat(String::createASCIIString(":style=semibold"));
+        break;
+    case 6:
+        familyName = familyName->concat(String::createASCIIString(":style=bold"));
+        break;
+    case 7:
+        familyName = familyName->concat(String::createASCIIString(":style=ultrabold"));
+        break;
+    case 8:
+        familyName = familyName->concat(String::createASCIIString(":style=black"));
+        break;
+    case 9:
+        familyName = familyName->concat(String::createASCIIString(":style=extrablack"));
+        break;
+    }
+
+    if (style == FontStyleItalic) {
+        familyName = familyName->concat(String::createASCIIString(" italic"));
+    } else if (style == FontStyleOblique) {
+        familyName = familyName->concat(String::createASCIIString(" oblique"));
+    }
+    return familyName;
+
+}
+
 class FontImplEFL : public Font {
 public:
     FontImplEFL(String* familyName, float size, char style, char weight, FontMetrics met)
@@ -25,44 +66,7 @@ public:
         m_size = size;
         m_weight = weight;
         m_style = style;
-
-        switch (weight) {
-        case 1:
-            familyName = familyName->concat(String::createASCIIString(":style=thin"));
-            break;
-        case 2:
-            familyName = familyName->concat(String::createASCIIString(":style=ultralight"));
-            break;
-        case 3:
-            familyName = familyName->concat(String::createASCIIString(":style=light"));
-            break;
-        case 4:
-            familyName = familyName->concat(String::createASCIIString(":style=medium"));
-            break;
-        case 5:
-            familyName = familyName->concat(String::createASCIIString(":style=semibold"));
-            break;
-        case 6:
-            familyName = familyName->concat(String::createASCIIString(":style=bold"));
-            break;
-        case 7:
-            familyName = familyName->concat(String::createASCIIString(":style=ultrabold"));
-            break;
-        case 8:
-            familyName = familyName->concat(String::createASCIIString(":style=black"));
-            break;
-        case 9:
-            familyName = familyName->concat(String::createASCIIString(":style=extrablack"));
-            break;
-        }
-
-        if (style == FontStyleItalic) {
-            familyName = familyName->concat(String::createASCIIString(" italic"));
-        } else if (style == FontStyleOblique) {
-            familyName = familyName->concat(String::createASCIIString(" oblique"));
-        }
-
-        m_fontFamily = familyName;
+        m_fontFamily = convertStyleParamStr(familyName, style, weight);
 
         if (!g_fontSizeAdjuesterInited) {
             float prevDiff = 100000000000.f;
@@ -147,8 +151,7 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
 {
     FcConfig* config = FcInitLoadConfigAndFonts();
 
-    FcPattern* pattern = FcPatternCreate();
-    FcPatternAddString(pattern, FC_FAMILY, (FcChar8*)familyName->utf8Data());
+    FcPattern* pattern = FcNameParse((const FcChar8*)(familyName->utf8Data()));
 
     FcConfigSubstitute(config, pattern, FcMatchPattern);
     FcDefaultSubstitute(pattern);
@@ -215,7 +218,7 @@ Font* FontSelector::loadFont(String* familyName, float size, char style, char we
         }
     }
 
-    f = new FontImplEFL(familyName, size, style, weight, loadFontMetrics(familyName, size));
+    f = new FontImplEFL(familyName, size, style, weight, loadFontMetrics(convertStyleParamStr(familyName, style, weight),  size));
     m_fontCache.push_back(std::make_tuple(f, familyName, size, style, weight));
     return f;
 }
