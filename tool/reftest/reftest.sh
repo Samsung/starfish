@@ -9,6 +9,7 @@ RESET='\033[0m'
 
 # Variables
 PASSFILENEW="tmp.res"
+RESULTCSV="result.csv"
 PASSTC=0
 SKIPTC=0
 FAILTC=0
@@ -24,9 +25,23 @@ fi
 # 1: Web Platform Tests
 # 2: Vendor Tests
 # 3: Pixel Tests
+# XXX: need to cleanup
 if [[ "$1" = *"dom_conformance_test.res" ]]; then
     TESTSUITE=0
     tc=$(cat $1)
+    if [[ "$1" = *"blink"* ]]; then
+        TESTSUITENAME="Blink DOM Conformance Test"
+        PASSFILE="test/regression/tool/vendor/blink/test_blink_dom_conformance"
+    elif [[ "$1" = *"webkit"* ]]; then
+        TESTSUITENAME="WebKit DOM Conformance Test"
+        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_dom_conformance"
+    elif [[ "$1" = *"gecko"* ]]; then
+        TESTSUITENAME="Gecko DOM Conformance Test"
+        PASSFILE="test/regression/tool/vendor/gecko/test_gecko_dom_conformance"
+    else
+        TESTSUITENAME="DOM Conformance Test"
+        PASSFILE="test/regression/tool/dom-conformance-test/test_dom_conformance"
+    fi
 elif [[ "$1" = *"dom-conformance-test"*".htm"* ]]; then
     TESTSUITE=0
     tc=$1
@@ -36,17 +51,51 @@ elif [[ "$1" = *"vendor/blink/dom"*".htm"* || "$1" = *"vendor/webkit/dom"*".htm"
 elif [[ "$1" = *"wpt"*".res" ]]; then
     TESTSUITE=1
     tc=$(cat $1)
+    if [[ "$1" = *"wpt_dom.res" ]]; then
+        TESTSUITENAME="WPT DOM"
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_dom"
+    elif [[ "$1" = *"wpt_dom_events.res" ]]; then
+        TESTSUITENAME="WPT DOM Events"
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_dom_events"
+    elif [[ "$1" = *"wpt_html.res" ]]; then
+        TESTSUITENAME="WPT HTML"
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_html"
+    elif [[ "$1" = *"wpt_page_visibility.res" ]]; then
+        TESTSUITENAME="WPT Page Visibility"
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_page_visibility"
+    elif [[ "$1" = *"wpt_progress_events.res" ]]; then
+        TESTSUITENAME="WPT Progress Events"
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_progress_events"
+    elif [[ "$1" = *"wpt_xhr.res" ]]; then
+        TESTSUITENAME="WPT XMLHttpRequest"
+        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_xhr"
+    fi
 elif [[ "$1" = *"web-platform-tests"*".htm"* ]]; then
     TESTSUITE=1
     tc=$1
 elif [[ "$1" = *"blink_fast"*".res" || "$1" = *"webkit_fast"*".res" ]]; then
     TESTSUITE=2
     tc=$(cat $1)
+    if [[ "$1" = *"blink_fast_dom.res" ]]; then
+        TESTSUITENAME="Blink Fast DOM"
+        PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_dom"
+    elif [[ "$1" = *"blink_fast_html.res" ]]; then
+        TESTSUITENAME="Blink Fast HTML"
+        PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_html"
+    elif [[ "$1" = *"webkit_fast_dom.res" ]]; then
+        TESTSUITENAME="WebKit Fast DOM"
+        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_dom"
+    elif [[ "$1" = *"webkit_fast_html.res" ]]; then
+        TESTSUITENAME="WebKit Fast HTML"
+        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_html"
+    fi
 elif [[ "$1" = *"vendor/blink/fast"*".htm"* || "$1" = *"vendor/webkit/fast"*".htm"* ]]; then
     TESTSUITE=2
     tc=$1
 elif [[ "$1" = *"bidi.res" ]]; then
     TESTSUITE=3
+    TESTSUITENAME="International Tests"
+    PASSFILE="test/regression/tool/bidi/test_bidi"
     tc=$(cat $1)
 elif [[ "$i" = *"bidi/International/tests/html-css/"*".htm"* ]]; then
     TESTSUITE=3
@@ -54,41 +103,6 @@ elif [[ "$i" = *"bidi/International/tests/html-css/"*".htm"* ]]; then
 else
     echo "Unsupported tests"
     exit
-fi
-
-if [ "$2" = true ]; then
-    REGRESSION=true
-    if [[ "$1" = *"/dom_conformance_test.res" ]]; then
-        PASSFILE="test/regression/tool/dom-conformance-test/test_dom_conformance"
-    elif [[ "$1" = *"wpt_dom.res" ]]; then
-        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_dom"
-    elif [[ "$1" = *"wpt_dom_events.res" ]]; then
-        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_dom_events"
-    elif [[ "$1" = *"wpt_html.res" ]]; then
-        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_html"
-    elif [[ "$1" = *"wpt_page_visibility.res" ]]; then
-        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_page_visibility"
-    elif [[ "$1" = *"wpt_progress_events.res" ]]; then
-        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_progress_events"
-    elif [[ "$1" = *"wpt_xhr.res" ]]; then
-        PASSFILE="test/regression/tool/web-platform-tests/test_wpt_xhr"
-    elif [[ "$1" = *"blink_dom_conformance_test.res" ]]; then
-        PASSFILE="test/regression/tool/vendor/blink/test_blink_dom_conformance"
-    elif [[ "$1" = *"blink_fast_dom.res" ]]; then
-        PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_dom"
-    elif [[ "$1" = *"blink_fast_html.res" ]]; then
-        PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_html"
-    elif [[ "$1" = *"gecko_dom_conformance_test.res" ]]; then
-        PASSFILE="test/regression/tool/vendor/gecko/test_gecko_dom_conformance"
-    elif [[ "$1" = *"webkit_dom_conformance_test.res" ]]; then
-        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_dom_conformance"
-    elif [[ "$1" = *"webkit_fast_dom.res" ]]; then
-        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_dom"
-    elif [[ "$1" = *"webkit_fast_html.res" ]]; then
-        PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_html"
-    elif [[ "$1" = *"bidi.res" ]]; then
-        PASSFILE="test/regression/tool/bidi/test_bidi"
-    fi
 fi
 
 echo -e "${BOLD}###### Ref Tests ######${RESET}\n"
@@ -116,7 +130,7 @@ for i in $tc ; do
         RESIMG="./out.png"
         ELM_ENGINE="shot:file="$RESIMG ./StarFish $i --width=900 --height=900 > /dev/null 2&>1 &
     else
-        ./StarFish $i --result-folder="out/$i" --hide-window &> $RESFILE &
+        ./StarFish $i --hide-window &> $RESFILE &
     fi
     if [[ $cnt != $((ROTATE-1)) ]] && [[ $i != $last ]]; then
         continue;
@@ -226,13 +240,19 @@ wait;
 
 # Print the summary
 echo -e "\n${BOLD}###### Summary ######${RESET}\n"
+if [ ! -f "$RESULTCSV" ]; then
+    echo -e "Test Suite\tPass\tFail\tSkip\tTotal" >> $RESULTCSV
+fi
 
 if [ $TESTSUITE -eq 0 ]; then
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
+    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t"$SKIPTC"\t"$TCFILE >> $RESULTCSV
 elif [ $TESTSUITE -eq 1 ]; then
     echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
+    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t0\t"`expr $PASSTC + $FAILTC` >> $RESULTCSV
 else
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed.${RESET}\n"
+    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t0\t"$TCFILE >> $RESULTCSV
 fi
 
 # Regression test

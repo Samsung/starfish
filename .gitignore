@@ -10,3 +10,4 @@ test/tool/pixel_test/bin/nodejs
 Demo.regression
 *.pyc
 *.png_
+result.csv
