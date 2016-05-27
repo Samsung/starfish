@@ -1,6 +1,7 @@
 test/reftest/csswg-test/css-transforms-1_converted/css3-transform-scale-002.html
 test/reftest/csswg-test/css-transforms-1_converted/css3-transform-scale.html
 test/reftest/csswg-test/css-transforms-1_converted/css3-transform-scale-ref-002.html
+test/reftest/csswg-test/css-transforms-1_converted/css-transform-inherit-rotate.html
 test/reftest/csswg-test/css-transforms-1_converted/css-transform-property-existence.html
 test/reftest/csswg-test/css-transforms-1_converted/css-transform-scale-002.html
 test/reftest/csswg-test/css-transforms-1_converted/css-transform-style-evaluation-validation.html
