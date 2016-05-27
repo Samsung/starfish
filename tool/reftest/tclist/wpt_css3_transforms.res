@@ -5,8 +5,6 @@ test/reftest/csswg-test/css-transforms-1_converted/css-transform-style-evaluatio
 test/reftest/csswg-test/css-transforms-1_converted/css3-transform-scale-002.html
 test/reftest/csswg-test/css-transforms-1_converted/css3-transform-scale-ref-002.html
 test/reftest/csswg-test/css-transforms-1_converted/css3-transform-scale.html
-test/reftest/csswg-test/css-transforms-1_converted/reference/css-transform-scale-ref-001.html
-test/reftest/csswg-test/css-transforms-1_converted/reference/css-transform-scale-ref-002.html
 test/reftest/csswg-test/css-transforms-1_converted/reftest/transform-3d-rotateY-stair-above-ref-001.htm
 test/reftest/csswg-test/css-transforms-1_converted/scalex.html
 test/reftest/csswg-test/css-transforms-1_converted/scaley.html

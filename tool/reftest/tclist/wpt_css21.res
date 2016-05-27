@@ -742,7 +742,6 @@ test/reftest/csswg-test/css21_converted/box-display/containing-block-030.htm
 test/reftest/csswg-test/css21_converted/box-display/viewport-002.htm
 test/reftest/csswg-test/css21_converted/cascade/at-import-001.htm
 test/reftest/csswg-test/css21_converted/cascade/at-import-009.htm
-test/reftest/csswg-test/css21_converted/cascade/at-import-011.htm
 test/reftest/csswg-test/css21_converted/cascade/cascade-005.htm
 test/reftest/csswg-test/css21_converted/cascade/html-attribute-004.htm
 test/reftest/csswg-test/css21_converted/cascade/html-attribute-018.htm
@@ -971,15 +970,6 @@ test/reftest/csswg-test/css21_converted/positioning/position-relative-030.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-031.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-032.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-033.htm
-test/reftest/csswg-test/css21_converted/reference/60x60-green.html
-test/reftest/csswg-test/css21_converted/reference/boxes_same_color_100px_black_50px_margin.htm
-test/reftest/csswg-test/css21_converted/reference/filler-text-below-green.htm
-test/reftest/csswg-test/css21_converted/reference/pass-if-number-0-30px.htm
-test/reftest/csswg-test/css21_converted/reference/pass_if_box_ahem.html
-test/reftest/csswg-test/css21_converted/reference/ref-filled-black-96px-square.htm
-test/reftest/csswg-test/css21_converted/reference/ref-nothing-below.htm
-test/reftest/csswg-test/css21_converted/reference/ref-this-text-should-be-green.htm
-test/reftest/csswg-test/css21_converted/reference/ref-transparent-or-black-square-transparent.htm
 test/reftest/csswg-test/css21_converted/selectors/active-selector-001.htm
 test/reftest/csswg-test/css21_converted/selectors/class-selector-001.htm
 test/reftest/csswg-test/css21_converted/selectors/class-selector-002.htm
@@ -996,8 +986,6 @@ test/reftest/csswg-test/css21_converted/selectors/universal-selector-001.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-002-notref.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-003.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-004.htm
-test/reftest/csswg-test/css21_converted/syntax/at-charset-003.htm
-test/reftest/csswg-test/css21_converted/syntax/at-charset-007.htm
 test/reftest/csswg-test/css21_converted/syntax/at-charset-010.htm
 test/reftest/csswg-test/css21_converted/syntax/at-charset-011.htm
 test/reftest/csswg-test/css21_converted/syntax/at-charset-quotes-001.htm
@@ -1183,8 +1171,6 @@ test/reftest/csswg-test/css21_converted/ui/overflow-html-body-001.htm
 test/reftest/csswg-test/css21_converted/ui/overflow-parent-001.htm
 test/reftest/csswg-test/css21_converted/ui/overflow-root-001.htm
 test/reftest/csswg-test/css21_converted/values/color-000.htm
-test/reftest/csswg-test/css21_converted/values/units-002.htm
-test/reftest/csswg-test/css21_converted/values/units-003.htm
 test/reftest/csswg-test/css21_converted/visufx/clip-shape-001.htm
 test/reftest/csswg-test/css21_converted/visufx/visibility-descendants-001.htm
 test/reftest/csswg-test/css21_converted/visuren/box-offsets-abs-pos-001.htm

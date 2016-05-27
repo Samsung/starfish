@@ -935,15 +935,6 @@ test/reftest/csswg-test/css21_converted/positioning/position-relative-030.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-031.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-032.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-033.htm
-test/reftest/csswg-test/css21_converted/reference/60x60-green.html
-test/reftest/csswg-test/css21_converted/reference/boxes_same_color_100px_black_50px_margin.htm
-test/reftest/csswg-test/css21_converted/reference/filler-text-below-green.htm
-test/reftest/csswg-test/css21_converted/reference/pass_if_box_ahem.html
-test/reftest/csswg-test/css21_converted/reference/pass-if-number-0-30px.htm
-test/reftest/csswg-test/css21_converted/reference/ref-filled-black-96px-square.htm
-test/reftest/csswg-test/css21_converted/reference/ref-nothing-below.htm
-test/reftest/csswg-test/css21_converted/reference/ref-this-text-should-be-green.htm
-test/reftest/csswg-test/css21_converted/reference/ref-transparent-or-black-square-transparent.htm
 test/reftest/csswg-test/css21_converted/selectors/active-selector-001.htm
 test/reftest/csswg-test/css21_converted/selectors/class-selector-001.htm
 test/reftest/csswg-test/css21_converted/selectors/class-selector-002.htm
