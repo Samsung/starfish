@@ -142,16 +142,19 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                         maxAscenderSoFar = std::max(pascender / 2 + rb->ascender(), maxAscenderSoFar);
                     } else if (va == VerticalAlignValue::TopVAlignValue) {
                         maxAscenderSoFar = std::max(rb->height() + rb->marginTop(), maxAscenderSoFar);
-                    } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                        maxAscenderSoFar = std::max(rb->height() - maxDescenderSoFar, maxAscenderSoFar);
                     } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                         maxDescenderSoFar = std::min(pascender - rb->height(), maxDescenderSoFar);
+                    } else if (va == VerticalAlignValue::MiddleVAlignValue) {
+                        maxAscenderSoFar = std::max(rb->ascender(), maxAscenderSoFar);
+                        maxDescenderSoFar = std::min(rb->decender(), maxDescenderSoFar);
+                    } else if (va == VerticalAlignValue::BottomVAlignValue) {
+                        maxAscenderSoFar = std::max(rb->height() - maxDescenderSoFar, maxAscenderSoFar);
                     } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                         maxAscenderSoFar = std::max(pdescender + rb->height(), maxAscenderSoFar);
                     } else if (va == VerticalAlignValue::NumericVAlignValue) {
                         maxAscenderSoFar = std::max(rb->y(), maxAscenderSoFar);
                         maxDescenderSoFar = std::min(rb->y() - rb->height(), maxDescenderSoFar);
-                    } else {
+                    }  else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
                 }
@@ -160,10 +163,10 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     maxAscenderSoFar = std::max(box->height() + box->marginHeight(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::TopVAlignValue) {
                     maxAscenderSoFar = std::max(box->height() + box->marginTop(), maxAscenderSoFar);
-                } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                    maxAscenderSoFar = std::max(maxDescenderSoFar + box->height() + box->marginTop(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                     maxDescenderSoFar = std::min(pascender - box->height(), maxDescenderSoFar);
+                } else if (va == VerticalAlignValue::BottomVAlignValue) {
+                    maxAscenderSoFar = std::max(maxDescenderSoFar + box->height() + box->marginTop(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
                     maxAscenderSoFar = std::max(pdescender + box->height(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
