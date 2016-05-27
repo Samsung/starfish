@@ -778,6 +778,9 @@ test/reftest/csswg-test/css21_converted/fonts/font-applies-to-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-applies-to-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-applies-to-005.htm
 test/reftest/csswg-test/css21_converted/fonts/font-family-rule-005.htm
+test/reftest/csswg-test/css21_converted/fonts/fonts-012.htm
+test/reftest/csswg-test/css21_converted/fonts/fonts-013.htm
+test/reftest/csswg-test/css21_converted/fonts/fonts-014.htm
 test/reftest/csswg-test/css21_converted/fonts/font-size-073.htm
 test/reftest/csswg-test/css21_converted/fonts/font-size-090.htm
 test/reftest/csswg-test/css21_converted/fonts/font-size-091.htm
@@ -860,6 +863,7 @@ test/reftest/csswg-test/css21_converted/margin-padding-clear/padding-top-applies
 test/reftest/csswg-test/css21_converted/media/media-dependency-003.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-formatting-contexts-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-formatting-contexts-010.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-empty-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-001a.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-001b.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-001c.htm
@@ -888,7 +892,11 @@ test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-007.h
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-008a.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-008b.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-008c.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-009.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-insert-011.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-margins-001a.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-nested-001.htm
+test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-percents-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-000.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-001.htm
 test/reftest/csswg-test/css21_converted/normal-flow/block-in-inline-remove-002.htm
@@ -910,7 +918,6 @@ test/reftest/csswg-test/css21_converted/normal-flow/inlines-003.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inlines-004.htm
 test/reftest/csswg-test/css21_converted/normal-flow/inlines-017.htm
 test/reftest/csswg-test/css21_converted/normal-flow/width-applies-to-012.htm
-test/reftest/csswg-test/css21_converted/normal-flow/width-undefined-001.htm
 test/reftest/csswg-test/css21_converted/page-box/page-container-002.htm
 test/reftest/csswg-test/css21_converted/page-box/page-container-006.htm
 test/reftest/csswg-test/css21_converted/page-box/page-container-009.htm
@@ -918,7 +925,6 @@ test/reftest/csswg-test/css21_converted/pagination/page-breaks-100.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-003.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-011.htm
 test/reftest/csswg-test/css21_converted/positioning/abspos-012.htm
-test/reftest/csswg-test/css21_converted/positioning/left-applies-to-008.htm
 test/reftest/csswg-test/css21_converted/positioning/position-006.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-001.htm
 test/reftest/csswg-test/css21_converted/positioning/position-relative-003.htm
