@@ -143,8 +143,8 @@ for i in $tc ; do
             EXPECTED=$(cat $EXPECTED_FILE)
             EXPECTED=${EXPECTED##*Status:}
             EXPECTED=${EXPECTED%Detail*}
-            EXPECTED=$(sed 's/[[:space:]]//' <<< "$EXPECTED")
-            RESULT=`grep -o $EXPECTED $TMPFILE | wc -l`
+            EXPECTED="Status: "$(sed 's/[[:space:]]//' <<< "$EXPECTED")
+            RESULT=`grep -o "$EXPECTED" $TMPFILE | wc -l`
             SKIP=`grep -o Skipped $TMPFILE | wc -l`
 
             if [ $SKIP -eq 1 ]; then

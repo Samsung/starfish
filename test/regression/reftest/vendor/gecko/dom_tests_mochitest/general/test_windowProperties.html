@@ -20,7 +20,7 @@ function _logResult(test, passString, failString) {
 
 function ok(condition, name, diag) {
     var test = {'result': !!condition, 'name': name, 'diag': diag || ""};
-    _logResult(test, "status: SUCCESS", "status: FAIL");    
+    _logResult(test, "Status: SUCCESS", "Status: FAIL");    
 };
 
 var lastProp;
