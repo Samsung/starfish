@@ -4768,6 +4768,11 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
         element->clearNeedsStyleRecalc();
     }
 
+    bool shouldWeStopTreeTraverseHere = element->style()->display() == DisplayValue::NoneDisplayValue;
+    if (shouldWeStopTreeTraverseHere) {
+        return;
+    }
+
     if (inheritedStyleChanged | element->childNeedsStyleRecalc()) {
         ComputedStyle* childStyle = nullptr;
         Node* child = element->firstChild();
@@ -4844,6 +4849,10 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
 
 void dump(Node* node, unsigned depth)
 {
+    if (!node->style()) {
+        return;
+    }
+
     for (unsigned i = 0; i < depth; i++) {
         printf("  ");
     }
