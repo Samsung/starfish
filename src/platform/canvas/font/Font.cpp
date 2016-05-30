@@ -93,7 +93,11 @@ public:
             // STARFISH_LOG_INFO("fontSizeAdjuester %f\n", (float)g_fontSizeAdjuester);
         }
 
-        loadFont(m_size * g_fontSizeAdjuester);
+        loadFont(m_size);
+        m_metrics.m_ascender = m_metrics.m_ascender / g_fontSizeAdjuester;
+        m_metrics.m_descender = m_metrics.m_descender / g_fontSizeAdjuester;
+        m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+
         m_spaceWidth = measureText(String::spaceString);
 
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
