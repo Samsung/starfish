@@ -14,8 +14,9 @@ function test()
     clearTimeout(timeoutID);
     if (window.testRunner)
         setTimeout(function() { testRunner.notifyDone() }, 0);
+    console.log("PASS");
+    wpt_test_end();
 }
 
 timeoutID = setTimeout(test, 0);
 </script>
-<script src="../../../resources/wpt-test-post.js"></script>

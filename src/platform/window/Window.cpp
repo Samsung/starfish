@@ -815,10 +815,14 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
     td->m_timerID = ecore_timer_add(delay / 1000.0, [](void* data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
         ScriptBindingInstanceEnterer enter(td->m_window->starFish()->scriptBindingInstance());
-        auto a = td->m_window->m_timeoutHandler.find(td->m_id);
+        Window* wnd = td->m_window;
+        uint32_t id = td->m_id;
         td->m_handler(td->m_window, td->m_data);
-        td->m_window->m_timeoutHandler.erase(a);
-        GC_FREE(td);
+        auto iter = wnd->m_timeoutHandler.find(id);
+        if (iter != wnd->m_timeoutHandler.end()) {
+            wnd->m_timeoutHandler.erase(iter);
+            GC_FREE(td);
+        }
         return ECORE_CALLBACK_DONE;
     }, td);
 
