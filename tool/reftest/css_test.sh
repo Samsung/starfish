@@ -164,6 +164,9 @@ for i in $tc ; do
     else
         FAIL=`expr $FAIL + 1`
         echo -e "${RED}[FAIL]${RESET}" $html "${YELLOW}(Unable to open html file)${RESET}"
+        mkdir -p $OUTDIR/${dir}
+        STARFISH_PNG="${OUTDIR}/${dir}/${file}_result.png"
+        mv result.png ${STARFISH_PNG}
     fi
 done
 

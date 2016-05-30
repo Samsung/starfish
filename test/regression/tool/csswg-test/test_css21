@@ -801,6 +801,11 @@ test/reftest/csswg-test/css21_converted/fonts/font-weight-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-003.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-008.htm
+test/reftest/csswg-test/css21_converted/fonts/font-weight-010.htm
+test/reftest/csswg-test/css21_converted/fonts/font-weight-011.htm
+test/reftest/csswg-test/css21_converted/fonts/font-weight-012.htm
+test/reftest/csswg-test/css21_converted/fonts/font-weight-013.htm
+test/reftest/csswg-test/css21_converted/fonts/font-weight-014.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-applies-to-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-applies-to-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-applies-to-005.htm
