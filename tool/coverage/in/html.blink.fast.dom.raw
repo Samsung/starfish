@@ -1,7 +1,7 @@
 
 test/regression/reftest/vendor/blink/fast/dom/Attr/access-after-element-destruction.html	!DOCTYPE	head	script	src	script	src	style	body	script	src	span	p	id	div	id	p	a	span	span	span	span	span	span	span	a	span	a	span	p	a	span	span	span	span	a	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/background-shorthand-csstext.html	head	script	body	onload	style	div	id	style	div	id	style	div	id	style	p	hr	div	id	style	
-test/regression/reftest/vendor/blink/fast/dom/body-frameset-event-handlers.html	!DOCTYPE	head	title	script	src	script	src	script	body	body	body	onload	onload	body	onload	script	src	body	div	id	
+test/regression/reftest/vendor/blink/fast/dom/body-frameset-event-handlers.html	!DOCTYPE	head	title	script	src	script	src	script	body	body	body	onload	onload	body	onload	script	src	
 test/regression/reftest/vendor/blink/fast/dom/capturing-event-listeners.html	head	script	body	onload	input	id	type	pre	id	
 test/regression/reftest/vendor/blink/fast/dom/children-nodes.html	head	script	body	onload	div	style	p	div	id	div	id	b	u	i	div	id	div	id	div	id	div	id	span	b	div	id	br	
 test/regression/reftest/vendor/blink/fast/dom/class-all-whitespace.html	head	style	script	body	p	tt	div	class	script	src	
@@ -34,7 +34,7 @@ test/regression/reftest/vendor/blink/fast/dom/domstring-attribute-reflection.htm
 test/regression/reftest/vendor/blink/fast/dom/domtimestamp-is-number.html	!DOCTYPE	head	script	src	script	src	style	body	onload	script	src	span	p	id	div	id	script	src	span	span	span	span	
 test/regression/reftest/vendor/blink/fast/dom/duplicate-ids-document-order.html	head	script	src	script	body	onload	div	style	id	div	id	span	id	span	id	span	id	span	id	span	id	
 test/regression/reftest/vendor/blink/fast/dom/duplicate-ids.html	head	script	src	script	body	onload	div	id	div	id	div	id	ul	id	
-test/regression/reftest/vendor/blink/fast/dom/Element/classlist-empty-string.html	!DOCTYPE	head	script	src	script	src	style	script	span	div	id	div	class	span	class	span	script	src	span	span	script	src	body	
+test/regression/reftest/vendor/blink/fast/dom/Element/classlist-empty-string.html	!DOCTYPE	head	script	src	script	src	style	script	span	div	id	div	class	span	class	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/Element/id-in-getelement01.html	head	script	src	script	src	style	body	div	name	id	div	name	id	div	name	id	script	span	p	id	div	id	span	span	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/Element/id-in-map.html	head	script	src	script	src	style	body	map	title	id	script	span	p	id	div	id	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/Element/id-in-node-list-index01.html	head	script	src	script	src	style	body	div	name	id	p	name	id	div	name	id	script	span	p	id	div	id	span	span	script	src	span	span	script	src	
@@ -65,11 +65,11 @@ test/regression/reftest/vendor/blink/fast/dom/html-collections-named-getter-mand
 test/regression/reftest/vendor/blink/fast/dom/HTMLLinkElement/link-onload2.html	!DOCTYPE	head	script	src	script	src	script	link	rel	href	onload	link	rel	href	onload	body	onload	p	pre	id	
 test/regression/reftest/vendor/blink/fast/dom/HTMLLinkElement/link-onload-before-page-load.html	!DOCTYPE	head	script	src	script	src	script	link	rel	href	onload	body	onload	p	pre	id	
 test/regression/reftest/vendor/blink/fast/dom/HTMLLinkElement/link-onload.html	!DOCTYPE	head	script	src	script	src	link	rel	href	onload	onerror	body	p	pre	id	
-test/regression/reftest/vendor/blink/fast/dom/HTMLLinkElement/prefetch-too-many-clients.html	head	body	onload	div	id	script	src	script	src	style	script	p	link	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	
+test/regression/reftest/vendor/blink/fast/dom/HTMLLinkElement/prefetch-too-many-clients.html	head	body	onload	div	id	script	src	script	src	style	script	p	link	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	id	rel	href	span	
 test/regression/reftest/vendor/blink/fast/dom/HTMLLinkElement/programmatically-add-link-with-onload-handler.html	!DOCTYPE	head	script	src	script	src	body	p	pre	id	script	link	rel	href	
 test/regression/reftest/vendor/blink/fast/dom/HTMLMetaElement/meta-attributes.html	head	meta	id	name	scheme	http-equiv	content	body	script	src	script	script	src	
-test/regression/reftest/vendor/blink/fast/dom/HTMLScriptElement/append-child-style-crash.html	!DOCTYPE	head	body	script	style	script	script	p	
-test/regression/reftest/vendor/blink/fast/dom/HTMLScriptElement/isURLAttribute.html	head	script	src	id	script	body	p	tt	tt	
+test/regression/reftest/vendor/blink/fast/dom/HTMLScriptElement/append-child-style-crash.html	!DOCTYPE	head	body	script	style	script	script	
+test/regression/reftest/vendor/blink/fast/dom/HTMLScriptElement/isURLAttribute.html	head	script	src	id	script	
 test/regression/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload2.html	!DOCTYPE	head	script	style	onload	style	onload	body	onload	p	pre	id	
 test/regression/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload-before-page-load.html	!DOCTYPE	head	script	src	script	style	onload	body	onload	p	pre	id	
 test/regression/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload.html	!DOCTYPE	head	script	style	onload	onerror	body	p	pre	id	
@@ -79,7 +79,7 @@ test/regression/reftest/vendor/blink/fast/dom/interface-object-proto.html	head	s
 test/regression/reftest/vendor/blink/fast/dom/isEqualNode-after-removeAttribute.html	!DOCTYPE	head	meta	charset	script	src	script	src	style	body	script	span	p	id	div	id	span	span	span	foo	span	foo	span	span	span	span	foo	span	foo	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/multiple-ids.html	head	script	body	onload	div	id	div	id	div	id	form	select	name	id	option	option	div	id	span	name	id	pre	id	p	id	span	id	
 test/regression/reftest/vendor/blink/fast/dom/namednodemap-namelookup.html	head	body	div	id	name	item	pre	script	script	src	
-test/regression/reftest/vendor/blink/fast/dom/NamedNodeMap-setNamedItem-crash.html	head	script	script	src	body	
+test/regression/reftest/vendor/blink/fast/dom/NamedNodeMap-setNamedItem-crash.html	head	script	script	src	
 test/regression/reftest/vendor/blink/fast/dom/Node/append-child-error.html	!DOCTYPE	head	script	src	body	script	div	id	div	
 test/regression/reftest/vendor/blink/fast/dom/node-childNodes-idempotence.html	!DOCTYPE	head	meta	charset	script	src	script	src	style	body	script	span	p	id	div	id	span	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/node-item.html	head	body	p	a	href	p	div	id	script	script	src	
@@ -87,7 +87,7 @@ test/regression/reftest/vendor/blink/fast/dom/node-legacy-event-listener.html	!D
 test/regression/reftest/vendor/blink/fast/dom/NodeList/5725058-crash-scenario-1.html	head	body	p	span	div	id	script	src	script	type	script	src	
 test/regression/reftest/vendor/blink/fast/dom/NodeList/5725058-crash-scenario-2.html	head	body	p	p	id	p	id	script	src	script	script	src	
 test/regression/reftest/vendor/blink/fast/dom/NodeList/5725058-crash-scenario-3.html	head	body	p	p	id	a	name	script	src	script	script	src	
-test/regression/reftest/vendor/blink/fast/dom/NodeList/item-by-id-with-no-document.html	head	title	script	p	script	src	body	p	
+test/regression/reftest/vendor/blink/fast/dom/NodeList/item-by-id-with-no-document.html	head	title	script	p	script	src	
 test/regression/reftest/vendor/blink/fast/dom/NodeList/nodelist-item-assignment.html	head	script	src	script	src	style	body	p	id	ol	div	id	script	span	span	span	span	span	span	span	span	span	span	span	span	span	span	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/NodeList/nodelist-item-call-as-function.html	!DOCTYPE	head	script	src	script	src	style	body	script	src	span	p	id	div	id	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/NodeList/nodelist-item-with-index.html	head	script	src	script	src	style	body	p	id	div	id	div	id	br	div	id	script	span	span	span	span	span	span	span	script	src	span	span	script	src	
@@ -120,8 +120,8 @@ test/regression/reftest/vendor/blink/fast/dom/Window/setTimeout-string-argument.
 test/regression/reftest/vendor/blink/fast/dom/Window/window-constructor.html	head	body	p	a	href	div	id	script	src	script	script	src	
 test/regression/reftest/vendor/blink/fast/dom/Window/window-constructor-presence.html	!DOCTYPE	head	body	script	src	script	src	style	script	span	p	id	div	id	span	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/Window/window-constructor-settable.html	head	body	p	a	href	div	id	script	src	script	script	src	
-test/regression/reftest/vendor/blink/fast/dom/Window/window-custom-prototype-crash.html	head	script	src	script	script	src	body	
+test/regression/reftest/vendor/blink/fast/dom/Window/window-custom-prototype-crash.html	head	script	src	script	script	src	
 test/regression/reftest/vendor/blink/fast/dom/Window/window-function-name-getter-precedence.html	!DOCTYPE	head	script	src	script	src	script	body	onload	p	pre	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	div	id	
-test/regression/reftest/vendor/blink/fast/dom/Window/window-legacy-event-listener.html	!DOCTYPE	head	script	src	script	src	style	body	script	span	p	id	div	id	span	span	span	span	script	src	span	span	
+test/regression/reftest/vendor/blink/fast/dom/Window/window-legacy-event-listener.html	!DOCTYPE	head	script	src	script	src	style	body	script	span	p	id	div	id	span	span	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/XMLHttpRequest-constants.html	!DOCTYPE	head	script	src	script	src	style	body	script	src	span	p	id	div	id	span	span	span	span	span	span	span	span	span	span	span	span	span	span	span	span	span	span	script	src	span	span	script	src	
 test/regression/reftest/vendor/blink/fast/dom/XMLHttpRequest-legacy-event-listener.html	!DOCTYPE	head	script	src	script	src	style	body	script	span	p	id	div	id	span	span	span	span	script	src	span	span	script	src	

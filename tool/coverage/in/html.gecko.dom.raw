@@ -179,4 +179,4 @@ test/regression/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLScr
 test/regression/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLScriptElement04.html	!DOCTYPE	head	meta	http-equiv	content	title	script	type	src	script	charset	type	src	script	type	body	onload	script	charset	type	defer	src	
 test/regression/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLScriptElement05.html	!DOCTYPE	head	meta	http-equiv	content	title	script	type	src	script	charset	type	src	script	type	body	onload	script	charset	type	defer	src	
 test/regression/reftest/vendor/gecko/dom_tests_mochitest/dom-level2-html/HTMLStyleElement03.html	!DOCTYPE	head	meta	http-equiv	content	style	media	type	title	script	type	src	script	charset	type	src	script	type	body	onload	p	
-test/regression/reftest/vendor/gecko/dom_tests_mochitest/general/test_windowProperties.html	!DOCTYPE	head	title	body	id	script	type	p	id	
+test/regression/reftest/vendor/gecko/dom_tests_mochitest/general/test_windowProperties.html	!DOCTYPE	head	title	body	id	script	type	

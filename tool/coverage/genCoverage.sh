@@ -63,6 +63,11 @@ css.webkit.fast.dom.raw
 css.webkit.fast.html.raw
 css.gecko.dom.raw
 css.bidi.raw
+css.css1.raw
+css.css21.raw
+css.css.backgrounds.3.raw
+css.css.color.3.raw
+css.css.transforms.1.raw
 "
 
 i=0;
@@ -101,6 +106,11 @@ html.webkit.fast.dom.raw
 html.webkit.fast.html.raw
 html.gecko.dom.raw
 html.bidi.raw
+html.css1.raw
+html.css21.raw
+html.css.backgrounds.3.raw
+html.css.color.3.raw
+html.css.transforms.1.raw
 "
 
 i=0;

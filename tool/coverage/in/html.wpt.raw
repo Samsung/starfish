@@ -122,8 +122,8 @@ test/regression/reftest/web-platform-tests/html/semantics/grouping-content/the-d
 test/regression/reftest/web-platform-tests/html/semantics/grouping-content/the-p-element/grouping-p.html	!DOCTYPE	head	meta	charset	title	link	rel	title	href	link	rel	href	script	src	script	src	script	p	body	h1	p	div	id	div	
 test/regression/reftest/web-platform-tests/html/semantics/scripting-1/the-script-element/script-languages-01.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	href	script	src	script	src	body	div	id	div	id	script	type	script	type	script	div	
 test/regression/reftest/web-platform-tests/html/semantics/scripting-1/the-script-element/script-onload-string.html	!DOCTYPE	head	title	link	rel	title	href	script	src	script	src	body	div	id	script	script	script	div	
-test/regression/reftest/web-platform-tests/html/webappapis/animation-frames/callback-invoked.html	!DOCTYPE	head	title	script	src	script	src	link	rel	href	body	div	id	script	
-test/regression/reftest/web-platform-tests/html/webappapis/animation-frames/callback-multicalls.html	!DOCTYPE	head	meta	charset	title	link	rel	title	href	link	rel	href	script	src	script	src	body	div	id	script	
+test/regression/reftest/web-platform-tests/html/webappapis/animation-frames/callback-invoked.html	!DOCTYPE	head	title	script	src	script	src	link	rel	href	body	div	id	script	div	
+test/regression/reftest/web-platform-tests/html/webappapis/animation-frames/callback-multicalls.html	!DOCTYPE	head	meta	charset	title	link	rel	title	href	link	rel	href	script	src	script	src	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/html/webappapis/animation-frames/cancel-invoked.html	!DOCTYPE	head	title	script	src	script	src	link	rel	href	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/html/webappapis/animation-frames/same-dispatch-time.html	!DOCTYPE	head	title	script	src	script	src	link	rel	href	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/html/webappapis/scripting/events/body-onload.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	title	href	link	rel	href	script	src	script	src	body	div	id	script	body	div	
@@ -133,13 +133,13 @@ test/regression/reftest/web-platform-tests/page-visibility/test_attributes_exist
 test/regression/reftest/web-platform-tests/page-visibility/test_read_only.html	!DOCTYPE	head	meta	charset	title	script	src	script	src	script	type	src	script	type	body	onload	h1	p	div	id	div	
 test/regression/reftest/web-platform-tests/progress-events/constructor.html	!DOCTYPE	head	title	script	src	script	src	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/progress-events/interface.html	!DOCTYPE	head	title	script	src	script	src	body	div	id	script	div	
-test/regression/reftest/web-platform-tests/XMLHttpRequest/abort-after-receive.htm	!DOCTYPE	head	title	script	src	script	src	link	rel	href	data-tested-assertations	body	div	id	script	
+test/regression/reftest/web-platform-tests/XMLHttpRequest/abort-after-receive.htm	!DOCTYPE	head	title	script	src	script	src	link	rel	href	data-tested-assertations	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/abort-during-unsent.htm	!DOCTYPE	head	title	script	src	script	src	link	rel	href	data-tested-assertations	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/abort-event-abort.htm	!DOCTYPE	head	link	rel	href	data-tested-assertations	script	src	title	body	div	id	script	type	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/abort-event-listeners.htm	!DOCTYPE	head	title	script	src	script	src	link	rel	href	data-tested-assertations	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/abort-event-loadend.htm	!DOCTYPE	head	link	rel	href	data-tested-assertations	script	src	script	src	title	body	div	id	script	type	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/event-abort.htm	!DOCTYPE	head	title	script	src	script	src	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	body	div	id	script	div	
-test/regression/reftest/web-platform-tests/XMLHttpRequest/event-error.html	!DOCTYPE	head	meta	charset	title	link	rel	title	href	meta	name	content	script	src	script	src	body	div	id	script	
+test/regression/reftest/web-platform-tests/XMLHttpRequest/event-error.html	!DOCTYPE	head	meta	charset	title	link	rel	title	href	meta	name	content	script	src	script	src	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/event-loadend.htm	!DOCTYPE	head	title	script	src	script	src	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/event-load.htm	!DOCTYPE	head	meta	charset	title	script	src	script	src	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	body	div	id	script	div	
 test/regression/reftest/web-platform-tests/XMLHttpRequest/event-loadstart.htm	!DOCTYPE	head	title	script	src	script	src	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	link	rel	href	data-tested-assertations	body	div	id	script	div	
