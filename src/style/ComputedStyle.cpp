@@ -261,36 +261,38 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth, LayoutUnit
     if (!hasTransforms()) {
         return matrix;
     }
-    for (size_t i = 0; i < m_transforms->size(); i ++) {
-        StyleTransformData t = m_transforms->at(i);
-        if (t.type() == StyleTransformData::Matrix) {
-            MatrixTransform* m = t.matrix();
-            // [ a c e ]
-            // [ b d f ]
-            // [ x x x ]
-            matrix.set(0, m->a());
-            matrix.set(1, m->c());
-            matrix.set(2, m->e());
-            matrix.set(3, m->b());
-            matrix.set(4, m->d());
-            matrix.set(5, m->f());
-        } else if (t.type() == StyleTransformData::Scale) {
-            ScaleTransform* m = t.scale();
-            matrix.preScale(m->x(), m->y());
-        } else if (t.type() == StyleTransformData::Rotate) {
-            RotateTransform* m = t.rotate();
-            matrix.preRotate(m->angle());
-        } else if (t.type() == StyleTransformData::Skew) {
-            SkewTransform* m = t.skew();
-            matrix.preSkew(tan(deg2rad(m->angleX())), tan(deg2rad(m->angleY())));
-        } else if (t.type() == StyleTransformData::Translate) {
-            TranslateTransform* m = t.translate();
-            matrix.preTranslate(m->tx().specifiedValue(containerWidth), m->ty().specifiedValue(containerHeight));
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    // https://www.w3.org/TR/css-transforms-1/#transformable-element
+    if (m_display == DisplayValue::BlockDisplayValue || m_display == DisplayValue::InlineBlockDisplayValue) {
+        for (size_t i = 0; i < m_transforms->size(); i ++) {
+            StyleTransformData t = m_transforms->at(i);
+            if (t.type() == StyleTransformData::Matrix) {
+                MatrixTransform* m = t.matrix();
+                // [ a c e ]
+                // [ b d f ]
+                // [ x x x ]
+                matrix.set(0, m->a());
+                matrix.set(1, m->c());
+                matrix.set(2, m->e());
+                matrix.set(3, m->b());
+                matrix.set(4, m->d());
+                matrix.set(5, m->f());
+            } else if (t.type() == StyleTransformData::Scale) {
+                ScaleTransform* m = t.scale();
+                matrix.preScale(m->x(), m->y());
+            } else if (t.type() == StyleTransformData::Rotate) {
+                RotateTransform* m = t.rotate();
+                matrix.preRotate(m->angle());
+            } else if (t.type() == StyleTransformData::Skew) {
+                SkewTransform* m = t.skew();
+                matrix.preSkew(tan(deg2rad(m->angleX())), tan(deg2rad(m->angleY())));
+            } else if (t.type() == StyleTransformData::Translate) {
+                TranslateTransform* m = t.translate();
+                matrix.preTranslate(m->tx().specifiedValue(containerWidth), m->ty().specifiedValue(containerHeight));
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }
     }
-
     return matrix;
 }
 
