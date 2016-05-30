@@ -303,12 +303,14 @@ public:
     {
         if (m_node && m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
             HTMLBodyElement* bodyElement = m_node->document()->bodyElement();
-            return bodyElement->style()->overflow() != style()->overflow();
+            if (bodyElement)
+                return bodyElement->style()->overflow() != style()->overflow();
+            return style()->overflow() != OverflowValue::VisibleOverflow;
         }
 
         if (m_node && m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLBodyElement()) {
-            HTMLHtmlElement* headElement = m_node->document()->rootElement();
-            return headElement->style()->overflow() != style()->overflow();
+            HTMLHtmlElement* rootElement = m_node->document()->rootElement();
+            return rootElement->style()->overflow() != style()->overflow();
         }
 
         return false;
