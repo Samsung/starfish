@@ -18,6 +18,13 @@ TCFILE=0
 if [ "$1" = "" ]; then
     echo "Please specify the input file"
     exit
+elif [[ "$1" = *".htm" || "$1" = *".html" ]]; then
+    tc=$1
+elif [[ "$1" = *".res" ]]; then
+    tc=$(cat $1)
+else
+    echo "Input file is not supported"
+    exit
 fi
 
 # Test Suites
@@ -25,10 +32,10 @@ fi
 # 1: Web Platform Tests
 # 2: Vendor Tests
 # 3: Pixel Tests
-# XXX: need to cleanup
-if [[ "$1" = *"dom_conformance_test.res" ]]; then
+if [[ "$1" = *"dom_conformance_test.res" ||
+      "$1" = *"dom-conformance-test"*".htm"* || "$1" = *"blink/dom"*".htm"* ||
+      "$1" = *"gecko/dom_tests_mochitest"*".htm"* || "$1" = *"webkit/dom"*".htm"* ]]; then
     TESTSUITE=0
-    tc=$(cat $1)
     if [[ "$1" = *"blink"* ]]; then
         TESTSUITENAME="Blink DOM Conformance Test"
         PASSFILE="test/regression/tool/vendor/blink/test_blink_dom_conformance"
@@ -42,15 +49,8 @@ if [[ "$1" = *"dom_conformance_test.res" ]]; then
         TESTSUITENAME="DOM Conformance Test"
         PASSFILE="test/regression/tool/dom-conformance-test/test_dom_conformance"
     fi
-elif [[ "$1" = *"dom-conformance-test"*".htm"* ]]; then
-    TESTSUITE=0
-    tc=$1
-elif [[ "$1" = *"vendor/blink/dom"*".htm"* || "$1" = *"vendor/webkit/dom"*".htm"* ]]; then
-    TESTSUITE=0
-    tc=$1
-elif [[ "$1" = *"wpt"*".res" ]]; then
+elif [[ "$1" = *"wpt"*".res" || "$1" = *"web-platform-tests"*".htm"* ]]; then
     TESTSUITE=1
-    tc=$(cat $1)
     if [[ "$1" = *"wpt_dom.res" ]]; then
         TESTSUITENAME="WPT DOM"
         PASSFILE="test/regression/tool/web-platform-tests/test_wpt_dom"
@@ -70,12 +70,9 @@ elif [[ "$1" = *"wpt"*".res" ]]; then
         TESTSUITENAME="WPT XMLHttpRequest"
         PASSFILE="test/regression/tool/web-platform-tests/test_wpt_xhr"
     fi
-elif [[ "$1" = *"web-platform-tests"*".htm"* ]]; then
-    TESTSUITE=1
-    tc=$1
-elif [[ "$1" = *"blink_fast"*".res" || "$1" = *"webkit_fast"*".res" ]]; then
+elif [[ "$1" = *"blink_fast"*".res" || "$1" = *"webkit_fast"*".res" ||
+        "$1" = *"blink/fast"*".htm"* || "$1" = *"webkit/fast"*".htm"* ]]; then
     TESTSUITE=2
-    tc=$(cat $1)
     if [[ "$1" = *"blink_fast_dom.res" ]]; then
         TESTSUITENAME="Blink Fast DOM"
         PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_dom"
@@ -89,17 +86,10 @@ elif [[ "$1" = *"blink_fast"*".res" || "$1" = *"webkit_fast"*".res" ]]; then
         TESTSUITENAME="WebKit Fast HTML"
         PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_html"
     fi
-elif [[ "$1" = *"vendor/blink/fast"*".htm"* || "$1" = *"vendor/webkit/fast"*".htm"* ]]; then
-    TESTSUITE=2
-    tc=$1
-elif [[ "$1" = *"bidi.res" ]]; then
+elif [[ "$1" = *"bidi.res" || "$1" = *"bidi/International/tests"*".htm"* ]]; then
     TESTSUITE=3
     TESTSUITENAME="International Tests"
     PASSFILE="test/regression/tool/bidi/test_bidi"
-    tc=$(cat $1)
-elif [[ "$i" = *"bidi/International/tests/html-css/"*".htm"* ]]; then
-    TESTSUITE=3
-    tc=$1
 else
     echo "Unsupported tests"
     exit
