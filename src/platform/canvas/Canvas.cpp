@@ -426,7 +426,7 @@ public:
 
             lastState().m_clipPath = result;
             lastState().m_clipper = NULL;
-        } else if (hasMatrixAffine()) {
+        } else if (hasValidMatrixValue()) {
             ClipperLib::Path path;
 
             path.push_back(ClipperLib::IntPoint(lastState().m_clipRect.x(), lastState().m_clipRect.y()));
@@ -1306,7 +1306,7 @@ public:
     virtual void applyMatrixTo(LayoutLocation lp)
     {
         if (lastState().m_mapMode) {
-            STARFISH_ASSERT(!hasMatrixAffine());
+            STARFISH_ASSERT(!hasValidMatrixValue());
             SkPoint point = SkPoint::Make((float)lp.x(), (float)lp.y());
             lastState().m_matrix.mapPoints(&point, 1);
             lp.setX(point.x());
@@ -1320,7 +1320,7 @@ public:
     virtual void applyMatrixTo(LayoutRect lp)
     {
         if (lastState().m_mapMode) {
-            STARFISH_ASSERT(!hasMatrixAffine());
+            STARFISH_ASSERT(!hasValidMatrixValue());
             SkRect sss = SkRect::MakeXYWH(
                 SkFloatToScalar((float)lp.x()),
                 SkFloatToScalar((float)lp.y()),
@@ -1349,9 +1349,9 @@ public:
         return m_state[m_state.size() - 1];
     }
 
-    bool hasMatrixAffine()
+    bool hasValidMatrixValue()
     {
-        return lastState().m_matrix.getType() & SkMatrix::TypeMask::kAffine_Mask;
+        return lastState().m_matrix.getType() & (SkMatrix::TypeMask::kTranslate_Mask | SkMatrix::TypeMask::kScale_Mask | SkMatrix::TypeMask::kAffine_Mask);
     }
 
     bool shouldApplyEvasMap()
@@ -1359,7 +1359,7 @@ public:
         if (lastState().m_opacity != 1) {
             return true;
         }
-        return hasMatrixAffine();
+        return hasValidMatrixValue();
     }
 
     void applyEvasMapIfNeeded(Evas_Object* eo, const LayoutRect& dst, bool isImage = false)
