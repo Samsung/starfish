@@ -62,11 +62,12 @@ function run(TCName, spec, file) {
                 table[filename][token] = "O";
             } else {
                 token = token.split("&&&")[1];
+
                 // 2. matches a method/attr
                 if (features[token] != undefined) {
                     table[filename][token] = "O";
                 } else if (features["*&&&"+token] != undefined) { // mataches a key in *&&&method format
-                    table[filename][token] = "O";
+                    table[filename]["*&&&"+token] = "O";
                 }
             }
         }

@@ -66,10 +66,6 @@
  CharacterData             , data
                            , *&&&length
                            , substringData
-                           , appendData
-                           , insertData
-                           , deleteData
-                           , replaceData
                            , wholeText
  Comment                   ,
  DOMTokenList              , DOMTokenList&&&length
@@ -101,8 +97,8 @@ WindowTimers               , setTimeout
                            , preventDefault
                            , defaultPrevented
                            , timeStamp
-                           , initEvent::bubbles
-                           , initEvent::cancelable
+                           , InitEvent::bubbles
+                           , InitEvent::cancelable
  EventTarget               , addEventListener
                            , removeEventListener
                            , dispatchEvent

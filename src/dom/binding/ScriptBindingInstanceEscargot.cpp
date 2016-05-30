@@ -321,6 +321,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(), escargot::ESString::create("document"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+#ifdef STARFISH_TC_COVERAGE
+        STARFISH_LOG_INFO("&&&document\n");
+#endif
         return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptObject();
     }, nullptr, true, false);
 
@@ -1280,6 +1283,9 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                         return result->scriptValue();
                     }
                 }
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("Element&&&getElementsByClassName\n");
+#endif
             } else {
                 THROW_ILLEGAL_INVOCATION()
             }
@@ -1304,6 +1310,9 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                         return result->scriptValue();
                     }
                 }
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("Element&&&getElementsByTagName\n");
+#endif
             } else {
                 THROW_ILLEGAL_INVOCATION()
             }
@@ -2543,10 +2552,10 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                 }
 #ifdef STARFISH_TC_COVERAGE
                 if (canBubbles) {
-                    STARFISH_LOG_INFO("initEvent::bubbles\n");
+                    STARFISH_LOG_INFO("&&&InitEvent::bubbles\n");
                 }
                 if (canCancelable) {
-                    STARFISH_LOG_INFO("initEvent::cancelable\n");
+                    STARFISH_LOG_INFO("&&&InitEvent::cancelable\n");
                 }
 #endif
                 auto event = new Event(String::fromUTF8(type->utf8Data()), EventInit(canBubbles, canCancelable));
@@ -2776,7 +2785,14 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
                 } else if (loaded.isESString()) {
                     totalValue = total.toUint32();
                 }
-
+#ifdef STARFISH_TC_COVERAGE
+                if (canLengthComputable) {
+                    STARFISH_LOG_INFO("ProgressEventInit&&&lengthComputable\n");
+                }
+                if (loadedValue != 0) {
+                    STARFISH_LOG_INFO("ProgressEventInit&&&loaded\n");
+                }
+#endif
                 auto event = new ProgressEvent(String::fromUTF8(type->utf8Data()), ProgressEventInit(canBubbles, canCancelable, canLengthComputable, loadedValue, totalValue));
                 return event->scriptValue();
             } else {
@@ -3397,6 +3413,10 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         String* c = originalObj->responseText();
+
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("&&&responseText\n");
+#endif
         return toJSString(c);
     }, nullptr);
 
