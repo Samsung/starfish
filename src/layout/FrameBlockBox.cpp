@@ -484,7 +484,7 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         return;
     }
 
-    bool hiddenApplied = shouldApplyOverflowHidden();
+    bool hiddenApplied = shouldApplyOverflow();
     if (hiddenApplied) {
         canvas->save();
         canvas->clip(Rect(0, 0, width(), height()));

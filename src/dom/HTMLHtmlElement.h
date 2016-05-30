@@ -44,6 +44,10 @@ public:
         } else {
             document()->window()->m_hasRootElementBackground = false;
         }
+
+        if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
+            document()->setNeedsFrameTreeBuild();
+        }
     }
 
     HTMLBodyElement* body()

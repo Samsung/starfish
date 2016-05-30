@@ -1100,7 +1100,6 @@ test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-173.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-174.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-175.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-176.htm
-test/reftest/csswg-test/css21_converted/text/control-characters-002.htm
 test/reftest/csswg-test/css21_converted/text/text-align-001.htm
 test/reftest/csswg-test/css21_converted/text/text-align-002.htm
 test/reftest/csswg-test/css21_converted/text/text-align-003.htm
@@ -1146,6 +1145,7 @@ test/reftest/csswg-test/css21_converted/text/text-decoration-thickness-001.htm
 test/reftest/csswg-test/css21_converted/text/text-indent-113-ref-margin.htm
 test/reftest/csswg-test/css21_converted/ui/cursor-021.htm
 test/reftest/csswg-test/css21_converted/ui/cursor-022.htm
+test/reftest/csswg-test/css21_converted/ui/overflow-html-body-001.htm
 test/reftest/csswg-test/css21_converted/ui/overflow-parent-001.htm
 test/reftest/csswg-test/css21_converted/ui/overflow-root-001.htm
 test/reftest/csswg-test/css21_converted/values/color-000.htm

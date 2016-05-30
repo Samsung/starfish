@@ -78,7 +78,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         canvas = Canvas::create(m_buffer);
         canvas->translate(-minX, -minY);
     } else {
-        if (owner()->shouldApplyOverflowHidden()) {
+        if (owner()->shouldApplyOverflow()) {
             canvas->save();
             canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
         }
@@ -148,7 +148,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     if (m_needsOwnBuffer) {
         delete canvas;
     } else {
-        if (owner()->shouldApplyOverflowHidden()) {
+        if (owner()->shouldApplyOverflow()) {
             canvas->restore();
         }
     }
@@ -199,7 +199,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->translate(-ox, -oy);
         }
 
-        if (owner()->shouldApplyOverflowHidden()) {
+        if (owner()->shouldApplyOverflow()) {
             canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
         }
         canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
@@ -208,7 +208,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         // canvas->setColor(Color(255, 0, 0, 128));
         // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
     } else {
-        if (owner()->shouldApplyOverflowHidden()) {
+        if (owner()->shouldApplyOverflow()) {
             canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
         }
     }

@@ -299,6 +299,26 @@ public:
         computeStyleFlags();
     }
 
+    bool isOverflowPropagatedToViewPort()
+    {
+        if (m_node && m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLHtmlElement()) {
+            HTMLBodyElement* bodyElement = m_node->document()->bodyElement();
+            return bodyElement->style()->overflow() != style()->overflow();
+        }
+
+        if (m_node && m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            HTMLHtmlElement* headElement = m_node->document()->rootElement();
+            return headElement->style()->overflow() != style()->overflow();
+        }
+
+        return false;
+    }
+
+    bool shouldApplyOverflow()
+    {
+        return isOverflowPropagatedToViewPort()? false: style()->overflow() != OverflowValue::VisibleOverflow;
+    }
+
     void computeStyleFlags()
     {
         bool isRootElement = m_flags.m_isRootElement;
@@ -307,7 +327,13 @@ public:
         m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
         ComputedStyle* style = Frame::style();
         if (style) {
-            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->overflow() != OverflowValue::VisibleOverflow);
+            // https://www.w3.org/TR/CSS21/visuren.html#block-formatting
+            // Block formatting context is established when the element is either float, absolute positioned, or block boxes with 'overflow' other than 'visible'.
+            // Especially, the last condition should be met another requirement, which is, the overflow should not be propagated to viewport.
+            // There are 2 possible cases that overflow property can propagate to viewport, in other words, containing block is viewport.
+            // 1. By giving a position of absoulte value, which is already included as one of forming block formatting context conditions.
+            // 2. <html> and <body> element, so we should check first overflow values of <head> and <body> are equal.
+            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (shouldApplyOverflow());
             m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
             m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->position() == PositionValue::AbsolutePositionValue);
         }
@@ -328,7 +354,7 @@ public:
 
             // FIXME
             // this is not necessery but, we need to compute clip rect when composite used
-            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->overflow() != OverflowValue::VisibleOverflow);
+            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (shouldApplyOverflow());
         }
 
         if (style && style->width().isAuto()) {

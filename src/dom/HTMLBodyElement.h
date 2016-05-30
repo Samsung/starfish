@@ -44,6 +44,10 @@ public:
         } else {
             document()->window()->m_hasBodyElementBackground = false;
         }
+
+        if (oldStyle && oldStyle->overflow() != newStyle->overflow()) {
+            document()->setNeedsFrameTreeBuild();
+        }
     }
 
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
