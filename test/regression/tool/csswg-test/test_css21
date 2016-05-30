@@ -796,6 +796,7 @@ test/reftest/csswg-test/css21_converted/fonts/font-style-applies-to-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-style-applies-to-005.htm
 test/reftest/csswg-test/css21_converted/fonts/font-style-applies-to-016.htm
 test/reftest/csswg-test/css21_converted/fonts/font-systemfont-rule-003.htm
+test/reftest/csswg-test/css21_converted/fonts/font-systemfont-rule-004.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-003.htm
@@ -1100,6 +1101,7 @@ test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-173.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-174.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-175.htm
 test/reftest/csswg-test/css21_converted/tables/table-anonymous-objects-176.htm
+test/reftest/csswg-test/css21_converted/text/control-characters-002.htm
 test/reftest/csswg-test/css21_converted/text/text-align-001.htm
 test/reftest/csswg-test/css21_converted/text/text-align-002.htm
 test/reftest/csswg-test/css21_converted/text/text-align-003.htm

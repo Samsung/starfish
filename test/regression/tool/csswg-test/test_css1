@@ -5,6 +5,7 @@ test/reftest/csswg-test/css1_converted/c17-comments-000.htm
 test/reftest/csswg-test/css1_converted/c17-comments-001.htm
 test/reftest/csswg-test/css1_converted/c412-hz-box-000.htm
 test/reftest/csswg-test/css1_converted/c43-rpl-bbx-000.htm
+test/reftest/csswg-test/css1_converted/c43-rpl-bbx-001.htm
 test/reftest/csswg-test/css1_converted/c45-bg-canvas-000.htm
 test/reftest/csswg-test/css1_converted/c526-font-sz-000.htm
 test/reftest/csswg-test/css1_converted/c526-font-sz-001.htm
@@ -37,6 +38,7 @@ test/reftest/csswg-test/css1_converted/c5508-ipadn-b-000.htm
 test/reftest/csswg-test/css1_converted/c5508-ipadn-b-001.htm
 test/reftest/csswg-test/css1_converted/c5508-ipadn-b-002.htm
 test/reftest/csswg-test/css1_converted/c5509-padn-l-000.htm
+test/reftest/csswg-test/css1_converted/c5510-padn-000.htm
 test/reftest/csswg-test/css1_converted/c5511-brdr-tw-003.htm
 test/reftest/csswg-test/css1_converted/c5511-ibrdr-tw-000.htm
 test/reftest/csswg-test/css1_converted/c5512-brdr-rw-000.htm
