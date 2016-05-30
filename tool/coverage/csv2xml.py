@@ -60,6 +60,15 @@ xmlfile.write('    <Styles>' + "\n" + \
 '            </Borders>' + "\n" + \
 '            <Interior ss:Color=\'#C6EFCE\' ss:Pattern=\'Solid\'/>' + "\n" + \
 '        </Style>' + "\n" + \
+'        <Style ss:ID="CoverageData">' + "\n" + \
+'            <Borders>' + "\n" + \
+'                <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" />' + "\n" + \
+'                <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" />' + "\n" + \
+'                <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" />' + "\n" + \
+'                <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" />' + "\n" + \
+'            </Borders>' + "\n" + \
+'            <Interior ss:Color=\'#C6EFCE\' ss:Pattern=\'Solid\'/>' + "\n" + \
+'        </Style>' + "\n" + \
 '        <Style ss:ID="ColumnCoverage">' + "\n" + \
 '            <Borders>' + "\n" + \
 '                <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2" />' + "\n" + \
@@ -281,11 +290,11 @@ for row in reader:
 		    xmlfile.write('                ' + '<Cell ss:StyleID="Body" ss:Index="3"><Data ss:Type="String">' + row[i] + '</Data></Cell>' + "\n")
 		    continue
 		elif zero_flag == 1 and i == zero_index[k]:
-		    xmlfile.write('                ' + '<Cell ss:StyleID="Coverage"><Data ss:Type="String">' + row[i] + '</Data></Cell>' + "\n")
+		    xmlfile.write('                ' + '<Cell ss:StyleID="CoverageData"><Data ss:Type="String">' + row[i] + '</Data></Cell>' + "\n")
 		    k+=1
 		    continue
 		elif zero_flag == 0 and i == 2:
-		    xmlfile.write('                ' + '<Cell ss:StyleID="Coverage"><Data ss:Type="String">' + row[i] + '</Data></Cell>' + "\n")
+		    xmlfile.write('                ' + '<Cell ss:StyleID="CoverageData"><Data ss:Type="String">' + row[i] + '</Data></Cell>' + "\n")
 		    continue
 		xmlfile.write('                ' + '<Cell ss:StyleID="Body"><Data ss:Type="String">' + row[i] + '</Data></Cell>' + "\n")
     k = 0
