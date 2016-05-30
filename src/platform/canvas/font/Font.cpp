@@ -94,9 +94,17 @@ public:
         }
 
         loadFont(m_size);
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+        if (!g_enablePixelTest) {
+            m_metrics.m_ascender = m_metrics.m_ascender / g_fontSizeAdjuester;
+            m_metrics.m_descender = m_metrics.m_descender / g_fontSizeAdjuester;
+            m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+        }
+#else
         m_metrics.m_ascender = m_metrics.m_ascender / g_fontSizeAdjuester;
         m_metrics.m_descender = m_metrics.m_descender / g_fontSizeAdjuester;
         m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+#endif
 
         m_spaceWidth = measureText(String::spaceString);
 
