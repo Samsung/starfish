@@ -14,6 +14,11 @@ dom.webkit.fast.raw
 dom.webkit.fast.html.raw
 dom.gecko.raw
 dom.bidi.raw
+dom.css1.raw
+dom.css21.raw
+dom.css.backgrounds.3.raw
+dom.css.color.3.raw
+dom.css.transforms.1.raw
 "
 
 list2=(
@@ -26,7 +31,14 @@ list2=(
 "Vender Webkit Fast DOM"
 "Vender Webkit Fast HTML"
 "Vender Gecko"
-"W3C International Text");
+"W3C International Text"
+"W3C International Text"
+"W3C CSS 1"
+"W3C CSS 2.1"
+"W3C CSS Backgrounds 3"
+"W3C CSS Color 3"
+"W3C CSS Transforms 1"
+);
 
 i=0;
 for f in $list; do

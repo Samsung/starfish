@@ -38,6 +38,12 @@ list22=`find $path/test/regression/reftest/vendor/webkit/fast/html -name '*.htm*
 list3=`find $path/test/regression/reftest/bidi/International/tests/html-css -name '*.html' | sort `
 list4=`find $path/test/regression/reftest/web-platform-tests -name '*.htm*' | sort `
 
+# css
+css1=`find $path/test/regression/reftest/csswg-test/css1 -name '*.htm*' | sort `
+css21=`find $path/test/regression/reftest/csswg-test/css21 -name '*.htm*'  | sort`
+cssBackgrounds=`find $path/test/regression/reftest/csswg-test/css-backgrounds-3 -name '*.htm*' | sort`
+cssColor=`find $path/test/regression/reftest/csswg-test/css-color-3 -name '*.htm*' | sort`
+cssTransforms=`find $path/test/regression/reftest/csswg-test/css-transforms-1 -name '*.htm*' | sort`
 
 run "in/dom.blink.fast.raw" $list1
 run "in/dom.blink.fast.html.raw" $list11
@@ -45,3 +51,9 @@ run "in/dom.webkit.fast.raw" $list2
 run "in/dom.webkit.fast.html.raw" $list22
 run "in/dom.bidi.raw" $list3
 run "in/dom.wpt.raw" $list4
+
+run "in/dom.css1.raw" $css1
+run "in/dom.css21.raw" $css21
+run "in/dom.css.backgrounds.3.raw" $cssBackgrounds
+run "in/dom.css.color.3.raw" $cssColor
+run "in/dom.css.transforms.1.raw" $cssTransforms
