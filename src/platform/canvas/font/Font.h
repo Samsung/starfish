@@ -61,6 +61,7 @@ public:
         LayoutUnit m_ascender;
         LayoutUnit m_descender;
         LayoutUnit m_fontHeight;
+        float m_xheightRate;
     };
 
     const FontMetrics& metrics()

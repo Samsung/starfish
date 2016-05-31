@@ -31,8 +31,7 @@ public:
                 m_data = fSize * m_data;
                 m_type = Fixed;
             } else if (m_type == ExToBeFixed) {
-                // TODO: calculate ex (x-height of font)
-                m_data = fSize * m_data * 0.5;
+                m_data = fSize * m_data * font->metrics().m_xheightRate;
                 m_type = Fixed;
             }
         }

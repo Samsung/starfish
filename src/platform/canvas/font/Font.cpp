@@ -198,10 +198,18 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     error = FT_New_Face(library, fontPath.data(), 0, &face);
     CHECK_ERROR;
 
+    error = FT_Set_Pixel_Sizes(face, 0, size);
+    CHECK_ERROR;
+    FT_UInt glyph_index = FT_Get_Char_Index(face, 'x');
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
+    CHECK_ERROR;
+    FT_Int xheight = face->glyph->bitmap_top;
+
     Font::FontMetrics met;
     met.m_fontHeight = ((face->ascender - face->descender) * size) / face->units_per_EM;
     met.m_ascender = ((face->ascender * size) / (face->units_per_EM));
     met.m_descender = met.m_ascender - met.m_fontHeight;
+    met.m_xheightRate = xheight / size;
 
 #ifdef STARFISH_ENABLE_PIXEL_TEST
     if (g_enablePixelTest) {
