@@ -14,5 +14,6 @@ test/reftest/web-platform-tests/XMLHttpRequest/event-readystate-sync-open.htm
 test/reftest/web-platform-tests/XMLHttpRequest/open-after-abort.htm
 test/reftest/web-platform-tests/XMLHttpRequest/open-during-abort.htm
 test/reftest/web-platform-tests/XMLHttpRequest/open-user-password-non-same-origin.htm
+test/reftest/web-platform-tests/XMLHttpRequest/responseText-status.html
 test/reftest/web-platform-tests/XMLHttpRequest/timeout-sync.htm
 test/reftest/web-platform-tests/XMLHttpRequest/xmlhttprequest-basic.htm
