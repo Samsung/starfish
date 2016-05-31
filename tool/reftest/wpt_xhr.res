@@ -8,6 +8,7 @@ test/reftest/web-platform-tests/XMLHttpRequest/event-error.html
 test/reftest/web-platform-tests/XMLHttpRequest/event-loadend.htm
 test/reftest/web-platform-tests/XMLHttpRequest/event-load.htm
 test/reftest/web-platform-tests/XMLHttpRequest/event-loadstart.htm
+test/reftest/web-platform-tests/XMLHttpRequest/event-progress.htm
 test/reftest/web-platform-tests/XMLHttpRequest/event-readystatechange-loaded.htm
 test/reftest/web-platform-tests/XMLHttpRequest/event-readystate-sync-open.htm
 test/reftest/web-platform-tests/XMLHttpRequest/open-after-abort.htm
