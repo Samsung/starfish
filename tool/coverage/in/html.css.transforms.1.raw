@@ -15,8 +15,10 @@ test/regression/reftest/csswg-test/css-transforms-1/transform3d-scale-001-notref
 test/regression/reftest/csswg-test/css-transforms-1/transform-applies-to-001.htm	!DOCTYPE	head	title	link	rel	title	href	link	rel	href	link	rel	href	meta	name	content	meta	name	content	Element&&&style	body	p	div	p	id	class	p	id	class	
 test/regression/reftest/csswg-test/css-transforms-1/transform-compound-001.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	title	href	link	rel	title	href	link	rel	href	meta	name	content	link	rel	href	link	rel	href	link	rel	href	Element&&&style	body	div	class	div	class	
 test/regression/reftest/csswg-test/css-transforms-1/transform-compound-notref-2.html	!DOCTYPE	head	title	link	rel	title	href	Element&&&style	body	div	class	div	class	
+test/regression/reftest/csswg-test/css-transforms-1/transform-display-001.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	href	meta	name	content	link	rel	href	link	rel	href	Element&&&style	body	div	
 test/regression/reftest/csswg-test/css-transforms-1/transform-display-notref.html	!DOCTYPE	head	title	link	rel	title	href	Element&&&style	body	div	
 test/regression/reftest/csswg-test/css-transforms-1/transform-image-001.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	title	href	link	rel	href	meta	name	content	link	rel	href	Element&&&style	body	img	src	
+test/regression/reftest/csswg-test/css-transforms-1/transform-inline-001.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	href	meta	name	content	link	rel	href	link	rel	href	Element&&&style	body	p	span	class	br	p	class	
 test/regression/reftest/csswg-test/css-transforms-1/transform-inline-notref.html	!DOCTYPE	head	title	link	rel	title	href	body	p	br	p	
 test/regression/reftest/csswg-test/css-transforms-1/transform-origin-001.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	title	href	link	rel	href	meta	name	content	link	rel	href	Element&&&style	body	div	
 test/regression/reftest/csswg-test/css-transforms-1/transform-origin-002.html	!DOCTYPE	head	title	link	rel	title	href	link	rel	title	href	link	rel	href	meta	name	content	link	rel	href	Element&&&style	body	div	

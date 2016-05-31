@@ -19,7 +19,6 @@ TESTSUITE=("test/regression/reftest/web-platform-tests/"
            "test/regression/reftest/csswg-test/css-transforms-1/")
 
 DESTDIR="tool/coverage/in"
-RAWFILE="tmp.raw"
 RESFILE="tmp.res"
 mkdir out > /dev/null 2>&1
 rm $RAWFILE $RESFILE > /dev/null 2>&1
@@ -58,16 +57,42 @@ for i in ${TESTSUITE[@]}; do
     fi
 
     echo -e "${BOLD}## Syntax checking for [${i}]..${RESET}\n"
+
     TC=$(find $i -regex ".*\.\(htm\|html\)$" | sort)
+    CNT=-1
+    if [[ "$j" = *"/csswg-test/"* || "$j" = *"/bidi/"* ]]; then
+        ROTATE=1
+    else
+        ROTATE="$(nproc)"
+    fi
+    ARRAY=($TC)
+    POS=$((${#ARRAY[*]}-1))
+    LAST=${ARRAY[$POS]}
+
     for j in $TC; do
+        CNT=$((CNT+1))
+        if [[ $CNT == $ROTATE ]]; then
+            CNT=0
+        fi
+        RAWFILE="tmp"$CNT
+
         echo -e "+++TC:"$j >> $RAWFILE
         if [[ "$j" = *"/csswg-test/"* || "$j" = *"/bidi/"* ]]; then
-            ./StarFish $j --screen-shot=./out.png &>> $RAWFILE
+            ./StarFish $j --screen-shot=./out.png &>> $RAWFILE &
         else
-            ./StarFish $j --hide-window &>> $RAWFILE
+            ./StarFish $j --hide-window &>> $RAWFILE &
         fi
 
-        cat $RAWFILE | grep "+++" > $RESFILE
+        if [[ $CNT != $((ROTATE-1)) && $j != $LAST ]]; then
+            continue;
+        fi
+        wait;
+
+        for k in $(seq 0 $CNT); do
+            TMPFILE="tmp"$k
+            cat $TMPFILE | grep "+++" >> $RESFILE
+            rm $TMPFILE
+        done
         sed -i 's/+++//g' $RESFILE
     done
 
@@ -97,7 +122,7 @@ for i in ${TESTSUITE[@]}; do
     perl -i -pe 's/TC:/\n/g' $CSSRES $HTMLRES
 
     # Remove unnecessary files 
-    rm $RAWFILE $RESFILE
+    rm $RESFILE
 done
 
 echo -e "${BOLD}Finished! You can find the results in \`tool/coverage/in/\`${RESET}\n"
