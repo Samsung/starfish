@@ -21,7 +21,7 @@ policies and contribution forms [3].
         output:true,
         harness_timeout:{
             // XXX
-            "normal":1000,
+            "normal":10000,
             "long":60000
         },
         test_timeout:null,
