@@ -2422,10 +2422,10 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
                 }
 #ifdef STARFISH_TC_COVERAGE
                 if (canBubbles) {
-                    STARFISH_LOG_INFO("&&&InitEvent::bubbles\n");
+                    STARFISH_LOG_INFO("&&&EventInit::bubbles\n");
                 }
                 if (canCancelable) {
-                    STARFISH_LOG_INFO("&&&InitEvent::cancelable\n");
+                    STARFISH_LOG_INFO("&&&EventInit::cancelable\n");
                 }
 #endif
                 auto event = new Event(String::fromUTF8(type->utf8Data()), EventInit(canBubbles, canCancelable));

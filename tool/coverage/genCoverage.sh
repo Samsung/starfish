@@ -149,3 +149,7 @@ rm out/html.csv.tmp t.txt
 
 rm -fr out
 
+python csv2xml.py dom.csv
+python csv2xml.py html.csv
+python csv2xml.py css.csv
+
