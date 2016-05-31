@@ -1,5 +1,10 @@
 CSS Version      , Property
-CSS 2.1          , margin
+CSS 2.1 Selector , universal-selector 
+                 , type-selector
+                 , class-selector
+                 , id-selector
+                 , pseudo-active-selector
+CSS 2.1 Property , margin
                  , margin-bottom
                  , margin-left
                  , margin-right
