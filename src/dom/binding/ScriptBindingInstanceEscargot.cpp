@@ -456,163 +456,33 @@ IMPL_EMPTY_BINDING(htmlUnknownElement, HTMLUnknownElement, htmlElement);
 escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Node, fetchData(scriptBindingInstance)->m_eventTarget);
+
     /* 4.4 Interface Node */
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("ELEMENT_NODE"), false, true, false, escargot::ESValue(Node::ELEMENT_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("ATTRIBUTE_NODE"), false, true, false, escargot::ESValue(Node::ATTRIBUTE_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("TEXT_NODE"), false, true, false, escargot::ESValue(Node::TEXT_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("CDATA_SECTION_NODE"), false, true, false, escargot::ESValue(Node::CDATA_SECTION_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("ENTITY_REFERENCE_NODE"), false, true, false, escargot::ESValue(Node::ENTITY_REFERENCE_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("ENTITY_NODE"), false, true, false, escargot::ESValue(Node::ENTITY_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("PROCESSING_INSTRUCTION_NODE"), false, true, false, escargot::ESValue(Node::PROCESSING_INSTRUCTION_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("COMMENT_NODE"), false, true, false, escargot::ESValue(Node::COMMENT_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("DOCUMENT_NODE"), false, true, false, escargot::ESValue(Node::DOCUMENT_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("DOCUMENT_TYPE_NODE"), false, true, false, escargot::ESValue(Node::DOCUMENT_TYPE_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("DOCUMENT_FRAGMENT_NODE"), false, true, false, escargot::ESValue(Node::DOCUMENT_FRAGMENT_NODE));
+    NodeFunction->asESObject()->defineDataProperty(escargot::ESString::create("NOTATION_NODE"), false, true, false, escargot::ESValue(Node::NOTATION_NODE));
 
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("ELEMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::ELEMENT_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("ATTRIBUTE_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::ATTRIBUTE_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("TEXT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::TEXT_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("CDATA_SECTION_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::CDATA_SECTION_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("ENTITY_REFERENCE_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::ENTITY_REFERENCE_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("ENTITY_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::ENTITY_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("PROCESSING_INSTRUCTION_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::PROCESSING_INSTRUCTION_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("COMMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::COMMENT_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::DOCUMENT_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_TYPE_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::DOCUMENT_TYPE_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("DOCUMENT_FRAGMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::DOCUMENT_FRAGMENT_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->defineAccessorProperty(escargot::ESString::create("NOTATION_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            escargot::ESValue v = originalObj;
-            return escargot::ESValue(Node::NOTATION_NODE);
-            },
-            NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ELEMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::ELEMENT_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ATTRIBUTE_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::ATTRIBUTE_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("TEXT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::TEXT_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("CDATA_SECTION_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::CDATA_SECTION_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ENTITY_REFERENCE_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::ENTITY_REFERENCE_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("ENTITY_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::ENTITY_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("PROCESSING_INSTRUCTION_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::PROCESSING_INSTRUCTION_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("COMMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::COMMENT_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::DOCUMENT_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_TYPE_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::DOCUMENT_TYPE_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("DOCUMENT_FRAGMENT_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::DOCUMENT_FRAGMENT_NODE);
-        },
-        NULL, false, false, false);
-
-    NodeFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("NOTATION_NODE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Node::NOTATION_NODE);
-        },
-        NULL, false, false, false);
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("ELEMENT_NODE"), false, true, false, escargot::ESValue(Node::ELEMENT_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("ATTRIBUTE_NODE"), false, true, false, escargot::ESValue(Node::ATTRIBUTE_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("TEXT_NODE"), false, true, false, escargot::ESValue(Node::TEXT_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("CDATA_SECTION_NODE"), false, true, false, escargot::ESValue(Node::CDATA_SECTION_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("ENTITY_REFERENCE_NODE"), false, true, false, escargot::ESValue(Node::ENTITY_REFERENCE_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("ENTITY_NODE"), false, true, false, escargot::ESValue(Node::ENTITY_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("PROCESSING_INSTRUCTION_NODE"), false, true, false, escargot::ESValue(Node::PROCESSING_INSTRUCTION_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("COMMENT_NODE"), false, true, false, escargot::ESValue(Node::COMMENT_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DOCUMENT_NODE"), false, true, false, escargot::ESValue(Node::DOCUMENT_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DOCUMENT_TYPE_NODE"), false, true, false, escargot::ESValue(Node::DOCUMENT_TYPE_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DOCUMENT_FRAGMENT_NODE"), false, true, false, escargot::ESValue(Node::DOCUMENT_FRAGMENT_NODE));
+    NodeFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("NOTATION_NODE"), false, true, false, escargot::ESValue(Node::NOTATION_NODE));
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NodeFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("nodeType"),
@@ -2602,53 +2472,15 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, nullptr);
 
-    eventFunction->defineAccessorProperty(escargot::ESString::create("NONE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            return escargot::ESValue(Event::NONE);
-            },
-            NULL, false, false, false);
+    eventFunction->asESObject()->defineDataProperty(escargot::ESString::create("NONE"), false, true, false, escargot::ESValue(Event::NONE));
+    eventFunction->asESObject()->defineDataProperty(escargot::ESString::create("CAPTURING_PHASE"), false, true, false, escargot::ESValue(Event::CAPTURING_PHASE));
+    eventFunction->asESObject()->defineDataProperty(escargot::ESString::create("AT_TARGET"), false, true, false, escargot::ESValue(Event::AT_TARGET));
+    eventFunction->asESObject()->defineDataProperty(escargot::ESString::create("BUBBLING_PHASE"), false, true, false, escargot::ESValue(Event::BUBBLING_PHASE));
 
-    eventFunction->defineAccessorProperty(escargot::ESString::create("CAPTURING_PHASE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            return escargot::ESValue(Event::CAPTURING_PHASE);
-            },
-            NULL, false, false, false);
-
-    eventFunction->defineAccessorProperty(escargot::ESString::create("AT_TARGET"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            return escargot::ESValue(Event::AT_TARGET);
-            },
-            NULL, false, false, false);
-
-    eventFunction->defineAccessorProperty(escargot::ESString::create("BUBBLING_PHASE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-            return escargot::ESValue(Event::BUBBLING_PHASE);
-            },
-            NULL, false, false, false);
-
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("NONE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Event::NONE);
-        },
-        NULL, false, false, false);
-
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("CAPTURING_PHASE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Event::CAPTURING_PHASE);
-        },
-        NULL, false, false, false);
-
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("AT_TARGET"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Event::AT_TARGET);
-        },
-        NULL, false, false, false);
-
-    eventFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("BUBBLING_PHASE"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-        return escargot::ESValue(Event::BUBBLING_PHASE);
-        },
-        NULL, false, false, false);
+    eventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("NONE"), false, true, false, escargot::ESValue(Event::NONE));
+    eventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("CAPTURING_PHASE"), false, true, false, escargot::ESValue(Event::CAPTURING_PHASE));
+    eventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("AT_TARGET"), false, true, false, escargot::ESValue(Event::AT_TARGET));
+    eventFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("BUBBLING_PHASE"), false, true, false, escargot::ESValue(Event::BUBBLING_PHASE));
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("eventPhase"),
@@ -3420,17 +3252,17 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
         return toJSString(c);
     }, nullptr);
 
-    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("UNSENT"), false, false, false, escargot::ESValue(0));
-    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("OPENED"), false, false, false, escargot::ESValue(1));
-    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HEADERS_RECEIVED"), false, false, false, escargot::ESValue(2));
-    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, false, false, escargot::ESValue(3));
-    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, false, false, escargot::ESValue(4));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("UNSENT"), false, true, false, escargot::ESValue(0));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("OPENED"), false, true, false, escargot::ESValue(1));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HEADERS_RECEIVED"), false, true, false, escargot::ESValue(2));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, true, false, escargot::ESValue(3));
+    xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, true, false, escargot::ESValue(4));
 
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("UNSENT"), false, false, false, escargot::ESValue(0));
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("OPENED"), false, false, false, escargot::ESValue(1));
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("HEADERS_RECEIVED"), false, false, false, escargot::ESValue(2));
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, false, false, escargot::ESValue(3));
-    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, false, false, escargot::ESValue(4));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("UNSENT"), false, true, false, escargot::ESValue(0));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("OPENED"), false, true, false, escargot::ESValue(1));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("HEADERS_RECEIVED"), false, true, false, escargot::ESValue(2));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, true, false, escargot::ESValue(3));
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, true, false, escargot::ESValue(4));
 
     escargot::ESFunctionObject* xhrOpenFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
