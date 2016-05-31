@@ -70,8 +70,6 @@ void NetworkRequest::initVariables()
     m_total = 0;
     m_loaded = 0;
     m_status = 0;
-    m_timeout = 0;
-
 }
 
 void NetworkRequest::clearIdlers()
@@ -526,6 +524,16 @@ void* NetworkRequest::networkWorker(void* data)
         } else if (res == CURLE_ABORTED_BY_CALLBACK) {
             requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
             GC_FREE(requestData);
+        } else if (res == CURLE_OPERATION_TIMEDOUT) {
+            NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+            STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle);
+            STARFISH_LOG_INFO("got timeout %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)requestData->responseCode);
+            requestData->request->m_status = requestData->responseCode;
+            requestData->request->changeReadyState(DONE, true);
+            requestData->request->changeProgress(PROGRESS, true);
+            requestData->request->changeProgress(TIMEOUT, true);
+            requestData->request->changeProgress(LOADEND, true);
+
         } else {
             NetworkWorkerData* requestData = (NetworkWorkerData*)data;
             STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle);
@@ -563,6 +571,26 @@ void* NetworkRequest::networkWorker(void* data)
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
                 NetworkWorkerData* requestData = (NetworkWorkerData*)data;
                 requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+                GC_FREE(requestData);
+            }, requestData);
+        } else if (res == CURLE_OPERATION_TIMEDOUT) {
+            Locker<Mutex> locker(*requestData->request->m_mutex);
+            requestData->request->m_pendingNetworkWorkerEndIdlerHandle = requestData->request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+                NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+                {
+                    Locker<Mutex> locker(*requestData->request->m_mutex);
+                    requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+                }
+
+                STARFISH_LOG_INFO("got timeout %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)requestData->responseCode);
+                requestData->request->m_status = requestData->responseCode;
+                requestData->request->changeReadyState(DONE, true);
+                requestData->request->changeProgress(PROGRESS, true);
+                requestData->request->changeProgress(TIMEOUT, true);
+                requestData->request->changeProgress(LOADEND, true);
+
+                requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+
                 GC_FREE(requestData);
             }, requestData);
         } else {

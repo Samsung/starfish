@@ -29,8 +29,8 @@ URL::URL(String* baseURL, String* url)
             STARFISH_ASSERT(pos != SIZE_MAX);
             size_t pos2 = baseURL->find("/", pos + 3);
             if (pos2 != SIZE_MAX) {
-                baseURL = baseURL->substring(0, baseURL->lastIndexOf('/'));
-                url = baseURL->concat(String::createASCIIString("/"))->concat(url);
+                baseURL = baseURL->substring(0, pos2);
+                url = baseURL->concat(url);
             } else {
                 url = baseURL->concat(url);
             }
