@@ -10,6 +10,8 @@
 
 namespace StarFish {
 
+class Frame;
+
 enum ComputedStyleDamage {
     ComputedStyleDamageNone = 0,
     ComputedStyleDamageInherited = 1,
@@ -167,15 +169,15 @@ public:
         }
     }
 
-    bool hasTransforms()
-    {
-        return m_transforms != nullptr;
-    }
+    bool hasTransforms(Frame* frame);
 
-    StyleTransformDataGroup* transforms()
+    // DO NOT USE THIS FUNCTION
+    StyleTransformDataGroup* uncheckedTransforms()
     {
         return m_transforms;
     }
+
+    StyleTransformDataGroup* transforms(Frame* frame);
 
     SkMatrix transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight);
     void setTransformIfNeeded()
@@ -633,18 +635,9 @@ public:
 
     OverflowValue overflow()
     {
-        return overflowX();
+        return m_overflow;
     }
 
-    OverflowValue overflowX()
-    {
-        return m_overflowX;
-    }
-
-    /*    OverflowValue overflowY() {
-        return m_overflowY;
-    }
-*/
     void setTop(Length top)
     {
         surround()->offset.setTop(top);
@@ -921,6 +914,11 @@ public:
             m_background->checkComputed(baseFontSize, font());
     }
 
+    void clearTransforms()
+    {
+        m_transforms = nullptr;
+    }
+
 protected:
     void initNonInheritedStyles()
     {
@@ -929,8 +927,7 @@ protected:
         m_zIndex = 0;
         m_background = nullptr;
         m_surround = nullptr;
-        m_overflowX = OverflowValue::VisibleOverflow;
-        // m_overflowY = OverflowValue::VisibleOverflow;
+        m_overflow = OverflowValue::VisibleOverflow;
         m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
         m_verticalAlign = initialVerticalAlign();
         m_transforms = nullptr;
@@ -958,8 +955,7 @@ protected:
     PositionValue m_position : 2;
     TextOverflowValue m_textOverflow : 1;
     VerticalAlignValue m_verticalAlign : 4;
-    OverflowValue m_overflowX : 1;
-    // OverflowValue m_overflowY : 1;
+    OverflowValue m_overflow : 1;
     TextDecorationValue m_textDecoration : 3;
 
     Length m_width;

@@ -335,7 +335,7 @@ String* CSSStyleValuePair::keyName()
         return String::createASCIIString("padding-left");
     case Opacity:
         return String::createASCIIString("opacity");
-    case OverflowX:
+    case Overflow:
         return String::createASCIIString("overflow");
     case Visibility:
         return String::createASCIIString("visibility");
@@ -1828,11 +1828,11 @@ void CSSStyleValuePair::setValueOpacity(std::vector<String*, gc_allocator<String
     }
 }
 
-void CSSStyleValuePair::setValueOverflowX(std::vector<String*, gc_allocator<String*> >* tokens)
+void CSSStyleValuePair::setValueOverflow(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
 
-    m_keyKind = CSSStyleValuePair::KeyKind::OverflowX;
+    m_keyKind = CSSStyleValuePair::KeyKind::Overflow;
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
     if (VALUE_IS_INHERIT()) {
@@ -1842,9 +1842,9 @@ void CSSStyleValuePair::setValueOverflowX(std::vector<String*, gc_allocator<Stri
     } else if (VALUE_IS_STRING("auto") || VALUE_IS_STRING("scroll")) {
         // Not Supported!!
     } else if (VALUE_IS_STRING("visible")) {
-        m_value.m_overflowX = OverflowValue::VisibleOverflow;
+        m_value.m_overflow = OverflowValue::VisibleOverflow;
     } else if (VALUE_IS_STRING("hidden")) {
-        m_value.m_overflowX = OverflowValue::HiddenOverflow;
+        m_value.m_overflow = OverflowValue::HiddenOverflow;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -2316,8 +2316,8 @@ String* CSSStyleValuePair::toString()
     case Opacity: {
         return String::fromUTF8(std::to_string(numberValue()).c_str());
     }
-    case OverflowX: {
-        switch (overflowValueX()) {
+    case Overflow: {
+        switch (overflowValue()) {
         case OverflowValue::VisibleOverflow:
             return String::fromUTF8("visible");
         case OverflowValue::HiddenOverflow:
@@ -3367,7 +3367,7 @@ bool CSSStyleDeclaration::checkInputErrorOpacity(std::vector<String*, gc_allocat
     return true;
 }
 
-bool CSSStyleDeclaration::checkInputErrorOverflowX(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleDeclaration::checkInputErrorOverflow(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() == 1) {
         const char* token = (*tokens)[0]->toLower()->utf8Data();
@@ -4359,25 +4359,15 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
                 break;
-            case CSSStyleValuePair::KeyKind::OverflowX:
+            case CSSStyleValuePair::KeyKind::Overflow:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->m_overflowX = parentStyle->overflowX();
+                    style->m_overflow = parentStyle->overflow();
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->m_overflowX = OverflowValue::VisibleOverflow;
+                    style->m_overflow = OverflowValue::VisibleOverflow;
                 } else {
-                    style->m_overflowX = cssValues[k].overflowValueX();
+                    style->m_overflow = cssValues[k].overflowValue();
                 }
                 break;
-/*            case CSSStyleValuePair::KeyKind::OverflowY:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->m_overflowY = parentStyle->m_overflowY;
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    // TODO : should assign initial value
-                } else {
-                    style->m_overflowY = cssValues[k].overflowValueY();
-                }
-                break;
-*/
             case CSSStyleValuePair::KeyKind::Visibility:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->m_inheritedStyles.m_visibility = parentStyle->visibility();

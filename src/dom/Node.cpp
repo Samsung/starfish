@@ -1319,17 +1319,11 @@ void Node::dumpStyle()
     printf("opacity: %.1f, ", m_style->opacity());
 
     // overflow-x
-    if (m_style->overflowX() == OverflowValue::VisibleOverflow)
-        printf("overflow-x: visible, ");
+    if (m_style->overflow() == OverflowValue::VisibleOverflow)
+        printf("overflow: visible, ");
     else
-        printf("overflow-x: hidden, ");
+        printf("overflow: hidden, ");
 
-    // overflow-y
-    /*    if (m_style->overflowY() == OverflowValue::VisibleOverflow)
-        printf("overflow-y: visible, ");
-    else
-        printf("overflow-y: hidden, ");
-*/
     // visibility
     if (m_style->visibility() == VisibilityValue::VisibleVisibilityValue)
         printf("visibility: visible, ");
@@ -1339,10 +1333,10 @@ void Node::dumpStyle()
     printf("z-index : %d, ", (int)m_style->zIndex());
 
     // transform
-    if (m_style->transforms() == NULL) {
+    if (m_style->uncheckedTransforms() == NULL) {
         printf("transform : none, ");
     } else {
-        printf("transform : %s, ", m_style->transforms()->dumpString()->utf8Data());
+        printf("transform : %s, ", m_style->uncheckedTransforms()->dumpString()->utf8Data());
     }
 
     if (m_style->transformOrigin() == NULL) {

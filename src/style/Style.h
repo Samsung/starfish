@@ -367,7 +367,7 @@ class CSSStyleDeclaration;
     F(Transform, transform, "transform")                           \
     F(TransformOrigin, transformOrigin, "transform-origin")        \
     F(Visibility, visibility, "visibility")                        \
-    F(OverflowX, overflow, "overflow")                             \
+    F(Overflow, overflow, "overflow")                             \
     F(BackgroundImage, backgroundImage, "background-image")        \
     F(BackgroundSize, backgroundSize, "background-size")           \
     F(ZIndex, zIndex, "z-index")                                   \
@@ -588,9 +588,7 @@ public:
         // https://www.w3.org/TR/css3-color/#transparency
         Opacity, // alphavalue | inherit // <1>
         // https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#propdef-overflow
-        // Overflow, // visible | hidden | scroll | auto | inherit // Initial value -> visible
-        OverflowX, // visible | hidden | scroll | auto | inherit // Initial value -> visible
-        // OverflowY, // visible | hidden | scroll | auto | inherit // Initial value -> visible
+        Overflow, // visible | hidden | scroll | auto | inherit // Initial value -> visible
         // https://www.w3.org/TR/CSS2/visufx.html#visibility
         Visibility, // visible | hidden | collapse | inherit // Initial value -> visible
         // http://www.w3.org/TR/CSS2/visuren.html#z-index
@@ -829,17 +827,12 @@ public:
         return m_value.m_multiValue;
     }
 
-    OverflowValue overflowValueX()
+    OverflowValue overflowValue()
     {
         STARFISH_ASSERT(m_valueKind == OverflowValueKind);
-        return m_value.m_overflowX;
+        return m_value.m_overflow;
     }
 
-    /*    OverflowValue overflowValueY() {
-          STARFISH_ASSERT(m_valueKind == OverflowValueKind);
-          return m_value.m_overflowY;
-          }
-          */
     VisibilityValue visibility()
     {
         STARFISH_ASSERT(m_valueKind == VisibilityKind);
@@ -873,8 +866,7 @@ public:
         BackgroundRepeatValue m_backgroundRepeatY;
         BorderImageRepeatValue m_borderImageRepeat;
         ValueList* m_multiValue;
-        OverflowValue m_overflowX;
-        //        OverflowValue m_overflowY;
+        OverflowValue m_overflow;
         VisibilityValue m_visibility;
         TextDecorationValue m_textDecoration;
         CSSTransformFunctions* m_transforms;
@@ -1021,7 +1013,7 @@ public:
     F(TransformOrigin, "transform-origin")      \
     F(Visibility, "visibility")                 \
     F(Opacity, "opacity")                       \
-    F(OverflowX, "overflow-x")                  \
+    F(Overflow, "overflow-x")                  \
     F(BackgroundImage, "background-image")      \
     F(ZIndex, "z-index")                        \
     F(VerticalAlign, "vertical-align")          \

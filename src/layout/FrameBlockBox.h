@@ -121,6 +121,12 @@ public:
             setRightMBPCleared();
         m_origin = origin;
         m_descender = m_ascender = 0;
+
+        // recompute style flags
+        // we should re compute flgas here
+        // because, when ctor of Frame is Executed, vtable is not setted correctly
+        // so we could not consider that what kind of frame is this
+        computeStyleFlags();
     }
 
     virtual bool isInlineNonReplacedBox() const { return true; }

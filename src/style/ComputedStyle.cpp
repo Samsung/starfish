@@ -5,8 +5,24 @@
 #include "dom/Node.h"
 #include "dom/Document.h"
 #include "platform/window/Window.h"
+#include "layout/Frame.h"
+#include "layout/FrameBlockBox.h"
 
 namespace StarFish {
+
+bool ComputedStyle::hasTransforms(Frame* frame)
+{
+    return transforms(frame) != nullptr;
+}
+
+StyleTransformDataGroup* ComputedStyle::transforms(Frame* frame)
+{
+    // https://www.w3.org/TR/css-transforms-1/#transformable-element
+    if (frame->isFrameInline() || (frame->isFrameBox() && frame->asFrameBox()->isInlineBox() && frame->asFrameBox()->asInlineBox()->isInlineNonReplacedBox())) {
+        return nullptr;
+    }
+    return m_transforms;
+}
 
 class StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion : public ResourceClient {
 public:
@@ -180,7 +196,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     if (newStyle->m_verticalAlignLength != oldStyle->m_verticalAlignLength)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
-    if (newStyle->m_overflowX != oldStyle->m_overflowX)
+    if (newStyle->m_overflow != oldStyle->m_overflow)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
     // if (newStyle->m_overflowY != oldStyle->m_overflowY)
@@ -258,39 +274,36 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth, LayoutUnit
 {
     SkMatrix matrix;
     matrix.reset();
-    if (!hasTransforms()) {
+    if (!m_transforms) {
         return matrix;
     }
-    // https://www.w3.org/TR/css-transforms-1/#transformable-element
-    if (m_display == DisplayValue::BlockDisplayValue || m_display == DisplayValue::InlineBlockDisplayValue) {
-        for (size_t i = 0; i < m_transforms->size(); i ++) {
-            StyleTransformData t = m_transforms->at(i);
-            if (t.type() == StyleTransformData::Matrix) {
-                MatrixTransform* m = t.matrix();
-                // [ a c e ]
-                // [ b d f ]
-                // [ x x x ]
-                matrix.set(0, m->a());
-                matrix.set(1, m->c());
-                matrix.set(2, m->e());
-                matrix.set(3, m->b());
-                matrix.set(4, m->d());
-                matrix.set(5, m->f());
-            } else if (t.type() == StyleTransformData::Scale) {
-                ScaleTransform* m = t.scale();
-                matrix.preScale(m->x(), m->y());
-            } else if (t.type() == StyleTransformData::Rotate) {
-                RotateTransform* m = t.rotate();
-                matrix.preRotate(m->angle());
-            } else if (t.type() == StyleTransformData::Skew) {
-                SkewTransform* m = t.skew();
-                matrix.preSkew(tan(deg2rad(m->angleX())), tan(deg2rad(m->angleY())));
-            } else if (t.type() == StyleTransformData::Translate) {
-                TranslateTransform* m = t.translate();
-                matrix.preTranslate(m->tx().specifiedValue(containerWidth), m->ty().specifiedValue(containerHeight));
-            } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
+    for (size_t i = 0; i < m_transforms->size(); i ++) {
+        StyleTransformData t = m_transforms->at(i);
+        if (t.type() == StyleTransformData::Matrix) {
+            MatrixTransform* m = t.matrix();
+            // [ a c e ]
+            // [ b d f ]
+            // [ x x x ]
+            matrix.set(0, m->a());
+            matrix.set(1, m->c());
+            matrix.set(2, m->e());
+            matrix.set(3, m->b());
+            matrix.set(4, m->d());
+            matrix.set(5, m->f());
+        } else if (t.type() == StyleTransformData::Scale) {
+            ScaleTransform* m = t.scale();
+            matrix.preScale(m->x(), m->y());
+        } else if (t.type() == StyleTransformData::Rotate) {
+            RotateTransform* m = t.rotate();
+            matrix.preRotate(m->angle());
+        } else if (t.type() == StyleTransformData::Skew) {
+            SkewTransform* m = t.skew();
+            matrix.preSkew(tan(deg2rad(m->angleX())), tan(deg2rad(m->angleY())));
+        } else if (t.type() == StyleTransformData::Translate) {
+            TranslateTransform* m = t.translate();
+            matrix.preTranslate(m->tx().specifiedValue(containerWidth), m->ty().specifiedValue(containerHeight));
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
     return matrix;

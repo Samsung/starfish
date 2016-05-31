@@ -41,7 +41,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     }
 
     m_matrix.reset();
-    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || m_owner->style()->hasTransforms();
+    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || m_owner->style()->hasTransforms(m_owner);
     return m_needsOwnBuffer;
 }
 

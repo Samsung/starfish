@@ -50,6 +50,8 @@
 #include "dom/Element.h"
 #include "dom/Document.h"
 
+#include "CSSStyleLookupTrie.h"
+
 #include "Style.h"
 
 namespace StarFish {
@@ -1080,8 +1082,14 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                     return;
                 }
 
+                const char* name = descriptor->toLower()->utf8Data();
+                CSSStyleKind kind = lookupCSSStyle(name, strlen(name));
+
+                if (false) {
+
+                }
 #define SET_ATTR(name, nameLower, nameCSSCase) \
-                else if (descriptor->equals(nameCSSCase)) { \
+                else if (kind == CSSStyleKind::name) { \
                     declaration->set##name(value->utf8Data());\
                 }
                 FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
