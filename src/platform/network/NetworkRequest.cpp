@@ -378,15 +378,15 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
         fio->read(res->m_response.data(), sizeof(const char), responseLength);
         fio->close();
         res->changeProgress(PROGRESS, true);
+        res->changeReadyState(DONE, true);
         res->changeProgress(LOAD, true);
         res->changeProgress(LOADEND, true);
-        res->changeReadyState(DONE, true);
     } else {
         STARFISH_LOG_INFO("failed to open %s\n", res->m_url.urlString()->utf8Data());
         res->m_status = 0;
+        res->changeProgress(PROGRESS, true);
         res->changeProgress(ERROR, true);
         res->changeProgress(LOADEND, true);
-        res->changeReadyState(DONE, true);
     }
     delete fio;
 }
@@ -494,9 +494,9 @@ void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
     }
 
     res->changeProgress(PROGRESS, true);
+    res->changeReadyState(DONE, true);
     res->changeProgress(LOAD, true);
     res->changeProgress(LOADEND, true);
-    res->changeReadyState(DONE, true);
 }
 
 void* NetworkRequest::networkWorker(void* data)
