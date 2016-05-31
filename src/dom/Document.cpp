@@ -279,7 +279,11 @@ Element* Document::createElement(QualifiedName localName)
         throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
 #ifdef STARFISH_TC_COVERAGE
-    STARFISH_LOG_INFO("+++tag:%s\n", localName.localName()->utf8Data());
+    if (localName.localName()->equals("style")) {
+        STARFISH_LOG_INFO("+++tag:Element&&&style\n");
+    } else {
+        STARFISH_LOG_INFO("+++tag:%s\n", localName.localName()->utf8Data());
+    }
 #endif
 
     if (localName == window()->starFish()->staticStrings()->m_htmlTagName) {
