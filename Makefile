@@ -637,6 +637,12 @@ regression_test_css3_backgrounds:
 	./tool/reftest/css_test.sh css3_backgrounds true
 regression_test_css3_transforms:
 	./tool/reftest/css_test.sh css3_transforms true
+regression_test_css:
+	make regression_test_css1
+	make regression_test_css21
+	make regression_test_css3_color
+	make regression_test_css3_backgrounds
+	make regression_test_css3_transforms
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp
