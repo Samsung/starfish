@@ -81,16 +81,6 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         return nullptr;
     }
-    virtual void didNodeInserted(Node* parent, Node* newChild)
-    {
-        Node::didNodeInserted(parent, newChild);
-        updateDOMVersion();
-    }
-    virtual void didNodeRemoved(Node* parent, Node* oldChild)
-    {
-        Node::didNodeRemoved(parent, oldChild);
-        updateDOMVersion();
-    }
 
     Element* documentElement();
 
@@ -162,6 +152,17 @@ public:
         return m_documentBuilder;
     }
 
+    virtual void didNodeInserted(Node* parent, Node* newChild);
+    virtual void didNodeRemoved(Node* parent, Node* oldChild);
+
+    HTMLCollection* namedAccess(String* name);
+    void invalidNamedAccessCacheIfNeeded();
+
+    std::vector<Element*, gc_allocator<Element*>>& elementExecutionStackForAttributeStringEventFunctionObject()
+    {
+        return m_elementExecutionStackForAttributeStringEventFunctionObject;
+    }
+
 protected:
     bool m_inParsing : 1;
     CompatibilityMode m_compatibilityMode;
@@ -174,6 +175,8 @@ protected:
     PageVisibilityState m_pageVisibilityState;
     size_t m_domVersion;
     std::vector<NetworkRequest*, gc_allocator<NetworkRequest*>> m_activeNetworkRequests;
+    ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
+    std::vector<Element*, gc_allocator<Element*>> m_elementExecutionStackForAttributeStringEventFunctionObject;
 #ifdef STARFISH_EXP
 private:
     DOMImplementation* m_domImplementation;

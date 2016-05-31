@@ -3,6 +3,8 @@
 #include "HTMLScriptElement.h"
 #include "CharacterData.h"
 
+#include "dom/binding/ScriptBindingInstance.h"
+
 #include "platform/message_loop/MessageLoop.h"
 #include "loader/ElementResourceClient.h"
 
@@ -31,7 +33,7 @@ public:
     {
         ResourceClient::didLoadFinished();
         String* text = m_resource->asTextResource()->text();
-        m_element->document()->window()->starFish()->evaluate(text);
+        m_element->document()->window()->starFish()->scriptBindingInstance()->evaluate(text);
         didScriptLoaded();
     }
 
@@ -63,7 +65,7 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             }
             String* script = text();
             m_isAlreadyStarted = true;
-            document()->window()->starFish()->evaluate(script);
+            document()->window()->starFish()->scriptBindingInstance()->evaluate(script);
             m_didScriptExecuted = true;
             return false;
         } else {

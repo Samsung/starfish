@@ -137,7 +137,6 @@ void StarFish::close()
 
 void StarFish::evaluate(String* s)
 {
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_scriptBindingInstance->evaluate(s);
 }
 

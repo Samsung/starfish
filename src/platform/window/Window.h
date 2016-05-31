@@ -11,6 +11,7 @@ class Document;
 class Window;
 class URL;
 class Canvas;
+class HTMLCollection;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -153,6 +154,9 @@ public:
     {
         return height();
     }
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
+    HTMLCollection* namedAccess(String* name);
 
 protected:
     void setNeedsRendering()

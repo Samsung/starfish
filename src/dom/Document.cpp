@@ -420,4 +420,86 @@ void Document::visibilityStateChanged()
     EventTarget::dispatchEvent(this->asNode(), e);
 }
 
+void Document::didNodeInserted(Node* parent, Node* newChild)
+{
+    Node::didNodeInserted(parent, newChild);
+    updateDOMVersion();
+    invalidNamedAccessCacheIfNeeded();
+}
+
+void Document::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    Node::didNodeRemoved(parent, oldChild);
+    updateDOMVersion();
+    invalidNamedAccessCacheIfNeeded();
+}
+
+HTMLCollection* Document::namedAccess(String* name)
+{
+    for (size_t i = 0; i < m_namedAccessActiveHTMLCollectionList.size(); i ++) {
+        if (m_namedAccessActiveHTMLCollectionList.at(i).first->equals(name)) {
+            return m_namedAccessActiveHTMLCollectionList[i].second;
+        }
+    }
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
+    auto filter = [](Node* node, void* data)
+    {
+        QualifiedName* qualifiedName = (QualifiedName*)data;
+
+        if (node->isElement() && node->asElement()->isHTMLElement()) {
+
+            // a, applet, area, embed, form, frameset, img, or object elements that have a name content attribute whose value is name, or
+            QualifiedName nm = node->asElement()->asHTMLElement()->name();
+            StaticStrings* ss = node->document()->window()->starFish()->staticStrings();
+            bool shouldConsiderNameAttribute = false;
+            if (nm == ss->m_aTagName) {
+                shouldConsiderNameAttribute = true;
+            } else if (nm == ss->m_areaTagName) {
+                shouldConsiderNameAttribute = true;
+            } else if (nm == ss->m_embedTagName) {
+                shouldConsiderNameAttribute = true;
+            } else if (nm == ss->m_formTagName) {
+                shouldConsiderNameAttribute = true;
+            } else if (nm == ss->m_framesetTagName) {
+                shouldConsiderNameAttribute = true;
+            } else if (nm == ss->m_imgTagName) {
+                shouldConsiderNameAttribute = true;
+            } else if (nm == ss->m_objectTagName) {
+                shouldConsiderNameAttribute = true;
+            }
+
+            if (shouldConsiderNameAttribute) {
+                if (node->asElement()->getAttribute(ss->m_name)->equals(qualifiedName->localName())) {
+                    return true;
+                }
+            }
+
+            // HTML elements that have an id content attribute whose value is name
+            if (node->asElement()->id()->equals(qualifiedName->localName())) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    // TODO
+    // now, we always create html collection for every query
+    // but, if len(result) == 0:
+    // we should not need to make HTMLCollection
+    // just return nullptr;
+    void* ptr = new QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), name));
+    auto list = new HTMLCollection(scriptBindingInstance(), document(), filter, ptr, true);
+    m_namedAccessActiveHTMLCollectionList.push_back(std::make_pair(name, list));
+
+    return list;
+}
+
+void Document::invalidNamedAccessCacheIfNeeded()
+{
+    for (size_t i = 0; i < m_namedAccessActiveHTMLCollectionList.size(); i ++) {
+        m_namedAccessActiveHTMLCollectionList.at(i).second->activeNodeList().invalidateCache();
+    }
+}
+
 }

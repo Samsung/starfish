@@ -74,6 +74,7 @@ test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload-before-page-loa
 test/reftest/vendor/blink/fast/dom/HTMLStyleElement/style-onload.html
 test/reftest/vendor/blink/fast/dom/inline-event-attributes-crash.html
 test/reftest/vendor/blink/fast/dom/inline-event-attributes-moved.html
+test/reftest/vendor/blink/fast/dom/inline-event-attributes-lookup-removed.html
 test/reftest/vendor/blink/fast/dom/interface-object-proto.html
 test/reftest/vendor/blink/fast/dom/isEqualNode-after-removeAttribute.html
 test/reftest/vendor/blink/fast/dom/multiple-ids.html

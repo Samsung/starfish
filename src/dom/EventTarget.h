@@ -7,7 +7,19 @@ namespace StarFish {
 
 class Event;
 class Node;
+class Element;
 class Window;
+
+struct AttributeStringEventFunctionData : public gc {
+public:
+    AttributeStringEventFunctionData(Element* target, String* scriptStringNeedToParse)
+        : m_target(target)
+        , m_scriptStringNeedToParse(scriptStringNeedToParse)
+    {
+    }
+    Element* m_target;
+    String* m_scriptStringNeedToParse;
+};
 
 class EventListener : public gc {
 public:
@@ -19,38 +31,37 @@ public:
     {
     }
 
-    EventListener(String* scriptString, bool isAttribute = false, bool useCapture = false)
+    EventListener(String* scriptString, Element* target, bool isAttribute = false, bool useCapture = false)
         : m_isAttribute(isAttribute)
         , m_capture(useCapture)
         , m_isNeedToParse(true)
-        , m_scriptStringNeedToParse(scriptString)
+        , m_scriptStringNeedToParse(new AttributeStringEventFunctionData(target, scriptString))
     {
     }
+
     bool isAttribute() const
     {
         return m_isAttribute;
     }
+
     bool compare(const EventListener* other) const
     {
         return (m_isAttribute == other->m_isAttribute) && (scriptValue() == other->scriptValue()) && (m_capture == other->m_capture);
     }
+
     bool capture() const
     {
         return m_capture;
     }
+
     void setCapture(bool capture)
     {
         m_capture = capture;
     }
+
     bool needParse()
     {
         return m_isNeedToParse;
-    }
-
-    void setScriptString(String* str)
-    {
-        m_isNeedToParse = true;
-        m_scriptStringNeedToParse = str;
     }
 
     ScriptValue scriptValue() const;
@@ -62,7 +73,7 @@ protected:
     mutable bool m_isNeedToParse : 1;
 
     union {
-        mutable String* m_scriptStringNeedToParse;
+        mutable AttributeStringEventFunctionData* m_scriptStringNeedToParse;
         mutable ScriptValue m_listener;
     };
 
@@ -119,10 +130,10 @@ public:
         EventListener* l = new EventListener(f, true);
         setAttributeEventListener(eventType, l);
     }
-    void setAttributeEventListener(const QualifiedName& eventTypeName, String* str)
+    void setAttributeEventListener(const QualifiedName& eventTypeName, String* str, Element* target)
     {
         auto eventType = eventTypeName.localName();
-        EventListener* l = new EventListener(str, true);
+        EventListener* l = new EventListener(str, target, true);
         setAttributeEventListener(eventType, l);
     }
     bool setAttributeEventListener(const String* eventType, EventListener* listener);

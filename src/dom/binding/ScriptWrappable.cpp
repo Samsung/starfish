@@ -311,6 +311,37 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         }
         },
         true, true, true);
+
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::WindowObject);
+        Window* self = (Window*)obj->extraPointerData();
+
+        if (self->document()->elementExecutionStackForAttributeStringEventFunctionObject().size()) {
+            ScriptValue v = self->document()->elementExecutionStackForAttributeStringEventFunctionObject().back()->scriptValue();
+            bool t = v.asESPointer()->asESObject()->hasOwnProperty(key);
+            if (t) {
+                return v.asESPointer()->asESObject()->get(key);
+            }
+        }
+
+        String* name = toBrowserString(key);
+        HTMLCollection* coll = self->namedAccess(name);
+        if (coll) {
+            if (coll->length()) {
+                if (coll->length() > 1) {
+                    return coll->scriptValue();
+                } else {
+                    return coll->item(0)->scriptObject();
+                }
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::WindowObject);
+        size_t len = 0;
+        escargot::ESValueVector v(len);
+        return v;
+    });
 }
 
 void ScriptWrappable::initScriptWrappable(Node* ptr)
@@ -623,7 +654,7 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
             v[i] = escargot::ESValue(i);
         }
         return v;
-    });
+    }, true);
 }
 
 void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* instance)
@@ -648,7 +679,7 @@ void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* 
             v[i] = escargot::ESValue(i);
         }
         return v;
-    });
+    }, true);
 }
 
 void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstance* instance)
@@ -673,7 +704,7 @@ void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstan
             v[i] = escargot::ESValue(i);
         }
         return v;
-    });
+    }, true);
 }
 
 void ScriptWrappable::initScriptWrappable(DOMSettableTokenList* ptr, ScriptBindingInstance* instance)
@@ -710,7 +741,7 @@ void ScriptWrappable::initScriptWrappable(NamedNodeMap* ptr, ScriptBindingInstan
             v[i] = escargot::ESValue(i);
         }
         return v;
-    });
+    }, true);
 }
 
 void ScriptWrappable::initScriptWrappable(Attr* ptr, ScriptBindingInstance* instance)
@@ -746,7 +777,7 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
             v[i] = escargot::ESValue(i);
         }
         return v;
-    });
+    }, true);
 }
 
 void ScriptWrappable::initScriptWrappable(CSSStyleRule* ptr)
@@ -826,6 +857,68 @@ ScriptValue createScriptFunction(String** argNames, size_t argc, String* functio
         STARFISH_LOG_INFO("Uncaught %s\n", result.toString()->utf8Data());
     }
     return result;
+}
+
+struct AttributeStringEventFunctionInnerData : public gc {
+    escargot::ESValue function;
+    Element* m_target;
+};
+
+ScriptValue createAttributeStringEventFunction(Element* target, String* functionBody, bool& result)
+{
+    String* name[] = {String::createASCIIString("event")};
+    escargot::ESValue fn = createScriptFunction(name, 1, functionBody, result);
+    escargot::ESFunctionObject* wrapper = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::FunctionEnvironmentRecordWithArgumentsObject* record = (escargot::FunctionEnvironmentRecordWithArgumentsObject*)escargot::ESVMInstance::currentInstance()->currentExecutionContext()->environment()->record();
+        escargot::ESFunctionObject* callee = record->callee();
+        STARFISH_ASSERT(callee->extraData() == ScriptWrappable::AttributeStringEventFunctionObject);
+        AttributeStringEventFunctionInnerData* data = (AttributeStringEventFunctionInnerData*)callee->extraPointerData();
+
+        Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+        wnd->document()->elementExecutionStackForAttributeStringEventFunctionObject().push_back(data->m_target);
+
+        escargot::ESVMInstance::currentInstance()->globalObject()->setIdentifierInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            Element* e = wnd->document()->elementExecutionStackForAttributeStringEventFunctionObject().back();
+            if (e->scriptValue().asESPointer()->asESObject()->hasOwnProperty(key, true)) {
+                return e->scriptValue().asESPointer()->asESObject()->getOwnProperty(key);
+            }
+            return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+        });
+
+        std::jmp_buf tryPosition;
+        bool hasError = false;
+        escargot::ESValue result;
+        if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
+            result = escargot::ESFunctionObject::call(escargot::ESVMInstance::currentInstance(), data->function,
+                escargot::ESVMInstance::currentInstance()->currentExecutionContext()->resolveThisBinding(),
+                escargot::ESVMInstance::currentInstance()->currentExecutionContext()->arguments(),
+                escargot::ESVMInstance::currentInstance()->currentExecutionContext()->argumentCount(), false);
+            instance->unregisterTryPos(&tryPosition);
+        } else {
+            result = instance->getCatchedError();
+        }
+
+        wnd->document()->elementExecutionStackForAttributeStringEventFunctionObject().pop_back();
+
+        if (wnd->document()->elementExecutionStackForAttributeStringEventFunctionObject().size() == 0) {
+            escargot::ESVMInstance::currentInstance()->globalObject()->setIdentifierInterceptor(nullptr);
+        }
+
+        if (hasError) {
+            instance->throwError(result);
+        }
+
+        return result;
+    }, escargot::ESString::create(""), 0, false);
+
+    wrapper->codeBlock()->m_needsToPrepareGenerateArgumentsObject = true;
+    wrapper->setExtraData(ScriptWrappable::AttributeStringEventFunctionObject);
+    AttributeStringEventFunctionInnerData* data = new AttributeStringEventFunctionInnerData();
+    data->m_target = target;
+    data->function = fn;
+    wrapper->setExtraPointerData(data);
+    return wrapper;
 }
 
 ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue)

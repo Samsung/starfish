@@ -1021,6 +1021,19 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 {
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
+HTMLCollection* Window::namedAccess(String* name)
+{
+    // TODO
+    // when child browser context(ex- iframe) implemented, we should re-implement this block
+    if (document()) {
+        return document()->namedAccess(name);
+    } else {
+        return nullptr;
+    }
+}
+
+
 void Window::pause()
 {
     STARFISH_LOG_INFO("onPause");

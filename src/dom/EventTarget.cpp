@@ -9,9 +9,8 @@ namespace StarFish {
 ScriptValue EventListener::scriptValue() const
 {
     if (m_isNeedToParse) {
-        String* name[] = {String::createASCIIString("event")};
-        bool error = false;
-        m_listener = createScriptFunction(name, 1, m_scriptStringNeedToParse, error);
+        bool error;
+        m_listener = createAttributeStringEventFunction(m_scriptStringNeedToParse->m_target, m_scriptStringNeedToParse->m_scriptStringNeedToParse, error);
         if (error)
             m_listener = ScriptValueNull;
         m_isNeedToParse = false;

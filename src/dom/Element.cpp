@@ -97,6 +97,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
     if (name == ss->m_id) {
         m_id = value;
         setNeedsStyleRecalc();
+
+        document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
         DOMTokenList::tokenize(&m_classNames, value);
         setNeedsStyleRecalc();
@@ -122,6 +124,11 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         CSSParser parser(document());
         parser.parseStyleDeclaration(value, inlineStyle());
         m_didInlineStyleModifiedAfterAttributeSet = false;
+    } else if (name == ss->m_name) {
+        // TODO we should not always invalidate cache
+        // according spec, https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
+        // only few html elements are affected by name attribute changing
+        document()->invalidNamedAccessCacheIfNeeded();
     }
 }
 

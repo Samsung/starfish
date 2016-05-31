@@ -79,11 +79,12 @@ public:
         BlobObject = 1 << 12,
         URLObject = 1 << 13,
         DOMExceptionObject = 1 << 14,
+        AttributeStringEventFunctionObject = 1 << 15,
 #ifdef TIZEN_DEVICE_API
-        NativePluginManagerObject = 1 << 15,
+        NativePluginManagerObject = 1 << 16,
 #endif
 #ifdef STARFISH_EXP
-        DOMImplementationObject = 1 << 16,
+        DOMImplementationObject = 1 << 17,
 #endif
     };
     ScriptWrappable(void* extraPointerData);
@@ -163,6 +164,7 @@ private:
 
 ScriptValue createScriptString(String* str);
 ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody, bool& error);
+ScriptValue createAttributeStringEventFunction(Element* target, String* functionBody, bool& result);
 ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue);
 ScriptValue parseJSON(String* jsonData);
 bool isCallableScriptValue(ScriptValue v);

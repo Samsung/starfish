@@ -2585,7 +2585,7 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
         EventTarget* target = originalObj->target();
-        if (target && (target->isNode() || target->isWindow())) {
+        if (target) {
             return target->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
@@ -3591,6 +3591,7 @@ escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBin
 
 void ScriptBindingInstance::evaluate(String* str)
 {
+    ScriptBindingInstanceEnterer enter(*this);
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) == 0) {
         escargot::ESValue ret = fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
