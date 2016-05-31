@@ -2,7 +2,7 @@ Category        , Item
 Global Attr     , class
                 , dir
                 , id
-                , &&&style
+                , *&&&style
                 , onclick
                 , onload
 Scripting       , onunload

@@ -87,16 +87,17 @@ DOMTokenList            , DOMTokenList&&&length
                         , add
                         , DOMTokenList&&&remove
                         , toggle
-HTML5                   , window
+Window                  , window
                         , document
-                        , setTimeout
+                        , innerHeight
+                        , innerWidth
+WindowTimers            , setTimeout
                         , clearTimeout
                         , setInterval
                         , clearInterval
-CSSOM                   , innerHeight
-                        , innerWidth
 Page Visibility         , hidden
                         , visibilityState
+                        , visibilitychange
 Animation               , requestAnimationFrame
                         , cancelAnimationFrame
 XMLHttpRequestEventTarget, onloadstart
@@ -115,6 +116,12 @@ XMLHttpRequest           , onreadyStatechange
                          , status
                          , responseText
 ProgressEvent            , ProgressEvent&&&type
+                         , lengthComputable
+                         , loaded
+                         , total
 ProgressEventInit        , ProgressEventInit&&&type
+                         , loaded
+                         , total
 Other                    , Array&&&length
                          , Object&&&length
+# UNSENT OPENED HEADERS_RECEIVED LOADING DONE
