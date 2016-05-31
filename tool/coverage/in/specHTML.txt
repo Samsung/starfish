@@ -2,7 +2,7 @@ Category        , Item
 Global Attr     , class
                 , dir
                 , id
-                , style
+                , &&&style
                 , onclick
                 , onload
 Scripting       , onunload
@@ -11,7 +11,7 @@ Element         , html
                 , head
                 , link
                 , meta
-                , style
+                , Element&&&style
                 , body
                 , p
                 , div
