@@ -75,6 +75,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::SubVAlignValue) {
                     rb->setY(pdescender + rb->ascender());
+                    maxAscenderSoFar = std::max(pdescender + rb->ascender(), maxAscenderSoFar);
                     maxDescenderSoFar = std::min(pdescender + rb->decender(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::SuperVAlignValue) {
                     // Placing a superscript is font and browser dependent.
@@ -82,6 +83,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     // (i.e, the baseline of superscript is aligned with 1/2 of the ascender)
                     rb->setY(pascender / 2 + rb->ascender());
                     maxAscenderSoFar = std::max(pascender / 2 + rb->ascender(), maxAscenderSoFar);
+                    maxDescenderSoFar = std::min(pascender / 2 + rb->decender(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                     maxDescenderSoFar = std::min(pascender - rb->height(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
@@ -300,11 +302,9 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                         STARFISH_ASSERT(f->isFrameBlockBox() && f->style()->display() == InlineBlockDisplayValue);
                         LayoutUnit ascender = ctx.inlineBlockAscender(f->asFrameBlockBox());
                         if (ascender == f->height()) {
-                            LayoutUnit dec = f->marginBottom();
-                            f->setY(height + maxDescender - f->height() - dec);
+                            f->setY(maxAscender - ascender - marginBottom);
                         } else {
-                            LayoutUnit dec = -(f->height() - ascender) + f->marginBottom();
-                            f->setY(height + maxDescender - f->height() - dec + f->marginTop());
+                            f->setY(maxAscender - ascender);
                         }
                     }
                 // 4. convert a y pos relative to the baseline to a y pos relative to the top-left corner of the box
