@@ -21,7 +21,6 @@ cd ../../ && ./tool/coverage/1_genCssHtmlSpecList.sh
 
 # 3. gen reports
 cd $path/tool/coverage && ./2_genCoverage.sh && ./3_combineCsv.sh
-d=`date +"%y%m%d"`
 
 # 4. gen xml and copy to the server
 ./4_genXmlAndCopy.sh
