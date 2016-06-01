@@ -367,7 +367,7 @@ class CSSStyleDeclaration;
     F(Transform, transform, "transform")                           \
     F(TransformOrigin, transformOrigin, "transform-origin")        \
     F(Visibility, visibility, "visibility")                        \
-    F(Overflow, overflow, "overflow")                             \
+    F(Overflow, overflow, "overflow")                              \
     F(BackgroundImage, backgroundImage, "background-image")        \
     F(BackgroundSize, backgroundSize, "background-size")           \
     F(ZIndex, zIndex, "z-index")                                   \
@@ -377,7 +377,7 @@ class CSSStyleDeclaration;
     F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y") \
     F(Background, background, "background")                        \
     F(Opacity, opacity, "opacity")                                 \
-    F(FontWeight, fontWeight, "font-weight")
+    F(FontWeight, fontWeight, "font-weight")                       \
 
 
 class CSSTransformFunction {

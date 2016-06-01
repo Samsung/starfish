@@ -17,6 +17,7 @@ test/reftest/vendor/webkit/fast/dom/constructor-proto.html
 test/reftest/vendor/webkit/fast/dom/createElement-with-column.html
 test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/css-properties-case-sensitive.html
 test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/css-style-item.html
+test/reftest/vendor/webkit/fast/dom/CSSStyleDeclaration/cssstyledeclaration-properties-descriptor.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-invalid-names.html
 test/reftest/vendor/webkit/fast/dom/Document/createElement-valid-names.html
 test/reftest/vendor/webkit/fast/dom/document-head.html
@@ -117,6 +118,7 @@ test/reftest/vendor/webkit/fast/dom/timer-clear-interval-in-handler.html
 test/reftest/vendor/webkit/fast/dom/timer-increase-min-interval-and-reset-part-2.html
 test/reftest/vendor/webkit/fast/dom/timer-increase-min-interval-repeating.html
 test/reftest/vendor/webkit/fast/dom/webidl-operations-on-node-prototype.html
+test/reftest/vendor/webkit/fast/dom/Window/addEventListener-implicit-this.html
 test/reftest/vendor/webkit/fast/dom/Window/dispatchEvent.html
 test/reftest/vendor/webkit/fast/dom/Window/HTMLBodyElement-window-eventListener-attributes.html
 test/reftest/vendor/webkit/fast/dom/Window/remove-timeout-crash.html
@@ -129,6 +131,7 @@ test/reftest/vendor/webkit/fast/dom/Window/window-constructor-presence.html
 test/reftest/vendor/webkit/fast/dom/Window/window-constructor-settable.html
 test/reftest/vendor/webkit/fast/dom/Window/window-custom-prototype-crash.html
 test/reftest/vendor/webkit/fast/dom/Window/window-function-name-getter-precedence.html
+test/reftest/vendor/webkit/fast/dom/Window/window-remove-event-listener.html
 test/reftest/vendor/webkit/fast/dom/Window/window-legacy-event-listener.html
 test/reftest/vendor/webkit/fast/dom/Window/window-properties-configurable.html
 test/reftest/vendor/webkit/fast/dom/XMLHttpRequest-constants.html

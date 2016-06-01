@@ -308,6 +308,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         return escargot::ESValue(ret);
     }, escargot::ESString::create("dispatchEvent"), 1, false);
+    fnDispatchEvent->codeBlock()->m_forceDenyStrictMode = true;
     EventTargetFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("dispatchEvent"), true, true, true, fnDispatchEvent);
 
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(Window, EventTargetFunction);
@@ -343,16 +344,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             fetchData(wnd->document()->scriptBindingInstance())->m_value##codeName = value; \
         }, true, false, true);
     STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
-/*
-    globalObject->defineAccessorProperty(escargot::ESString::create("Node"), [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            return fetchData((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptBindingInstance())->node();
-        }, [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name, const escargot::ESValue& value)
-        {
-            fetchData((((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptBindingInstance())->node();
-            escargot::ESVMInstance::currentInstance()->globalObject()->defineDataProperty(name, true, false, true, value);
-        }, true, false, true);
-*/
 
 
     /* 4.5.1 Interface DOMImplementation */
@@ -3129,7 +3120,7 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
 {
     /* style-related getter/setter start here */
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
-
+/*
 #define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                 \
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(                                                                     \
         CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create(#nameLower),            \
@@ -3155,7 +3146,7 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
         return escargot::ESValue(); \
     });
     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
-
+*/
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {

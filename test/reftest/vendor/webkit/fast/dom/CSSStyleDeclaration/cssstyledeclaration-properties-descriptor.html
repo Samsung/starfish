@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <script src="../../../resources/wpt-test-pre.js"></script>
+    <script src="../../../resources/js-test-pre.js"></script>
+    <script>
+        description("This tests the descriptor of CSSStyleDeclaration properties.");
+
+        var descriptor = Object.getOwnPropertyDescriptor(document.body.style, 'color');
+        shouldBeFalse("descriptor['writable']");
+        shouldBeFalse("descriptor['enumerable']");
+        shouldBeFalse("descriptor['configurable']");
+    </script>
+    <script src="../../../resources/js-test-post.js"></script>
+    <script src="../../../resources/wpt-test-post.js"></script>
+</body>
+</html>

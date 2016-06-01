@@ -14,8 +14,8 @@ description("Invalidation of cached id-name collections must not crash.");
 if (window.testRunner)
     testRunner.dumpAsText();
 
-// var is = window["p1"];
-var is = document.getElementsByTagName("pre");
+var is = window["p1"][0];
+// var is = document.getElementsByTagName("pre");
 var div = document.createElement('div');
 document.body.appendChild(div);
 div.appendChild(is[is.length - 2]);

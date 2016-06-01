@@ -9,6 +9,8 @@
 #include "dom/binding/ScriptBindingInstance.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
+#include "style/CSSStyleLookupTrie.h"
+
 namespace StarFish {
 
 static ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
@@ -208,8 +210,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
                 wnd->cancelAnimationFrame(instance->currentExecutionContext()->readArgument(0).toUint32());
             }
         }
-        // FIXME what return value should return?
-        return escargot::ESValue(1000);
+        return escargot::ESValue();
     }, escargot::ESString::create("cancelAnimationFrame"), 1, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("cancelAnimationFrame"), false, false, false, cancelAnimationFrameFunction);
 
@@ -336,6 +337,9 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             }
         }
         return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::WindowObject);
+        return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::WindowObject);
         size_t len = 0;
@@ -645,6 +649,9 @@ void ScriptWrappable::initScriptWrappable(HTMLCollection* ptr, ScriptBindingInst
             return self->item(idx)->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
+        return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::HTMLCollectionObject);
         HTMLCollection* self = (HTMLCollection*)obj->extraPointerData();
@@ -670,6 +677,9 @@ void ScriptWrappable::initScriptWrappable(NodeList* ptr, ScriptBindingInstance* 
         if (idx < self->length())
             return self->item(idx)->scriptValue();
         return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
+        return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NodeListObject);
         NodeList* self = (NodeList*)obj->extraPointerData();
@@ -695,6 +705,9 @@ void ScriptWrappable::initScriptWrappable(DOMTokenList* ptr, ScriptBindingInstan
         if (idx < self->length())
             return createScriptString(self->item(idx));
         return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::DOMTokenListObject);
+        return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::DOMTokenListObject);
         DOMTokenList* self = (DOMTokenList*)obj->extraPointerData();
@@ -732,6 +745,9 @@ void ScriptWrappable::initScriptWrappable(NamedNodeMap* ptr, ScriptBindingInstan
             return self->item(idx)->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NamedNodeMapObject);
+        return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::NamedNodeMapObject);
         NamedNodeMap* self = (NamedNodeMap*)obj->extraPointerData();
@@ -764,10 +780,47 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
         if (idx < self->length()) {
             return escargot::ESString::create(self->item(idx)->utf8Data());
         }
+
         if (idx == escargot::ESValue::ESInvalidIndexValue) {
-            return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+            const char* str = toBrowserString(key)->utf8Data();
+            CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
+
+            if (kind == CSSStyleKind::Unknown) {
+                return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+            } else {
+                if (false) {
+
+                }
+#define GET_ATTR(name, nameLower, nameCSSCase) \
+                else if (kind == CSSStyleKind::name) { \
+                    return createScriptString(self->name()); \
+                }
+                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
+
+            }
         }
+
         return escargot::ESString::create("");
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::CSSStyleDeclarationObject);
+        CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
+        const char* str = toBrowserString(key)->utf8Data();
+        CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
+        if (kind == CSSStyleKind::Unknown) {
+            return false;
+        } else {
+            if (false) {
+
+            }
+#define SET_ATTR(name, nameLower, nameCSSCase) \
+            else if (kind == CSSStyleKind::name) { \
+                self->set##name(toBrowserString(val)->utf8Data()); \
+                return true; \
+            }
+            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+        }
+
+        return false;
     }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
         STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::CSSStyleDeclarationObject);
         CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
@@ -776,6 +829,11 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
         for (size_t i = 0; i < len; i ++) {
             v[i] = escargot::ESValue(i);
         }
+
+#define ENUM_ATTR(name, nameLower, nameCSSCase) \
+        v.push_back(escargot::ESString::create(#nameLower));
+
+        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ENUM_ATTR)
         return v;
     }, true);
 }
@@ -799,7 +857,6 @@ static int utf32ToUtf16(char32_t i, char16_t *u)
         return 2;
     } else {
         // produce error char
-        // U+FFFD
         *u = 0xFFFD;
         return 1;
     }

@@ -422,4 +422,343 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     return CSSStyleKind::Unknown;
 }
 
+CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
+{
+    switch (length) {
+    case 3:
+        if (memcmp(data, "top", 3) == 0) {
+            return CSSStyleKind::Top;
+        }
+        break;
+    case 4:
+        if (memcmp(data, "left", 4) == 0) {
+            return CSSStyleKind::Left;
+        }
+        break;
+    case 5:
+        switch (data[0]) {
+        case 'c':
+            if (memcmp(data, "color", 5) == 0) {
+                return CSSStyleKind::Color;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "width", 5) == 0) {
+                return CSSStyleKind::Width;
+            }
+            break;
+        case 'r':
+            if (memcmp(data, "right", 5) == 0) {
+                return CSSStyleKind::Right;
+            }
+            break;
+        }
+        break;
+    case 6:
+        switch (data[0]) {
+        case 'b':
+            switch (data[1]) {
+            case 'o':
+                if (memcmp(data, "bottom", 6) == 0) {
+                    return CSSStyleKind::Bottom;
+                }
+                if (memcmp(data, "border", 6) == 0) {
+                    return CSSStyleKind::Border;
+                }
+                break;
+            }
+            break;
+        case 'h':
+            if (memcmp(data, "height", 6) == 0) {
+                return CSSStyleKind::Height;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "margin", 6) == 0) {
+                return CSSStyleKind::Margin;
+            }
+            break;
+        case 'z':
+            if (memcmp(data, "zIndex", 6) == 0) {
+                return CSSStyleKind::ZIndex;
+            }
+            break;
+        }
+        break;
+    case 7:
+        switch (data[0]) {
+        case 'd':
+            if (memcmp(data, "display", 7) == 0) {
+                return CSSStyleKind::Display;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "padding", 7) == 0) {
+                return CSSStyleKind::Padding;
+            }
+            break;
+        case 'o':
+            if (memcmp(data, "opacity", 7) == 0) {
+                return CSSStyleKind::Opacity;
+            }
+            break;
+        }
+        break;
+    case 8:
+        switch (data[0]) {
+        case 'f':
+            if (memcmp(data, "fontSize", 8) == 0) {
+                return CSSStyleKind::FontSize;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "position", 8) == 0) {
+                return CSSStyleKind::Position;
+            }
+            break;
+        case 'o':
+            if (memcmp(data, "overflow", 8) == 0) {
+                return CSSStyleKind::Overflow;
+            }
+            break;
+        }
+        break;
+    case 9:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "borderTop", 9) == 0) {
+                return CSSStyleKind::BorderTop;
+            }
+            break;
+        case 't':
+            if (memcmp(data, "transform", 9) == 0) {
+                return CSSStyleKind::Transform;
+            }
+            if (memcmp(data, "textAlign", 9) == 0) {
+                return CSSStyleKind::TextAlign;
+            }
+            break;
+        case 'd':
+            if (memcmp(data, "direction", 9) == 0) {
+                return CSSStyleKind::Direction;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "fontStyle", 9) == 0) {
+                return CSSStyleKind::FontStyle;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "marginTop", 9) == 0) {
+                return CSSStyleKind::MarginTop;
+            }
+            break;
+        }
+        break;
+    case 10:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "background", 10) == 0) {
+                return CSSStyleKind::Background;
+            }
+            if (memcmp(data, "borderLeft", 10) == 0) {
+                return CSSStyleKind::BorderLeft;
+            }
+            break;
+        case 'v':
+            if (memcmp(data, "visibility", 10) == 0) {
+                return CSSStyleKind::Visibility;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "fontWeight", 10) == 0) {
+                return CSSStyleKind::FontWeight;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "lineHeight", 10) == 0) {
+                return CSSStyleKind::LineHeight;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "paddingTop", 10) == 0) {
+                return CSSStyleKind::PaddingTop;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "marginLeft", 10) == 0) {
+                return CSSStyleKind::MarginLeft;
+            }
+            break;
+        }
+        break;
+    case 11:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "borderStyle", 11) == 0) {
+                return CSSStyleKind::BorderStyle;
+            }
+            if (memcmp(data, "borderWidth", 11) == 0) {
+                return CSSStyleKind::BorderWidth;
+            }
+            if (memcmp(data, "borderColor", 11) == 0) {
+                return CSSStyleKind::BorderColor;
+            }
+            if (memcmp(data, "borderRight", 11) == 0) {
+                return CSSStyleKind::BorderRight;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "paddingLeft", 11) == 0) {
+                return CSSStyleKind::PaddingLeft;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "marginRight", 11) == 0) {
+                return CSSStyleKind::MarginRight;
+            }
+            break;
+        }
+        break;
+    case 12:
+        switch (data[0]) {
+        case 'p':
+            if (memcmp(data, "paddingRight", 12) == 0) {
+                return CSSStyleKind::PaddingRight;
+            }
+            break;
+        case 'm':
+            if (memcmp(data, "marginBottom", 12) == 0) {
+                return CSSStyleKind::MarginBottom;
+            }
+            break;
+        case 'b':
+            if (memcmp(data, "borderBottom", 12) == 0) {
+                return CSSStyleKind::BorderBottom;
+            }
+            break;
+        }
+        break;
+    case 13:
+        switch (data[0]) {
+        case 'v':
+            if (memcmp(data, "verticalAlign", 13) == 0) {
+                return CSSStyleKind::VerticalAlign;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "letterSpacing", 13) == 0) {
+                return CSSStyleKind::LetterSpacing;
+            }
+            break;
+        case 'p':
+            if (memcmp(data, "paddingBottom", 13) == 0) {
+                return CSSStyleKind::PaddingBottom;
+            }
+        }
+        break;
+    case 14:
+        switch (data[0]) {
+        case 't':
+            if (memcmp(data, "textSecoration", 14) == 0) {
+                return CSSStyleKind::TextDecoration;
+            }
+            break;
+        case 'b':
+            if (memcmp(data, "backgroundSize", 14) == 0) {
+                return CSSStyleKind::BackgroundSize;
+            }
+            if (memcmp(data, "borderTopColor", 14) == 0) {
+                return CSSStyleKind::BorderTopColor;
+            }
+            if (memcmp(data, "borderTopStyle", 14) == 0) {
+                return CSSStyleKind::BorderTopStyle;
+            }
+            if (memcmp(data, "borderTopWidth", 14) == 0) {
+                return CSSStyleKind::BorderTopWidth;
+            }
+            break;
+        }
+        break;
+    case 15:
+        switch (data[0]) {
+        case 't':
+            if (memcmp(data, "transformOrigin", 15) == 0) {
+                return CSSStyleKind::TransformOrigin;
+            }
+            break;
+        case 'b':
+            if (memcmp(data, "backgroundColor", 15) == 0) {
+                return CSSStyleKind::BackgroundColor;
+            }
+            if (memcmp(data, "backgroundImage", 15) == 0) {
+                return CSSStyleKind::BackgroundImage;
+            }
+            if (memcmp(data, "borderLeftColor", 15) == 0) {
+                return CSSStyleKind::BorderLeftColor;
+            }
+            if (memcmp(data, "borderLeftStyle", 15) == 0) {
+                return CSSStyleKind::BorderLeftStyle;
+            }
+            if (memcmp(data, "borderLeftWidth", 15) == 0) {
+                return CSSStyleKind::BorderLeftWidth;
+            }
+        }
+        break;
+    case 16:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "backgroundRepeat", 16) == 0) {
+                return CSSStyleKind::BackgroundRepeat;
+            }
+            if (memcmp(data, "borderImageSlice", 16) == 0) {
+                return CSSStyleKind::BorderImageSlice;
+            }
+            if (memcmp(data, "borderImageWidth", 16) == 0) {
+                return CSSStyleKind::BorderImageWidth;
+            }
+            if (memcmp(data, "borderRightStyle", 16) == 0) {
+                return CSSStyleKind::BorderRightStyle;
+            }
+            if (memcmp(data, "borderRightWidth", 16) == 0) {
+                return CSSStyleKind::BorderRightWidth;
+            }
+            if (memcmp(data, "borderRightColor", 16) == 0) {
+                return CSSStyleKind::BorderRightColor;
+            }
+            break;
+        }
+        break;
+    case 17:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "backgroundRepeatX", 17) == 0) {
+                return CSSStyleKind::BackgroundRepeatX;
+            }
+            if (memcmp(data, "backgroundRepeatY", 17) == 0) {
+                return CSSStyleKind::BackgroundRepeatY;
+            }
+            if (memcmp(data, "borderImageRepeat", 17) == 0) {
+                return CSSStyleKind::BorderImageRepeat;
+            }
+            if (memcmp(data, "borderImageSource", 17) == 0) {
+                return CSSStyleKind::BorderImageSource;
+            }
+            if (memcmp(data, "borderBottomStyle", 17) == 0) {
+                return CSSStyleKind::BorderBottomStyle;
+            }
+            if (memcmp(data, "borderBottomWidth", 17) == 0) {
+                return CSSStyleKind::BorderBottomWidth;
+            }
+            if (memcmp(data, "borderBottomColor", 17) == 0) {
+                return CSSStyleKind::BorderBottomColor;
+            }
+            break;
+        }
+        break;
+    }
+
+    return CSSStyleKind::Unknown;
+}
+
 }

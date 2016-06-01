@@ -16,7 +16,11 @@ enum CSSStyleKind {
 
 #undef DEFINE_CSS_STYLE_KIND
 
+// z-index, font-size...
 CSSStyleKind lookupCSSStyle(const char* data, unsigned length);
+
+// zIndex, fontSize...
+CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length);
 
 } /* namespace StarFish */
 
