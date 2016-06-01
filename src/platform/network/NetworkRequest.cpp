@@ -539,9 +539,11 @@ void* NetworkRequest::networkWorker(void* data)
             STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle);
             STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url.urlString()->utf8Data());
             requestData->request->m_status = requestData->responseCode;
+            requestData->request->changeReadyState(DONE, true);
+            requestData->request->changeProgress(PROGRESS, true);
             requestData->request->changeProgress(ERROR, true);
             requestData->request->changeProgress(LOADEND, true);
-            requestData->request->changeReadyState(DONE, true);
+
 
             requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
 
@@ -557,9 +559,9 @@ void* NetworkRequest::networkWorker(void* data)
                     requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
                 }
                 requestData->request->m_status = requestData->responseCode;
+                requestData->request->changeReadyState(DONE, true);
                 requestData->request->changeProgress(LOAD, true);
                 requestData->request->changeProgress(LOADEND, true);
-                requestData->request->changeReadyState(DONE, true);
 
                 requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
 

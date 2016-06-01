@@ -17,20 +17,17 @@
       test.step(function() {
         var client = new XMLHttpRequest();
         client.ontimeout = function() {
-          console.log("ontimeout");
           test.step(function() {
-            console.log("test.step client.readySTate  : " + client.readyState);
             assert_equals(client.readyState, 4);
             test.done();
           });
         };
-        client.timeout = 20000;
-        client.open("GET", "resources/delay.py?ms=2000");
+        client.timeout = 5;
+        client.open("GET", "resources/delay.py?ms=20000");
         client.send(null);
         setTimeout(test.step_func(function () {
-          console.log("setTimeout")
           assert_unreached("ontimeout not called.");
-        }), 30000);
+        }), 300);
       });
     </script>
   </body>
