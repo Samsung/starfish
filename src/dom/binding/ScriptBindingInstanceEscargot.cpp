@@ -3429,7 +3429,7 @@ void ScriptBindingInstance::evaluate(String* str)
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) == 0) {
         escargot::ESValue ret = fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
-        // fetchData(this)->m_instance->printValue(ret);
+        fetchData(this)->m_instance->printValue(ret);
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
     } else {
         escargot::ESValue err = fetchData(this)->m_instance->getCatchedError();
