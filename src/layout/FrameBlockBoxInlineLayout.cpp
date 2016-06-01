@@ -241,10 +241,16 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
 
         if (maxAscender < ascenderShouldBe) {
             maxAscender = ascenderShouldBe;
+            maxDescender = descenderShouldBe;
         } else if (!hasBoxOtherThanText) {
+            // Should Not reset decender when line box consists of text only
             maxAscender = ascenderShouldBe;
+            if (parentStyle->display()!=InlineDisplayValue)
+                maxDescender = descenderShouldBe;
+        } else {
+            maxDescender = descenderShouldBe;
         }
-        maxDescender = descenderShouldBe;
+
     }
 
     ascenderInOut = maxAscender;
