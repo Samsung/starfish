@@ -219,7 +219,7 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
     Locker<Mutex> locker(*request->m_mutex);
 
     // TODO read header info
-    if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX) {
+    if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX && !request->m_isReceivedHeader) {
         request->m_isReceivedHeader = true;
         request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
             NetworkRequest* request = (NetworkRequest*)data;
