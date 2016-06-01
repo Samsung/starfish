@@ -81,10 +81,8 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     rb->setY(pascender / 2 + rb->ascender());
                     maxAscenderSoFar = std::max(pascender / 2 + rb->ascender(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    rb->setY(pascender);
                     maxDescenderSoFar = std::min(pascender - rb->height(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    rb->setY(pdescender + rb->height());
                     maxAscenderSoFar = std::max(pdescender + rb->height(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
                     Length len = box->style()->verticalAlignLength();
@@ -121,10 +119,8 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 box->setY(pascender / 2 + boxHeight);
                 maxAscenderSoFar = std::max(pascender / 2 + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                box->setY(pascender);
                 maxDescenderSoFar = std::min(pascender - boxHeight, maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                box->setY(pdescender + boxHeight);
                 maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 Length len = box->style()->verticalAlignLength();
@@ -319,9 +315,9 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     // pascender / 2 + ib->asInlineNonReplacedBox()->ascender()
                     f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    f->setY(maxAscender - f->y() + marginTop);
+                    f->setY(maxAscender - pascender + marginTop);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    f->setY(maxAscender - f->y() + marginTop);
+                    f->setY(maxAscender - pdescender - f->height() - marginBottom);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
                     f->setY(maxAscender - f->y() + marginTop);
                 } else {
