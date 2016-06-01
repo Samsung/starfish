@@ -3,9 +3,9 @@
 mkdir -p out
 
 # FIX an extra tab in html.csv
-head -1 html.csv | sed 's/\t$//' > out/t.txt
-tail -n +2 html.csv > out/t1.txt
-cat out/t.txt out/t1.txt > html.csv
+#head -1 html.csv | sed 's/\t$//' > out/t.txt
+#tail -n +2 html.csv > out/t1.txt
+#cat out/t.txt out/t1.txt > html.csv
 
 run() {
     printf "\t\t$1" > out/label.txt
