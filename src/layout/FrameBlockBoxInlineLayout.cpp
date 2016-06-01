@@ -115,11 +115,11 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 maxAscenderSoFar = std::max(halfHeight, maxAscenderSoFar);
                 maxDescenderSoFar = std::min(-1 * halfHeight, maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
-                // TODO : Need Implement Here
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                box->setY(pdescender + boxHeight);
+                maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::SuperVAlignValue) {
-                // TODO : Need Implement Here
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                box->setY(pascender / 2 + boxHeight);
+                maxAscenderSoFar = std::max(pascender / 2 + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                 box->setY(pascender);
                 maxDescenderSoFar = std::min(pascender - boxHeight, maxDescenderSoFar);
@@ -245,7 +245,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
         } else if (!hasBoxOtherThanText) {
             // Should Not reset decender when line box consists of text only
             maxAscender = ascenderShouldBe;
-            if (parentStyle->display()!=InlineDisplayValue)
+            if (parentStyle->display() != InlineDisplayValue)
                 maxDescender = descenderShouldBe;
         } else {
             maxDescender = descenderShouldBe;
@@ -293,7 +293,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                            + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
                            ib->setY(height + maxDescender - asc + ib->marginTop());
                            */
-                       f->setY(maxAscender - f->height() - marginBottom);
+                        f->setY(maxAscender - f->height() - marginBottom);
                     } else {
                         STARFISH_ASSERT(f->isFrameBlockBox() && f->style()->display() == InlineBlockDisplayValue);
                         LayoutUnit ascender = ctx.inlineBlockAscender(f->asFrameBlockBox());
