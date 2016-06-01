@@ -93,7 +93,7 @@ last=${array[$pos]}
 ROTATE=1
 
 if [[ "$PLATFORM" == "i686" ]]; then
-   	STARFISH="./test/bin/tizen_emulator/StarFish"
+    STARFISH="./test/bin/tizen-wearable-2.3-emulator/StarFish"
 elif [[ "$PLATFORM" == "armv7l" ]]; then
     STARFISH="./test/bin/tizen-wearable-2.3-target-arm/StarFish"
 fi
@@ -112,7 +112,7 @@ for i in $tc ; do
     filenames[$cnt]=$i
     if [ $TESTSUITE -eq 3 ]; then
         RESIMG="./out.png"
-        ELM_ENGINE="shot:file="$RESIMG $StarFish $i --width=900 --height=900 > /dev/null 2&>1 &
+        ELM_ENGINE="shot:file="$RESIMG $STARFISH $i --width=900 --height=900 > /dev/null 2&>1 &
     else
         $STARFISH $i --hide-window &
     fi
@@ -184,11 +184,13 @@ for i in $tc ; do
             fi
         elif [ $TESTSUITE -eq 3 ]; then
             EXPIMG=${filenames[$c]}
-            EXPIMG=`echo $EXPIMG | sed 's/html-css/html-css\/tizen_wearable_arm/'
-            EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/'
+            EXPIMGPATH=${EXPIMG%/*}"/tizen_wearable_arm/"
+            EXPIMGNAME=${EXPIMG##*/}
+            EXPIMGNAME=${EXPIMGNAME%.*}"-expected.png"
+            EXPIMG=$EXPIMGPATH$EXPIMGNAME
             IMGDIFF="./test/tool/imgdiffEvas"
             DIFF=`$IMGDIFF $RESIMG $EXPIMG`
-            if [[ "$DIFF" = *"passed"* ]]; then
+            if [[ "$DIFF" = *"passed"* || "$DIFF" = "Pass" ]]; then
                 PASSTC=`expr $PASSTC + 1`
                 echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
                 echo -e "[PASS]" ${filenames[$c]} >> $RESULTFILE

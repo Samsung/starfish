@@ -1,0 +1,280 @@
+/*
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+(function () {
+    'use strict';
+
+    // helper functions ////////////////////////////////////////////////////
+
+    var _common = require('./tizen.Common');
+    var T = _common.Type;
+    var AV = _common.ArgumentValidator;
+    var C = _common.Common;
+    var _callSync = C.getCallSync('messageport');
+    _common = undefined;
+
+    function _dataItemArrToObject(dataArr) {
+        var ret = {};   //Create object
+        if (!T.isArray(dataArr)) {
+            return ret;
+        }
+
+        for (var i = 0, l = dataArr.length; i < l; i++) {
+            var data = dataArr[i];
+            if (T.hasProperty(data, 'key') && T.hasProperty(data, 'value')) {
+                ret[data.key] = data.value;
+            }
+        }
+
+        return ret;
+    }
+
+    function _objectToDataItemArr(obj) {
+        var ret = [];   //Create array
+
+        for (var k in obj) {
+            if (obj.hasOwnProperty(k)) {
+                var data = {};
+                data.key = k;
+                data.value = obj[k];
+                ret.push(data);
+            }
+        }
+        return ret;
+    }
+
+    function LocalMessagePortListeners() {
+        var self = this;
+        Object.defineProperties(this, {
+            listeners                  : {value: {}, writable: true, enumerable: false},
+            nextId                     : {value: 0, writable: true, enumerable: false},
+            localMessagePortCallback   : {value: function (data) {
+                var obj = JSON.parse(data);
+                var listeners = self.listeners[obj.local_id];
+
+                if (listeners) {
+                    var dataArr = _objectToDataItemArr(obj.data);
+                    var remotePort = null;
+                    if (obj.remote_port) {
+                        remotePort = new RemoteMessagePort(obj.remote_port, obj.remote_app_id,
+                                                           obj.remote_is_trusted);
+                    }
+                    for (var i in listeners) {
+                        if (listeners.hasOwnProperty(i)) {
+                            listeners[i](dataArr, remotePort);
+                        }
+                    }
+                }
+            } , writable: false, enumerable: false},
+        });
+    }
+
+    LocalMessagePortListeners.prototype.addListener = function(id, listener) {
+        if (T.isEmptyObject(this.listeners)) {
+            native.addListener('MESSAGEPORT_MESSAGE_RECEIVED', this.localMessagePortCallback);
+        }
+
+        if (!this.listeners[id]) {
+            this.listeners[id] = {};
+        }
+
+        var watchId = ++this.nextId;
+        this.listeners[id][watchId] = listener;
+
+        return watchId;
+    };
+
+    LocalMessagePortListeners.prototype.removeListener = function(id, watchId) {
+        if (T.isNullOrUndefined(this.listeners[id]) ||
+            T.isNullOrUndefined(this.listeners[id][watchId])) {
+            throw new WebAPIException('NotFoundError', 'Watch ID not found.');
+        }
+
+        delete this.listeners[id][watchId];
+
+        if (T.isEmptyObject(this.listeners[id])) {
+            delete this.listeners[id];
+        }
+
+        if (T.isEmptyObject(this.listeners)) {
+            native.removeListener('MESSAGEPORT_MESSAGE_RECEIVED', this.localMessagePortCallback);
+        }
+    };
+
+    var listeners = new LocalMessagePortListeners();
+
+    // class LocalMessagePort //////////////////////////////////////////////////////
+    function LocalMessagePort(id, portName, isTrusted) {
+        Object.defineProperties(this, {
+            _id             : {value: id, writable: false, enumerable: false},
+            messagePortName : {value: portName, writable: false, enumerable: true},
+            isTrusted       : {value: isTrusted, writable: false, enumerable: true}
+        });
+    }
+
+    LocalMessagePort.prototype.addMessagePortListener = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'listener',
+                type : AV.Types.FUNCTION
+            }
+        ]);
+
+        return listeners.addListener(this._id, args.listener);
+    };
+
+    LocalMessagePort.prototype.removeMessagePortListener = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'watchId',
+                type : AV.Types.LONG
+            }
+        ]);
+        listeners.removeListener(this._id, args.watchId);
+    };
+
+    // class RemoteMessagePort /////////////////////////////////////////////////////
+    function RemoteMessagePort(portName, appId, isTrusted) {
+        Object.defineProperties(this, {
+            messagePortName : {value: portName, writable: false, enumerable: true},
+            appId           : {value: appId, writable: false, enumerable: true},
+            isTrusted       : {value: isTrusted, writable: false, enumerable: true}
+        });
+    }
+
+    RemoteMessagePort.prototype.sendMessage = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'data',
+                type : AV.Types.ARRAY,
+                values : Object,
+                validator : function(val) {
+                    for (var i = 0, l = val.length; i < l; ++i) {
+                        if (!T.isString(val[i].key) || !T.isString(val[i].value)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            },
+            {
+                name : 'localMessagePort',
+                type : AV.Types.PLATFORM_OBJECT,
+                values : LocalMessagePort,
+                optional : true,
+                nullable : true
+            }
+        ]);
+
+        var callArgs = {
+            data              : _dataItemArrToObject(args.data),
+            localMessagePort  : (args.has.localMessagePort ? args.localMessagePort._id : -1),
+            remoteMessagePort : this
+        };
+
+        var result = _callSync('RemoteMessagePort_sendMessage', callArgs);
+
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        }
+    };
+
+    // class MessagePortManager ////////////////////////////////////////////////////
+    var MessagePortManager = function() {
+    };
+
+    function _requestLocalMessagePort(localMessagePortName, isTrusted) {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'localMessagePortName',
+                type : AV.Types.STRING
+            }
+        ]);
+
+        if (args.localMessagePortName === '') {
+            C.throwInvalidValues('Local message port name is empty.');
+        }
+
+        var callArgs = {
+            localMessagePortName : args.localMessagePortName,
+            isTrusted            : isTrusted
+        };
+
+        var result = _callSync('MessagePortManager_requestLocalMessagePort', callArgs);
+
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        } else {
+            return new LocalMessagePort(result.id, args.localMessagePortName, isTrusted);
+        }
+    }
+
+    MessagePortManager.prototype.requestLocalMessagePort = function(localMessagePortName) {
+        return _requestLocalMessagePort(localMessagePortName, false);
+    };
+
+    MessagePortManager.prototype.requestTrustedLocalMessagePort = function(localMessagePortName) {
+        return _requestLocalMessagePort(localMessagePortName, true);
+    };
+
+    function _requestRemoteMessagePort(appId, remoteMessagePortName, isTrusted) {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'appId',
+                type : AV.Types.STRING
+            },
+            {
+                name : 'remoteMessagePortName',
+                type : AV.Types.STRING
+            }
+        ]);
+
+        if (args.appId === '') {
+            C.throwInvalidValues('Application id is empty.');
+        }
+
+        if (args.remoteMessagePortName === '') {
+            C.throwInvalidValues('Remote message port name is empty.');
+        }
+
+        var callArgs = {
+            appId                 : args.appId,
+            remoteMessagePortName : args.remoteMessagePortName,
+            isTrusted             : isTrusted
+        };
+
+        var result = _callSync('MessagePortManager_requestRemoteMessagePort', callArgs);
+
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        } else {
+            return new RemoteMessagePort(args.remoteMessagePortName, args.appId, isTrusted);
+        }
+    }
+
+    MessagePortManager.prototype.requestRemoteMessagePort = function(appId, remoteMessagePortName) {
+        return _requestRemoteMessagePort(appId, remoteMessagePortName, false);
+    };
+
+    MessagePortManager.prototype.requestTrustedRemoteMessagePort = function(appId,
+                                                                            remoteMessagePortName) {
+        return _requestRemoteMessagePort(appId, remoteMessagePortName, true);
+    };
+
+    module.exports = {
+        messageport : {value: new MessagePortManager(), writable: false, enumerable: true},
+    };
+})();

@@ -1,0 +1,340 @@
+/*
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License"),
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+var errors = {
+    INDEX_SIZE_ERR: 1,
+    DOMSTRING_SIZE_ERR: 2,
+    HIERARCHY_REQUEST_ERR: 3,
+    WRONG_DOCUMENT_ERR: 4,
+    INVALID_CHARACTER_ERR: 5,
+    NO_DATA_ALLOWED_ERR: 6,
+    NO_MODIFICATION_ALLOWED_ERR: 7,
+    NOT_FOUND_ERR: 8,
+    NOT_SUPPORTED_ERR: 9,
+    INUSE_ATTRIBUTE_ERR: 10,
+    INVALID_STATE_ERR: 11,
+    SYNTAX_ERR: 12,
+    INVALID_MODIFICATION_ERR: 13,
+    NAMESPACE_ERR: 14,
+    INVALID_ACCESS_ERR: 15,
+    VALIDATION_ERR: 16,
+    TYPE_MISMATCH_ERR: 17,
+    SECURITY_ERR: 18,
+    NETWORK_ERR: 19,
+    ABORT_ERR: 20,
+    URL_MISMATCH_ERR: 21,
+    QUOTA_EXCEEDED_ERR: 22,
+    TIMEOUT_ERR: 23,
+    INVALID_NODE_TYPE_ERR: 24,
+    DATA_CLONE_ERR: 25
+};
+
+var code_to_name = {};
+code_to_name[errors["INDEX_SIZE_ERR"]] = "IndexSizeError";
+code_to_name[errors["DOMSTRING_SIZE_ERR"]] = "DOMStringSizeError";
+code_to_name[errors["HIERARCHY_REQUEST_ERR"]] = "HierarchyRequestError";
+code_to_name[errors["WRONG_DOCUMENT_ERR"]] = "WrongDocumentError";
+code_to_name[errors["INVALID_CHARACTER_ERR"]] = "InvalidCharacterError";
+code_to_name[errors["NO_DATA_ALLOWED_ERR"]] = "NoDataAllowedError";
+code_to_name[errors["NO_MODIFICATION_ALLOWED_ERR"]] = "NoModificationAllowedError";
+code_to_name[errors["NOT_FOUND_ERR"]] = "NotFoundError";
+code_to_name[errors["NOT_SUPPORTED_ERR"]] = "NotSupportedError";
+code_to_name[errors["INUSE_ATTRIBUTE_ERR"]] = "InuseAttributeError";
+code_to_name[errors["INVALID_STATE_ERR"]] = "InvalidStateError";
+code_to_name[errors["SYNTAX_ERR"]] = "SyntaxError";
+code_to_name[errors["INVALID_MODIFICATION_ERR"]] = "InvalidModificationError";
+code_to_name[errors["NAMESPACE_ERR"]] = "NamespaceError";
+code_to_name[errors["INVALID_ACCESS_ERR"]] = "InvalidAccessError";
+code_to_name[errors["VALIDATION_ERR"]] = "ValidationError";
+code_to_name[errors["TYPE_MISMATCH_ERR"]] = "TypeMismatchError";
+code_to_name[errors["SECURITY_ERR"]] = "SecurityError";
+code_to_name[errors["NETWORK_ERR"]] = "NetworkError";
+code_to_name[errors["ABORT_ERR"]] = "AbortError";
+code_to_name[errors["URL_MISMATCH_ERR"]] = "URLMismatchError";
+code_to_name[errors["QUOTA_EXCEEDED_ERR"]] = "QuotaExceededError";
+code_to_name[errors["TIMEOUT_ERR"]] = "TimeoutError";
+code_to_name[errors["INVALID_NODE_TYPE_ERR"]] = "InvalidNodeTypeError";
+code_to_name[errors["DATA_CLONE_ERR"]] = "DataCloneError";
+
+var name_to_code = {};
+Object.keys(errors).forEach(function (key) {
+    name_to_code[code_to_name[errors[key]]] = errors[key];
+});
+
+function __isObject(object) {
+    return object instanceof Object;
+}
+
+function __isUndefined(object) {
+    return object === void 0;
+}
+
+function __isNumber(object) {
+    return typeof object === 'number';
+}
+
+var WebAPIException = function() {
+    var code = 0;
+    var name = "";
+    var message = "";
+
+    switch (arguments.length) {
+    case 1:
+        var error = arguments[0];
+        if (__isObject(error)) {
+            name = error["name"];
+            message = error["message"];
+            if (!__isUndefined(name_to_code[name])) {
+                code = name_to_code[name];
+            }
+        } else {
+            return;
+        }
+        break;
+    case 2:
+        if (__isNumber(arguments[0])) {
+            code = arguments[0];
+            if (!__isUndefined(code_to_name[code])) {
+                name = code_to_name[code];
+            }
+        } else {
+            name = String(arguments[0]);
+            if (!__isUndefined(name_to_code[name])) {
+                code = name_to_code[name];
+            }
+        }
+        message = String(arguments[1]);
+        break;
+    default:
+        return;
+    }
+    // attributes
+    Object.defineProperties(this, {
+        code:  {value: code, writable: false, enumerable: true},
+        name:  {value: name, writable: false, enumerable: true},
+        message:  {value: message, writable: false, enumerable: true}
+    });
+    Error.captureStackTrace(this, WebAPIException);
+}
+
+WebAPIException.prototype.toString = function() {
+    return this.name + ": " + this.message;
+};
+
+// error constants
+var error_constants = {};
+for (prop in errors) {
+    error_constants[prop] = {value: errors[prop], writable: false, enumerable: true};
+}
+Object.defineProperties(WebAPIException, error_constants);
+
+
+//FilterMatchFlag
+var filter_match_flag = [ "EXACTLY", "FULLSTRING", "CONTAINS", "STARTSWITH", "ENDSWITH", "EXISTS" ];
+
+//AbstractFilter
+var AbstractFilter = function() {
+}
+
+//AttributeFilter
+function AttributeFilter(name, flag, value) {
+    var attributeName = "";
+    var matchFlag = "EXACTLY";
+    var matchValue = null;
+
+    function attributeNameSetter(name) {
+        attributeName = String(name);
+    }
+    if (arguments.length > 0)
+        attributeNameSetter(name);
+ 
+    function matchFlagSetter(flag) {
+        if (filter_match_flag.indexOf(flag) >= 0)
+            matchFlag = flag;
+    }
+    if (arguments.length > 1)
+        matchFlagSetter(flag);
+
+    function matchValueSetter(value) {
+            matchValue = value;
+    }
+    if (arguments.length > 2) {
+        matchValueSetter(value);
+    } else {
+        matchFlagSetter("EXISTS"); // if matchValue is not used then matchFlag is set to "EXISTS".
+    }
+
+    Object.defineProperties(this, {
+        attributeName: {enumerable: true, set: attributeNameSetter, get: function() { return attributeName; }},
+        matchFlag: {enumerable: true, set: matchFlagSetter, get: function() { return matchFlag; }},
+        matchValue: {enumerable: true, set: matchValueSetter, get: function() { return matchValue; }}
+    });
+}
+
+AttributeFilter.prototype = Object.create(AbstractFilter.prototype);
+
+//AttributeRangeFilter
+function AttributeRangeFilter(name, init, end) {
+    var attributeName = "";
+    var initialValue = null;
+    var endValue = null;
+
+    function attributeNameSetter(name) {
+        attributeName = String(name);
+    }
+    if (arguments.length > 0)
+        attributeNameSetter(name);
+
+    function initSetter(init) {
+        initialValue = init;
+    }
+    if (arguments.length > 1)
+        initSetter(init);
+
+    function endSetter(end) {
+        endValue = end;
+    }
+    if (arguments.length > 2)
+        endSetter(end);
+
+    Object.defineProperties(this, {
+        attributeName: {enumerable: true, set: attributeNameSetter, get: function() { return attributeName; }},
+        initialValue: {enumerable: true, set: initSetter, get: function() { return initialValue; }},
+        endValue: {enumerable: true, set: endSetter, get: function() { return endValue; }}
+    });
+}
+
+AttributeRangeFilter.prototype = Object.create(AbstractFilter.prototype);
+
+//CompositeFilter
+function CompositeFilter(filterType, filterList) {
+    var filterTypes = [ "UNION", "INTERSECTION" ];
+
+    var type = filterTypes[0];
+    var filters = [];
+
+    function typeSetter(filterType) {
+        if (filterTypes.indexOf(filterType) >= 0)
+            type = filterType;
+    }
+    if (arguments.length > 0)
+        typeSetter(filterType);
+
+    function filtersSetter(filterList) {
+        if (!(filterList instanceof Array))
+            return;
+
+        var valid = false;
+
+        for (var i in filterList) {
+            valid = (filterList[i] instanceof AbstractFilter);
+            if (valid != true)
+                return;
+        }
+
+        filters = filterList.slice(0);
+    }
+    if (arguments.length > 1)
+        filtersSetter(filterList);
+
+    Object.defineProperties(this, {
+        type: { enumerable: true, set:typeSetter, get: function() { return type; }},
+        filters: { enumerable: true, set: filtersSetter, get: function() { return filters; }}
+    });
+}
+
+CompositeFilter.prototype = Object.create(AbstractFilter.prototype);
+
+//SortMode
+function SortMode(name, sortOrder) {
+    var sortModeOrder = [ "ASC", "DESC" ];
+
+    var attributeName = "";
+    var order = "ASC";
+
+    function nameSetter(name) {
+        attributeName = String(name);
+    }
+    if (arguments.length > 0)
+        nameSetter(name);
+
+    function orderSetter(sortOrder) {
+        if (sortModeOrder.indexOf(sortOrder) >= 0)
+            order = sortOrder;
+    }
+    if (arguments.length > 1)
+        orderSetter(sortOrder);
+
+    Object.defineProperties(this, {
+        attributeName: { enumerable: true, set: nameSetter, get: function() { return attributeName; }},
+        order: { enumerable: true, set: orderSetter, get: function() { return order; }}
+    });
+}
+
+//SimpleCoordinates
+function SimpleCoordinates(lat, lon) {
+    var latitude = 0;
+    var longitude = 0;
+
+    function latSetter(lat) {
+        var tmp = Number(lat);
+        if (tmp != NaN) {
+            if (tmp > 90) tmp = 90;
+            else if (tmp < 0) tmp = 0;
+
+            latitude = tmp;
+        }
+    }
+    latSetter(lat);
+
+    function lonSetter(lon) {
+        var tmp = Number(lon);
+        if (tmp != NaN) {
+            if (tmp > 180) tmp = 180;
+            else if (tmp < 0) tmp = 0;
+
+            longitude = tmp;
+        }
+    }
+    lonSetter(lon);
+
+    Object.defineProperties(this, {
+        latitude: { enumerable: true, set: latSetter, get: function() { return latitude; }},
+        longitude: { enumerable: true, set: lonSetter, get: function() { return longitude; }}
+    });
+}
+
+// Tizen Object
+var TizenObject = function() {
+}
+
+TizenObject.prototype.AttributeFilter = AttributeFilter;
+
+TizenObject.prototype.AttributeRangeFilter = AttributeRangeFilter;
+
+TizenObject.prototype.CompositeFilter = CompositeFilter;
+
+TizenObject.prototype.SortMode = SortMode;
+
+TizenObject.prototype.SimpleCoordinates = SimpleCoordinates;
+
+// TODO: constructor of WebAPIException should not be exposed
+
+// exports
+module.exports = {
+    tizen: {value: new TizenObject(), writable: false, enumerable: true},
+    WebAPIException: {value: WebAPIException, writable: false, enumerable: false},
+};
