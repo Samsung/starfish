@@ -8,12 +8,12 @@ fi
 # Update `test/regression`
 ./tool/reftest/update_regression.sh
 
-make tizen_wearable_arm.exe.debug -j
+make clean && make tizen_wearable_arm.exe.debug -j
 if [[ `file StarFish` != *"ARM"* ]]; then
     echo "Build failed! check the StarFish binary."
     exit
 fi
-cp StarFish test/regression/bin/tizen_arm
+cp StarFish test/regression/bin/tizen-wearable-2.3-target-arm
 
 # Update lwe repository
 rm $LWE_REPO/test/bin $LWE_REPO/test/reftest $LWE_REPO/test/tool -rf

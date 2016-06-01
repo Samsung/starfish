@@ -10,10 +10,11 @@ RESET='\033[0m'
 # Variables
 RESULTFILE="result"
 PASSTC=0
-SKIPTC=0
 FAILTC=0
-TCFILE=0
+SKIPTC=0
 PASSTCFILE=0
+CHECKTCFILE=0
+TCFILE=0
 
 PLATFORM=`uname -m`
 if [[ "$PLATFORM" != "i686" && "$PLATFORM" != "armv7l" ]]; then
@@ -94,7 +95,7 @@ ROTATE=1
 if [[ "$PLATFORM" == "i686" ]]; then
    	STARFISH="./test/bin/tizen_emulator/StarFish"
 elif [[ "$PLATFORM" == "armv7l" ]]; then
-    STARFISH="./test/bin/tizen_arm/StarFish"
+    STARFISH="./test/bin/tizen-wearable-2.3-target-arm/StarFish"
 fi
 
 for i in $tc ; do
@@ -153,6 +154,7 @@ for i in $tc ; do
             FAILTC=`expr $FAILTC + $FAIL`
 
             if [ $SUM -eq 0 ]; then
+                CHECKTCFILE=`expr $CHECKTCFILE + 1`
                 echo -e "${YELLOW}[CHECK]${RESET}" ${filenames[$c]} "(${BOLD}No results${RESET})"
                 echo -e "[CHECK]" ${filenames[$c]} "(No results)" >> $RESULTFILE
             elif [ $FAIL -eq 0 ]; then
@@ -211,8 +213,8 @@ if [ $TESTSUITE -eq 0 ]; then
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
     echo -e "Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.\n" >> $RESULTFILE
 elif [ $TESTSUITE -eq 1 ]; then
-    echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
-    echo -e "Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.\n" >> $RESULTFILE
+    echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed," $CHECKTCFILE "files are needed to check.${RESET}\n"
+    echo -e "Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed," $CHECKTCFILE "files are needed to check.\n" >> $RESULTFILE
 else
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
     echo -e "Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.\n" >> $RESULTFILE

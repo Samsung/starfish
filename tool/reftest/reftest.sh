@@ -11,8 +11,10 @@ RESET='\033[0m'
 PASSFILENEW="tmp.res"
 RESULTCSV="result.csv"
 PASSTC=0
-SKIPTC=0
 FAILTC=0
+SKIPTC=0
+PASSTCFILE=0
+CHECKTCFILE=0
 TCFILE=0
 
 if [ "$1" = "" ]; then
@@ -172,6 +174,7 @@ for i in $tc ; do
             FAILTC=`expr $FAILTC + $FAIL`
 
             if [ $SUM -eq 0 ]; then
+                CHECKTCFILE=`expr $CHECKTCFILE + 1`
                 echo -e "${YELLOW}[CHECK]${RESET}" ${filenames[$c]} "(${BOLD}No results${RESET})"
             elif [ $FAIL -eq 0 ]; then
                 PASSTCFILE=`expr $PASSTCFILE + 1`
@@ -231,18 +234,18 @@ wait;
 # Print the summary
 echo -e "\n${BOLD}###### Summary ######${RESET}\n"
 if [ ! -f "$RESULTCSV" ]; then
-    echo -e "Test Suite\tPass\tFail\tSkip\tTotal" >> $RESULTCSV
+    echo -e "Test Suite\tPass\tFail\tSkip\tCheck\tTotal" >> $RESULTCSV
 fi
 
 if [ $TESTSUITE -eq 0 ]; then
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed," $SKIPTC "skipped.${RESET}\n"
-    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t"$SKIPTC"\t"$TCFILE >> $RESULTCSV
+    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t"$SKIPTC"\t"$CHECKTCFILE"\t"$TCFILE >> $RESULTCSV
 elif [ $TESTSUITE -eq 1 ]; then
-    echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed.${RESET}\n"
-    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t0\t"`expr $PASSTC + $FAILTC` >> $RESULTCSV
+    echo -e "${YELLOW}Run" `expr $PASSTC + $FAILTC` "test cases ("$TCFILE" files):" $PASSTC "passed ("$PASSTCFILE "files)," $FAILTC "failed," $CHECKTCFILE "files are needed to check.${RESET}\n"
+    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t0\t"$CHECKTCFILE"\t"`expr $PASSTC + $FAILTC` >> $RESULTCSV
 else
     echo -e "${YELLOW}Run" `expr $TCFILE` "test cases:" $PASSTC "passed," $FAILTC "failed.${RESET}\n"
-    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t0\t"$TCFILE >> $RESULTCSV
+    echo -e $TESTSUITENAME"\t"$PASSTC"\t"$FAILTC"\t0\t"$CHECKTCFILE"\t"$TCFILE >> $RESULTCSV
 fi
 
 # Regression test
