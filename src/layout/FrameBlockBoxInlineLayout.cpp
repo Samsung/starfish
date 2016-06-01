@@ -69,8 +69,10 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     // NO WORK TO DO
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
                     LayoutUnit halfHeight = rb->height() / 2;
-                    maxAscenderSoFar = std::max(halfHeight, maxAscenderSoFar);
-                    maxDescenderSoFar = std::min(-1 * halfHeight, maxDescenderSoFar);
+                    LayoutUnit halfXHeight = (parentStyle->font()->metrics().m_xheightRate * parentStyle->font()->size()) / 2;
+                    rb->setY(halfHeight + halfXHeight);
+                    maxAscenderSoFar = std::max(halfHeight + halfXHeight, maxAscenderSoFar);
+                    maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::SubVAlignValue) {
                     rb->setY(pdescender + rb->ascender());
                     maxDescenderSoFar = std::min(pdescender + rb->decender(), maxDescenderSoFar);
@@ -110,8 +112,10 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 // NO WORK TO DO
             } else if (va == VerticalAlignValue::MiddleVAlignValue) {
                 LayoutUnit halfHeight = boxHeight / 2;
-                maxAscenderSoFar = std::max(halfHeight, maxAscenderSoFar);
-                maxDescenderSoFar = std::min(-1 * halfHeight, maxDescenderSoFar);
+                LayoutUnit halfXHeight = (parentStyle->font()->metrics().m_xheightRate * parentStyle->font()->size()) / 2;
+                box->setY(halfHeight + halfXHeight);
+                maxAscenderSoFar = std::max(halfHeight + halfXHeight, maxAscenderSoFar);
+                maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight), maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
                 box->setY(pdescender + boxHeight);
                 maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
@@ -155,8 +159,10 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 // NO WORK TO DO
             } else if (va == VerticalAlignValue::MiddleVAlignValue) {
                 LayoutUnit halfHeight = boxHeight / 2;
-                maxAscenderSoFar = std::max(halfHeight, maxAscenderSoFar);
-                maxDescenderSoFar = std::min(-1 * halfHeight, maxDescenderSoFar);
+                LayoutUnit halfXHeight = (parentStyle->font()->metrics().m_xheightRate * parentStyle->font()->size()) / 2;
+                box->setY(halfHeight + halfXHeight);
+                maxAscenderSoFar = std::max(halfHeight + halfXHeight, maxAscenderSoFar);
+                maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight), maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
                 // TODO : Need Implement Here
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -307,8 +313,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 } else if (va == VerticalAlignValue::BottomVAlignValue) {
                     f->setY(height - f->height() - marginBottom);
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                    LayoutUnit dec = -(f->height() / 2);
-                    f->setY(height + maxDescender - f->height() - dec - marginTop);
+                    f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::SubVAlignValue) {
                     f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::SuperVAlignValue) {
