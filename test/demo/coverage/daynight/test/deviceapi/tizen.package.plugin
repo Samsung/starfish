@@ -1,0 +1,333 @@
+/*
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+(function() {
+    'use strict';
+
+    var _common = require('./tizen.Common');
+    var T = _common.Type;
+    var AV = _common.ArgumentValidator;
+    var C = _common.Common;
+    var _callSync = C.getCallSync('package');
+    var _call = C.getCall('package');
+    _common = undefined;
+
+    console.logd = console.logd || console.log;
+
+    var _internal = {};
+    _internal.eventCallback = undefined;
+    _internal.eventCallback_registered = false;
+
+    function _handle_packageinfo_event(data) {
+        if (_internal.eventCallback === undefined) {
+            return;
+        }
+
+        try {
+            var callback = JSON.parse(data);
+
+            if (callback.type === 'install') {
+                _internal.eventCallback.oninstalled(new PackageInformation(callback.pkgInfo));
+            } else if (callback.type === 'update') {
+                _internal.eventCallback.onupdated(new PackageInformation(callback.pkgInfo));
+            } else if (callback.type === 'uninstall') {
+                _internal.eventCallback.onuninstalled(callback.id);
+            } else {
+                console.logd('WEBAPI-PACKAGE', 'Wrong Event');
+            }
+
+        } catch(e) {
+            console.logd('WEBAPI-PACKAGE', e.toString());
+        }
+    }
+
+    function PackageManager() {
+    }
+
+    PackageManager.prototype.install = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'path',
+                type : AV.Types.STRING
+            },
+            {
+                name : 'progressCallback',
+                type : AV.Types.LISTENER,
+                values : ['onprogress', 'oncomplete']
+            },
+            {
+                name : 'errorCallback',
+                type : AV.Types.FUNCTION,
+                optional : true,
+                nullable : true
+            }
+        ]);
+
+        var hasProgressCallback = !T.isNullOrUndefined(args.progressCallback.onprogress);
+
+        var onprogressId = 'PackageProgressCallback_' + new Date().valueOf();
+        var onprogressCallback = function(status_str) {
+            var status = JSON.parse(status_str);
+
+            args.progressCallback.onprogress(status.id, status.progress);
+            if (status.progress >= 100) {
+                native.removeListener(onprogressId, onprogressCallback);
+            }
+        };
+
+        var callback = function(result) {
+            if (C.isFailure(result)) {
+                C.callIfPossible(args.errorCallback, C.getErrorObject(result));
+            } else {
+                C.callIfPossible(args.progressCallback.oncomplete, result.id);
+            }
+            native.removeListener(onprogressId, onprogressCallback);
+        };
+
+        if (hasProgressCallback) {
+            native.addListener(onprogressId, onprogressCallback);
+        }
+
+        var callArgs = {
+            path : args.path,
+            listener : onprogressId
+        };
+
+        var result = _call('PackageManager_install', callArgs, callback);
+
+        if (C.isFailure(result)) {
+            var err_obj = C.getErrorObject(result);
+
+            if (err_obj.name === 'NotFoundError' || err_obj.name === 'UnknownError') {
+                C.callIfPossible(args.errorCallback, err_obj);
+            } else {
+                throw err_obj;
+            }
+        }
+    };
+
+    PackageManager.prototype.uninstall = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'id',
+                type : AV.Types.STRING
+            },
+            {
+                name : 'progressCallback',
+                type : AV.Types.LISTENER,
+                values : ['onprogress', 'oncomplete']
+            },
+            {
+                name : 'errorCallback',
+                type : AV.Types.FUNCTION,
+                optional : true,
+                nullable : true
+            }
+        ]);
+
+        var hasProgressCallback = !T.isNullOrUndefined(args.progressCallback.onprogress);
+
+        var onprogressId = 'PackageProgressCallback_' + new Date().valueOf();
+        var onprogressCallback = function(status_str) {
+            var status = JSON.parse(status_str);
+
+            args.progressCallback.onprogress(status.id, status.progress);
+            if (status.progress >= 100) {
+                native.removeListener(onprogressId, onprogressCallback);
+            }
+        };
+
+        var callback = function(result) {
+            if (C.isFailure(result)) {
+                C.callIfPossible(args.errorCallback, C.getErrorObject(result));
+            } else {
+                C.callIfPossible(args.progressCallback.oncomplete, result.id);
+            }
+            native.removeListener(onprogressId, onprogressCallback);
+        };
+
+        if (hasProgressCallback) {
+            native.addListener(onprogressId, onprogressCallback);
+        }
+
+        var callArgs = {
+            id : args.id,
+            listener : onprogressId
+        };
+
+        var result = _call('PackageManager_uninstall', callArgs, callback);
+
+        if (C.isFailure(result)) {
+            var err_obj = C.getErrorObject(result);
+
+            if (err_obj.name === 'NotFoundError' || err_obj.name === 'UnknownError') {
+                C.callIfPossible(args.errorCallback, err_obj);
+            } else {
+                throw err_obj;
+            }
+        }
+    };
+
+    PackageManager.prototype.getPackagesInfo = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'successCallback',
+                type : AV.Types.FUNCTION
+            },
+            {
+                name : 'errorCallback',
+                type : AV.Types.FUNCTION,
+                optional : true,
+                nullable : true
+            }
+        ]);
+
+        var callback = function(result) {
+            if (C.isFailure(result)) {
+                C.callIfPossible(args.errorCallback, C.getErrorObject(result));
+            } else {
+                var pkgInfos = C.getResultObject(result).pkgInfos;
+                var pkgInfoList = [];
+                pkgInfos.forEach(function (info) {
+                    pkgInfoList.push(new PackageInformation(info));
+                });
+                args.successCallback(pkgInfoList);
+            }
+        };
+
+        var result = _call('PackageManager_getPackagesInfo', {}, callback);
+
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        }
+    };
+
+    PackageManager.prototype.getPackageInfo = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'id',
+                type : AV.Types.STRING,
+                optional : true,
+                nullable : true
+            }
+        ]);
+
+        var callArgs = {};
+
+        if (args.has.id && !T.isNull(args.id)) {
+            callArgs.id = args.id;
+        }
+
+        var result = _callSync('PackageManager_getPackageInfo', callArgs);
+
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        } else {
+            return new PackageInformation(C.getResultObject(result));
+        }
+    };
+
+    PackageManager.prototype.setPackageInfoEventListener = function() {
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'eventCallback',
+                type : AV.Types.LISTENER,
+                values : ['oninstalled', 'onupdated', 'onuninstalled']
+            }
+        ]);
+
+        _internal.eventCallback = args.eventCallback;
+
+        if (_internal.eventCallback_registered === false) {
+            _internal.eventCallback_registered = true;
+            native.addListener('package-PackageInfoEvent', _handle_packageinfo_event);
+
+            var result = _callSync('PackageManager_setPackageInfoEventListener', {});
+
+            if (C.isFailure(result)) {
+                throw C.getErrorObject(result);
+            }
+        }
+    };
+
+    PackageManager.prototype.unsetPackageInfoEventListener = function() {
+        _internal.eventCallback = undefined;
+
+        if (_internal.eventCallback_registered === true) {
+            _internal.eventCallback_registered = false;
+
+            var result = _callSync('PackageManager_unsetPackageInfoEventListener', {});
+
+            if (C.isFailure(result)) {
+                throw C.getErrorObject(result);
+            }
+
+            native.removeListener('package-PackageInfoEvent', _handle_packageinfo_event);
+        }
+    };
+
+    function PackageInformation(data) {
+        var totalSize;
+        var dataSize;
+
+        function sizeGetter(package_id) {
+            var callArgs = {id : package_id};
+            var result = _callSync('PackageManager_getSize', callArgs);
+
+            if (C.isFailure(result)) {
+                totalSize = 0;
+                dataSize = 0;
+            } else {
+                result = C.getResultObject(result);
+                totalSize = result.totalSize;
+                dataSize = result.dataSize;
+            }
+        }
+
+        function totalSizeGetter() {
+            if (undefined === totalSize) {
+                sizeGetter(this.id);
+            }
+
+            return totalSize;
+        }
+
+        function dataSizeGetter() {
+            if (undefined === totalSize) {
+                sizeGetter(this.id);
+            }
+
+            return dataSize;
+        }
+
+        Object.defineProperties(this, {
+            id              :   {value: data.id, writable: false, enumerable: true},
+            name            :   {value: data.name, writable: false, enumerable: true},
+            iconPath        :   {value: data.iconPath, writable: false, enumerable: true},
+            version         :   {value: data.version, writable: false, enumerable: true},
+            totalSize       :   {enumerable : true, set : function(){}, get : totalSizeGetter},
+            dataSize        :   {enumerable : true, set : function(){}, get : dataSizeGetter},
+            lastModified    :   {value: new Date(data.lastModified), writable: false, enumerable: true},
+            author          :   {value: data.author, writable: false, enumerable: true},
+            description     :   {value: data.description, writable: false, enumerable: true},
+            appIds          :   {value: data.appIds, writable: false, enumerable: true}
+        });
+    }
+
+    module.exports = {
+        package: {value: new PackageManager(), writable: false, enumerable: true}
+    };
+})();

@@ -1,0 +1,44 @@
+body {
+	margin: 0px;
+	top:0px;
+	left:0px;
+	width:360px;
+	height:360px;
+	font-size: 24px;
+	color: white;
+	background-color:#222;
+}
+.progress {
+	position:absolute;
+}
+.content {
+	position:absolute;
+	width:360px;
+}
+.icon {
+	padding-top:50px;
+}
+.icon-size {
+	width:100px;
+	height:100px;
+}		
+
+.distance {
+	height:16px;
+	line-height: 16px;
+	color:green;
+	font-size: 16px;			
+}
+.number {
+	height:90px;
+	line-height: 90px;
+	font-size: 90px;
+}
+.meter {
+	height:24px;
+	line-height: 24px;
+	font-size: 24px;
+}	
+.dist-margin-top {
+	margin-top:10px;
+}

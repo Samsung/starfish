@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+   <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+      <!--link rel="stylesheet" type="text/css" href="style.css"/-->
+      <style>
+         * {
+            margin: 0;
+            padding: 0;
+         }
+         body {
+            width: 360px;
+            height: 360px;
+         }
+         p {
+            text-align: center;
+            color: block;
+         }
+         .regularFont {
+            font-size: 20pt;
+         }
+         .mediumFont {
+            font-size: 22pt;
+         }
+         .largeFont {
+            font-size: 46pt;
+         }
+         #container {
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+         }
+         #top_text {
+            padding-top: 8%;
+         }
+         #img_weather {
+            width: 120px;
+            height: 120px;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="container">
+         <p class="regularFont" id="clock_text">11:45AM</p>
+         <p class="mediumFont" id="city_text">San Francisco, CA</p>
+         <img id="img_weather" src="img/weather_icon.png"/>
+         <p class="largeFont" id="current_temp_text">17°C</p>
+         <p class="mediumFont" id="mixmax_temp_text">15°/27°</p>
+      </div>
+   </body>
+   <script>
+      var weatherAPI = "http://api.openweathermap.org/data/2.5/weather?q=Seoul&units=metric&APPID=40a7b740f73250931427bf4eb04d8aa0";
+      var w_icon_base = "http://openweathermap.org/img/w/";
+      document.getElementsByTagName("body").item(0).onclick = function() {
+         //print("clicked!");
+         fetch();
+      };
+
+      function fetch(){
+         function onLoadHandler() {
+           var weather_json = this.response;
+           var clock_text = document.getElementById("clock_text");
+           var city_text = document.getElementById("city_text");
+           var img_weather = document.getElementById("img_weather");
+           var current_temp_text = document.getElementById("current_temp_text");
+           var mixmax_temp_text = document.getElementById("mixmax_temp_text");
+           var date = new Date(weather_json['dt']);
+           var icon_name = weather_json['weather'][0]['icon'];
+           var time_str = '';
+
+           if(date.getHours()<10)
+            time_str+='0'
+           time_str+=date.getHours();
+           time_str+=":";
+           if(date.getMinutes()<10)
+            time_str+='0'
+           time_str+=date.getMinutes();
+
+           img_weather.src = "img/"+icon_name+".png";
+           clock_text.textContent = time_str;
+           city_text.textContent = weather_json['name'];
+           current_temp_text.textContent = weather_json['main']['temp']+"°C";
+           mixmax_temp_text.textContent = weather_json['main']['temp_min'] +"°C"+ " / " +weather_json['main']['temp_max']+"°C";
+         }
+         var xhr = new XMLHttpRequest();
+         xhr.addEventListener("load", onLoadHandler);
+         xhr.open("GET",weatherAPI);
+         xhr.responseType='json';
+         xhr.send();
+      }
+      fetch();
+
+   </script>
+</html>

@@ -1,0 +1,54 @@
+* {
+	padding: 0;
+	margin: 0;
+}
+body {
+	width: 360px;
+	height: 360px;
+    font-size: 2.125em;
+    text-align: center;
+    color: white;
+	background-color: black;
+}
+
+.titleImg {
+	margin-top: 5%;
+	height: 17%;
+}
+.title {
+	font-size: 20px;
+	text-align: center;
+	margin-bottom: 10px;
+}
+.mainImg {
+	height:49px;
+}
+.bigTxt {
+	font-weight: bold;
+	font-size: 50px;
+}
+.smallTxt {
+	font-size: 20px;
+}
+.addButton {
+	margin-top: 6%;
+	padding-top: 6%;
+	height: 20%;
+	font-size: 26px;
+	background-color: #39addb;
+}
+
+.addButton:active {
+	background-color: #2F8AAF;
+}
+
+#blue {
+	color: #39addb;;
+}
+
+
+.cup {
+	width: 29px;
+	height: 39px;
+    margin: -5px;
+}

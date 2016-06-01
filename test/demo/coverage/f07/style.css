@@ -1,0 +1,38 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+script {
+	display: none;
+}
+html, body {
+	width: 360px;
+	height: 360px;
+}
+p {
+	text-align: center;
+	color: #1BCEFC;
+}
+#container {
+	width: 100%;
+	height: 100%;
+	background-color: white;
+}
+#text_header {
+	font-size: 25pt;
+	padding-top: 25px;
+	margin-bottom: 25px;
+}
+#img_graph {
+	width: 100%;
+	margin-bottom: 40px;
+}
+#div_pointer {
+	top: 154px;
+	left: 244px;
+	position: absolute;
+	text-align: center;
+}
+#img_pointer {
+	width: 15px;
+}

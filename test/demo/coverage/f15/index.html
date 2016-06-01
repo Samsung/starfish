@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+
+<style>
+
+body {
+    margin: 0;
+    padding: 0;
+}
+#viewport {
+    width: 360px;
+    height: 360px;
+    color: white;
+    font-size: 20pt;
+    background-color: black;
+    //border: 3px solid red;
+    text-align: center;
+    left: 0%;
+}
+#t1 {
+    padding-top: 5%;
+    height: 10%;
+    color: green;
+    font-size: 30pt;
+}
+#t2 {
+    margin-top:2%;
+    height: 10%;
+}
+#t3 {
+	border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-color: black;
+    border-bottom-color: black;
+    border-left-color: black;
+    border-right-color: black;
+    border-top-style: solid;
+    border-bottom-style: solid;
+    border-left-style: solid;
+    border-right-style: solid;
+    margin-top: 5%;
+    height: 15%;
+    font-weight: bold;
+    font-size: 30pt;
+}
+#t4 {
+    top: 45%;
+    height: 10%;
+    font-size: 24pt;
+}
+#t5 {
+    margin-top: 5%;
+    height: 15%;
+    font-weight: bold;
+    font-size: 30pt;
+}
+#t6 {
+    height: 10%;
+    font-size: 24pt;
+}
+#t7 {
+    margin-top: 2%;
+    height: 10%;
+    font-size: 16pt;
+}
+#t4, #t6, #t7 {
+    color: gray;
+}
+</style>
+
+<script>
+function clicked(node) {
+  console.log("clicked");
+  console.log(node);
+}
+</script>
+
+<body>
+
+<div id="viewport" onclick="clicked(this)">
+    <div id="t1">
+        <div>26</div>
+    </div>
+    <div id="t2">
+        <div>Thursday</div>
+    </div>
+    <div id="t3">
+        <div>Project meeting</div>
+    </div>
+    <div id="t4">
+        <div>1:00PM-2:00PM</div>
+    </div>
+    <div id="t5">
+        <div>Conference call</div>
+    </div>
+    <div id="t6">
+        <div>3:00PM-3:30PM</div>
+    </div>
+    <div id="t7">
+        <div>+3</div>
+    </div>
+</div>
+
+</body>
+</html>

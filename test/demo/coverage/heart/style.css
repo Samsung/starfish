@@ -1,0 +1,45 @@
+body {
+    position:absolute;
+	top:0px;
+	left:0px;
+	width:360px;
+	height:360px;
+    font-size: 2.125rem;
+    font-family: Tizen,Samsung Sans,Helvetica;
+    color: white;
+	background-color: black;
+	border: 2px solid red;
+}
+head {
+	display: none;
+}
+* {
+	position: absolute;
+}
+.titleIcon {
+	left: 155px;
+	top: 70px;
+	width: 50px;
+}
+.text {
+	top: 120px;
+	width: 100%;
+	height: 40px;
+	font-size: 30px;
+	text-align: center;
+}
+.bgImg {
+	top: 160px;
+	width: 100%;
+	height: 160px;
+}
+.button {
+	top: 50px;
+	left: 80px;
+	width: 200px;
+	padding-top: 20px;
+	padding-bottom: 20px;
+	text-align: center;
+	font-size: 30px;
+	font-weight: bold;
+}

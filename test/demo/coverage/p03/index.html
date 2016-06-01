@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+   <head>
+      <style>
+            * {
+                  margin: 0;
+                  padding: 0;
+            }
+		body {
+			position:absolute;
+			top:0px;
+			left:0px;
+			width:360px;
+			height:360px;
+			font-size: 2.125em;
+			color: white;
+		}
+            p {
+                  color: white;
+                  font-size: 20pt;
+                  font-weight: bold;
+            }
+            #container {
+                  width: 100%;
+                  height: 100%;
+                  background-color: black;
+                  text-align: center;
+                  overflow: hidden;
+            }
+            #img_title {
+                  width: 40%;
+                  height: 24%;
+                  margin: 4% 0 4% 0;
+            }
+            #div_progress {
+                  width: 68%;
+                  height: 8px;
+                  margin: 0 auto 2% auto;
+                  background-color: #333333;
+            }
+            #div_progress_bar {
+                  width: 35%;
+                  height: 100%;
+                  background-color: #41CD8B;
+            }
+            #div_btn {
+                  width: 100%;
+                  height: 26%;
+                  background-color: #41CD8B;
+                  margin-top: 5%;
+            }
+            #text_title {
+                  color: #41CD8B;
+                  margin-bottom: 4%;
+                  font-size: 16pt;
+            }
+            #text_value {
+                  font-size: 40pt;
+                  font-weight: bold;
+            }
+            #text_btn {
+                  font-size: 22pt;
+                  padding-top: 5%;
+            }
+      </style>
+   </head>
+   <body>
+      <div id="container">
+         <img id="img_title" src="images/food0.png"/>
+         <p id="text_title">TODAY'S RECOMMENDED FOOD</p>
+         <div id="div_progress"><div id="div_progress_bar"></div></div>
+         <p id="text_value">700</p>
+         <p>kcal</p>
+         <div id="div_btn"><p id="text_btn">NEXT FOOD</p></div>
+      </div>
+   </body>
+   <script>
+      var num = 0;
+      document.getElementById("div_btn").onclick = function() {
+         var img = document.getElementById('img_title');
+         var txt = document.getElementById('text_value');
+         var pgb = document.getElementById('div_progress_bar');
+
+         num = (++num)%4;
+         switch(num){
+            case 0:
+               img.src = "images/food0.png";
+               txt.textContent = "700";
+               pgb.style.width = "70%"
+               break;
+            case 1:
+               img.src = "images/food1.png";
+               txt.textContent = "500";
+               pgb.style.width = "50%"
+               break;
+            case 2:
+               img.src = "images/food2.jpg";
+               txt.textContent = "400";
+               pgb.style.width = "40%"
+               break;
+            case 3:
+               img.src = "images/food3.png";
+               txt.textContent = "800";
+               pgb.style.width = "80%"
+               break;
+         }
+
+
+
+
+         //var text = document.getElementById('');
+      };
+   </script>
+</html>

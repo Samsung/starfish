@@ -1,0 +1,1081 @@
+/*
+ * Copyright (c) 2014 Samsung Electronics Co., Ltd All Rights Reserved
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+(function() {
+    'use strict';
+
+//  helper functions ////////////////////////////////////////////////////
+    var _common = require('./tizen.Common');
+    var T = _common.Type;
+    var Converter = _common.Converter;
+    var AV = _common.ArgumentValidator;
+    var C = _common.Common;
+    var _callSync = C.getCallSync('systeminfo');
+    var _call = C.getCall('systeminfo');
+    _common = undefined;
+
+//  enumeration SystemInfoPropertyId ////////////////////////////////////////////////////
+    var SystemInfoPropertyId = {
+        BATTERY : 'BATTERY',
+        CPU : 'CPU',
+        STORAGE : 'STORAGE',
+        DISPLAY : 'DISPLAY',
+        DEVICE_ORIENTATION : 'DEVICE_ORIENTATION',
+        BUILD : 'BUILD',
+        LOCALE : 'LOCALE',
+        NETWORK : 'NETWORK',
+        WIFI_NETWORK : 'WIFI_NETWORK',
+        CELLULAR_NETWORK : 'CELLULAR_NETWORK',
+        SIM : 'SIM',
+        PERIPHERAL : 'PERIPHERAL'
+    };
+
+//  class SystemInfoDeviceCapability ////////////////////////////////////////////////////
+    function SystemInfoDeviceCapability(data) {
+        Object.defineProperties(this, {
+            bluetooth : {
+                value : data.bluetooth,
+                writable : false,
+                enumerable : true
+            },
+            nfc : {
+                value : data.nfc,
+                writable : false,
+                enumerable : true
+            },
+            nfcReservedPush : {
+                value : data.nfcReservedPush,
+                writable : false,
+                enumerable : true
+            },
+            multiTouchCount : {
+                value : Converter.toOctet(data.multiTouchCount),
+                writable : false,
+                enumerable : true
+            },
+            inputKeyboard : {
+                value : data.inputKeyboard,
+                writable : false,
+                enumerable : true
+            },
+            inputKeyboardLayout : {
+                value : data.inputKeyboardLayout,
+                writable : false,
+                enumerable : true
+            },
+            wifi : {
+                value : data.wifi,
+                writable : false,
+                enumerable : true
+            },
+            wifiDirect : {
+                value : data.wifiDirect,
+                writable : false,
+                enumerable : true
+            },
+            opengles : {
+                value : data.opengles,
+                writable : false,
+                enumerable : true
+            },
+            openglestextureFormat : {
+                value : data.openglestextureFormat,
+                writable : false,
+                enumerable : true
+            },
+            openglesVersion1_1 : {
+                value : data.openglesVersion1_1,
+                writable : false,
+                enumerable : true
+            },
+            openglesVersion2_0 : {
+                value : data.openglesVersion2_0,
+                writable : false,
+                enumerable : true
+            },
+            fmRadio : {
+                value : data.fmRadio,
+                writable : false,
+                enumerable : true
+            },
+            platformVersion : {
+                value : data.platformVersion,
+                writable : false,
+                enumerable : true
+            },
+            webApiVersion : {
+                value : data.webApiVersion,
+                writable : false,
+                enumerable : true
+            },
+            nativeApiVersion : {
+                value : data.nativeApiVersion,
+                writable : false,
+                enumerable : true
+            },
+            platformName : {
+                value : data.platformName,
+                writable : false,
+                enumerable : true
+            },
+            camera : {
+                value : data.camera,
+                writable : false,
+                enumerable : true
+            },
+            cameraFront : {
+                value : data.cameraFront,
+                writable : false,
+                enumerable : true
+            },
+            cameraFrontFlash : {
+                value : data.cameraFrontFlash,
+                writable : false,
+                enumerable : true
+            },
+            cameraBack : {
+                value : data.cameraBack,
+                writable : false,
+                enumerable : true
+            },
+            cameraBackFlash : {
+                value : data.cameraBackFlash,
+                writable : false,
+                enumerable : true
+            },
+            location : {
+                value : data.location,
+                writable : false,
+                enumerable : true
+            },
+            locationGps : {
+                value : data.locationGps,
+                writable : false,
+                enumerable : true
+            },
+            locationWps : {
+                value : data.locationWps,
+                writable : false,
+                enumerable : true
+            },
+            microphone : {
+                value : data.microphone,
+                writable : false,
+                enumerable : true
+            },
+            usbHost : {
+                value : data.usbHost,
+                writable : false,
+                enumerable : true
+            },
+            usbAccessory : {
+                value : data.usbAccessory,
+                writable : false,
+                enumerable : true
+            },
+            screenOutputRca : {
+                value : data.screenOutputRca,
+                writable : false,
+                enumerable : true
+            },
+            screenOutputHdmi : {
+                value : data.screenOutputHdmi,
+                writable : false,
+                enumerable : true
+            },
+            platformCoreCpuArch : {
+                value : data.platformCoreCpuArch,
+                writable : false,
+                enumerable : true
+            },
+            platformCoreFpuArch : {
+                value : data.platformCoreFpuArch,
+                writable : false,
+                enumerable : true
+            },
+            sipVoip : {
+                value : data.sipVoip,
+                writable : false,
+                enumerable : true
+            },
+            duid : {
+                value : data.duid,
+                writable : false,
+                enumerable : true
+            },
+            speechRecognition : {
+                value : data.speechRecognition,
+                writable : false,
+                enumerable : true
+            },
+            speechSynthesis : {
+                value : data.speechSynthesis,
+                writable : false,
+                enumerable : true
+            },
+            accelerometer : {
+                value : data.accelerometer,
+                writable : false,
+                enumerable : true
+            },
+            accelerometerWakeup : {
+                value : data.accelerometerWakeup,
+                writable : false,
+                enumerable : true
+            },
+            barometer : {
+                value : data.barometer,
+                writable : false,
+                enumerable : true
+            },
+            barometerWakeup : {
+                value : data.barometerWakeup,
+                writable : false,
+                enumerable : true
+            },
+            gyroscope : {
+                value : data.gyroscope,
+                writable : false,
+                enumerable : true
+            },
+            gyroscopeWakeup : {
+                value : data.gyroscopeWakeup,
+                writable : false,
+                enumerable : true
+            },
+            magnetometer : {
+                value : data.magnetometer,
+                writable : false,
+                enumerable : true
+            },
+            magnetometerWakeup : {
+                value : data.magnetometerWakeup,
+                writable : false,
+                enumerable : true
+            },
+            photometer : {
+                value : data.photometer,
+                writable : false,
+                enumerable : true
+            },
+            photometerWakeup : {
+                value : data.photometerWakeup,
+                writable : false,
+                enumerable : true
+            },
+            proximity : {
+                value : data.proximity,
+                writable : false,
+                enumerable : true
+            },
+            proximityWakeup : {
+                value : data.proximityWakeup,
+                writable : false,
+                enumerable : true
+            },
+            tiltmeter : {
+                value : data.tiltmeter,
+                writable : false,
+                enumerable : true
+            },
+            tiltmeterWakeup : {
+                value : data.tiltmeterWakeup,
+                writable : false,
+                enumerable : true
+            },
+            dataEncryption : {
+                value : data.dataEncryption,
+                writable : false,
+                enumerable : true
+            },
+            graphicsAcceleration : {
+                value : data.graphicsAcceleration,
+                writable : false,
+                enumerable : true
+            },
+            push : {
+                value : data.push,
+                writable : false,
+                enumerable : true
+            },
+            telephony : {
+                value : data.telephony,
+                writable : false,
+                enumerable : true
+            },
+            telephonyMms : {
+                value : data.telephonyMms,
+                writable : false,
+                enumerable : true
+            },
+            telephonySms : {
+                value : data.telephonySms,
+                writable : false,
+                enumerable : true
+            },
+            screenSizeNormal : {
+                value : data.screenSizeNormal,
+                writable : false,
+                enumerable : true
+            },
+            screenSize480_800 : {
+                value : data.screenSize480_800,
+                writable : false,
+                enumerable : true
+            },
+            screenSize720_1280 : {
+                value : data.screenSize720_1280,
+                writable : false,
+                enumerable : true
+            },
+            autoRotation : {
+                value : data.autoRotation,
+                writable : false,
+                enumerable : true
+            },
+            shellAppWidget : {
+                value : data.shellAppWidget,
+                writable : false,
+                enumerable : true
+            },
+            visionImageRecognition : {
+                value : data.visionImageRecognition,
+                writable : false,
+                enumerable : true
+            },
+            visionQrcodeGeneration : {
+                value : data.visionQrcodeGeneration,
+                writable : false,
+                enumerable : true
+            },
+            visionQrcodeRecognition : {
+                value : data.visionQrcodeRecognition,
+                writable : false,
+                enumerable : true
+            },
+            visionFaceRecognition : {
+                value : data.visionFaceRecognition,
+                writable : false,
+                enumerable : true
+            },
+            secureElement : {
+                value : data.secureElement,
+                writable : false,
+                enumerable : true
+            },
+            nativeOspCompatible : {
+                value : data.nativeOspCompatible,
+                writable : false,
+                enumerable : true
+            },
+            profile : {
+                value : data.profile,
+                writable : false,
+                enumerable : true
+            }
+        });
+    }
+
+//  class SystemInfoBattery ////////////////////////////////////////////////////
+    function SystemInfoBattery(data) {
+        Object.defineProperties(this, {
+            level : {
+                value : data.level,
+                writable : false,
+                enumerable : true
+            },
+            isCharging : {
+                value : data.isCharging,
+                writable : false,
+                enumerable : true
+            }
+        });
+    }
+
+//  class SystemInfoCpu ////////////////////////////////////////////////////
+    function SystemInfoCpu(data) {
+        Object.defineProperties(this, {
+            load : {
+                value: data.load,
+                writable: false,
+                enumerable: true
+            }
+        });
+    }
+
+//  class SystemInfoStorageUnit ////////////////////////////////////////////////////
+    function SystemInfoStorageUnit(data) {
+        Object.defineProperties(this, {
+            type : {
+                value: data.type,
+                writable: false,
+                enumerable: true
+            },
+            capacity : {
+                value: Converter.toUnsignedLongLong(data.capacity),
+                writable: false,
+                enumerable: true
+            },
+            availableCapacity : {
+                value : Converter.toUnsignedLongLong(data.availableCapacity),
+                writable : false,
+                enumerable : true
+            },
+            isRemovable : {
+                value : data.isRemovable,
+                writable : false,
+                enumerable : true
+            },
+            isRemoveable : {
+                value : data.isRemovable,
+                writable : false,
+                enumerable : true
+            }
+        });
+    }
+
+//  class SystemInfoStorage ////////////////////////////////////////////////////
+    function SystemInfoStorage(data) {
+        var len = data.storages.length;
+        var storageArray = new Array(len);
+        for (var i = 0; i < len; ++i) {
+            storageArray[i] = new SystemInfoStorageUnit(data.storages[i]);
+        }
+        Object.defineProperties(this, {
+            units : {
+                value: storageArray,
+                writable: false,
+                enumerable: true
+            }
+        });
+    }
+
+//  class SystemInfoDisplay ////////////////////////////////////////////////////
+    function SystemInfoDisplay(data) {
+        Object.defineProperties(this, {
+            resolutionWidth : {
+                value: Converter.toUnsignedLong(data.resolutionWidth),
+                writable: false,
+                enumerable: true
+            },
+            resolutionHeight : {
+                value: Converter.toUnsignedLong(data.resolutionHeight),
+                writable: false,
+                enumerable: true
+            },
+            dotsPerInchWidth : {
+                value: Converter.toUnsignedLong(data.dotsPerInchWidth),
+                writable: false,
+                enumerable: true
+            },
+            dotsPerInchHeight : {
+                value: Converter.toUnsignedLong(data.dotsPerInchHeight),
+                writable: false,
+                enumerable: true
+            },
+            physicalWidth : {
+                value: Number(data.physicalWidth),
+                writable: false,
+                enumerable: true
+            },
+            physicalHeight : {
+                value: Number(data.physicalHeight),
+                writable: false,
+                enumerable: true
+            },
+            brightness : {
+                value: Number(data.brightness),
+                writable: false,
+                enumerable: true
+            }
+        });
+    }
+
+//  class SystemInfoDeviceOrientation ////////////////////////////////////////////////////
+    function SystemInfoDeviceOrientation(data) {
+        Object.defineProperties(this, {
+            status : {value: data.status, writable: false, enumerable: true},
+            isAutoRotation : {value: data.isAutoRotation, writable: false, enumerable: true}
+        });
+    }
+
+//  class SystemInfoBuild ////////////////////////////////////////////////////
+    function SystemInfoBuild(data) {
+        Object.defineProperties(this, {
+            model : {value: data.model, writable: false, enumerable: true},
+            manufacturer : {value: data.manufacturer, writable: false, enumerable: true},
+            buildVersion : {value: data.buildVersion, writable: false, enumerable: true}
+        });
+    }
+
+    // class SystemInfoLocale ////////////////////////////////////////////////////
+    function SystemInfoLocale(data) {
+        Object.defineProperties(this, {
+            language : {value: data.language, writable: false, enumerable: true},
+            country : {value: data.country, writable: false, enumerable: true}
+        });
+    }
+    // class SystemInfoNetwork ////////////////////////////////////////////////////
+    function SystemInfoNetwork(data) {
+        Object.defineProperties(this, {
+            networkType : {value: data.networkType, writable: false, enumerable: true}
+        });
+    }
+
+    // class SystemInfoWifiNetwork ////////////////////////////////////////////////////
+    function SystemInfoWifiNetwork(data) {
+        Object.defineProperties(this, {
+            status : {value: data.status, writable: false, enumerable: true},
+            ssid : {value: data.ssid, writable: false, enumerable: true},
+            ipAddress : {value: data.ipAddress, writable: false, enumerable: true},
+            ipv6Address : {value: data.ipv6Address, writable: false, enumerable: true},
+            signalStrength : {value: Number(data.signalStrength), writable: false, enumerable: true}
+        });
+    }
+
+    // class SystemInfoCellularNetwork ////////////////////////////////////////////////////
+    function SystemInfoCellularNetwork(data) {
+        Object.defineProperties(this, {
+            status : {value: data.status, writable: false, enumerable: true},
+            apn : {value: data.apn, writable: false, enumerable: true},
+            ipAddress : {value: data.ipAddress, writable: false, enumerable: true},
+            ipv6Address : {value: data.ipv6Address, writable: false, enumerable: true},
+            mcc : {value: Number(data.mcc), writable: false, enumerable: true},
+            mnc : {value: Number(data.mnc), writable: false, enumerable: true},
+            cellId : {value: Number(data.cellId), writable: false, enumerable: true},
+            lac : {value: Number(data.lac), writable: false, enumerable: true},
+            isRoaming : {value: data.isRoaming, writable: false, enumerable: true},
+            isFlightMode : {value: data.isFligthMode, writable: false, enumerable: true},
+            imei : {value: data.imei, writable: false, enumerable: true}
+        });
+    }
+
+    // class SystemInfoSIM ////////////////////////////////////////////////////
+    function SystemInfoSIM(data) {
+        Object.defineProperties(this, {
+            state : {value: data.state, writable: false, enumerable: true},
+            operatorName : {value: data.operatorName, writable: false, enumerable: true},
+            msisdn : {value: data.msisdn, writable: false, enumerable: true},
+            iccid : {value: data.iccid, writable: false, enumerable: true},
+            mcc : {value: Number(data.mcc), writable: false, enumerable: true},
+            mnc : {value: Number(data.mnc), writable: false, enumerable: true},
+            msin : {value: data.msin, writable: false, enumerable: true},
+            spn : {value: data.spn, writable: false, enumerable: true}
+        });
+    }
+
+//  class SystemInfoPeripheral ////////////////////////////////////////////////////
+    function SystemInfoPeripheral(data) {
+        Object.defineProperties(this, {
+            isVideoOutputOn : {value: data.isVideoOutputOn, writable: false, enumerable: true}
+        });
+    }
+
+//  class SystemInfo ////////////////////////////////////////////////////
+    var SystemInfo = function() {
+    };
+
+    SystemInfo.prototype.getCapabilities = function() {
+        console.logd('Entered getCapabilities');
+        var result = _callSync('SystemInfo_getCapabilities', {});
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        }
+        var devCap = new SystemInfoDeviceCapability(C.getResultObject(result));
+        return devCap;
+    };
+
+    SystemInfo.prototype.getCapability = function() {
+        console.logd('Entered getCapability');
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'key',
+                type : AV.Types.STRING
+            }
+        ]);
+
+        var result = _callSync('SystemInfo_getCapability', {key: args.key});
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        }
+        var res = C.getResultObject(result);
+        if (res.type === 'int') {
+            return Number(res.value);
+        } else {
+            return res.value;
+        }
+    };
+
+    SystemInfo.prototype.getPropertyValue = function() {
+        console.logd('Entered getPropertyValue');
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'property',
+                type : AV.Types.ENUM,
+                values : T.getValues(SystemInfoPropertyId)
+            },
+            {
+                name : 'successCallback',
+                type : AV.Types.FUNCTION
+            },
+            {
+                name : 'errorCallback',
+                type : AV.Types.FUNCTION,
+                optional : true,
+                nullable : true
+            }
+        ]);
+
+        var propObject = _propertyContainer[args.property];
+        if (!propObject) {
+            C.throwTypeMismatch('Property with id: ' + args.property + ' is not supported.');
+        }
+
+        var callback = function(result) {
+            if (C.isFailure(result)) {
+                setTimeout(function() {
+                    C.callIfPossible(args.errorCallback, C.getErrorObject(result));
+                }, 0);
+            } else {
+                var resultProp = _createProperty(args.property, C.getResultObject(result));
+                args.successCallback(resultProp);
+            }
+        };
+
+        var result = _call('SystemInfo_getPropertyValue', {property: args.property}, callback);
+
+        if (C.isFailure(result)) {
+            throw C.getErrorObject(result);
+        }
+    };
+
+//  SystemInfo helpers ///////////////////////////////////////////////////
+    var _batteryStr = SystemInfoPropertyId.BATTERY;
+    var _cpuStr = SystemInfoPropertyId.CPU;
+    var _storageStr = SystemInfoPropertyId.STORAGE;
+    var _displayStr = SystemInfoPropertyId.DISPLAY;
+    var _deviceOrientationStr = SystemInfoPropertyId.DEVICE_ORIENTATION;
+    //var _buildStr = SystemInfoPropertyId.BUILD;
+    var _localeStr = SystemInfoPropertyId.LOCALE;
+    var _networkStr = SystemInfoPropertyId.NETWORK;
+    var _wifiNetworkStr = SystemInfoPropertyId.WIFI_NETWORK;
+    var _cellularNetworkStr = SystemInfoPropertyId.CELLULAR_NETWORK;
+    var _simStr = SystemInfoPropertyId.SIM;
+    var _peripheralStr = SystemInfoPropertyId.PERIPHERAL;
+
+    var _nextId = 0;
+
+    var _createProperty = function (property, data) {
+        if (_propertyContainer[property]){
+            return new _propertyContainer[property].constructor(data);
+        } else {
+            C.throwTypeMismatch('Property with id: ' + property + ' is not supported.');
+        }
+    };
+
+    function _systeminfoBatteryListenerCallback(event) {
+        console.logd('Entered _systeminfoBatteryListenerCallback');
+        var property = _batteryStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                var listener = callbacks[watchId];
+                var executeCall = (T.isUndefined(listener.lowThreshold) ||
+                                  (propObj.level <= listener.lowThreshold)) ||
+                                  (T.isUndefined(listener.highThreshold) ||
+                                  (propObj.level >= listener.highThreshold));
+                if (executeCall) {
+                    listener.callback(propObj);
+                }
+            }
+        }
+    }
+
+    function _systeminfoCpuListenerCallback(event) {
+        console.logd('Entered _systeminfoCpuListenerCallback');
+        var property = _cpuStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                var listener = callbacks[watchId];
+                var executeCall = (T.isUndefined(listener.lowThreshold) ||
+                                  (propObj.load <= listener.lowThreshold)) ||
+                                  (T.isUndefined(listener.highThreshold) ||
+                                  (propObj.load >= listener.highThreshold));
+                if (executeCall) {
+                    listener.callback(propObj);
+                }
+            }
+        }
+    }
+
+    function _systeminfoStorageListenerCallback(event) {
+        console.logd('Entered _systeminfoStorageListenerCallback');
+        var property = _storageStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    function _systeminfoDisplayListenerCallback(event) {
+        console.logd('Entered _systeminfoDisplayListenerCallback');
+        var property = _displayStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                var listener = callbacks[watchId];
+                var executeCall = (T.isUndefined(listener.lowThreshold) ||
+                                  (propObj.brightness <= listener.lowThreshold)) ||
+                                  (T.isUndefined(listener.highThreshold) ||
+                                  (propObj.brightness >= listener.highThreshold));
+                if (executeCall) {
+                    listener.callback(propObj);
+                }
+            }
+        }
+    }
+
+    function _systeminfoDeviceOrientationListenerCallback(event) {
+        console.logd('Entered _systeminfoDeviceOrientationListenerCallback');
+        var property = _deviceOrientationStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    function _systeminfoLocaleListenerCallback(event) {
+        console.logd('Entered _systeminfoLocaleListenerCallback');
+        var property = _localeStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    function _systeminfoNetworkListenerCallback(event) {
+        console.logd('Entered _systeminfoNetworkListenerCallback');
+        var property = _networkStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    function _systeminfoWifiNetworkListenerCallback(event) {
+        console.logd('Entered _systeminfoWifiNetworkListenerCallback');
+        var property = _wifiNetworkStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    function _systeminfoCellularNetworkListenerCallback(event) {
+        console.logd('Entered _systeminfoCellularNetworkListenerCallback');
+        var property = _cellularNetworkStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    function _systeminfoSimListenerCallback(event) {
+        console.logd('Entered _systeminfoSimListenerCallback');
+        var property = _simStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    function _systeminfoPeripheralListenerCallback(event) {
+        console.logd('Entered _systeminfoPeripheralListenerCallback');
+        var property = _peripheralStr;
+        var eventObj = JSON.parse(event);
+        var propObj = _createProperty(property, eventObj.result);
+        var callbacks = _propertyContainer[property].callbacks;
+
+        for (var watchId in callbacks) {
+            if (callbacks.hasOwnProperty(watchId)) {
+                callbacks[watchId].callback(propObj);
+            }
+        }
+    }
+
+    var _propertyContainer = {
+        'BATTERY' : {
+            callbacks : {},
+            constructor : SystemInfoBattery,
+            broadcastFunction : _systeminfoBatteryListenerCallback,
+            signalLabel : 'SystemInfoBatteryChangeBroadcast'
+        },
+        'CPU' : {
+            callbacks : {},
+            constructor : SystemInfoCpu,
+            broadcastFunction : _systeminfoCpuListenerCallback,
+            signalLabel : 'SystemInfoCpuChangeBroadcast'
+        },
+        'STORAGE' : {
+            callbacks : {},
+            constructor : SystemInfoStorage,
+            broadcastFunction : _systeminfoStorageListenerCallback,
+            signalLabel : 'SystemInfoStorageChangeBroadcast'
+        },
+        'DISPLAY' : {
+            callbacks : {},
+            constructor : SystemInfoDisplay,
+            broadcastFunction : _systeminfoDisplayListenerCallback,
+            signalLabel : 'SystemInfoDisplayChangeBroadcast'
+        },
+        'DEVICE_ORIENTATION' : {
+            callbacks : {},
+            constructor : SystemInfoDeviceOrientation,
+            broadcastFunction : _systeminfoDeviceOrientationListenerCallback,
+            signalLabel : 'SystemInfoDeviceOrientationChangeBroadcast'
+        },
+        'BUILD' : {
+            callbacks : {}, //adding callbacks for build is not possible
+            constructor : SystemInfoBuild,
+            broadcastFunction : function(){},
+            signalLabel : ''
+        },
+        'LOCALE' : {
+            callbacks : {},
+            constructor : SystemInfoLocale,
+            broadcastFunction : _systeminfoLocaleListenerCallback,
+            signalLabel : 'SystemInfoLocaleChangeBroadcast'
+        },
+        'NETWORK' : {
+            callbacks : {},
+            constructor : SystemInfoNetwork,
+            broadcastFunction : _systeminfoNetworkListenerCallback,
+            signalLabel : 'SystemInfoNetworkChangeBroadcast'
+        },
+        'WIFI_NETWORK' : {
+            callbacks : {},
+            constructor : SystemInfoWifiNetwork,
+            broadcastFunction : _systeminfoWifiNetworkListenerCallback,
+            signalLabel : 'SystemInfoWifiNetworkChangeBroadcast'
+        },
+        'CELLULAR_NETWORK' : {
+            callbacks : {},
+            constructor : SystemInfoCellularNetwork,
+            broadcastFunction : _systeminfoCellularNetworkListenerCallback,
+            signalLabel : 'SystemInfoCellularNetworkChangeBroadcast'
+        },
+        'SIM' : {
+            callbacks : {},
+            constructor : SystemInfoSIM,
+            broadcastFunction : _systeminfoSimListenerCallback,
+            signalLabel : 'SystemInfoSimChangeBroadcast'
+        },
+        'PERIPHERAL' : {
+            callbacks : {},
+            constructor : SystemInfoPeripheral,
+            broadcastFunction : _systeminfoPeripheralListenerCallback,
+            signalLabel : 'SystemInfoPeripheralChangeBroadcast'
+        }
+    };
+
+    var _registerListener = function (property, listener, errorCallback) {
+        console.logd('Entered registerListener');
+        var watchId;
+        var result={};
+
+        var propObject = _propertyContainer[property];
+        if (!propObject) {
+            C.throwTypeMismatch('Property with id: ' + property + ' is not supported.');
+        }
+        var callbackBroadcastFunction = propObject.broadcastFunction;
+        var signalLabel = propObject.signalLabel;
+        var callbacksMap = propObject.callbacks;
+
+        var fail = false;
+        if (T.isEmptyObject(callbacksMap)) {
+            //registration in C++ layer
+            result = _callSync(
+                    'SystemInfo_addPropertyValueChangeListener',
+                    {property: Converter.toString(property)});
+            fail = C.isFailure(result);
+            if (!fail) {
+                native.addListener(signalLabel, callbackBroadcastFunction);
+            } else {
+                setTimeout(function() {
+                    C.callIfPossible(errorCallback, C.getErrorObject(result));
+                }, 0);
+            }
+        }
+        if (!fail){
+            watchId = ++_nextId;
+            callbacksMap[watchId] = listener;
+        }
+
+        return Converter.toUnsignedLong(watchId);
+    };
+
+    var _identifyListener = function (watchId) {
+        console.logd('Entered _identifyListener');
+
+        for (var p in _propertyContainer) {
+            if (_propertyContainer[p].callbacks[watchId]) {
+                return p;
+            }
+        }
+        C.throwInvalidValues('Listener with id: ' + watchId + ' does not exist.');
+    };
+
+    var _unregisterListener = function (watchId, isTimeout) {
+        console.logd('Entered _unregisterListener');
+        var property = {};
+        try {
+            property = _identifyListener(watchId);
+        } catch (e) {
+            // if it is "auto" timeout call it should not throw an exception
+            if (isTimeout) {
+                console.logd('Listener was already deleted');
+                return;
+            }
+            throw e;
+        }
+
+        var propObject = _propertyContainer[property];
+        var result={};
+
+        var callbackBroadcastFunction = propObject.broadcastFunction;
+        var signalLabel = propObject.signalLabel;
+        var callbacksMap = propObject.callbacks;
+
+        delete callbacksMap[Number(watchId)];
+        if (T.isEmptyObject(callbacksMap)) {
+            native.removeListener(signalLabel, callbackBroadcastFunction);
+            //unregistration in C++ layer
+            result = _callSync(
+                    'SystemInfo_removePropertyValueChangeListener',
+                    {property: Converter.toString(property)});
+            if (C.isFailure(result)) {
+                throw C.getErrorObject(result);
+            }
+        }
+    };
+
+    SystemInfo.prototype.addPropertyValueChangeListener = function() {
+        console.logd('Entered addPropertyVaueChangeListener');
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'property',
+                type : AV.Types.ENUM,
+                values : T.getValues(SystemInfoPropertyId)
+            },
+            {
+                name : 'successCallback',
+                type : AV.Types.FUNCTION
+            },
+            {
+                name : 'options',
+                type : AV.Types.DICTIONARY,
+                optional : true,
+                nullable : true
+            },
+            {
+                name : 'errorCallback',
+                type : AV.Types.FUNCTION,
+                optional : true,
+                nullable : true
+            }
+        ]);
+
+        var listener = {
+            callback      : args.successCallback,
+            highThreshold : !T.isNullOrUndefined(args.options) ?
+                                args.options.highThreshold : undefined,
+            lowThreshold  : !T.isNullOrUndefined(args.options) ?
+                                args.options.lowThreshold : undefined
+        };
+        var watchId = _registerListener(args.property, listener, args.errorCallback);
+
+        var timeout = !T.isNullOrUndefined(args.options) ? args.options.timeout : undefined;
+        if (!T.isUndefined(timeout) ){
+            setTimeout(function(){_unregisterListener(watchId, true);}, timeout);
+        }
+
+        return watchId;
+    };
+
+    SystemInfo.prototype.removePropertyValueChangeListener = function() {
+        console.logd('Entered removePropertyValueChangeListener');
+        var args = AV.validateMethod(arguments, [
+            {
+                name : 'watchId',
+                type : AV.Types.UNSIGNED_LONG
+            }
+        ]);
+
+        _unregisterListener(args.watchId, false);
+    };
+
+
+//  exports ////////////////////////////////////////////////////
+
+    module.exports = {
+        systeminfo : {value: new SystemInfo(), writable: false, enumerable: true},
+    };
+
+})();

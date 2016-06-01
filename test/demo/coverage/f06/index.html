@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+   <head>
+	<style>
+	* {
+		display: relative;
+		margin: 0;
+		padding: 0;
+	}
+	body {
+		width: 360px;
+		height: 360px;
+	}
+	p {
+		font-size: 16pt;
+		color: white;
+	}
+	span {
+		font-size: 16pt;
+		color: white;
+	}
+	#container {
+		background-color: black;
+		width: 100%;
+		height: 100%;
+		text-align: center;
+	}
+	#main_img {
+		width: 36%;
+		margin-top: 7%;
+	}
+	#main_text {
+		font-size: 14pt;
+		color: #DF4C8E;
+		margin-top: 3%;
+	}
+	#progress_container {
+		width: 72%;
+		height: 8px;
+		margin-left: auto;
+		margin-right: auto;
+		background-color: #333333;
+		margin-top: 4%;
+	}
+	#progress_bar {
+		width: 0%;
+		height: 100%;
+		background-color: #DF4C8E;
+	}
+	.text_container {
+		margin-top: 5px;
+		padding-left: 120px;
+		text-align: left;
+	}
+	.number_text {
+		/*font-weight: bold;*/
+		font-size: 40pt;
+		margin-right: 2px;
+		display: inline;
+	}
+	.desc_text {
+		/*margin: 0px 0 0px 0;*/
+		font-size: 16pt;
+		color: white;
+	}
+	</style>
+   </head>
+   <body>
+      <div id="container">
+         <img id="main_img" src="images/shoe.png">
+         <div id="main_text">TODAY's EXERCISE</div>
+         <div id="progress_container">
+            <div id="progress_bar"></div>
+         </div>
+         <div class="text_container">
+            <div class="desc_text"><div class="number_text" id="min">0</div> minutes</div>
+            <div class="desc_text"><div class="number_text" id="stp">0</div> steps</div>
+            <div class="desc_text"><div class="number_text" id="mtr">0</div> metres</div>
+         </div>
+      </div>
+   </body>
+   <script>
+	  var minNum = 0;
+	  var stpNum = 0;
+	  var mtrNum = 0;
+	  var pgsNum = 0;
+      document.getElementsByTagName("body").item(0).onclick = function() {
+		 minNum = parseInt(document.getElementById('min').textContent);
+		 if(minNum >= 60) minNum = 0;
+		 else minNum += 6;
+		 document.getElementById('min').textContent = minNum;
+
+		 stpNum = parseInt(document.getElementById('stp').textContent);
+		 if(stpNum >= 2600) stpNum = 0;
+		 else stpNum += 260;
+		 document.getElementById('stp').textContent = stpNum;
+
+		 mtrNum = parseInt(document.getElementById('mtr').textContent);
+		 if(mtrNum >= 180) mtrNum = 0;
+		 else mtrNum += 18;
+		 document.getElementById('mtr').textContent = mtrNum;
+
+		 var pgs = document.getElementById('progress_bar');
+		 if(pgsNum >= 100) pgsNum = 0;
+		 else pgsNum += 10;
+		 pgs.style.width = (pgsNum+'%');
+      };
+   </script>
+</html>

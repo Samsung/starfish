@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+   <head>
+      <!--meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+      <link rel="stylesheet" type="text/css" href="style.css"/-->
+      <style>
+         * {
+            margin: 0;
+            padding: 0;
+         }
+         script {
+            display: none;
+         }
+         body {
+            width: 360px;
+            height: 360px;
+         }
+         p {
+            color: #CCCCCC;
+            width: 100%;
+            text-align: center;
+         }
+         .font_regular {
+			border-image-source: url(BlackSquareSmall.png);
+            border-image-slice: 30;
+            border-image-width: 1px;
+            font-size: 18pt;
+         }
+         .font_medium {
+            font-size: 24pt;
+         }
+         .font_large {
+            color: white;
+            font-size: 45pt;
+         }
+         div {
+            width: 100%;
+         }
+         #container {
+            height: 100%;
+            background-color: black;
+         }
+         #div_top {
+            height: 29%;
+            background-color: #252525;
+         }
+         #div_middle {
+            height: 42%;
+            background-color: #1F1F1F;
+         }
+         #div_bottom {
+            height: 29%;
+            background-color: #2F2F2F;
+         }
+         #text_date {
+            padding-top: 9.7%;
+         }
+         #text_price {
+            padding-top: 6.2%;
+         }
+         #img_picto {
+            line-height: 80%;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="container">
+         <div id="div_top"><p class="font_medium" id="text_date">2015.09.09</p></div>
+         <div id="div_middle">
+            <p class="font_large" id="text_price">216,500</p>
+            <p class="font_regular">SK TELECOM</p>
+         </div>
+         <div id="div_bottom">
+            <p class="font_large" id="img_picto">-</p>
+            <p class="font_medium">0.00%</p>
+         </div>
+      </div>
+   </body>
+   <script>
+      document.getElementsByTagName("body").item(0).onclick = function() {
+         print("clicked!");
+      };
+   </script>
+</html>
