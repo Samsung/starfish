@@ -223,11 +223,13 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             escargot::ESObject* obj = thisValue.asESPointer()->asESObject();
             if (obj->extraData()) {
                 escargot::ESValue constructor = thisValue.asESPointer()->asESObject()->get(escargot::ESString::create("constructor"));
-                escargot::ESValue constructor_name = constructor.asESPointer()->asESObject()->get(escargot::ESString::create("name"));
-                String* result = String::createASCIIString("[object ");
-                result = result->concat(toBrowserString(constructor_name.toString()));
-                result = result->concat(String::createASCIIString("]"));
-                return toJSString(result);
+                if (constructor.isObject()) {
+                    escargot::ESValue constructor_name = constructor.asESPointer()->asESObject()->get(escargot::ESString::create("name"));
+                    String* result = String::createASCIIString("[object ");
+                    result = result->concat(toBrowserString(constructor_name.toString()));
+                    result = result->concat(String::createASCIIString("]"));
+                    return toJSString(result);
+                }
             }
         }
         Window* wnd = (Window*)instance->globalObject()->extraPointerData();
