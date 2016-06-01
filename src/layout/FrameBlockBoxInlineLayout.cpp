@@ -5,6 +5,23 @@
 
 namespace StarFish {
 
+static LayoutUnit computeLineHeight(ComputedStyle* style)
+{
+    LayoutUnit fontHeight = style->font()->metrics().m_ascender - style->font()->metrics().m_descender;
+    LayoutUnit lineHeight = fontHeight;
+
+    if (!style->hasNormalLineHeight()) {
+        if (style->lineHeight().isFixed()) {
+            return lineHeight * style->lineHeight().fixed();
+        } else if (style->lineHeight().isPercent()) {
+            return lineHeight * style->lineHeight().percent();
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+    return lineHeight;
+}
+
 static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, LineFormattingContext& ctx)
 {
     LayoutUnit maxAscender = ascenderInOut;
@@ -24,159 +41,109 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
 
     LayoutUnit pascender = parentStyle->font()->metrics().m_ascender;
     LayoutUnit pdescender = parentStyle->font()->metrics().m_descender;
-    bool hasNormalFlowContent = false;
 
-    // 1. set relative y-pos from baseline
+    // 1. set relative y-pos from baseline (only if it needs)
+    // 2. find max ascender and descender
+    LayoutUnit maxAscenderSoFar = pascender;
+    LayoutUnit maxDescenderSoFar = pdescender;
     for (size_t k = 0; k < boxes->size(); k ++) {
-        FrameBox* f = boxes->at(k);
-        if (f->isNormalFlow()) {
-            hasNormalFlowContent = true;
-        } else {
-            // out of flow boxes
-            f->asFrameBox()->setY(f->asFrameBox()->marginTop());
+        FrameBox* box = boxes->at(k);
+        if (!box->isNormalFlow()) {
+            box->asFrameBox()->setY(box->asFrameBox()->marginTop());
             continue;
         }
-        VerticalAlignValue va = f->style()->verticalAlign();
-        if (f->isInlineBox()) {
-            InlineBox* ib = f->asFrameBox()->asInlineBox();
-            // normal flow
-            if (ib->isInlineTextBox()) {
-                ib->setY(ib->asInlineTextBox()->style()->font()->metrics().m_ascender);
+        VerticalAlignValue va = box->style()->verticalAlign();
+        if (box->isInlineBox()) {
+            if (box->asInlineBox()->isInlineTextBox()) {
+                Font* pFont = box->asInlineBox()->asInlineTextBox()->style()->font();
+                maxAscenderSoFar = std::max(pFont->metrics().m_ascender, maxAscenderSoFar);
+                maxDescenderSoFar = std::min(pFont->metrics().m_descender, maxDescenderSoFar);
             } else {
-                hasBoxOtherThanText = true;
+                InlineNonReplacedBox* rb = box->asInlineBox()->asInlineNonReplacedBox();
                 if (va == VerticalAlignValue::BaselineVAlignValue) {
-                    LayoutUnit a = ib->asInlineNonReplacedBox()->ascender();
-                    ib->setY(ib->asInlineNonReplacedBox()->ascender()+ib->marginTop());
+                    maxAscenderSoFar = std::max(rb->ascender(), maxAscenderSoFar);
+                    maxDescenderSoFar = std::min(rb->decender(), maxDescenderSoFar);
+                } else if (va == VerticalAlignValue::TopVAlignValue) {
+                    // NO WORK TO DO
+                } else if (va == VerticalAlignValue::BottomVAlignValue) {
+                    // NO WORK TO DO
+                } else if (va == VerticalAlignValue::MiddleVAlignValue) {
+                    LayoutUnit halfHeight = rb->height() / 2;
+                    maxAscenderSoFar = std::max(halfHeight, maxAscenderSoFar);
+                    maxDescenderSoFar = std::min(-1 * halfHeight, maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::SubVAlignValue) {
-                    ib->setY(pdescender + ib->asInlineNonReplacedBox()->ascender());
+                    rb->setY(pdescender + rb->ascender());
+                    maxDescenderSoFar = std::min(pdescender + rb->decender(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::SuperVAlignValue) {
                     // Placing a superscript is font and browser dependent.
                     // We place superscript above the baseline by 1/2 of ascender (following blink)
                     // (i.e, the baseline of superscript is aligned with 1/2 of the ascender)
-                    ib->setY(pascender / 2 + ib->asInlineNonReplacedBox()->ascender());
-                } else if (va == VerticalAlignValue::TopVAlignValue) {
-                    ib->setY(ib->height() + ib->marginTop());
-                } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                    ib->setY(pdescender + ib->height() + ib->marginBottom());
-                } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                    ib->setY(ib->height() / 2 + ib->marginTop());
+                    rb->setY(pascender / 2 + rb->ascender());
+                    maxAscenderSoFar = std::max(pascender / 2 + rb->ascender(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    ib->setY(pascender);
+                    rb->setY(pascender);
+                    maxDescenderSoFar = std::min(pascender - rb->height(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    ib->setY(pdescender + ib->height());
+                    rb->setY(pdescender + rb->height());
+                    maxAscenderSoFar = std::max(pdescender + rb->height(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
-                    Length len = f->style()->verticalAlignLength();
-                    LayoutUnit height = ib->asInlineNonReplacedBox()->ascender() - ib->asInlineNonReplacedBox()->decender();
+                    Length len = box->style()->verticalAlignLength();
+                    LayoutUnit y;
                     if (len.isPercent()) {
-                        ib->setY(ib->asInlineNonReplacedBox()->ascender() + height * len.percent());
+                        y = rb->ascender() + computeLineHeight(box->style()) * len.percent();
                     } else if (len.isFixed()) {
-                        ib->setY(ib->asInlineNonReplacedBox()->ascender() + LayoutUnit::fromPixel(len.fixed()));
+                        y = rb->ascender() + LayoutUnit::fromPixel(len.fixed());
                     }
-                } else {
+                    maxAscenderSoFar = std::max(y, maxAscenderSoFar);
+                    maxDescenderSoFar = std::min(y - rb->height(), maxDescenderSoFar);
+                    rb->setY(y);
+                }  else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
             }
-        } else if (f->isFrameReplaced()) {
-            // TODO use this code for when replaced content does not have content
-            /*
-            LayoutUnit asc = ib->marginTop() + ib->asInlineReplacedBox()->replacedBox()->borderTop() + ib->asInlineReplacedBox()->replacedBox()->paddingTop()
-            + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
-            LayoutUnit dec = -(ib->asInlineReplacedBox()->replacedBox()->paddingBottom() + ib->asInlineReplacedBox()->replacedBox()->borderBottom()
-            + ib->marginBottom());
-            maxAscender = std::max(asc, maxAscender);
-            maxDescender = std::min(dec, maxDescender);
-            */
-
+        } else if (box->isFrameReplaced()) {
             hasBoxOtherThanText = true;
+            LayoutUnit boxHeight = box->height() + box->marginHeight();
             if (va == VerticalAlignValue::BaselineVAlignValue) {
-                f->setY(f->height() + f->marginHeight());
+                maxAscenderSoFar = std::max(boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::TopVAlignValue) {
-                // Nothing needs to be done
+                // NO WORK TO DO
             } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                f->setY(pdescender + f->height() + f->marginTop() + f->marginBottom());
+                // NO WORK TO DO
+            } else if (va == VerticalAlignValue::MiddleVAlignValue) {
+                LayoutUnit halfHeight = boxHeight / 2;
+                maxAscenderSoFar = std::max(halfHeight, maxAscenderSoFar);
+                maxDescenderSoFar = std::min(-1 * halfHeight, maxDescenderSoFar);
+            } else if (va == VerticalAlignValue::SubVAlignValue) {
+                // TODO : Need Implement Here
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            } else if (va == VerticalAlignValue::SuperVAlignValue) {
+                // TODO : Need Implement Here
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                f->setY(pascender);
+                box->setY(pascender);
+                maxDescenderSoFar = std::min(pascender - boxHeight, maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                f->setY(pdescender + f->height() + f->marginBottom());
+                box->setY(pdescender + boxHeight);
+                maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
-                Length len = f->style()->verticalAlignLength();
+                Length len = box->style()->verticalAlignLength();
+                LayoutUnit amount;
                 if (len.isPercent()) {
-                    f->setY(f->height() + f->height() * len.percent());
+                    amount = boxHeight + computeLineHeight(box->style()) * len.percent();
                 } else if (len.isFixed()) {
-                    f->setY(f->height() + LayoutUnit::fromPixel(len.fixed()));
+                    amount = boxHeight + LayoutUnit::fromPixel(len.fixed());
                 }
+                maxAscenderSoFar = std::max(amount, maxAscenderSoFar);
+                maxDescenderSoFar = std::min(amount - boxHeight, maxDescenderSoFar);
+                box->setY(amount);
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
-        } else if (f->isFrameBlockBox() && f->style()->display() == InlineBlockDisplayValue) {
+        } else if (box->isFrameBlockBox() && box->style()->display() == InlineBlockDisplayValue) {
             hasBoxOtherThanText = true;
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }
-
-    // 2. find max ascender and descender
-    LayoutUnit maxAscenderSoFar = pascender;
-    LayoutUnit maxDescenderSoFar = pdescender;
-    // FIXME: step 2 can be reduced
-    while (true) {
-        LayoutUnit prevMaxAscenderSoFar = maxAscenderSoFar;
-        LayoutUnit prevMaxDescenderSoFar = maxDescenderSoFar;
-
-        for (size_t k = 0; k < boxes->size(); k ++) {
-            FrameBox* box = boxes->at(k);
-            VerticalAlignValue va = box->style()->verticalAlign();
-
-            if (box->isInlineBox()) {
-                if (box->asInlineBox()->isInlineTextBox()) {
-                    maxAscenderSoFar = std::max(box->asInlineBox()->asInlineTextBox()->style()->font()->metrics().m_ascender, maxAscenderSoFar);
-                    maxDescenderSoFar = std::min(box->asInlineBox()->asInlineTextBox()->style()->font()->metrics().m_descender, maxDescenderSoFar);
-                } else {
-                    InlineNonReplacedBox* rb = box->asInlineBox()->asInlineNonReplacedBox();
-                    if (va == VerticalAlignValue::BaselineVAlignValue) {
-                        maxAscenderSoFar = std::max(rb->ascender(), maxAscenderSoFar);
-                        maxDescenderSoFar = std::min(rb->decender(), maxDescenderSoFar);
-                    } else if (va == VerticalAlignValue::SubVAlignValue) {
-                        maxDescenderSoFar = std::min(pdescender + rb->decender(), maxDescenderSoFar);
-                    } else if (va == VerticalAlignValue::SuperVAlignValue) {
-                        maxAscenderSoFar = std::max(pascender / 2 + rb->ascender(), maxAscenderSoFar);
-                    } else if (va == VerticalAlignValue::TopVAlignValue) {
-                        maxAscenderSoFar = std::max(rb->height() + rb->marginTop(), maxAscenderSoFar);
-                    } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                        maxDescenderSoFar = std::min(pascender - rb->height(), maxDescenderSoFar);
-                    } else if (va == VerticalAlignValue::MiddleVAlignValue) {
-                        maxAscenderSoFar = std::max(rb->ascender(), maxAscenderSoFar);
-                        maxDescenderSoFar = std::min(rb->decender(), maxDescenderSoFar);
-                    } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                        maxAscenderSoFar = std::max(rb->height() - maxDescenderSoFar, maxAscenderSoFar);
-                    } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                        maxAscenderSoFar = std::max(pdescender + rb->height(), maxAscenderSoFar);
-                    } else if (va == VerticalAlignValue::NumericVAlignValue) {
-                        maxAscenderSoFar = std::max(rb->y(), maxAscenderSoFar);
-                        maxDescenderSoFar = std::min(rb->y() - rb->height(), maxDescenderSoFar);
-                    }  else {
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                    }
-                }
-            } else if (box->isFrameReplaced()) {
-                if (va == VerticalAlignValue::BaselineVAlignValue) {
-                    maxAscenderSoFar = std::max(box->height() + box->marginHeight(), maxAscenderSoFar);
-                } else if (va == VerticalAlignValue::TopVAlignValue) {
-                    maxAscenderSoFar = std::max(box->height() + box->marginTop(), maxAscenderSoFar);
-                } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    maxDescenderSoFar = std::min(pascender - box->height(), maxDescenderSoFar);
-                } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                    maxAscenderSoFar = std::max(maxDescenderSoFar + box->height() + box->marginTop(), maxAscenderSoFar);
-                } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    maxAscenderSoFar = std::max(pdescender + box->height(), maxAscenderSoFar);
-                } else if (va == VerticalAlignValue::NumericVAlignValue) {
-                    maxAscenderSoFar = std::max(box->y(), maxAscenderSoFar);
-                    maxDescenderSoFar = std::min(box->y() - box->height(), maxDescenderSoFar);
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-            } else if (box->isFrameBlockBox() && box->style()->display() == InlineBlockDisplayValue) {
-                hasBoxOtherThanText = true;
+            LayoutUnit boxHeight = box->height() + box->marginHeight();
+            if (va == VerticalAlignValue::BaselineVAlignValue) {
                 LayoutUnit ascender = ctx.inlineBlockAscender(box->asFrameBlockBox());
                 if (ascender == box->height()) {
                     maxAscenderSoFar = std::max(ascender + box->marginHeight(), maxAscenderSoFar);
@@ -186,12 +153,63 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     maxAscenderSoFar = std::max(ascender + box->marginTop(), maxAscenderSoFar);
                     maxDescenderSoFar = std::min(dec, maxDescenderSoFar);
                 }
+            } else if (va == VerticalAlignValue::TopVAlignValue) {
+                // NO WORK TO DO
+            } else if (va == VerticalAlignValue::BottomVAlignValue) {
+                // NO WORK TO DO
+            } else if (va == VerticalAlignValue::MiddleVAlignValue) {
+                LayoutUnit halfHeight = boxHeight / 2;
+                maxAscenderSoFar = std::max(halfHeight, maxAscenderSoFar);
+                maxDescenderSoFar = std::min(-1 * halfHeight, maxDescenderSoFar);
+            } else if (va == VerticalAlignValue::SubVAlignValue) {
+                // TODO : Need Implement Here
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            } else if (va == VerticalAlignValue::SuperVAlignValue) {
+                // TODO : Need Implement Here
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            } else if (va == VerticalAlignValue::TextTopVAlignValue) {
+                maxDescenderSoFar = std::min(pascender - boxHeight, maxDescenderSoFar);
+            } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
+                maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
+            } else if (va == VerticalAlignValue::NumericVAlignValue) {
+                LayoutUnit ascender = ctx.inlineBlockAscender(box->asFrameBlockBox());
+                Length len = box->style()->verticalAlignLength();
+                LayoutUnit amount;
+                if (len.isPercent()) {
+                    amount = ascender + computeLineHeight(box->style()) * len.percent();
+                } else if (len.isFixed()) {
+                    amount = ascender + LayoutUnit::fromPixel(len.fixed());
+                }
+                maxAscenderSoFar = std::max(amount, maxAscenderSoFar);
+                maxDescenderSoFar = std::min(amount - ascender, maxDescenderSoFar);
+                box->setY(amount);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
+    }
 
-        if (prevMaxAscenderSoFar == maxAscenderSoFar
-            && prevMaxDescenderSoFar == maxDescenderSoFar) {
-            break;
+    // VA: top/bottom
+    for (size_t k = 0; k < boxes->size(); k ++) {
+        FrameBox* box = boxes->at(k);
+        VerticalAlignValue va = box->style()->verticalAlign();
+
+        // Ignore non normalFlow
+        if (!box->isNormalFlow())
+            continue;
+
+        // Ignore inlineBox's marginHeight
+        LayoutUnit marginHeight;
+        if (!box->isInlineBox())
+            marginHeight = box->marginHeight();
+
+        // Update maxAsc & maxDes
+        if (!(box->isInlineBox() && box->asInlineBox()->isInlineTextBox())) {
+            if (va == VerticalAlignValue::TopVAlignValue) {
+                maxDescenderSoFar = std::min(maxAscenderSoFar - (box->height() + marginHeight), maxDescenderSoFar);
+            } else if (va == VerticalAlignValue::BottomVAlignValue) {
+                maxAscenderSoFar = std::max(maxDescenderSoFar + (box->height() + marginHeight), maxAscenderSoFar);
+            }
         }
     }
 
@@ -252,6 +270,13 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 }
             } else {
                 VerticalAlignValue va = f->style()->verticalAlign();
+                LayoutUnit marginTop, marginRight, marginBottom, marginLeft;
+                if (!f->isInlineBox()) {
+                    marginTop = f->marginTop();
+                    marginRight = f->marginRight();
+                    marginBottom = f->marginBottom();
+                    marginLeft = f->marginLeft();
+                }
                 if (va == VerticalAlignValue::BaselineVAlignValue) {
                     if (f->isInlineBox() && f->asInlineBox()->isInlineNonReplacedBox()) {
                         f->setY(height + maxDescender - f->height() - f->asInlineBox()->asInlineNonReplacedBox()->decender());
@@ -262,7 +287,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                            + ib->asInlineReplacedBox()->replacedBox()->contentHeight();
                            ib->setY(height + maxDescender - asc + ib->marginTop());
                            */
-                        f->setY(maxAscender - (f->y() - f->marginTop()));
+                       f->setY(maxAscender - f->height() - marginBottom);
                     } else {
                         STARFISH_ASSERT(f->isFrameBlockBox() && f->style()->display() == InlineBlockDisplayValue);
                         LayoutUnit ascender = ctx.inlineBlockAscender(f->asFrameBlockBox());
@@ -275,23 +300,24 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                         }
                     }
                 // 4. convert a y pos relative to the baseline to a y pos relative to the top-left corner of the box
+                } else if (va == VerticalAlignValue::TopVAlignValue) {
+                    f->setY(marginTop);
+                } else if (va == VerticalAlignValue::BottomVAlignValue) {
+                    f->setY(height - f->height() - marginBottom);
                 } else if (va == VerticalAlignValue::MiddleVAlignValue) {
                     LayoutUnit dec = -(f->height() / 2);
-                    f->setY(height + maxDescender - f->height() - dec - f->marginTop());
-                } else if (va == VerticalAlignValue::TopVAlignValue) {
-                    f->setY(f->marginTop());
-                } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                    f->setY(height - f->height() - f->marginBottom());
+                    f->setY(height + maxDescender - f->height() - dec - marginTop);
                 } else if (va == VerticalAlignValue::SubVAlignValue) {
-                    f->setY(maxAscender - f->y());
+                    f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::SuperVAlignValue) {
-                    f->setY(maxAscender - f->y());
+                    // pascender / 2 + ib->asInlineNonReplacedBox()->ascender()
+                    f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    f->setY(maxAscender - f->y());
+                    f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    f->setY(maxAscender - f->y());
+                    f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
-                    f->setY(maxAscender - f->y());
+                    f->setY(maxAscender - f->y() + marginTop);
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
