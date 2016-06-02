@@ -10,6 +10,7 @@ namespace StarFish {
 
 class Document;
 class NetworkRequest;
+class NetworkWorkerHelper;
 
 typedef std::vector<char> NetworkRequestResponse;
 
@@ -20,8 +21,40 @@ public:
     virtual void onReadyStateChange(NetworkRequest* request, bool isExplicitAction) { }
 };
 
+struct NetworkWorkerData {
+    NetworkRequest* request;
+    NetworkWorkerHelper* networkWorker;
+    CURL* curl;
+    curl_slist* headerList;
+    bool isSync;
+    long responseCode;
+    int res;
+};
+
+class NetworkWorkerHelper: public gc {
+public:
+    NetworkWorkerHelper() { }
+    virtual ~NetworkWorkerHelper() { }
+    void* networkWorker(void* data);
+protected:
+    virtual void responseHandlerWrapper(int res, NetworkWorkerData *requestData) { }
+    static void responseHandler(size_t handle, void* requestData);
+};
+
+class AsyncNetworkWorkHelper : public NetworkWorkerHelper {
+protected:
+    virtual void responseHandlerWrapper(int res, NetworkWorkerData *requestData);
+};
+
+class SyncNetworkWorkHelper : public NetworkWorkerHelper {
+protected:
+    virtual void responseHandlerWrapper(int res, NetworkWorkerData *requestData);
+};
+
 class NetworkRequest : public gc {
     friend class XMLHttpRequest;
+    friend class NetworkWorkerHelper;
+    friend class AsyncNetworkWorkHelper;
 public:
     enum MethodType {
         UNKNOWN_METHOD,
@@ -133,6 +166,8 @@ protected:
     static void* networkWorker(void*);
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
     void changeProgress(ProgressState progress, bool isExplicitAction);
+    void handleResponseEOF();
+    void handleError(ProgressState error);
     bool m_isAborted;
     bool m_isSync;
     bool m_isReceivedHeader;
