@@ -557,7 +557,7 @@ install_pixel_test_dep:
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
 pixel_test_css:
-	java StarFishTester $(tc)
+	java StarFishTester $(tc) $(engine)
 pixel_test_css1:
 	make pixel_test_css tc=css1
 pixel_test_css21:

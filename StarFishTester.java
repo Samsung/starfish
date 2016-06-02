@@ -25,6 +25,7 @@ public class StarFishTester {
     }
 
 	public static void main(String args[]) {
+        Boolean nw = false;
 		System.out.println("StarFish Tester Start");
 		try {
 			String testFile="";
@@ -52,6 +53,17 @@ public class StarFishTester {
 
 			int cores = Runtime.getRuntime().availableProcessors();
 			// System.out.println("oh! rich guy you have " + cores + " processors!!! good!");
+            if (args.length >= 2 && args[1].equals("nw")) {
+                nw = true;
+                System.out.println("# pixel-test for Node-Webkit");
+                String ss = "";
+                ss = "nw tool/pixel_test/nw_capture/ -l " + testFile + " pc";
+                System.out.println("# capture START:" + ss);
+                Process process = Runtime.getRuntime().exec(ss);
+                System.out.println("It may take a few minutes");
+                process.waitFor();
+                System.out.println("# capture COMPLETE");
+            }
 			
 			final Mutex workQueueMutex = new Mutex();
 			final Mutex printMutex = new Mutex();

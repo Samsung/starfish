@@ -1,0 +1,10 @@
+{
+  "name": "node-webkit-screenshot",
+  "main": "index.html",
+  "single-instance": false,
+  "window": {
+    "show": false,
+    "show_in_taskbar": false,
+    "inject-js-start": "inject.js"
+  }
+}

@@ -12,15 +12,18 @@
 
 struct Color {
     unsigned char r, g, b, a;
+    bool hasAlpha;
     inline bool operator ==(const Color& b)
     {
         int diff = 0;
         const int threshold = 3;
         int d;
-        d = abs((int)a - (int)b.a);
-        diff += d;
-        if (d > threshold) {
-            return false;
+        if (hasAlpha && b.hasAlpha) {
+            d = abs((int)a - (int)b.a);
+            diff += d;
+            if (d > threshold) {
+                return false;
+            }
         }
 
         d = abs((int)r - (int)b.r);
@@ -104,8 +107,22 @@ public:
         number_of_passes = png_set_interlace_handling(png_ptr);
         png_read_update_info(png_ptr, info_ptr);
 
+        if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGB) {
+            num_palette = 3;
+//            printf("RGB:%ld\n", png_get_rowbytes(png_ptr, info_ptr));
+//            printf("%d %d - %d\n", m_width, m_height, num_palette );
+        } else if (png_get_color_type(png_ptr, info_ptr) == PNG_COLOR_TYPE_RGBA) {
+            num_palette = 4;
+//            printf("RGBA:%ld\n", png_get_rowbytes(png_ptr, info_ptr));
+//            printf("%d %d - %d\n", m_width, m_height, num_palette );
+        } else {
+            abort("[process_file] color_type of input file must be PNG_COLOR_TYPE_RGBA (%d) or PNG_COLOR_TYPE_RGB (%d) (is %d)", PNG_COLOR_TYPE_RGBA, PNG_COLOR_TYPE_RGB, png_get_color_type(png_ptr, info_ptr));
+        }
+
+        /*
         if (png_get_color_type(png_ptr, info_ptr) != PNG_COLOR_TYPE_RGBA)
             abort("[process_file] color_type of input file must be PNG_COLOR_TYPE_RGBA (%d) (is %d)", PNG_COLOR_TYPE_RGBA, png_get_color_type(png_ptr, info_ptr));
+        */
 
         /* read file */
         if (setjmp(png_jmpbuf(png_ptr)))
@@ -143,14 +160,19 @@ public:
     virtual Color colorAt(int x, int y)
     {
         png_byte* row = row_pointers[y];
-        png_byte* ptr = &(row[x*4]);
+        png_byte* ptr = &(row[x*num_palette]);
         // printf("Pixel at position [ %d - %d ] has RGBA values: %d - %d - %d - %d\n",
         // x, y, ptr[0], ptr[1], ptr[2], ptr[3]);
         Color c;
         c.r = ptr[0];
         c.g = ptr[1];
         c.b = ptr[2];
-        c.a = ptr[3];
+        if (num_palette >= 4) {
+            c.a = ptr[3];
+            c.hasAlpha = true;
+        } else {
+            c.hasAlpha = false;
+        }
         return c;
     }
 
@@ -161,6 +183,7 @@ public:
     png_structp png_ptr;
     png_infop info_ptr;
     int number_of_passes;
+    int num_palette;
     png_bytep * row_pointers;
 };
 
