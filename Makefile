@@ -548,6 +548,7 @@ install_pixel_test_dep:
 	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
 	cp tool/pixel_test/bin/CooHew-Roman.ttf ~/.fonts/
 	fc-cache -fv
+	./set_nodewebkit_env.sh
 	#@echo ""
 	#@echo "============ [ Install Arial Font ] ============"
 	#sudo apt-get install ttf-mscorefonts-installer
