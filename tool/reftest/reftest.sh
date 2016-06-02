@@ -204,7 +204,6 @@ for i in $tc ; do
             fi
         elif [ $TESTSUITE -eq 3 ]; then
             EXPIMG=${filenames[$c]}
-            EXPIMG=`echo $EXPIMG | sed 's/reftest/regression\/reftest/'`
             EXPIMG=`echo $EXPIMG | sed 's/html-css/html-css\/x64/'`
             EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/'`
             IMGDIFF="./tool/pixel_test/bin/image_diff"
