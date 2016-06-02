@@ -63,7 +63,6 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
     } else if (progState == NetworkRequest::TIMEOUT)
         eventName = request->starFish()->staticStrings()->m_timeout.localName();
     else if (progState == NetworkRequest::LOAD) {
-        m_resposeText =  String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
         eventName = request->starFish()->staticStrings()->m_load.localName();
     } else if (progState == NetworkRequest::LOADEND)
         eventName = request->starFish()->staticStrings()->m_loadend.localName();
@@ -79,6 +78,9 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
 void XMLHttpRequest::onReadyStateChange(NetworkRequest* request, bool fromExplicit)
 {
     if (fromExplicit) {
+        if(request->readyState()==NetworkRequest::DONE)
+            m_resposeText =  String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+
         String* eventType = request->starFish()->staticStrings()->m_readystatechange.localName();
         Event* e = new Event(eventType, EventInit(true, true));
         EventTarget::dispatchEvent(this, e);
