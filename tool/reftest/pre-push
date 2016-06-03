@@ -9,99 +9,101 @@ if cat error_report | grep 'ERROR'; then
 fi
 
 echo "checking... make regression_test_dom_conformance_test"
-make regression_test_dom_conformance_test > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_dom_conformance_test > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_dom_conformance_test$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_webkit_dom_conformance_test"
-make regression_test_webkit_dom_conformance_test > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_webkit_dom_conformance_test > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_webkit_dom_conformance_test$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_blink_dom_conformance_test"
-make regression_test_blink_dom_conformance_test > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_blink_dom_conformance_test > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_blink_dom_conformance_test$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_gecko_dom_conformance_test"
-make regression_test_gecko_dom_conformance_test > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_gecko_dom_conformance_test > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_gecko_dom_conformance_test$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_wpt_dom"
-make regression_test_wpt_dom > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_wpt_dom > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_wpt_dom$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_webkit_fast_dom"
-make regression_test_webkit_fast_dom > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_webkit_fast_dom > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_webkit_fast_dom$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_blink_fast_dom"
-make regression_test_blink_fast_dom > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_blink_fast_dom > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_blink_fast_dom$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_wpt_html"
-make regression_test_wpt_html > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_wpt_html > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_wpt_html$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_blink_fast_html"
-make regression_test_blink_fast_html > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_blink_fast_html > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_blink_fast_html$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_webkit_fast_html"
-make regression_test_webkit_fast_html > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_webkit_fast_html > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_webkit_fast_html$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_wpt_dom_events"
-make regression_test_wpt_dom_events > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_wpt_dom_events > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_wpt_dom_events$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_wpt_progress_events"
-make regression_test_wpt_progress_events > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_wpt_progress_events > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_wpt_progress_events$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_wpt_page_visibility"
-make regression_test_wpt_page_visibility > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_wpt_page_visibility > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_wpt_page_visibility$RESET"
  exit 1
 fi
 
 echo "checking... make regression_test_wpt_xhr"
-make regression_test_wpt_xhr > precommit_result
-if cat precommit_result |grep 'FAIL'; then
+make regression_test_wpt_xhr > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make regression_test_wpt_xhr$RESET"
  exit 1
 fi
+
+rm prepush_test_result
