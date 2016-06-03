@@ -540,7 +540,7 @@ run:
 
 install_regression_test_dep:
 	sudo ./add_wpt_into_hosts.sh
-	#cp -rf tool/reftest/pre-commit .git/hooks/
+	#cp -rf tool/reftest/pre-push .git/hooks/
 
 install_pixel_test_dep:
 	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
