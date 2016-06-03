@@ -48,6 +48,9 @@ var filelist = [];
 var acceptCSSList = ["font"];
 var acceptTagList = [];
 var acceptValues = {};
+var allowedPropList = ["background-attachment", "background-clip", "background-origin",
+                        "background-position", "background-position-x", "background-position-y",
+                        "border-image-outset", "border-image-repeat"];
 var curpath = "tool/pixel_test/";
 
 function initialize() {
@@ -93,11 +96,11 @@ function initialize() {
     stream2.close();
 
     if (args.length == 1) {
-        testPath = "test/reftest/csswg-test_converted/";
+        testPath = "test/reftest/csswg-test/";
     }
     else if (args.length == 2) {
         if (args[1] != "-f") {
-            testPath = "test/reftest/csswg-test_converted/" + args[1];
+            testPath = "test/reftest/csswg-test/" + args[1];
             return true;
         }
     }
@@ -174,8 +177,9 @@ page.onLoadStarted = function() {
 
 var resEvaluate;
 page.onLoadFinished = function() {
-    resEvaluate = page.evaluate(function(acceptCSSList, acceptTagList, acceptValues, includes) {
+    resEvaluate = page.evaluate(function(acceptCSSList, acceptTagList, acceptValues, allowedPropList, includes, startsWith) {
         Array.prototype.includes = includes;
+        String.prototype.startsWith = startsWith;
         var changePropName = function(prop, nextprop) {
             if (prop == "-webkit-transform")
                 prop = "transform";
@@ -198,12 +202,10 @@ page.onLoadFinished = function() {
                 for (var j = 0; j < inlineStyleList.length; j++) {
                     if (inlineStyleList[j][0].trim() != "") {
                         var prop = inlineStyleList[j][0].trim();
-                        if ((prop == "background-attachment") || (prop == "background-clip")
-                                || (prop == "background-origin") || (prop == "background-position")
-                                || (prop == "border-image-outset") || (prop == "border-image-repeat")
-                           ) {
-                            if (inlineStyleList[j][1].trim() == "initial"
-                                    || inlineStyleList[j][1].trim() == "initial initial")
+                        if (allowedPropList.includes(prop)) {
+                            var val = inlineStyleList[j][1].trim();
+                            if (val == "initial"
+                                    || val == "initial initial")
                                 continue;
                         }
                         var newprop = changePropName(prop, inlineStyleList[j+1]? inlineStyleList[j+1][0] : undefined );
@@ -234,11 +236,9 @@ page.onLoadFinished = function() {
                         return false;
                     for (var k = 0; k < rules[j].style.length; k++) {
                         var prop = rules[j].style[k].trim();
-                        if ((prop == "background-attachment") || (prop == "background-clip")
-                                || (prop == "background-origin") || (prop == "background-position")
-                                || (prop == "border-image-outset") || (prop == "border-image-repeat")
-                           ) {
-                            if (rules[j].style[prop].trim() == "initial")
+                        if (allowedPropList.includes(prop)) {
+                            var val = rules[j].style[prop].trim();
+                            if (val == "initial")
                                 continue;
                         }
                         var newprop = changePropName(prop, rules[j].style[k+1]);
@@ -303,7 +303,7 @@ page.onLoadFinished = function() {
         document.body.appendChild(d);
         document.result = undefined;
 
-    }, acceptCSSList, acceptTagList, acceptValues, Array.prototype.includes);
+    }, acceptCSSList, acceptTagList, acceptValues, allowedPropList, Array.prototype.includes, String.prototype.startsWith);
     //console.log(JSON.stringify(result));
 };
 
