@@ -540,6 +540,7 @@ run:
 
 install_regression_test_dep:
 	sudo ./add_wpt_into_hosts.sh
+	#cp -rf tool/reftest/pre-commit .git/hooks/
 
 install_pixel_test_dep:
 	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
@@ -601,7 +602,7 @@ regression_test_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/dom_conformance_test.res true
 
 regression_test_wpt_dom:
-	
+
 	./tool/reftest/reftest.sh tool/reftest/wpt_dom.res true
 regression_test_wpt_dom_events:
 	./tool/reftest/reftest.sh tool/reftest/wpt_dom_events.res true
