@@ -16,7 +16,7 @@ struct Color {
     inline bool operator ==(const Color& b)
     {
         int diff = 0;
-        const int threshold = 3;
+        const int threshold = 64;
         int d;
         if (hasAlpha && b.hasAlpha) {
             d = abs((int)a - (int)b.a);
@@ -44,7 +44,7 @@ struct Color {
             return false;
         }
         // return memcmp(this, &b, 4) == 0;
-        return diff < (threshold * 4);
+        return diff < (threshold);
     }
 
     inline bool operator !=(const Color& b)

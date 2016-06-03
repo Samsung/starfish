@@ -211,16 +211,6 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     met.m_descender = met.m_ascender - met.m_fontHeight;
     met.m_xheightRate = xheight / size;
 
-#ifdef STARFISH_ENABLE_TEST
-    if (g_enablePixelTest) {
-        // NOTE: To sync phantom webkit
-        if (met.m_fontHeight != 20 && met.m_fontHeight != 40) {
-            met.m_descender -= 1;
-            met.m_fontHeight += 1;
-        }
-    }
-#endif
-
     FT_Done_Face(face);
     FT_Done_FreeType(library);
     return met;
