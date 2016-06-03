@@ -78,7 +78,7 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
 void XMLHttpRequest::onReadyStateChange(NetworkRequest* request, bool fromExplicit)
 {
     if (fromExplicit) {
-        if(request->readyState()==NetworkRequest::DONE)
+        if (request->readyState() == NetworkRequest::DONE)
             m_resposeText =  String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
 
         String* eventType = request->starFish()->staticStrings()->m_readystatechange.localName();
