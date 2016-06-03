@@ -4,12 +4,12 @@ path=$STARFISH_PATH
 
 # 1. compile
 cd $path
-git checkout .
-cp .gitmodules_bot .gitmodules
+git checkout -- .
 git fetch
+git rebase origin master
+cp .gitmodules_bot .gitmodules
 git submodule init
 git submodule update
-git rebase origin master
 
 cd third_party/escargot && make clean && TC=1 make x64.interpreter.debug.static -j
 cd ../../
