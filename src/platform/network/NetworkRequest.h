@@ -13,6 +13,7 @@ class NetworkRequest;
 class NetworkWorkerHelper;
 
 typedef std::vector<char> NetworkRequestResponse;
+typedef std::string NetworkRequestResponseHeader;
 
 class NetworkRequestClient : public gc {
 public:
@@ -150,12 +151,18 @@ public:
         return m_response;
     }
 
+    String* mimeType()
+    {
+        return m_responseMimeType;
+    }
+
     void addNetworkRequestClient(NetworkRequestClient* client)
     {
         m_clients.push_back(client);
     }
 
 protected:
+    void pareseHeader(const char* header, size_t len);
     void initVariables();
     void clearIdlers();
     static void fileWorker(NetworkRequest* res, String* filePath);
@@ -164,14 +171,17 @@ protected:
     static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb, void* data);
     static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb, void* data);
     static void* networkWorker(void*);
+    template <typename StrType>
+    static NetworkRequestResponse parseBase64String(const StrType& str, size_t startAt, size_t endAt);
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
     void handleError(ProgressState error);
     bool m_isAborted;
     bool m_isSync;
-    bool m_isReceivedHeader;
     bool m_didSend;
+    bool m_isReceivedHeader;
+    bool m_containsBase64Content;
     StarFish* m_starFish;
     Document* m_document;
     URL m_url;
@@ -185,8 +195,9 @@ protected:
     int m_status;
     uint32_t m_timeout;
     Mutex* m_mutex;
+    String* m_responseMimeType;
     NetworkRequestResponse m_response;
-
+    NetworkRequestResponseHeader m_responseHeaderData;
     std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;
     void pushIdlerHandle(size_t handle)
     {

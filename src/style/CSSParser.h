@@ -590,7 +590,8 @@ public:
     {
         m_error = String::emptyString;
     }
-    CSSStyleSheet* parseStyleSheet(String* str, Element* origin);
+
+    void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment);

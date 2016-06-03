@@ -591,6 +591,12 @@ void Window::rendering()
     Timer renderingTimer("Window::rendering");
 
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
+        if (m_needsStyleRecalcForWholeDocument) {
+            for (size_t i = 0; i < document()->styleResolver()->sheets().size(); i ++) {
+                document()->styleResolver()->sheets()[i]->parseSheetIfneeds();
+            }
+        }
+
         // resolve style
         Timer t("resolve style");
         document()->styleResolver()->resolveDOMStyle(m_document, m_needsStyleRecalcForWholeDocument);

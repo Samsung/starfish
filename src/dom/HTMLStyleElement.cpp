@@ -9,13 +9,20 @@
 
 namespace StarFish {
 
+bool isCSSType(const char* type)
+{
+    if (strcmp("", type) == 0) {
+        return true;
+    } else if (strcmp("text/css", type) == 0) {
+        return true;
+    }
+    return false;
+}
+
 void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
 {
     HTMLElement::didCharacterDataModified(before, after);
     if (isInDocumentScope()) {
-        // FIXME
-        // parse style sheet every modified-time is bad idea
-        // should we parse stylesheet in rendering-time?
         removeStyleSheet();
         generateStyleSheet();
     }
@@ -25,9 +32,6 @@ void HTMLStyleElement::didNodeInserted(Node* parent, Node* newChild)
 {
     HTMLElement::didNodeInserted(parent, newChild);
     if (isInDocumentScope()) {
-        // FIXME
-        // parse style sheet every modified-time is bad idea
-        // should we parse stylesheet in rendering-time?
         removeStyleSheet();
         generateStyleSheet();
     }
@@ -37,9 +41,6 @@ void HTMLStyleElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     HTMLElement::didNodeInserted(parent, oldChild);
     if (isInDocumentScope()) {
-        // FIXME
-        // parse style sheet every modified-time is bad idea
-        // should we parse stylesheet in rendering-time?
         removeStyleSheet();
         generateStyleSheet();
     }
@@ -80,7 +81,7 @@ void HTMLStyleElement::generateStyleSheet()
         child = child->nextSibling();
     }
 
-    CSSStyleSheet* sheet = parser.parseStyleSheet(str, this);
+    CSSStyleSheet* sheet = new CSSStyleSheet(this, str);
     m_generatedSheet = sheet;
     document()->styleResolver()->addSheet(sheet);
     document()->window()->setWholeDocumentNeedsStyleRecalc();

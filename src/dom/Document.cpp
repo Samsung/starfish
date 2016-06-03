@@ -28,8 +28,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     m_scriptBindingInstance = scriptBindingInstance;
     setStyle(m_styleResolver.resolveDocumentStyle(this));
 
-    CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet(this);
-
+    CSSStyleSheet* userAgentStyleSheet = new CSSStyleSheet(this, String::emptyString);
+    userAgentStyleSheet->parseSheetIfneeds();
     {
         CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("html"), CSSStyleRule::PseudoClass::None, document());
         CSSStyleValuePair pair;

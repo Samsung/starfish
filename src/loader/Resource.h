@@ -63,6 +63,11 @@ public:
         m_resourceClients.erase(std::find(m_resourceClients.begin(), m_resourceClients.end(), rc));
     }
 
+    NetworkRequest* networkRequest()
+    {
+        return m_networkRequest;
+    }
+
     const URL& url()
     {
         return m_url;

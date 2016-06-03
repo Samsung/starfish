@@ -1333,22 +1333,21 @@ bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
     return false;
 }
 
-CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString, Element* origin)
+void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
 {
     m_lookAhead = nullptr;
     m_token = nullptr;
     m_preserveWS = false;
     m_preserveComments = false;
     m_scanner = new CSSScanner(sourceString);
-    CSSStyleSheet* sheet = new CSSStyleSheet(origin);
 
     // @charset can only appear at first char of the stylesheet
     CSSToken* token = getToken(false, false);
     if (!token->isNotNull())
-        return sheet;
+        return;
     if (token->isAtRule(String::createASCIIString("@charset"))) {
         ungetToken();
-        parseCharsetRule(sheet);
+        parseCharsetRule(target);
         token = getToken(false, false);
     }
 
@@ -1366,7 +1365,7 @@ CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString, Element* origin)
             // if (this.mPreserveComments)
             //     this.addComment(sheet, token.value);
         } else if (token->isAtRule()) {
-            addUnknownAtRule(sheet, token->m_value);
+            addUnknownAtRule(target, token->m_value);
             /*
             if (token.isAtRule("@variables")) {
               if (!foundImportRules && !foundStyleRules)
@@ -1428,15 +1427,13 @@ CSSStyleSheet* CSSParser::parseStyleSheet(String* sourceString, Element* origin)
             } */
         } else {
             // plain style rules
-            parseStyleRule(token, sheet, false);
+            parseStyleRule(token, target, false);
             // String* ruleText = parseStyleRule(token, sheet, false);
             // if (ruleText)
             //     foundStyleRules = true;
         }
         token = getToken(false, false);
     }
-
-    return sheet;
 }
 
 void CSSParser::parseStyleDeclaration(String* str, CSSStyleDeclaration* declarations)

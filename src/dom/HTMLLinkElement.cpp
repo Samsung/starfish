@@ -9,6 +9,8 @@
 
 namespace StarFish {
 
+bool isCSSType(const char* type);
+
 URL HTMLLinkElement::href()
 {
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
@@ -42,7 +44,7 @@ void HTMLLinkElement::checkLoadStyleSheet()
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
     size_t rel = hasAttribute(document()->window()->starFish()->staticStrings()->m_rel);
 
-    if (((type != SIZE_MAX && getAttribute(type)->toLower()->equals("text/css")) || type == SIZE_MAX)
+    if (((type != SIZE_MAX && isCSSType(getAttribute(type)->toLower()->utf8Data())) || type == SIZE_MAX)
         && href != SIZE_MAX
         && rel != SIZE_MAX && getAttribute(rel)->toLower()->equals("stylesheet")) {
         loadStyleSheet();
@@ -71,7 +73,7 @@ public:
         String* text = m_resource->asTextResource()->text();
 
         CSSParser parser(m_element->document());
-        CSSStyleSheet* sheet = parser.parseStyleSheet(text, m_element);
+        CSSStyleSheet* sheet = new CSSStyleSheet(m_element, text);
         if (sheet) {
             m_element->m_generatedSheet = sheet;
             m_element->document()->styleResolver()->addSheet(sheet);

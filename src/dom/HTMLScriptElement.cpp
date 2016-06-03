@@ -5,6 +5,7 @@
 
 #include "dom/binding/ScriptBindingInstance.h"
 
+#include "platform/network/NetworkRequest.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "loader/ElementResourceClient.h"
 
@@ -12,6 +13,24 @@
 #include "dom/parser/HTMLParser.h"
 
 namespace StarFish {
+
+static bool isJavaScriptType(const char* type)
+{
+    if (strcmp("", type) == 0) {
+        return true;
+    } else if (strcmp("text/javascript", type) == 0) {
+        return true;
+    } else if (strcmp("application/javascript", type) == 0) {
+        return true;
+    } else if (strcmp("application/x-javascript", type) == 0) {
+        return true;
+    } else if (strcmp("application/ecmascript", type) == 0) {
+        return true;
+    } else if (strcmp("text/ecmascript", type) == 0) {
+        return true;
+    }
+    return false;
+}
 
 class ScriptDownloadClient : public ResourceClient {
 public:
@@ -32,8 +51,10 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        String* text = m_resource->asTextResource()->text();
-        m_element->document()->window()->starFish()->scriptBindingInstance()->evaluate(text);
+        if (isJavaScriptType(m_resource->networkRequest()->mimeType()->toLower()->utf8Data())) {
+            String* text = m_resource->asTextResource()->text();
+            m_element->document()->window()->starFish()->scriptBindingInstance()->evaluate(text);
+        }
         didScriptLoaded();
     }
 
@@ -56,7 +77,7 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
 
     if (!m_isAlreadyStarted && isInDocumentScope()) {
         String* typeAttr = getAttribute(document()->window()->starFish()->staticStrings()->m_type);
-        if (!typeAttr->equals(String::emptyString) && !typeAttr->equals("text/javascript"))
+        if (!typeAttr->equals(String::emptyString) && !isJavaScriptType(typeAttr->toLower()->utf8Data()))
             return false;
         size_t idx = hasAttribute(document()->window()->starFish()->staticStrings()->m_src);
         if (idx == SIZE_MAX) {

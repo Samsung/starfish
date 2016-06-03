@@ -121,9 +121,10 @@ NetworkRequest::NetworkRequest(Document* document)
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
         // STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest\n");
         NetworkRequest* nr = (NetworkRequest*)obj;
-        std::vector<char>* m = &nr->m_response;
-        m->clear();
-        m->shrink_to_fit();
+        nr->m_response.clear();
+        nr->m_response.shrink_to_fit();
+        nr->m_responseHeaderData.clear();
+        nr->m_responseHeaderData.shrink_to_fit();
     }, NULL, NULL, NULL);
 
     initVariables();
@@ -135,10 +136,13 @@ void NetworkRequest::initVariables()
 {
     m_userName = String::emptyString;
     m_password = String::emptyString;
+    m_responseMimeType = String::emptyString;
     m_response.clear();
+    m_responseHeaderData.clear();
     m_isAborted = false;
     m_isSync = false;
     m_isReceivedHeader = false;
+    m_containsBase64Content = false;
     m_didSend = false;
     m_total = 0;
     m_loaded = 0;
@@ -186,8 +190,85 @@ void NetworkRequest::handleError(ProgressState error)
     changeProgress(LOADEND, true);
 }
 
+// trim from start (in place)
+static inline void ltrim(std::string &s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string &s)
+{
+    ltrim(s);
+    rtrim(s);
+}
+
+// trim from start (copying)
+static inline std::string ltrimmed(std::string s)
+{
+    ltrim(s);
+    return s;
+}
+
+// trim from end (copying)
+static inline std::string rtrimmed(std::string s)
+{
+    rtrim(s);
+    return s;
+}
+
+// trim from both ends (copying)
+static inline std::string trimmed(std::string s)
+{
+    trim(s);
+    return s;
+}
+
 void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitAction)
 {
+    if (readyState == HEADERS_RECEIVED) {
+        std::istringstream resp(m_responseHeaderData);
+        std::string header;
+        std::string::size_type index;
+        while (std::getline(resp, header) && header != "\r") {
+            index = header.find(':', 0);
+            if (index != std::string::npos) {
+                std::string h = header.substr(0, index);
+                std::string d = header.substr(index + 1);
+
+                if (h == "Content-Type") {
+                    std::istringstream is(d);
+                    std::string part;
+                    String* mimeType = String::emptyString;
+                    bool hasBase64 = false;
+                    bool first = true;
+                    // TODO read encoding
+                    while (std::getline(is, part, ';')) {
+                        trim(part);
+                        if (part == "base64") {
+                            hasBase64 = true;
+                        } else if (first) {
+                            first = false;
+                            mimeType = String::createASCIIString(part.data());
+                        }
+                    }
+                    m_responseMimeType = mimeType;
+                    m_containsBase64Content = hasBase64;
+                }
+            }
+        }
+    } else if (readyState == DONE) {
+        if (m_containsBase64Content) {
+            m_response = parseBase64String(m_response, 0, m_response.size());
+        }
+    }
+
     if (readyState != m_readyState) {
         m_readyState = readyState;
         for (size_t i = 0; i < m_clients.size(); i ++) {
@@ -208,6 +289,8 @@ void NetworkRequest::changeProgress(ProgressState progress, bool isExplicitActio
     if (m_progressState == LOADEND) {
         m_response.clear();
         m_response.shrink_to_fit();
+        m_responseHeaderData.clear();
+        m_responseHeaderData.shrink_to_fit();
     }
 }
 
@@ -263,9 +346,22 @@ int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl
     if (request->m_isAborted)
         return 1;
 
+    if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX && !request->m_isReceivedHeader) {
+        request->m_isReceivedHeader = true;
+        request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+            NetworkRequest* request = (NetworkRequest*)data;
+            {
+                Locker<Mutex> locker(*request->m_mutex);
+                STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
+                request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
+            }
+            request->changeReadyState(HEADERS_RECEIVED, true);
+        }, request);
+    }
+
     request->m_loaded = static_cast<uint32_t>(dlnow);
     request->m_total = static_cast<uint32_t>(dltotal);
-    if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX && request->m_isReceivedHeader) {
+    if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
         request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
             NetworkRequest* request = (NetworkRequest*)data;
             {
@@ -284,11 +380,12 @@ size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb, v
 {
     NetworkRequest* request = (NetworkRequest*)data;
     Locker<Mutex> locker(*request->m_mutex);
-    size_t realSize = size * nmemb;
 
+    size_t realSize = size * nmemb;
     const char* memPtr = (const char*)ptr;
 
     request->m_response.insert(request->m_response.end(), memPtr, memPtr + realSize);
+
     return realSize;
 }
 
@@ -298,19 +395,10 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
     NetworkRequest* request = (NetworkRequest*)data;
     Locker<Mutex> locker(*request->m_mutex);
 
-    // TODO read header info
-    if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX && !request->m_isReceivedHeader) {
-        request->m_isReceivedHeader = true;
-        request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-            NetworkRequest* request = (NetworkRequest*)data;
-            {
-                Locker<Mutex> locker(*request->m_mutex);
-                STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
-                request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
-            }
-            request->changeReadyState(HEADERS_RECEIVED, true);
-        }, request);
-    }
+    size_t realSize = size * nmemb;
+    const char* memPtr = (const char*)ptr;
+
+    request->m_responseHeaderData.insert(request->m_responseHeaderData.end(), memPtr, memPtr + realSize);
     return realsize;
 }
 
@@ -320,7 +408,7 @@ void NetworkRequest::send(String* body)
     changeProgress(LOADSTART, true);
     if (m_url.isFileURL()) {
         // this area doesn't require lock.
-        // reading file is not require thread
+        // reading file does not require thread
         String* path = m_url.urlStringWithoutSearchPart();
         String* filePath = path->substring(7, path->length() - 7);
 
@@ -336,7 +424,7 @@ void NetworkRequest::send(String* body)
         }
     } else if (m_url.isDataURL())  {
         // this area doesn't require lock.
-        // reading file is not require thread
+        // reading file does not require thread
         if (m_isSync) {
             dataURLWorker(this, m_url.urlString());
         } else {
@@ -382,14 +470,14 @@ void NetworkRequest::send(String* body)
 
             std::string headerText;
             struct curl_slist* list = NULL;
-            list = curl_slist_append(list, "Accept:text/plain");
+            // list = curl_slist_append(list, "Accept:text/plain");
             list = curl_slist_append(list, "Accept-Charset:utf-8");
             headerText = "Accept-Language:";
             headerText += m_starFish->locale().getName();
             headerText.replace(headerText.begin(), headerText.end(), '_', '-');
             list = curl_slist_append(list, headerText.data());
             list = curl_slist_append(list, "Connection:keep-alive");
-            list = curl_slist_append(list, "User-Agent:" USER_AGENT(APP_CODE_NAME, VERSION));
+            list = curl_slist_append(list, "User-Agent: Mozilla/5.0" USER_AGENT(APP_CODE_NAME, VERSION));
 
             if (m_document->documentURI().isFileURL() || m_document->documentURI().isDataURL()) {
                 list = curl_slist_append(list, "Origin:null");
@@ -465,6 +553,40 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
     delete fio;
 }
 
+void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
+{
+    res->m_status = 200;
+
+    size_t idxColon = url->indexOf(':');
+    size_t idx = url->indexOf(',');
+
+    if (idx != SIZE_MAX && idxColon != SIZE_MAX && idxColon < idx) {
+        String* sub = url->substring(idxColon + 1, idx - idxColon - 1);
+        res->m_responseHeaderData = "Content-Type:";
+        for (size_t i = 0; i < sub->length(); i ++) {
+            res->m_responseHeaderData.push_back((char)sub->charAt(i));
+        }
+    }
+    res->changeReadyState(HEADERS_RECEIVED, true);
+
+    res->changeReadyState(LOADING, true);
+    for (size_t i = idx + 1; i < url->length(); i++) {
+        char32_t c = url->charAt(i);
+        // TODO filter url string correctly according RFC 3986
+        if (c < 128) {
+            res->m_response.push_back((char)c);
+        }
+    }
+
+    res->handleResponseEOF();
+}
+
+void* NetworkRequest::networkWorker(void* data)
+{
+    NetworkWorkerData* requestData = (NetworkWorkerData*) data;
+    return requestData->networkWorker->networkWorker(data);
+}
+
 static size_t base64Table[128] =
 {
     std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, std::string::npos, // 0~9
@@ -494,86 +616,63 @@ static inline bool isBase64(unsigned char c)
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
+
+template <typename StrType>
+NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str, size_t startAt, size_t endAt)
 {
-    res->m_status = 200;
-    res->changeReadyState(HEADERS_RECEIVED, true);
-    res->changeReadyState(LOADING, true);
+    size_t inLen = endAt - startAt;
+    size_t i = 0;
+    size_t j = 0;
+    size_t in_ = startAt;
+    unsigned char charArray4[4], charArray3[3];
+    NetworkRequestResponse result;
 
-    size_t idx = url->indexOf(',');
-
-    if (idx != SIZE_MAX) {
-        size_t base64 = url->find("base64");
-
-        if (base64 < idx) {
-            size_t inLen = url->length() - base64 - 6;
-            size_t i = 0;
-            size_t j = 0;
-            size_t in_ = base64 + 1 + 6;
-            unsigned char charArray4[4], charArray3[3];
-
-            while (inLen--) {
-                if (((unsigned char) url->charAt(in_) != '=') && isBase64((unsigned char) url->charAt(in_))) {
-                    charArray4[i++] = url->charAt(in_);
-                    in_++;
-                    if (i == 4) {
-                        for (i = 0; i < 4; i++) {
+    while (inLen--) {
+        if (((unsigned char) str[in_] != '=') && isBase64((unsigned char) str[in_])) {
+            charArray4[i++] = str[in_];
+            in_++;
+            if (i == 4) {
+                for (i = 0; i < 4; i++) {
 #ifndef NDEBUG
-                            STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[i]) == (char)base64Table[charArray4[i]]);
+                    STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[i]) == (char)base64Table[charArray4[i]]);
 #endif
-                            charArray4[i] = base64Table[charArray4[i]];
-                        }
-
-                        charArray3[0] = (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
-                        charArray3[1] = ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
-                        charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
-
-                        for (i = 0; (i < 3); i++) {
-                            res->m_response.push_back((char)charArray3[i]);
-                        }
-                        i = 0;
-                    }
-                }
-            }
-
-            if (i) {
-                for (j = i; j < 4; j++)
-                    charArray4[j] = 0;
-                for (j = 0; j < 4; j++) {
-#ifndef NDEBUG
-                    auto ret = base64CharsDebug.find(charArray4[j]);
-                    STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[j]) == (char)base64Table[charArray4[j]]);
-                    ret = !ret;
-#endif
-                    charArray4[j] = base64Table[charArray4[j]];
+                    charArray4[i] = base64Table[charArray4[i]];
                 }
 
                 charArray3[0] = (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
                 charArray3[1] = ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
                 charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
 
-                for (j = 0; (j < i - 1); j++) {
-                    res->m_response.push_back((char)charArray3[i]);
+                for (i = 0; (i < 3); i++) {
+                    result.push_back((char)charArray3[i]);
                 }
-            }
-        } else {
-            for (size_t i = idx + 1; i < url->length(); i++) {
-                char32_t c = url->charAt(i);
-                // TODO filter url string correctly according RFC 3986
-                if (c < 128) {
-                    res->m_response.push_back((char)c);
-                }
+                i = 0;
             }
         }
     }
 
-    res->handleResponseEOF();
-}
+    if (i) {
+        for (j = i; j < 4; j++)
+            charArray4[j] = 0;
+        for (j = 0; j < 4; j++) {
+#ifndef NDEBUG
+            auto ret = base64CharsDebug.find(charArray4[j]);
+            STARFISH_ASSERT((char)base64CharsDebug.find(charArray4[j]) == (char)base64Table[charArray4[j]]);
+            ret = !ret;
+#endif
+            charArray4[j] = base64Table[charArray4[j]];
+        }
 
-void* NetworkRequest::networkWorker(void* data)
-{
-    NetworkWorkerData* requestData = (NetworkWorkerData*) data;
-    return requestData->networkWorker->networkWorker(data);
+        charArray3[0] = (charArray4[0] << 2) + ((charArray4[1] & 0x30) >> 4);
+        charArray3[1] = ((charArray4[1] & 0xf) << 4) + ((charArray4[2] & 0x3c) >> 2);
+        charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
+
+        for (j = 0; (j < i - 1); j++) {
+            result.push_back((char)charArray3[i]);
+        }
+    }
+
+    return result;
 }
 
 

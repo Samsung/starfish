@@ -1320,11 +1320,11 @@ protected:
 };
 
 class CSSStyleSheet : public gc {
-    friend class StyleResolver;
-
 public:
-    CSSStyleSheet(Node* origin)
+    CSSStyleSheet(Node* origin, String* str)
     {
+        m_isParsed = false;
+        m_sourceString = str;
         m_origin = origin;
     }
 
@@ -1339,7 +1339,17 @@ public:
         return m_origin;
     }
 
+    void parseSheetIfneeds();
+
+    std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> >& rules()
+    {
+        STARFISH_ASSERT(m_isParsed);
+        return m_rules;
+    }
 protected:
+    bool m_isParsed;
+    String* m_sourceString; // m_sourceString should vaild until stylesheet unparsed
+
     std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> > m_rules;
     Node* m_origin;
 };
@@ -1355,6 +1365,11 @@ public:
     {
         STARFISH_ASSERT(std::find(m_sheets.begin(), m_sheets.end(), sheet) != m_sheets.end());
         m_sheets.erase(std::find(m_sheets.begin(), m_sheets.end(), sheet));
+    }
+
+    std::vector<CSSStyleSheet*, gc_allocator<CSSStyleSheet*> >& sheets()
+    {
+        return m_sheets;
     }
 
     void resolveDOMStyle(Document* document, bool force = false);
