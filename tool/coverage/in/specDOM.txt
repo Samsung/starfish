@@ -117,11 +117,11 @@ XMLHttpRequest           , onreadyStatechange
                          , responseText
 ProgressEvent            , ProgressEvent&&&type
                          , lengthComputable
-                         , loaded
-                         , total
+                         , ProgressEvent&&&loaded
+                         , ProgressEvent&&&total
 ProgressEventInit        , ProgressEventInit&&&type
-                         , loaded
-                         , total
+                         , ProgressEventInit&&&loaded
+                         , ProgressEventInit&&&total
 Other                    , Array&&&length
                          , Object&&&length
 # UNSENT OPENED HEADERS_RECEIVED LOADING DONE
