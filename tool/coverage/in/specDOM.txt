@@ -107,10 +107,10 @@ XMLHttpRequestEventTarget, onloadstart
                          , onload
                          , ontimeout
                          , onloadend
-XMLHttpRequest           , onreadyStatechange
+XMLHttpRequest           , onreadystatechange
                          , readyState
-                         , Open
-                         , Timeout
+                         , open
+                         , timeout
                          , send
                          , abort
                          , status

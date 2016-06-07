@@ -1845,6 +1845,18 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         }
         THROW_ILLEGAL_INVOCATION()
     }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("visibilitychange"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isDocument()) {
+            originalObj->asDocument()->visibilityStateChanged();
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION()
+    }, nullptr);
+
     return DocumentFunction;
 }
 
@@ -2611,6 +2623,9 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
                     totalValue = total.toUint32();
                 }
 #ifdef STARFISH_TC_COVERAGE
+                if (total.isNumber()) {
+                    STARFISH_LOG_INFO("ProgressEventInit&&&total\n");
+                }
                 if (canLengthComputable) {
                     STARFISH_LOG_INFO("ProgressEventInit&&&lengthComputable\n");
                 }
