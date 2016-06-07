@@ -6,13 +6,13 @@ mkdir -p out
 list="
 dom.wpt.raw
 dom.dct.raw
-dom.blink.raw
-dom.blink.fast.raw
+dom.blink.dom.raw
+dom.blink.fast.dom.raw
 dom.blink.fast.html.raw
-dom.webkit.raw
-dom.webkit.fast.raw
+dom.webkit.dom.raw
+dom.webkit.fast.dom.raw
 dom.webkit.fast.html.raw
-dom.gecko.raw
+dom.gecko.dom.raw
 dom.bidi.raw
 dom.css1.raw
 dom.css21.raw
@@ -31,7 +31,6 @@ list2=(
 "Vender Webkit Fast DOM"
 "Vender Webkit Fast HTML"
 "Vender Gecko"
-"W3C International Text"
 "W3C International Text"
 "W3C CSS 1"
 "W3C CSS 2.1"

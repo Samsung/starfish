@@ -56,7 +56,7 @@ for i in ${TESTSUITE[@]}; do
         TESTNAME="css.transforms.1"
     fi
 
-    echo -e "${BOLD}## Syntax checking for [${i}]..${RESET}\n"
+    echo -e "${BOLD}## [CSS & HTML] Syntax checking for [${i}]..${RESET}\n"
 
     TC=$(find $i -regex ".*\.\(htm\|html\)$" | sort)
     CNT=-1

@@ -1,4 +1,6 @@
 #!/bin/bash
+BOLD='\033[1m'
+RESET='\033[0m'
 
 mkdir -p out
 rm -f in/dom.*.raw
@@ -21,10 +23,40 @@ TESTSUITE=("test/regression/reftest/vendor/blink/dom/html"
            "test/regression/reftest/csswg-test/css-transforms-1")
 
 for tc in ${TESTSUITE[@]}; do
-    echo $tc
-    res=$tc
-    res=`echo $res | sed 's/test\/regression\/reftest\///'`
-    res=`echo $res | sed 's/\//\./g'`
+    if [[ "$tc" = *"web-platform-tests"* ]]; then
+        res="wpt"
+    elif [[ "$tc" = *"dom-conformance-test"* ]]; then
+        res="dct"
+    elif [[ "$tc" = *"blink/dom"* ]]; then
+        res="blink.dom"
+    elif [[ "$tc" = *"blink/fast/dom"* ]]; then
+        res="blink.fast.dom"
+    elif [[ "$tc" = *"blink/fast/html"* ]]; then
+        res="blink.fast.html"
+    elif [[ "$tc" = *"webkit/dom"* ]]; then
+        res="webkit.dom"
+    elif [[ "$tc" = *"webkit/fast/dom"* ]]; then
+        res="webkit.fast.dom"
+    elif [[ "$tc" = *"webkit/fast/html"* ]]; then
+        res="webkit.fast.html"
+    elif [[ "$tc" = *"gecko"* ]]; then
+        res="gecko.dom"
+    elif [[ "$tc" = *"bidi"* ]]; then
+        res="bidi"
+    elif [[ "$tc" = *"css1"* ]]; then
+        res="css1"
+    elif [[ "$tc" = *"css21"* ]]; then
+        res="css21"
+    elif [[ "$tc" = *"css-backgrounds-3"* ]]; then
+        res="css.backgrounds.3"
+    elif [[ "$tc" = *"css-color-3"* ]]; then
+        res="css.color.3"
+    elif [[ "$tc" = *"css-transforms-1"* ]]; then
+        res="css.transforms.1"
+    fi
+
+    echo -e "${BOLD}## [DOM] Syntax checking for [${tc}]..${RESET}\n"
+
     res="in/dom.$res.raw"
     for f in `find $path/$tc -name '*.htm*' | sort`; do
         echo $f | sed 's/\.\.\/\.\.\/test/test/' > out/t.txt
@@ -33,3 +65,6 @@ for tc in ${TESTSUITE[@]}; do
         tr '\n' '\t' < out/t.txt | sed 's/\t$/\n/' >> $res
     done
 done
+
+echo -e "${BOLD}Finished! You can find the results in \`tool/coverage/in/\`${RESET}\n"
+
