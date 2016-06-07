@@ -4,6 +4,3 @@
 [submodule "test/regression/reftest/csswg-res"]
 	path = test/regression/reftest/csswg-test/csswg-res
 	url = http://10.113.64.195:9090/scm/star/csswg-res.git
-[submodule "third_party/deviceapi"]
-	path = third_party/deviceapi
-	url = http://10.113.64.203/StarFish/deviceapi.git
