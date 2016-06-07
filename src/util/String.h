@@ -41,6 +41,7 @@ public:
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);
     static String* createASCIIString(const char* src);
+    static String* createASCIIStringWithNoGC(const char* src);
     static String* createUTF32String(const UTF32String& src);
     static String* createUTF32String(char32_t c);
     static String* createASCIIStringFromUTF32Source(const UTF32String& src);

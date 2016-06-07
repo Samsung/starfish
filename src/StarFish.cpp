@@ -63,8 +63,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     UErrorCode code = U_ZERO_ERROR;
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
-    GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
-    GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     m_messageLoop = new MessageLoop(this);
     m_threadPool = new ThreadPool(2);
 }

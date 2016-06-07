@@ -29,17 +29,15 @@ extern sfmatchLocation_cb matchLocation_cb;
 
 extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* locale, const char* timezoneID)
 {
-    StarFishInstance* instance = (StarFishInstance*)malloc(sizeof(StarFishInstance));
+    StarFishInstance* instance = new(NoGC) StarFishInstance;
     instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, 360, 360);
-    starfishGCAddRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + 1);
     return instance;
 }
 
 extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 {
-    starfishGCRemoveRoots(instance->m_starfish, (StarFish::StarFish*)instance->m_starfish + 1);
     delete TO_STARFISH(instance);
-    free(instance);
+    GC_FREE(instance);
 
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
@@ -58,16 +56,6 @@ extern "C" STARFISH_EXPORT void starfishNotifyPause(StarFishInstance* instance)
 extern "C" STARFISH_EXPORT void starfishNotifyResume(StarFishInstance* instance)
 {
     TO_STARFISH(instance)->resume();
-}
-
-extern "C" STARFISH_EXPORT void starfishGCAddRoots(void* start, void* end)
-{
-    GC_add_roots(start, end);
-}
-
-extern "C" STARFISH_EXPORT void starfishGCRemoveRoots(void* start, void* end)
-{
-    GC_remove_roots(start, end);
 }
 
 extern "C" STARFISH_EXPORT void registerFileOpenCB(FILE* (*cb)(const char* fileName))

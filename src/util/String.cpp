@@ -4,8 +4,8 @@
 
 namespace StarFish {
 
-String* String::emptyString = String::createASCIIString("");
-String* String::spaceString = String::createASCIIString(" ");
+String* String::emptyString = String::createASCIIStringWithNoGC("");
+String* String::spaceString = String::createASCIIStringWithNoGC(" ");
 
 size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
 {
@@ -206,6 +206,11 @@ String* String::fromUTF8(const char* str)
 String* String::createASCIIString(const char* str)
 {
     return new StringDataASCII(str);
+}
+
+String* String::createASCIIStringWithNoGC(const char* str)
+{
+    return new(NoGC) StringDataASCII(str);
 }
 
 String* String::createUTF32String(const UTF32String& src)
