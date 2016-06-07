@@ -482,6 +482,16 @@ void NetworkRequest::send(String* body)
             if (m_document->documentURI().isFileURL() || m_document->documentURI().isDataURL()) {
                 list = curl_slist_append(list, "Origin:null");
             } else {
+                std::string hostString = m_document->documentURI().urlString()->utf8Data();
+                size_t pos = hostString.find("://");
+                hostString = hostString.substr(pos + 3);
+                auto pos2 = hostString.find('/');
+                if (pos2 != std::string::npos) {
+                    hostString = hostString.substr(0, pos2);
+                }
+                headerText = "Host:";
+                headerText += hostString.substr(pos + 3);
+                list = curl_slist_append(list, headerText.data());
                 headerText = "Referer:";
                 headerText += m_document->documentURI().urlString()->utf8Data();
                 list = curl_slist_append(list, headerText.data());

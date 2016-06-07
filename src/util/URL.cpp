@@ -6,6 +6,11 @@ namespace StarFish {
 URL::URL(String* baseURL, String* url)
     : m_string(url)
 {
+    if (url->startsWith("data:")) {
+        m_urlString = m_string = url;
+        return;
+    }
+
     bool isAbsolute = url->contains("://");
 
     if (url->startsWith("//")) {
@@ -13,11 +18,6 @@ URL::URL(String* baseURL, String* url)
         STARFISH_ASSERT(baseURL->length());
         size_t idx = baseURL->indexOf(':');
         url = baseURL->substring(0, idx + 1)->concat(url);
-    }
-
-    if (url->startsWith("data:")) {
-        m_urlString = m_string = url;
-        return;
     }
 
     if (url->startsWith("/")) {
@@ -54,7 +54,13 @@ URL::URL(String* baseURL, String* url)
         if (baseEndsWithSlash) {
             m_urlString = baseURL->concat(url);
         } else {
-            baseURL = baseURL->substring(0, baseURL->lastIndexOf('/'));
+            size_t f = baseURL->find("://");
+            STARFISH_ASSERT(f != SIZE_MAX);
+            f += 3;
+            size_t f2 = baseURL->find("/", f);
+            if (f2 != SIZE_MAX) {
+                baseURL = baseURL->substring(0, baseURL->lastIndexOf('/'));
+            }
             m_urlString = baseURL->concat(String::createASCIIString("/"))->concat(url);
         }
     }

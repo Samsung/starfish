@@ -37,8 +37,11 @@ public:
         {
             // The fact that !m_item == isMarker() is an implementation detail
             // callers should check isMarker() before calling element().
-            STARFISH_ASSERT(m_item);
-            return m_item->element();
+            if (m_item) {
+                return m_item->element();
+            } else {
+                return nullptr;
+            }
         }
         void replaceElement(HTMLStackItem* item) { m_item = item; }
 

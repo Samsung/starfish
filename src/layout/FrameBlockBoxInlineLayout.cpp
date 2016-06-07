@@ -523,52 +523,55 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                             idx++;
                         }
 
-                        if (idx != lastTextBox->text()->length()) {
+                        if (idx != lastTextBox->text()->length() && lastTextBox->text()->length()) {
                             lastTextBox = splitBoxAt(lastTextBox, idx - 1, false);
                         }
                     }
 
                     // check it has trailing neutral chars
-                    size_t lastPos = lastTextBox->text()->length() - 1;
-                    char32_t lastChar = lastTextBox->text()->charAt(lastPos);
-                    size_t i = lastPos;
-                    if (charDirection(lastChar) == 2) {
-                        while (true) {
-                            if (charDirection(lastTextBox->text()->charAt(i)) != 2) {
-                                break;
+                    if (lastTextBox->text()->length()) {
+                        size_t lastPos = lastTextBox->text()->length() - 1;
+                        char32_t lastChar = lastTextBox->text()->charAt(lastPos);
+                        size_t i = lastPos;
+                        if (charDirection(lastChar) == 2) {
+                            while (true) {
+                                if (charDirection(lastTextBox->text()->charAt(i)) != 2) {
+                                    break;
+                                }
+                                if (i == 0) {
+                                    break;
+                                } else {
+                                    i--;
+                                }
                             }
-                            if (i == 0) {
-                                break;
+                        }
+
+                        // FIXME: Is there a isNumber() for unicode?
+                        auto isNumber = [](String* text)
+                        {
+                            for (unsigned i = 0; i < text->length(); i++) {
+                                unsigned d = text->charAt(i);
+                                if (('0' <= d && d <= '9')
+                                    || (0x0660 <= d && d <= 0x0669) // 0 to 9 in Arabic
+                                    || (0x06F0 <= d && d <= 0x06F9)) { // 0 to 9 in Extended Arabic
+                                } else {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        };
+
+                        if (i < lastPos) {
+                            String* text = lastTextBox->text();
+                            if (isNumber(text)) {
+                                // if text is a number, do not split. The direction of number should be determined by surrounding text
+                                tb->setCharDirection(InlineTextBox::CharDirection::Netural);
                             } else {
-                                i--;
+                                splitBoxAt(lastTextBox, i, true);
                             }
                         }
                     }
 
-                    // FIXME: Is there a isNumber() for unicode?
-                    auto isNumber = [](String* text)
-                    {
-                        for (unsigned i = 0; i < text->length(); i++) {
-                            unsigned d = text->charAt(i);
-                            if (('0' <= d && d <= '9')
-                                || (0x0660 <= d && d <= 0x0669) // 0 to 9 in Arabic
-                                || (0x06F0 <= d && d <= 0x06F9)) { // 0 to 9 in Extended Arabic
-                            } else {
-                                return false;
-                            }
-                        }
-                        return true;
-                    };
-
-                    if (i < lastPos) {
-                        String* text = lastTextBox->text();
-                        if (isNumber(text)) {
-                            // if text is a number, do not split. The direction of number should be determined by surrounding text
-                            tb->setCharDirection(InlineTextBox::CharDirection::Netural);
-                        } else {
-                            splitBoxAt(lastTextBox, i, true);
-                        }
-                    }
                 }
             }
         }
