@@ -2623,6 +2623,9 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
                     totalValue = total.toUint32();
                 }
 #ifdef STARFISH_TC_COVERAGE
+                if (type->isESString) {
+                    STARFISH_LOG_INFO("ProgressEventInit&&&type\n");
+                }
                 if (total.isNumber()) {
                     STARFISH_LOG_INFO("ProgressEventInit&&&total\n");
                 }
