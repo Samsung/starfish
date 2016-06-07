@@ -1,9 +1,8 @@
 #ifndef __StarFishNetworkRequest__
 #define __StarFishNetworkRequest__
 
-#include <curl/curl.h>
-
 #include "platform/threading/Mutex.h"
+#include "platform/threading/Semaphore.h"
 #include "platform/threading/Locker.h"
 
 namespace StarFish {

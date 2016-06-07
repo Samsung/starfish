@@ -11,7 +11,7 @@ class MessageLoop;
 class Window;
 class ScriptBindingInstance;
 class ImageData;
-
+class ThreadPool;
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
 F(abbr) \
@@ -285,6 +285,11 @@ public:
         return m_timezoneID;
     }
 
+    ThreadPool* threadPool()
+    {
+        return m_threadPool;
+    }
+
     void addPointerInRootSet(void *ptr);
     void removePointerFromRootSet(void *ptr);
 
@@ -294,7 +299,6 @@ protected:
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return str.find(prefix);
     }
-
     StaticStrings* m_staticStrings;
     icu::Locale m_locale;
     icu::BreakIterator* m_lineBreaker;
@@ -306,6 +310,7 @@ protected:
     void* m_nativeWindow;
     Window* m_window;
     FontSelector m_fontSelector;
+    ThreadPool* m_threadPool;
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
         gc_allocator<std::pair<void*, size_t>>> m_rootMap;
     std::unordered_map<std::string, AtomicString,

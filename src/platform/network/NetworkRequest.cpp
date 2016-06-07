@@ -3,6 +3,7 @@
 
 #include "platform/file_io/FileIO.h"
 #include "platform/window/Window.h"
+#include "platform/threading/ThreadPool.h"
 #include "dom/Document.h"
 #include "platform/message_loop/MessageLoop.h"
 
@@ -477,12 +478,12 @@ void NetworkRequest::send(String* body)
             headerText.replace(headerText.begin(), headerText.end(), '_', '-');
             list = curl_slist_append(list, headerText.data());
             list = curl_slist_append(list, "Connection:keep-alive");
-            list = curl_slist_append(list, "User-Agent: Mozilla/5.0" USER_AGENT(APP_CODE_NAME, VERSION));
+            list = curl_slist_append(list, "User-Agent: Mozilla/5.0 " USER_AGENT(APP_CODE_NAME, VERSION));
 
             if (m_document->documentURI().isFileURL() || m_document->documentURI().isDataURL()) {
                 list = curl_slist_append(list, "Origin:null");
             } else {
-                std::string hostString = m_document->documentURI().urlString()->utf8Data();
+                std::string hostString = m_url.urlString()->utf8Data();
                 size_t pos = hostString.find("://");
                 hostString = hostString.substr(pos + 3);
                 auto pos2 = hostString.find('/');
@@ -490,7 +491,7 @@ void NetworkRequest::send(String* body)
                     hostString = hostString.substr(0, pos2);
                 }
                 headerText = "Host:";
-                headerText += hostString.substr(pos + 3);
+                headerText += hostString;
                 list = curl_slist_append(list, headerText.data());
                 headerText = "Referer:";
                 headerText += m_document->documentURI().urlString()->utf8Data();
@@ -536,8 +537,9 @@ void NetworkRequest::send(String* body)
             networkWorker(data);
         } else {
             data->networkWorker = new AsyncNetworkWorkHelper();
-            pthread_t thread;
-            pthread_create(&thread, NULL, networkWorker, data);
+            m_starFish->threadPool()->addWork(networkWorker, data);
+            // Thread* t = new Thread();
+            // t->run(networkWorker, data);
         }
 
     }

@@ -1,6 +1,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "dom/Document.h"
+#include "platform/threading/ThreadPool.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/window/Window.h"
 #include "platform/canvas/image/ImageData.h"
@@ -65,6 +66,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     GC_add_roots(String::emptyString, String::emptyString + sizeof(String*));
     GC_add_roots(String::spaceString, String::spaceString + sizeof(String*));
     m_messageLoop = new MessageLoop(this);
+    m_threadPool = new ThreadPool(2);
 }
 
 StarFish::~StarFish()
