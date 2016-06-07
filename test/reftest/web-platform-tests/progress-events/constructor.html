@@ -31,10 +31,11 @@ test(function() {
   assert_equals(ev.cancelable, false)
 }, "Basic test.")
 test(function() {
-  var ev = new ProgressEvent(null, { lengthComputable: "hah", loaded: "2" })
+  var ev = new ProgressEvent(null, { lengthComputable: "hah", loaded: "2", total: "3" })
   assert_equals(ev.type, "null")
   assert_equals(ev.lengthComputable, true)
   assert_equals(ev.loaded, 2)
+  assert_equals(ev.total, 3)
 }, "ECMAScript value conversion test.")
 test(function() {
   var ev = new ProgressEvent("Xx", { lengthcomputable: true})
