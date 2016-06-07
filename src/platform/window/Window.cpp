@@ -151,6 +151,11 @@ public:
 
     virtual int width()
     {
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+        if (getenv("SCREEN_SHOT_WIDTH") && strlen(getenv("SCREEN_SHOT_WIDTH"))) {
+            return atoi(getenv("SCREEN_SHOT_WIDTH"));
+        }
+#endif
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int width;
         evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, NULL);
@@ -159,6 +164,11 @@ public:
 
     virtual int height()
     {
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+        if (getenv("SCREEN_SHOT_HEIGHT") && strlen(getenv("SCREEN_SHOT_HEIGHT"))) {
+            return atoi(getenv("SCREEN_SHOT_HEIGHT"));
+        }
+#endif
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int height;
         evas_object_geometry_get(eflWindow->m_window, NULL, NULL, NULL, &height);
@@ -601,6 +611,7 @@ void Window::rendering()
         Timer t("resolve style");
         document()->styleResolver()->resolveDOMStyle(m_document, m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
+        m_needsStyleRecalcForWholeDocument = false;
 
         if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
             // dump style
@@ -762,12 +773,23 @@ void Window::rendering()
             evas_object_image_save(g_imgBufferForScreehShot, path, NULL, NULL);
             // int writeImage(char* filename, int width, int height, void *buffer)
             // writeImage(path, width(), height(), evas_object_image_data_get(g_imgBufferForScreehShot, EINA_FALSE));
-            exit(0);
+            if (getenv("EXIT_AFTER_SCREEN_SHOT") && strlen(getenv("EXIT_AFTER_SCREEN_SHOT")))
+                exit(0);
         }
     }
 
 #endif
 }
+
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+void Window::screenShot(std::string filePath)
+{
+    setNeedsPainting();
+    setenv("SCREEN_SHOT", filePath.data(), 1);
+    rendering();
+    setenv("SCREEN_SHOT", "", 1);
+}
+#endif
 
 void Window::setNeedsRenderingSlowCase()
 {

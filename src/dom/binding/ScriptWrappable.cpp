@@ -45,6 +45,18 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     scriptObject()->setExtraData(ScriptWrappable::WindowObject);
     scriptObject()->setExtraPointerData(window);
 
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+    escargot::ESFunctionObject* screenShotFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            wnd->screenShot(escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toString()->utf8Data());
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("screenShot"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("screenShot"), true, true, true, screenShotFunction);
+#endif
+
     // [setTimeout]
     // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-settimeout
     // long setTimeout(Function handler, optional long timeout, any... arguments);

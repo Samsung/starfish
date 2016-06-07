@@ -56,6 +56,10 @@ int main(int argc, char *argv[])
             flag |= StarFish::enableRegressionTest;
         } else if (strstr(argv[i], "--screen-shot=") == argv[i]) {
             screenShot = argv[i] + strlen("--screen-shot=");
+        } else if (strstr(argv[i], "--screen-shot-width=") == argv[i]) {
+            setenv("SCREEN_SHOT_WIDTH", argv[i] + strlen("--screen-shot-width="), 1);
+        } else if (strstr(argv[i], "--screen-shot-height=") == argv[i]) {
+            setenv("SCREEN_SHOT_HEIGHT", argv[i] + strlen("--screen-shot-height="), 1);
         } else if (strcmp(argv[i], "--hide-window") == 0) {
             // regression test, pixel test only
             setenv("HIDE_WINDOW", "1", 1);
@@ -66,6 +70,7 @@ int main(int argc, char *argv[])
         // screenShot = std::string("shot:delay=0.5:file=") + screenShot;
         // setenv("ELM_ENGINE", screenShot.data(), 1);
         setenv("SCREEN_SHOT", screenShot.data(), 1);
+        setenv("EXIT_AFTER_SCREEN_SHOT", "1", 1);
     }
 
     elm_init(0, 0);

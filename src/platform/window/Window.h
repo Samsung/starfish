@@ -158,6 +158,10 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
     HTMLCollection* namedAccess(String* name);
 
+#ifdef STARFISH_ENABLE_PIXEL_TEST
+    void screenShot(std::string filePath);
+#endif
+
 protected:
     void setNeedsRendering()
     {
