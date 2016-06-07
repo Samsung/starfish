@@ -210,7 +210,7 @@ ESPostListener::ESPostListener(escargot::ESVMInstance* instance, escargot::ESFun
     , listener_(listener)
 {
     DEVICEAPI_LOG_INFO("Enter");
-    GC_add_roots(listener_, listener_ + sizeof(void*));
+    GC_add_roots(&listener_, &listener_ + sizeof(escargot::ESFunctionObject*));
 }
 
 ESPostListener::~ESPostListener()
@@ -222,7 +222,7 @@ ESPostListener::~ESPostListener()
 void ESPostListener::finalize()
 {
     DEVICEAPI_LOG_INFO("Enter");
-    GC_remove_roots(listener_, listener_ + sizeof(void*));
+    GC_remove_roots(&listener_, &listener_ + sizeof(escargot::ESFunctionObject*));
     listener_ = nullptr;
     instance_ = nullptr;
 }
