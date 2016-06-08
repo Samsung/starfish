@@ -100,11 +100,7 @@ fi
 echo -e "${BOLD}###### Ref Tests ######${RESET}\n"
 
 cnt=-1
-if [ $TESTSUITE -eq 3 ]; then
-    ROTATE=1
-else
-    ROTATE="$(nproc)"
-fi
+ROTATE="$(nproc)"
 filenames=()
 array=( $tc )
 pos=$(( ${#array[*]} - 1 ))
@@ -119,8 +115,8 @@ for i in $tc ; do
     # Running the tests
     filenames[$cnt]=$i
     if [ $TESTSUITE -eq 3 ]; then
-        RESIMG="./out.png"
-        ELM_ENGINE="shot:file="$RESIMG ./StarFish $i --width=900 --height=900 > /dev/null 2&>1 &
+        RESIMG="out"$cnt".png"
+        ./StarFish $i --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 &> /dev/null 2&>1 &
     else
         ./StarFish $i --hide-window &> $RESFILE &
     fi
@@ -131,6 +127,7 @@ for i in $tc ; do
 
     for c in $(seq 0 $cnt); do
         TMPFILE="tmp"$c
+        RESIMG="out"$c".png"
 
         # Collect the result
         if [ $TESTSUITE -ne 3 ]; then
