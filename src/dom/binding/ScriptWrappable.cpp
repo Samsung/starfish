@@ -55,6 +55,26 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("screenShot"), 0, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("screenShot"), true, true, true, screenShotFunction);
+
+    escargot::ESFunctionObject* simulateClickFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            wnd->simulateClick(escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toNumber(), escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(1).toNumber());
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("simulateClick"), 2, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("simulateClick"), true, true, true, simulateClickFunction);
+
+    escargot::ESFunctionObject* simulateVisibilitychangeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            wnd->simulateVisibilitychange(escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toBoolean());
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("simulateVisibilitychange"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("simulateVisibilitychange"), true, true, true, simulateVisibilitychangeFunction);
 #endif
 
     // [setTimeout]

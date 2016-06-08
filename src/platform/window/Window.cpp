@@ -789,6 +789,21 @@ void Window::screenShot(std::string filePath)
     rendering();
     setenv("SCREEN_SHOT", "", 1);
 }
+
+void Window::simulateClick(float x, float y)
+{
+    dispatchTouchEvent(x, y, Window::TouchEventDown);
+    dispatchTouchEvent(x, y, Window::TouchEventUp);
+}
+
+void Window::simulateVisibilitychange(bool show)
+{
+    if (show) {
+        m_starFish->resume();
+    } else {
+        m_starFish->pause();
+    }
+}
 #endif
 
 void Window::setNeedsRenderingSlowCase()

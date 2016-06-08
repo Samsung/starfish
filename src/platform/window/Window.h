@@ -160,6 +160,8 @@ public:
 
 #ifdef STARFISH_ENABLE_TEST
     void screenShot(std::string filePath);
+    void simulateClick(float x, float y);
+    void simulateVisibilitychange(bool show);
 #endif
 
 protected:
