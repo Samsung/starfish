@@ -1,4 +1,0 @@
-PASS  Should be a div element
-PASS  Should be a div element
-PASS  Should be a div element
-PASS  Should be a div element

@@ -1,1 +1,0 @@
-<span><span class="pass">PASS</span> we didn't crash.</span><br />

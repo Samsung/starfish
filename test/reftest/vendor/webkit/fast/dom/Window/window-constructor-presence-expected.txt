@@ -1,5 +1,0 @@
-<p>Tests that the Window constructor is present and that window is an instanceof of it.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-<span><span class="pass">PASS</span> typeof Window is not "undefined"</span><br />
-<span><span class="pass">PASS</span> window instanceof Window is true</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

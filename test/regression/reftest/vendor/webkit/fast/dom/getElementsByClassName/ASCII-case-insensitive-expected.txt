@@ -1,6 +1,0 @@
-<span><span class="fail">FAIL</span> getByClassName('a') should be a A. Was a.</span><br />
-<span><span class="fail">FAIL</span> getByClassName('A') should be a A. Was A.</span><br />
-<span><span class="pass">PASS</span> getByClassName('ä') is "ä"</span><br />
-<span><span class="pass">PASS</span> getByClassName('Ä') is "Ä"</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

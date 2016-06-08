@@ -1,9 +1,0 @@
-<p>Tests that Attr.value is not nullable</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-attr = document.createAttribute('test')<br />
-<span><span class="pass">PASS</span> attr.value is ""</span><br />
-<span><span class="pass">PASS</span> attr.value = null did not throw exception.</span><br />
-<span><span class="pass">PASS</span> attr.value is "null"</span><br />
-<span><span class="pass">PASS</span> attr.value = undefined did not throw exception.</span><br />
-<span><span class="pass">PASS</span> attr.value is "undefined"</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

@@ -1,6 +1,0 @@
-<span><span class="pass">PASS</span> window.addEventListener("foo") threw exception TypeError: Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 1 present..</span><br />
-<span><span class="pass">PASS</span> window.removeEventListener("bar") threw exception TypeError: Failed to execute 'removeEventListener' on 'EventTarget': 2 arguments required, but only 1 present..</span><br />
-<span><span class="pass">PASS</span> window.addEventListener() threw exception TypeError: Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 0 present..</span><br />
-<span><span class="pass">PASS</span> window.removeEventListener() threw exception TypeError: Failed to execute 'removeEventListener' on 'EventTarget': 2 arguments required, but only 0 present..</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

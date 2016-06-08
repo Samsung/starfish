@@ -1,5 +1,0 @@
-Check the classlist length attribute for empty strings<br />
-<span><span class="pass">PASS</span> div.className.length is 3</span><br />
-<span><span class="pass">PASS</span> div.className.length is 5</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

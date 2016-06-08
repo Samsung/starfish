@@ -1,5 +1,0 @@
-<p>This tests that setting the proto of a built in constructor is not reset</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-<span><span class="pass">PASS</span> Object.getPrototypeOf(HTMLElement) is Element</span><br />
-<span><span class="pass">PASS</span> Object.getPrototypeOf(HTMLElement) is proto</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

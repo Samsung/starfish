@@ -1,6 +1,0 @@
-<p>This tests the descriptor of CSSStyleDeclaration properties.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-<span><span class="pass">PASS</span> descriptor['writable'] is false</span><br />
-<span><span class="pass">PASS</span> descriptor['enumerable'] is false</span><br />
-<span><span class="pass">PASS</span> descriptor['configurable'] is false</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

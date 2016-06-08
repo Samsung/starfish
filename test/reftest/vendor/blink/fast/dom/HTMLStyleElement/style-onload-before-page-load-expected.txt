@@ -1,3 +1,0 @@
-PASS Fired Load event at style.
-PASS Fired Load event at body.
-

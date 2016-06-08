@@ -1,5 +1,0 @@
-PASS target.import.querySelector('link').sheet instanceof StyleSheet is true
-PASS successfullyParsed is true
-
-TEST COMPLETE
-

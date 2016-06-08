@@ -1,7 +1,0 @@
-PASS document.body.style.margin is "0px"
-PASS document.body.style.margin = 1 is 1
-PASS document.body.style.margin = badString threw exception Exception in toString().
-PASS successfullyParsed is true
-
-TEST COMPLETE
-

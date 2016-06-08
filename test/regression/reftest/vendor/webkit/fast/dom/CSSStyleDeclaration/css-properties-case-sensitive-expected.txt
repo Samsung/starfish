@@ -1,7 +1,0 @@
-<p>This test checks that access to CSS properties via JavaScript properties on DOM elements is case sensitive.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-normal cases<br />
-<br />
-<span><span class="pass">PASS</span> element.style.zIndex is '1'</span><br />
-<span><span class="pass">PASS</span> element.style.ZIndex is undefined.</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

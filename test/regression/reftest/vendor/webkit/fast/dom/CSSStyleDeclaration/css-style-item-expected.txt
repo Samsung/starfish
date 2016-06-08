@@ -1,7 +1,0 @@
-<p>This tests indexing outside the range of the style object.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-<span><span class="pass">PASS</span> style.length is 1</span><br />
-<span><span class="pass">PASS</span> style[0] is "color"</span><br />
-<span><span class="pass">PASS</span> style[1] is ""</span><br />
-<span><span class="pass">PASS</span> style[-1] is undefined.</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />

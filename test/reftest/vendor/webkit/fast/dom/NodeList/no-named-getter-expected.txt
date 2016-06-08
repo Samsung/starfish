@@ -1,8 +1,0 @@
-<p>Tests that NodeList does not have a named property getter.</p><p>On success, you will see a series of "<span class="pass">PASS</span>" messages, followed by "<span class="pass">TEST COMPLETE</span>".</p>
-<span><span class="pass">PASS</span> nodeList.__proto__ is NodeList.prototype</span><br />
-<span><span class="pass">PASS</span> nodeList['testId'] is undefined.</span><br />
-<span><span class="pass">PASS</span> nodeList.testId is undefined.</span><br />
-<span><span class="pass">PASS</span> nodeList['testName'] is undefined.</span><br />
-<span><span class="pass">PASS</span> nodeList.testName is undefined.</span><br />
-<span><span class="pass">PASS</span> successfullyParsed is true</span><br />
-<br /><span class="pass">TEST COMPLETE</span><br />
