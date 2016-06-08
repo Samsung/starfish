@@ -1608,7 +1608,7 @@ Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage st
     }
     return nullptr;
 }
-
+#ifdef STARFISH_ENABLE_TEST
 void InlineNonReplacedBox::dump(int depth)
 {
     InlineBox::dump(depth);
@@ -1625,4 +1625,5 @@ void InlineNonReplacedBox::dump(int depth)
         iter++;
     }
 }
+#endif
 }

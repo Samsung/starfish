@@ -505,13 +505,13 @@ public:
     {
         return m_frame;
     }
-
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
         printf("[%s] ", localName()->utf8Data());
     }
-
     virtual void dumpStyle();
+#endif
 
     Element* firstElementChild();
     Element* lastElementChild();

@@ -69,8 +69,10 @@ public:
 
     virtual void setTextContent(String* text);
 
+#ifdef STARFISH_ENABLE_TEST
     String* innerHTML();
     void setInnerHTML(String*);
+#endif
 
     virtual QualifiedName name() = 0;
 
@@ -120,7 +122,7 @@ public:
     }
 
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
-
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
         Node::dump();
@@ -134,6 +136,7 @@ public:
 
         printf("className:%s", className.data());
     }
+#endif
 
     /* Other than DOM API */
     bool hasSameAttributes(Element* otherNode)

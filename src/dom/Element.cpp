@@ -144,6 +144,7 @@ void Element::setTextContent(String* text)
     }
 }
 
+#ifdef STARFISH_ENABLE_TEST
 String* Element::innerHTML()
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -162,6 +163,7 @@ void Element::setInnerHTML(String* html)
     parser.parseStep();
     appendChild(df);
 }
+#endif
 
 Node* Element::clone()
 {

@@ -27,11 +27,12 @@ public:
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
         Frame::dump(depth);
     }
+#endif
 
 protected:
 };

@@ -5,7 +5,7 @@
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/file_io/FileIO.h"
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
 #endif
 
@@ -125,7 +125,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
             String* eventType = wnd->starFish()->staticStrings()->m_load.localName();
             Event* e = new Event(eventType, EventInit(false, false));
             wnd->EventTarget::dispatchEvent(e);
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
             g_fireOnloadEvent = true;
             wnd->setNeedsPainting();
 #endif

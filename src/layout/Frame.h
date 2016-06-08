@@ -536,10 +536,11 @@ public:
         oldChild->m_next = nullptr;
         oldChild->setParent(nullptr);
     }
-
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
     }
+#endif
 
     virtual const char* name()
     {

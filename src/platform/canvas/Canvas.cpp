@@ -818,7 +818,7 @@ public:
             return;
         }
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
             if (!text->equals(String::spaceString)) {
                 float h = lastState().m_font->size();
@@ -1251,7 +1251,7 @@ public:
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
         evas_object_raise(eo);
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
         if (evas_object_evas_get(eo) != m_canvas) {
             eo = evas_object_image_add(m_canvas);
             evas_object_move(eo, xx, yy);

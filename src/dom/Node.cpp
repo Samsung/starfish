@@ -941,7 +941,7 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
         }
     }
 }
-
+#ifdef STARFISH_ENABLE_TEST
 void Node::dumpStyle()
 {
     dump();
@@ -1347,4 +1347,5 @@ void Node::dumpStyle()
 
     printf("}");
 }
+#endif
 }

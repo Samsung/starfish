@@ -96,7 +96,7 @@ public:
 
         return result;
     }
-
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump()
     {
         Node::dump();
@@ -105,7 +105,7 @@ public:
         str = replaceAll(str, "\n", "\\n");
         printf("data:%s ", str.data());
     }
-
+#endif
 private:
     String* m_data;
 };

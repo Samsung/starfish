@@ -50,6 +50,7 @@ public:
         return (InlineBox*)this;
     }
 
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
         Frame::dump(depth);
@@ -60,6 +61,7 @@ public:
         printf(" border(%g,%g,%g,%g) ", (float)borderTop(), (float)borderRight(), (float)borderBottom(), (float)borderLeft());
         printf(" margin(%g,%g,%g,%g) ", (float)marginTop(), (float)marginRight(), (float)marginBottom(), (float)marginLeft());
     }
+#endif
 
     StackingContext* stackingContext()
     {

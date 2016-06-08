@@ -53,14 +53,14 @@ public:
 
         return result;
     }
-
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
         std::string str = text()->utf8Data();
         str = replaceAll(str, "\n", "\\n");
         printf("text-> %s", str.data());
     }
-
+#endif
     virtual void layout(LayoutContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

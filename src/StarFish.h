@@ -317,7 +317,7 @@ protected:
         std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString>>> m_atomicStringMap;
 };
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
 extern bool g_enablePixelTest;
 #endif
 

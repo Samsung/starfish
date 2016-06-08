@@ -19,7 +19,7 @@
 #endif
 namespace StarFish {
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
 #endif
 

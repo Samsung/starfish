@@ -185,7 +185,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     escargot::ESValue v;
 
-#if defined(STARFISH_ENABLE_PIXEL_TEST) || defined(STARFISH_EMULATOR_RELEASE)
+#if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_EMULATOR_RELEASE)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("wptTestEnd"), false, false, false, escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         const char* hide = getenv("HIDE_WINDOW");
         if ((hide && strlen(hide)))
@@ -963,6 +963,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         return nd->scriptValue();
     }, nullptr);
 
+#ifdef STARFISH_ENABLE_TEST
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("innerHTML"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -983,6 +984,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         }
         return escargot::ESValue();
     });
+#endif
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("attributes"),

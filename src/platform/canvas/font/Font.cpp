@@ -94,7 +94,7 @@ public:
         }
 
         loadFont(m_size);
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
         if (!g_enablePixelTest) {
             m_metrics.m_ascender = m_metrics.m_ascender / g_fontSizeAdjuester;
             m_metrics.m_descender = m_metrics.m_descender / g_fontSizeAdjuester;
@@ -135,7 +135,7 @@ public:
 
     virtual LayoutUnit measureText(String* str)
     {
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
             return str->length() * m_size;
         }
@@ -211,7 +211,7 @@ Font::FontMetrics loadFontMetrics(String* familyName, double size)
     met.m_descender = met.m_ascender - met.m_fontHeight;
     met.m_xheightRate = xheight / size;
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
     if (g_enablePixelTest) {
         // NOTE: To sync phantom webkit
         if (met.m_fontHeight != 20 && met.m_fontHeight != 40) {

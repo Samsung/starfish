@@ -368,7 +368,7 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
     FrameTreeBuilderContext ctx(document->frame()->asFrameBlockBox());
     buildTree(n, ctx);
 }
-
+#ifdef STARFISH_ENABLE_TEST
 void dump(Frame* frm, unsigned depth)
 {
     for (unsigned i = 0; i < depth; i++) {
@@ -397,4 +397,5 @@ void FrameTreeBuilder::dumpFrameTree(Document* document)
 {
     dump(document->frame(), 0);
 }
+#endif
 }

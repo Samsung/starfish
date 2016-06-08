@@ -80,7 +80,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
     if (g_enablePixelTest)
         m_font = sf->fetchFont(String::fromUTF8("Ahem"), fontSize, style, fontWeight);
     else {
@@ -106,7 +106,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             setBackgroundImageResource(res);
             res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
             res->request(g_enablePixelTest);
 #else
             res->request();
@@ -126,7 +126,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
             ImageResource* res = consumer->document()->resourceLoader()->fetchImage(u);
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
             res->request(g_enablePixelTest);
 #else
             res->request();

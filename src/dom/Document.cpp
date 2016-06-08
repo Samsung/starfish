@@ -211,9 +211,7 @@ void Document::resumeDocumentParsing()
     window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         Document* document = (Document*)data;
         STARFISH_ASSERT(document->m_documentBuilder);
-        // FIXME
-        if (document->m_documentBuilder)
-            document->m_documentBuilder->resume();
+        document->m_documentBuilder->resume();
     }, this);
 }
 
@@ -239,7 +237,7 @@ void Document::close()
     resourceLoader()->cancelAllOfPendingRequests();
 
     while (m_activeNetworkRequests.size()) {
-        (*m_activeNetworkRequests.begin())->abort();
+        m_activeNetworkRequests.back()->abort();
     }
 }
 

@@ -234,7 +234,7 @@ ifeq ($(HOST), linux)
   CC           = gcc
   CXX          = g++
   STRIP        = strip
-  CXXFLAGS += -DSTARFISH_ENABLE_PIXEL_TEST
+  CXXFLAGS += -DSTARFISH_ENABLE_TEST
   CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n)
   LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n)
 else ifneq ($(filter $(HOST),tizen_arm tizen3_arm), )
@@ -313,7 +313,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
   CXXFLAGS += -Os -g0 -finline-limit=64
   ifeq ($(MODE), debug)
-    CXXFLAGS += -g3 -Wno-literal-suffix -DSTARFISH_ENABLE_PIXEL_TEST
+    CXXFLAGS += -g3 -Wno-literal-suffix -DSTARFISH_ENABLE_TEST
   endif
     TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \

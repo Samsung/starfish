@@ -527,7 +527,7 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         canvas->restore();
     }
 }
-
+#ifdef STARFISH_ENABLE_TEST
 void FrameBlockBox::dump(int depth)
 {
     FrameBox::dump(depth);
@@ -553,4 +553,5 @@ void FrameBlockBox::dump(int depth)
         }
     }
 }
+#endif
 }

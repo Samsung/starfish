@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "--dump-hittest") == 0) {
             flag |= StarFish::enableHitTestDump;
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
             g_enablePixelTest = true;
 #endif
         } else if (strstr(argv[i], "--width=") == argv[i]) {

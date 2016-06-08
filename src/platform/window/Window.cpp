@@ -31,7 +31,7 @@ extern __thread Evas* g_internalCanvas;
 extern Evas* g_internalCanvas;
 #endif
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
 
 bool g_fireOnloadEvent = false;
 
@@ -151,7 +151,7 @@ public:
 
     virtual int width()
     {
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
         if (getenv("SCREEN_SHOT_WIDTH") && strlen(getenv("SCREEN_SHOT_WIDTH"))) {
             return atoi(getenv("SCREEN_SHOT_WIDTH"));
         }
@@ -164,7 +164,7 @@ public:
 
     virtual int height()
     {
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
         if (getenv("SCREEN_SHOT_HEIGHT") && strlen(getenv("SCREEN_SHOT_HEIGHT"))) {
             return atoi(getenv("SCREEN_SHOT_HEIGHT"));
         }
@@ -330,7 +330,7 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
     elm_win_resize_object_add(wnd->m_window, wnd->m_dummyBox);
     elm_box_layout_set(wnd->m_dummyBox, mainRenderingFunction, wnd, NULL);
     evas_object_show(wnd->m_dummyBox);
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
         const char* hide = getenv("HIDE_WINDOW");
@@ -513,13 +513,13 @@ protected:
 #endif
 };
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
 static Evas_Object* g_imgBufferForScreehShot;
 #endif
 
 Canvas* preparePainting(WindowImplEFL* eflWindow)
 {
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
@@ -661,7 +661,7 @@ void Window::rendering()
         }
         m_needsLayout = false;
     }
-
+#ifdef STARFISH_ENABLE_TEST
     if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableFrameTreeDump) {
         FrameTreeBuilder::dumpFrameTree(m_document);
     }
@@ -712,7 +712,7 @@ void Window::rendering()
 
         dumpSC(ctx, 0);
     }
-
+#endif
     if (m_needsPainting) {
         Timer t("painting");
 
@@ -766,7 +766,7 @@ void Window::rendering()
     m_needsRendering = false;
     m_inRendering = false;
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
@@ -781,7 +781,7 @@ void Window::rendering()
 #endif
 }
 
-#ifdef STARFISH_ENABLE_PIXEL_TEST
+#ifdef STARFISH_ENABLE_TEST
 void Window::screenShot(std::string filePath)
 {
     setNeedsPainting();
@@ -960,13 +960,13 @@ Node* Window::hitTest(float x, float y)
         while (!frame->node()) {
             frame = frame->parent();
         }
-
+#ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableHitTestDump) {
             printf("hitTest Result-> ");
             frame->node()->dump();
             puts("");
         }
-
+#endif
         return frame->node();
     }
 

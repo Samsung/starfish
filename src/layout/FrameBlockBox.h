@@ -66,12 +66,13 @@ public:
     virtual bool isInlineTextBox() const { return true; }
 
     virtual void paint(Canvas* canvas, PaintingStage stage);
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
         printf(" [(%s), dir: %d] ", m_text->utf8Data(), (int)m_charDirection);
     }
-
+#endif
     virtual const char* name()
     {
         return "InlineTextBox";
@@ -150,8 +151,9 @@ public:
         }
     }
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
-
+#endif
     virtual void iterateChildBoxes(void (*fn)(FrameBox*))
     {
         fn(this);
@@ -349,7 +351,9 @@ public:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     virtual void computePreferredWidth(ComputePreferredWidthContext& ctx);
 
+#ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
+#endif
     virtual void paint(Canvas* canvas, PaintingStage stage);
     virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);

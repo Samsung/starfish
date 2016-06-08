@@ -4846,7 +4846,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
     if (!added)
         m_sheets.push_back(sheet);
 }
-
+#ifdef STARFISH_ENABLE_TEST
 void dump(Node* node, unsigned depth)
 {
     if (!node->style()) {
@@ -4874,4 +4874,5 @@ void StyleResolver::dumpDOMStyle(Document* document)
     dump(document->asNode(), 0);
     printf("\n");
 }
+#endif
 }

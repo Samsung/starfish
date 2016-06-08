@@ -11,8 +11,10 @@ class FrameTreeBuilder {
 public:
     static void buildFrameTree(Document* document);
     static void clearTree(Node* current);
+#ifdef STARFISH_ENABLE_TEST
     // debug function
     static void dumpFrameTree(Document* document);
+#endif
 };
 
 }
