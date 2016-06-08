@@ -263,9 +263,9 @@ else ifneq ($(filter $(HOST),tizen_arm tizen3_arm), )
   LD    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
-  CXXFLAGS += -Os -g0
+  CXXFLAGS += -Os
   ifeq ($(MODE), debug)
-    CXXFLAGS += -g3 -Wno-literal-suffix
+    CXXFLAGS += -Wno-literal-suffix
   endif
     TIZEN_INCLUDE = elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
                   ecore-input-1 edje-1 eo-1 ethumb-client-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 \
@@ -311,9 +311,9 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   LD    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/arm-linux-gnueabi-strip
-  CXXFLAGS += -Os -g0 -finline-limit=64
+  CXXFLAGS += -Os -finline-limit=64
   ifeq ($(MODE), debug)
-    CXXFLAGS += -g3 -Wno-literal-suffix -DSTARFISH_ENABLE_TEST
+    CXXFLAGS += -Wno-literal-suffix -DSTARFISH_ENABLE_TEST
   endif
     TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
@@ -375,9 +375,9 @@ else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), 
   LD    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ld
   AR    = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-ar
   STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
-  CXXFLAGS += -Os -g0 -finline-limit=64
+  CXXFLAGS += -Os -finline-limit=64
   ifeq ($(MODE), debug)
-    CXXFLAGS += -g3 -Wno-literal-suffix
+    CXXFLAGS += -Wno-literal-suffix
   endif
     TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 network \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
@@ -447,47 +447,86 @@ x64.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $< .
 
 tizen_arm.exe.debug: $(OUTDIR)/$(BIN)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(BIN)
 tizen_wearable_arm.exe.debug: $(OUTDIR)/$(BIN)
-	$(STRIP) $<
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(BIN) # use strip-ed binary
 tizen_wearable_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(BIN)
 tizen_wearable_arm.lib.debug: $(OUTDIR)/$(LIB)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen_wearable_arm.lib.release: $(OUTDIR)/$(LIB)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(LIB)
 tizen_wearable_emulator.exe.debug: $(OUTDIR)/$(BIN)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen_wearable_emulator.exe.release: $(OUTDIR)/$(EBIN)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(EBIN)
 tizen_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(LIB)
 
 tizen3_arm.exe.debug: $(OUTDIR)/$(BIN)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(BIN)
 tizen3_wearable_arm.exe.debug: $(OUTDIR)/$(BIN)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(BIN)
 tizen3_wearable_arm.lib.debug: $(OUTDIR)/$(LIB)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_arm.lib.release: $(OUTDIR)/$(LIB)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(LIB)
 tizen3_wearable_emulator.exe.debug: $(OUTDIR)/$(BIN)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_emulator.exe.release: $(OUTDIR)/$(EBIN)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(EBIN)
 tizen3_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
+	cp $< $<.strip
+	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
-	cp -f $< .
+	cp $< $<.strip
+	$(STRIP) $<.strip
+	cp -f $<.strip ./$(LIB)
 
 $(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS)
 	@echo "[LINK] $@"
