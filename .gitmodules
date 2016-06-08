@@ -1,6 +1,3 @@
 [submodule "third_party/escargot"]
 	path = third_party/escargot
 	url = http://10.113.64.203/escargot/escargot.git
-[submodule "test/regression/reftest/csswg-res"]
-	path = test/regression/reftest/csswg-test/csswg-res
-	url = http://10.113.64.195:9090/scm/star/csswg-res.git
