@@ -502,4 +502,17 @@ void Document::invalidNamedAccessCacheIfNeeded()
     }
 }
 
+Element* Document::elementFromPoint(float x, float y)
+{
+    Node* node = window()->hitTest(x, y);
+    while (node) {
+        if (node->isElement()) {
+            return node->asElement();
+        }
+        node = node->parentNode();
+    }
+
+    return rootElement();
+}
+
 }

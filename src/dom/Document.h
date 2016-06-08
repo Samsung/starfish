@@ -163,6 +163,8 @@ public:
         return m_elementExecutionStackForAttributeStringEventFunctionObject;
     }
 
+    Element* elementFromPoint(float x, float y);
+
 protected:
     bool m_inParsing : 1;
     CompatibilityMode m_compatibilityMode;

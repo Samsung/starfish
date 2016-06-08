@@ -1857,6 +1857,25 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         THROW_ILLEGAL_INVOCATION()
     }, nullptr);
 
+    escargot::ESFunctionObject* elementFromPointFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+        if (obj->isDocument()) {
+            Document* doc = obj->asDocument();
+            escargot::ESValue argValue0 = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue argValue1 = instance->currentExecutionContext()->readArgument(0);
+            Element* element = doc->elementFromPoint(argValue0.toNumber(), argValue1.toNumber());
+            if (element) {
+                return element->scriptValue();
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("elementFromPoint"), 2, false);
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("elementFromPoint"), false, false, false, elementFromPointFunction);
+
     return DocumentFunction;
 }
 
