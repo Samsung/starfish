@@ -1,9 +1,6 @@
 [submodule "third_party/escargot"]
 	path = third_party/escargot
 	url = git@10.113.64.203:escargot/escargot.git
-[submodule "test/regression/reftest/csswg-res"]
-	path = test/regression/reftest/csswg-test/csswg-res
-	url = ssh://git@10.113.64.195:7999/star/csswg-res.git
-[submodule "third_party/deviceapi"]
-	path = third_party/deviceapi
-	url = git@10.113.64.203:StarFish/deviceapi.git
+[submodule "test"]
+	path = test
+	url = ssh://sae-bom.kim@suprem.sec.samsung.net:29418/OWES/widget-tc.git
