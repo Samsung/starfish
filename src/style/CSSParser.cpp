@@ -406,9 +406,13 @@ public:
             s = s->concat(String::createUTF32String((char32_t)c));
         c = read();
         while (c != -1 && (isIdent(c) || c == CSS_ESCAPE)) {
-            if (c == CSS_ESCAPE)
-                s = s->concat(gatherEscape());
-            else
+            if (c == CSS_ESCAPE) {
+                String* tmp = gatherEscape();
+                if (!tmp->length())
+                    return String::emptyString;
+                else
+                s = s->concat(tmp);
+            } else
                 s = s->concat(String::createUTF32String((char32_t)c));
             c = read();
         }
@@ -699,7 +703,7 @@ void CSSParser::forgetState()
     }
 }
 
-String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate)
+String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector)
 {
     String* s = String::emptyString;
     // var specificity = {a: 0, b: 0, c: 0, d: 0}; // CSS 2.1 section 6.4.3
@@ -751,7 +755,12 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
         s = s->concat(token->m_value);
         token = getToken(false, true);
         if (token->isIdent()) {
-            s = s->concat(token->m_value);
+            if (token->m_value->length())
+                s = s->concat(token->m_value);
+            else {
+                validSelector = false;
+                return String::emptyString;
+            }
             /*
             if (isClass)
                 specificity.c++;
@@ -781,7 +790,7 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
             if (!canNegate)
                 return String::emptyString;
             token = getToken(true, true);
-            String* simpleSelector = parseSimpleSelector(token, isFirstInChain, false);
+            String* simpleSelector = parseSimpleSelector(token, isFirstInChain, false, validSelector);
             if (simpleSelector->length() == 0)
                 return String::emptyString;
             else {
@@ -868,7 +877,7 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
     return String::emptyString;
 }
 
-String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly)
+String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool& validSelector)
 {
     String* s = String::emptyString;
     // var specificity = {a: 0, b: 0, c: 0, d: 0}; // CSS 2.1 section 6.4.3
@@ -932,7 +941,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly)
             token = getToken(true, true);
             continue;
         } else {
-            String* simpleSelector = parseSimpleSelector(token, isFirstInChain, true);
+            String* simpleSelector = parseSimpleSelector(token, isFirstInChain, true, validSelector);
             if (!simpleSelector->length())
                 break; // error
             s = s->concat(simpleSelector);
@@ -1143,7 +1152,8 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
     preserveState();
     // first let's see if we have a selector here...
-    String* selector = parseSelector(aToken, false);
+    bool validSelector = true;
+    String* selector = parseSelector(aToken, false, validSelector);
     bool valid = false;
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(m_document);
     // var declarations = [];
@@ -1170,8 +1180,22 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                 token = getToken(true, false);
             }
         }
-    } else {
+    } else if (!validSelector) {
         // selector is invalid so the whole rule is invalid with it
+        CSSToken* token = getToken(true, true);
+        while (!token->isSymbol('{') && token->isNotNull())
+            token = getToken(true, false);
+        while (true) {
+            if (!token->isNotNull()) {
+                return;
+            }
+            if (token->isSymbol('}')) {
+                return;
+            } else {
+                parseDeclaration(token, declarations);
+            }
+            token = getToken(true, false);
+        }
     }
 
     if (valid) {

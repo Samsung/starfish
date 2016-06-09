@@ -602,8 +602,8 @@ protected:
     void forgetState();
     CSSToken* lookAhead(bool aSkipWS, bool aSkipComment);
     void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule);
-    String* parseSelector(CSSToken* aToken, bool aParseSelectorOnly);
-    String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate);
+    String* parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool& validSelector);
+    String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector);
     String* parseDefaultPropertyValue(CSSToken* token);
     void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
     void addUnknownAtRule(CSSStyleSheet* aSheet, String* aString);
