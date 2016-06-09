@@ -4252,6 +4252,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Normal) {
                     // The compute value should be 'normal'.
                     // https://developer.mozilla.org/ko/docs/Web/CSS/line-height.
+                    style->setLineHeight(Length(Length::Percent, -100));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Number) {
                     // The computed value should be same as the specified value.
                     style->setLineHeight(Length(Length::EmToBeFixed, cssValues[k].numberValue()));

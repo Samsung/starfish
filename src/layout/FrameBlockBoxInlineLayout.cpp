@@ -44,8 +44,8 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
 
     // 1. set relative y-pos from baseline (only if it needs)
     // 2. find max ascender and descender
-    LayoutUnit maxAscenderSoFar = pascender;
-    LayoutUnit maxDescenderSoFar = pdescender;
+    LayoutUnit maxAscenderSoFar = 0;
+    LayoutUnit maxDescenderSoFar = intMaxForLayoutUnit;
     for (size_t k = 0; k < boxes->size(); k ++) {
         FrameBox* box = boxes->at(k);
         if (!box->isNormalFlow()) {
@@ -55,9 +55,6 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
         VerticalAlignValue va = box->style()->verticalAlign();
         if (box->isInlineBox()) {
             if (box->asInlineBox()->isInlineTextBox()) {
-                Font* pFont = box->asInlineBox()->asInlineTextBox()->style()->font();
-                maxAscenderSoFar = std::max(pFont->metrics().m_ascender, maxAscenderSoFar);
-                maxDescenderSoFar = std::min(pFont->metrics().m_descender, maxDescenderSoFar);
             } else {
                 hasBoxOtherThanText = true;
                 InlineNonReplacedBox* rb = box->asInlineBox()->asInlineNonReplacedBox();
@@ -152,9 +149,9 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                     maxAscenderSoFar = std::max(ascender + box->marginHeight(), maxAscenderSoFar);
                     maxDescenderSoFar = std::min(LayoutUnit(0), maxDescenderSoFar);
                 } else {
-                    LayoutUnit dec = -(box->height() - ascender) - box->marginBottom();
+                    LayoutUnit descender = -(box->height() - ascender) - box->marginBottom();
                     maxAscenderSoFar = std::max(ascender + box->marginTop(), maxAscenderSoFar);
-                    maxDescenderSoFar = std::min(dec, maxDescenderSoFar);
+                    maxDescenderSoFar = std::min(descender, maxDescenderSoFar);
                 }
             } else if (va == VerticalAlignValue::TopVAlignValue) {
                 // NO WORK TO DO
@@ -194,6 +191,30 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
         }
     }
 
+    // Consider parent's font ascender/descender
+    maxAscender = std::max(maxAscenderSoFar, pascender);
+    maxDescender = std::min(maxDescenderSoFar, pdescender);
+
+    // If maxDescenderSoFar is initial value(=intMaxForLayoutUnit), set it to 0.
+    maxDescenderSoFar = maxDescenderSoFar.toInt() == intMaxForLayoutUnit ? LayoutUnit(0) : maxDescenderSoFar;
+
+    // 3. adjusting the line height
+    if (!parentStyle->hasNormalLineHeight()) {
+        LayoutUnit lineHeight = parentStyle->lineHeight().fixed();
+        LayoutUnit diff = (lineHeight - parentStyle->font()->metrics().m_fontHeight) / 2;
+        LayoutUnit ascenderShouldBe = parentStyle->font()->metrics().m_ascender + diff;
+        LayoutUnit descenderShouldBe = parentStyle->font()->metrics().m_descender - diff;
+
+        if (hasBoxOtherThanText) {
+            maxAscender = std::max(maxAscenderSoFar, ascenderShouldBe);
+            maxDescender = std::min(maxDescenderSoFar, descenderShouldBe);
+        } else {
+            // Only Text Children
+            maxAscender = ascenderShouldBe;
+            maxDescender = descenderShouldBe;
+        }
+    }
+
     // VA: top/bottom
     for (size_t k = 0; k < boxes->size(); k ++) {
         FrameBox* box = boxes->at(k);
@@ -211,56 +232,15 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
         // Update maxAsc & maxDes
         if (!(box->isInlineBox() && box->asInlineBox()->isInlineTextBox())) {
             if (va == VerticalAlignValue::TopVAlignValue) {
-                maxDescenderSoFar = std::min(maxAscenderSoFar - (box->height() + marginHeight), maxDescenderSoFar);
+                maxDescender = std::min(maxAscender - (box->height() + marginHeight), maxDescender);
             } else if (va == VerticalAlignValue::BottomVAlignValue) {
-                maxAscenderSoFar = std::max(maxDescenderSoFar + (box->height() + marginHeight), maxAscenderSoFar);
+                maxAscender = std::max(maxDescender + (box->height() + marginHeight), maxAscender);
             }
         }
-    }
-
-    maxAscender = maxAscenderSoFar;
-    maxDescender = maxDescenderSoFar;
-
-    // 3. adjusting the line height
-    if (!parentStyle->hasNormalLineHeight()) {
-        LayoutUnit lineHeight = parentStyle->lineHeight().fixed();
-        LayoutUnit ascenderShouldBe;
-        LayoutUnit descenderShouldBe;
-
-        if (lineHeight > parentStyle->font()->metrics().m_fontHeight) {
-            LayoutUnit diff = (lineHeight - parentStyle->font()->metrics().m_fontHeight) / 2;
-            ascenderShouldBe = parentStyle->font()->metrics().m_ascender + diff;
-            descenderShouldBe = parentStyle->font()->metrics().m_descender - diff;
-        } else {
-            LayoutUnit diff = (lineHeight - parentStyle->font()->metrics().m_fontHeight) / 2;
-            ascenderShouldBe = parentStyle->font()->metrics().m_ascender + diff;
-            descenderShouldBe = parentStyle->font()->metrics().m_descender - diff;
-            if (descenderShouldBe > 0) {
-                ascenderShouldBe -= descenderShouldBe;
-                descenderShouldBe = 0;
-            }
-            if (ascenderShouldBe < 0) {
-                ascenderShouldBe = 0;
-            }
-        }
-
-        if (maxAscender < ascenderShouldBe) {
-            maxAscender = ascenderShouldBe;
-            maxDescender = descenderShouldBe;
-        } else if (!hasBoxOtherThanText) {
-            // Should Not reset decender when line box consists of text only
-            maxAscender = ascenderShouldBe;
-            if (parentStyle->display() != InlineDisplayValue)
-                maxDescender = descenderShouldBe;
-        } else {
-            maxDescender = descenderShouldBe;
-        }
-
     }
 
     ascenderInOut = maxAscender;
     descenderInOut = maxDescender;
-
     LayoutUnit height = maxAscender - maxDescender;
     for (size_t k = 0; k < boxes->size(); k ++) {
         FrameBox* f = boxes->at(k);
@@ -270,15 +250,17 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
 
         if (f->isNormalFlow()) {
             if (f->isInlineBox() && f->asInlineBox()->isInlineTextBox()) {
-                InlineBox* ib = f->asFrameBox()->asInlineBox();
-                if (UNLIKELY(descenderInOut == 0)) {
-                    if (height < ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight)
-                        ib->setY((height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight + ib->asInlineTextBox()->style()->font()->metrics().m_descender) / 2);
-                    else
-                        ib->setY(height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
-                } else {
-                    ib->setY(height + maxDescender - ib->height() - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
-                }
+                // InlineBox* ib = f->asFrameBox()->asInlineBox();
+                // if (UNLIKELY(descenderInOut == 0)) {
+                //     if (height < ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight)
+                //         ib->setY((height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight + ib->asInlineTextBox()->style()->font()->metrics().m_descender) / 2);
+                //     else
+                //         ib->setY(height - ib->asInlineTextBox()->style()->font()->metrics().m_fontHeight - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                // } else {
+                //     ib->setY(height + maxDescender - ib->height() - ib->asInlineTextBox()->style()->font()->metrics().m_descender);
+                // }
+                InlineTextBox* ib = f->asFrameBox()->asInlineBox()->asInlineTextBox();
+                ib->setY(maxAscender - ib->style()->font()->metrics().m_ascender);
             } else {
                 VerticalAlignValue va = f->style()->verticalAlign();
                 LayoutUnit marginTop, marginRight, marginBottom, marginLeft;
