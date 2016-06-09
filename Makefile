@@ -126,18 +126,10 @@ CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof -fvisibility=hidden
 
-ifeq ($(HOST), tizen)
-  CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
-endif
-
 # fixme
 # this causes
 # /home/ksh8281/tizen-sdk-2.4.r2/tools/arm-linux-gnueabi-gcc-4.9/bin/../lib/gcc/arm-linux-gnueabi/4.9.2/../../../../arm-linux-gnueabi/bin/ld: BFD (GNU Binutils) 2.22 assertion fail ../../bfd/elf32-arm.c:12049
 # LDFLAGS += -Wl,--gc-sections
-
-ifeq ($(HOST), tizen)
-  LDFLAGS += --sysroot=$(TIZEN_SYSROOT)
-endif
 
 # flags for debug/release
 CXXFLAGS_DEBUG = -O0 -g3 -D_GLIBCXX_DEBUG -fno-omit-frame-pointer -Wall -Wextra -Werror
@@ -472,85 +464,45 @@ x64.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $< .
 
 tizen_arm.exe.debug: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(BIN)
 tizen_wearable_arm.exe.debug: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
-	cp -f $<.strip ./$(BIN) # use strip-ed binary
+	cp -f $<.strip ./$(BIN) # use stripped binary
 tizen_wearable_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(BIN)
 tizen_wearable_arm.lib.debug: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen_wearable_arm.lib.release: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(LIB)
 tizen_wearable_emulator.exe.debug: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen_wearable_emulator.exe.release: $(OUTDIR)/$(EBIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(EBIN)
 tizen_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(LIB)
 
 tizen3_arm.exe.debug: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(BIN)
 tizen3_wearable_arm.exe.debug: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_arm.exe.release: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(BIN)
 tizen3_wearable_arm.lib.debug: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_arm.lib.release: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(LIB)
 tizen3_wearable_emulator.exe.debug: $(OUTDIR)/$(BIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_emulator.exe.release: $(OUTDIR)/$(EBIN)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(EBIN)
 tizen3_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $< .
 tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
-	cp $< $<.strip
-	$(STRIP) $<.strip
 	cp -f $<.strip ./$(LIB)
 
 $(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS)
@@ -558,10 +510,14 @@ $(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS)
 	ln -sf deps/tizen/lib/tizen-wearable-$(VERSION)-emulator-x86/libstdc++.a.0 libstdc++.a
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
 	rm libstdc++.a
+	cp $@ $@.strip
+	$(STRIP) $@.strip
 
 $(OUTDIR)/$(LIB): $(OBJS) $(THIRD_PARTY_LIBS) Makefile
 	@echo "[LINK] $@"
 	$(CXX) -shared -Wl,-soname,$(LIB) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
+	cp $@ $@.strip
+	$(STRIP) $@.strip
 
 $(OUTDIR)/%.o: %.cpp Makefile
 	echo "[CXX] $@"
@@ -583,14 +539,6 @@ $(OUTDIR)/%.o: %.c Makefile
 
 clean:
 	rm -rf out
-
-strip:
-	strip $(BIN)
-
-asm:
-	objdump -d        $(BIN) | c++filt > $(BIN).asm
-	readelf -a --wide $(BIN) | c++filt > $(BIN).elf
-	vi -O $(BIN).asm $(BIN).elf
 
 ifeq (run,$(firstword $(MAKECMDGOALS)))
 # use the rest as arguments for "run"
