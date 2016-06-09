@@ -120,15 +120,17 @@ function run(TCName, spec, file) {
 
         // print coverage percentage
         var count=0;
+        var validKeys=0;
         for (var j=0; j < keys.length; j++) {
             var v = keys[j];
             if (features[keys[j]] != "Other") {
                 if (values[v] == "O") {
                     count++;
                 }
+                validKeys++;
             }
         }
-        process.stdout.write("\t"+(count/keys.length).toFixed(2));
+        process.stdout.write("\t"+(count/validKeys).toFixed(2));
 
         // print O if method exists
         for (var j=0; j < keys.length; j++) {
