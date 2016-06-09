@@ -59,6 +59,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 maxAscenderSoFar = std::max(pFont->metrics().m_ascender, maxAscenderSoFar);
                 maxDescenderSoFar = std::min(pFont->metrics().m_descender, maxDescenderSoFar);
             } else {
+                hasBoxOtherThanText = true;
                 InlineNonReplacedBox* rb = box->asInlineBox()->asInlineNonReplacedBox();
                 if (va == VerticalAlignValue::BaselineVAlignValue) {
                     maxAscenderSoFar = std::max(rb->ascender(), maxAscenderSoFar);
