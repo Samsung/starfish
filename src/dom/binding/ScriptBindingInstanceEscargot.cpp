@@ -259,6 +259,9 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             auto listener = new EventListener(secondArg);
             bool capture = thirdArg.isBoolean() ? thirdArg.toBoolean() : false;
             ((EventTarget *)thisValue.asESPointer()->asESObject()->extraPointerData())->addEventListener(eventTypeName, listener, capture);
+#ifdef STARFISH_TC_COVERAGE
+            STARFISH_LOG_INFO("&&&%s\n", eventTypeName->utf8Data());
+#endif
         }
         return escargot::ESValue();
     }, escargot::ESString::create("addEventListener"), 0, false);
@@ -2647,7 +2650,7 @@ escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBi
                 if (type->isESString()) {
                     STARFISH_LOG_INFO("ProgressEventInit&&&type\n");
                 }
-                if (total.isNumber()) {
+                if (total.isESString()) {
                     STARFISH_LOG_INFO("ProgressEventInit&&&total\n");
                 }
                 if (canLengthComputable) {
