@@ -16,7 +16,7 @@ struct Color {
     inline bool operator ==(const Color& b)
     {
         int diff = 0;
-        const int threshold = 64;
+        const int threshold = 70;
         int d;
         if (hasAlpha && b.hasAlpha) {
             d = abs((int)a - (int)b.a);
