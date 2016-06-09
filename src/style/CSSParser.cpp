@@ -1197,6 +1197,9 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                 selectorText = cSelectorText.data();
                 if (strcmp(pcPos + 1, "active") == 0) {
                     pc = CSSStyleRule::PseudoClass::Active;
+#ifdef STARFISH_TC_COVERAGE
+        STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
+#endif
                 } else if (strcmp(pcPos + 1, "hover") == 0) {
                     pc = CSSStyleRule::PseudoClass::Hover;
                 }
