@@ -19,6 +19,7 @@ OS:=$(shell uname -s)
 SHELL:=/bin/bash
 OUTPUT:=bin
 TIZEN_DEVICE_API=
+LTO=0
 ifeq ($(OS),Linux)
   NPROCS:=$(shell grep -c ^processor /proc/cpuinfo)
   SHELL:=/bin/bash
@@ -110,6 +111,10 @@ else ifeq ($(MODE), release)
   CXXFLAGS += $(CXXFLAGS_RELEASE)
 endif
 
+ifneq (,$(findstring tizen,$(HOST)))
+  #LTO=1
+endif
+
 
 #######################################################
 # Global build flags
@@ -165,8 +170,23 @@ ifeq ($(TIZEN_DEVICE_API), true)
 	include third_party/deviceapi/build/Include.mk
 endif
 
-JSLIBS = third_party/escargot/out/$(HOST)/$(ARCH)/interpreter/$(MODE)/libescargot.a
-GCLIBS = third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/$(MODE).shared/.libs/libgc.a
+ifeq ($(HOST), linux)
+  JSDIR=$(HOST)
+  JSARCH=$(ARCH)
+else ifneq (,$(findstring tizen,$(HOST)))
+  JSARCH=$(ARCH)
+  ifeq ($(ARCH), x86)
+    JSARCH=i386
+  endif
+
+  ifneq (,$(findstring wearable,$(HOST)))
+    JSDIR=tizen_$(VERSION)_wearable
+  else
+    JSDIR=tizen_$(VERSION)_mobile
+  endif
+endif
+JSLIBS = third_party/escargot/out/$(JSDIR)/$(JSARCH)/interpreter/$(MODE)/libescargot.a
+GCLIBS = third_party/escargot/third_party/bdwgc/out/$(JSDIR)/$(JSARCH)/$(MODE).shared/.libs/libgc.a
 
 #skia_matrix
 CXXFLAGS += -Ithird_party/skia_matrix/
@@ -428,6 +448,11 @@ ifeq ($(TC), 1)
   CXXFLAGS += -DSTARFISH_TC_COVERAGE
 endif
 
+ifeq ($(LTO), 1)
+  CXXFLAGS += -flto -ffat-lto-objects
+  LDFLAGS += $(CFLAGS)
+endif
+
 # pull in dependency info for *existing* .o files
 -include $(OBJS:.o=.d)
 
@@ -534,7 +559,7 @@ $(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS)
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
 	rm libstdc++.a
 
-$(OUTDIR)/$(LIB): $(OBJS) $(THIRD_PARTY_LIBS)
+$(OUTDIR)/$(LIB): $(OBJS) $(THIRD_PARTY_LIBS) Makefile
 	@echo "[LINK] $@"
 	$(CXX) -shared -Wl,-soname,$(LIB) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
 
