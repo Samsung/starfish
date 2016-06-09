@@ -13,9 +13,6 @@ namespace StarFish {
 extern int g_screenDpi;
 Evas* internalCanvas();
 
-static bool g_fontSizeAdjuesterInited = false;
-static float g_fontSizeAdjuester;
-
 static String* convertStyleParamStr(String* familyName, char style, char weight)
 {
     switch (weight) {
@@ -68,42 +65,20 @@ public:
         m_style = style;
         m_fontFamily = convertStyleParamStr(familyName, style, weight);
 
-        if (!g_fontSizeAdjuesterInited) {
-            float prevDiff = 100000000000.f;
-            int best = 0;
-            loadFont(convertFromPxToPt(m_size) - 1);
-            for (int i = convertFromPxToPt(m_size);; i++) {
-                // STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
-                evas_object_text_font_set(m_text, m_fontFamily->utf8Data(), i);
-                evas_object_text_text_set(m_text, "gWAPpqfX");
-                Evas_Coord minw, minh;
-                evas_object_geometry_get(m_text, 0, 0, &minw, &minh);
-                float curDiff = std::abs((float)m_metrics.m_fontHeight - minh);
-                if (prevDiff < curDiff) {
-                    break;
-                } else {
-                    best = i;
-                    prevDiff = curDiff;
-                }
-            }
-            evas_font_cache_flush(evas_object_evas_get(m_text));
-            // STARFISH_LOG_INFO("find- font best %f->%f, %f\n", (float)size, (float)best, (float)prevDiff);
-            g_fontSizeAdjuesterInited = true;
-            g_fontSizeAdjuester = best / size;
-            // STARFISH_LOG_INFO("fontSizeAdjuester %f\n", (float)g_fontSizeAdjuester);
-        }
-
         loadFont(m_size);
+
 #ifdef STARFISH_ENABLE_TEST
         if (!g_enablePixelTest) {
-            m_metrics.m_ascender = m_metrics.m_ascender / g_fontSizeAdjuester;
-            m_metrics.m_descender = m_metrics.m_descender / g_fontSizeAdjuester;
+            m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
+            m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
             m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+            m_metrics.m_xheightRate = met.m_xheightRate;
         }
 #else
-        m_metrics.m_ascender = m_metrics.m_ascender / g_fontSizeAdjuester;
-        m_metrics.m_descender = m_metrics.m_descender / g_fontSizeAdjuester;
+        m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
+        m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
         m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+        m_metrics.m_xheightRate = met.m_xheightRate;
 #endif
 
         m_spaceWidth = measureText(String::spaceString);
