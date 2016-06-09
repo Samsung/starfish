@@ -589,10 +589,11 @@ pixel_test_css_all:
 	make pixel_test_css3_transforms 2>> out/pixel_test_css_all.log
 	make pixel_test_css3_backgrounds 2>> out/pixel_test_css_all.log
 	@echo '========== Show out/pixel_test_css_all.log =========='
-	@cat out/pixel_test_css_all.log | grep "% passed" | cut -d' ' -f1 | sort > out/wpt_css_passed.res
+	@cat out/pixel_test_css_all.log | grep "% passed" | cut -d' ' -f1 | sort -d > out/wpt_css_passed.res
 	@cat out/pixel_test_css_all.log | grep "====total" | awk 'BEGIN {s=0}{ s += $$6 } END {print "Total "s" Passed (CSS1/21/3-color/3-backgrounds/3-transforms)"}'
-	@diff out/wpt_css_passed.res tool/reftest/wpt_css_passed.res
+	mv tool/reftest/wpt_css_passed.res out/wpt_css_passed.orig
 	cp out/wpt_css_passed.res tool/reftest/
+	@diff out/wpt_css_passed.res out/wpt_css_passed.orig
 
 internal_test:
 	./test/reftest/internaltest.sh test/internal-test/test.res
