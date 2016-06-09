@@ -109,7 +109,9 @@ for i in $tc ; do
         mv out.png result.png
         DIFF_PNG=${GOAL_PNG}
     else
-        tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f ${html} ${OUTDIR} ${screen} > /dev/null 2>&1
+        echo "*** NOT EXIST EXPECTED PNG !!! Add ${GOAL_PNG} "
+        #tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f ${html} ${OUTDIR} ${screen} > /dev/null 2>&1
+        nw tool/pixel_test/nw_capture/ -f ${html} ${OUTDIR} ${screen} > /dev/null 2>&1
         WEBKIT_PNG=${OUTDIR}"/"${file}_expected.png
         #echo $WEBKIT_PNG ## out/x64/exe/debug/reftest/Regression/c15-ids-000_expected.png
         #echo $GOAL_PNG
