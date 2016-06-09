@@ -1373,7 +1373,9 @@ public:
     }
 
     void resolveDOMStyle(Document* document, bool force = false);
+#ifdef STARFISH_ENABLE_TEST
     void dumpDOMStyle(Document* document);
+#endif
     ComputedStyle* resolveDocumentStyle(Document* doc);
     friend Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data);
     ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);

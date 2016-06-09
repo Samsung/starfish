@@ -591,6 +591,9 @@ pixel_test_css_all:
 	@echo '========== Show out/pixel_test_css_all.log =========='
 	@cat out/pixel_test_css_all.log | grep "====total" | awk 'BEGIN {s=0}{ s += $$6 } END {print "Total "s" Passed (CSS1/21/3-color/3-backgrounds/3-transforms)"}'
 
+internal_test:
+	./test/reftest/internaltest.sh test/internal-test/test.res
+
 reftest:
 	./tool/reftest/reftest.sh $(tc) $(regression)
 
@@ -696,6 +699,7 @@ regression_test:
 	make regression_test_css3_color
 	make regression_test_css3_backgrounds
 	make regression_test_css3_transforms
+	make internal_test
 
 tidy:
 	./tool/tidy/check-webkit-style `find src/ -name "*.cpp" -o -name "*.h"`> error_report 2>& 1

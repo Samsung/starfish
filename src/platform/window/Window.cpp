@@ -613,10 +613,12 @@ void Window::rendering()
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
 
+#ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
             // dump style
             document()->styleResolver()->dumpDOMStyle(m_document);
         }
+#endif
     }
 
     bool shouldClearStackingContext = true;
@@ -1051,7 +1053,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
             }
             String* eventType = starFish()->staticStrings()->m_click.localName();
             Event* e = new Event(eventType, EventInit(true, true));
-            EventTarget::dispatchEvent(t->asDocument()->window(), e);
+            EventTarget::dispatchEvent(t->asDocument(), e);
         }
 
         releaseActiveNode();
@@ -1079,7 +1081,7 @@ HTMLCollection* Window::namedAccess(String* name)
 
 void Window::pause()
 {
-    STARFISH_LOG_INFO("onPause");
+    STARFISH_LOG_INFO("onPause\n");
     m_isRunning = false;
 
     document()->setVisibleState(PageVisibilityState::PageVisibilityStateHidden);
@@ -1090,7 +1092,7 @@ void Window::resume()
 {
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     eflWindow->clearEFLResources();
-    STARFISH_LOG_INFO("onResume");
+    STARFISH_LOG_INFO("onResume\n");
     m_isRunning = true;
     m_needsRendering = true;
     m_needsPainting = true;

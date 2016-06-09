@@ -113,4 +113,11 @@ if cat prepush_test_result |grep 'FAIL'; then
  exit 1
 fi
 
+echo "checking... make internal_test"
+make internal_test > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
+ echo "$RED[FAIL] make internal_test$RESET"
+ exit 1
+fi
+
 rm prepush_test_result

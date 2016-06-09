@@ -75,6 +75,57 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("simulateVisibilitychange"), 0, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("simulateVisibilitychange"), true, true, true, simulateVisibilitychangeFunction);
+
+    escargot::ESFunctionObject* testAssertFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        if (instance->currentExecutionContext()->readArgument(0).isESString()) {
+            std::jmp_buf tryPosition;
+            if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
+                escargot::ESValue result = instance->evaluate(instance->currentExecutionContext()->readArgument(0).asESString());
+                escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+                if (result.toBoolean()) {
+
+                } else {
+                    escargot::ESStringBuilder builder;
+                    builder.appendString("[FAIL]assertion fail : ");
+                    builder.appendString(instance->currentExecutionContext()->readArgument(0).asESString());
+                    escargot::ESString* s = builder.finalize();
+                    puts(s->utf8Data());
+                    STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+                    exit(-1);
+                }
+            } else {
+                escargot::ESStringBuilder builder;
+                builder.appendString("[FAIL]got exception while eval : ");
+                builder.appendString(instance->currentExecutionContext()->readArgument(0).asESString());
+                escargot::ESString* s = builder.finalize();
+                puts(s->utf8Data());
+                STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+                exit(-1);
+            }
+        } else {
+            if (instance->currentExecutionContext()->readArgument(0).toBoolean()) {
+
+            } else {
+                escargot::ESStringBuilder builder;
+                builder.appendString("[FAIL]testAssert fail");
+                escargot::ESString* s = builder.finalize();
+                puts(s->utf8Data());
+                STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+                exit(-1);
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("testAssert"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("testAssert"), true, true, true, testAssertFunction);
+
+    escargot::ESFunctionObject* testEndFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        puts("[PASS]");
+        STARFISH_LOG_ERROR("%s\n", "[PASS]");
+        exit(0);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("testEnd"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("testEnd"), true, true, true, testEndFunction);
+
 #endif
 
     // [setTimeout]

@@ -1881,6 +1881,31 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
     }, escargot::ESString::create("elementFromPoint"), 2, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("elementFromPoint"), false, false, false, elementFromPointFunction);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onclick"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return nd->attributeEventListener(nd->document()->window()->starFish()->staticStrings()->m_click);
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            auto eventType = nd->document()->window()->starFish()->staticStrings()->m_click;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                nd->setAttributeEventListener(eventType, v);
+            } else {
+                nd->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
     return DocumentFunction;
 }
 
