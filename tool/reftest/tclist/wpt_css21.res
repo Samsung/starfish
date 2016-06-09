@@ -986,8 +986,6 @@ test/reftest/csswg-test/css21_converted/selectors/universal-selector-001.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-002-notref.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-003.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-004.htm
-test/reftest/csswg-test/css21_converted/syntax/at-charset-010.htm
-test/reftest/csswg-test/css21_converted/syntax/at-charset-011.htm
 test/reftest/csswg-test/css21_converted/syntax/at-charset-quotes-001.htm
 test/reftest/csswg-test/css21_converted/syntax/at-charset-space-001.htm
 test/reftest/csswg-test/css21_converted/syntax/at-charset-space-002.htm
@@ -1016,9 +1014,7 @@ test/reftest/csswg-test/css21_converted/syntax/blocks-005.htm
 test/reftest/csswg-test/css21_converted/syntax/blocks-006.htm
 test/reftest/csswg-test/css21_converted/syntax/blocks-and-strings-001.htm
 test/reftest/csswg-test/css21_converted/syntax/case-sensitive-006.htm
-test/reftest/csswg-test/css21_converted/syntax/case-sensitive-007.htm
 test/reftest/csswg-test/css21_converted/syntax/case-sensitive-008.htm
-test/reftest/csswg-test/css21_converted/syntax/charset-attr-001.htm
 test/reftest/csswg-test/css21_converted/syntax/colors-001.htm
 test/reftest/csswg-test/css21_converted/syntax/colors-002.htm
 test/reftest/csswg-test/css21_converted/syntax/colors-003.htm
@@ -1050,7 +1046,6 @@ test/reftest/csswg-test/css21_converted/syntax/declarations-009.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-001.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-002.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-005.htm
-test/reftest/csswg-test/css21_converted/syntax/eof-006.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-007.htm
 test/reftest/csswg-test/css21_converted/syntax/escaped-ident-001.htm
 test/reftest/csswg-test/css21_converted/syntax/escaped-ident-002.htm
@@ -1109,7 +1104,6 @@ test/reftest/csswg-test/css21_converted/syntax/uri-010.htm
 test/reftest/csswg-test/css21_converted/syntax/uri-011.htm
 test/reftest/csswg-test/css21_converted/syntax/uri-012.htm
 test/reftest/csswg-test/css21_converted/syntax/uri-016.htm
-test/reftest/csswg-test/css21_converted/syntax/uri-018.htm
 test/reftest/csswg-test/css21_converted/syntax/whitespace-001.htm
 test/reftest/csswg-test/css21_converted/syntax/whitespace-002.htm
 test/reftest/csswg-test/css21_converted/tables/support/frameset-border-spacing-001.htm
@@ -1133,10 +1127,6 @@ test/reftest/csswg-test/css21_converted/text/text-align-inherit-001.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-001.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-003.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-004.htm
-test/reftest/csswg-test/css21_converted/text/text-decoration-007.htm
-test/reftest/csswg-test/css21_converted/text/text-decoration-013.htm
-test/reftest/csswg-test/css21_converted/text/text-decoration-014.htm
-test/reftest/csswg-test/css21_converted/text/text-decoration-016.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-065.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-081.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-082.htm
