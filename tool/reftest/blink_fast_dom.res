@@ -125,3 +125,4 @@ test/reftest/vendor/blink/fast/dom/Window/window-function-name-getter-precedence
 test/reftest/vendor/blink/fast/dom/Window/window-legacy-event-listener.html
 test/reftest/vendor/blink/fast/dom/XMLHttpRequest-constants.html
 test/reftest/vendor/blink/fast/dom/XMLHttpRequest-legacy-event-listener.html
+test/reftest/vendor/blink/fast/dom/Window/window-remove-event-listener.html
