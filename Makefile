@@ -631,9 +631,9 @@ regression_test_wpt_page_visibility:
 regression_test_wpt_progress_events:
 	./tool/reftest/reftest.sh tool/reftest/wpt_progress_events.res true
 regression_test_wpt_xhr:
-	#./run_wpt_serve.sh
+	./run_wpt_serve.sh
 	./tool/reftest/reftest.sh tool/reftest/wpt_xhr.res true
-	#-./kill_wpt_serve.sh
+	-./kill_wpt_serve.sh
 
 regression_test_blink_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/blink_dom_conformance_test.res true
