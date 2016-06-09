@@ -50,6 +50,7 @@ var getRenderFilePath = function (filepath) {
     if (pathToSave == "") {
         path = RES_STR + filepath;
     } else {
+        path = pathToSave;
     }
     return ( path + filename );
     //return "out/" + filepath + filename;

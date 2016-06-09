@@ -56,6 +56,7 @@ public class StarFishTester {
             if (args.length >= 2 && args[1].equals("nw")) {
                 nw = true;
                 System.out.println("# pixel-test for Node-Webkit");
+                /*
                 String ss = "";
                 ss = "nw tool/pixel_test/nw_capture/ -l " + testFile + " pc";
                 System.out.println("# capture START:" + ss);
@@ -63,8 +64,10 @@ public class StarFishTester {
                 System.out.println("It may take a few minutes");
                 process.waitFor();
                 System.out.println("# capture COMPLETE");
+                */
             }
 			
+            final Boolean enableNW = nw;
 			final Mutex workQueueMutex = new Mutex();
 			final Mutex printMutex = new Mutex();
             final Mutex resultMutex = new Mutex();
@@ -148,12 +151,18 @@ public class StarFishTester {
                             }
 
                             // take webkit screen shot
+                            String expectedPNG = outFolder + caseName + "_expected.png";
+                            if (enableNW)
+                                expectedPNG = "./test/expected/nw_with_ahem/" + caseName.replace("_converted", "") + "_expected.png";
+
 							try {
 
-								String ex = outFolder + caseName + "_expected.png";
-								File sc = new File(ex);
+								File sc = new File(expectedPNG);
 
 								if (!sc.exists()) {
+                                    if (enableNW) {
+                                        System.out.println("File not Found : " + expectedPNG);
+                                    }
 									String ss = "tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f " + workItem + " " + folderName + " pc";
 									// System.out.println(ss);
 									Process process = runtime.exec(ss);
@@ -166,7 +175,7 @@ public class StarFishTester {
 							// image diff
 							String testStatus="";
 							try {
-								String ss = "./tool/imgdiff/imgdiff " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png";
+								String ss = "./tool/imgdiff/imgdiff " + outFolder + caseName + "_result.png" + " " + expectedPNG;
 								// System.out.println(ss);
 								Process process = runtime.exec(ss);
 								process.waitFor();
@@ -187,7 +196,7 @@ public class StarFishTester {
 									testStatus = "diff: 100.0% failed";
 								}
 								if (testStatus.contains("failed") || testStatus.contains("not exactly same")) {
-									ss = "tool/pixel_test/bin/image_diff --diff " + outFolder + caseName + "_result.png" + " " + outFolder + caseName + "_expected.png " + outFolder + caseName + "_diff.png";
+									ss = "tool/pixel_test/bin/image_diff --diff " + outFolder + caseName + "_result.png" + " " + expectedPNG + " " + outFolder + caseName + "_diff.png";
 									process = runtime.exec(ss);
 									process.waitFor();
 								}

@@ -600,15 +600,15 @@ pixel_test:
 pixel_test_css:
 	java StarFishTester $(tc) $(engine)
 pixel_test_css1:
-	make pixel_test_css tc=css1
+	make pixel_test_css tc=css1 engine=nw
 pixel_test_css21:
-	make pixel_test_css tc=css21
+	make pixel_test_css tc=css21 engine=nw
 pixel_test_css3_color:
-	make pixel_test_css tc=css3_color
+	make pixel_test_css tc=css3_color engine=nw
 pixel_test_css3_backgrounds:
-	make pixel_test_css tc=css3_backgrounds
+	make pixel_test_css tc=css3_backgrounds engine=nw
 pixel_test_css3_transforms:
-	make pixel_test_css tc=css3_transforms
+	make pixel_test_css tc=css3_transforms engine=nw
 pixel_test_css_all:
 	make pixel_test_css1 2> out/pixel_test_css_all.log
 	make pixel_test_css21 2>> out/pixel_test_css_all.log
