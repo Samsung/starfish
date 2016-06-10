@@ -559,7 +559,7 @@ public:
             sscanf(m_curPos, "%fpx", &f);
             m_parsedFloatValue = f;
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            return false;
         }
         m_curPos = nextSep + 1;
         return true;

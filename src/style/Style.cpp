@@ -125,7 +125,9 @@ void parseLength(CSSStyleValuePair& ret, const char* value)
         ret.m_valueKind = CSSStyleValuePair::ValueKind::Length;
         ret.m_value.m_length = CSSLength(0.0);
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_LOG_ERROR("unsupported length value %s\n", value);
+        ret.m_valueKind = CSSStyleValuePair::ValueKind::Length;
+        ret.m_value.m_length = CSSLength(0.0);
     }
 }
 
