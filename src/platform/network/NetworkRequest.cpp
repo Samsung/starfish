@@ -478,7 +478,7 @@ void NetworkRequest::send(String* body)
             headerText.replace(headerText.begin(), headerText.end(), '_', '-');
             list = curl_slist_append(list, headerText.data());
             list = curl_slist_append(list, "Connection:keep-alive");
-            list = curl_slist_append(list, "User-Agent: Mozilla/5.0 " USER_AGENT(APP_CODE_NAME, VERSION));
+            list = curl_slist_append(list, "User-Agent: " USER_AGENT(APP_CODE_NAME, VERSION));
 
             if (m_document->documentURI().isFileURL() || m_document->documentURI().isDataURL()) {
                 list = curl_slist_append(list, "Origin:null");

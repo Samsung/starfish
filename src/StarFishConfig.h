@@ -180,7 +180,7 @@
 #define APP_CODE_NAME "StarFish"
 #define VERSION "0.1.0"
 #define APP_VERSION(APP_NAME, VERSION) APP_NAME "/" VERSION
-#define USER_AGENT(APP_CODE_NAME, VERSION) APP_CODE_NAME "/"  VERSION
+#define USER_AGENT(APP_CODE_NAME, VERSION) "Mozilla/5.0 " APP_CODE_NAME "/"  VERSION
 #define VENDOR_NAME "Samsung Electronics Co., Ltd."
 
 #include "StarFishExport.h"
