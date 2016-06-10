@@ -106,12 +106,12 @@ if cat prepush_test_result |grep 'FAIL'; then
  exit 1
 fi
 
-echo "checking... make regression_test_bidi"
-make regression_test_bidi > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_bidi$RESET"
- exit 1
-fi
+#echo "checking... make regression_test_bidi"
+#make regression_test_bidi > prepush_test_result
+#if cat prepush_test_result |grep 'FAIL'; then
+# echo "$RED[FAIL] make regression_test_wpt_bidi$RESET"
+# exit 1
+#fi
 
 echo "checking... make internal_test"
 make internal_test > prepush_test_result
