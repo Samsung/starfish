@@ -13,7 +13,6 @@ test/reftest/csswg-test/css-transforms-1_converted/transform-compound-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-compound-notref-2.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-display-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-display-notref.html
-test/reftest/csswg-test/css-transforms-1_converted/transform-image-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-inline-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-inline-notref.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-001.html
