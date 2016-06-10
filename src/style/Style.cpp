@@ -4257,7 +4257,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setLineHeight(Length(Length::Percent, -100));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Number) {
                     // The computed value should be same as the specified value.
-                    style->setLineHeight(Length(Length::EmToBeFixed, cssValues[k].numberValue()));
+                    style->setLineHeight(Length(Length::InheritableNumber, cssValues[k].numberValue()));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
                     || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
                     style->setLineHeight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));

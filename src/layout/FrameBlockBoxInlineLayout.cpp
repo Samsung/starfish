@@ -7,19 +7,19 @@ namespace StarFish {
 
 static LayoutUnit computeLineHeight(ComputedStyle* style)
 {
-    LayoutUnit fontHeight = style->font()->metrics().m_ascender - style->font()->metrics().m_descender;
-    LayoutUnit lineHeight = fontHeight;
+    LayoutUnit fontSize = style->font()->metrics().m_ascender - style->font()->metrics().m_descender;
 
     if (!style->hasNormalLineHeight()) {
         if (style->lineHeight().isFixed()) {
-            return lineHeight * style->lineHeight().fixed();
-        } else if (style->lineHeight().isPercent()) {
-            return lineHeight * style->lineHeight().percent();
+            return style->lineHeight().fixed();
+        } else if (style->lineHeight().isInheritableNumber()) {
+            return fontSize * style->lineHeight().number();
         } else {
+            // Only Fixed | InheritableNumer possible here
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
-    return lineHeight;
+    return fontSize;
 }
 
 static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, LineFormattingContext& ctx)
@@ -200,7 +200,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
 
     // 3. adjusting the line height
     if (!parentStyle->hasNormalLineHeight()) {
-        LayoutUnit lineHeight = parentStyle->lineHeight().fixed();
+        LayoutUnit lineHeight = computeLineHeight(parentStyle);
         LayoutUnit diff = (lineHeight - parentStyle->font()->metrics().m_fontHeight) / 2;
         LayoutUnit ascenderShouldBe = parentStyle->font()->metrics().m_ascender + diff;
         LayoutUnit descenderShouldBe = parentStyle->font()->metrics().m_descender - diff;

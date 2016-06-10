@@ -12,7 +12,11 @@ public:
 
         // After finishing resolveStyle, ex/em values should be changed to Fixed
         ExToBeFixed,
-        EmToBeFixed
+        EmToBeFixed,
+
+        // This is for line-height
+        // (font-related value but does not change to Fixed since inheritance issue)
+        InheritableNumber
     };
 
     Length(Type type = Auto, float data = 0.f)
@@ -34,6 +38,7 @@ public:
                 m_data = fSize * m_data * font->metrics().m_xheightRate;
                 m_type = Fixed;
             }
+            // InheritableNumber does not change its value
         }
     }
 
@@ -56,6 +61,7 @@ public:
     bool isAuto() const { return m_type == Auto; }
     bool isFixed() const { return m_type == Fixed; }
     bool isPercent() const { return m_type == Percent; }
+    bool isInheritableNumber() const { return m_type == InheritableNumber; }
     bool isComputed() const { return isFixed() || isPercent() || isAuto(); }
     Type type() const { return m_type; }
 
@@ -69,6 +75,12 @@ public:
     float fixed() const
     {
         STARFISH_ASSERT(m_type == Fixed);
+        return m_data;
+    }
+
+    float number() const
+    {
+        STARFISH_ASSERT(m_type == InheritableNumber);
         return m_data;
     }
 
@@ -112,6 +124,8 @@ public:
             sprintf(temp, "%.1f%%", percent());
         else if (isAuto())
             sprintf(temp, "auto");
+        else if (isInheritableNumber())
+            sprintf(temp, "%.1f(num)", number());
         return String::fromUTF8(temp);
     }
 
