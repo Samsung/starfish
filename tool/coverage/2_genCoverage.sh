@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Generating DOM coverage
+## Generating DOM coverage
 mkdir -p out
 
 list="
@@ -61,6 +61,10 @@ node genTable.js "" in/specDOM.txt out/dom.raw | tail -1 > t.txt
 cat out/head.txt out/dom.csv.tmp t.txt > dom.csv
 rm out/dom.csv.tmp t.txt
 
+# Demo
+node genTable.js "Demo" in/specDOM.txt in/dom.demo.raw > dom.demo.csv
+
+
 ## Generating CSS coverage Data
 
 csslist="
@@ -103,8 +107,11 @@ node genTable.js "" in/specCSS.txt out/css.raw | tail -1 > t.txt
 cat out/head.txt out/css.csv.tmp t.txt > css.csv
 rm out/css.csv.tmp t.txt
 
+# Demo
+node genTable.js "Demo" in/specCSS.txt in/css.demo.raw > css.demo.csv
 
-# Generating HTML coverage
+
+## Generating HTML coverage
 
 htmllist="
 html.wpt.raw
@@ -148,7 +155,6 @@ rm out/html.csv.tmp t.txt
 
 rm -fr out
 
-python csv2xml.py dom.csv
-python csv2xml.py html.csv
-python csv2xml.py css.csv
+# Demo
+node genTable.js "Demo" in/specHTML.txt in/html.demo.raw > html.demo.csv
 

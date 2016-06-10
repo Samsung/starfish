@@ -2,7 +2,8 @@
 BOLD='\033[1m'
 RESET='\033[0m'
 
-TESTSUITE=("test/regression/reftest/web-platform-tests/"
+TESTSUITE=("test/demo/coverage/"
+           "test/regression/reftest/web-platform-tests/"
            "test/regression/reftest/dom-conformance-test/html/"
            "test/regression/reftest/vendor/blink/dom/html/"
            "test/regression/reftest/vendor/blink/fast/dom/"
@@ -54,17 +55,15 @@ for i in ${TESTSUITE[@]}; do
         TESTNAME="css.color.3"
     elif [[ "$i" = *"css-transforms-1"* ]]; then
         TESTNAME="css.transforms.1"
+    elif [[ "$i" = *"demo"* ]]; then
+        TESTNAME="demo"
     fi
 
     echo -e "${BOLD}## [CSS & HTML] Syntax checking for [${i}]..${RESET}\n"
 
     TC=$(find $i -regex ".*\.\(htm\|html\)$" | sort)
     CNT=-1
-    if [[ "$j" = *"/csswg-test/"* || "$j" = *"/bidi/"* ]]; then
-        ROTATE=1
-    else
-        ROTATE="$(nproc)"
-    fi
+    ROTATE="$(nproc)"
     ARRAY=($TC)
     POS=$((${#ARRAY[*]}-1))
     LAST=${ARRAY[$POS]}
@@ -77,7 +76,7 @@ for i in ${TESTSUITE[@]}; do
         RAWFILE="tmp"$CNT
 
         echo -e "+++TC:"$j >> $RAWFILE
-        if [[ "$j" = *"/csswg-test/"* || "$j" = *"/bidi/"* ]]; then
+        if [[ "$j" = *"/csswg-test/"* || "$j" = *"/bidi/"* || "$j" = *"/demo/"* ]]; then
             ./StarFish $j --screen-shot=./out.png &>> $RAWFILE &
         else
             ./StarFish $j --hide-window &>> $RAWFILE &

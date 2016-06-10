@@ -6,7 +6,8 @@ mkdir -p out
 rm -f in/dom.*.raw
 path='../..';
 
-TESTSUITE=("test/regression/reftest/vendor/blink/dom/html"
+TESTSUITE=("test/demo/coverage"
+           "test/regression/reftest/vendor/blink/dom/html"
            "test/regression/reftest/vendor/webkit/dom/html"
            "test/regression/reftest/vendor/gecko"
            "test/regression/reftest/dom-conformance-test/html"
@@ -53,6 +54,8 @@ for tc in ${TESTSUITE[@]}; do
         res="css.color.3"
     elif [[ "$tc" = *"css-transforms-1"* ]]; then
         res="css.transforms.1"
+    elif [[ "$tc" = *"demo"* ]]; then
+        res="demo"
     fi
 
     echo -e "${BOLD}## [DOM] Syntax checking for [${tc}]..${RESET}\n"
