@@ -389,7 +389,7 @@ else ifneq ($(filter $(HOST),tizen_wearable_emulator tizen3_wearable_emulator), 
   STRIP = $(TIZEN_TOOLCHAIN)/bin/i386-linux-gnueabi-strip
   CXXFLAGS += -Os -finline-limit=64
   ifeq ($(MODE), debug)
-    CXXFLAGS += -Wno-literal-suffix
+    CXXFLAGS += -Wno-literal-suffix -DSTARFISH_ENABLE_TEST
   endif
     TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 network \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
