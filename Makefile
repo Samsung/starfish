@@ -560,6 +560,7 @@ install_pixel_test_dep:
 	mkdir -p ~/.fonts
 	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
 	cp tool/pixel_test/bin/CooHew-Roman.ttf ~/.fonts/
+	cp tool/pixel_test/bin/CooHew-Bold.ttf ~/.fonts/
 	fc-cache -fv
 	./set_nodewebkit_env.sh
 	#@echo ""
@@ -672,10 +673,7 @@ regression_test_css:
 	make regression_test_css3_transforms
 
 font_dependent_regression_test_css:
-	./tool/reftest/css_test.sh css1_manual
-	./tool/reftest/css_test.sh css21_manual
-	./tool/reftest/css_test.sh css3_backgrounds_manual
-	./tool/reftest/css_test.sh css3_transforms_manual
+	./tool/reftest/css_test.sh css_manual
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp
