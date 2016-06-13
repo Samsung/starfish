@@ -995,16 +995,20 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                 token = getToken(true, true);
                 break;
             }
-        } else if (token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[')) {
-            blocks.push_back(token->m_value);
-        } else if (token->isSymbol('}') || token->isSymbol(']')) {
+        } else if (token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[') || token->isFunction()) {
+            blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
+        } else if (token->isSymbol('}') || token->isSymbol(')') || token->isSymbol(']')) {
             if (blocks.size()) {
                 String* ontop = blocks[blocks.size() - 1];
                 if ((token->isSymbol('}') && ontop->equals("{"))
                     || (token->isSymbol(')') && ontop->equals("("))
                     || (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
+                } else {
+                    return String::emptyString;
                 }
+            } else {
+                return String::emptyString;
             }
         }
 
@@ -1128,9 +1132,10 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
     CSSToken* token = getToken(false, false);
     while (token->isNotNull()) {
         s = s->concat(token->m_value);
-        if ((token->isSymbol(';') || token->isSymbol('}')) && !blocks.size()) {
-            if (token->isSymbol('}'))
-                ungetToken();
+        if (token->isSymbol(';')) {
+            break;
+        } else if (token->isSymbol('}') && !blocks.size()) {
+            ungetToken();
             break;
         } else if (token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[') || token->isFunction()) {
             blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
