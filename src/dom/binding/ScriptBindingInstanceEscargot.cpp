@@ -185,7 +185,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     escargot::ESValue v;
 
-#if defined(STARFISH_ENABLE_TEST) || defined(STARFISH_EMULATOR_RELEASE)
+#if defined(STARFISH_ENABLE_TEST)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("wptTestEnd"), false, false, false, escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         const char* hide = getenv("HIDE_WINDOW");
         if ((hide && strlen(hide)))

@@ -1,4 +1,4 @@
-#ifdef STARFISH_TIZEN_WEARABLE_APP
+#ifdef STARFISH_TIZEN_WEARABLE_LIB
 
 #include "StarFishConfig.h"
 #include "StarFish.h"

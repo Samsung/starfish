@@ -12,7 +12,7 @@
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
-#ifdef ESCARGOT_TIZEN3
+#ifdef STARFISH_TIZEN_3_0
 #include <Ecore.h>
 #else
 #include <Ecore_X.h>
@@ -314,7 +314,7 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
 
 Window* Window::create(StarFish* sf, void* win, const URL& url)
 {
-#ifndef STARFISH_TIZEN_WEARABLE_APP
+#ifndef STARFISH_TIZEN_WEARABLE_LIB
     initInternalCanvas();
 #else
     g_internalCanvas = evas_object_evas_get((Evas_Object*)win);
@@ -323,7 +323,7 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
 
-#ifndef STARFISH_TIZEN_WEARABLE_APP
+#ifndef STARFISH_TIZEN_WEARABLE_LIB
     Evas* e = evas_object_evas_get(wnd->m_window);
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
     Ecore_Window ew = ecore_evas_window_get(ee);
