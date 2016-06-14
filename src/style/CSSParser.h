@@ -594,7 +594,7 @@ public:
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
 protected:
-    CSSToken* getToken(bool aSkipWS, bool aSkipComment);
+    CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);
     CSSToken* currentToken();
     void ungetToken();
     void preserveState();

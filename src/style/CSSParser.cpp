@@ -411,7 +411,7 @@ public:
                 if (!tmp->length())
                     return String::emptyString;
                 else
-                s = s->concat(tmp);
+                    s = s->concat(tmp);
             } else
                 s = s->concat(String::createUTF32String((char32_t)c));
             c = read();
@@ -430,6 +430,30 @@ public:
             return new CSSToken(CSSToken::FUNCTION_TYPE, value);
         }
         return new CSSToken(CSSToken::IDENT_TYPE, value);
+    }
+
+    CSSToken* parseURL(int c)
+    {
+        String* value = String::emptyString;
+        if (c == CSS_ESCAPE)
+            value = value->concat(gatherEscape());
+        else
+            value = value->concat(String::createUTF32String((char32_t)c));
+        c = read();
+        while (c != -1 && c != ' ' && c != ')') {
+            if (c == CSS_ESCAPE) {
+                String* tmp = gatherEscape();
+                if (!tmp->length())
+                    return new CSSToken(CSSToken::STRING_TYPE, String::emptyString);
+                else
+                    value = value->concat(tmp);
+            } else
+                value = value->concat(String::createUTF32String((char32_t)c));
+            c = read();
+        }
+        if (c != -1)
+            pushback();
+        return new CSSToken(CSSToken::STRING_TYPE, value);
     }
 
     bool isDigit(char32_t c)
@@ -545,11 +569,14 @@ public:
         return new CSSToken(CSSToken::ATRULE_TYPE, gatherIdent(c));
     }
 
-    CSSToken* nextToken()
+    CSSToken* nextToken(bool isURL = false)
     {
         int c = read();
         if (c == -1)
             return new CSSToken(CSSToken::NULL_TYPE, String::emptyString);
+
+        if (isURL && c != '\'' && c != '"' && c != ')' && c != ' ') // url starts without \' nor \"
+            return parseURL(c);
 
         if (startsWithIdent(c, peek()))
             return parseIdent(c);
@@ -645,7 +672,7 @@ protected:
 
 };
 
-CSSToken* CSSParser::getToken(bool aSkipWS, bool aSkipComment)
+CSSToken* CSSParser::getToken(bool aSkipWS, bool aSkipComment, bool isURL)
 {
     if (m_lookAhead) {
         m_token = m_lookAhead;
@@ -653,9 +680,9 @@ CSSToken* CSSParser::getToken(bool aSkipWS, bool aSkipComment)
         return m_token;
     }
 
-    m_token = m_scanner->nextToken();
+    m_token = m_scanner->nextToken(isURL);
     while (m_token && ((aSkipWS && m_token->isWhiteSpace()) || (aSkipComment && m_token->isComment())))
-        m_token = m_scanner->nextToken();
+        m_token = m_scanner->nextToken(isURL);
     return m_token;
 }
 
@@ -966,6 +993,8 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
     std::vector<String*, gc_allocator<String*>> blocks;
     // bool foundPriority = false;
     std::vector<String*, gc_allocator<String*>> values;
+    bool isURLFunc = false;
+    int urlTokens = 0;
     while (token->isNotNull()) {
         if ((token->isSymbol(';')
             || token->isSymbol('}')
@@ -996,7 +1025,11 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                 break;
             }
         } else if (token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[') || token->isFunction()) {
-            blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
+            if (token->isFunction() && token->m_value->toLower()->equals("url(")) {
+                blocks.push_back(String::createASCIIString("url("));
+                isURLFunc = true;
+            } else
+                blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
         } else if (token->isSymbol('}') || token->isSymbol(')') || token->isSymbol(']')) {
             if (blocks.size()) {
                 String* ontop = blocks[blocks.size() - 1];
@@ -1004,6 +1037,12 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                     || (token->isSymbol(')') && ontop->equals("("))
                     || (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
+                } else if (token->isSymbol(')') && ontop->equals("url(")) {
+                    blocks.pop_back();
+                    if (urlTokens > 2)
+                        return String::emptyString;
+                    isURLFunc = false;
+                    urlTokens = 0;
                 } else {
                     return String::emptyString;
                 }
@@ -1013,7 +1052,11 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
         }
 
         willBeConcat.push_back(token);
-        token = getToken(false, false);
+        if (isURLFunc) {
+            token = getToken(true, false, true);
+            urlTokens++;
+        } else
+            token = getToken(false, false);
     }
     /*
     if (values.length && valueText) {
@@ -1130,6 +1173,8 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
     String* s = aToken->m_value;
     blocks.clear();
     CSSToken* token = getToken(false, false);
+    bool isURLFunc = false;
+
     while (token->isNotNull()) {
         s = s->concat(token->m_value);
         if (token->isSymbol(';')) {
@@ -1138,16 +1183,26 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
             ungetToken();
             break;
         } else if (token->isSymbol('{') || token->isSymbol('(') || token->isSymbol('[') || token->isFunction()) {
-            blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
+            if (token->isFunction() && token->m_value->toLower()->equals("url(")) {
+                blocks.push_back(String::createASCIIString("url("));
+                isURLFunc = true;
+            } else
+                blocks.push_back(token->isFunction() ? String::createASCIIString("(") : token->m_value);
         } else if (token->isSymbol('}') || token->isSymbol(')') || token->isSymbol(']')) {
             if (blocks.size()) {
                 String* ontop = blocks[blocks.size() - 1];
                 if ((token->isSymbol('}') && ontop->equals("{")) || (token->isSymbol(')') && ontop->equals("(")) || (token->isSymbol(']') && ontop->equals("["))) {
                     blocks.pop_back();
+                } else if (token->isSymbol(')') && ontop->equals("url(")) {
+                    blocks.pop_back();
+                    isURLFunc = false;
                 }
             }
         }
-        token = getToken(false, false);
+        if (isURLFunc)
+            token = getToken(true, false, true);
+        else
+            token = getToken(false, false);
     }
     return;
 }

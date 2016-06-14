@@ -1136,6 +1136,7 @@ test/reftest/csswg-test/css21_converted/syntax/uri-009.htm
 test/reftest/csswg-test/css21_converted/syntax/uri-010.htm
 test/reftest/csswg-test/css21_converted/syntax/uri-011.htm
 test/reftest/csswg-test/css21_converted/syntax/uri-012.htm
+test/reftest/csswg-test/css21_converted/syntax/uri-016.htm
 test/reftest/csswg-test/css21_converted/syntax/whitespace-001.htm
 test/reftest/csswg-test/css21_converted/syntax/whitespace-002.htm
 test/reftest/csswg-test/css21_converted/tables/support/frameset-border-spacing-001.htm
