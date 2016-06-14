@@ -471,7 +471,7 @@ public:
         } else {
             SkRect sss;
 
-            //assureMapMode();
+            // assureMapMode();
             if (lastState().m_mapMode) {
                 STARFISH_ASSERT(!hasValidMatrixValue());
                 sss = SkRect::MakeXYWH(
@@ -1254,7 +1254,7 @@ public:
                     }
                     applyClippers(eo);
                     applyEvasMapIfNeeded(eo, Rect(dst.x() + curx, dst.y() + cury,
-                                                imageWidth, imageHeight), true);
+                        imageWidth, imageHeight), true);
 
                     evas_object_show(eo);
                     cury += imageHeight;

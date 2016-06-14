@@ -68,7 +68,7 @@ for i in $tc ; do
     #echo $DIFF_PNG
     if [ ! -f ${WEBKIT_PNG} ]; then
 #        tool/phantomjs/linux64/bin/phantomjs tool/pixel_test/capture.js -f ${i} out/ $2 > /dev/null 2>&1
-        nw tool/pixel_test/nw_capture/ -f ${i} ${EXPECTED_IMAGE_PATH}/${dir} ${2}
+        test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f ${i} ${EXPECTED_IMAGE_PATH}/${dir} ${2}
 #        mv out/${file}_expected.png ${WEBKIT_PNG}
     fi
 
