@@ -550,8 +550,7 @@ endif
 run:
 	phantomjs --web-security=false --local-to-remote-url-access=true runner.js ${RUN_ARGS}
 
-install_regression_test_dep:
-	sudo ./add_wpt_into_hosts.sh
+install_git_prepush:
 	cp -rf tool/reftest/pre-push .git/hooks/
 
 install_pixel_test_dep:
