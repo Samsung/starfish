@@ -19,7 +19,7 @@ OS:=$(shell uname -s)
 SHELL:=/bin/bash
 OUTPUT:=bin
 TIZEN_DEVICE_API=
-LTO=0
+LTO=
 ifeq ($(OS),Linux)
   NPROCS:=$(shell grep -c ^processor /proc/cpuinfo)
   SHELL:=/bin/bash
@@ -112,7 +112,7 @@ else ifeq ($(MODE), release)
 endif
 
 ifneq (,$(findstring tizen,$(HOST)))
-  #LTO=1
+  LTO=1
 endif
 
 
@@ -442,7 +442,7 @@ endif
 
 ifeq ($(LTO), 1)
   CXXFLAGS += -flto -ffat-lto-objects
-  LDFLAGS += $(CFLAGS)
+  LDFLAGS += $(CXXFLAGS)
 endif
 
 # pull in dependency info for *existing* .o files
