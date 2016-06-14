@@ -353,6 +353,8 @@ else ifneq ($(filter $(HOST),tizen_wearable_arm tizen3_wearable_arm), )
   ifneq ($(VERSION), 3.0)
     ifeq ($(TYPE), lib)
       LDFLAGS += -static-libstdc++
+    else
+      LDFLAGS += $(TIZEN_TOOLCHAIN)/arm-linux-gnueabi/lib/libstdc++.a
     endif
   endif
   ifeq ($(TYPE), lib)
@@ -505,7 +507,7 @@ tizen3_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
 tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $<.strip ./$(LIB)
 
-$(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS)
+$(OUTDIR)/$(EBIN): $(OBJS) $(THIRD_PARTY_LIBS) Makefile
 	@echo "[LINK] $@"
 	ln -sf deps/tizen/lib/tizen-wearable-$(VERSION)-emulator-x86/libstdc++.a.0 libstdc++.a
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_LIBS) $(LDFLAGS)
