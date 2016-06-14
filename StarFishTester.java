@@ -153,7 +153,7 @@ public class StarFishTester {
                             // take webkit screen shot
                             String expectedPNG = outFolder + caseName + "_expected.png";
                             if (enableNW)
-                                expectedPNG = "./test/expected/nw_with_ahem/" + caseName.replace("_converted", "") + "_expected.png";
+                                expectedPNG = "./test/reftest/" + caseName.replace("_converted", "_res") + "_expected.png";
 
 							try {
 

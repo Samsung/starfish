@@ -107,6 +107,7 @@ function execute() {
             pathToSave = args[2];
         console.log("--- nw capture START!: " + args[1] + (args[2]? " " + args[2] : ""));
         if (args[0] == "-f" && fs.existsSync(args[1]) && (args[1].endsWith(".html") || args[1].endsWith(".htm"))) {
+            numCPUs = 1;
             setTimeout(function() { takeSnapshot([args[1]]) },1000);
             return true;
         } else if (args[0] == "-l" && fs.existsSync(args[1])) {

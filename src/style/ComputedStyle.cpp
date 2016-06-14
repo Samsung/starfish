@@ -107,7 +107,8 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
             setBackgroundImageResource(res);
             res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
 #ifdef STARFISH_ENABLE_TEST
-            res->request(g_enablePixelTest);
+            bool enableRegressionTest = sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+            res->request(g_enablePixelTest || enableRegressionTest);
 #else
             res->request();
 #endif
@@ -127,7 +128,8 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
 #ifdef STARFISH_ENABLE_TEST
-            res->request(g_enablePixelTest);
+            bool enableRegressionTest = sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+            res->request(g_enablePixelTest || enableRegressionTest);
 #else
             res->request();
 #endif

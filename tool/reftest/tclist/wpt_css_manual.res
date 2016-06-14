@@ -25,6 +25,7 @@ test/reftest/csswg-test/css21_converted/text/control-characters-002.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-081.htm
 test/reftest/csswg-test/css21_converted/text/text-decoration-thickness-001.htm
 test/reftest/csswg-test/css-backgrounds-3_converted/background-size/background-size-cover.htm
+test/reftest/csswg-test/css-backgrounds-3_converted/background-size/background-size-contain.htm
 test/reftest/csswg-test/css-transforms-1_converted/css-transform-inherit-rotate.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-compound-001.html
 test/reftest/csswg-test/css-transforms-1_converted/transform-origin-001.html
