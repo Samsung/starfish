@@ -144,6 +144,7 @@ public:
 
     virtual int width() = 0;
     virtual int height() = 0;
+    virtual void resizeTo(int w, int h) = 0;
 
     // The viewport width and height are same as the window size for wearable widget.
     double innerWidth()
@@ -162,6 +163,7 @@ public:
     void screenShot(std::string filePath);
     void simulateClick(float x, float y);
     void simulateVisibilitychange(bool show);
+    void testStart();
 #endif
 
 protected:

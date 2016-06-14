@@ -50,7 +50,11 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-            wnd->screenShot(escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toString()->utf8Data());
+            std::string path = wnd->document()->documentURI().baseURI()->utf8Data();
+            path = path.substr(strlen("file://"));
+            path += escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toString()->utf8Data();
+            wnd->screenShot(path);
+            callScriptFunction(instance->currentExecutionContext()->readArgument(1), { }, 0, instance->globalObject());
         }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("screenShot"), 0, false);
@@ -127,6 +131,71 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("testEnd"), true, true, true, testEndFunction);
 
 #endif
+
+    escargot::ESFunctionObject* testImgDiffFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        std::string cmd = "./tool/imgdiff/imgdiff ";
+
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        std::string path = wnd->document()->documentURI().baseURI()->utf8Data();
+        path = path.substr(strlen("file://"));
+
+        cmd += path;
+        cmd += instance->currentExecutionContext()->readArgument(0).toString()->utf8Data();
+        cmd += " ";
+        cmd += path;
+        cmd += instance->currentExecutionContext()->readArgument(1).toString()->utf8Data();
+
+        STARFISH_LOG_INFO("%s\n", cmd.c_str());
+        FILE* fp = popen(cmd.c_str(), "r");
+        int ch;
+
+        if (!fp) {
+            RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        std::string output;
+        while ((ch = fgetc(fp)) != EOF) {
+            output += ch;
+        }
+
+        STARFISH_LOG_INFO("%s", output.c_str());
+
+        if (output.find("failed") != std::string::npos) {
+            cmd = "tool/pixel_test/bin/image_diff --diff ";
+            cmd += path;
+            cmd += instance->currentExecutionContext()->readArgument(0).toString()->utf8Data();
+            cmd += " ";
+            cmd += path;
+            cmd += instance->currentExecutionContext()->readArgument(1).toString()->utf8Data();
+            cmd += " ";
+            cmd += path;
+            cmd += std::string(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()) + "_diff.png";
+            puts(cmd.c_str());
+
+            FILE* fp = popen(cmd.c_str(), "r");
+            int ch;
+
+            if (!fp) {
+                RELEASE_ASSERT_NOT_REACHED();
+            }
+
+            std::string output;
+            while ((ch = fgetc(fp)) != EOF) {
+                output += ch;
+            }
+
+            escargot::ESStringBuilder builder;
+            builder.appendString("[FAIL]testImgDiff fail");
+            escargot::ESString* s = builder.finalize();
+            puts(s->utf8Data());
+            STARFISH_LOG_ERROR("%s\n", s->utf8Data());
+            exit(-1);
+        }
+
+        pclose(fp);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("testEnd"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("testImgDiff"), true, true, true, testImgDiffFunction);
 
     // [setTimeout]
     // https://www.w3.org/TR/html5/webappapis.html#dom-windowtimers-settimeout
@@ -927,6 +996,16 @@ void ScriptWrappable::initScriptWrappable(CSSStyleRule* ptr)
     scriptObject()->set__proto__(data->cssStyleRule()->protoType());
     scriptObject()->setExtraData(CSSStyleRuleObject);
 }
+#ifdef STARFISH_ENABLE_TEST
+void Window::testStart()
+{
+    ScriptBindingInstanceEnterer enter(starFish()->scriptBindingInstance());
+    escargot::ESValue v = escargot::ESVMInstance::currentInstance()->globalObject()->get(escargot::ESString::create("testStart"));
+    if (!v.isUndefined()) {
+        callScriptFunction(v, { }, 0, escargot::ESVMInstance::currentInstance()->globalObject());
+    }
+}
+#endif
 
 static int utf32ToUtf16(char32_t i, char16_t *u)
 {

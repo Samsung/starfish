@@ -1,0 +1,9 @@
+{
+  "name": "internal-test-node-webkit-client",
+  "main": "index.html",
+  "single-instance": false,
+  "window": {
+    "show": true,
+    "show_in_taskbar": false
+  }
+}

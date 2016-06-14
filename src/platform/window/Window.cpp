@@ -175,6 +175,10 @@ public:
         return height;
     }
 
+    virtual void resizeTo(int w, int h)
+    {
+        evas_object_resize(m_window, w, h);
+    }
 
     void clearEFLResources()
     {

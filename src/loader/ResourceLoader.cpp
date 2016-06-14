@@ -128,6 +128,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
 #ifdef STARFISH_ENABLE_TEST
             g_fireOnloadEvent = true;
             wnd->setNeedsPainting();
+            wnd->testStart();
 #endif
         }, m_document->window());
     }

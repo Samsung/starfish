@@ -36,6 +36,8 @@ public:
         return true;
     }
 
+    void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+
 protected:
 };
 
