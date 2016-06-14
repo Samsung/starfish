@@ -469,14 +469,24 @@ public:
             lastState().m_clipper = NULL;
             lastState().m_hasPathClip = true;
         } else {
-            SkRect sss = SkRect::MakeXYWH(
-                SkFloatToScalar((float)rt.x()),
-                SkFloatToScalar((float)rt.y()),
-                SkFloatToScalar((float)rt.width()),
-                SkFloatToScalar((float)rt.height()));
+            SkRect sss;
 
-            assureMapMode();
-            lastState().m_matrix.mapRect(&sss);
+            //assureMapMode();
+            if (lastState().m_mapMode) {
+                STARFISH_ASSERT(!hasValidMatrixValue());
+                sss = SkRect::MakeXYWH(
+                    SkFloatToScalar((float)rt.x()),
+                    SkFloatToScalar((float)rt.y()),
+                    SkFloatToScalar((float)rt.width()),
+                    SkFloatToScalar((float)rt.height()));
+                lastState().m_matrix.mapRect(&sss);
+            } else {
+                sss = SkRect::MakeXYWH(
+                    SkFloatToScalar((float)rt.x() + lastState().m_baseX),
+                    SkFloatToScalar((float)rt.y() + lastState().m_baseY),
+                    SkFloatToScalar((float)rt.width()),
+                    SkFloatToScalar((float)rt.height()));
+            }
 
             if (!SkRect::Intersects(lastState().m_clipRect, sss)) {
                 lastState().m_clipRect.setEmpty();
@@ -1182,37 +1192,78 @@ public:
             ww = dst.width();
             hh = dst.height();
         }
-        Evas_Object* eo = nullptr;
-        eo = evas_object_image_add(m_canvas);
-        if (m_objList)
-            m_objList->push_back(eo);
 
         Evas_Object* imgData = (Evas_Object*)data->unwrap();
         // const char* buf;
         // evas_object_image_file_get(imgData, &buf, NULL);
         // evas_object_image_file_set(eo, buf, NULL);
-
         void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
-        evas_object_image_size_set(eo, data->width(), data->height());
-        evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
-        evas_object_image_data_set(eo, imgBuf);
-        evas_object_image_filled_set(eo, EINA_TRUE);
-        evas_object_image_alpha_set(eo, EINA_TRUE);
+        Evas_Colorspace cspace = evas_object_image_colorspace_get(imgData);
+        float imgdataW = data->width();
+        float imgdataH = data->height();
 
-        evas_object_image_filled_set(eo, EINA_FALSE);
-        evas_object_image_fill_set(eo, 0, 0, imageWidth, imageHeight);
-        // evas_object_image_alpha_set(eo, EINA_TRUE);
-        // evas_object_anti_alias_set(eo, EINA_TRUE);
+        if (!shouldApplyEvasMap()) {
+            Evas_Object* eo = nullptr;
+            eo = evas_object_image_add(m_canvas);
+            if (m_objList)
+                m_objList->push_back(eo);
+            evas_object_image_size_set(eo, imgdataW, imgdataH);
+            evas_object_image_colorspace_set(eo, cspace);
+            evas_object_image_data_set(eo, imgBuf);
+            evas_object_image_alpha_set(eo, EINA_TRUE);
 
+            evas_object_image_filled_set(eo, EINA_FALSE);
+            evas_object_image_fill_set(eo, 0, 0, imageWidth, imageHeight);
+            // evas_object_image_alpha_set(eo, EINA_TRUE);
+            // evas_object_anti_alias_set(eo, EINA_TRUE);
+            evas_object_move(eo, xx, yy);
+            evas_object_resize(eo, ww, hh);
 
-        evas_object_move(eo, xx, yy);
-        evas_object_resize(eo, ww, hh);
+            applyClippers(eo);
+            applyEvasMapIfNeeded(eo, dst, true);
+            evas_object_show(eo);
+            m_imageCount++;
+        } else {
+            // NOTE: Draw all images due to mapping issue for tiled_img
+            int cntw = (ww - 1) / imageWidth + 1;
+            int cnth = (hh - 1) / imageHeight + 1;
+            float curx = 0, cury = 0;
+            for (int i = 0; i < cntw; i++) {
+                cury = 0;
+                for (int j = 0; j < cnth; j++) {
+                    Evas_Object* eo = nullptr;
+                    eo = evas_object_image_filled_add(m_canvas);
+                    if (m_objList)
+                        m_objList->push_back(eo);
+                    evas_object_image_size_set(eo, imgdataW, imgdataH);
+                    evas_object_image_colorspace_set(eo, cspace);
+                    evas_object_image_data_set(eo, imgBuf);
+                    evas_object_image_alpha_set(eo, EINA_TRUE);
 
-        applyClippers(eo);
-        applyEvasMapIfNeeded(eo, dst, true);
-        evas_object_show(eo);
+                    evas_object_resize(eo, imageWidth, imageHeight);
+                    evas_object_move(eo, curx, cury);
 
-        m_imageCount++;
+                    float clipw = (i == cntw - 1) ? ww - curx : imageWidth;
+                    float cliph = (j == cnth - 1) ? hh - cury : imageHeight;
+                    if (clipw != imageWidth || cliph != imageHeight) {
+                        Evas_Object* clp = evas_object_rectangle_add(m_canvas);
+                        evas_object_move(clp, curx, cury);
+                        evas_object_resize(clp, clipw, cliph);
+                        evas_object_show(clp);
+                        evas_object_clip_set(eo, clp);
+                    }
+                    applyClippers(eo);
+                    applyEvasMapIfNeeded(eo, Rect(dst.x() + curx, dst.y() + cury,
+                                                imageWidth, imageHeight), true);
+
+                    evas_object_show(eo);
+                    cury += imageHeight;
+                    m_imageCount++;
+                }
+                curx += imageWidth;
+            }
+        }
+
         if (m_imageCount == 101) {
             STARFISH_LOG_ERROR("paint more than 100 image makes poor performance\n");
         }

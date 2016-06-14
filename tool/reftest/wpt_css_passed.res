@@ -1199,6 +1199,8 @@ test/reftest/csswg-test/css-backgrounds-3_converted/background-image-005.html
 test/reftest/csswg-test/css-backgrounds-3_converted/background-image-006.html
 test/reftest/csswg-test/css-backgrounds-3_converted/background-paint-order-001.html
 test/reftest/csswg-test/css-backgrounds-3_converted/background-repeat/background-repeat-no-repeat.htm
+test/reftest/csswg-test/css-backgrounds-3_converted/background-repeat/background-repeat-repeat-x.htm
+test/reftest/csswg-test/css-backgrounds-3_converted/background-repeat/background-repeat-repeat-y.htm
 test/reftest/csswg-test/css-backgrounds-3_converted/background-size/vector/background-size-vector-001.html
 test/reftest/csswg-test/css-backgrounds-3_converted/background-size/vector/background-size-vector-002.html
 test/reftest/csswg-test/css-backgrounds-3_converted/background-size/vector/background-size-vector-003.html
