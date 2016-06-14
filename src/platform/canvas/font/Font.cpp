@@ -73,6 +73,12 @@ public:
             m_metrics.m_descender = -evas_object_text_max_descent_get(m_text);
             m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
             m_metrics.m_xheightRate = met.m_xheightRate;
+        } else {
+            // Set the FontMetrics as if font is Ahem.
+            m_metrics.m_ascender = m_size * 0.8;
+            m_metrics.m_descender = m_metrics.m_ascender - m_size;
+            m_metrics.m_fontHeight = m_metrics.m_ascender - m_metrics.m_descender;
+            m_metrics.m_xheightRate = 0.8f;
         }
 #else
         m_metrics.m_ascender = evas_object_text_max_ascent_get(m_text);
