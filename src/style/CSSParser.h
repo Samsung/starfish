@@ -428,16 +428,12 @@ public:
             return true;
         } else if (strcmp("currentcolor", token) == 0) {
             return true;
-        } else if (strlen(token) == 7 && token[0] == '#') {
-            for (int i = 1; i < 7; i++) {
-                if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'a' && token[i] <= 'f')) {
-                } else {
-                    return false;
-                }
+        } else if (token[0] == '#') {
+            if (!(strlen(token) == 9 || strlen(token) == 7 || strlen(token) == 5 || strlen(token) == 4)) {
+                return false;
             }
-            return true;
-        } else if (strlen(token) == 4 && token[0] == '#') {
-            for (int i = 1; i < 4; i++) {
+
+            for (unsigned i = 1; i < strlen(token); i++) {
                 if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'a' && token[i] <= 'f')) {
                 } else {
                     return false;

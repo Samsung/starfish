@@ -18,6 +18,8 @@ class ComputedStyle;
 class Element;
 class Document;
 
+Color parseColor(String* str);
+
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
 public:

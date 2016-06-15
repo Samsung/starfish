@@ -213,6 +213,20 @@ public:
         return m_a == 0;
     }
 
+    String* toString() const
+    {
+        char* buf;
+        if (m_a == 0) {
+            asprintf(&buf, "rgb(%d, %d, %d)", m_r, m_g, m_b);
+        } else {
+            asprintf(&buf, "rgb(%d, %d, %d, %d)", m_r, m_g, m_b, m_a);
+        }
+
+        String* toStr = String::createASCIIString(buf);
+        free(buf);
+        return toStr;
+    }
+
     unsigned char r() const { return m_r; }
     unsigned char g() const { return m_g; }
     unsigned char b() const { return m_b; }
