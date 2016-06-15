@@ -165,14 +165,17 @@ public:
 
     Element* elementFromPoint(float x, float y);
 
+    ImageData* brokenImage();
 protected:
     bool m_inParsing : 1;
+    bool m_didLoadBrokenImage : 1;
     CompatibilityMode m_compatibilityMode;
     URL m_documentURI;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     Window* m_window;
+    ImageData* m_brokenImage;
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;
     size_t m_domVersion;

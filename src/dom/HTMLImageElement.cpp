@@ -20,7 +20,9 @@ public:
     {
         ResourceClient::didLoadFailed();
         m_element->m_imageResource = nullptr;
-        m_element->m_imageData = nullptr;
+        m_element->m_imageData = m_element->document()->brokenImage();
+
+        m_element->setNeedsFrameTreeBuild();
     }
 
     virtual void didLoadFinished()
