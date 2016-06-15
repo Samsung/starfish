@@ -27,6 +27,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
     LayoutUnit maxAscender = ascenderInOut;
     LayoutUnit maxDescender = descenderInOut;
     bool hasBoxOtherThanText = false;
+    bool hasNormalFlowChild = false;
 
     std::vector<FrameBox*, gc_allocator<FrameBox*> >* boxes;
     if (parentBox->isLineBox()) {
@@ -51,6 +52,8 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
         if (!box->isNormalFlow()) {
             box->asFrameBox()->setY(box->asFrameBox()->marginTop());
             continue;
+        } else {
+            hasNormalFlowChild = true;
         }
         VerticalAlignValue va = box->style()->verticalAlign();
         if (box->isInlineBox()) {
@@ -189,6 +192,11 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
+    }
+
+    if (!hasNormalFlowChild && boxes->size() != 0) {
+        ascenderInOut = descenderInOut = 0;
+        return 0;
     }
 
     // Consider parent's font ascender/descender
