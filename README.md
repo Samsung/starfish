@@ -6,7 +6,7 @@
 git clone git@10.113.64.203:StarFish/starfish.git
 cd starfish
 ./build_third_party.sh
-make [x86|x64|tizen_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
+make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
 ```
 
 e.g. `make x64.exe.debug -j`

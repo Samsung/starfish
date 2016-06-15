@@ -205,6 +205,12 @@ else
   CXXFLAGS += $(ESCARGOT_CXXFLAGS_X64)
 endif
 
+ifeq ($(MODE), debug)
+  CXXFLAGS += $(ESCARGOT_CXXFLAGS_DEBUG)
+else ifeq ($(MODE), release)
+  CXXFLAGS += $(ESCARGOT_CXXFLAGS_RELEASE)
+endif
+
 # bdwgc
 CXXFLAGS_DEBUG += -DGC_DEBUG
 
@@ -416,31 +422,33 @@ tizen3_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
 tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $<.strip ./$(LIB)
 
-$(OUTDIR)/$(BIN): $(OBJS) $(THIRD_PARTY_OBJS) Makefile
+DEPENDENCY_MAKEFILE = Makefile third_party/escargot/build/Flags.mk
+
+$(OUTDIR)/$(BIN): $(OBJS) $(THIRD_PARTY_OBJS) $(DEPENDENCY_MAKEFILE)
 	@echo "[LINK] $@"
 	$(CXX) -o $@ $(OBJS) $(THIRD_PARTY_OBJS) $(LDFLAGS)
 	cp $@ $@.strip
 	$(STRIP) $@.strip
 
-$(OUTDIR)/$(LIB): $(OBJS) $(THIRD_PARTY_OBJS) Makefile
+$(OUTDIR)/$(LIB): $(OBJS) $(THIRD_PARTY_OBJS) $(DEPENDENCY_MAKEFILE)
 	@echo "[LINK] $@"
 	$(CXX) -shared -Wl,-soname,$(LIB) -o $@ $(OBJS) $(THIRD_PARTY_OBJS) $(LDFLAGS)
 	cp $@ $@.strip
 	$(STRIP) $@.strip
 
-$(OUTDIR)/%.o: %.cpp Makefile
+$(OUTDIR)/%.o: %.cpp $(DEPENDENCY_MAKEFILE)
 	echo "[CXX] $@"
 	mkdir -p $(dir $@)
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 	$(CXX) -MM $(CXXFLAGS) -MT $@ $< > $(OUTDIR)/$*.d
 
-$(OUTDIR)/%.o: %.cc Makefile
+$(OUTDIR)/%.o: %.cc $(DEPENDENCY_MAKEFILE)
 	echo "[CXX] $@"
 	mkdir -p $(dir $@)
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 	$(CXX) -MM $(CXXFLAGS) -MT $@ $< > $(OUTDIR)/$*.d
 
-$(OUTDIR)/%.o: %.c Makefile
+$(OUTDIR)/%.o: %.c $(DEPENDENCY_MAKEFILE)
 	echo "[CC] $@"
 	mkdir -p $(dir $@)
 	$(CC) -c $(CFLAGS) $< -o $@
