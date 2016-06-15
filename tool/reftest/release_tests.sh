@@ -27,6 +27,5 @@ cp StarFish test/regression/bin/tizen-wearable-2.3-emulator
 # Update lwe repository
 rm $LWE_REPO/test/bin $LWE_REPO/test/reftest $LWE_REPO/test/tool -rf
 cp test/regression/bin test/regression/reftest test/regression/tool $LWE_REPO/test -rf
-rm $LWE_REPO/test/reftest/csswg-test $LWE_REPO/test/tool/csswg-test -rf
 rm $LWE_REPO/test/reftest/bidi/International/tests/html-css/x64 -rf
 

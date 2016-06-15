@@ -37,10 +37,6 @@ cp test/reftest/web-platform-tests/progress-events test/regression/reftest/web-p
 cp tool/reftest/wpt_xhr.res test/regression/tool/web-platform-tests/test_wpt_xhr
 rm test/regression/reftest/web-platform-tests/XMLHttpRequest -rf
 cp test/reftest/web-platform-tests/XMLHttpRequest test/regression/reftest/web-platform-tests/ -rf
-cp test/reftest/web-platform-tests/config.default.json test/regression/reftest/web-platform-tests/
-cp test/reftest/web-platform-tests/serve test/regression/reftest/web-platform-tests/
-cp test/reftest/web-platform-tests/serve.py test/regression/reftest/web-platform-tests/
-cp test/reftest/web-platform-tests/tools test/regression/reftest/web-platform-tests/ -rf
 
 ## Blink
 # W3C DOM Conformance Test Suites
@@ -88,6 +84,7 @@ rm test/regression/reftest/vendor/webkit/fast/html -rf
 mkdir -p test/regression/reftest/vendor/webkit/fast/html
 cp test/reftest/vendor/webkit/fast/html test/regression/reftest/vendor/webkit/fast -rf
 
-## W3C Internationalization tests
-# bidi: n/a
+## TODO: W3C Internationalization Tests
+
+## TODO: W3C CSS Tests
 
