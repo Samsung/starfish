@@ -14,7 +14,9 @@ for f in `ls $BIDI_PATH/*.html`; do
     out=`echo $out | sed 's/\.html/-expected\.png/'`
     out=`basename $out`
     echo "$f -> $OUT/$out"
-    ELM_ENGINE="shot:file=$OUT/$out" ./StarFish $f --width=900 --height=900 > /dev/null 2>&1
+    #ELM_ENGINE="shot:file=$OUT/$out" ./StarFish $f --width=900 --height=900 > /dev/null 2>&1
+    #ELM_ENGINE="shot:file=$OUT/$out" ./StarFish $f --width=900 --height=900 > /dev/null 2>&1
+    ./StarFish $f --screen-shot=$OUT/$out --width=900 --height=900 --regression-test > /dev/null 2>&1
     #r=`./imgdiffEvas.exe $f-expected.png $f.tmp.png`
     #rm -f $f.tmp.png
 done
