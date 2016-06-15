@@ -27,8 +27,17 @@ public:
     bool similar(const Color& b)
     {
         int diff = 0;
-        const int threshold = 3;
+        const int threshold = 4;
         int d;
+
+        if (hasAlpha && b.hasAlpha) {
+            d = abs((int)m_a - (int)b.m_a);
+            diff += d;
+            if (d > threshold) {
+                return false;
+            }
+        }
+
         d = abs((int)a() - (int)b.a());
         diff += d;
         if (d > threshold) {
@@ -60,6 +69,7 @@ public:
     uint8_t r() const { return m_r; }
     uint8_t g() const { return m_g; }
     uint8_t b() const { return m_b; }
+    bool hasAlpha;
 
 private:
     uint8_t m_a, m_r, m_g, m_b;
@@ -173,14 +183,14 @@ int main(int argc, char **argv)
             }
         }
 
-        if (maxCnt < 10) {
+        if (maxCnt < 4) {
             printf("diff: %01.2f%% passed (not exactly same)(debug %d)\n", 100.f*(diffCount/((float)(width*height))), maxCnt);
         } else {
             printf("diff: %01.2f%% failed\n", 100.f*(diffCount/((float)(width*height))));
         }
 
     } else {
-        printf("Pass\n");
+        printf("diff: 0.00%% passed\n");
     }
 
     return 0;
