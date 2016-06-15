@@ -747,6 +747,11 @@ test/reftest/csswg-test/css21_converted/cascade/html-attribute-004.htm
 test/reftest/csswg-test/css21_converted/cascade/html-attribute-018.htm
 test/reftest/csswg-test/css21_converted/cascade/html-attribute-019.htm
 test/reftest/csswg-test/css21_converted/cascade/html-attribute-028.htm
+test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-001.htm
+test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-003.htm
+test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-005.htm
+test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-006.htm
+test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-control.htm
 test/reftest/csswg-test/css21_converted/cascade/inherit-001.htm
 test/reftest/csswg-test/css21_converted/cascade/inherit-002.htm
 test/reftest/csswg-test/css21_converted/cascade/inherit-004.htm
@@ -758,11 +763,6 @@ test/reftest/csswg-test/css21_converted/cascade/specificity-007.htm
 test/reftest/csswg-test/css21_converted/cascade/support/html-attribute-017-frame.htm
 test/reftest/csswg-test/css21_converted/cascade/support/html-attribute-021-frame.htm
 test/reftest/csswg-test/css21_converted/cascade/support/html-attribute-022-frame.htm
-test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-001.htm
-test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-003.htm
-test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-005.htm
-test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-006.htm
-test/reftest/csswg-test/css21_converted/cascade-import/cascade-import-dynamic-control.htm
 test/reftest/csswg-test/css21_converted/colors/bidi-color-001.htm
 test/reftest/csswg-test/css21_converted/colors/color-176.htm
 test/reftest/csswg-test/css21_converted/colors/color-applies-to-008.htm
@@ -782,6 +782,9 @@ test/reftest/csswg-test/css21_converted/fonts/font-applies-to-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-applies-to-002.htm
 test/reftest/csswg-test/css21_converted/fonts/font-applies-to-005.htm
 test/reftest/csswg-test/css21_converted/fonts/font-family-rule-005.htm
+test/reftest/csswg-test/css21_converted/fonts/fonts-012.htm
+test/reftest/csswg-test/css21_converted/fonts/fonts-013.htm
+test/reftest/csswg-test/css21_converted/fonts/fonts-014.htm
 test/reftest/csswg-test/css21_converted/fonts/font-size-073.htm
 test/reftest/csswg-test/css21_converted/fonts/font-size-090.htm
 test/reftest/csswg-test/css21_converted/fonts/font-size-091.htm
@@ -817,9 +820,6 @@ test/reftest/csswg-test/css21_converted/fonts/font-weight-rule-005.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-rule-006.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-rule-007.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-rule-008.htm
-test/reftest/csswg-test/css21_converted/fonts/fonts-012.htm
-test/reftest/csswg-test/css21_converted/fonts/fonts-013.htm
-test/reftest/csswg-test/css21_converted/fonts/fonts-014.htm
 test/reftest/csswg-test/css21_converted/linebox/inline-formatting-context-001.htm
 test/reftest/csswg-test/css21_converted/linebox/inline-formatting-context-004.htm
 test/reftest/csswg-test/css21_converted/linebox/inline-formatting-context-005.htm
@@ -844,8 +844,8 @@ test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-001.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-002.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-004a.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-005a.htm
-test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-006.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-006a.htm
+test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-006.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-007.htm
 test/reftest/csswg-test/css21_converted/linebox/vertical-align-baseline-010.htm
 test/reftest/csswg-test/css21_converted/margin-padding-clear/margin-applies-to-008.htm
@@ -981,8 +981,8 @@ test/reftest/csswg-test/css21_converted/selectors/id-selector-001.htm
 test/reftest/csswg-test/css21_converted/selectors/id-selector-002.htm
 test/reftest/csswg-test/css21_converted/selectors/id-selector-004.htm
 test/reftest/csswg-test/css21_converted/selectors/id-selector-005.htm
-test/reftest/csswg-test/css21_converted/selectors/universal-selector-001-notref.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-001.htm
+test/reftest/csswg-test/css21_converted/selectors/universal-selector-001-notref.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-002-notref.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-003.htm
 test/reftest/csswg-test/css21_converted/selectors/universal-selector-004.htm
@@ -1041,8 +1041,8 @@ test/reftest/csswg-test/css21_converted/syntax/declaration-003.htm
 test/reftest/csswg-test/css21_converted/syntax/declaration-004.htm
 test/reftest/csswg-test/css21_converted/syntax/declaration-005.htm
 test/reftest/csswg-test/css21_converted/syntax/declaration-006.htm
-test/reftest/csswg-test/css21_converted/syntax/declaration-whitespace-001.htm
 test/reftest/csswg-test/css21_converted/syntax/declarations-009.htm
+test/reftest/csswg-test/css21_converted/syntax/declaration-whitespace-001.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-001.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-002.htm
 test/reftest/csswg-test/css21_converted/syntax/eof-005.htm
