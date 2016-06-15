@@ -379,15 +379,7 @@ public:
             return true;
 
         Frame* child = firstChild();
-
-        while (child && !child->isNormalFlow()) {
-            child = child->next();
-        }
-
-        if (!child)
-            return true;
-
-        return child->style()->display() == BlockDisplayValue;
+        return child->style()->originalDisplay() == BlockDisplayValue;
     }
 
     bool isSelfCollapsingBlock(LayoutContext& ctx)
