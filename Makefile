@@ -579,15 +579,20 @@ regression_test_bidi:
 	./tool/reftest/reftest.sh tool/reftest/bidi.res true
 
 regression_test_css1:
-	./tool/reftest/css_test.sh css1 true
+	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css1 | sort -d > out/csswg_css1.res
+	./tool/reftest/reftest.sh out/csswg_css1.res true
 regression_test_css21:
-	./tool/reftest/css_test.sh css21 true
+	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css21 | sort -d > out/csswg_css21.res
+	./tool/reftest/reftest.sh out/csswg_css21.res true
 regression_test_css3_color:
-	./tool/reftest/css_test.sh css3_color true
+	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css-color-3 | sort -d > out/csswg_css3_color.res
+	./tool/reftest/reftest.sh out/csswg_css3_color.res true
 regression_test_css3_backgrounds:
-	./tool/reftest/css_test.sh css3_backgrounds true
+	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css-backgrounds | sort -d > out/csswg_css3_backgrounds.res
+	./tool/reftest/reftest.sh out/csswg_css3_backgrounds.res true
 regression_test_css3_transforms:
-	./tool/reftest/css_test.sh css3_transforms true
+	cat tool/reftest/wpt_css_passed.res tool/reftest/tclist/csswg_manual.res | grep css-transforms | sort -d > out/csswg_css3_transforms.res
+	./tool/reftest/reftest.sh out/csswg_css3_transforms.res true
 regression_test_css:
 	make regression_test_css1
 	make regression_test_css21
@@ -595,8 +600,8 @@ regression_test_css:
 	make regression_test_css3_backgrounds
 	make regression_test_css3_transforms
 
-font_dependent_regression_test_css:
-	./tool/reftest/css_test.sh css_manual
+font_dependent_test_css:
+	./tool/reftest/reftest.sh tool/reftest/tclist/csswg_manual.res
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp

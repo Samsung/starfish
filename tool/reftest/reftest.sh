@@ -16,6 +16,7 @@ SKIPTC=0
 PASSTCFILE=0
 CHECKTCFILE=0
 TCFILE=0
+OUTDIR="out/x64/exe/debug/reftest/regression/"
 
 if [ "$1" = "" ]; then
     echo "Please specify the input file"
@@ -34,6 +35,7 @@ fi
 # 1: Web Platform Tests
 # 2: Vendor Tests
 # 3: Pixel Tests
+# 4: CSSWG - Pixel Tests (font-dependent)
 if [[ "$1" = *"dom_conformance_test.res" ||
       "$1" = *"dom-conformance-test"*".htm"* || "$1" = *"blink/dom"*".htm"* ||
       "$1" = *"gecko/dom_tests_mochitest"*".htm"* || "$1" = *"webkit/dom"*".htm"* ]]; then
@@ -92,6 +94,12 @@ elif [[ "$1" = *"bidi.res" || "$1" = *"bidi/International/tests"*".htm"* ]]; the
     TESTSUITE=3
     TESTSUITENAME="International Tests"
     PASSFILE="test/regression/tool/bidi/test_bidi"
+elif [[ "$1" = *"csswg"*".res" || "$1" = *"csswg-test/"*".htm"* ]]; then
+    TESTSUITE=4
+    name=${1##*/}
+    name=${name%.*}
+    TESTSUITENAME="CSSWG Tests - $name"
+    PASSFILE="test/regression/tool/csswg-test/test_$name"
 else
     echo "Unsupported tests"
     exit
@@ -116,7 +124,10 @@ for i in $tc ; do
     filenames[$cnt]=$i
     if [ $TESTSUITE -eq 3 ]; then
         RESIMG="out"$cnt".png"
-        ./StarFish $i --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 &> /dev/null 2&>1 &
+        ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 &> /dev/null 2>&1 &
+    elif [ $TESTSUITE -eq 4 ]; then
+        RESIMG="out"$cnt".png"
+        ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 &> /dev/null 2>&1 &
     else
         ./StarFish $i --hide-window &> $RESFILE &
     fi
@@ -130,7 +141,7 @@ for i in $tc ; do
         RESIMG="out"$c".png"
 
         # Collect the result
-        if [ $TESTSUITE -ne 3 ]; then
+        if [ `expr $TESTSUITE \< 3` -eq 1 ]; then
             replace1='s/\\n"//g'
             replace2='s/"//g'
             replace3='s/\n//g'
@@ -217,11 +228,56 @@ for i in $tc ; do
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
             fi
             rm $RESIMG
+        elif [ $TESTSUITE -eq 4 ]; then
+            RESIMGPATH=${filenames[$c]%/*}
+            RESIMGPATH=`echo $RESIMGPATH | sed 's/test\/reftest\///'`
+            RESIMGPATH=$OUTDIR$RESIMGPATH
+            mkdir -p $RESIMGPATH
+            NEWRESIMG=${filenames[$c]##*/}
+            NEWRESIMG=`echo $NEWRESIMG | sed 's/\.html/-expected\.png/'`
+            NEWRESIMG=`echo $NEWRESIMG | sed 's/\.htm/-expected\.png/'`
+            NEWRESIMG=$RESIMGPATH"/"$NEWRESIMG
+            #echo $NEWRESIMG
+            mv $RESIMG $NEWRESIMG
+
+            EXPIMG=${filenames[$c]}
+            EXPIMG=`echo $EXPIMG | sed 's/_converted/_result\/font_dependent\/x64/'`
+            EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/'`
+            EXPIMG=`echo $EXPIMG | sed 's/\.htm/-expected\.png/'`
+            IMGDIFF="./tool/pixel_test/bin/image_diff"
+            if [[ -f ${EXPIMG} ]]; then
+                DIFF=`$IMGDIFF $NEWRESIMG $EXPIMG`
+            else
+                DIFF="failed"
+            fi
+            if [[ "$DIFF" = *"0.00% passed" ]]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                passfile=${filenames[$c]//_converted\//\/}
+                if [ ! -f ${passfile} ]; then
+                    filepath=${filenames[$c]%/*}
+                    passpath=${passfile%/*}
+                    mkdir -p ${passpath}
+                    if [[ -d ${filepath}/support && ! -d ${passpath}/support ]]; then
+                        echo "--- Copied folder: "${filepath}"/support"
+                        cp -rf ${filepath}/support ${passpath}/support
+                    fi
+                    cp ${filenames[$c]} $passpath
+                fi
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+                DIFFIMG=`echo $NEWRESIMG | sed 's/-expected/-diff//'`
+                if [[ -f ${EXPIMG} ]]; then
+                    $IMGDIFF --diff $NEWRESIMG $EXPIMG $DIFFIMG
+                fi
+            fi
+            rm -f $RESIMG
         fi
 
         TCFILE=`expr $TCFILE + 1`
         if [ $TESTSUITE -ne 3 ]; then
-            rm $TMPFILE
+            rm -f $TMPFILE
         fi
     done
 done
