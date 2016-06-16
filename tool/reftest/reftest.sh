@@ -264,12 +264,23 @@ for i in $tc ; do
                     fi
                     cp ${filenames[$c]} $passpath
                 fi
+                if [[ "$2" = "update" ]]; then
+                    passpng=${EXPIMG//test\/reftest/test\/regression\/reftest}
+                    mkdir -p ${passpng%/*}
+                    cp $EXPIMG ${passpng}
+                fi
             else
                 FAILTC=`expr $FAILTC + 1`
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
                 DIFFIMG=`echo $NEWRESIMG | sed 's/-expected/-diff//'`
                 if [[ -f ${EXPIMG} ]]; then
                     $IMGDIFF --diff $NEWRESIMG $EXPIMG $DIFFIMG
+                    if [[ "$2" = "update" ]]; then
+                        passpng=${EXPIMG//test\/reftest/test\/regression\/reftest}
+                        if [[ -f ${passpng} ]]; then
+                            rm ${passpng}
+                        fi
+                    fi
                 fi
             fi
             rm -f $RESIMG
