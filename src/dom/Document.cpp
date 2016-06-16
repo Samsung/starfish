@@ -520,7 +520,7 @@ ImageData* Document::brokenImage()
     if (m_didLoadBrokenImage) {
         return m_brokenImage;
     } else {
-        String* brokenImg = String::fromUTF8("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAACXBIWXMAAAsVAAALFQGAmdiDAAACm0lEQVR4nJ1US08TURS+r5kOBSkDrdQ2wQRNo+lCmhCVR1K2xI0kJhgDG/gFrgz8BhfuTVyxUiPYYKJphEJMjIoLHgFdkEAAFYFQgdrp3Ln3emYqpK2VBSe5k3NPzvd953EzLJPJoLMag5NMJs+AnJmZYUVvbGyMUoYJRqpKHsYoFoslEokqysWEm109AbNRCAWpRQMeIMMYv8ukl5dXhBDt7e1VwEqpgmC/8ow7ghCvAoWEBE2lMVzgIh6/2tBgTk1Nd3Z2GIZRBpYuWDkFaXPZHKDRJpaz5Oq2I6QyGAYWx3HC4TBopNPp7u5u0zRLlaWUiCgUMWnYdIO1BoldYF+/2VIhStinubn5+UUpBeAnJ18NDg6UKEOKQi0hGqjBJU25cYs7bTeSfh0ziiilB9n92ek3lT2Drf3kts3x8cTckDtpnOfYlu4cdI1yQaHH8p5daSSE5I48Af8dOUaODY5bsKET7GDGWAXYk5bgIA+rvKM8mhMuRQhpbGq8299fUbZbC3yABdYjFC+IXE7sEszqWFAjfoqpz2fUMNkS1BCi/yq7TcJLOBQ/lrOvF/dThEIVpJ5G2sw7V0LJJr9sjfgg2bZtXdfLBuZtG23ll5YOXq7n3itSfGx4z1mdO3xyKaq3RnohZ2dnN5VKDQ8PlYA96W1rZSH7fD3/sfgqi90arGbo2v3rkR7ws3m+sacsq1DxwuRBYWf+8MVG/jM6RoLVavUPOh9eNuNc2rNr6S97G22+WwKmWgp2BP/w/dmWWEICMez2gykO1p4f6XjUXBeF69OFx283J/w4yDVbSqcMbP221IIeVYniXmAlwVBooPfeOSMA1/Hxic3Vo4t2F3DmyJFGtTLw6OgI+r/19d2uGnfB8E84BXmK/QG0a1ee1/3GTwAAAABJRU5ErkJggg==");
+        String* brokenImg = String::fromUTF8("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AYQCBEZPGjJdQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAVSURBVDjLY2AYBaNgFIyCUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
         ImageResource* res = resourceLoader()->fetchImage(URL(String::emptyString, brokenImg));
         res->request(true);
         m_brokenImage = res->imageData();
