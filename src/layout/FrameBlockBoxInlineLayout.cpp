@@ -1525,6 +1525,12 @@ void FrameBlockBox::paintChildrenWith(Canvas* canvas, PaintingStage stage)
 void InlineTextBox::paint(Canvas* canvas, PaintingStage stage)
 {
     if (stage == PaintingNormalFlowInline) {
+        if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+            canvas->setVisible(false);
+        } else {
+            canvas->setVisible(true);
+        }
+
         if (m_origin->textDecorationData()) {
             auto data = m_origin->textDecorationData();
             canvas->setNeedsLineThrough(data->m_hasLineThrough);
