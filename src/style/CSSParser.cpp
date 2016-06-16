@@ -376,7 +376,9 @@ public:
             size_t i;
             for (i = 0; i < 6; i++) {
                 c = read();
-                if (isHexDigit((char32_t)c))
+                if (isDigit((char32_t)c))
+                    code = code * 16 + (c - '0');
+                else if (isHexDigit((char32_t)c))
                     code = code * 16 + (towlower(c) - 'a' + 10);
                 else if (!isHexDigit((char32_t)c) && !isWhiteSpace((char32_t)c)) {
                     pushback();
@@ -912,6 +914,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
     CSSToken* token = aToken;
     bool valid = false;
     bool combinatorFound = false;
+    bool commaFound = false;
 
     while (token->isSGMLComment() || token->isWhiteSpace()) {
         token = getToken(false, true);
@@ -928,7 +931,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
 
         if (!aParseSelectorOnly && token->isSymbol('{')) {
             // end of selector
-            valid = !combinatorFound;
+            valid = !combinatorFound && !commaFound;
             // don't unget if invalid since addUnknownRule is going to restore state anyway
             if (valid)
                 ungetToken();
@@ -939,6 +942,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
             s = s->concat(token->m_value);
             isFirstInChain = true;
             combinatorFound = false;
+            commaFound = true;
             token = getToken(false, true);
             continue;
         } else if (!combinatorFound && (token->isWhiteSpace() || token->isSymbol('>') || token->isSymbol('+') || token->isSymbol('~'))) {
@@ -968,6 +972,8 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
             token = getToken(true, true);
             continue;
         } else {
+            if (!isFirstInChain && !combinatorFound)
+                break;
             String* simpleSelector = parseSimpleSelector(token, isFirstInChain, true, validSelector);
             if (!simpleSelector->length())
                 break; // error
@@ -977,6 +983,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
             // specificity.d += simpleSelector.specificity.d;
             isFirstInChain = false;
             combinatorFound = false;
+            commaFound = false;
         }
         token = getToken(false, true);
     }
