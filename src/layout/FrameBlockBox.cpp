@@ -49,6 +49,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     remainWidth -= marginWidth();
                     remainWidth -= borderWidth();
                     remainWidth -= paddingWidth();
+                    if (remainWidth < 0)
+                        remainWidth = 0;
                     setContentWidth(remainWidth);
                 }
             } else {
