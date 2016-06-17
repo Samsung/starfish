@@ -911,7 +911,7 @@ public:
             float ptSize = siz;
             evas_object_text_font_set(eo, lastState().m_font->familyName()->utf8Data(), ptSize);
             evas_object_color_set(eo, lastState().m_color.r(), lastState().m_color.g(), lastState().m_color.b(), lastState().m_color.a());
-            evas_object_text_text_set(eo, text->utf8Data());
+            evas_object_text_text_set(eo, text->utf8DataIgnoreZeroWidthChar());
 
             evas_object_move(eo, (int)xx, (int)yy);
             applyClippers(eo);

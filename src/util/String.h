@@ -70,6 +70,7 @@ public:
     UTF16String toUTF16String() const;
 
     const char* utf8Data();
+    const char* utf8DataIgnoreZeroWidthChar();
 
     bool equals(const String* str) const;
     bool equalsWithoutCase(const String* str) const;
@@ -251,7 +252,7 @@ protected:
         return true;
     }
 
-    const char* utf8DataSlowCase();
+    const char* utf8DataSlowCase(bool ignoreZeroWidthChar = false);
     String()
     {
         m_isASCIIString = true;

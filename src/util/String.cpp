@@ -162,6 +162,48 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len, size_t* bufferSize
     return result;
 }
 
+bool isZeroWidthChar(char32_t CHAR)
+{
+    if (CHAR < 32) {
+        if (CHAR != 9 && CHAR !=10 && CHAR != 13)
+            return true;
+    }
+    if (CHAR >= 0x7F && CHAR < 0xA0) {
+        return true;
+    }
+    if (CHAR == 0xAD || CHAR == 0x200B || CHAR == 0x200E || CHAR == 0x200F || CHAR == 0x202A || CHAR == 0x202B || CHAR == 0x202C || CHAR == 0x202D || CHAR == 0x202C || CHAR == 0x202E || CHAR == 0xFEFF || CHAR == 0xFFFC)
+        return true;
+    return false;
+}
+
+const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len, size_t* bufferSize = NULL)
+{
+    unsigned strLength = 0;
+    char buffer[8];
+    for (size_t i = 0; i < len; i++) {
+        if (isZeroWidthChar(t[i]))
+            continue;
+        int length = utf32ToUtf8(t[i], buffer);
+        strLength += length;
+    }
+
+    char* result = (char*)GC_MALLOC_ATOMIC(strLength + 1);
+    if (bufferSize)
+        *bufferSize = strLength + 1;
+    unsigned currentPosition = 0;
+
+    for (size_t i = 0; i < len; i++) {
+        if (isZeroWidthChar(t[i]))
+            continue;
+        int length = utf32ToUtf8(t[i], buffer);
+        memcpy(&result[currentPosition], buffer, length);
+        currentPosition += length;
+    }
+    result[strLength] = 0;
+
+    return result;
+}
+
 StringDataUTF32::StringDataUTF32(const char* src, size_t len)
 {
     m_isASCIIString = false;
@@ -174,9 +216,11 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
     putDebugInfo();
 }
 
-const char* String::utf8DataSlowCase()
+const char* String::utf8DataSlowCase(bool ignoreZeroWidthChar)
 {
     STARFISH_ASSERT(!m_isASCIIString);
+    if (ignoreZeroWidthChar)
+        return utf32ToUtf8IgnoreZeroWidthChar(asUTF32String()->data(), asUTF32String()->length());
     return utf32ToUtf8(asUTF32String()->data(), asUTF32String()->length());
 }
 
@@ -264,6 +308,15 @@ const char* String::utf8Data()
         return asASCIIString()->data();
     } else {
         return utf8DataSlowCase();
+    }
+}
+
+const char* String::utf8DataIgnoreZeroWidthChar()
+{
+    if (m_isASCIIString) {
+        return asASCIIString()->data();
+    } else {
+        return utf8DataSlowCase(true);
     }
 }
 
