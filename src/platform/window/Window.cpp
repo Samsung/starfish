@@ -460,7 +460,7 @@ Window::Window(StarFish* starFish, const URL& url)
     initScriptWrappable(this);
     STARFISH_ASSERT(m_starFish->scriptBindingInstance());
     m_timeoutCounter = 0;
-    m_requestAnimationFrameCounter = 0;
+    m_requestAnimationFrameCounter = 1;
 
     m_needsRendering = false;
     m_inRendering = false;
@@ -938,7 +938,7 @@ uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* da
 
     TimeoutData* td = new(NoGC) TimeoutData;
     td->m_window = this;
-    uint32_t id = m_requestAnimationFrameCounter++;
+    uint32_t id = m_requestAnimationFrameCounter;
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
