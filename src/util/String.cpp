@@ -314,7 +314,13 @@ const char* String::utf8Data()
 const char* String::utf8DataIgnoreZeroWidthChar()
 {
     if (m_isASCIIString) {
-        return asASCIIString()->data();
+        StringDataASCII* newStr = new StringDataASCII("");
+        for (size_t i = 0; i < length(); i ++) {
+            if (!isZeroWidthChar(charAt(i))) {
+                newStr->insert(newStr->end(), (*asASCIIString())[i]);
+            }
+        }
+        return newStr->data();
     } else {
         return utf8DataSlowCase(true);
     }
