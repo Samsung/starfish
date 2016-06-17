@@ -1015,7 +1015,7 @@ public:
                 (int)lastState().m_color.r(), (int)lastState().m_color.g(), (int)lastState().m_color.b(), (int)lastState().m_color.a(), weight, fontStyle, lineThroughMode, lineThroughColor, underlineMode, underlineColor);
             evas_textblock_style_set(st, buf);
             evas_object_textblock_style_set(eo, st);
-            evas_object_color_set(eo, lastState().m_color.r(), lastState().m_color.g(), lastState().m_color.b(), lastState().m_color.a());
+//            evas_object_color_set(eo, lastState().m_color.r(), lastState().m_color.g(), lastState().m_color.b(), lastState().m_color.a());
             evas_object_textblock_text_markup_set(eo, text->utf8Data());
 
             evas_object_resize(eo, ww, hh);

@@ -601,7 +601,7 @@ regression_test_css:
 	make regression_test_css3_transforms
 
 font_dependent_test_css:
-	./tool/reftest/reftest.sh tool/reftest/tclist/csswg_manual.res
+	./tool/reftest/reftest.sh tool/reftest/tclist/csswg_manual.res update
 
 regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp

@@ -272,7 +272,7 @@ for i in $tc ; do
             else
                 FAILTC=`expr $FAILTC + 1`
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
-                DIFFIMG=`echo $NEWRESIMG | sed 's/-expected/-diff//'`
+                DIFFIMG=${NEWRESIMG//-expected/-diff}
                 if [[ -f ${EXPIMG} ]]; then
                     $IMGDIFF --diff $NEWRESIMG $EXPIMG $DIFFIMG
                     if [[ "$2" = "update" ]]; then
