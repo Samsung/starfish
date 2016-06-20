@@ -26,7 +26,7 @@ Event::Event()
 {
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
-    m_timeStamp = (BILLION * time.tv_sec + time.tv_nsec) / MILLION;
+    m_timeStamp = (unsigned long long)(BILLION * time.tv_sec + time.tv_nsec) / MILLION;
 }
 
 Event::Event(String* eventType, const EventInit& init)
@@ -38,7 +38,7 @@ Event::Event(String* eventType, const EventInit& init)
 {
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
-    m_timeStamp = (BILLION * time.tv_sec + time.tv_nsec) / MILLION;
+    m_timeStamp = (unsigned long long)(BILLION * time.tv_sec + time.tv_nsec) / MILLION;
 }
 
 UIEvent::UIEvent(ScriptBindingInstance* instance)

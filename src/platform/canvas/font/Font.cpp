@@ -13,7 +13,7 @@ namespace StarFish {
 extern int g_screenDpi;
 Evas* internalCanvas();
 
-static String* convertStyleParamStr(String* familyName, char style, char weight)
+static String* convertStyleParamStr(String* familyName, unsigned char style, char weight)
 {
     switch (weight) {
     case 1:

@@ -68,7 +68,7 @@ const char* kNAMESPACE_RULE_POSITION = "@namespace rule invalid at this position
 const char* kCHARSET_RULE_CHARSET_SOF = "@charset rule invalid at this position in the stylesheet";
 const char* kUNKNOWN_AT_RULE = "Unknow @-rule";
 
-char CSS_ESCAPE  = '\\';
+unsigned char CSS_ESCAPE  = '\\';
 
 char IS_HEX_DIGIT = 1;
 char START_IDENT = 2;

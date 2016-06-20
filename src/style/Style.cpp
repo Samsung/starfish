@@ -2259,7 +2259,7 @@ String* CSSStyleValuePair::toString()
         case CSSStyleValuePair::ValueKind::Inherit:
             return String::fromUTF8("inherit");
         default:
-            break;
+            return String::emptyString;
         }
     }
     case BorderTopStyle:
@@ -2276,7 +2276,7 @@ String* CSSStyleValuePair::toString()
         case CSSStyleValuePair::ValueKind::Inherit:
             return String::fromUTF8("inherit");
         default:
-            break;
+            return String::emptyString;
         }
     }
     case BorderTopWidth:

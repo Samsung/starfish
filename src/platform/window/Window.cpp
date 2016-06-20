@@ -633,12 +633,12 @@ void Window::rendering()
                 box->clearStackingContextIfNeeds();
             });
             shouldClearStackingContext = false;
-        }
 
-        // create frame tree
-        Timer t("create frame tree");
-        FrameTreeBuilder::buildFrameTree(m_document);
-        m_needsFrameTreeBuild = false;
+            // create frame tree
+            Timer t("create frame tree");
+            FrameTreeBuilder::buildFrameTree(m_document);
+            m_needsFrameTreeBuild = false;
+        }
     }
 
     if (m_needsLayout) {
