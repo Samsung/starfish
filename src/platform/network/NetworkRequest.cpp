@@ -565,6 +565,46 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
     delete fio;
 }
 
+static String* decodeURL(String *src, size_t idx)
+{
+    UTF32String ret;
+
+    while(idx < src->length()) {
+        char32_t c = src->charAt(idx);
+        if (c == '%') {
+            char32_t ch = 0;
+            bool ok = true;
+            for (size_t i = 0; i < 2; i++) {
+                if (idx >= src->length()) {
+                    ok = false;
+                    break;
+                }
+                idx++;
+                c = src->charAt(idx);
+                char32_t current = 0;
+                if (c < ':') {
+                    current = c - 48;
+                } else if (c > '@' && c < '[') {
+                    current = (c - 'A') + 10;
+                } else {
+                    current = (c - 'a') + 10;
+                }
+
+                if ((16 * (1 - i))) {
+                    current = (current * 16);
+                }
+                ch += current;
+            }
+            if (ok)
+                ret += ch;
+        } else {
+            ret += c;
+        }
+        idx++;
+    }
+    return new StringDataUTF32(std::move(ret));
+}
+
 void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
 {
     res->m_status = 200;
@@ -582,12 +622,13 @@ void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
     res->changeReadyState(HEADERS_RECEIVED, true);
 
     res->changeReadyState(LOADING, true);
-    for (size_t i = idx + 1; i < url->length(); i++) {
-        char32_t c = url->charAt(i);
-        // TODO filter url string correctly according RFC 3986
-        if (c < 128) {
-            res->m_response.push_back((char)c);
-        }
+
+    // TODO filter url string correctly according RFC 3986
+    String* decodedURL = decodeURL(url, idx + 1);
+    const char* utf8Data = decodedURL->utf8Data();
+
+    for (size_t i = 0; i < strlen(utf8Data); i++) {
+        res->m_response.push_back(utf8Data[i]);
     }
 
     res->handleResponseEOF();

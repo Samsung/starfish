@@ -170,6 +170,7 @@ protected:
     static size_t curlWriteCallback(void* ptr, size_t size, size_t nmemb, void* data);
     static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb, void* data);
     static void* networkWorker(void*);
+
     template <typename StrType>
     static NetworkRequestResponse parseBase64String(const StrType& str, size_t startAt, size_t endAt);
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
