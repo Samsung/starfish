@@ -136,6 +136,9 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
         } else {
             // Block... + Inline case
             Frame* last = frameBlockBox->lastChild();
+            if (!last)
+                return;
+
             if (!last->isNormalFlow() && currentFrame->isNormalFlow()) {
                 Frame* lastAnnyBlockBox = nullptr;
 
@@ -253,15 +256,17 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         if (isBlockChild && ctx.isInFrameInlineFlow() && currentFrame->isNormalFlow()) {
             // divide block. when comes Inline.. + Block(normal flow)
             didSplitBlock = true;
+
+            STARFISH_ASSERT(current->parentNode());
             Frame* parent = current->parentNode()->frame();
-            while (true) {
+            while (parent) {
                 if (parent->isFrameBlockBox() && parent->node())
                     break;
                 parent = parent->parent();
             }
 
             Node* nd = current->parentNode();
-            while (true) {
+            while (nd) {
                 if (nd->frame()->isFrameBlockBox()) {
                     break;
                 }
@@ -289,6 +294,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
                 nd = nd->parentNode();
             }
 
+            STARFISH_ASSERT(parent);
             ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
             ctx.setIsInFrameInlineFlow(false);
         }

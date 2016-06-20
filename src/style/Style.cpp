@@ -4825,7 +4825,7 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         if (!originFounded && node == origin) {
             originFounded = true;
         } else if (originFounded) {
-            if (node->isElement() && node->asElement()) {
+            if (node->isElement()) {
                 if (node->asElement()->isHTMLElement()) {
                     if (node->asElement()->asHTMLElement()->isHTMLStyleElement()) {
                         if (node->asElement()->asHTMLElement()->asHTMLStyleElement()->generatedSheet()) {

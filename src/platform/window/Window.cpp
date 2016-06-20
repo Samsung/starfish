@@ -743,7 +743,7 @@ void Window::rendering()
 
     if (m_needsComposite) {
         Timer t("composite");
-        if (m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer()) {
+        if (m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer()) {
             Canvas* canvas = preparePainting(eflWindow);
             paintWindowBackground(canvas);
             m_document->frame()->firstChild()->asFrameBox()->stackingContext()->compositeStackingContext(canvas);

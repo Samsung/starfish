@@ -1918,7 +1918,7 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->asHTMLElement()) {
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_dir));
         } else {
             THROW_ILLEGAL_INVOCATION();
@@ -1926,7 +1926,7 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->asHTMLElement()) {
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
             nd->asElement()->setAttribute(nd->document()->window()->starFish()->staticStrings()->m_dir, toBrowserString(v));
         } else {
             THROW_ILLEGAL_INVOCATION();

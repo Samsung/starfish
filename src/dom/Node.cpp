@@ -715,14 +715,16 @@ void Node::parserRemoveChild(Node* child)
 void Node::parserInsertBefore(Node* child, Node* childRef)
 {
     ASSERT(child);
-    ASSERT(childRef->parentNode() == this);
-    if (childRef->previousSibling() == child || childRef == child) // nothing to do
-        return;
 
     if (childRef == nullptr) {
         appendChild(child);
         return;
     }
+
+    ASSERT(childRef->parentNode() == this);
+    if (childRef->previousSibling() == child || childRef == child) // nothing to do
+        return;
+
     if (child == childRef) {
         return;
     }
@@ -858,7 +860,7 @@ void Node::setNeedsFrameTreeBuild()
             STARFISH_ASSERT(old->isFrameDocument());
             parent = old;
         } else {
-            while (true) {
+            while (parent) {
                 if (parent->isFrameBlockBox() && parent->node()) {
                     break;
                 }
@@ -866,6 +868,7 @@ void Node::setNeedsFrameTreeBuild()
             }
         }
 
+        STARFISH_ASSERT(parent);
         while (parent->firstChild()) {
             parent->removeChild(parent->firstChild());
         }
