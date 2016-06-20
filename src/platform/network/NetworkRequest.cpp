@@ -569,7 +569,7 @@ static String* decodeURL(String *src, size_t idx)
 {
     UTF32String ret;
 
-    while(idx < src->length()) {
+    while (idx < src->length()) {
         char32_t c = src->charAt(idx);
         if (c == '%') {
             char32_t ch = 0;
