@@ -26,7 +26,3 @@ test/reftest/bidi/International/tests/html-css/bidi-markup-024.html
 test/reftest/bidi/International/tests/html-css/bidi-markup-025.html
 test/reftest/bidi/International/tests/html-css/bidi-markup-026.html
 test/reftest/bidi/International/tests/html-css/bidi-markup-030.html
-test/reftest/bidi/International/tests/html-css/direction-controls-001.html
-test/reftest/bidi/International/tests/html-css/direction-controls-004.html
-test/reftest/bidi/International/tests/html-css/direction-controls-005.html
-test/reftest/bidi/International/tests/html-css/direction-controls-006.html
