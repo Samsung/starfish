@@ -1011,7 +1011,7 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
             || token->isSymbol('}')
             || token->isSymbol('!'))
             && !blocks.size()) {
-            if (token->isSymbol('}'))
+            if (token->isSymbol('}') && willBeConcat.size() > 0)
                 ungetToken();
             break;
         }
