@@ -77,11 +77,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         oldCanvas = canvas;
         canvas = Canvas::create(m_buffer);
         canvas->translate(-minX, -minY);
-    } else {
-        if (owner()->shouldApplyOverflow()) {
-            canvas->save();
-            canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
-        }
     }
 
     {
@@ -96,6 +91,11 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
     // the background and borders of the element forming the stacking context.
     m_owner->paintBackgroundAndBorders(canvas);
+
+    if (!m_needsOwnBuffer && owner()->shouldApplyOverflow()) {
+        canvas->save();
+        canvas->clip(Rect(owner()->borderLeft(), owner()->borderTop(), owner()->width()-owner()->borderWidth(), owner()->height()-owner()->borderHeight()));
+    }
 
     // the child stacking contexts with negative stack levels (most negative first).
     {
