@@ -179,7 +179,7 @@ public:
 
     static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect bgRect, LayoutRect borderBox)
     {
-        if (!style->backgroundColor().isTransparent()) {
+        if (!style->backgroundColor().isTransparent() && style->visibility() == VisibilityValue::VisibleVisibilityValue) {
             canvas->save();
             canvas->setColor(style->backgroundColor());
             canvas->drawRect(borderBox);
