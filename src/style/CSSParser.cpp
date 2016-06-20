@@ -931,7 +931,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
 
         if (!aParseSelectorOnly && token->isSymbol('{')) {
             // end of selector
-            valid = !combinatorFound && !commaFound;
+            valid = !combinatorFound;
             // don't unget if invalid since addUnknownRule is going to restore state anyway
             if (valid)
                 ungetToken();
@@ -942,8 +942,8 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
             s = s->concat(token->m_value);
             isFirstInChain = true;
             combinatorFound = false;
-            commaFound = true;
             token = getToken(false, true);
+            commaFound = true;
             continue;
         } else if (!combinatorFound && (token->isWhiteSpace() || token->isSymbol('>') || token->isSymbol('+') || token->isSymbol('~'))) {
             // now combinators and grouping...
@@ -972,8 +972,7 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
             token = getToken(true, true);
             continue;
         } else {
-            if (!isFirstInChain && !combinatorFound)
-                break;
+            commaFound = false;
             String* simpleSelector = parseSimpleSelector(token, isFirstInChain, true, validSelector);
             if (!simpleSelector->length())
                 break; // error
@@ -983,10 +982,15 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
             // specificity.d += simpleSelector.specificity.d;
             isFirstInChain = false;
             combinatorFound = false;
-            commaFound = false;
         }
         token = getToken(false, true);
     }
+
+    if (commaFound) {
+        valid = false;
+    }
+
+    validSelector = valid;
     if (valid) {
         // return {selector: s, specificity: specificity };
         return s;
