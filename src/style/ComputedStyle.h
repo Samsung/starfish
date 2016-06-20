@@ -202,7 +202,7 @@ public:
         t.setScale(a, b);
         m_transforms->append(t);
     }
-    
+
     void setTransformRotate(double a)
     {
         setTransformIfNeeded();
@@ -210,7 +210,7 @@ public:
         t.setRotate(a);
         m_transforms->append(t);
     }
-    
+
     void setTransformSkew(double a, double b)
     {
         setTransformIfNeeded();
@@ -358,6 +358,11 @@ public:
     int32_t zIndex()
     {
         return m_zIndex;
+    }
+
+    bool IsSpecifiedZIndex()
+    {
+        return m_zIndexSpecifiedByUser;
     }
 
     StyleBackgroundData* background()
@@ -925,6 +930,7 @@ protected:
         m_display = DisplayValue::InlineDisplayValue;
         m_opacity = 1;
         m_zIndex = 0;
+        m_zIndexSpecifiedByUser = false;
         m_background = nullptr;
         m_surround = nullptr;
         m_overflow = OverflowValue::VisibleOverflow;
@@ -964,6 +970,7 @@ protected:
 
     float m_opacity;
     int32_t m_zIndex;
+    bool m_zIndexSpecifiedByUser;
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;

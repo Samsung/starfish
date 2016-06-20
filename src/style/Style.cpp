@@ -4401,6 +4401,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->m_zIndex = 0;
                 } else {
                     style->m_zIndex = cssValues[k].numberValue();
+                    style->m_zIndexSpecifiedByUser = true;
                 }
                 break;
             case CSSStyleValuePair::KeyKind::Transform:
