@@ -636,7 +636,7 @@ NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str, siz
     size_t i = 0;
     size_t j = 0;
     size_t in_ = startAt;
-    unsigned char charArray4[4], charArray3[3];
+    unsigned char charArray4[4] = { }, charArray3[3] = { };
     NetworkRequestResponse result;
 
     while (inLen--) {
@@ -680,7 +680,7 @@ NetworkRequestResponse NetworkRequest::parseBase64String(const StrType& str, siz
         charArray3[2] = ((charArray4[2] & 0x3) << 6) + charArray4[3];
 
         for (j = 0; (j < i - 1); j++) {
-            result.push_back((char)charArray3[i]);
+            result.push_back((char)charArray3[j]);
         }
     }
 

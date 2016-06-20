@@ -1115,6 +1115,7 @@ ScriptValue createAttributeStringEventFunction(Element* target, String* function
                 escargot::ESVMInstance::currentInstance()->currentExecutionContext()->argumentCount(), false);
             instance->unregisterTryPos(&tryPosition);
         } else {
+            hasError = true;
             result = instance->getCatchedError();
         }
 

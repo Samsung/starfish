@@ -180,6 +180,7 @@ void DOMTokenList::remove(String* token)
         }
         m_element->setAttribute(m_localName, dst);
     }
+    delete [] matchFlags;
 }
 
 void DOMTokenList::remove(std::vector<String*, gc_allocator<String*> >* tokensToRemove)
@@ -208,6 +209,7 @@ void DOMTokenList::remove(std::vector<String*, gc_allocator<String*> >* tokensTo
         }
         m_element->setAttribute(m_localName, dst);
     }
+    delete [] matchFlags;
 }
 
 bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
@@ -227,6 +229,7 @@ bool DOMTokenList::toggle(String* token, bool isForced, bool forceValue)
         if (matchCount == 0) {
             needAdd = true;
         }
+        delete [] matchFlags;
     }
     if (needAdd) {
         str = addSingleToken(str, &tokens, token);

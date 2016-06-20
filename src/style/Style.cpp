@@ -3087,7 +3087,7 @@ bool CSSStyleDeclaration::checkInputErrorFontWeight(std::vector<String*, gc_allo
                 char tmp[4] = {
                     0,
                 };
-                sprintf(tmp, "%d", num);
+                snprintf(tmp, 4, "%d", num);
                 (*tokens)[0] = String::fromUTF8(tmp);
                 return true;
             }
