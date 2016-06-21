@@ -1,7 +1,3 @@
-git checkout master
-git submodule init
-git submodule update
-
 make clean
 ./build_third_party.sh
 make tizen_wearable_arm.lib.release TIZEN_DEVICE_API=true -j

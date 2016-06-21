@@ -7,12 +7,23 @@ Group:         Development/Libraries
 License:       Apache License, Version 2.0
 
 # build requirements
-#BuildRequires: cmake
-#BuildRequires: pkgconfig(bundle)
-#BuildRequires: pkgconfig(dlog)
-
-# install requirements
-
+%if "%{gcc_version}" == "49"
+BuildRequires: make
+BuildRequires: web-widget-js
+BuildRequires: web-widget-js-devel
+BuildRequires: pkgconfig(dlog)
+BuildRequires: pkgconfig(evas)
+BuildRequires: pkgconfig(ecore-evas)
+BuildRequires: pkgconfig(elementary)
+BuildRequires: pkgconfig(efl-extension)
+BuildRequires: pkgconfig(cairo)
+BuildRequires: pkgconfig(icu-i18n)
+BuildRequires: pkgconfig(icu-uc)
+BuildRequires: pkgconfig(libcurl)
+BuildRequires: pkgconfig(libxml-2.0)
+BuildRequires: pkgconfig(capi-network-connection)
+BuildRequires: pkgconfig(capi-media-player)
+%endif
 
 %description
 Implementation of Web Widget Engine
@@ -29,46 +40,54 @@ web-widget-engine development headers
 %setup -q
 
 %build
-%if "%{tizen_profile_name}" == "wearable"
+
+%if "%{gcc_version}" == "49"
 %ifarch %{arm}
-#make tizen_wearable_arm %{?jobs:-j%jobs}
+make tizen_obs_arm.lib.release TIZEN_DEVICE_API=true %{?jobs:-j%jobs}
+make tizen_obs_arm.exe.debug %{?jobs:-j%jobs}
 %else
-#make tizen_wearable_emulator %{?jobs:-j%jobs}
+make tizen_obs_emulator.lib.release TIZEN_DEVICE_API=true %{?jobs:-j%jobs}
+make tizen_obs_emulator.exe.debug %{?jobs:-j%jobs}
 %endif
 %endif
 
 %install
+%ifarch %{arm}
+export STARFISH_ARCH=arm
+export TIZEN_ARCH=armv7l
+%else
+export STARFISH_ARCH=x86
+export TIZEN_ARCH=i586
+%endif
+
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_datadir}/license
 cp LICENSE %{buildroot}%{_datadir}/license/%{name}
 
-mkdir -p %{buildroot}%{_libdir}/
+mkdir -p %{buildroot}%{_libdir}
+mkdir -p %{buildroot}%{_bindir}
+%if "%{gcc_version}" == "49"
+cp out/tizen_obs/${STARFISH_ARCH}/lib/release/libWebWidgetEngine.so %{buildroot}%{_libdir}
+cp out/tizen_obs/${STARFISH_ARCH}/exe/debug/StarFish %{buildroot}%{_bindir}
+%else
 %if "%{tizen_profile_name}" == "wearable"
-%ifarch %{arm}
-cp prebuilt/tizen-wearable-2.3-armv7l/libWebWidgetEngine.so %{buildroot}%{_libdir}
+cp prebuilt/tizen-wearable-2.3-${TIZEN_ARCH}/libWebWidgetEngine.so %{buildroot}%{_libdir}
+touch %{buildroot}%{_bindir}/StarFish
 %else
-cp prebuilt/tizen-wearable-2.3-i586/libWebWidgetEngine.so %{buildroot}%{_libdir}
+touch %{buildroot}%{_libdir}/libWebWidgetEngine.so
+touch %{buildroot}%{_bindir}/StarFish
 %endif
-%else
-touch %{buildroot}%{_libdir}/libWebWidgetEngine.so # TBD
 %endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
 
-%clean
-rm -rf %{buildroot}
-
-%post
-/sbin/ldconfig
-
-%postun -p /sbin/ldconfig
-
 %files
 %manifest %{name}.manifest
 %{_datadir}/license/%{name}
-%{_libdir}/*.so*
+%{_libdir}/*.so
 
 %files devel
 %{_includedir}
+%{_bindir}/StarFish

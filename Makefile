@@ -76,6 +76,13 @@ else ifneq (,$(findstring tizen3_wearable_emulator,$(MAKECMDGOALS)))
   TIZEN_VERSION=3.0
   TIZEN_PROFILE=wearable
   TIZEN_DEVICE=emulator
+else ifneq (,$(findstring tizen_obs_arm,$(MAKECMDGOALS)))
+  HOST=tizen_obs
+  TIZEN_VERSION=3.0
+else ifneq (,$(findstring tizen_obs_emulator,$(MAKECMDGOALS)))
+  HOST=tizen_obs
+  ARCH=x86
+  TIZEN_VERSION=3.0
 endif
 
 ifneq (,$(findstring exe,$(MAKECMDGOALS)))
@@ -94,6 +101,8 @@ endif
 
 ifeq ($(HOST), linux)
   OUTDIR=out/$(ARCH)/$(TYPE)/$(MODE)
+else ifeq ($(HOST), tizen_obs)
+  OUTDIR=out/tizen_obs/$(ARCH)/$(TYPE)/$(MODE)
 else ifneq (,$(findstring tizen,$(HOST)))
   OUTDIR=out/tizen_$(TIZEN_VERSION)/$(ARCH)/$(TYPE)/$(MODE)
 endif
@@ -144,7 +153,7 @@ endif
 
 # flags for debug/release
 CXXFLAGS_DEBUG = -O0 -g3 -D_GLIBCXX_DEBUG -fno-omit-frame-pointer -Wall -Wextra -Werror
-CXXFLAGS_DEBUG += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter
+CXXFLAGS_DEBUG += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
 CXXFLAGS_RELEASE = -O2 -g3 -DNDEBUG -fomit-frame-pointer -fno-stack-protector -funswitch-loops -Wno-deprecated-declarations
 
 # flags for shared library
@@ -173,6 +182,10 @@ ifneq (,$(findstring tizen,$(HOST)))
   ifeq ($(TIZEN_VERSION), 3.0)
     CXXFLAGS += -DSTARFISH_TIZEN_3_0
   endif
+
+  ifeq ($(HOST),tizen_obs)
+    CXXFLAGS_DEBUG += -O1 # _FORTIFY_SOURCE requires compiling with optimization
+  endif
 endif
 
 # for printing TC coverage log
@@ -187,7 +200,15 @@ endif
 ################################################################################
 
 # escargot
-include third_party/escargot/build/Flags.mk
+ifneq ($(HOST), tizen_obs)
+  ESCARGOT_SRC_ROOT=third_party/escargot
+  ESCARGOT_LIB_ROOT=third_party/escargot
+else
+  ESCARGOT_SRC_ROOT=/usr/include/web-widget-js
+  ESCARGOT_LIB_ROOT=/usr/lib/web-widget-js
+endif
+
+include $(ESCARGOT_SRC_ROOT)/build/Flags.mk
 
 CXXFLAGS += $(ESCARGOT_CXXFLAGS_COMMON)
 
@@ -262,18 +283,21 @@ else
 endif
 
 # escargot
-CXXFLAGS += -Ithird_party/escargot/third_party/bdwgc/include/
-CXXFLAGS += -Ithird_party/escargot/src
-CXXFLAGS += -Ithird_party/escargot/third_party/double_conversion/
-CXXFLAGS += -Ithird_party/escargot/third_party/rapidjson/include/
-CXXFLAGS += -Ithird_party/escargot/third_party/yarr/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/bdwgc/include/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/src
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/double_conversion/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/rapidjson/include/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/yarr/
 
 ifeq ($(HOST), linux)
-  JSLIBS = third_party/escargot/out/$(HOST)/$(ARCH)/interpreter/$(MODE)/libescargot.a
-  GCLIBS = third_party/escargot/third_party/bdwgc/out/$(HOST)/$(ARCH)/$(MODE).shared/.libs/libgc.a
+  JSLIBS = $(ESCARGOT_LIB_ROOT)/out/$(HOST)/$(ARCH)/interpreter/$(MODE)/libescargot.a
+  GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/bdwgc/out/$(HOST)/$(ARCH)/$(MODE).shared/.libs/libgc.a
+else ifeq ($(HOST), tizen_obs)
+  JSLIBS = $(ESCARGOT_LIB_ROOT)/$(MODE)/libescargot.a
+  GCLIBS = $(ESCARGOT_LIB_ROOT)/$(MODE)/libgc.a
 else ifneq (,$(findstring tizen,$(HOST)))
-  JSLIBS = third_party/escargot/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/interpreter/$(MODE)/libescargot.a
-  GCLIBS = third_party/escargot/third_party/bdwgc/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE).shared/.libs/libgc.a
+  JSLIBS = $(ESCARGOT_LIB_ROOT)/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/interpreter/$(MODE)/libescargot.a
+  GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/bdwgc/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE).shared/.libs/libgc.a
 endif
 
 # deviceapi
@@ -308,6 +332,15 @@ ifeq ($(HOST), linux)
   STRIP        = strip
   CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n)
   LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n)
+else ifeq ($(HOST), tizen_obs)
+  CC           = gcc
+  CXX          = g++
+  STRIP        = strip
+  TIZEN_DEPS = dlog elementary ecore libpng cairo freetype2 fontconfig icu-uc icu-i18n \
+               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player
+  CXXFLAGS    += $(shell pkg-config --cflags $(TIZEN_DEPS))
+  LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS))
+  LIB = libWebWidgetEngine.so
 else ifneq (,$(findstring tizen,$(HOST)))
 
   # Toolchain & Platform
@@ -401,6 +434,11 @@ tizen_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
 tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $<.strip ./$(LIB)
 
+tizen_obs_arm.lib.release: $(OUTDIR)/$(LIB)
+tizen_obs_emulator.lib.release: $(OUTDIR)/$(LIB)
+tizen_obs_arm.exe.debug: $(OUTDIR)/$(BIN)
+tizen_obs_emulator.exe.debug: $(OUTDIR)/$(BIN)
+
 tizen3_mobile_arm.exe.debug: $(OUTDIR)/$(BIN)
 	cp -f $< .
 tizen3_mobile_arm.exe.release: $(OUTDIR)/$(BIN)
@@ -422,7 +460,7 @@ tizen3_wearable_emulator.lib.debug: $(OUTDIR)/$(LIB)
 tizen3_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $<.strip ./$(LIB)
 
-DEPENDENCY_MAKEFILE = Makefile third_party/escargot/build/Flags.mk
+DEPENDENCY_MAKEFILE = Makefile $(ESCARGOT_SRC_ROOT)/build/Flags.mk
 
 $(OUTDIR)/$(BIN): $(OBJS) $(THIRD_PARTY_OBJS) $(DEPENDENCY_MAKEFILE)
 	@echo "[LINK] $@"
