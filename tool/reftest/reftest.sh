@@ -215,6 +215,10 @@ for i in $tc ; do
             EXPIMG=`echo $EXPIMG | sed 's/reftest\//regression\/reftest\//'`
             EXPIMG=`echo $EXPIMG | sed 's/html-css/html-css_result\/x64/'`
             EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/'`
+            DIFFIMG=${filenames[$c]}
+            DIFFIMG=`echo $DIFFIMG | sed 's/reftest\//regression\/reftest\//'`
+            DIFFIMG=`echo $DIFFIMG | sed 's/html-css/html-css\/x64/'`
+            DIFFIMG=`echo $DIFFIMG | sed 's/\.html/-diff\.png/'`
             IMGDIFF="./tool/pixel_test/bin/image_diff"
             DIFF=`$IMGDIFF $RESIMG $EXPIMG`
             if [[ "$DIFF" = *"0.00% passed" ]]; then
@@ -226,6 +230,8 @@ for i in $tc ; do
             else
                 FAILTC=`expr $FAILTC + 1`
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+                echo $DIFFIMG
+                DIFF=`$IMGDIFF --diff $RESIMG $EXPIMG $DIFFIMG`
             fi
             rm $RESIMG
         elif [ $TESTSUITE -eq 4 ]; then

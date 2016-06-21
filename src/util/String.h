@@ -172,6 +172,19 @@ public:
         return true;
     }
 
+    bool containsOnlyASCIIChars() const
+    {
+        if (isASCIIString())
+            return true;
+        for (size_t i = 0; i < length(); i ++) {
+            const char32_t c = charAt(i);
+            if (c > 127) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     static String* fromFloat(float f);
     static String* fromInt(int i);
     static int parseInt(String* s)

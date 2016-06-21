@@ -230,7 +230,7 @@ void HTMLConstructionSite::flushPendingText()
         // unsigned breakIndex = findBreakIndexBetween(string, currentPosition, proposedBreakIndex);
         unsigned breakIndex = string.length();
         ASSERT(breakIndex <= string.length());
-        String* substring = new StringDataUTF32(string.substr(currentPosition, breakIndex - currentPosition));
+        String* substring = String::createASCIIStringFromUTF32SourceIfPossible(string.substr(currentPosition, breakIndex - currentPosition));
         substring = atomizeIfAllWhitespace(substring, pendingText.whitespaceMode);
 
         HTMLConstructionSiteTask task(HTMLConstructionSiteTask::InsertText);

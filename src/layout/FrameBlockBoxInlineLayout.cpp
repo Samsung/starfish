@@ -389,23 +389,109 @@ static char charDirection(char32_t c)
     }
 }
 
+static InlineTextBox::CharDirection charDirFromICUDir(UBiDiDirection dir)
+{
+    if (dir == UBIDI_LTR) {
+        return InlineTextBox::CharDirection::Ltr;
+    } else if (dir == UBIDI_RTL) {
+        return InlineTextBox::CharDirection::Rtl;
+    } else if (dir == UBIDI_NEUTRAL) {
+        return InlineTextBox::CharDirection::Netural;
+    } else {
+        STARFISH_ASSERT(dir == UBIDI_MIXED);
+        return InlineTextBox::CharDirection::Mixed;
+    }
+}
+
+static UBiDiDirection getTextDir(String* text)
+{
+    UTF16String str = text->toUTF16String();
+    UBiDiDirection dir = ubidi_getBaseDirection((const UChar*)str.data(), str.length());
+    return dir;
+}
+
+static bool isNumberChar(char32_t d)
+{
+    if (('0' <= d && d <= '9')
+        || (0x0660 <= d && d <= 0x0669) // 0 to 9 in Arabic
+        || (0x06F0 <= d && d <= 0x06F9)) { // 0 to 9 in Extended Arabic
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static bool isNumber(String* text)
+{
+    for (unsigned i = 0; i < text->length(); i++) {
+        if (isNumberChar(text->charAt(i))) {
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
+InlineTextBox::CharDirection contentDir(FrameBox* box, bool isLtr)
+{
+    if (box->isInlineBox()) {
+        InlineBox* ib = box->asInlineBox();
+        if (ib->isInlineTextBox()) {
+            return ib->asInlineTextBox()->charDirection();
+        } else if (ib->isInlineNonReplacedBox()) {
+            InlineNonReplacedBox* b = ib->asInlineNonReplacedBox();
+            const std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes = b->boxes();
+            bool hasRTL = false;
+            bool hasLTR = false;
+            for (size_t i = 0; i < boxes.size(); i ++) {
+                InlineTextBox::CharDirection dir = contentDir(boxes[i], isLtr);
+                if (dir == InlineTextBox::CharDirection::Ltr) {
+                    hasLTR = true;
+                } else if (dir == InlineTextBox::CharDirection::Rtl) {
+                    hasRTL = true;
+                } else { // netural
+                }
+            }
+
+            if (isLtr) {
+                if (!hasLTR && hasRTL) {
+                    return InlineTextBox::CharDirection::Rtl;
+                } else {
+                    return InlineTextBox::CharDirection::Ltr;
+                }
+            } else {
+                if (hasLTR && !hasRTL) {
+                    return InlineTextBox::CharDirection::Ltr;
+                } else {
+                    return InlineTextBox::CharDirection::Rtl;
+                }
+            }
+        } else {
+            return InlineTextBox::CharDirection::Netural;
+        }
+    } else {
+        return InlineTextBox::CharDirection::Netural;
+    }
+}
+
 static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes)
 {
     InlineTextBox::CharDirection defaultCharDirection = parentDir == DirectionValue::LtrDirectionValue ? InlineTextBox::CharDirection::Ltr : InlineTextBox::CharDirection::Rtl;
     bool everSeenUTF32String = parentDir == DirectionValue::RtlDirectionValue;
-    InlineTextBox::CharDirection charDirectionBefore = defaultCharDirection;
+    bool canUseFastPath = parentDir == DirectionValue::LtrDirectionValue;
+    bool sawRtlBlock = parentDir == DirectionValue::RtlDirectionValue;
     for (size_t i = 0; i < boxes.size(); i ++) {
         FrameBox* box = boxes[i];
         if (box->isInlineBox()) {
             InlineBox* ib = box->asInlineBox();
             if (ib->isInlineTextBox()) {
                 InlineTextBox* tb = ib->asInlineTextBox();
-                if (tb->text()->isASCIIString()) {
+                if (tb->text()->isASCIIString() && canUseFastPath) {
                     if (!everSeenUTF32String)
                         tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
                     else {
                         if (tb->text()->containsOnlyWhitespace()) {
-                            tb->setCharDirection(defaultCharDirection);
+                            tb->setCharDirection(InlineTextBox::CharDirection::Netural);
                         } else {
                             bool isNeturalRun = true;
                             String* txt = tb->text();
@@ -417,7 +503,7 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                                 }
                             }
                             if (isNeturalRun) {
-                                tb->setCharDirection(defaultCharDirection);
+                                tb->setCharDirection(InlineTextBox::CharDirection::Netural);
                             } else {
                                 tb->setCharDirection(InlineTextBox::CharDirection::Ltr);
                             }
@@ -426,9 +512,8 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                 } else {
                     if (!everSeenUTF32String) {
                         everSeenUTF32String = true;
-                        i = SIZE_MAX;
-                        continue;
                     }
+
                     UBiDi* bidi = ubidi_open();
                     UTF16String str = tb->text()->toUTF16String();
                     UErrorCode err = (UErrorCode)0;
@@ -439,9 +524,9 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                     InlineTextBox* lastTextBox = tb;
                     if (total == 1) {
                         int32_t start, length;
-                        UBiDiDirection dir = ubidi_getVisualRun(bidi, 0, &start, &length);
-                        tb->setCharDirection(dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr);
-                        charDirectionBefore = dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr;
+                        ubidi_getVisualRun(bidi, 0, &start, &length);
+                        UBiDiDirection dir = getTextDir(tb->text());
+                        tb->setCharDirection(charDirFromICUDir(dir));
                     } else {
                         LayoutUnit x = tb->x();
                         LayoutUnit y = tb->y();
@@ -452,11 +537,10 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                         for (size_t i = 0; i < total; i ++) {
                             ubidi_getLogicalRun(bidi, start, &end, NULL);
                             String* t = tb->text()->substring(start, end-start);
-                            // puts(t->utf8Data());
                             start = end;
-                            UBiDiDirection dir = ubidi_getBaseDirection((const UChar*)t->toUTF16String().data(), t->length());
+                            UBiDiDirection dir = getTextDir(tb->text());
 
-                            InlineTextBox* box = new InlineTextBox(tb->node(), tb->style(), nullptr, t, tb->origin(), dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr);
+                            InlineTextBox* box = new InlineTextBox(tb->node(), tb->style(), nullptr, t, tb->origin(), charDirFromICUDir(dir));
                             box->setLayoutParent(tb->layoutParent());
                             box->setX(x);
                             box->setY(y);
@@ -465,20 +549,27 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                             box->setHeight(tb->height());
                             x += width;
                             boxes.insert(boxes.begin() + insertPos++, box);
-                            charDirectionBefore = dir == UBIDI_RTL ? InlineTextBox::CharDirection::Rtl : InlineTextBox::CharDirection::Ltr;
                             lastTextBox = box;
                         }
                     }
                     ubidi_close(bidi);
 
-                    auto splitBoxAt = [&boxes, &defaultCharDirection](InlineTextBox* where, size_t idx, bool neturalAtLast)
+                    String* text = lastTextBox->text();
+                    if (isNumber(text)) {
+                        tb->setCharDirection(InlineTextBox::CharDirection::Netural);
+                        continue;
+                    }
+
+                    auto splitBoxAt = [&boxes, &defaultCharDirection, parentDir](InlineTextBox* where, size_t idx, bool neturalAtLast)
                     {
                         auto iter = std::find(boxes.begin(), boxes.end(), where);
                         size_t boxIdx = iter - boxes.begin();
                         boxes.erase(iter);
                         String* newText = where->text()->substring(0, idx + 1);
 
-                        InlineTextBox* box = new InlineTextBox(where->node(), where->style(), nullptr, newText, where->origin(), neturalAtLast ? where->charDirection() : defaultCharDirection);
+                        InlineTextBox* firstBox;
+                        InlineTextBox* box = new InlineTextBox(where->node(), where->style(), nullptr, newText, where->origin(), charDirFromICUDir(getTextDir(newText)));
+                        firstBox = box;
                         box->setLayoutParent(where->layoutParent());
                         LayoutUnit x = where->x();
                         LayoutUnit y = where->y();
@@ -491,7 +582,7 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                         boxes.insert(boxes.begin() + boxIdx++, box);
 
                         String* newText2 = where->text()->substring(idx + 1, where->text()->length() - idx);
-                        box = new InlineTextBox(where->node(), where->style(), nullptr, newText2, where->origin(), neturalAtLast ? defaultCharDirection : where->charDirection());
+                        box = new InlineTextBox(where->node(), where->style(), nullptr, newText2, where->origin(), charDirFromICUDir(getTextDir(newText2)));
                         box->setLayoutParent(where->layoutParent());
                         box->setX(x);
                         box->setY(y);
@@ -500,159 +591,199 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                         box->setHeight(where->height());
                         boxes.insert(boxes.begin() + boxIdx, box);
 
-                        return box;
+                        if (neturalAtLast) {
+                            return firstBox;
+                        } else {
+                            return box;
+                        }
                     };
 
                     // check it has leading netural chars
                     char32_t first = lastTextBox->text()->charAt(0);
-                    if (charDirection(first) == 2) {
-                        size_t idx = 1;
-                        while (idx < lastTextBox->text()->length()) {
-                            if (charDirection(lastTextBox->text()->charAt(idx)) != 2) {
-                                break;
-                            }
-                            idx++;
-                        }
-
-                        if (idx != lastTextBox->text()->length() && lastTextBox->text()->length()) {
-                            lastTextBox = splitBoxAt(lastTextBox, idx - 1, false);
-                        }
+                    if (lastTextBox->text()->length() > 1 && charDirection(first) == 2 && !isNumberChar(first)) {
+                        lastTextBox = splitBoxAt(lastTextBox, 0, false);
                     }
 
                     // check it has trailing neutral chars
-                    if (lastTextBox->text()->length()) {
+                    if (lastTextBox->text()->length() > 1) {
                         size_t lastPos = lastTextBox->text()->length() - 1;
-                        char32_t lastChar = lastTextBox->text()->charAt(lastPos);
-                        size_t i = lastPos;
-                        if (charDirection(lastChar) == 2) {
-                            while (true) {
-                                if (charDirection(lastTextBox->text()->charAt(i)) != 2) {
-                                    break;
-                                }
-                                if (i == 0) {
-                                    break;
-                                } else {
-                                    i--;
-                                }
-                            }
-                        }
-
-                        // FIXME: Is there a isNumber() for unicode?
-                        auto isNumber = [](String* text)
-                        {
-                            for (unsigned i = 0; i < text->length(); i++) {
-                                unsigned d = text->charAt(i);
-                                if (('0' <= d && d <= '9')
-                                    || (0x0660 <= d && d <= 0x0669) // 0 to 9 in Arabic
-                                    || (0x06F0 <= d && d <= 0x06F9)) { // 0 to 9 in Extended Arabic
-                                } else {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        };
-
-                        if (i < lastPos) {
-                            String* text = lastTextBox->text();
-                            if (isNumber(text)) {
-                                // if text is a number, do not split. The direction of number should be determined by surrounding text
-                                tb->setCharDirection(InlineTextBox::CharDirection::Netural);
-                            } else {
-                                splitBoxAt(lastTextBox, i, true);
-                            }
+                        char32_t last = lastTextBox->text()->charAt(lastPos);
+                        if (charDirection(last) == 2 && !isNumberChar(last)) {
+                            lastTextBox = splitBoxAt(lastTextBox, lastPos - 1, true);
+                            i--;
                         }
                     }
-
                 }
             }
         }
     }
 
-    if (parentDir == DirectionValue::LtrDirectionValue) {
-        bool lastLTRState = true;
-        size_t RTLStartPos = SIZE_MAX;
+    if (parentDir == DirectionValue::RtlDirectionValue) {
+        // find inline Text Boxes has only number for
+        // <LTR> <Number> <RTL> case
+        // Number following LTR Text should be LTR
+        // <LTR> <Number> <RTL> -> <LTR> <Number-LTR not netural> <RTL>
         for (size_t i = 0; i < boxes.size(); i ++) {
             FrameBox* box = boxes[i];
             if (box->isInlineBox()) {
                 InlineBox* ib = box->asInlineBox();
                 if (ib->isInlineTextBox()) {
-                    if (lastLTRState) {
-                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
-                            // l->r
-                            RTLStartPos = i;
-                            lastLTRState = false;
-                        } else {
-                            // l->l
-                        }
-                    } else {
-                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl
-                            || ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
-                            // r->r
-                        } else {
-                            // r->l
-                            if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
-                                if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
-                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl
-                                        || boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Netural) {
-                                        continue;
+                    if (isNumber(ib->asInlineTextBox()->text())) {
+                        for (size_t j = i - 1; j != SIZE_MAX; j--) {
+                            FrameBox* box2 = boxes[j];
+                            if (box2->isInlineBox()) {
+                                InlineBox* ib2 = box2->asInlineBox();
+                                if (ib2->isInlineTextBox()) {
+                                    if (ib2->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Ltr) {
+                                        ib->asInlineTextBox()->setCharDirection(InlineTextBox::CharDirection::Ltr);
+                                        break;
+                                    } else if (ib2->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                                        break;
                                     }
                                 }
                             }
-                            std::reverse(boxes.begin() + RTLStartPos, boxes.begin() + i);
-                            lastLTRState = true;
-                            RTLStartPos = SIZE_MAX;
                         }
                     }
                 }
             }
-        }
-        if (!lastLTRState) {
-            std::reverse(boxes.begin() + RTLStartPos, boxes.end());
         }
     } else {
-        // reverse every boxes
-        std::reverse(boxes.begin(), boxes.end());
-
-        // reverse among ltr blockes
-        bool lastLTRState = false;
-        size_t LTRStartPos = 0;
         for (size_t i = 0; i < boxes.size(); i ++) {
             FrameBox* box = boxes[i];
             if (box->isInlineBox()) {
                 InlineBox* ib = box->asInlineBox();
                 if (ib->isInlineTextBox()) {
-                    if (lastLTRState) {
-                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
-                            // l->r
-                            if (ib->asInlineTextBox()->text()->containsOnlyWhitespace() && (i + 1)< boxes.size()) {
-                                if (boxes[i + 1]->isInlineBox() && boxes[i + 1]->asInlineBox()->isInlineTextBox()) {
-                                    if (boxes[i + 1]->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Ltr) {
-                                        continue;
-                                    }
-                                }
-                            }
-                            std::reverse(boxes.begin() + LTRStartPos, boxes.begin() + i);
-                            lastLTRState = false;
-                            LTRStartPos = SIZE_MAX;
-                        } else {
-                            // l->l
-                        }
-                    } else {
-                        if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
-                            // r->r
-                        } else {
-                            // r->l
-                            LTRStartPos = i;
-                            lastLTRState = true;
-                        }
+                    if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                        sawRtlBlock = true;
+                        break;
                     }
                 }
             }
         }
-        if (lastLTRState) {
-            std::reverse(boxes.begin() + LTRStartPos, boxes.end());
+    }
+
+#ifndef NDEBUG
+    for (size_t i = 0; i < boxes.size(); i ++) {
+        FrameBox* box = boxes[i];
+        if (box->isInlineBox()) {
+            InlineBox* ib = box->asInlineBox();
+            if (ib->isInlineTextBox()) {
+                InlineTextBox* tb = ib->asInlineTextBox();
+                STARFISH_ASSERT(tb->charDirection() != InlineTextBox::CharDirection::Mixed);
+            }
+        }
+    }
+#endif
+
+    if (parentDir == DirectionValue::LtrDirectionValue) {
+        if (sawRtlBlock) {
+            std::vector<FrameBox*, gc_allocator<FrameBox*>> oldBoxes = std::move(boxes);
+            std::vector<FrameBox*> rtlStorage; // use normal allocator because oldBoxes has strong reference
+
+            InlineTextBox::CharDirection currentDirection = InlineTextBox::CharDirection::Ltr;
+            for (size_t i = 0; i < oldBoxes.size(); i ++) {
+                InlineTextBox::CharDirection currentDirectionBefore = currentDirection;
+                FrameBox* box = oldBoxes[i];
+                InlineTextBox::CharDirection dir = contentDir(box, true);
+                if (dir == InlineTextBox::CharDirection::Netural) {
+                    InlineTextBox::CharDirection nextDir = InlineTextBox::CharDirection::Netural;
+                    for (size_t j = i + 1; j < oldBoxes.size(); j ++) {
+                        nextDir = contentDir(oldBoxes[j], true);
+                        if (nextDir != InlineTextBox::CharDirection::Netural) {
+                            break;
+                        }
+                    }
+
+                    if (currentDirection == InlineTextBox::CharDirection::Rtl && nextDir == InlineTextBox::CharDirection::Netural) {
+                        currentDirection = InlineTextBox::CharDirection::Ltr;
+                    } else if (currentDirection == InlineTextBox::CharDirection::Rtl && nextDir == InlineTextBox::CharDirection::Ltr) {
+                        currentDirection = InlineTextBox::CharDirection::Ltr;
+                    }
+
+                    if (box->isInlineBox()) {
+                        InlineBox* ib = box->asInlineBox();
+                        if (ib->isInlineTextBox()) {
+                            if (isNumber(ib->asInlineTextBox()->text())) {
+                                currentDirection = currentDirectionBefore;
+                            }
+                            ib->asInlineTextBox()->setCharDirection(currentDirection);
+                        }
+                    }
+                } else {
+                    currentDirection = dir;
+                }
+
+                if (currentDirection == InlineTextBox::CharDirection::Ltr) {
+                    if (rtlStorage.size()) {
+                        boxes.insert(boxes.end(), rtlStorage.begin(), rtlStorage.end());
+                        rtlStorage.clear();
+                    }
+                    boxes.push_back(box);
+                } else {
+                    rtlStorage.insert(rtlStorage.begin(), box);
+                }
+            }
+
+            if (rtlStorage.size()) {
+                boxes.insert(boxes.end(), rtlStorage.begin(), rtlStorage.end());
+                rtlStorage.clear();
+            }
+        }
+    } else {
+        std::vector<FrameBox*, gc_allocator<FrameBox*>> oldBoxes = std::move(boxes);
+        std::vector<FrameBox*> ltrStorage; // use normal allocator because oldBoxes has strong reference
+
+        InlineTextBox::CharDirection currentDirection = InlineTextBox::CharDirection::Rtl;
+        for (size_t i = 0; i < oldBoxes.size(); i ++) {
+            InlineTextBox::CharDirection currentDirectionBefore = currentDirection;
+            FrameBox* box = oldBoxes[i];
+            InlineTextBox::CharDirection dir = contentDir(box, false);
+            if (dir == InlineTextBox::CharDirection::Netural) {
+                InlineTextBox::CharDirection nextDir = InlineTextBox::CharDirection::Netural;
+                for (size_t j = i + 1; j < oldBoxes.size(); j ++) {
+                    nextDir = contentDir(oldBoxes[j], false);
+                    if (nextDir != InlineTextBox::CharDirection::Netural) {
+                        break;
+                    }
+                }
+
+                if (currentDirection == InlineTextBox::CharDirection::Ltr && nextDir == InlineTextBox::CharDirection::Netural) {
+                    currentDirection = InlineTextBox::CharDirection::Rtl;
+                } else if (currentDirection == InlineTextBox::CharDirection::Ltr && nextDir == InlineTextBox::CharDirection::Rtl) {
+                    currentDirection = InlineTextBox::CharDirection::Rtl;
+                }
+
+                if (box->isInlineBox()) {
+                    InlineBox* ib = box->asInlineBox();
+                    if (ib->isInlineTextBox()) {
+                        if (isNumber(ib->asInlineTextBox()->text())) {
+                            currentDirection = currentDirectionBefore;
+                        }
+                        ib->asInlineTextBox()->setCharDirection(currentDirection);
+                    }
+                }
+            } else {
+                currentDirection = dir;
+            }
+
+            if (currentDirection == InlineTextBox::CharDirection::Rtl) {
+                if (ltrStorage.size()) {
+                    boxes.insert(boxes.begin(), ltrStorage.begin(), ltrStorage.end());
+                    ltrStorage.clear();
+                }
+                boxes.insert(boxes.begin(), box);
+            } else {
+                ltrStorage.push_back(box);
+            }
         }
 
+        if (ltrStorage.size()) {
+            boxes.insert(boxes.begin(), ltrStorage.begin(), ltrStorage.end());
+            ltrStorage.clear();
+        }
+    }
+
+    if (sawRtlBlock) {
         // reverse parenthesis chars
         static const char parenthesisMap[] = {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -667,54 +798,53 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
             0, 93, 0, 91, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 125, 0, 123, 0, 0, 0
+            0, 0, 0, 123, 0, 125, 0, 0
         };
+
         for (size_t i = 0; i < boxes.size(); i ++) {
             FrameBox* box = boxes[i];
             if (box->isInlineBox()) {
-                if (box->asInlineBox()->isInlineTextBox()) {
+                if (box->asInlineBox()->isInlineTextBox() && box->asInlineBox()->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
                     InlineTextBox* b = box->asInlineBox()->asInlineTextBox();
                     String* t = b->text();
-                    if (t->length() == 1) {
-                        bool shouldReplaceString = false;
-                        for (size_t j = 0; j < t->length(); j++) {
-                            char32_t ch = t->charAt(j);
-                            if (ch < 128) {
-                                if (parenthesisMap[ch]) {
-                                    shouldReplaceString = true;
-                                    break;
-                                }
+                    bool shouldReplaceString = false;
+                    for (size_t j = 0; j < t->length(); j++) {
+                        char32_t ch = t->charAt(j);
+                        if (ch < 128) {
+                            if (parenthesisMap[ch]) {
+                                shouldReplaceString = true;
+                                break;
                             }
                         }
+                    }
 
-                        if (shouldReplaceString) {
-                            if (t->isASCIIString()) {
-                                ASCIIString str;
-                                for (size_t j = 0; j < t->length(); j++) {
-                                    char32_t ch = t->charAt(j);
-                                    if (ch < 128) {
-                                        if (parenthesisMap[ch]) {
-                                            ch = (char32_t) parenthesisMap[ch];
-                                        }
+                    if (shouldReplaceString) {
+                        if (t->isASCIIString()) {
+                            ASCIIString str;
+                            for (size_t j = 0; j < t->length(); j++) {
+                                char32_t ch = t->charAt(j);
+                                if (ch < 128) {
+                                    if (parenthesisMap[ch]) {
+                                        ch = (char32_t) parenthesisMap[ch];
                                     }
-                                    str += (char)ch;
                                 }
-                                t = new StringDataASCII(std::move(str));
-                            } else {
-                                UTF32String str;
-                                for (size_t j = 0; j < t->length(); j++) {
-                                    char32_t ch = t->charAt(j);
-                                    if (ch < 128) {
-                                        if (parenthesisMap[ch]) {
-                                            ch = (char32_t) parenthesisMap[ch];
-                                        }
-                                    }
-                                    str += ch;
-                                }
-                                t = new StringDataUTF32(std::move(str));
+                                str += (char)ch;
                             }
-                            b->setText(t);
+                            t = new StringDataASCII(std::move(str));
+                        } else {
+                            UTF32String str;
+                            for (size_t j = 0; j < t->length(); j++) {
+                                char32_t ch = t->charAt(j);
+                                if (ch < 128) {
+                                    if (parenthesisMap[ch]) {
+                                        ch = (char32_t) parenthesisMap[ch];
+                                    }
+                                }
+                                str += ch;
+                            }
+                            t = new StringDataUTF32(std::move(str));
                         }
+                        b->setText(t);
                     }
                 }
             }

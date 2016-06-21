@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             ecore_idler_add([](void *data) -> Eina_Bool {
                 Pass* p = (Pass*)data;
 
-                if (strcmp(p->buf, "!exit") == 0) {
+                if (strncmp(p->buf, "!exit", 5) == 0) {
                     delete p->sf;
 
                     GC_gcollect_and_unmap();

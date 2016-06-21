@@ -69,15 +69,17 @@ window.onload = function() {
         iframe.contentWindow.document.head.appendChild(style);
         iframe.contentWindow.screenShot = function(filename, cb) {
             console.log("screenShot : " + filename);
-            win.capturePage(function(img) {
-                // console.log(img)
-                var s = path.parse(pageSrc)
-                var p = path.parse(filename)
-                filename = s.dir + p.dir + "/" + p.name + "_expected" + p.ext
-                console.log(filename);
-                scCount++;
-                fs.writeFile(filename, img, function (err) { scCount--; cb() });
-            }, {format: 'png', datatype: 'buffer'})
+            window.setTimeout(function() { 
+                win.capturePage(function(img) {
+                    // console.log(img)
+                    var s = path.parse(pageSrc)
+                    var p = path.parse(filename)
+                    filename = s.dir + p.dir + "/" + p.name + "_expected" + p.ext
+                    console.log(filename);
+                    scCount++;
+                    fs.writeFile(filename, img, function (err) { scCount--; cb() });
+                }, {format: 'png', datatype: 'buffer'})
+            }, 250);
         }
         iframe.contentWindow.testImgDiff = function() {} // do nothing
         iframe.contentWindow.testEnd = function() {
