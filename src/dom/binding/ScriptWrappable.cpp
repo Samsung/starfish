@@ -46,6 +46,18 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     scriptObject()->setExtraPointerData(window);
 
 #ifdef STARFISH_ENABLE_TEST
+    escargot::ESFunctionObject* isPixelTestFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            if(getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST")))
+                return escargot::ESValue(escargot::ESValue::ESTrue);
+            else
+                return escargot::ESValue(escargot::ESValue::ESFalse);
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("isPixelTest"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("isPixelTest"), true, true, true, isPixelTestFunction);
+
     escargot::ESFunctionObject* screenShotFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {

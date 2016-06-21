@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
 #ifdef STARFISH_ENABLE_TEST
             g_enablePixelTest = true;
+            setenv("PIXEL_TEST", "1", 1);
 #endif
         } else if (strstr(argv[i], "--width=") == argv[i]) {
             width = std::atoi(argv[i] + strlen("--width="));
