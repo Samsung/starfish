@@ -49,7 +49,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     escargot::ESFunctionObject* isPixelTestFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
-            if(getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST")))
+            if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST")))
                 return escargot::ESValue(escargot::ESValue::ESTrue);
             else
                 return escargot::ESValue(escargot::ESValue::ESFalse);
