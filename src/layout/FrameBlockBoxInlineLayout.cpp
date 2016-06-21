@@ -1573,7 +1573,16 @@ void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
         return;
     }
     // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
-    if (stage == PaintingNormalFlowInline) {
+    if (isPositionedElement()) {
+        if (stage == PaintingPositionedElements) {
+            paintBackgroundAndBorders(canvas);
+            PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
+            while (s != PaintingStageEnd) {
+                paintChildrenWith(canvas, s);
+                s = (PaintingStage)(s + 1);
+            }
+        }
+    } else if (stage == PaintingNormalFlowInline) {
         paintBackgroundAndBorders(canvas);
         paintChildrenWith(canvas, stage);
     }
