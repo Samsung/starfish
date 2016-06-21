@@ -45,14 +45,9 @@ public:
         return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
     }
 
-    int width()
+    String* width()
     {
-        String* width = getAttribute(document()->window()->starFish()->staticStrings()->m_width);
-        if (width->equals(String::emptyString)) {
-            return -1; // indicates that width is not defined
-        } else {
-            return String::parseInt(width);
-        }
+        return getAttribute(document()->window()->starFish()->staticStrings()->m_width);
     }
 
     void setWidth(int width)
@@ -60,14 +55,9 @@ public:
         setAttribute(document()->window()->starFish()->staticStrings()->m_width, String::fromInt(width));
     }
 
-    int height()
+    String* height()
     {
-        String* height = getAttribute(document()->window()->starFish()->staticStrings()->m_height);
-        if (height->equals(String::emptyString)) {
-            return -1; // indicates that height is not defined
-        } else {
-            return String::parseInt(height);
-        }
+        return getAttribute(document()->window()->starFish()->staticStrings()->m_height);
     }
 
     void setHeight(int height)
@@ -78,9 +68,23 @@ public:
     LayoutSize intrinsicSize()
     {
         if (m_imageData) {
-            int w = width() >= 0 ? width(): m_imageData->width();
-            int h = height() >= 0 ? height(): m_imageData->height();
-            return LayoutSize(w, h);
+            String* widthString = width();
+            String* heightString = height();
+            bool widthIsEmpty = widthString->equals(String::emptyString);
+            bool heightIsEmpty = heightString->equals(String::emptyString);
+            if (widthIsEmpty && heightIsEmpty) {
+                return LayoutSize(m_imageData->width(), m_imageData->height());
+            } else if (widthIsEmpty) {
+                int h = String::parseInt(heightString);
+                return LayoutSize(h, h);
+            } else if (heightIsEmpty) {
+                int w = String::parseInt(widthString);
+                return LayoutSize(w, w);
+            } else {
+                int w = String::parseInt(widthString);
+                int h = String::parseInt(heightString);
+                return LayoutSize(w, h);
+            }
         } else {
             return LayoutSize(0, 0);
         }
