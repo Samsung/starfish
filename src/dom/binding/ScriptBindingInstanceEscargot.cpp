@@ -1055,9 +1055,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
 
                     String* attrVal = toBrowserString(val);
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
-                    if (elem) {
-                        elem->setAttribute(attrKey, attrVal);
-                    }
+                    elem->setAttribute(attrKey, attrVal);
                 }
                 return escargot::ESValue(escargot::ESValue::ESNull);
             } catch(DOMException* e) {
@@ -1079,9 +1077,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                     auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
                     QualifiedName attrKey = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(sf, key.asESString()->utf8Data()));
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
-                    if (elem) {
-                        elem->removeAttribute(attrKey);
-                    }
+                    elem->removeAttribute(attrKey);
                 }
                 return escargot::ESValue(escargot::ESValue::ESNull);
             } catch(DOMException* e) {
