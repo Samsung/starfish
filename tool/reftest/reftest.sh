@@ -213,7 +213,7 @@ for i in $tc ; do
         elif [ $TESTSUITE -eq 3 ]; then
             EXPIMG=${filenames[$c]}
             EXPIMG=`echo $EXPIMG | sed 's/reftest\//regression\/reftest\//'`
-            EXPIMG=`echo $EXPIMG | sed 's/html-css/html-css_result\/linux/'`
+            EXPIMG=`echo $EXPIMG | sed 's/html-css/html-css_result\/x64/'`
             EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/'`
             IMGDIFF="./tool/pixel_test/bin/image_diff"
             DIFF=`$IMGDIFF $RESIMG $EXPIMG`
