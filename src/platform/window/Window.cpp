@@ -798,6 +798,11 @@ void Window::screenShot(std::string filePath)
     setenv("SCREEN_SHOT", "", 1);
 }
 
+void Window::forceDisableOnloadCapture()
+{
+    setenv("SCREEN_SHOT", "", 1);
+}
+
 void Window::simulateClick(float x, float y)
 {
     dispatchTouchEvent(x, y, Window::TouchEventDown);

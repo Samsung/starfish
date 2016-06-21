@@ -60,6 +60,31 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     }, escargot::ESString::create("screenShot"), 0, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("screenShot"), true, true, true, screenShotFunction);
 
+    escargot::ESFunctionObject* screenShotRelativePathFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            char buff[1024];
+            getcwd(buff, 1024);
+            std::string path(buff);
+            path = path + "/" + escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toString()->utf8Data();
+            wnd->screenShot(path);
+            callScriptFunction(instance->currentExecutionContext()->readArgument(1), { }, 0, instance->globalObject());
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("screenShotRelativePath"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("screenShotRelativePath"), true, true, true, screenShotRelativePathFunction);
+
+    escargot::ESFunctionObject* forceDisableOnloadCaptureFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            wnd->forceDisableOnloadCapture();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("forceDisableOnloadCapture"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("forceDisableOnloadCapture"), true, true, true, forceDisableOnloadCaptureFunction);
+
     escargot::ESFunctionObject* simulateClickFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
