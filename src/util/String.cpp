@@ -15,7 +15,7 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
 
     // ASCII byte
     if (0 == (UTF8[0] & 0x80)) {
-        uc = UTF8[0];
+        uc = (char32_t) UTF8[0];
         tRequiredSize = 1;
     } else // Start byte for 2byte
         if (0xC0 == (UTF8[0] & 0xE0)
@@ -693,7 +693,7 @@ size_t String::find(const char* str, size_t pos)
         return pos <= size ? pos : -1;
 
     if (srcStrLen <= size) {
-        char32_t src0 = str[0];
+        char32_t src0 = (char32_t) str[0];
         for (; pos <= size - srcStrLen; ++pos) {
             if (charAt(pos) == src0) {
                 bool same = true;
@@ -721,7 +721,7 @@ bool String::contains(const char* str, bool caseSensitive)
 
     if (caseSensitive) {
         if (strLen <= len) {
-            char32_t src0 = str[0];
+            char32_t src0 = (char32_t) str[0];
             size_t pos = 0;
             for (; pos <= len - strLen; ++pos) {
                 if (charAt(pos) == src0) {

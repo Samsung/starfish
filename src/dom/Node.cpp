@@ -141,7 +141,8 @@ bool Node::isEqualNode(Node* other)
         if (!child->isEqualNode(otherChild)) {
             return false;
         }
-        otherChild = otherChild->nextSibling();
+        if (otherChild)
+            otherChild = otherChild->nextSibling();
     }
 
     return true;

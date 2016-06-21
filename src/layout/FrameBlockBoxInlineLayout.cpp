@@ -694,7 +694,7 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                                     char32_t ch = t->charAt(j);
                                     if (ch < 128) {
                                         if (parenthesisMap[ch]) {
-                                            ch = parenthesisMap[ch];
+                                            ch = (char32_t) parenthesisMap[ch];
                                         }
                                     }
                                     str += (char)ch;
@@ -706,7 +706,7 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                                     char32_t ch = t->charAt(j);
                                     if (ch < 128) {
                                         if (parenthesisMap[ch]) {
-                                            ch = parenthesisMap[ch];
+                                            ch = (char32_t) parenthesisMap[ch];
                                         }
                                     }
                                     str += ch;

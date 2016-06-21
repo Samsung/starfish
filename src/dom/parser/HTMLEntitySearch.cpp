@@ -21,7 +21,7 @@ HTMLEntitySearch::CompareResult HTMLEntitySearch::compare(const HTMLEntityTableE
 {
     if (entry->length < m_currentLength + 1)
         return Before;
-    char32_t entryNextCharacter = entry->entity[m_currentLength];
+    char32_t entryNextCharacter = (char32_t) entry->entity[m_currentLength];
     if (entryNextCharacter == nextCharacter)
         return Prefix;
     return entryNextCharacter < nextCharacter ? Before : After;
