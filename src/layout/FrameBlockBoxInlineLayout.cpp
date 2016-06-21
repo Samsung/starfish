@@ -1585,6 +1585,8 @@ void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
     } else if (stage == PaintingNormalFlowInline) {
         paintBackgroundAndBorders(canvas);
         paintChildrenWith(canvas, stage);
+    } else {
+        paintChildrenWith(canvas, stage);
     }
 }
 
