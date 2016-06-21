@@ -169,6 +169,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     LayoutUnit w = l - r + parentWidth;
                     w = w - paddingWidth() - borderWidth();
                     width = Length(Length::Fixed, w);
+                    setAbsX(l);
                 } else {
                     // 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
                     STARFISH_ASSERT(right.isAuto() && !left.isAuto() && !width.isAuto());
