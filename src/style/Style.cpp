@@ -83,7 +83,8 @@ CSSLength parseCSSLength(const char* value)
         sscanf(value, "%fpc", &f);
         return CSSLength(CSSLength::Kind::PC, f);
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_LOG_ERROR("unsupported css length value %s\n", value);
+        return CSSLength(CSSLength::Kind::PX, 0);
     }
 }
 void parseLength(CSSStyleValuePair& ret, const char* value)

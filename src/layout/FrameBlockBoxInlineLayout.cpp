@@ -648,6 +648,10 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
             }
         }
     } else {
+        // find inline Text Boxes has only number for
+        // <RTL> <Number> <LTR> case
+        // Number following RTL Text should be RTL
+        // <RTL> <Number> <LTR> -> <RTL> <Number-RTL not netural> <LTR>
         for (size_t i = 0; i < boxes.size(); i ++) {
             FrameBox* box = boxes[i];
             if (box->isInlineBox()) {
@@ -655,7 +659,23 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                 if (ib->isInlineTextBox()) {
                     if (ib->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
                         sawRtlBlock = true;
-                        break;
+                    }
+
+                    if (sawRtlBlock && isNumber(ib->asInlineTextBox()->text())) {
+                        for (size_t j = i - 1; j != SIZE_MAX; j--) {
+                            FrameBox* box2 = boxes[j];
+                            if (box2->isInlineBox()) {
+                                InlineBox* ib2 = box2->asInlineBox();
+                                if (ib2->isInlineTextBox()) {
+                                    if (ib2->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Rtl) {
+                                        ib->asInlineTextBox()->setCharDirection(InlineTextBox::CharDirection::Rtl);
+                                        break;
+                                    } else if (ib2->asInlineTextBox()->charDirection() == InlineTextBox::CharDirection::Ltr) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
