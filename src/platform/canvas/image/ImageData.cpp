@@ -17,10 +17,15 @@ public:
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         int w, h;
         evas_object_image_size_get(m_image, &w, &h);
-        m_width = w;
-        m_height = h;
+        if (w >= 0 && h >= 0) {
+            m_width = w;
+            m_height = h;
 
-        reigsterFinalizer();
+            reigsterFinalizer();
+        } else {
+            m_image = NULL;
+        }
+
     }
 
     ImageDataEFL(const char* buf, size_t len)
@@ -31,10 +36,14 @@ public:
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         int w, h;
         evas_object_image_size_get(m_image, &w, &h);
-        m_width = w;
-        m_height = h;
+        if (w >= 0 && h >= 0) {
+            m_width = w;
+            m_height = h;
 
-        reigsterFinalizer();
+            reigsterFinalizer();
+        } else {
+            m_image = NULL;
+        }
     }
 
     ImageDataEFL(size_t w, size_t h)
@@ -92,12 +101,18 @@ protected:
 
 ImageData* ImageData::create(String* imageSrc)
 {
-    return new ImageDataEFL(imageSrc);
+    ImageData* imageData = new ImageDataEFL(imageSrc);
+    if (imageData->unwrap() == NULL)
+        return NULL;
+    return imageData;
 }
 
 ImageData* ImageData::create(const char* buf, size_t len)
 {
-    return new ImageDataEFL(buf, len);
+    ImageData* imageData = new ImageDataEFL(buf, len);
+    if (imageData->unwrap() == NULL)
+        return NULL;
+    return imageData;
 }
 
 ImageData* ImageData::create(size_t w, size_t h)

@@ -32,6 +32,10 @@ void ImageResource::doLoadFile(void* data)
         ImageData* id;
         if (iter == res->loader()->m_offlineImageCache.end()) {
             id = ImageData::create(filePath);
+            if (!id) {
+                res->didLoadFailed();
+                return;
+            }
             res->loader()->m_offlineImageCache.insert(std::make_pair(utf8, id));
         } else {
             id = iter->second;
@@ -65,6 +69,10 @@ void ImageResource::didLoadFinished()
 {
     if (!m_url.isFileURL()) {
         m_imageData = ImageData::create(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+        if (!m_imageData) {
+            Resource::didLoadFailed();
+            return;
+        }
     }
     Resource::didLoadFinished();
 }
