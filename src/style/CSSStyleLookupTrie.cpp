@@ -660,7 +660,7 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
     case 14:
         switch (data[0]) {
         case 't':
-            if (memcmp(data, "textSecoration", 14) == 0) {
+            if (memcmp(data, "textDecoration", 14) == 0) {
                 return CSSStyleKind::TextDecoration;
             }
             break;
