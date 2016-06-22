@@ -1411,8 +1411,10 @@ test/reftest/csswg-test/css-backgrounds-3_converted/background-size/vector/zero-
 test/reftest/csswg-test/css-backgrounds-3_converted/border-color_transparent.html
 test/reftest/csswg-test/css-backgrounds-3_converted/border-image-2.html
 test/reftest/csswg-test/css-backgrounds-3_converted/border-image-3.html
+test/reftest/csswg-test/css-backgrounds-3_converted/border-image-4.html
 test/reftest/csswg-test/css-backgrounds-3_converted/border-image-7.html
 test/reftest/csswg-test/css-backgrounds-3_converted/css3-background-size-001.html
+test/reftest/csswg-test/css-backgrounds-3_converted/css3-border-image-source.html
 test/reftest/csswg-test/css-backgrounds-3_converted/justfortest.html
 test/reftest/csswg-test/css-backgrounds-3_converted/ttwf-css3background-border-color.htm
 test/reftest/csswg-test/css-backgrounds-3_converted/ttwf-css3background-border-color-shorthand.htm
