@@ -954,7 +954,10 @@ uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* da
         ScriptBindingInstanceEnterer enter(td->m_window->starFish()->scriptBindingInstance());
         auto a = td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
         td->m_handler(td->m_window, td->m_data);
-        td->m_window->m_requestAnimationFrameHandler.erase(a);
+        a = td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
+        if (td->m_window->m_requestAnimationFrameHandler.end() != a) {
+            td->m_window->m_requestAnimationFrameHandler.erase(a);
+        }
         GC_FREE(td);
         return ECORE_CALLBACK_DONE;
     }, td);
