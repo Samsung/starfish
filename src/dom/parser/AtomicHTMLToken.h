@@ -232,7 +232,7 @@ inline void AtomicHTMLToken::initializeAttributes(const HTMLToken::AttributeList
         const QualifiedName& name = nameForAttribute(attribute);
         // FIXME: This is N^2 for the number of attributes.
         if (!findAttributeInVector(m_attributes, name))
-            m_attributes.push_back(Attribute(name, new StringDataUTF32(attribute.value.data())));
+            m_attributes.push_back(Attribute(name, String::createASCIIStringFromUTF32SourceIfPossible(attribute.value)));
     }
 }
 

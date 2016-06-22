@@ -723,10 +723,14 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                     if (box->isInlineBox()) {
                         InlineBox* ib = box->asInlineBox();
                         if (ib->isInlineTextBox()) {
-                            if (isNumber(ib->asInlineTextBox()->text())) {
-                                currentDirection = currentDirectionBefore;
+                            String* text = ib->asInlineTextBox()->text();
+                            if (text->containsOnlyWhitespace()) {
+                            } else {
+                                if (isNumber(text)) {
+                                    currentDirection = currentDirectionBefore;
+                                }
+                                ib->asInlineTextBox()->setCharDirection(currentDirection);
                             }
-                            ib->asInlineTextBox()->setCharDirection(currentDirection);
                         }
                     }
                 } else {
@@ -776,10 +780,14 @@ static void resolveBidi(DirectionValue parentDir, std::vector<FrameBox*, gc_allo
                 if (box->isInlineBox()) {
                     InlineBox* ib = box->asInlineBox();
                     if (ib->isInlineTextBox()) {
-                        if (isNumber(ib->asInlineTextBox()->text())) {
-                            currentDirection = currentDirectionBefore;
+                        String* text = ib->asInlineTextBox()->text();
+                        if (text->containsOnlyWhitespace()) {
+                        } else {
+                            if (isNumber(text)) {
+                                currentDirection = currentDirectionBefore;
+                            }
+                            ib->asInlineTextBox()->setCharDirection(currentDirection);
                         }
-                        ib->asInlineTextBox()->setCharDirection(currentDirection);
                     }
                 }
             } else {

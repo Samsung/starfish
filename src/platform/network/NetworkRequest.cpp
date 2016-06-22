@@ -567,6 +567,7 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
 
 static String* decodeURL(String *src, size_t idx)
 {
+    bool gotUTF32Char = false;
     UTF32String ret;
 
     while (idx < src->length()) {
@@ -595,14 +596,25 @@ static String* decodeURL(String *src, size_t idx)
                 }
                 ch += current;
             }
-            if (ok)
+            if (ok) {
+                if (ch > 127) {
+                    gotUTF32Char = true;
+                }
                 ret += ch;
+            }
         } else {
+            if (c > 127) {
+                gotUTF32Char = true;
+            }
             ret += c;
         }
         idx++;
     }
-    return new StringDataUTF32(std::move(ret));
+    if (gotUTF32Char) {
+        return new StringDataUTF32(std::move(ret));
+    } else {
+        return String::createASCIIStringFromUTF32Source(ret);
+    }
 }
 
 void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
