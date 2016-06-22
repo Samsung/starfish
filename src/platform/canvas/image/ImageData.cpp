@@ -15,17 +15,20 @@ public:
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_file_set(m_image, PathResolver::matchLocation(imageSrc)->utf8Data(), NULL);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
-        int w, h;
-        evas_object_image_size_get(m_image, &w, &h);
-        if (w >= 0 && h >= 0) {
-            m_width = w;
-            m_height = h;
+        int w, h, err;
+        err = evas_object_image_load_error_get(m_image);
+        if (err == EVAS_LOAD_ERROR_NONE) {
+            evas_object_image_size_get(m_image, &w, &h);
+            if (w >= 0 && h >= 0) {
+                m_width = w;
+                m_height = h;
 
-            reigsterFinalizer();
-        } else {
-            m_image = NULL;
+                reigsterFinalizer();
+                return;
+            }
         }
-
+        evas_object_del(m_image);
+        m_image = NULL;
     }
 
     ImageDataEFL(const char* buf, size_t len)
@@ -34,16 +37,20 @@ public:
         char format[4] = "";
         evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format, NULL);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
-        int w, h;
-        evas_object_image_size_get(m_image, &w, &h);
-        if (w >= 0 && h >= 0) {
-            m_width = w;
-            m_height = h;
+        int w, h, err;
+        err = evas_object_image_load_error_get(m_image);
+        if (err == EVAS_LOAD_ERROR_NONE) {
+            evas_object_image_size_get(m_image, &w, &h);
+            if (w >= 0 && h >= 0) {
+                m_width = w;
+                m_height = h;
 
-            reigsterFinalizer();
-        } else {
-            m_image = NULL;
+                reigsterFinalizer();
+                return;
+            }
         }
+        evas_object_del(m_image);
+        m_image = NULL;
     }
 
     ImageDataEFL(size_t w, size_t h)
