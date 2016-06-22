@@ -1065,6 +1065,8 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         }, escargot::ESString::create("setAttribute"), 0, false)
     );
 
+    // spec of removeAttribute
+    // https://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-6D6AC0F9
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeAttribute"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             try {
@@ -1079,7 +1081,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
                     elem->removeAttribute(attrKey);
                 }
-                return escargot::ESValue(escargot::ESValue::ESNull);
+                return escargot::ESValue();
             } catch(DOMException* e) {
                 escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1510,6 +1512,17 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         Node* nd = originalObj;
         if (nd->isDocument()) {
             return escargot::ESString::create("UTF-8");
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("contentType"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return escargot::ESString::create("text/html");
         }
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);
@@ -2769,6 +2782,7 @@ escargot::ESFunctionObject* bindingNodeList(ScriptBindingInstance* scriptBinding
     return NodeListFunction;
 }
 
+// https://dom.spec.whatwg.org/#interface-domtokenlist
 escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMTokenList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
@@ -2827,7 +2841,7 @@ escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBin
             }
             if (argCount > 0)
                 ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->add(&tokens);
-            return escargot::ESValue(escargot::ESValue::ESNull);
+            return escargot::ESValue();
         } catch(DOMException* e) {
             escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -2849,7 +2863,7 @@ escargot::ESFunctionObject* bindingDOMTokenList(ScriptBindingInstance* scriptBin
             }
             if (argCount > 0)
                 ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
-            return escargot::ESValue(escargot::ESValue::ESNull);
+            return escargot::ESValue();
         } catch(DOMException* e) {
             escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
             STARFISH_RELEASE_ASSERT_NOT_REACHED();

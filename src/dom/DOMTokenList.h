@@ -7,6 +7,8 @@ namespace StarFish {
 
 class Node;
 class Element;
+
+// https://dom.spec.whatwg.org/#interface-domtokenlist
 class DOMTokenList : public ScriptWrappable {
 public:
     DOMTokenList(ScriptBindingInstance* instance, Element* element, QualifiedName localName)
