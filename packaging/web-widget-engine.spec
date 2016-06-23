@@ -6,6 +6,14 @@ Source:        %{name}-%{version}.tar.gz
 Group:         Development/Libraries
 License:       Apache License, Version 2.0
 
+
+%if "%{?tizen_profile_name}" == "mobile"
+ExcludeArch: %{arm} %ix86 x86_64
+%endif
+%if "%{?tizen_profile_name}" == "tv"
+ExcludeArch: %{arm} %ix86 x86_64
+%endif
+
 # build requirements
 %if "%{gcc_version}" == "49"
 BuildRequires: make
@@ -70,13 +78,8 @@ mkdir -p %{buildroot}%{_bindir}
 cp out/tizen_obs/${STARFISH_ARCH}/lib/release/libWebWidgetEngine.so %{buildroot}%{_libdir}
 cp out/tizen_obs/${STARFISH_ARCH}/exe/debug/StarFish %{buildroot}%{_bindir}
 %else
-%if "%{tizen_profile_name}" == "wearable"
 cp prebuilt/tizen-wearable-2.3-${TIZEN_ARCH}/libWebWidgetEngine.so %{buildroot}%{_libdir}
 touch %{buildroot}%{_bindir}/StarFish
-%else
-touch %{buildroot}%{_libdir}/libWebWidgetEngine.so
-touch %{buildroot}%{_bindir}/StarFish
-%endif
 %endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
