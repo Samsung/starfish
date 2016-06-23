@@ -16,12 +16,18 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*> >* tokens
 
     std::string str;
     bool inQuotationMarks = false;
+    bool inParenthesis = false;
     for (size_t i = 0; i < length; i++) {
         if (data[i] == '"' || data[i] == '\'') {
             if (inQuotationMarks)
                 inQuotationMarks = false;
             else
                 inQuotationMarks = true;
+        }
+        if (data[i] == '(') {
+            inParenthesis = true;
+        } else if (data[i] == ')') {
+            inParenthesis = false;
         }
         if (isWhiteSpaceState) {
             if (!String::isSpaceOrNewline(data[i])) {
@@ -31,9 +37,11 @@ void DOMTokenList::tokenize(std::vector<String*, gc_allocator<String*> >* tokens
                 continue;
         } else {
             if (String::isSpaceOrNewline(data[i]) && !inQuotationMarks) {
-                isWhiteSpaceState = true;
-                tokens->push_back(String::fromUTF8(str.data(), str.length()));
-                str.clear();
+                if (!inParenthesis) {
+                    isWhiteSpaceState = true;
+                    tokens->push_back(String::fromUTF8(str.data(), str.length()));
+                    str.clear();
+                }
             } else {
                 str += data[i];
             }

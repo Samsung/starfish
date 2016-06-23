@@ -80,7 +80,7 @@ public:
             res = res * 10 + (*cur - '0');
             cur++;
         }
-        if (cur == m_curPos)
+        if (cur == m_curPos && *cur != '.') // number can just start with '.' without '0'
             return false;
 
         if (*cur == '.' && cur < m_endPos) {
@@ -434,7 +434,7 @@ public:
             }
 
             for (unsigned i = 1; i < strlen(token); i++) {
-                if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'a' && token[i] <= 'f')) {
+                if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'A' && token[i] <= 'F') || (token[i] >= 'a' && token[i] <= 'f')) {
                 } else {
                     return false;
                 }
