@@ -10,7 +10,9 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
 {
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
-    LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top;
+    // NOTE: maxNormalFlowBottom : Maximum position after finishing layout for all children
+    // normalFlowPosition : Current Position on normal flow
+    LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top, normalFlowPosition = 0;
     LayoutRect visibleRect(0, 0, 0, 0);
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() || isFrameDocument(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
@@ -30,7 +32,6 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     Frame* child = firstChild();
     if (!child)
         marginInfo.setMargin(0, 0);
-    LayoutUnit marginForAbsolute;
     bool hasOnlySelfCollapsing = true;
     while (child) {
         // Place the child.
@@ -100,7 +101,6 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
                     child->asFrameBox()->moveY(logicalTop);
                 }
                 marginInfo.setMargin(child->asFrameBox()->marginBottom());
-                marginForAbsolute = marginInfo.positiveMargin() - marginInfo.negativeMargin();
                 marginInfo.setPositiveMargin(std::max(marginInfo.positiveMargin(), ctx.maxPositiveMarginBottom()));
                 marginInfo.setNegativeMargin(std::max(marginInfo.negativeMargin(), ctx.maxNegativeMarginBottom()));
             }
@@ -117,9 +117,10 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
                     maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
                 normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
             }
+            normalFlowPosition = child->asFrameBox()->y() + child->asFrameBox()->height() + child->asFrameBox()->marginBottom();
             visibleRect.unite(child->asFrameBox()->visibleRect());
         } else {
-            child->asFrameBox()->moveY(marginForAbsolute);
+            child->asFrameBox()->setY(normalFlowPosition);
             ctx.registerAbsolutePositionedFrames(child);
         }
 
