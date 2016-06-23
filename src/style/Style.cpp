@@ -1901,7 +1901,11 @@ void CSSStyleValuePair::setValueZIndex(std::vector<String*, gc_allocator<String*
     } else {
         // TODO check string has right color string
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
-        sscanf(value, "%f%%", &m_value.m_floatValue);
+        if (atof(value) - atoi(value)) {
+            m_value.m_intValue = 0;
+        } else {
+            sscanf(value, "%d", &m_value.m_intValue);
+        }
     }
 }
 
@@ -4440,7 +4444,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
                     style->m_zIndex = 0;
                 } else {
-                    style->m_zIndex = cssValues[k].numberValue();
+                    style->m_zIndex = cssValues[k].numberIntValue();
                     style->m_zIndexSpecifiedByUser = true;
                 }
                 break;
