@@ -1181,13 +1181,11 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
 
     // we have an error here, let's skip it
     restoreState();
-    String* s = aToken->m_value;
     blocks.clear();
-    CSSToken* token = getToken(false, false);
+    CSSToken* token = aToken;
     bool isURLFunc = false;
 
     while (token->isNotNull()) {
-        s = s->concat(token->m_value);
         if (token->isSymbol(';')) {
             break;
         } else if (token->isSymbol('}') && !blocks.size()) {
@@ -1255,6 +1253,8 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
         // selector is invalid so the whole rule is invalid with it
         CSSToken* token = getToken(true, true);
         while (!token->isSymbol('{') && token->isNotNull())
+            token = getToken(true, false);
+        if (token->isSymbol('{'))
             token = getToken(true, false);
         while (true) {
             if (!token->isNotNull()) {
