@@ -108,7 +108,7 @@ else ifneq (,$(findstring tizen,$(HOST)))
 endif
 
 ifneq (,$(findstring tizen,$(HOST)))
-  LTO=1
+  #LTO=1
 endif
 
 $(info host... $(HOST))
@@ -124,7 +124,7 @@ $(info build dir... $(OUTDIR))
 ################################################################################
 
 # common flags
-CXXFLAGS += -std=c++11
+CXXFLAGS += -std=c++0x
 CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Iinc/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
@@ -154,6 +154,7 @@ endif
 # flags for debug/release
 CXXFLAGS_DEBUG = -O0 -g3 -D_GLIBCXX_DEBUG -fno-omit-frame-pointer -Wall -Wextra -Werror
 CXXFLAGS_DEBUG += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
+CXXFLAGS_DEBUG += -Wno-unused-variable
 CXXFLAGS_RELEASE = -O2 -g3 -DNDEBUG -fomit-frame-pointer -fno-stack-protector -funswitch-loops -Wno-deprecated-declarations
 
 # flags for shared library
@@ -172,7 +173,7 @@ ifneq (,$(findstring tizen,$(HOST)))
   CXXFLAGS += -Os -finline-limit=64
   CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
 
-  CXXFLAGS_DEBUG += -Wno-literal-suffix
+  #CXXFLAGS_DEBUG += -Wno-literal-suffix
   CXXFLAGS_RELEASE += -USTARFISH_ENABLE_TEST
 
   ifeq ($(TYPE), lib)
@@ -341,12 +342,16 @@ else ifeq ($(HOST), tizen_obs)
   CXXFLAGS    += $(shell pkg-config --cflags $(TIZEN_DEPS))
   LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS))
   LIB = libWebWidgetEngine.so
+  ifeq ($(TYPE), exe)
+    LDFLAGS += -lrt
+  endif
 else ifneq (,$(findstring tizen,$(HOST)))
 
   # Toolchain & Platform
   COMPILER_PREFIX=$(TIZEN_ARCH)-linux-gnueabi
+  COMPILER_VERSION=4.6
   TIZEN_SYSROOT=$(TIZEN_SDK_HOME)/platforms/tizen-$(TIZEN_VERSION)/$(TIZEN_PROFILE)/rootstraps/$(TIZEN_PROFILE)-$(TIZEN_VERSION)-$(TIZEN_DEVICE).core
-  TIZEN_TOOLCHAIN=$(TIZEN_SDK_HOME)/tools/$(COMPILER_PREFIX)-gcc-4.9
+  TIZEN_TOOLCHAIN=$(TIZEN_SDK_HOME)/tools/$(COMPILER_PREFIX)-gcc-$(COMPILER_VERSION)
 
   CC    = $(TIZEN_TOOLCHAIN)/bin/$(COMPILER_PREFIX)-gcc
   CXX   = $(TIZEN_TOOLCHAIN)/bin/$(COMPILER_PREFIX)-g++
@@ -373,12 +378,14 @@ else ifneq (,$(findstring tizen,$(HOST)))
   LDFLAGS += -Ldeps/tizen/lib/tizen-$(TIZEN_PROFILE)-$(TIZEN_VERSION)-$(TIZEN_ARCH)
 
 
-  # Workaround for platforms using gcc 4.6
+  # Workaround for platform gcc 4.6 + toolchain gcc 4.9
   ifneq ($(TIZEN_VERSION), 3.0)
-    ifeq ($(TYPE), lib)
-      LDFLAGS += -static-libstdc++
-    else
-      LDFLAGS += $(TIZEN_TOOLCHAIN)/$(COMPILER_PREFIX)/lib/libstdc++.a
+    ifeq ($(COMPILER_VERSION), 4.9)
+      ifeq ($(TYPE), lib)
+        LDFLAGS += -static-libstdc++
+      else
+        LDFLAGS += $(TIZEN_TOOLCHAIN)/$(COMPILER_PREFIX)/lib/libstdc++.a
+      endif
     endif
   endif
 

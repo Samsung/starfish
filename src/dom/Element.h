@@ -19,7 +19,7 @@ public:
         , m_attrList(nullptr)
     {
     }
-    bool isRareElementMembers() override
+    bool isRareElementMembers()
     {
         return true;
     }
@@ -153,9 +153,9 @@ public:
         return true;
     }
 
-    NamedNodeMap* attributes() override;
+    NamedNodeMap* attributes();
 
-    RareNodeMembers* ensureRareMembers() override;
+    RareNodeMembers* ensureRareMembers();
     RareElementMembers* ensureRareElementMembers();
 
     void addAttr(Attr* attr);

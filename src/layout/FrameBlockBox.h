@@ -110,7 +110,7 @@ protected:
 };
 
 class InlineNonReplacedBox : public InlineBox {
-    friend FrameBlockBox;
+    friend class FrameBlockBox;
 
 public:
     InlineNonReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameInline* origin)

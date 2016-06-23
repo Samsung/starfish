@@ -55,6 +55,8 @@ class NetworkRequest : public gc {
     friend class XMLHttpRequest;
     friend class NetworkWorkerHelper;
     friend class AsyncNetworkWorkHelper;
+    friend void NetworkRequestFileWorker(NetworkRequest* res, String* filePath);
+    friend void NetworkRequestDataURLWorker(NetworkRequest* res, String* url);
 public:
     enum MethodType {
         UNKNOWN_METHOD,
@@ -219,6 +221,17 @@ protected:
 
     std::vector<NetworkRequestClient*, gc_allocator<NetworkRequestClient*>> m_clients;
 };
+
+inline void NetworkRequestFileWorker(NetworkRequest* res, String* filePath)
+{
+    NetworkRequest::fileWorker(res, filePath);
+}
+
+inline void NetworkRequestDataURLWorker(NetworkRequest* res, String* url)
+{
+    NetworkRequest::dataURLWorker(res, url);
+}
+
 }
 
 #endif

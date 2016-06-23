@@ -141,6 +141,16 @@ private:
     static ExtensionManagerInstanceMap s_extensionManagerInstances;
 };
 
+inline ExtensionManagerInstance* ExtensionManagerInstanceGet(escargot::ESVMInstance* instance)
+{
+    return ExtensionManagerInstance::get(instance);
+}
+
+inline ExtensionManagerInstance* ExtensionManagerInstanceCurrentInstance()
+{
+    return ExtensionManagerInstance::currentInstance();
+}
+
 void initialize(escargot::ESVMInstance* instance);
 void close(escargot::ESVMInstance* instance);
 

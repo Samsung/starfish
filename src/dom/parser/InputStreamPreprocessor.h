@@ -5,7 +5,7 @@
 
 namespace StarFish {
 
-const char kEndOfFileMarker = 0;
+const char32_t kEndOfFileMarker = 0;
 
 // http://www.whatwg.org/specs/web-apps/current-work/#preprocessing-the-input-stream
 template <typename Tokenizer>

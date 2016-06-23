@@ -46,7 +46,7 @@ bool EventTarget::addEventListener(const String* eventType, EventListener* liste
     listener->setCapture(useCapture);
 
     String* type = const_cast<String*>(eventType);
-    EventListenerVector* v;
+    EventListenerVector* v = nullptr;
     bool hasEvent = false;
     for (auto it = m_eventListeners.begin(); it != m_eventListeners.end(); ++it) {
         if (it->first->equals(eventType)) {

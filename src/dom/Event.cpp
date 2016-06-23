@@ -23,6 +23,14 @@ EventInit::EventInit(bool b, bool c)
 Event::Event()
     : ScriptWrappable(this)
     , m_isInitialized(true)
+    , m_type(String::emptyString)
+    , m_eventPhase(0)
+    , m_propagationStopped(false)
+    , m_immediatePropagationStopped(false)
+    , m_bubbles(false)
+    , m_cancelable(false)
+    , m_defaultPrevented(false)
+    , m_isDispatched(false)
 {
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
@@ -33,8 +41,13 @@ Event::Event(String* eventType, const EventInit& init)
     : ScriptWrappable(this)
     , m_isInitialized(true)
     , m_type(eventType)
+    , m_eventPhase(0)
+    , m_propagationStopped(false)
+    , m_immediatePropagationStopped(false)
     , m_bubbles(init.bubbles)
     , m_cancelable(init.cancelable)
+    , m_defaultPrevented(false)
+    , m_isDispatched(false)
 {
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);

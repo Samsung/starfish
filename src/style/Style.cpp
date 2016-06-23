@@ -642,9 +642,9 @@ void CSSStyleValuePair::setValueBackgroundSize(std::vector<String*, gc_allocator
                 if (kind == CSSStyleValuePair::ValueKind::Auto) {
                     values->append(kind, { 0 });
                 } else if (kind == CSSStyleValuePair::ValueKind::Percentage) {
-                    values->append(kind, {.m_floatValue = parser->parsedFloatValue() });
+                    values->append(kind, { parser->parsedFloatValue() });
                 } else if (kind == CSSStyleValuePair::ValueKind::Length) {
-                    CSSStyleValuePair::ValueData data = {.m_length = CSSLength(parser->parsedFloatValue()) };
+                    CSSStyleValuePair::ValueData data = { CSSLength(parser->parsedFloatValue()) };
                     values->append(kind, data);
                 }
             }
@@ -896,7 +896,7 @@ void CSSStyleValuePair::setValueBorderImageSlice(std::vector<String*, gc_allocat
                 char* pEnd;
                 double d = strtod(currentToken, &pEnd);
                 STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
-                m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Number, {.m_floatValue = (float)d });
+                m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
             }
         }
     }
@@ -935,23 +935,23 @@ void CSSStyleValuePair::setValueBorderImageRepeat(std::vector<String*, gc_alloca
         // TODO: find better way to parse axis data
         // 1) parse X-axis data
         if (startsWith(value, "stretch")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = StretchValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { StretchValue });
         } else if (startsWith(value, "repeat")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = RepeatValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RepeatValue });
         } else if (startsWith(value, "round")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = RoundValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RoundValue });
         } else if (startsWith(value, "space")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = SpaceValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { SpaceValue });
         }
         // 2) parse Y-axis data
         if (endsWith(value, "stretch")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = StretchValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { StretchValue });
         } else if (endsWith(value, "repeat")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = RepeatValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RepeatValue });
         } else if (endsWith(value, "round")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = RoundValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RoundValue });
         } else if (endsWith(value, "space")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, {.m_borderImageRepeat = SpaceValue });
+            m_value.m_multiValue->append(BorderImageRepeatValueKind, { SpaceValue });
         }
     }
 }
@@ -974,9 +974,9 @@ void CSSStyleValuePair::setValueBorderImageWidth(std::vector<String*, gc_allocat
                 char* pEnd;
                 double d = strtod(currentToken, &pEnd);
                 STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
-                values->append(CSSStyleValuePair::ValueKind::Number, {.m_floatValue = (float)d });
+                values->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
             } else {
-                CSSStyleValuePair::ValueData data = {.m_length = parseCSSLength(currentToken) };
+                CSSStyleValuePair::ValueData data = { parseCSSLength(currentToken) };
                 values->append(CSSStyleValuePair::ValueKind::Length, data);
             }
         }
@@ -1069,11 +1069,11 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
                 if (unit == Number) {
                     parser->consumeNumber();
                     float num = parser->parsedNumber();
-                    values->append(CSSStyleValuePair::ValueKind::Number, {.m_floatValue = num});
+                    values->append(CSSStyleValuePair::ValueKind::Number, { num});
                 } else if (unit == Angle) {
                     parser->consumeNumber();
                     parser->consumeString();
-                    ValueData data = {.m_angle = CSSAngle(parser->parsedString(), parser->parsedNumber())};
+                    ValueData data = { CSSAngle(parser->parsedString(), parser->parsedNumber())};
                     values->append(CSSStyleValuePair::ValueKind::Angle, data);
                 } else { // TranslationValue
                     char* savedPos = parser->m_curPos;
@@ -1082,10 +1082,10 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
                     if (parser->consumeString()) {
                         String* str = parser->parsedString();
                         if (str->equals("%")) {
-                            ValueData data = {.m_floatValue = num / 100.f};
+                            ValueData data = { num / 100.f};
                             values->append(CSSStyleValuePair::ValueKind::Percentage, data);
                         } else {
-                            ValueData data = {.m_length = parseCSSLength(savedPos)};
+                            ValueData data = { parseCSSLength(savedPos)};
                             values->append(CSSStyleValuePair::ValueKind::Length, data);
                         }
                     }
@@ -1134,9 +1134,9 @@ void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocato
             } else if (endsWith(value, "%")) {
                 float f;
                 sscanf(value, "%f%%", &f);
-                values->append(CSSStyleValuePair::ValueKind::Percentage, {.m_floatValue = (f / 100.f) });
+                values->append(CSSStyleValuePair::ValueKind::Percentage, { (f / 100.f) });
             } else {
-                CSSStyleValuePair::ValueData data = {.m_length = parseCSSLength(value) };
+                CSSStyleValuePair::ValueData data = { parseCSSLength(value) };
                 values->append(CSSStyleValuePair::ValueKind::Length, data);
             }
         }

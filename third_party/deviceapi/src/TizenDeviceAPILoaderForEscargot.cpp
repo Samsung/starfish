@@ -135,7 +135,7 @@ escargot::ESObject* ExtensionManagerInstance::createExtensionObject()
             DEVICEAPI_LOG_INFO("extension.sendSyncMessage");
             printArguments(instance);
 
-            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::get(instance);
+            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceGet(instance);
             wrt::xwalk::ExtensionInstance* extensionInstance = extensionManagerInstance->getExtensionInstanceFromCallingContext(instance);
             if (!extensionInstance || (instance->currentExecutionContext()->argumentCount() != 1))
                 return ESValue(false);
@@ -156,7 +156,7 @@ escargot::ESObject* ExtensionManagerInstance::createExtensionObject()
             DEVICEAPI_LOG_INFO("extension.sendSyncData");
             printArguments(instance);
 
-            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::get(instance);
+            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceGet(instance);
             wrt::xwalk::ExtensionInstance* extensionInstance = extensionManagerInstance->getExtensionInstanceFromCallingContext(instance);
             if (!extensionInstance || (instance->currentExecutionContext()->argumentCount() < 1))
                 return ESValue(false);
@@ -230,7 +230,7 @@ escargot::ESObject* ExtensionManagerInstance::createExtensionObject()
             DEVICEAPI_LOG_INFO("extension.setMessageListener");
             printArguments(instance);
 
-            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::get(instance);
+            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceGet(instance);
             wrt::xwalk::ExtensionInstance* extensionInstance = extensionManagerInstance->getExtensionInstanceFromCallingContext(instance);
             if (!extensionInstance || instance->currentExecutionContext()->argumentCount() != 1)
                 return ESValue(false);
@@ -259,7 +259,7 @@ escargot::ESObject* ExtensionManagerInstance::createExtensionObject()
             DEVICEAPI_LOG_INFO("extension.receiveChunkData");
             printArguments(instance);
 
-            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::get(instance);
+            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceGet(instance);
             wrt::xwalk::ExtensionInstance* extensionInstance = extensionManagerInstance->getExtensionInstanceFromCallingContext(instance);
             if (!extensionInstance || (instance->currentExecutionContext()->argumentCount() < 1))
                 return ESValue(false);
@@ -340,7 +340,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
 
             DEVICEAPI_LOG_INFO("Enter");
 
-            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::currentInstance();
+            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceCurrentInstance();
             TizenStrings* strings = extensionManagerInstance->strings();
             strings->initializeLazyStrings();
 
@@ -350,7 +350,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
                 tizenObject->defineAccessorProperty(api.string(),
                     [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
                         DEVICEAPI_LOG_INFO("Loading plugin for %s API", name->utf8Data());
-                        ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::currentInstance();
+                        ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceCurrentInstance();
                         escargot::ESObject* apiObject = extensionManagerInstance->initializeExtensionInstance(name->utf8Data());
                         obj->defineDataProperty(name, false, true, false, apiObject, true);
                         return apiObject;
@@ -360,7 +360,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
             for (auto entryPoint : strings->entryPoints()) {
                 tizenObject->defineAccessorProperty(entryPoint.first,
                     [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
-                        ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::currentInstance();
+                        ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceCurrentInstance();
                         TizenStrings* strings = extensionManagerInstance->strings();
                         obj->deleteProperty(name, true);
                         obj->get(strings->entryPoints().find(name)->second.string()); // trigger plugin loading
@@ -383,7 +383,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
 
             DEVICEAPI_LOG_INFO("Enter");
 
-            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::currentInstance();
+            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceCurrentInstance();
             TizenStrings* strings = extensionManagerInstance->strings();
             strings->initializeLazyStrings();
 
@@ -392,7 +392,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
             xwalkObject->defineAccessorProperty(strings->utils.string(),
                 [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
                     DEVICEAPI_LOG_INFO("Loading plugin for xwalk.utils");
-                    ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::currentInstance();
+                    ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceCurrentInstance();
                     escargot::ESObject* utilsObject = extensionManagerInstance->initializeExtensionInstance("utils");
                     obj->defineDataProperty(name, false, true, false, utilsObject, true);
                     return utilsObject;
@@ -409,7 +409,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
 
             DEVICEAPI_LOG_INFO("Enter");
 
-            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::currentInstance();
+            ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceCurrentInstance();
             TizenStrings* strings = extensionManagerInstance->strings();
             strings->initializeLazyStrings();
 
@@ -418,7 +418,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
             webapisObject->defineAccessorProperty(strings->sa.string(),
                 [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
                     DEVICEAPI_LOG_INFO("Loading plugin for Samsung Accessory protocol API");
-                    ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstance::currentInstance();
+                    ExtensionManagerInstance* extensionManagerInstance = ExtensionManagerInstanceCurrentInstance();
                     escargot::ESObject* saObject = extensionManagerInstance->initializeExtensionInstance("sa");
                     obj->defineDataProperty(name, false, true, false, saObject, true);
                     return saObject;

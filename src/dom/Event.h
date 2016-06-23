@@ -80,24 +80,24 @@ public:
     }
 
 private:
-    bool m_isInitialized { false }; // initialized flag
+    bool m_isInitialized; // initialized flag
 
-    String* m_type { String::emptyString };
+    String* m_type;
     EventTarget* m_target;
     EventTarget* m_currentTarget;
 
-    unsigned short m_eventPhase { 0 };
+    unsigned short m_eventPhase;
 
-    bool m_propagationStopped { false }; // stop propagation flag
-    bool m_immediatePropagationStopped { false }; // stop immediate propagation flag
+    bool m_propagationStopped; // stop propagation flag
+    bool m_immediatePropagationStopped; // stop immediate propagation flag
 
-    bool m_bubbles { false };
-    bool m_cancelable { false };
-    bool m_defaultPrevented { false }; // canceled flag
+    bool m_bubbles;
+    bool m_cancelable;
+    bool m_defaultPrevented; // canceled flag
 
     DOMTimeStamp m_timeStamp;
 
-    bool m_isDispatched { false }; // dispatch flag
+    bool m_isDispatched; // dispatch flag
 };
 
 class UIEvent : public Event {
@@ -132,9 +132,9 @@ public:
     virtual bool isProgressEvent() const { return true; }
 
 private:
-    bool m_lengthComputable { false };
-    unsigned long long m_loaded { 0 };
-    unsigned long long m_total { 0 };
+    bool m_lengthComputable;
+    unsigned long long m_loaded;
+    unsigned long long m_total;
 };
 
 }

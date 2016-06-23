@@ -676,7 +676,7 @@ public:
     };
 
     CSSStyleValuePair()
-        : m_value {0}
+        : m_value(0.0f)
     {
     }
 
@@ -896,6 +896,26 @@ public:
         UnicodeBidiValue m_unicodeBidi;
         TextDecorationValue m_textDecoration;
         CSSTransformFunctions* m_transforms;
+        ValueData(int v) { m_floatValue = v; }
+        ValueData(float v) { m_floatValue = v; }
+        ValueData(DisplayValue v) { m_display = v; }
+        ValueData(PositionValue v) { m_position = v; }
+        ValueData(VerticalAlignValue v) { m_verticalAlign = v; }
+        ValueData(FontStyleValue v) { m_fontStyle = v; }
+        ValueData(FontWeightValue v) { m_fontWeight = v; }
+        ValueData(TextOverflowValue v) { m_textOverflow = v; }
+        ValueData(TextAlignValue v) { m_textAlign = v; }
+        ValueData(DirectionValue v) { m_direction = v; }
+        ValueData(CSSLength v) { m_length = v; }
+        ValueData(CSSAngle v) { m_angle = v; }
+        ValueData(String* v) { m_stringValue = v; }
+        ValueData(BorderImageRepeatValue v) { m_borderImageRepeat = v; }
+        ValueData(ValueList* v) { m_multiValue = v; }
+        ValueData(OverflowValue v) { m_overflow = v; }
+        ValueData(VisibilityValue v) { m_visibility = v; }
+        ValueData(UnicodeBidiValue v) { m_unicodeBidi = v; }
+        ValueData(TextDecorationValue v) { m_textDecoration = v; }
+        ValueData(CSSTransformFunctions* v) { m_transforms = v; }
     };
 
     void setValue(const ValueData& value)

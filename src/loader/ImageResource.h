@@ -31,6 +31,12 @@ public:
 protected:
     ImageData* m_imageData;
 };
+
+inline void ImageResourceDoLoadFile(void* data)
+{
+    ImageResource::doLoadFile(data);
+}
+
 }
 
 #endif

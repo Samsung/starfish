@@ -47,7 +47,7 @@ public:
 
     void markEndOfFile()
     {
-        m_last->append(SegmentedString(new StringDataASCII(&kEndOfFileMarker, 1)));
+        m_last->append(SegmentedString(new StringDataASCII("\0", 1)));
         m_last->close();
     }
 

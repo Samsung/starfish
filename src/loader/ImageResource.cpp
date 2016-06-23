@@ -57,7 +57,7 @@ void ImageResource::request(bool needsSyncRequest)
             pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
                 Resource* res = (Resource*)data;
                 res->removeIdlerHandle(handle);
-                doLoadFile(data);
+                ImageResourceDoLoadFile(data);
             }, this));
         }
     } else {

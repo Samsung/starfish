@@ -419,7 +419,7 @@ void NetworkRequest::send(String* body)
             size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
                 NetworkRequest* request = (NetworkRequest*)data;
                 request->removeIdlerHandle(handle);
-                fileWorker((NetworkRequest*)data, (String*)data1);
+                NetworkRequestFileWorker((NetworkRequest*)data, (String*)data1);
             }, this, filePath);
             pushIdlerHandle(handle);
         }
@@ -432,7 +432,7 @@ void NetworkRequest::send(String* body)
             size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
                 NetworkRequest* request = (NetworkRequest*)data;
                 request->removeIdlerHandle(handle);
-                dataURLWorker((NetworkRequest*)data, (String*)data1);
+                NetworkRequestDataURLWorker((NetworkRequest*)data, (String*)data1);
             }, this, m_url.urlString());
             pushIdlerHandle(handle);
         }

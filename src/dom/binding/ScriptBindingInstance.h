@@ -31,8 +31,9 @@ public:
     }
 
     ScriptBindingInstanceEnterer(ScriptBindingInstance* instance)
-        : ScriptBindingInstanceEnterer(*instance)
+        : m_instance(*instance)
     {
+        m_instance.enter();
     }
 
     ~ScriptBindingInstanceEnterer()
