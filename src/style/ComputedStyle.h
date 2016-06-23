@@ -924,6 +924,16 @@ public:
         m_transforms = nullptr;
     }
 
+    void setUnicodeBidi(UnicodeBidiValue value)
+    {
+        m_unicodeBidi = value;
+    }
+
+    UnicodeBidiValue unicodeBidi()
+    {
+        return m_unicodeBidi;
+    }
+
 protected:
     void initNonInheritedStyles()
     {
@@ -938,12 +948,12 @@ protected:
         m_verticalAlign = initialVerticalAlign();
         m_transforms = nullptr;
         m_transformOrigin = nullptr;
+        m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
     }
 
     // NOTICE
     // if you add new property, you MUST implement comparing style for new property in [compareStyle function]
 
-    // TODO pack enum values
     struct InheritedStyles {
         Color m_color;
         Length m_fontSize;
@@ -963,6 +973,7 @@ protected:
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflow : 1;
     TextDecorationValue m_textDecoration : 3;
+    UnicodeBidiValue m_unicodeBidi : 2;
 
     Length m_width;
     Length m_height;

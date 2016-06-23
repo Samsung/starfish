@@ -311,6 +311,11 @@ enum VisibilityValue {
     HiddenVisibilityValue,
 };
 
+enum UnicodeBidiValue {
+    NormalUnicodeBidiValue,
+    EmbedUnicodeBidiValue,
+};
+
 class ValueList;
 class CSSStyleDeclaration;
 
@@ -380,6 +385,7 @@ class CSSStyleDeclaration;
     F(Background, background, "background")                        \
     F(Opacity, opacity, "opacity")                                 \
     F(FontWeight, fontWeight, "font-weight")                       \
+    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                    \
 
 
 class CSSTransformFunction {
@@ -407,6 +413,7 @@ public:
     CSSTransformFunction(Kind kind)
     {
         m_kind = kind;
+        m_values = nullptr;
     }
 
     Kind kind()
@@ -591,6 +598,8 @@ public:
         Opacity, // alphavalue | inherit // <1>
         // https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#propdef-overflow
         Overflow, // visible | hidden | scroll | auto | inherit // Initial value -> visible
+        // https://www.w3.org/TR/CSS21/visuren.html#propdef-unicode-bidi
+        UnicodeBidi,
         // https://www.w3.org/TR/CSS2/visufx.html#visibility
         Visibility, // visible | hidden | collapse | inherit // Initial value -> visible
         // http://www.w3.org/TR/CSS2/visuren.html#z-index
@@ -653,6 +662,7 @@ public:
         OverflowValueKind,
         TextDecorationKind,
         VisibilityKind,
+        UnicodeBidiKind,
 
         // transform
         TransformFunctions,
@@ -748,6 +758,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == DirectionValueKind);
         return m_value.m_direction;
+    }
+
+    UnicodeBidiValue unicodeBidiValue()
+    {
+        STARFISH_ASSERT(m_valueKind == UnicodeBidiKind);
+        return m_value.m_unicodeBidi;
     }
 
     CSSLength lengthValue()
@@ -870,6 +886,7 @@ public:
         ValueList* m_multiValue;
         OverflowValue m_overflow;
         VisibilityValue m_visibility;
+        UnicodeBidiValue m_unicodeBidi;
         TextDecorationValue m_textDecoration;
         CSSTransformFunctions* m_transforms;
     };
@@ -1011,16 +1028,17 @@ public:
     F(BorderBottomWidth, "border-bottom-width") \
     F(BorderLeftWidth, "border-left-width")     \
     F(TextAlign, "text-align")                  \
-    F(Transform, "transform")                  \
+    F(Transform, "transform")                   \
     F(TransformOrigin, "transform-origin")      \
     F(Visibility, "visibility")                 \
     F(Opacity, "opacity")                       \
-    F(Overflow, "overflow-x")                  \
+    F(Overflow, "overflow")                     \
     F(BackgroundImage, "background-image")      \
     F(ZIndex, "z-index")                        \
     F(VerticalAlign, "vertical-align")          \
     F(BackgroundRepeatX, "background-repeat-x") \
     F(BackgroundRepeatY, "background-repeat-y") \
+    F(UnicodeBidi, "unicode-bidi")              \
     F(FontWeight, "font-weight")
 
 #define SET_VALUE(name, nameCSSCase) \
@@ -1160,9 +1178,9 @@ public:
 #undef ATTRIBUTE_GETTER
 
 #define ATTRIBUTE_SETTER(name, nameCSSCase)                                            \
-    void set##name(const char* value)                                                  \
+    void set##name(String* value)                                                      \
     {                                                                                  \
-        if (*value == '\0') {                                                          \
+        if (value->length() == 0) {                                                    \
             for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
                 if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
                     m_cssValues.erase(m_cssValues.begin() + i);                        \
@@ -1172,7 +1190,7 @@ public:
             return;                                                                    \
         }                                                                              \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
-        DOMTokenList::tokenize(&tokens, String::fromUTF8(value));                      \
+        DOMTokenList::tokenize(&tokens, value);                                        \
         if (checkInputError##name(&tokens)) {                                          \
             for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
                 if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
@@ -1201,24 +1219,24 @@ public:
     String* BorderStyle();
     String* BorderColor();
     String* BorderWidth();
-    void setMargin(const char* value);
-    void setBorder(const char* value);
-    void setBorderTop(const char* value);
-    void setBorderRight(const char* value);
-    void setBorderBottom(const char* value);
-    void setBorderLeft(const char* value);
-    void setBorderWidth(const char* value);
-    void setBorderStyle(const char* value);
-    void setBorderColor(const char* value);
+    void setMargin(String* value);
+    void setBorder(String* value);
+    void setBorderTop(String* value);
+    void setBorderRight(String* value);
+    void setBorderBottom(String* value);
+    void setBorderLeft(String* value);
+    void setBorderWidth(String* value);
+    void setBorderStyle(String* value);
+    void setBorderColor(String* value);
 
     String* BackgroundRepeat();
-    void setBackgroundRepeat(const char* value);
+    void setBackgroundRepeat(String* value);
 
     String* Background();
-    void setBackground(const char* value);
+    void setBackground(String* value);
 
     String* Padding();
-    void setPadding(const char* value);
+    void setPadding(String* value);
 
     static String* combineBoxString(String* t, String* r, String* b, String* l)
     {
@@ -1251,7 +1269,6 @@ protected:
     Element* m_element;
 };
 
-// FIXME implement CSSRule
 class CSSStyleRule : public ScriptWrappable {
     friend class StyleResolver;
 
@@ -1314,9 +1331,9 @@ protected:
     }
 
     Kind m_kind;
+    PseudoClass m_pseudoClass;
     String** m_ruleText;
     size_t m_ruleTextLength;
-    PseudoClass m_pseudoClass;
     CSSStyleDeclaration* m_styleDeclaration;
     Document* m_document;
 };
@@ -1325,7 +1342,6 @@ class CSSStyleSheet : public gc {
 public:
     CSSStyleSheet(Node* origin, String* str)
     {
-        m_isParsed = false;
         m_sourceString = str;
         m_origin = origin;
     }
@@ -1345,12 +1361,12 @@ public:
 
     std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> >& rules()
     {
-        STARFISH_ASSERT(m_isParsed);
+        STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_rules;
     }
 protected:
-    bool m_isParsed;
-    String* m_sourceString; // m_sourceString should vaild until stylesheet unparsed
+    // m_stringString != String::emptyString means we need to parse style sheet before access style rules.
+    String* m_sourceString;
 
     std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> > m_rules;
     Node* m_origin;

@@ -6,6 +6,8 @@ namespace StarFish {
 
 String* String::emptyString = String::createASCIIStringWithNoGC("");
 String* String::spaceString = String::createASCIIStringWithNoGC(" ");
+String* String::inheritString = String::createASCIIStringWithNoGC("inherit");
+String* String::initialString = String::createASCIIStringWithNoGC("initial");
 
 size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
 {
@@ -343,6 +345,7 @@ String* String::toUpper()
         return new StringDataASCII(std::move(str));
     } else {
         UTF32String str = *asUTF32String();
+        // TODO use icu to transform utf-32 string
         std::transform(str.begin(), str.end(), str.begin(), ::toupper);
         return new StringDataUTF32(std::move(str));
     }
@@ -356,6 +359,7 @@ String* String::toLower()
         return new StringDataASCII(std::move(str));
     } else {
         UTF32String str = *asUTF32String();
+        // TODO use icu to transform utf-32 string
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
         return new StringDataUTF32(std::move(str));
     }

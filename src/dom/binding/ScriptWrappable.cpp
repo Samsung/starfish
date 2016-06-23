@@ -1003,7 +1003,7 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
             }
 #define SET_ATTR(name, nameLower, nameCSSCase) \
             else if (kind == CSSStyleKind::name) { \
-                self->set##name(toBrowserString(val)->utf8Data()); \
+                self->set##name(toBrowserString(val)); \
                 return true; \
             }
             FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)

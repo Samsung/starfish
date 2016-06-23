@@ -192,6 +192,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     if (newStyle->m_height != oldStyle->m_height)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
+    if (newStyle->m_unicodeBidi != oldStyle->m_unicodeBidi)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
     if (newStyle->m_verticalAlign != oldStyle->m_verticalAlign)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
@@ -200,9 +203,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
 
     if (newStyle->m_overflow != oldStyle->m_overflow)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
-
-    // if (newStyle->m_overflowY != oldStyle->m_overflowY)
-    //     damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
     // NOTE.
     // text-decoration is not inherited.

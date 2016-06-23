@@ -1015,7 +1015,7 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
                 ungetToken();
             break;
         }
-        if (token->isIdent(String::createASCIIString("inherit"))) {
+        if (token->isIdent(String::inheritString)) {
             /*
             if (values.size()) {
                 return;
@@ -1157,7 +1157,7 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 }
 #define SET_ATTR(name, nameLower, nameCSSCase) \
                 else if (kind == CSSStyleKind::name) { \
-                    declaration->set##name(value->utf8Data());\
+                    declaration->set##name(value);\
                 }
                 FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
                 else {

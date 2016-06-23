@@ -37,6 +37,8 @@ public:
 
     static String* emptyString;
     static String* spaceString;
+    static String* initialString;
+    static String* inheritString;
 
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);
