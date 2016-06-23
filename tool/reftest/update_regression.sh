@@ -87,4 +87,30 @@ cp test/reftest/vendor/webkit/fast/html test/regression/reftest/vendor/webkit/fa
 ## TODO: W3C Internationalization Tests
 
 ## TODO: W3C CSS Tests
+# TC lists are modified manually (regression/tool/csswg-test/*)
+# Expected images should be updated manually
+rm -rf test/regression/reftest/csswg-test/css1
+cp -rf test/reftest/csswg-test/css1 test/regression/reftest/csswg-test
+rm -rf test/regression/reftest/csswg-test/css1_result/font_independent
+cp -rf test/reftest/csswg-test/css1_result/font_independent test/regression/reftest/csswg-test/css1_result/
+
+rm -rf test/regression/reftest/csswg-test/css21
+cp -rf test/reftest/csswg-test/css21 test/regression/reftest/csswg-test
+rm -rf test/regression/reftest/csswg-test/css21_result/font_independent
+cp -rf test/reftest/csswg-test/css21_result/font_independent test/regression/reftest/csswg-test/css21_result/
+
+rm -rf test/regression/reftest/csswg-test/css-backgrounds-3
+cp -rf test/reftest/csswg-test/css-backgrounds-3 test/regression/reftest/csswg-test
+rm -rf test/regression/reftest/csswg-test/css-backgrounds-3_result/font_independent
+cp -rf test/reftest/csswg-test/css-backgrounds-3_result/font_independent test/regression/reftest/csswg-test/css-backgrounds-3_result/
+
+rm -rf test/regression/reftest/csswg-test/css-color-3
+cp -rf test/reftest/csswg-test/css-color-3 test/regression/reftest/csswg-test
+rm -rf test/regression/reftest/csswg-test/css-color-3_result/font_independent
+cp -rf test/reftest/csswg-test/css-color-3_result/font_independent test/regression/reftest/csswg-test/css-color-3_result/
+
+rm -rf test/regression/reftest/csswg-test/css-transforms-1
+cp -rf test/reftest/csswg-test/css-transforms-1 test/regression/reftest/csswg-test
+rm -rf test/regression/reftest/csswg-test/css-transforms-1_result/font_independent
+cp -rf test/reftest/csswg-test/css-transforms-1_result/font_independent test/regression/reftest/csswg-test/css-transforms-1_result/
 

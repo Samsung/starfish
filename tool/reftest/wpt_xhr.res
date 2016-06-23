@@ -4,7 +4,6 @@ http://52.79.162.207/XMLHttpRequest/abort-event-abort.htm
 http://52.79.162.207/XMLHttpRequest/abort-event-listeners.htm
 http://52.79.162.207/XMLHttpRequest/abort-event-loadend.htm
 http://52.79.162.207/XMLHttpRequest/event-abort.htm
-http://52.79.162.207/XMLHttpRequest/event-error.html
 http://52.79.162.207/XMLHttpRequest/event-loadend.htm
 http://52.79.162.207/XMLHttpRequest/event-load.htm
 http://52.79.162.207/XMLHttpRequest/event-loadstart.htm
