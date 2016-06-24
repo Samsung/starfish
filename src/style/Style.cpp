@@ -53,6 +53,9 @@ static String* mergeTokens(std::vector<String*, gc_allocator<String*> >* tokens)
 #define VALUE_IS_NONE() \
     VALUE_IS_STRING("none")
 
+#define VALUE_IS_AUTO() \
+    VALUE_IS_STRING("auto")
+
 #define STRING_VALUE_IS_STRING(str) \
     (value->equals(str))
 
@@ -359,6 +362,24 @@ String* CSSStyleValuePair::keyName()
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+}
+
+bool CSSStyleValuePair::setValueCommon(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    // NOTE: set common value (e.g. initial, inherit)
+    if (tokens->size() != 1)
+        return false;
+    const char* value = tokens->at(0)->toLower()->utf8Data();
+    if (VALUE_IS_INHERIT()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
+    } else if (VALUE_IS_INITIAL()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
+    } else if (VALUE_IS_AUTO()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+    } else {
+        return false;
+    }
+    return true;
 }
 
 void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -994,10 +1015,7 @@ void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<Stri
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
         CSSTransformFunction::Kind fkind;
-        if (m_value.m_transforms == NULL)
-            m_value.m_transforms = new CSSTransformFunctions();
-        else
-            m_value.m_transforms->clear();
+        m_value.m_transforms = new CSSTransformFunctions();
 
         bool hasClosing = false;
         for (unsigned i = 0; i< tokens->size(); i++) {
@@ -2758,6 +2776,15 @@ void CSSStyleDeclaration::setPadding(String* value)
     setPaddingLeft(tokens[3]);
 }
 
+bool CSSStyleDeclaration::checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    // NOTE: check if string is the value which all property can have. (e.g. initial, inherit)
+    if (tokens->size() != 1)
+        return false;
+    const char* value = tokens->at(0)->toLower()->utf8Data();
+    return CSSPropertyParser::assureEssential(value);
+}
+
 bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // color | percentage | <auto> | inherit
@@ -2774,7 +2801,7 @@ bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator
         (*tokens)[0] = str;
     }
     const char* token = tokens->at(0)->utf8Data();
-    if (!(CSSPropertyParser::assureColor(token) || (strcmp(token, "initial") == 0) || (strcmp(token, "inherit") == 0))) {
+    if (!CSSPropertyParser::assureColor(token)) {
         return false;
     }
 
@@ -2807,7 +2834,7 @@ bool CSSStyleDeclaration::checkInputErrorBackgroundSize(std::vector<String*, gc_
     // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
     if (tokens->size() == 1) {
         const char* token = (*tokens)[0]->utf8Data();
-        if (strcmp(token, "cover") == 0 || strcmp(token, "contain") == 0 || strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0 || CSSPropertyParser::assureLength(token, false) || CSSPropertyParser::assurePercent(token, false)) {
+        if (strcmp(token, "cover") == 0 || strcmp(token, "contain") == 0 || CSSPropertyParser::assureLength(token, false) || CSSPropertyParser::assurePercent(token, false)) {
             return true;
         }
     } else if (tokens->size() == 2) {
@@ -2829,7 +2856,6 @@ bool CSSStyleDeclaration::checkInputErrorLetterSpacing(std::vector<String*, gc_a
     (*tokens)[0] = (*tokens)[0]->toLower();
     const char* value = (*tokens)[0]->utf8Data();
     return (VALUE_IS_STRING("normal")
-        || CSSPropertyParser::assureEssential(value)
         || CSSPropertyParser::assureLength(value, false));
 }
 
@@ -2840,7 +2866,6 @@ bool CSSStyleDeclaration::checkInputErrorLineHeight(std::vector<String*, gc_allo
     (*tokens)[0] = (*tokens)[0]->toLower();
     const char* value = (*tokens)[0]->utf8Data();
     return (VALUE_IS_STRING("normal")
-        || CSSPropertyParser::assureEssential(value)
         || CSSPropertyParser::assureLength(value, false)
         || CSSPropertyParser::assurePercent(value, false)
         || CSSPropertyParser::assureNumber(value, false));
@@ -2852,8 +2877,7 @@ bool CSSStyleDeclaration::checkInputErrorPaddingTop(std::vector<String*, gc_allo
         return false;
     (*tokens)[0] = (*tokens)[0]->toLower();
     const char* value = (*tokens)[0]->utf8Data();
-    return (CSSPropertyParser::assureEssential(value)
-        || CSSPropertyParser::assureLength(value, false)
+    return (CSSPropertyParser::assureLength(value, false)
         || CSSPropertyParser::assurePercent(value, false));
 }
 
@@ -2889,8 +2913,7 @@ bool CSSStyleDeclaration::checkInputErrorBackgroundImage(std::vector<String*, gc
                 return false;
             }
             return true;
-        } else if (CSSPropertyParser::assureEssential(token)
-            || strcmp(token, "none") == 0 || strcmp(token, "") == 0) {
+        } else if (strcmp(token, "none") == 0 || strcmp(token, "") == 0) {
             return true;
         }
     } else if (tokens->size() == 2) {
@@ -2944,7 +2967,6 @@ bool CSSStyleDeclaration::checkInputErrorBackgroundRepeat(std::vector<String*, g
         || VALUE_IS_STRING("repeat-x")
         || VALUE_IS_STRING("repeat-y")
         || VALUE_IS_STRING("no-repeat")
-        || CSSPropertyParser::assureEssential(value)
         || strcmp(value, "") == 0;
 }
 
@@ -3213,8 +3235,7 @@ bool CSSStyleDeclaration::checkInputErrorBorderImageSource(std::vector<String*, 
     // none | <image>(=<uri>)
     if (tokens->size() == 1) {
         const char* value = (*tokens)[0]->toLower()->utf8Data();
-        if (CSSPropertyParser::assureEssential(value)
-            || strcmp(value, "none") == 0)
+        if (strcmp(value, "none") == 0)
             return true;
     }
     // url
@@ -3237,10 +3258,6 @@ bool CSSStyleDeclaration::checkInputErrorBorderImageWidth(std::vector<String*, g
 bool CSSStyleDeclaration::checkInputErrorBorder(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // [border-width || border-style || border-color] | inherit | initial
-    if (tokens->size() == 1 && CSSPropertyParser::assureEssential(tokens->at(0)->toLower()->utf8Data())) {
-        return true;
-    }
-
     bool hasWidth = false, hasStyle = false, hasColor = false;
     if (tokens->size() > 0 && tokens->size() <= 3) {
         for (unsigned i = 0; i < tokens->size(); i++) {
@@ -3450,7 +3467,7 @@ bool CSSStyleDeclaration::checkInputErrorTransform(std::vector<String*, gc_alloc
 {
     const char* str0 = tokens->at(0)->utf8Data();
     if (tokens->size() == 1) {
-        if (CSSPropertyParser::assureEssential(str0) || strcmp(str0, "none") == 0)
+        if (strcmp(str0, "none") == 0)
             return true;
     }
 

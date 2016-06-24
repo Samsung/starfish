@@ -702,6 +702,8 @@ public:
         m_valueKind = kind;
     }
 
+    bool setValueCommon(std::vector<String*, gc_allocator<String*> >* tokens);
+
     bool isAuto()
     {
         return valueKind() == Auto;
@@ -1177,6 +1179,8 @@ public:
 
     void notifyNeedsStyleRecalc();
 
+    bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
+
 #define CHECK_INPUT_ERROR(name, nameCSSCase) \
     bool checkInputError##name(std::vector<String*, gc_allocator<String*> >* tokens);
 
@@ -1218,17 +1222,19 @@ public:
         }                                                                              \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
         DOMTokenList::tokenize(&tokens, value);                                        \
-        if (checkInputError##name(&tokens)) {                                          \
+        if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
             for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
                 if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
-                    m_cssValues.at(i).setValue##name(&tokens);                         \
+                    if (!m_cssValues.at(i).setValueCommon(&tokens))                    \
+                        m_cssValues.at(i).setValue##name(&tokens);                     \
                     notifyNeedsStyleRecalc();                                          \
                     return;                                                            \
                 }                                                                      \
             }                                                                          \
             CSSStyleValuePair ret;                                                     \
             ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                          \
-            ret.setValue##name(&tokens);                                               \
+            if (!ret.setValueCommon(&tokens))                                          \
+                ret.setValue##name(&tokens);                                           \
             notifyNeedsStyleRecalc();                                                  \
             m_cssValues.push_back(ret);                                                \
         }                                                                              \
