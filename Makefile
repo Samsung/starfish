@@ -520,8 +520,10 @@ install_pixel_test_dep:
 	javac StarFishTester.java
 	mkdir -p ~/.fonts
 	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
-	cp tool/pixel_test/bin/CooHew-Roman.ttf ~/.fonts/
-	cp tool/pixel_test/bin/CooHew-Bold.ttf ~/.fonts/
+#	cp tool/pixel_test/bin/CooHew-Roman.ttf ~/.fonts/
+#	cp tool/pixel_test/bin/CooHew-Bold.ttf ~/.fonts/
+	cp tool/pixel_test/bin/SamsungOne-300C_v1.0.ttf ~/.fonts/
+	cp tool/pixel_test/bin/SamsungOne-600C_v1.0.ttf ~/.fonts/
 	fc-cache -fv
 	./set_nodewebkit_env.sh
 	#@echo ""
