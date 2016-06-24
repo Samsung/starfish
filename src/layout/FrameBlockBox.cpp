@@ -346,6 +346,12 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         }
     });
 
+    // NOTE //
+    // In latest css spec, relative position is decided after
+    // the size of containing block is fixed with recursive calculation,
+    // while the position is decided "before" the containing block's size is fixed in nodewebkit or Chrome.
+    // So, as for relative position, the results of StarFish can be quite different from those of nodewebkit or Chrome.
+
     // layout relative positioned blocks
     ctx.layoutRegisteredRelativePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
         for (size_t i = 0; i < frames.size(); i ++) {
