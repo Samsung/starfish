@@ -136,38 +136,16 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
         } else {
             // Block... + Inline case
             Frame* last = frameBlockBox->lastChild();
-            if (!last)
-                return;
-
-            if (!last->isNormalFlow() && currentFrame->isNormalFlow()) {
-                Frame* lastAnnyBlockBox = nullptr;
-
-                Frame* cur = last->previous();
-                while (cur) {
-                    STARFISH_ASSERT(cur->isFrameBlockBox());
-                    if (cur->isNormalFlow() && cur->node() == nullptr) {
-                        lastAnnyBlockBox = cur;
-                        break;
-                    }
-                    cur = cur->previous();
-                }
-
-                if (lastAnnyBlockBox) {
-                    lastAnnyBlockBox->appendChild(currentFrame);
-                    return;
-                }
-            }
-            STARFISH_ASSERT(last->style()->display() == BlockDisplayValue);
 
             if (last->node()) {
-                ComputedStyle* newStyle = new ComputedStyle(currentFrame->style());
-                newStyle->loadResources(last->node());
-                newStyle->arrangeStyleValues(currentFrame->style());
+                ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
                 newStyle->setDisplay(DisplayValue::BlockDisplayValue);
+                newStyle->loadResources(currentNode);
+                newStyle->arrangeStyleValues(frameBlockBox->style());
 
-                last = new FrameBlockBox(nullptr, newStyle);
-                frameBlockBox->appendChild(last);
-                last->appendChild(currentFrame);
+                FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
+                blockBox->appendChild(currentFrame);
+                frameBlockBox->appendChild(blockBox);
             } else {
                 last->appendChild(currentFrame);
             }
