@@ -287,7 +287,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             // 'height' is 'auto', 'top' and 'bottom' are not 'auto', then 'auto' values for 'margin-top' and 'margin-bottom' are set to 0 and solve for 'height'
             LayoutUnit t = top.specifiedValue(parentHeight);
             LayoutUnit b = bottom.specifiedValue(parentHeight);
-            LayoutUnit h = t - b + parentHeight;
+            LayoutUnit h = -t - b + parentHeight;
             h = h - paddingHeight() - borderHeight();
             height = Length(Length::Fixed, h);
             setAbsY(t);
