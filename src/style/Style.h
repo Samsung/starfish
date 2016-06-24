@@ -790,12 +790,6 @@ public:
         return m_value.m_floatValue;
     }
 
-    int numberIntValue()
-    {
-        STARFISH_ASSERT(m_valueKind == Number);
-        return m_value.m_intValue;
-    }
-
     // 0~1
     float percentageValue()
     {
@@ -875,7 +869,6 @@ public:
 
     union ValueData {
         float m_floatValue;
-        int32_t m_intValue;
         DisplayValue m_display;
         PositionValue m_position;
         VerticalAlignValue m_verticalAlign;
