@@ -106,17 +106,24 @@ if cat prepush_test_result |grep 'FAIL'; then
  exit 1
 fi
 
-echo "checking... make regression_test_bidi"
-make regression_test_bidi > prepush_test_result
-if cat prepush_test_result |grep 'FAIL'; then
- echo "$RED[FAIL] make regression_test_wpt_bidi$RESET"
- exit 1
-fi
+#echo "checking... make regression_test_bidi"
+#make regression_test_bidi > prepush_test_result
+#if cat prepush_test_result |grep 'FAIL'; then
+# echo "$RED[FAIL] make regression_test_wpt_bidi$RESET"
+# exit 1
+#fi
 
 echo "checking... make pixel_test_css_all"
 make pixel_test_css_all > prepush_test_result 2>&1
 if cat prepush_test_result |grep 'Error 1'; then
  echo "$RED[FAIL] make pixel_test_css_all$RESET"
+ exit 1
+fi
+
+echo "checking... make font_dependent_test_css"
+make font_dependent_test_css > prepush_test_result 2>&1
+if cat prepush_test_result |grep 'FAIL'; then
+ echo "$RED[FAIL] make font_dependent_test_css$RESET"
  exit 1
 fi
 
