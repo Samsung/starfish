@@ -33,9 +33,10 @@ fi
 # Test Suites
 # 0: W3C DOM Conformace Test Suites
 # 1: Web Platform Tests
-# 2: Vendor Tests
-# 3: Pixel Tests
-# 4: CSSWG - Pixel Tests (font-dependent)
+# 2: Vendor Tests - Pixel Tests
+# 3: Vendor Tests
+# 4: Bidi Tests - Pixel Tests
+# 5: CSSWG - Pixel Tests (font-dependent)
 if [[ "$1" = *"dom_conformance_test.res" ||
       "$1" = *"dom-conformance-test"*".htm"* || "$1" = *"blink/dom"*".htm"* ||
       "$1" = *"gecko/dom_tests_mochitest"*".htm"* || "$1" = *"webkit/dom"*".htm"* ]]; then
@@ -74,9 +75,13 @@ elif [[ "$1" = *"wpt"*".res" || "$1" = *"web-platform-tests"*".htm"* ]]; then
         TESTSUITENAME="WPT XMLHttpRequest"
         PASSFILE="test/regression/tool/web-platform-tests/test_wpt_xhr"
     fi
+elif [[ "$1" = *"webkit_fast_css.res" || "$1" = *"webkit/fast/css"*".htm"* ]]; then
+    TESTSUITE=2
+    TESTSUITENAME="WebKit Fast CSS"
+    #PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_css"
 elif [[ "$1" = *"blink_fast"*".res" || "$1" = *"webkit_fast"*".res" ||
         "$1" = *"blink/fast"*".htm"* || "$1" = *"webkit/fast"*".htm"* ]]; then
-    TESTSUITE=2
+    TESTSUITE=3
     if [[ "$1" = *"blink_fast_dom.res" ]]; then
         TESTSUITENAME="Blink Fast DOM"
         PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_dom"
@@ -91,11 +96,11 @@ elif [[ "$1" = *"blink_fast"*".res" || "$1" = *"webkit_fast"*".res" ||
         PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_html"
     fi
 elif [[ "$1" = *"bidi.res" || "$1" = *"bidi/International/tests"*".htm"* ]]; then
-    TESTSUITE=3
+    TESTSUITE=4
     TESTSUITENAME="International Tests"
     PASSFILE="test/regression/tool/bidi/test_bidi"
 elif [[ "$1" = *"csswg"*".res" || "$1" = *"csswg-test/"*".htm"* ]]; then
-    TESTSUITE=4
+    TESTSUITE=5
     name=${1##*/}
     name=${name%.*}
     TESTSUITENAME="CSSWG Tests - $name"
@@ -122,12 +127,12 @@ for i in $tc ; do
 
     # Running the tests
     filenames[$cnt]=$i
-    if [ $TESTSUITE -eq 3 ]; then
+    if [ $TESTSUITE -eq 4 ]; then
         RESIMG="out"$cnt".png"
-        ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 &> /dev/null 2>&1 &
-    elif [ $TESTSUITE -eq 4 ]; then
+        ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 --width=900 --height=900 &> /dev/null 2>&1 &
+    elif [ $TESTSUITE -eq 2 ] || [ $TESTSUITE -eq 5 ]; then
         RESIMG="out"$cnt".png"
-        ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 &> /dev/null 2>&1 &
+        ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 --width=800 --height=600 &> /dev/null 2>&1 &
     else
         ./StarFish $i --hide-window &> $RESFILE &
     fi
@@ -141,7 +146,7 @@ for i in $tc ; do
         RESIMG="out"$c".png"
 
         # Collect the result
-        if [ `expr $TESTSUITE \< 3` -eq 1 ]; then
+        if [ `expr $TESTSUITE \< 2` -eq 1 ] || [ $TESTSUITE -eq 3 ] ; then
             replace1='s/\\n"//g'
             replace2='s/"//g'
             replace3='s/\n//g'
@@ -196,6 +201,28 @@ for i in $tc ; do
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]} "(${GREEN}PASS:" $PASS"${RESET}," "${RED}FAIL:" $FAIL"${RESET})"
             fi
         elif [ $TESTSUITE -eq 2 ]; then
+            EXPIMG=${filenames[$c]}
+            EXPIMG=`echo $EXPIMG | sed 's/fast\/css/fast\/css_result/g'`
+            EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/g'`
+            IMGDIFF="./tool/pixel_test/bin/image_diff"
+            DIFF=`$IMGDIFF $RESIMG $EXPIMG`
+            if [[ "$DIFF" = *"0.00% passed" ]]; then
+                PASSTC=`expr $PASSTC + 1`
+                echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                if [ "$REGRESSION" = true ]; then
+                    echo -e ${filenames[$c]} >> $PASSFILENEW
+                fi
+            else
+                FAILTC=`expr $FAILTC + 1`
+                echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+                if [ "$2" = "capture" ]; then
+                    EXPDIR=${EXPIMG%/*}
+                    mkdir $EXPDIR
+                    cp $RESIMG $EXPIMG
+                fi
+            fi
+            rm $RESIMG
+        elif [ $TESTSUITE -eq 3 ]; then
             EXPECTED_FILE=${filenames[$c]%.*}"-expected.txt"
             EXPECTED=`grep -Eo "PASS|FAIL" $EXPECTED_FILE`
             RESULT=`grep -Eo "PASS|FAIL" $TMPFILE`
@@ -210,7 +237,7 @@ for i in $tc ; do
                 FAILTC=`expr $FAILTC + 1`
                 echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
             fi
-        elif [ $TESTSUITE -eq 3 ]; then
+        elif [ $TESTSUITE -eq 4 ]; then
             EXPIMG=${filenames[$c]}
             EXPIMG=`echo $EXPIMG | sed 's/reftest\//regression\/reftest\//'`
             EXPIMG=`echo $EXPIMG | sed 's/html-css/html-css_result\/x64/'`
@@ -234,7 +261,7 @@ for i in $tc ; do
                 DIFF=`$IMGDIFF --diff $RESIMG $EXPIMG $DIFFIMG`
             fi
             rm $RESIMG
-        elif [ $TESTSUITE -eq 4 ]; then
+        elif [ $TESTSUITE -eq 5 ]; then
             RESIMGPATH=${filenames[$c]%/*}
             RESIMGPATH=`echo $RESIMGPATH | sed 's/test\/reftest\///'`
             RESIMGPATH=$OUTDIR$RESIMGPATH
