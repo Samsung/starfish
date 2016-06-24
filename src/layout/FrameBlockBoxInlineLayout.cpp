@@ -985,7 +985,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                 preferredWidth = f->style()->width().specifiedValue(inlineContentWidth);
             }
 
-            if ((preferredWidth) > (inlineContentWidth - lineFormattingContext.m_currentLineWidth)) {
+            if (lineFormattingContext.m_currentLineWidth != 0 && (preferredWidth) > (inlineContentWidth - lineFormattingContext.m_currentLineWidth)) {
                 lineBreakCallback(false);
             }
             f->asFrameBox()->setLayoutParent(lineFormattingContext.currentLine());
