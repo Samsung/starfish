@@ -3428,10 +3428,6 @@ Color parseColor(String* str)
         unsigned int r, g, b;
         sscanf(s, "#%02x%02x%02x", &r, &g, &b);
         return Color(r, g, b, 255);
-    } else if (startsWith(s, "#") && (str->length() == 5)) {
-        unsigned int r, g, b, a;
-        sscanf(s, "#%01x%01x%01x%01x", &r, &g, &b, &a);
-        return Color(r * 17, g * 17, b * 17, a * 17);
     } else if (startsWith(s, "#") && (str->length() == 4)) {
         unsigned int r, g, b;
         sscanf(s, "#%01x%01x%01x", &r, &g, &b);

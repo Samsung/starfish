@@ -429,7 +429,7 @@ public:
         } else if (strcmp("currentcolor", token) == 0) {
             return true;
         } else if (token[0] == '#') {
-            if (!(strlen(token) == 9 || strlen(token) == 7 || strlen(token) == 5 || strlen(token) == 4)) {
+            if (!(strlen(token) == 9 || strlen(token) == 7 || strlen(token) == 4)) {
                 return false;
             }
 
