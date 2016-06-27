@@ -614,6 +614,7 @@ public:
         Auto,
         None,
         Number, // real number values - https://www.w3.org/TR/CSS21/syndata.html#value-def-number
+        Int32Number,
         Angle, //
         Normal,
         StringValueKind,
@@ -794,7 +795,7 @@ public:
 
     int32_t numberInt32Value()
     {
-        STARFISH_ASSERT(m_valueKind == Number);
+        STARFISH_ASSERT(m_valueKind == Int32Number);
         return m_value.m_int32Value;
     }
 
@@ -981,6 +982,8 @@ public:
             return percentageToString(data.m_floatValue);
         else if (kind == CSSStyleValuePair::ValueKind::Number)
             return numberToString(data.m_floatValue);
+        else if (kind == CSSStyleValuePair::ValueKind::Int32Number)
+            return numberToString(data.m_int32Value);
         else if (kind == CSSStyleValuePair::ValueKind::Angle)
             return data.m_angle.toString();
         else if (kind == CSSStyleValuePair::ValueKind::StringValueKind)
