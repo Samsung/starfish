@@ -996,6 +996,9 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
         const char* str = toBrowserString(key)->utf8Data();
         CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
         if (kind == CSSStyleKind::Unknown) {
+            kind = lookupCSSStyle(str, strlen(str));
+        }
+        if (kind == CSSStyleKind::Unknown) {
             return false;
         } else {
             if (false) {
