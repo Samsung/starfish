@@ -385,14 +385,8 @@ bool CSSStyleValuePair::setValueCommon(std::vector<String*, gc_allocator<String*
 void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = tokens->at(0);
-    }
+    m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+    m_value.m_stringValue = tokens->at(0);
 }
 
 void CSSStyleValuePair::setValueDirection(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -406,10 +400,6 @@ void CSSStyleValuePair::setValueDirection(std::vector<String*, gc_allocator<Stri
         m_value.m_direction = DirectionValue::LtrDirectionValue;
     } else if (VALUE_IS_STRING("rtl")) {
         m_value.m_direction = DirectionValue::RtlDirectionValue;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -422,14 +412,7 @@ void CSSStyleValuePair::setValueWidth(std::vector<String*, gc_allocator<String*>
     m_keyKind = CSSStyleValuePair::KeyKind::Width;
     m_valueKind = CSSStyleValuePair::ValueKind::Auto;
 
-    if (VALUE_IS_STRING("auto")) {
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        setValuePercentageOrLength(value);
-    }
+    setValuePercentageOrLength(value);
 }
 
 void CSSStyleValuePair::setValueHeight(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -439,14 +422,7 @@ void CSSStyleValuePair::setValueHeight(std::vector<String*, gc_allocator<String*
     m_keyKind = CSSStyleValuePair::KeyKind::Height;
     m_valueKind = CSSStyleValuePair::ValueKind::Auto;
 
-    if (VALUE_IS_STRING("auto")) {
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        setValuePercentageOrLength(value);
-    }
+    setValuePercentageOrLength(value);
 }
 
 void CSSStyleValuePair::setValueFontSize(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -456,11 +432,7 @@ void CSSStyleValuePair::setValueFontSize(std::vector<String*, gc_allocator<Strin
     // absolute-size | relative-size | length | percentage | inherit // initial value -> medium
     //        O      |       O       |   O    |    O       |    O
     m_keyKind = CSSStyleValuePair::KeyKind::FontSize;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("xx-small")) {
+    if (VALUE_IS_STRING("xx-small")) {
         m_valueKind = CSSStyleValuePair::ValueKind::XXSmallFontSizeValueKind;
     } else if (VALUE_IS_STRING("x-small")) {
         m_valueKind = CSSStyleValuePair::ValueKind::XSmallFontSizeValueKind;
@@ -490,11 +462,7 @@ void CSSStyleValuePair::setValueFontWeight(std::vector<String*, gc_allocator<Str
 
     // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit // initial -> normal
     m_keyKind = CSSStyleValuePair::KeyKind::FontWeight;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("normal")) {
+    if (VALUE_IS_STRING("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::FontWeightValueKind;
         m_value.m_fontWeight = FontWeightValue::NormalFontWeightValue;
     } else if (VALUE_IS_STRING("bold")) {
@@ -543,11 +511,7 @@ void CSSStyleValuePair::setValueFontStyle(std::vector<String*, gc_allocator<Stri
     const char* value = tokens->at(0)->utf8Data();
     // <normal> | italic | oblique | inherit
     m_keyKind = CSSStyleValuePair::KeyKind::FontStyle;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("normal")) {
+    if (VALUE_IS_STRING("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
         m_value.m_fontStyle = FontStyleValue::NormalFontStyleValue;
     } else if (VALUE_IS_STRING("italic")) {
@@ -567,11 +531,7 @@ void CSSStyleValuePair::setValueDisplay(std::vector<String*, gc_allocator<String
     // <inline> | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit
     m_keyKind = CSSStyleValuePair::KeyKind::Display;
     m_valueKind = CSSStyleValuePair::ValueKind::DisplayValueKind;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("block")) {
+    if (VALUE_IS_STRING("block")) {
         m_value.m_display = DisplayValue::BlockDisplayValue;
     } else if (VALUE_IS_STRING("inline")) {
         m_value.m_display = DisplayValue::InlineDisplayValue;
@@ -591,11 +551,7 @@ void CSSStyleValuePair::setValuePosition(std::vector<String*, gc_allocator<Strin
     m_keyKind = CSSStyleValuePair::KeyKind::Position;
     m_valueKind = CSSStyleValuePair::ValueKind::PositionValueKind;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("static")) {
+    if (VALUE_IS_STRING("static")) {
         m_value.m_position = PositionValue::StaticPositionValue;
     } else if (VALUE_IS_STRING("relative")) {
         m_value.m_position = PositionValue::RelativePositionValue;
@@ -613,11 +569,7 @@ void CSSStyleValuePair::setValueTextDecoration(std::vector<String*, gc_allocator
     m_keyKind = CSSStyleValuePair::KeyKind::TextDecoration;
     m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationKind;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_NONE()) {
+    if (VALUE_IS_NONE()) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
         m_value.m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
     } else if (VALUE_IS_STRING("underline")) {
@@ -646,10 +598,6 @@ void CSSStyleValuePair::setValueBackgroundSize(std::vector<String*, gc_allocator
         m_valueKind = CSSStyleValuePair::ValueKind::Cover;
     } else if (token->equals("contain")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Contain;
-    } else if (token->equals("initial")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (token->equals("inherit")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
         ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
@@ -678,11 +626,7 @@ void CSSStyleValuePair::setValueBackgroundImage(std::vector<String*, gc_allocato
     const char* value = tokens->at(0)->utf8Data();
     // none | <image>
     m_keyKind = CSSStyleValuePair::KeyKind::BackgroundImage;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("none")) {
+    if (VALUE_IS_STRING("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
     } else if (startsWith(value, "url(")) {
         m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
@@ -698,11 +642,7 @@ void CSSStyleValuePair::setValueBackgroundRepeatX(std::vector<String*, gc_alloca
     m_keyKind = CSSStyleValuePair::KeyKind::BackgroundRepeatX;
     m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("no-repeat")) {
+    if (VALUE_IS_STRING("no-repeat")) {
         m_value.m_backgroundRepeatX = BackgroundRepeatValue::NoRepeatRepeatValue;
     } else if (VALUE_IS_STRING("repeat") || VALUE_IS_INITIAL()) {
         m_value.m_backgroundRepeatX = BackgroundRepeatValue::RepeatRepeatValue;
@@ -719,11 +659,7 @@ void CSSStyleValuePair::setValueBackgroundRepeatY(std::vector<String*, gc_alloca
     m_keyKind = CSSStyleValuePair::KeyKind::BackgroundRepeatY;
     m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("no-repeat")) {
+    if (VALUE_IS_STRING("no-repeat")) {
         m_value.m_backgroundRepeatY = BackgroundRepeatValue::NoRepeatRepeatValue;
     } else if (VALUE_IS_STRING("repeat") || VALUE_IS_INITIAL()) {
         m_value.m_backgroundRepeatY = BackgroundRepeatValue::RepeatRepeatValue;
@@ -734,15 +670,7 @@ void CSSStyleValuePair::setValueBackgroundRepeatY(std::vector<String*, gc_alloca
 
 void CSSStyleValuePair::setValuePercentageOrLength(const char* value)
 {
-    if (VALUE_IS_STRING("auto")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else {
-        parsePercentageOrLength(*this, value);
-    }
+    parsePercentageOrLength(*this, value);
 }
 
 void CSSStyleValuePair::setValueLetterSpacing(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -750,11 +678,7 @@ void CSSStyleValuePair::setValueLetterSpacing(std::vector<String*, gc_allocator<
     // normal | length | inherit
     const char* value = tokens->at(0)->utf8Data();
     m_keyKind = CSSStyleValuePair::KeyKind::LetterSpacing;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("normal")) {
+    if (VALUE_IS_STRING("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
     } else {
         parseLength(*this, value);
@@ -766,11 +690,7 @@ void CSSStyleValuePair::setValueLineHeight(std::vector<String*, gc_allocator<Str
     // <normal> | number | length | percentage | inherit
     const char* value = tokens->at(0)->utf8Data();
     m_valueKind = CSSStyleValuePair::ValueKind::Normal;
-    if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("inherit")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_STRING("normal")) {
+    if (VALUE_IS_STRING("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
     } else {
         char* pEnd;
@@ -836,14 +756,7 @@ void CSSStyleValuePair::setValueTop(std::vector<String*, gc_allocator<String*> >
     m_keyKind = CSSStyleValuePair::KeyKind::Top;
     m_valueKind = CSSStyleValuePair::ValueKind::Auto;
 
-    if (VALUE_IS_STRING("auto")) {
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        setValuePercentageOrLength(value);
-    }
+    setValuePercentageOrLength(value);
 }
 
 void CSSStyleValuePair::setValueBottom(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -853,14 +766,7 @@ void CSSStyleValuePair::setValueBottom(std::vector<String*, gc_allocator<String*
     m_keyKind = CSSStyleValuePair::KeyKind::Bottom;
     m_valueKind = CSSStyleValuePair::ValueKind::Auto;
 
-    if (VALUE_IS_STRING("auto")) {
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        setValuePercentageOrLength(value);
-    }
+    setValuePercentageOrLength(value);
 }
 
 void CSSStyleValuePair::setValueLeft(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -869,15 +775,8 @@ void CSSStyleValuePair::setValueLeft(std::vector<String*, gc_allocator<String*> 
     // length | percentage | <auto> | inherit
     m_keyKind = CSSStyleValuePair::KeyKind::Left;
     m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-    if (VALUE_IS_STRING("auto")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        setValuePercentageOrLength(value);
-    }
+
+    setValuePercentageOrLength(value);
 }
 
 void CSSStyleValuePair::setValueRight(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -887,14 +786,7 @@ void CSSStyleValuePair::setValueRight(std::vector<String*, gc_allocator<String*>
     m_keyKind = CSSStyleValuePair::KeyKind::Right;
     m_valueKind = CSSStyleValuePair::ValueKind::Auto;
 
-    if (VALUE_IS_STRING("auto")) {
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        setValuePercentageOrLength(value);
-    }
+    setValuePercentageOrLength(value);
 }
 
 void CSSStyleValuePair::setValueBorderImageSlice(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -902,23 +794,17 @@ void CSSStyleValuePair::setValueBorderImageSlice(std::vector<String*, gc_allocat
     const char* value = tokens->at(0)->utf8Data();
     // number | percentage {1, 4} && fill?
     m_keyKind = CSSStyleValuePair::KeyKind::BorderImageSlice;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-        m_value.m_multiValue = new ValueList();
-        for (unsigned int i = 0; i < tokens->size(); i++) {
-            const char* currentToken = tokens->at(i)->toLower()->utf8Data();
-            if (startsWith(currentToken, "fill")) {
-                m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::StringValueKind, { 0 });
-            } else {
-                char* pEnd;
-                double d = strtod(currentToken, &pEnd);
-                STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
-                m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
-            }
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    m_value.m_multiValue = new ValueList();
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        const char* currentToken = tokens->at(i)->toLower()->utf8Data();
+        if (startsWith(currentToken, "fill")) {
+            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::StringValueKind, { 0 });
+        } else {
+            char* pEnd;
+            double d = strtod(currentToken, &pEnd);
+            STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
+            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
         }
     }
 }
@@ -928,11 +814,7 @@ void CSSStyleValuePair::setValueBorderImageSource(std::vector<String*, gc_alloca
     const char* value = tokens->at(0)->utf8Data();
     // none | <image>
     m_keyKind = CSSStyleValuePair::KeyKind::BorderImageSource;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("none")) {
+    if (VALUE_IS_STRING("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
     } else if (startsWith(value, "url(")) {
         m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
@@ -945,35 +827,29 @@ void CSSStyleValuePair::setValueBorderImageRepeat(std::vector<String*, gc_alloca
     const char* value = tokens->at(0)->utf8Data();
     // <stretch> | repeat | round | space {1, 2}
     m_keyKind = CSSStyleValuePair::KeyKind::BorderImageRepeat;
-    if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-        m_value.m_multiValue = new ValueList();
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    m_value.m_multiValue = new ValueList();
 
-        // TODO: find better way to parse axis data
-        // 1) parse X-axis data
-        if (startsWith(value, "stretch")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { StretchValue });
-        } else if (startsWith(value, "repeat")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RepeatValue });
-        } else if (startsWith(value, "round")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RoundValue });
-        } else if (startsWith(value, "space")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { SpaceValue });
-        }
-        // 2) parse Y-axis data
-        if (endsWith(value, "stretch")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { StretchValue });
-        } else if (endsWith(value, "repeat")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RepeatValue });
-        } else if (endsWith(value, "round")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { RoundValue });
-        } else if (endsWith(value, "space")) {
-            m_value.m_multiValue->append(BorderImageRepeatValueKind, { SpaceValue });
-        }
+    // TODO: find better way to parse axis data
+    // 1) parse X-axis data
+    if (startsWith(value, "stretch")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { StretchValue });
+    } else if (startsWith(value, "repeat")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { RepeatValue });
+    } else if (startsWith(value, "round")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { RoundValue });
+    } else if (startsWith(value, "space")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { SpaceValue });
+    }
+    // 2) parse Y-axis data
+    if (endsWith(value, "stretch")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { StretchValue });
+    } else if (endsWith(value, "repeat")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { RepeatValue });
+    } else if (endsWith(value, "round")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { RoundValue });
+    } else if (endsWith(value, "space")) {
+        m_value.m_multiValue->append(BorderImageRepeatValueKind, { SpaceValue });
     }
 }
 
@@ -982,35 +858,27 @@ void CSSStyleValuePair::setValueBorderImageWidth(std::vector<String*, gc_allocat
     const char* value = tokens->at(0)->utf8Data();
     // [length | number]
     m_keyKind = CSSStyleValuePair::KeyKind::BorderImageWidth;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-        ValueList* values = new ValueList();
-        for (unsigned int i = 0; i < tokens->size(); i++) {
-            const char* currentToken = tokens->at(i)->utf8Data();
-            if (endsWithNumber(currentToken)) {
-                char* pEnd;
-                double d = strtod(currentToken, &pEnd);
-                STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
-                values->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
-            } else {
-                CSSStyleValuePair::ValueData data = { parseCSSLength(currentToken) };
-                values->append(CSSStyleValuePair::ValueKind::Length, data);
-            }
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList();
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        const char* currentToken = tokens->at(i)->utf8Data();
+        if (endsWithNumber(currentToken)) {
+            char* pEnd;
+            double d = strtod(currentToken, &pEnd);
+            STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
+            values->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
+        } else {
+            CSSStyleValuePair::ValueData data = { parseCSSLength(currentToken) };
+            values->append(CSSStyleValuePair::ValueKind::Length, data);
         }
-        m_value.m_multiValue = values;
     }
+    m_value.m_multiValue = values;
 }
 
 void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL() || VALUE_IS_STRING("none")) {
+    if (VALUE_IS_STRING("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
     } else {
         m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
@@ -1129,38 +997,32 @@ void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocato
     const char* value = tokens->at(0)->utf8Data();
     m_keyKind = CSSStyleValuePair::KeyKind::TransformOrigin;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-        ValueList* values = new ValueList();
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList();
 
-        for (unsigned int i = 0; i < tokens->size(); i++) {
-            value = tokens->at(i)->utf8Data();
-            if (VALUE_IS_STRING("left")) {
-                values->append(CSSStyleValuePair::ValueKind::TransformOriginLeft, { 0 });
-            } else if (VALUE_IS_STRING("right")) {
-                values->append(CSSStyleValuePair::ValueKind::TransformOriginRight, { 0 });
-            } else if (VALUE_IS_STRING("center")) {
-                values->append(CSSStyleValuePair::ValueKind::TransformOriginCenter, { 0 });
-            } else if (VALUE_IS_STRING("top")) {
-                values->append(CSSStyleValuePair::ValueKind::TransformOriginTop, { 0 });
-            } else if (VALUE_IS_STRING("bottom")) {
-                values->append(CSSStyleValuePair::ValueKind::TransformOriginBottom, { 0 });
-            } else if (endsWith(value, "%")) {
-                float f;
-                sscanf(value, "%f%%", &f);
-                values->append(CSSStyleValuePair::ValueKind::Percentage, { (f / 100.f) });
-            } else {
-                CSSStyleValuePair::ValueData data = { parseCSSLength(value) };
-                values->append(CSSStyleValuePair::ValueKind::Length, data);
-            }
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        value = tokens->at(i)->utf8Data();
+        if (VALUE_IS_STRING("left")) {
+            values->append(CSSStyleValuePair::ValueKind::TransformOriginLeft, { 0 });
+        } else if (VALUE_IS_STRING("right")) {
+            values->append(CSSStyleValuePair::ValueKind::TransformOriginRight, { 0 });
+        } else if (VALUE_IS_STRING("center")) {
+            values->append(CSSStyleValuePair::ValueKind::TransformOriginCenter, { 0 });
+        } else if (VALUE_IS_STRING("top")) {
+            values->append(CSSStyleValuePair::ValueKind::TransformOriginTop, { 0 });
+        } else if (VALUE_IS_STRING("bottom")) {
+            values->append(CSSStyleValuePair::ValueKind::TransformOriginBottom, { 0 });
+        } else if (endsWith(value, "%")) {
+            float f;
+            sscanf(value, "%f%%", &f);
+            values->append(CSSStyleValuePair::ValueKind::Percentage, { (f / 100.f) });
+        } else {
+            CSSStyleValuePair::ValueData data = { parseCSSLength(value) };
+            values->append(CSSStyleValuePair::ValueKind::Length, data);
         }
-
-        m_value.m_multiValue = values;
     }
+
+    m_value.m_multiValue = values;
 }
 
 String* BorderString(String* width, String* style, String* color)
@@ -1614,11 +1476,7 @@ void CSSStyleValuePair::setValueBorderTopColor(std::vector<String*, gc_allocator
 {
     const char* value = tokens->at(0)->utf8Data();
     // color | transparent | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("transparent")) {
+    if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
         setValueColor(tokens);
@@ -1629,11 +1487,7 @@ void CSSStyleValuePair::setValueBorderRightColor(std::vector<String*, gc_allocat
 {
     const char* value = tokens->at(0)->utf8Data();
     // color | transparent | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("transparent")) {
+    if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
         setValueColor(tokens);
@@ -1644,11 +1498,7 @@ void CSSStyleValuePair::setValueBorderBottomColor(std::vector<String*, gc_alloca
 {
     const char* value = tokens->at(0)->utf8Data();
     // color | transparent | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("transparent")) {
+    if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
         setValueColor(tokens);
@@ -1659,11 +1509,7 @@ void CSSStyleValuePair::setValueBorderLeftColor(std::vector<String*, gc_allocato
 {
     const char* value = tokens->at(0)->utf8Data();
     // color | transparent | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("transparent")) {
+    if (VALUE_IS_STRING("transparent")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Transparent;
     } else {
         setValueColor(tokens);
@@ -1675,11 +1521,7 @@ void CSSStyleValuePair::setValueBorderTopStyle(std::vector<String*, gc_allocator
     const char* value = tokens->at(0)->utf8Data();
     // border-style(<none> | solid) | inherit
     m_valueKind = CSSStyleValuePair::ValueKind::BorderNone;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("solid")) {
+    if (VALUE_IS_STRING("solid")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderSolid;
     }
 }
@@ -1689,11 +1531,7 @@ void CSSStyleValuePair::setValueBorderRightStyle(std::vector<String*, gc_allocat
     const char* value = tokens->at(0)->utf8Data();
     // border-style(<none> | solid) | inherit
     m_valueKind = CSSStyleValuePair::ValueKind::BorderNone;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("solid")) {
+    if (VALUE_IS_STRING("solid")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderSolid;
     }
 }
@@ -1703,11 +1541,7 @@ void CSSStyleValuePair::setValueBorderBottomStyle(std::vector<String*, gc_alloca
     const char* value = tokens->at(0)->utf8Data();
     // border-style(<none> | solid) | inherit
     m_valueKind = CSSStyleValuePair::ValueKind::BorderNone;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("solid")) {
+    if (VALUE_IS_STRING("solid")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderSolid;
     }
 }
@@ -1717,11 +1551,7 @@ void CSSStyleValuePair::setValueBorderLeftStyle(std::vector<String*, gc_allocato
     const char* value = tokens->at(0)->utf8Data();
     // border-style(<none> | solid) | inherit
     m_valueKind = CSSStyleValuePair::ValueKind::BorderNone;
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("solid")) {
+    if (VALUE_IS_STRING("solid")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderSolid;
     }
 }
@@ -1730,11 +1560,7 @@ void CSSStyleValuePair::setValueBorderTopWidth(std::vector<String*, gc_allocator
 {
     const char* value = tokens->at(0)->utf8Data();
     // border-width(thin | <medium> | thick | length) | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("thin")) {
+    if (VALUE_IS_STRING("thin")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderThin;
     } else if (VALUE_IS_STRING("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderMedium;
@@ -1749,11 +1575,7 @@ void CSSStyleValuePair::setValueBorderRightWidth(std::vector<String*, gc_allocat
 {
     const char* value = tokens->at(0)->utf8Data();
     // border-width(thin | <medium> | thick | length) | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("thin")) {
+    if (VALUE_IS_STRING("thin")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderThin;
     } else if (VALUE_IS_STRING("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderMedium;
@@ -1768,11 +1590,7 @@ void CSSStyleValuePair::setValueBorderBottomWidth(std::vector<String*, gc_alloca
 {
     const char* value = tokens->at(0)->utf8Data();
     // border-width(thin | <medium> | thick | length) | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("thin")) {
+    if (VALUE_IS_STRING("thin")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderThin;
     } else if (VALUE_IS_STRING("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderMedium;
@@ -1787,11 +1605,7 @@ void CSSStyleValuePair::setValueBorderLeftWidth(std::vector<String*, gc_allocato
 {
     const char* value = tokens->at(0)->utf8Data();
     // border-width(thin | <medium> | thick | length) | inherit
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("thin")) {
+    if (VALUE_IS_STRING("thin")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderThin;
     } else if (VALUE_IS_STRING("medium")) {
         m_valueKind = CSSStyleValuePair::ValueKind::BorderMedium;
@@ -1809,11 +1623,7 @@ void CSSStyleValuePair::setValueTextAlign(std::vector<String*, gc_allocator<Stri
     m_keyKind = CSSStyleValuePair::KeyKind::TextAlign;
     m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("left")) {
+    if (VALUE_IS_STRING("left")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
         m_value.m_textAlign = TextAlignValue::LeftTextAlignValue;
     } else if (VALUE_IS_STRING("center")) {
@@ -1835,11 +1645,7 @@ void CSSStyleValuePair::setValueUnicodeBidi(std::vector<String*, gc_allocator<St
     const char* value = tokens->at(0)->utf8Data();
     m_keyKind = CSSStyleValuePair::KeyKind::UnicodeBidi;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("normal")) {
+    if (VALUE_IS_STRING("normal")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
     } else if (VALUE_IS_STRING("embed")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::EmbedUnicodeBidiValue;
@@ -1855,11 +1661,7 @@ void CSSStyleValuePair::setValueVisibility(std::vector<String*, gc_allocator<Str
     m_keyKind = CSSStyleValuePair::KeyKind::Visibility;
     m_valueKind = CSSStyleValuePair::ValueKind::VisibilityKind;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("visible")) {
+    if (VALUE_IS_STRING("visible")) {
         m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
     } else if (VALUE_IS_STRING("hidden")) {
         m_value.m_visibility = VisibilityValue::HiddenVisibilityValue;
@@ -1875,15 +1677,9 @@ void CSSStyleValuePair::setValueOpacity(std::vector<String*, gc_allocator<String
     m_keyKind = CSSStyleValuePair::KeyKind::Opacity;
     m_valueKind = CSSStyleValuePair::ValueKind::Number;
 
-    if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else {
-        sscanf(value, "%f%%", &m_value.m_floatValue);
-        if (m_value.m_floatValue > 1.0)
-            m_value.m_floatValue = 1.0;
-    }
+    sscanf(value, "%f%%", &m_value.m_floatValue);
+    if (m_value.m_floatValue > 1.0)
+        m_value.m_floatValue = 1.0;
 }
 
 void CSSStyleValuePair::setValueOverflow(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -1893,13 +1689,7 @@ void CSSStyleValuePair::setValueOverflow(std::vector<String*, gc_allocator<Strin
     m_keyKind = CSSStyleValuePair::KeyKind::Overflow;
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
-    if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_STRING("auto") || VALUE_IS_STRING("scroll")) {
-        // Not Supported!!
-    } else if (VALUE_IS_STRING("visible")) {
+    if (VALUE_IS_STRING("visible")) {
         m_value.m_overflow = OverflowValue::VisibleOverflow;
     } else if (VALUE_IS_STRING("hidden")) {
         m_value.m_overflow = OverflowValue::HiddenOverflow;
@@ -1910,33 +1700,21 @@ void CSSStyleValuePair::setValueOverflow(std::vector<String*, gc_allocator<Strin
 void CSSStyleValuePair::setValueZIndex(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
-    if (VALUE_IS_STRING("auto")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
+    // TODO check string has right color string
+    m_valueKind = CSSStyleValuePair::ValueKind::Number;
+    if (atof(value) - atoi(value)) {
+        m_value.m_int32Value = 0;
     } else {
-        // TODO check string has right color string
-        m_valueKind = CSSStyleValuePair::ValueKind::Number;
-        if (atof(value) - atoi(value)) {
-            m_value.m_int32Value = 0;
-        } else {
-            sscanf(value, "%d%%", &m_value.m_int32Value);
-        }
-        sscanf(value, "%f%%", &m_value.m_floatValue);
+        sscanf(value, "%d%%", &m_value.m_int32Value);
     }
+    sscanf(value, "%f%%", &m_value.m_floatValue);
 }
 
 void CSSStyleValuePair::setValueVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
     m_keyKind = CSSStyleValuePair::KeyKind::VerticalAlign;
-    if (VALUE_IS_INITIAL()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Initial;
-    } else if (VALUE_IS_INHERIT()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-    } else if (VALUE_IS_STRING("baseline")) {
+    if (VALUE_IS_STRING("baseline")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
     } else if (VALUE_IS_STRING("sub")) {
