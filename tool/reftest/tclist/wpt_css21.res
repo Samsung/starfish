@@ -29,7 +29,6 @@ test/reftest/csswg-test/css21_converted/backgrounds/background-repeat-003.htm
 test/reftest/csswg-test/css21_converted/backgrounds/background-repeat-004.htm
 test/reftest/csswg-test/css21_converted/backgrounds/background-repeat-005.htm
 test/reftest/csswg-test/css21_converted/backgrounds/background-repeat-applies-to-008.htm
-test/reftest/csswg-test/css21_converted/bidi-text/bidi-001.htm
 test/reftest/csswg-test/css21_converted/borders/border-001.htm
 test/reftest/csswg-test/css21_converted/borders/border-003.htm
 test/reftest/csswg-test/css21_converted/borders/border-applies-to-008.htm
