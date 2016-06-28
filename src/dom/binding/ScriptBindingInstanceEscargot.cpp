@@ -3352,8 +3352,10 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
                 NetworkRequest::MethodType mt;
                 if (method == "post") {
                     mt = NetworkRequest::POST_METHOD;
-                } else {
+                } else if (method == "get") {
                     mt = NetworkRequest::GET_METHOD;
+                } else {
+                    THROW_DOM_EXCEPTION(instance, DOMException::SYNTAX_ERR);
                 }
 
                 String* userName = String::emptyString;
