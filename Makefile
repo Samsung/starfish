@@ -622,7 +622,7 @@ regression_test_webkit_fast_dom:
 regression_test_webkit_fast_html:
 	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html.res true
 regression_test_webkit_fast_css:
-	./tool/reftest/reftest.sh tool/reftest/webkit_fast_css.res true
+	./tool/reftest/reftest.sh webkit_fast_css true
 
 regression_test_bidi:
 	./tool/reftest/reftest.sh tool/reftest/bidi.res true
