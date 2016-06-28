@@ -1089,9 +1089,9 @@ String* CSSStyleDeclaration::generateCSSText()
 
 String* CSSStyleDeclaration::Border()
 {
-    String* width = BorderTopWidth();
-    String* style = BorderTopStyle();
-    String* color = BorderTopColor();
+    String* width = BorderWidth();
+    String* style = BorderStyle();
+    String* color = BorderColor();
     return BorderString(width, style, color);
 }
 
@@ -2145,7 +2145,7 @@ String* CSSStyleValuePair::toString()
         }
     }
     case Opacity: {
-        return String::fromUTF8(std::to_string(numberValue()).c_str());
+        return String::fromFloat(numberValue());
     }
     case Overflow: {
         switch (overflowValue()) {

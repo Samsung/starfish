@@ -407,10 +407,9 @@ String* String::replaceAll(String* from, String* to)
 
 String* String::fromFloat(float f)
 {
-    if (f == std::floor(f))
-        return String::fromUTF8(std::to_string((int)std::floor(f)).c_str());
-
-    return String::fromUTF8(std::to_string(f).c_str());
+    char buf[256];
+    snprintf(buf, sizeof buf, "%g", f);
+    return String::fromUTF8(buf);
 }
 
 String* String::fromInt(int i)

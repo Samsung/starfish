@@ -83,9 +83,7 @@ public:
 
     String* toString()
     {
-        std::stringstream ss(std::stringstream::in | std::stringstream::out);
-        ss << m_value;
-        std::string stdStr = ss.str();
+        std::string stdStr = String::fromFloat(m_value)->utf8Data();
         if (m_kind == PX)
             return String::fromUTF8(stdStr.append("px").c_str());
         else if (m_kind == CM)
@@ -102,7 +100,6 @@ public:
             return String::fromUTF8(stdStr.append("em").c_str());
         else if (m_kind == EX)
             return String::fromUTF8(stdStr.append("ex").c_str());
-
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
@@ -934,10 +931,7 @@ public:
     String* percentageToString(float f)
     {
         float v = f * 100.f;
-        if (v == std::floor(v))
-            return String::fromUTF8(std::to_string((int)std::floor(v)).append("%").c_str());
-
-        return String::fromUTF8(std::to_string(v).append("%").c_str());
+        return String::fromFloat(v)->concat(String::createASCIIString("%"));
     }
 
     String* lengthOrPercentageOrKeywordToString()
@@ -960,7 +954,7 @@ public:
 
     String* numberToString(float f)
     {
-        return String::fromUTF8(std::to_string(f).c_str());
+        return String::fromFloat(f);
     }
 
     String* valueToString()
