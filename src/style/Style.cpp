@@ -1130,7 +1130,7 @@ String* CSSStyleDeclaration::BorderLeft()
 String* CSSStyleDeclaration::BorderStyle()
 {
     String* t = BorderTopStyle();
-    String* r = BorderLeftStyle();
+    String* r = BorderRightStyle();
     String* b = BorderBottomStyle();
     String* l = BorderLeftStyle();
 
@@ -1746,17 +1746,25 @@ String* CSSStyleValuePair::toString()
 {
     switch (keyKind()) {
     case Color:
-    case BackgroundColor: {
-        if (m_valueKind == CSSStyleValuePair::ValueKind::Auto)
-            return String::fromUTF8("auto");
-        else if (m_valueKind == CSSStyleValuePair::ValueKind::Initial)
+    case BackgroundColor:
+    case BorderTopColor:
+    case BorderRightColor:
+    case BorderBottomColor:
+    case BorderLeftColor: {
+        switch (valueKind()) {
+        case CSSStyleValuePair::ValueKind::Initial:
             return String::initialString;
-        else if (m_valueKind == CSSStyleValuePair::ValueKind::Inherit)
-            return String::inheritString;
-        else if (m_valueKind == CSSStyleValuePair::ValueKind::StringValueKind)
+        case CSSStyleValuePair::ValueKind::Transparent:
+            return String::fromUTF8("transparent");
+        case CSSStyleValuePair::ValueKind::StringValueKind:
             return stringValue();
-        break;
+        case CSSStyleValuePair::ValueKind::Inherit:
+            return String::inheritString;
+        default:
+            return String::emptyString;
+        }
     }
+    break;
     case BackgroundImage:
         if (m_valueKind == CSSStyleValuePair::ValueKind::None) {
             return String::fromUTF8("none");
@@ -2072,23 +2080,6 @@ String* CSSStyleValuePair::toString()
         }
         default:
             return lengthOrPercentageOrKeywordToString();
-        }
-    }
-    case BorderTopColor:
-    case BorderRightColor:
-    case BorderBottomColor:
-    case BorderLeftColor: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::Initial:
-            return String::initialString;
-        case CSSStyleValuePair::ValueKind::Transparent:
-            return String::fromUTF8("transparent");
-        case CSSStyleValuePair::ValueKind::StringValueKind:
-            return parseColor(stringValue()).toString();
-        case CSSStyleValuePair::ValueKind::Inherit:
-            return String::inheritString;
-        default:
-            return String::emptyString;
         }
     }
     case BorderTopStyle:
