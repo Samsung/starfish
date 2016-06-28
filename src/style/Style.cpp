@@ -1700,14 +1700,13 @@ void CSSStyleValuePair::setValueOverflow(std::vector<String*, gc_allocator<Strin
 void CSSStyleValuePair::setValueZIndex(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
+    m_valueKind = CSSStyleValuePair::ValueKind::Int32;
     // TODO check string has right color string
-    m_valueKind = CSSStyleValuePair::ValueKind::Number;
     if (atof(value) - atoi(value)) {
         m_value.m_int32Value = 0;
     } else {
         sscanf(value, "%d%%", &m_value.m_int32Value);
     }
-    sscanf(value, "%f%%", &m_value.m_floatValue);
 }
 
 void CSSStyleValuePair::setValueVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -2174,8 +2173,8 @@ String* CSSStyleValuePair::toString()
             return String::initialString;
         else if (m_valueKind == CSSStyleValuePair::ValueKind::Inherit)
             return String::inheritString;
-        else if (m_valueKind == CSSStyleValuePair::ValueKind::Number)
-            return String::fromUTF8(std::to_string((int)numberValue()).c_str());
+        else if (m_valueKind == CSSStyleValuePair::ValueKind::Int32)
+            return String::fromUTF8(std::to_string(int32Value()).c_str());
         break;
     }
     case VerticalAlign: {
@@ -4236,7 +4235,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
                     style->m_zIndex = 0;
                 } else {
-                    style->m_zIndex = cssValues[k].numberInt32Value();
+                    style->m_zIndex = cssValues[k].int32Value();
                     style->m_zIndexSpecifiedByUser = true;
                 }
                 break;

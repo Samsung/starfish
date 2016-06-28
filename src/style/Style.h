@@ -614,6 +614,7 @@ public:
         Auto,
         None,
         Number, // real number values - https://www.w3.org/TR/CSS21/syndata.html#value-def-number
+        Int32,
         Angle, //
         Normal,
         StringValueKind,
@@ -792,9 +793,9 @@ public:
         return m_value.m_floatValue;
     }
 
-    int32_t numberInt32Value()
+    int32_t int32Value()
     {
-        STARFISH_ASSERT(m_valueKind == Number);
+        STARFISH_ASSERT(m_valueKind == Int32);
         return m_value.m_int32Value;
     }
 
