@@ -422,11 +422,11 @@ public:
         return parser->isEnd();
     }
 
-    static bool assureColor(const char* token)
+    static bool assureColor(const char* token, size_t num = 1)
     {
-        if (strcmp("transparent", token) == 0) {
+        if (num == 1 && strcmp("transparent", token) == 0) {
             return true;
-        } else if (strcmp("currentcolor", token) == 0) {
+        } else if (num == 1 && strcmp("currentcolor", token) == 0) {
             return true;
         } else if (token[0] == '#') {
             if (!(strlen(token) == 9 || strlen(token) == 7 || strlen(token) == 4)) {
@@ -442,7 +442,7 @@ public:
             return true;
         }
 #define PARSE_COLOR(name, value)        \
-    else if (strcmp(#name, token) == 0) \
+    else if (num == 1 && strcmp(#name, token) == 0) \
     {                                   \
         return true;                    \
     }
@@ -508,14 +508,6 @@ public:
     {
         // border-style(<none> | solid) | inherit
         if (strcmp(token, "none") == 0 || strcmp(token, "solid") == 0)
-            return true;
-        return false;
-    }
-
-    static bool assureBorderColor(const char* token)
-    {
-        // color | transparent | inherit
-        if (assureColor(token))
             return true;
         return false;
     }
