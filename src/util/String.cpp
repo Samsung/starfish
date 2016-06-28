@@ -742,7 +742,7 @@ bool String::contains(const char* str, bool caseSensitive)
         }
     } else {
         if (strLen <= len) {
-            char32_t src0 = str[0];
+            char32_t src0 = (char32_t) str[0];
             size_t pos = 0;
             for (; pos <= len - strLen; ++pos) {
                 if (charAt(pos) == src0) {

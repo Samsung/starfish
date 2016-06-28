@@ -137,6 +137,8 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
             // Block... + Inline case
             Frame* last = frameBlockBox->lastChild();
 
+            STARFISH_ASSERT(last);
+
             if (last->node()) {
                 ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
                 newStyle->setDisplay(DisplayValue::BlockDisplayValue);

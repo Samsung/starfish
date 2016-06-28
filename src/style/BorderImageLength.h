@@ -80,7 +80,7 @@ public:
             return m_length.dumpString();
         else if (m_type == NumberType) {
             char temp[100];
-            sprintf(temp, "%f", m_number);
+            snprintf(temp, sizeof temp, "%f", m_number);
             return String::fromUTF8(temp);
         }
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

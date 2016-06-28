@@ -102,9 +102,11 @@ void StarFish::loadHTMLDocument(String* filePath)
             }
 
             char* p = realpath(path.c_str(), NULL);
-            path = p;
+            if (p) {
+                path = p;
+                free(p);
+            }
             path += "/";
-            free(p);
 
             path = std::string("file://") + path + fileName;
         }

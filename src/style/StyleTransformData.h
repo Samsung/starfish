@@ -141,15 +141,15 @@ public:
     {
         char temp[100];
         if (m_type == Matrix) {
-            sprintf(temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", m_matrix->a(), m_matrix->b(), m_matrix->c(), m_matrix->d(), m_matrix->e(), m_matrix->f());
+            snprintf(temp, sizeof temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", m_matrix->a(), m_matrix->b(), m_matrix->c(), m_matrix->d(), m_matrix->e(), m_matrix->f());
         } else if (m_type == Scale) {
-            sprintf(temp, "scale(%.3f %.3f) ", m_scale->x(), m_scale->y());
+            snprintf(temp, sizeof temp, "scale(%.3f %.3f) ", m_scale->x(), m_scale->y());
         } else if (m_type == Rotate) {
-            sprintf(temp, "rotate(%.3f) ", m_rotate->angle());
+            snprintf(temp, sizeof temp, "rotate(%.3f) ", m_rotate->angle());
         } else if (m_type == Skew) {
-            sprintf(temp, "skew(%.3f %.3f) ", m_skew->angleX(), m_skew->angleY());
+            snprintf(temp, sizeof temp, "skew(%.3f %.3f) ", m_skew->angleX(), m_skew->angleY());
         } else if (m_type == Translate) {
-            sprintf(temp, "translate(%s %s) ", m_translate->tx().dumpString()->utf8Data(), m_translate->ty().dumpString()->utf8Data());
+            snprintf(temp, sizeof temp, "translate(%s %s) ", m_translate->tx().dumpString()->utf8Data(), m_translate->ty().dumpString()->utf8Data());
         }
         // TODO
         return String::fromUTF8(temp);

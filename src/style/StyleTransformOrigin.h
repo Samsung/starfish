@@ -89,7 +89,7 @@ public:
     String* dumpString()
     {
         char temp[100];
-        sprintf(temp, "(%.3f %.3f)", m_originValue->getXAxis().isFixed() ? m_originValue->getXAxis().fixed() : m_originValue->getXAxis().percent()
+        snprintf(temp, sizeof temp, "(%.3f %.3f)", m_originValue->getXAxis().isFixed() ? m_originValue->getXAxis().fixed() : m_originValue->getXAxis().percent()
             , m_originValue->getYAxis().isFixed() ? m_originValue->getYAxis().fixed() : m_originValue->getYAxis().percent());
 
         return String::fromUTF8(temp);
