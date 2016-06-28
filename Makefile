@@ -623,6 +623,10 @@ regression_test_webkit_fast_html:
 	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html.res true
 regression_test_webkit_fast_css:
 	./tool/reftest/reftest.sh webkit_fast_css true
+regression_test_webkit_fast_etc:
+	./tool/reftest/reftest.sh webkit_fast_etc true
+regression_test_webkit_fast_etc_capture:
+	./tool/reftest/reftest.sh webkit_fast_etc capture
 
 regression_test_bidi:
 	./tool/reftest/reftest.sh tool/reftest/bidi.res true
@@ -672,6 +676,7 @@ regression_test:
 	make regression_test_webkit_fast_dom
 	make regression_test_webkit_fast_html
 	make regression_test_webkit_fast_css
+	make regression_test_webkit_fast_etc
 	make regression_test_bidi
 	make regression_test_demo
 	make regression_test_css1

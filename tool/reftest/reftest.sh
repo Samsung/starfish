@@ -22,7 +22,8 @@ function main() {
     if [ "$1" = "" ]; then
         echo "Please specify the input file"
         exit
-    elif [[ "$1" = *".htm" || "$1" = *".html" || "$1" = "webkit_fast_css" ]]; then
+    elif [[ "$1" = *".htm" || "$1" = *".html" ||
+            "$1" = "webkit_fast_css" || "$1" = "webkit_fast_etc" ]]; then
         tc=$1
     elif [[ "$1" = *".res" ]]; then
         tc=$(cat $1)
@@ -120,13 +121,22 @@ function main() {
         PASSFILE="test/regression/tool/csswg-test/test_$name"
         doTest "$@"
     elif [[ "$1" = "webkit_fast_css" ]]; then
-        TESTSUITENAME="WebKit Fast CSS - Pixel Test"
+        TESTSUITENAME="WebKit Fast CSS"
         #PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_css"
         TESTSUITE=2
         tc=$(cat tool/reftest/webkit_fast_css.res)
         doTest "$@"
         TESTSUITE=3
         tc=$(cat tool/reftest/webkit_fast_css_manual.res)
+        doTest "$@"
+    elif [[ "$1" = "webkit_fast_etc" ]]; then
+        TESTSUITENAME="WebKit Fast etc"
+        #PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_etc"
+        TESTSUITE=2
+        tc=$(cat tool/reftest/webkit_fast_etc.res)
+        doTest "$@"
+        TESTSUITE=3
+        tc=$(cat tool/reftest/webkit_fast_etc_manual.res)
         doTest "$@"
     else
         echo "Unsupported tests"
@@ -235,10 +245,13 @@ function doTest() {
                     echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]} "(${GREEN}PASS:" $PASS"${RESET}," "${RED}FAIL:" $FAIL"${RESET})"
                 fi
             elif [ $TESTSUITE -eq 2 ] || [ $TESTSUITE -eq 3 ]; then
-                EXPIMG=${filenames[$c]}
-                EXPIMG=`echo $EXPIMG | sed 's/fast\/css/fast\/css_result/g'`
-                EXPIMG=`echo $EXPIMG | sed 's/\.html/_expected\.png/g'`
-                #IMGDIFF="./tool/pixel_test/bin/image_diff"
+                TC=${filenames[$c]}
+                BASEDIR=${TC%fast*}
+                TCDIR=${TC##*fast/}
+                TCDIRNAME=${TCDIR%%/*}
+                EXPDIR=$BASEDIR"fast/"$TCDIRNAME"_result"
+                EXPFILE=${TCDIR#*/}
+                EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
                 IMGDIFF="./tool/imgdiff/imgdiff"
                 DIFF=`$IMGDIFF $RESIMG $EXPIMG`
                 if [[ "$DIFF" = *"passed"* ]]; then
@@ -256,7 +269,7 @@ function doTest() {
                         EXPDIR=${EXPIMG%/*}
                         mkdir $EXPDIR &> /dev/null 2>&1 
                         if [ $TESTSUITE -eq 2 ]; then
-                            test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f ${filenames[$c]} $EXPDIR pc 
+                            test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f $TC $EXPDIR pc
                             # DEBUG
                             # DIFFIMG=`echo $EXPIMG | sed 's/_expected/_diff/g'`
                             # ./tool/pixel_test/bin/image_diff --diff $RESIMG $EXPIMG $DIFFIMG                            
