@@ -207,15 +207,15 @@ public:
                 float imgR = id->width() / (float)id->height();
                 if (boxR > imgR) {
                     if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw*imgR, bh);
+                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bh*imgR, bh);
                     } else {
-                        canvas->drawImage(id, Rect(0, 0, bw*imgR, bh));
+                        canvas->drawImage(id, Rect(0, 0, bh*imgR, bh));
                     }
                 } else {
                     if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bh / imgR);
+                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bw / imgR);
                     } else {
-                        canvas->drawImage(id, Rect(0, 0, bw, bh / imgR));
+                        canvas->drawImage(id, Rect(0, 0, bw, bw / imgR));
                     }
                 }
 
