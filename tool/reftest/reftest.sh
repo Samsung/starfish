@@ -18,7 +18,7 @@ CHECKTCFILE=0
 TCFILE=0
 OUTDIR="out/x64/exe/debug/reftest/regression/"
 
-function main() {
+function main {
     if [ "$1" = "" ]; then
         echo "Please specify the input file"
         exit
@@ -148,7 +148,7 @@ function main() {
 
 echo -e "${BOLD}###### Ref Tests ######${RESET}\n"
 
-function doTest() {
+function doTest {
     cnt=-1
     #if [ "$2" = "capture" ]; then
     #    ROTATE=1
@@ -272,7 +272,7 @@ function doTest() {
                             test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f $TC $EXPDIR pc
                             # DEBUG
                             # DIFFIMG=`echo $EXPIMG | sed 's/_expected/_diff/g'`
-                            # ./tool/pixel_test/bin/image_diff --diff $RESIMG $EXPIMG $DIFFIMG                            
+                            # ./tool/pixel_test/bin/image_diff --diff $RESIMG $EXPIMG $DIFFIMG
                             # RESULTIMG=`echo $EXPIMG | sed 's/_expected/_result/g'`
                             # cp $RESIMG $RESULTIMG
                         else
@@ -388,7 +388,7 @@ function doTest() {
     wait;
 }
 
-function printSummary() {
+function printSummary {
     # Print the summary
     echo -e "\n${BOLD}###### Summary ######${RESET}\n"
     if [ ! -f "$RESULTCSV" ]; then
@@ -407,7 +407,7 @@ function printSummary() {
     fi
 }
 
-function checkRegression() {
+function checkRegression {
     # Regression test
     if [ "$REGRESSION" = true ]; then
         echo -e "${BOLD}###### Regression Test ######${RESET}\n"
