@@ -162,6 +162,9 @@ public:
         m_clients.push_back(client);
     }
 
+    URL& url() {
+        return m_url;
+    }
 protected:
     void pareseHeader(const char* header, size_t len);
     void initVariables();

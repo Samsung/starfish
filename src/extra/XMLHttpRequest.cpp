@@ -22,9 +22,10 @@ void XMLHttpRequest::send(String* body)
 
 void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url, bool async, String* userName, String* password)
 {
+    if (method == NetworkRequest::UNKNOWN_METHOD)
+        throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     if (!async && m_networkRequest->timeout() != 0)
         throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
-
     m_networkRequest->open(method, url, async);
 }
 
@@ -53,9 +54,12 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
     NetworkRequest::ProgressState progState = request->progressState();
     if (progState == NetworkRequest::PROGRESS)
         eventName = request->starFish()->staticStrings()->m_progress.localName();
-    else if (progState == NetworkRequest::ERROR)
+    else if (progState == NetworkRequest::ERROR) {
         eventName = request->starFish()->staticStrings()->m_error.localName();
-    else if (progState == NetworkRequest::ABORT) {
+        if (!m_networkRequest->url().isFileURL() && !m_networkRequest->url().isDataURL()) {
+            throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::NETWORK_ERR, "NetworkError");
+        }
+    } else if (progState == NetworkRequest::ABORT) {
         if (isExplicitAction) {
             return;
         }

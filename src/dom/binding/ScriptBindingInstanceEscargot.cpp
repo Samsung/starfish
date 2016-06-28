@@ -3355,7 +3355,8 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
                 } else if (method == "get") {
                     mt = NetworkRequest::GET_METHOD;
                 } else {
-                    THROW_DOM_EXCEPTION(instance, DOMException::SYNTAX_ERR);
+                    mt = NetworkRequest::UNKNOWN_METHOD;
+                    STARFISH_LOG_ERROR("Unsupported method : %s\n", method.c_str());
                 }
 
                 String* userName = String::emptyString;
