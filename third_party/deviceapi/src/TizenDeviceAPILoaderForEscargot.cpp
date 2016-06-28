@@ -87,6 +87,8 @@ wrt::xwalk::Extension* ExtensionManagerInstance::getExtension(const char* apiNam
     }
 }
 
+// Caution: this function is called only inside existing js execution context,
+// so we dont' handle JS exception around ESFunctionObject::call()
 escargot::ESObject* ExtensionManagerInstance::initializeExtensionInstance(const char* apiName)
 {
     DEVICEAPI_LOG_INFO("Enter");
@@ -97,23 +99,12 @@ escargot::ESObject* ExtensionManagerInstance::initializeExtensionInstance(const 
         return ESObject::create();
     }
     escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-
-    std::jmp_buf tryPosition;
-    escargot::ESObject* ret;
-    if (setjmp(instance->registerTryPos(&tryPosition)) == 0) {
-        escargot::ESFunctionObject* initializer = instance->evaluate(escargot::ESString::create(extension->javascript_api().c_str())).asESPointer()->asESFunctionObject();
-        escargot::ESObject* extensionObject = createExtensionObject();
-        wrt::xwalk::ExtensionInstance* extensionInstance = extension->CreateInstance();
-        m_extensionInstances[extensionObject] = extensionInstance;
-        escargot::ESValue arguments[] = { extensionObject };
-        ret = escargot::ESFunctionObject::call(instance, initializer, escargot::ESValue(), arguments, 1, false).asESPointer()->asESObject();
-        m_instance->unregisterTryPos(&tryPosition);
-    } else {
-        escargot::ESValue err = instance->getCatchedError();
-        DEVICEAPI_LOG_ERROR("Uncaught %s\n", err.toString()->utf8Data());
-    }
-
-    return ret;
+    escargot::ESFunctionObject* initializer = instance->evaluate(escargot::ESString::create(extension->javascript_api().c_str())).asESPointer()->asESFunctionObject();
+    escargot::ESObject* extensionObject = createExtensionObject();
+    wrt::xwalk::ExtensionInstance* extensionInstance = extension->CreateInstance();
+    m_extensionInstances[extensionObject] = extensionInstance;
+    escargot::ESValue arguments[] = { extensionObject };
+    return escargot::ESFunctionObject::call(instance, initializer, escargot::ESValue(), arguments, 1, false).asESPointer()->asESObject();
 }
 
 escargot::ESObject* ExtensionManagerInstance::createExtensionObject()
