@@ -3243,6 +3243,11 @@ escargot::ESFunctionObject* bindingCSSStyleRule(ScriptBindingInstance* scriptBin
 
 escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptBindingInstance)
 {
+    /* XMLHttpRequestEventTarget */
+
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(XMLHttpRequestEventTarget, fetchData(scriptBindingInstance)->m_eventTarget);
+    fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(XMLHttpRequestEventTargetString, true, false, true, XMLHttpRequestEventTargetFunction);
+
     /* XMLHttpRequest */
     escargot::ESFunctionObject* xhrElementFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         Window* wnd = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData());
@@ -3251,12 +3256,12 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
     }, escargot::ESString::create("XMLHttpRequest"), 0, true, false);
 
     xhrElementFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
-    xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget->protoType());
+    xhrElementFunction->protoType().asESPointer()->asESObject()->set__proto__(XMLHttpRequestEventTargetFunction->protoType());
     fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("XMLHttpRequest"), false, false, false, xhrElementFunction);
 
 #define DEFINE_XHR_EVENT_HANDLER(eventName) \
     defineNativeAccessorPropertyButNeedToGenerateJSFunction( \
-        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("on" #eventName), \
+        XMLHttpRequestEventTargetFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("on" #eventName), \
         [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest); \
         auto eventType = originalObj->networkRequest().starFish()->staticStrings()->m_##eventName; \
