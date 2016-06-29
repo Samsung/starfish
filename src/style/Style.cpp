@@ -450,7 +450,6 @@ void CSSStyleValuePair::setValueFontSize(std::vector<String*, gc_allocator<Strin
 
 void CSSStyleValuePair::setValueFontWeight(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    // TODO: LEESS
     const char* value = tokens->at(0)->utf8Data();
 
     // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit // initial -> normal
@@ -1901,36 +1900,37 @@ String* CSSStyleValuePair::toString()
         }
     }
     case FontWeight: {
-        switch (valueKind()) {
-        case FontWeightValue::NormalFontWeightValue:
-            return String::fromUTF8("normal");
-        case FontWeightValue::BoldFontWeightValue:
-            return String::fromUTF8("bold");
-        case FontWeightValue::BolderFontWeightValue:
-            return String::fromUTF8("bolder");
-        case FontWeightValue::LighterFontWeightValue:
-            return String::fromUTF8("lighter");
-        case FontWeightValue::OneHundredFontWeightValue:
-            return String::fromUTF8("100");
-        case FontWeightValue::TwoHundredsFontWeightValue:
-            return String::fromUTF8("200");
-        case FontWeightValue::ThreeHundredsFontWeightValue:
-            return String::fromUTF8("300");
-        case FontWeightValue::FourHundredsFontWeightValue:
-            return String::fromUTF8("400");
-        case FontWeightValue::FiveHundredsFontWeightValue:
-            return String::fromUTF8("500");
-        case FontWeightValue::SixHundredsFontWeightValue:
-            return String::fromUTF8("600");
-        case FontWeightValue::SevenHundredsFontWeightValue:
-            return String::fromUTF8("700");
-        case FontWeightValue::EightHundredsFontWeightValue:
-            return String::fromUTF8("800");
-        case FontWeightValue::NineHundredsFontWeightValue:
-            return String::fromUTF8("900");
-        default:
-            return lengthOrPercentageOrKeywordToString();
+        switch (fontWeightValue()) {
+            case FontWeightValue::NormalFontWeightValue:
+                return String::fromUTF8("normal");
+            case FontWeightValue::BoldFontWeightValue:
+                return String::fromUTF8("bold");
+            case FontWeightValue::BolderFontWeightValue:
+                return String::fromUTF8("bolder");
+            case FontWeightValue::LighterFontWeightValue:
+                return String::fromUTF8("lighter");
+            case FontWeightValue::OneHundredFontWeightValue:
+                return String::fromUTF8("100");
+            case FontWeightValue::TwoHundredsFontWeightValue:
+                return String::fromUTF8("200");
+            case FontWeightValue::ThreeHundredsFontWeightValue:
+                return String::fromUTF8("300");
+            case FontWeightValue::FourHundredsFontWeightValue:
+                return String::fromUTF8("400");
+            case FontWeightValue::FiveHundredsFontWeightValue:
+                return String::fromUTF8("500");
+            case FontWeightValue::SixHundredsFontWeightValue:
+                return String::fromUTF8("600");
+            case FontWeightValue::SevenHundredsFontWeightValue:
+                return String::fromUTF8("700");
+            case FontWeightValue::EightHundredsFontWeightValue:
+                return String::fromUTF8("800");
+            case FontWeightValue::NineHundredsFontWeightValue:
+                return String::fromUTF8("900");
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        break;
     }
     case Display: {
         switch (valueKind()) {
@@ -2840,7 +2840,7 @@ bool CSSStyleDeclaration::checkInputErrorFontWeight(std::vector<String*, gc_allo
 {
     if (tokens->size() == 1) {
         const char* token = (*tokens)[0]->toLower()->utf8Data();
-        if ((strcmp(token, "normal") == 0) || (strcmp(token, "bold") == 0) || (strcmp(token, "bolder") == 0) || (strcmp(token, "lighter") == 0) || (strcmp(token, "100") == 0) || (strcmp(token, "200") == 0) || (strcmp(token, "300") == 0) || (strcmp(token, "400") == 0) || (strcmp(token, "500") == 0) || (strcmp(token, "600") == 0) || (strcmp(token, "700") == 0) || (strcmp(token, "800") == 0) || (strcmp(token, "900") == 0) || (strcmp(token, "inherit") == 0) || (strcmp(token, "initial") == 0)) {
+        if ((strcmp(token, "normal") == 0) || (strcmp(token, "bold") == 0) || (strcmp(token, "bolder") == 0) || (strcmp(token, "lighter") == 0) || (strcmp(token, "100") == 0) || (strcmp(token, "200") == 0) || (strcmp(token, "300") == 0) || (strcmp(token, "400") == 0) || (strcmp(token, "500") == 0) || (strcmp(token, "600") == 0) || (strcmp(token, "700") == 0) || (strcmp(token, "800") == 0) || (strcmp(token, "900") == 0)) {
             return true;
         } else if (CSSPropertyParser::assureInteger(token, false)) {
             int num = 0;

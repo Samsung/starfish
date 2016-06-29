@@ -949,7 +949,7 @@ public:
         else if (valueKind() == CSSStyleValuePair::ValueKind::Percentage)
             return percentageToString(percentageValue());
         else
-            return nullptr;
+            return String::emptyString;
     }
 
     String* numberToString(float f)
