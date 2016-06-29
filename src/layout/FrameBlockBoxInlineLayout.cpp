@@ -1620,7 +1620,14 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
             } else {
                 STARFISH_ASSERT(f->isFrameReplaced());
-                LayoutUnit w = f->asFrameReplaced()->intrinsicSize().width();
+                std::pair<Length, Length> s = f->asFrameReplaced()->intrinsicSize();
+                LayoutUnit w;
+                if (s.first.isFixed()) {
+                    w = s.first.fixed();
+                } else {
+                    LayoutUnit parentContentWidth = ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
+                    w = s.first.percent() * parentContentWidth;
+                }
 
                 if (f->style()->width().isFixed()) {
                     w = f->style()->width().fixed();

@@ -29,17 +29,15 @@ public:
     {
         ResourceClient::didLoadFinished();
 
-        LayoutSize sizeBefore(0, 0);
-        LayoutSize size(0, 0);
-        sizeBefore = m_element->intrinsicSize();
+        std::pair<Length, Length> sizeBefore = m_element->intrinsicSize();
         ImageData* imageData = m_resource->asImageResource()->imageData();
         STARFISH_ASSERT(imageData);
 
         m_element->m_imageData = imageData;
 
-        size = m_element->intrinsicSize();
+        std::pair<Length, Length> size = m_element->intrinsicSize();
         if (m_element->frame()) {
-            if (sizeBefore == size) {
+            if (sizeBefore.first == size.first && sizeBefore.second == size.second) {
                 m_element->setNeedsPainting();
             } else {
                 m_element->setNeedsLayout();

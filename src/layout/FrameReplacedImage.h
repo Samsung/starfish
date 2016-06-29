@@ -30,7 +30,7 @@ public:
             width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
     }
 
-    virtual LayoutSize intrinsicSize()
+    virtual std::pair<Length, Length> intrinsicSize()
     {
         return node()->asElement()->asHTMLElement()->asHTMLImageElement()->intrinsicSize();
     }

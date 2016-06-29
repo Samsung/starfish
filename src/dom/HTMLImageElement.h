@@ -65,7 +65,7 @@ public:
         setAttribute(document()->window()->starFish()->staticStrings()->m_height, String::fromInt(height));
     }
 
-    LayoutSize intrinsicSize()
+    std::pair<Length, Length> intrinsicSize()
     {
         if (m_imageData) {
             String* widthString = width();
@@ -73,20 +73,28 @@ public:
             bool widthIsEmpty = widthString->equals(String::emptyString);
             bool heightIsEmpty = heightString->equals(String::emptyString);
             if (widthIsEmpty && heightIsEmpty) {
-                return LayoutSize(m_imageData->width(), m_imageData->height());
+                return std::make_pair(Length(Length::Fixed, m_imageData->width()), Length(Length::Fixed, m_imageData->height()));
             } else if (widthIsEmpty) {
                 int h = String::parseInt(heightString);
-                return LayoutSize(h, h);
+                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+                return std::make_pair(height, height);
             } else if (heightIsEmpty) {
                 int w = String::parseInt(widthString);
-                return LayoutSize(w, w);
+                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+                return std::make_pair(width, width);
             } else {
                 int w = String::parseInt(widthString);
                 int h = String::parseInt(heightString);
-                return LayoutSize(w, h);
+                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+                return std::make_pair(width, height);
             }
         } else {
-            return LayoutSize(0, 0);
+            return std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
         }
     }
 

@@ -37,38 +37,50 @@ public:
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
     {
-        LayoutSize s = intrinsicSize();
+        std::pair<Length, Length> s = intrinsicSize();
         LayoutUnit parentContentWidth = ctx.blockContainer(this)->asFrameBox()->contentWidth();
         computeBorderMarginPadding(parentContentWidth);
+        LayoutUnit intrinsicWidth;
+        LayoutUnit intrinsicHeight;
+        if (s.first.isFixed()) {
+            intrinsicWidth = s.first.fixed();
+        } else {
+            intrinsicWidth = s.first.percent() * parentContentWidth;
+        }
+        if (s.second.isFixed()) {
+            intrinsicHeight = s.second.fixed();
+        } else {
+            intrinsicHeight = s.second.percent() * parentContentWidth;
+        }
 
         if (isNormalFlow()) {
-            if ((s.width() == 0 || s.height() == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
+            if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
                 setContentWidth(0);
                 setContentHeight(0);
             } else if (style()->width().isAuto() && style()->height().isAuto()) {
-                setContentWidth(s.width());
-                setContentHeight(s.height());
+                setContentWidth(intrinsicWidth);
+                setContentHeight(intrinsicHeight);
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
                 LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
-                LayoutUnit h = w * (s.height() / s.width());
+                LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
                 setContentWidth(w);
                 setContentHeight(h);
             } else if (style()->width().isAuto() && style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
                     LayoutUnit h = style()->height().fixed();
-                    LayoutUnit w = h * (s.width() / s.height());
+                    LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
                     setContentWidth(w);
                     setContentHeight(h);
                 } else {
                     STARFISH_ASSERT(style()->height().isPercent());
                     if (ctx.parentHasFixedHeight(this)) {
                         LayoutUnit h = style()->height().percent() * ctx.parentFixedHeight(this);
-                        LayoutUnit w = h * (s.width() / s.height());
+                        LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
                         setContentWidth(w);
                         setContentHeight(h);
                     } else {
-                        setContentWidth(s.width());
-                        setContentHeight(s.height());
+                        setContentWidth(intrinsicWidth);
+                        setContentHeight(intrinsicHeight);
                     }
                 }
             } else {
@@ -80,7 +92,7 @@ public:
                     if (ctx.parentHasFixedHeight(this))
                         setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
                     else
-                        setContentHeight(s.height());
+                        setContentHeight(intrinsicHeight);
                 }
             }
 
@@ -96,27 +108,27 @@ public:
             }
         } else {
             // The used value of 'width' is determined as for inline replaced elements.
-            if ((s.width() == 0 || s.height() == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
+            if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
                 setContentWidth(0);
                 setContentHeight(0);
             } else if (style()->width().isAuto() && style()->height().isAuto()) {
-                setContentWidth(s.width());
-                setContentHeight(s.height());
+                setContentWidth(intrinsicWidth);
+                setContentHeight(intrinsicHeight);
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
                 LayoutUnit w = style()->width().specifiedValue(ctx.containingBlock(this)->asFrameBox()->contentWidth());
-                LayoutUnit h = w * (s.height() / s.width());
+                LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
                 setContentWidth(w);
                 setContentHeight(h);
             } else if (style()->width().isAuto() && style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
                     LayoutUnit h = style()->height().fixed();
-                    LayoutUnit w = h * (s.width() / s.height());
+                    LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
                     setContentWidth(w);
                     setContentHeight(h);
                 } else {
                     // FIXME
-                    setContentWidth(s.width());
-                    setContentHeight(s.height());
+                    setContentWidth(intrinsicWidth);
+                    setContentHeight(intrinsicHeight);
                 }
             } else {
                 STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
@@ -127,7 +139,7 @@ public:
                     if (ctx.parentHasFixedHeight(this))
                         setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
                     else
-                        setContentHeight(s.height());
+                        setContentHeight(intrinsicHeight);
                 }
             }
 
@@ -211,30 +223,44 @@ public:
 
     virtual void computePreferredWidth(ComputePreferredWidthContext& ctx)
     {
-        LayoutSize s = intrinsicSize();
+        std::pair<Length, Length> s = intrinsicSize();
+        LayoutUnit parentContentWidth = ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
+        LayoutUnit intrinsicWidth;
+        LayoutUnit intrinsicHeight;
+        if (s.first.isFixed()) {
+            intrinsicWidth = s.first.fixed();
+        } else {
+            intrinsicWidth = s.first.percent() * parentContentWidth;
+        }
+        if (s.second.isFixed()) {
+            intrinsicHeight = s.second.fixed();
+        } else {
+            intrinsicHeight = s.second.percent() * parentContentWidth;
+        }
+
         if (style()->width().isAuto() && style()->height().isAuto()) {
-            ctx.setResult(s.width());
+            ctx.setResult(intrinsicWidth);
         } else if (style()->width().isSpecified()) {
             if (style()->width().isFixed()) {
                 ctx.setResult(style()->width().fixed());
             } else {
-                ctx.setResult(s.width());
+                ctx.setResult(intrinsicWidth);
             }
         } else if (style()->height().isSpecified()) {
             if (style()->height().isFixed()) {
                 LayoutUnit h = style()->height().fixed();
-                LayoutUnit w = h * (s.width() / s.height());
+                LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
                 ctx.setResult(w);
             } else {
-                ctx.setResult(s.width());
+                ctx.setResult(intrinsicWidth);
             }
         } else {
             // TODO support width, height attribute
-            ctx.setResult(s.width());
+            ctx.setResult(intrinsicWidth);
         }
     }
 
-    virtual LayoutSize intrinsicSize() = 0;
+    virtual std::pair<Length, Length> intrinsicSize() = 0;
 
     virtual void paintReplaced(Canvas* canvas)
     {
