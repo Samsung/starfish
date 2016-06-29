@@ -610,6 +610,7 @@ public:
         Percentage,
         Auto,
         None,
+        EmptyValue,
         Number, // real number values - https://www.w3.org/TR/CSS21/syndata.html#value-def-number
         Int32,
         Angle, //
@@ -938,10 +939,6 @@ public:
     {
         if (valueKind() == CSSStyleValuePair::ValueKind::Auto)
             return String::fromUTF8("auto");
-        else if (valueKind() == CSSStyleValuePair::ValueKind::Inherit)
-            return String::fromUTF8("inherit");
-        else if (valueKind() == CSSStyleValuePair::ValueKind::Initial)
-            return String::fromUTF8("initial");
         else if (valueKind() == CSSStyleValuePair::ValueKind::None)
             return String::fromUTF8("none");
         else if (valueKind() == CSSStyleValuePair::ValueKind::Length)
@@ -1008,6 +1005,10 @@ public:
     }
 
     void setValuePercentageOrLength(const char* value);
+    void setValuePercentageOrLength(std::vector<String*, gc_allocator<String*> >* tokens);
+    void setValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens);
+    void setValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens);
+    void setValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens);
 
 #define FOR_EACH_STYLE_ATTRIBUTE(F)             \
     F(Color, "color")                           \
@@ -1181,7 +1182,20 @@ public:
 
     FOR_EACH_STYLE_ATTRIBUTE(CHECK_INPUT_ERROR)
 #undef CHECK_INPUT_ERROR
-    bool checkInputErrorMargin(std::vector<String*, gc_allocator<String*> >* tokens);
+
+#define FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(F)                  \
+    F(Margin, MarginTop, MarginBottom, MarginLeft, MarginRight)         \
+    F(Padding, PaddingTop, PaddingBottom, PaddingLeft, PaddingRight)    \
+    F(BorderStyle, BorderTopStyle, BorderBottomStyle, BorderLeftStyle, BorderRightStyle)    \
+    F(BorderWidth, BorderTopWidth, BorderBottomWidth, BorderLeftWidth, BorderRightWidth)    \
+    F(BorderColor, BorderTopColor, BorderBottomColor, BorderLeftColor, BorderRightColor)
+
+#define CHECK_INPUT_ERROR_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight) \
+    bool checkInputError##name(std::vector<String*, gc_allocator<String*> >* tokens);
+
+    FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(CHECK_INPUT_ERROR_FOURSIDE)
+#undef CHECK_INPUT_ERROR_FOURSIDE
+
     bool checkInputErrorBackground(std::vector<String*, gc_allocator<String*> >* tokens);
     bool checkInputErrorBackgroundRepeat(std::vector<String*, gc_allocator<String*> >* tokens);
     bool checkInputErrorBorder(std::vector<String*, gc_allocator<String*> >* tokens);
@@ -1236,35 +1250,85 @@ public:
     }
 
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_SETTER)
-#undef ATTRIBUTE_GETTER
+#undef ATTRIBUTE_SETTER
 
-    String* Margin();
+#define ATTRIBUTE_GETTER_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight)                                            \
+    String* name()                                                               \
+    {                                                                            \
+        String* top = nameTop();                                                 \
+        if (!top->equals(String::emptyString)) {                                 \
+            String* right = nameRight();                                         \
+            if (!right->equals(String::emptyString)) {                           \
+                String* bottom = nameBottom();                                   \
+                if (!bottom->equals(String::emptyString)) {                      \
+                    String* left = nameLeft();                                   \
+                    if (!left->equals(String::emptyString)) {                    \
+                        return combineBoxString(top, right, bottom, left);       \
+                    }                                                            \
+                }                                                                \
+            }                                                                    \
+        }                                                                        \
+        return String::emptyString;                                              \
+    }
+
+    FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(ATTRIBUTE_GETTER_FOURSIDE)
+#undef ATTRIBUTE_GETTER_FOURSIDE
+
+#define ATTRIBUTE_SETTER_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight)                                            \
+    void set##name(String* value)                                                      \
+    {                                                                                  \
+        std::vector<String*, gc_allocator<String*> > tokens;                           \
+        DOMTokenList::tokenize(&tokens, value);                                        \
+        if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
+            size_t len = tokens.size();                                                \
+            if (len == 0) {                                                            \
+                set##nameTop(String::emptyString);                                     \
+                set##nameBottom(String::emptyString);                                  \
+                set##nameLeft(String::emptyString);                                    \
+                set##nameRight(String::emptyString);                                   \
+            } else if (len == 1) {                                                     \
+                set##nameTop(tokens[0]);                                               \
+                set##nameBottom(tokens[0]);                                            \
+                set##nameLeft(tokens[0]);                                              \
+                set##nameRight(tokens[0]);                                             \
+            } else if (len == 2) {                                                     \
+                set##nameTop(tokens[0]);                                               \
+                set##nameBottom(tokens[0]);                                            \
+                set##nameLeft(tokens[1]);                                              \
+                set##nameRight(tokens[1]);                                             \
+            } else if (len == 3) {                                                     \
+                set##nameTop(tokens[0]);                                               \
+                set##nameLeft(tokens[1]);                                              \
+                set##nameRight(tokens[1]);                                             \
+                set##nameBottom(tokens[2]);                                            \
+            } else if (len == 4) {                                                     \
+                set##nameTop(tokens[0]);                                               \
+                set##nameRight(tokens[1]);                                             \
+                set##nameBottom(tokens[2]);                                            \
+                set##nameLeft(tokens[3]);                                              \
+            }                                                                          \
+        }                                                                              \
+    }
+
+    FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(ATTRIBUTE_SETTER_FOURSIDE)
+#undef ATTRIBUTE_SETTER_FOURSIDE
+
     String* Border();
     String* BorderTop();
     String* BorderRight();
     String* BorderBottom();
     String* BorderLeft();
-    String* BorderStyle();
-    String* BorderColor();
-    String* BorderWidth();
-    void setMargin(String* value);
     void setBorder(String* value);
     void setBorderTop(String* value);
     void setBorderRight(String* value);
     void setBorderBottom(String* value);
     void setBorderLeft(String* value);
-    void setBorderWidth(String* value);
-    void setBorderStyle(String* value);
-    void setBorderColor(String* value);
 
     String* BackgroundRepeat();
     void setBackgroundRepeat(String* value);
 
     String* Background();
     void setBackground(String* value);
-
-    String* Padding();
-    void setPadding(String* value);
 
     static String* combineBoxString(String* t, String* r, String* b, String* l)
     {

@@ -200,21 +200,33 @@ public:
         return String::emptyString;
     }
 
+    static bool assureUrl(const char* str)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)str);
+        if (parser->consumeString()) {
+            String* name = parser->parsedString();
+            if (name->toLower()->equals("url") && parser->consumeIfNext('(')) {
+
+                return parser->consumeUrl() && parser->isEnd();
+            }
+        }
+        return false;
+    }
+
     static bool assureUrl(std::vector<String*, gc_allocator<String*> >* tokens, unsigned start, unsigned end)
     {
         String* str = String::emptyString;
         for (unsigned i = start; i < end; i++) {
             str = str->concat(tokens->at(i));
         }
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)str->utf8Data());
-        if (parser->consumeString()) {
-            String* name = parser->parsedString();
-            if (name->toLower()->equals("url") && parser->consumeIfNext('(')) {
+        return CSSPropertyParser::assureUrl(str->utf8Data());
+    }
 
-                return parser->consumeUrl();
-            }
-        }
-        return false;
+    static bool assureUrlOrNone(const char* token)
+    {
+        if (strcmp(token, "none") == 0)
+            return true;
+        return CSSPropertyParser::assureUrl(token);
     }
 
     static bool assureLengthOrPercent(const char* token, bool allowNegative)
@@ -246,6 +258,14 @@ public:
             return false;
         }
         return true;
+    }
+
+    static bool assureLengthOrPercentOrAuto(const char* token, bool allowNegative)
+    {
+        // <length> | <percentage> | auto
+        if (assureLengthOrPercent(token, allowNegative) || strcmp(token, "auto") == 0)
+            return true;
+        return false;
     }
 
     static bool assureLengthOrPercentList(const char* token, bool allowNegative, int minSize, int maxSize)
