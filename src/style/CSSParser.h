@@ -485,6 +485,7 @@ public:
                 bool isPercent = false;
                 for (int i = 0; i < numcnt; i++) {
                     bool hasPoint = false;
+                    parser->consumeWhitespaces();
                     if (!parser->consumeNumber(&hasPoint))
                         return false;
 
@@ -497,6 +498,7 @@ public:
                     if (i < 3 && !isPercent && hasPoint)
                         return false;
 
+                    parser->consumeWhitespaces();
                     if (i == numcnt - 1)
                         parser->consumeIfNext(')');
                     else
