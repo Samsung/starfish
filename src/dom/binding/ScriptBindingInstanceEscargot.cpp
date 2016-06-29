@@ -1450,7 +1450,8 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
                 if (node_v->isElement() && node_v->asElement()->isHTMLElement() && node_v->asElement()->asHTMLElement()->isHTMLBodyElement()) {
                     HTMLBodyElement* body = nd->asDocument()->bodyElement();
                     HTMLHtmlElement* html_root = nd->asDocument()->rootElement();
-                    html_root->removeChild(body);
+                    if (body)
+                        html_root->removeChild(body);
                     html_root->appendChild(node_v);
                 } else {
                     THROW_DOM_EXCEPTION(instance, DOMException::HIERARCHY_REQUEST_ERR);
