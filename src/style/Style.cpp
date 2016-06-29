@@ -1901,34 +1901,34 @@ String* CSSStyleValuePair::toString()
     }
     case FontWeight: {
         switch (fontWeightValue()) {
-            case FontWeightValue::NormalFontWeightValue:
-                return String::fromUTF8("normal");
-            case FontWeightValue::BoldFontWeightValue:
-                return String::fromUTF8("bold");
-            case FontWeightValue::BolderFontWeightValue:
-                return String::fromUTF8("bolder");
-            case FontWeightValue::LighterFontWeightValue:
-                return String::fromUTF8("lighter");
-            case FontWeightValue::OneHundredFontWeightValue:
-                return String::fromUTF8("100");
-            case FontWeightValue::TwoHundredsFontWeightValue:
-                return String::fromUTF8("200");
-            case FontWeightValue::ThreeHundredsFontWeightValue:
-                return String::fromUTF8("300");
-            case FontWeightValue::FourHundredsFontWeightValue:
-                return String::fromUTF8("400");
-            case FontWeightValue::FiveHundredsFontWeightValue:
-                return String::fromUTF8("500");
-            case FontWeightValue::SixHundredsFontWeightValue:
-                return String::fromUTF8("600");
-            case FontWeightValue::SevenHundredsFontWeightValue:
-                return String::fromUTF8("700");
-            case FontWeightValue::EightHundredsFontWeightValue:
-                return String::fromUTF8("800");
-            case FontWeightValue::NineHundredsFontWeightValue:
-                return String::fromUTF8("900");
-            default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        case FontWeightValue::NormalFontWeightValue:
+            return String::fromUTF8("normal");
+        case FontWeightValue::BoldFontWeightValue:
+            return String::fromUTF8("bold");
+        case FontWeightValue::BolderFontWeightValue:
+            return String::fromUTF8("bolder");
+        case FontWeightValue::LighterFontWeightValue:
+            return String::fromUTF8("lighter");
+        case FontWeightValue::OneHundredFontWeightValue:
+            return String::fromUTF8("100");
+        case FontWeightValue::TwoHundredsFontWeightValue:
+            return String::fromUTF8("200");
+        case FontWeightValue::ThreeHundredsFontWeightValue:
+            return String::fromUTF8("300");
+        case FontWeightValue::FourHundredsFontWeightValue:
+            return String::fromUTF8("400");
+        case FontWeightValue::FiveHundredsFontWeightValue:
+            return String::fromUTF8("500");
+        case FontWeightValue::SixHundredsFontWeightValue:
+            return String::fromUTF8("600");
+        case FontWeightValue::SevenHundredsFontWeightValue:
+            return String::fromUTF8("700");
+        case FontWeightValue::EightHundredsFontWeightValue:
+            return String::fromUTF8("800");
+        case FontWeightValue::NineHundredsFontWeightValue:
+            return String::fromUTF8("900");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
     }
