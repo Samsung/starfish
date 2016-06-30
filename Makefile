@@ -613,6 +613,10 @@ regression_test_blink_fast_dom:
 	./tool/reftest/reftest.sh tool/reftest/blink_fast_dom.res true
 regression_test_blink_fast_html:
 	./tool/reftest/reftest.sh tool/reftest/blink_fast_html.res true
+regression_test_blink_fast_etc:
+	./tool/reftest/reftest.sh blink_fast_etc true
+regression_test_blink_fast_etc_capture:
+	./tool/reftest/reftest.sh blink_fast_etc capture
 regression_test_gecko_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/gecko_dom_conformance_test.res true
 regression_test_webkit_dom_conformance_test:
@@ -671,6 +675,7 @@ regression_test:
 	make regression_test_blink_dom_conformance_test
 	make regression_test_blink_fast_dom
 	make regression_test_blink_fast_html
+	make regression_test_blink_fast_etc
 	make regression_test_gecko_dom_conformance_test
 	make regression_test_webkit_dom_conformance_test
 	make regression_test_webkit_fast_dom
