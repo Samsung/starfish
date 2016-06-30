@@ -280,11 +280,6 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::VerticalAlign;
             }
             break;
-        case 'l':
-            if (memcmp(data, "letter-spacing", 14) == 0) {
-                return CSSStyleKind::LetterSpacing;
-            }
-            break;
         case 'p':
             if (memcmp(data, "padding-bottom", 14) == 0) {
                 return CSSStyleKind::PaddingBottom;
@@ -655,11 +650,6 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'v':
             if (memcmp(data, "verticalAlign", 13) == 0) {
                 return CSSStyleKind::VerticalAlign;
-            }
-            break;
-        case 'l':
-            if (memcmp(data, "letterSpacing", 13) == 0) {
-                return CSSStyleKind::LetterSpacing;
             }
             break;
         case 'p':

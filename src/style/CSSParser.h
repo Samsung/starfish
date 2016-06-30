@@ -140,7 +140,7 @@ public:
 
     bool consumeWhitespaces()
     {
-        while (*m_curPos == ' ' && m_curPos < m_endPos) {
+        while (String::isSpaceOrNewline(*m_curPos) && m_curPos < m_endPos) {
             m_curPos++;
         }
         return true;
@@ -273,6 +273,7 @@ public:
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
         int cnt = 0;
         do {
+            parser->consumeWhitespaces();
             if (!parser->consumeNumber())
                 return false;
             float num = parser->parsedNumber();
@@ -297,6 +298,7 @@ public:
                     return false;
             }
             cnt++;
+            parser->consumeWhitespaces();
         } while (parser->consumeIfNext(','));
         return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
     }
@@ -361,6 +363,7 @@ public:
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
         int cnt = 0;
         do {
+            parser->consumeWhitespaces();
             if (!parser->consumeNumber())
                 return false;
             float num = parser->parsedNumber();
@@ -381,6 +384,7 @@ public:
                 else
                     return false;
             }
+            parser->consumeWhitespaces();
         } while (parser->consumeIfNext(','));
         return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
     }
@@ -423,11 +427,13 @@ public:
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
         int cnt = 0;
         do {
+            parser->consumeWhitespaces();
             if (!parser->consumeNumber())
                 return false;
             if (!allowNegative && parser->parsedNumber() < 0)
                 return false;
             cnt++;
+            parser->consumeWhitespaces();
         } while (parser->consumeIfNext(','));
         return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
     }
@@ -442,11 +448,9 @@ public:
         return parser->isEnd();
     }
 
-    static bool assureColor(const char* token, size_t num = 1)
+    static bool assureColor(const char* token)
     {
-        if (num == 1 && strcmp("transparent", token) == 0) {
-            return true;
-        } else if (num == 1 && strcmp("currentcolor", token) == 0) {
+        if (strcmp("currentcolor", token) == 0) {
             return true;
         } else if (token[0] == '#') {
             if (!(strlen(token) == 9 || strlen(token) == 7 || strlen(token) == 4)) {
@@ -462,7 +466,7 @@ public:
             return true;
         }
 #define PARSE_COLOR(name, value)        \
-    else if (num == 1 && strcmp(#name, token) == 0) \
+    else if (strcmp(#name, token) == 0) \
     {                                   \
         return true;                    \
     }
@@ -532,20 +536,6 @@ public:
         if (strcmp(token, "none") == 0 || strcmp(token, "solid") == 0)
             return true;
         return false;
-    }
-
-    static char* getNextSingleValue(char* str)
-    {
-        char* next = NULL;
-        while ((next = strchr(str, ' '))) {
-            if (next == str) {
-                str++;
-                continue;
-            }
-            *next = '\0';
-            return str;
-        }
-        return str;
     }
 
     bool findNextValueKind(char separator, CSSStyleValuePair::ValueKind* kind)

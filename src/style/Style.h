@@ -202,7 +202,6 @@ enum PositionValue {
     StaticPositionValue,
     RelativePositionValue,
     AbsolutePositionValue,
-    FixedPositionValue, // TODO
 };
 
 enum VerticalAlignValue {
@@ -320,7 +319,6 @@ class CSSStyleDeclaration;
     F(Color, color, "color")                                       \
     F(Direction, direction, "direction")                           \
     F(BackgroundColor, backgroundColor, "background-color")        \
-    F(LetterSpacing, letterSpacing, "letter-spacing")              \
     F(LineHeight, lineHeight, "line-height")                       \
     F(PaddingTop, paddingTop, "padding-top")                       \
     F(PaddingRight, paddingRight, "padding-right")                 \
@@ -500,7 +498,7 @@ public:
         // http://www.w3.org/TR/CSS21/visuren.html#propdef-display
         Display, // <inline> | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit
         // http://www.w3.org/TR/CSS21/visuren.html#choose-position
-        Position, // <static> | relative | absolute | fixed | inherit
+        Position, // <static> | relative | absolute | inherit
         // https://www.w3.org/TR/CSS21/visudet.html#the-width-property
         Width, // length | percentage | <auto> | inherit
         // https://www.w3.org/TR/CSS21/visudet.html#the-height-property
@@ -525,8 +523,6 @@ public:
         Transform, // none | <transform-function>+
         // https://www.w3.org/TR/css3-transforms/#transform-origin-property
         TransformOrigin, // [ left | center | right | top | bottom | <percentage> | <length> ] | [ left | center | right | <percentage> | <length> ] [ top | center | bottom | <percentage> | <length> ] <length>? | [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>? // Initial: 50% 50%
-        // https://www.w3.org/TR/CSS2/text.html#propdef-letter-spacing
-        LetterSpacing, //  normal | length | inherit // Initial -> normal
         // https://www.w3.org/TR/CSS21/visuren.html#propdef-direction
         Direction, // <ltr> | rtl | inherit
         // https://www.w3.org/TR/2011/REC-CSS2-20110607/colors.html#background-properties
@@ -610,7 +606,6 @@ public:
         Percentage,
         Auto,
         None,
-        EmptyValue,
         Number, // real number values - https://www.w3.org/TR/CSS21/syndata.html#value-def-number
         Int32,
         Angle, //
@@ -623,8 +618,6 @@ public:
         VerticalAlignValueKind,
         TextAlignValueKind,
         DirectionValueKind,
-
-        Transparent,
 
         ValueListKind,
 
@@ -1014,7 +1007,6 @@ public:
     F(Color, "color")                           \
     F(BackgroundColor, "background-color")      \
     F(BackgroundSize, "background-size")        \
-    F(LetterSpacing, "letter-spacing")          \
     F(LineHeight, "line-height")                \
     F(MarginTop, "margin-top")                  \
     F(MarginRight, "margin-right")              \
@@ -1175,6 +1167,8 @@ public:
 
     void notifyNeedsStyleRecalc();
 
+    void tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src);
+
     bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
 
 #define CHECK_INPUT_ERROR(name, nameCSSCase) \
@@ -1230,7 +1224,7 @@ public:
             return;                                                                    \
         }                                                                              \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
-        DOMTokenList::tokenize(&tokens, value);                                        \
+        tokenizeCSSValue(&tokens, value);                                              \
         if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
             for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
                 if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
@@ -1278,7 +1272,7 @@ public:
     void set##name(String* value)                                                      \
     {                                                                                  \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
-        DOMTokenList::tokenize(&tokens, value);                                        \
+        tokenizeCSSValue(&tokens, value);                                              \
         if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
             size_t len = tokens.size();                                                \
             if (len == 0) {                                                            \

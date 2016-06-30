@@ -152,7 +152,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle, Node* current
     }
     // 9.7 Relationships between 'display', 'position', and 'float'
     m_originalDisplay = m_display;
-    if (m_originalDisplay != DisplayValue::NoneDisplayValue && (position() == AbsolutePositionValue || position() == FixedPositionValue)) {
+    if (m_originalDisplay != DisplayValue::NoneDisplayValue && position() == AbsolutePositionValue) {
         m_display = DisplayValue::BlockDisplayValue;
     }
 

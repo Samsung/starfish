@@ -148,7 +148,8 @@
     F(violet  , 0xee82ee) \
     F(wheat   , 0xf5deb3) \
     F(whitesmoke  , 0xf5f5f5) \
-    F(yellowgreen , 0x9acd32)
+    F(yellowgreen , 0x9acd32) \
+    F(transparent , 0x000000)
 
 
 #endif
