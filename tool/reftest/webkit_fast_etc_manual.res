@@ -5,3 +5,6 @@ test/reftest/vendor/webkit/fast/images/hidpi-image-position-on-device-pixels.htm
 test/reftest/vendor/webkit/fast/inline/inline-box-append-child-crash.html
 test/reftest/vendor/webkit/fast/inline/percentage-margins.html
 test/reftest/vendor/webkit/fast/layers/remove-only-this-layer-update.html
+test/reftest/vendor/webkit/fast/layers/wrong-clipping-semi-transparent-layer-on-subpixel-position.html
+test/reftest/vendor/webkit/fast/parser/eightdigithexentity.html
+test/reftest/vendor/webkit/fast/parser/nsup-entity.html
