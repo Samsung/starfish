@@ -862,62 +862,7 @@ public:
     static BorderImageRepeatValue initialBorderImageRepeat() { return BorderImageRepeatValue::StretchValue; }
 
     void loadResources(Node* consumer, ComputedStyle* prevComputedStyleValueForReferenceLoadedResources = nullptr);
-    void arrangeStyleValues(ComputedStyle* parentStyle)
-    {
-        // 9.7 Relationships between 'display', 'position', and 'float'
-        m_originalDisplay = m_display;
-        if (m_originalDisplay != DisplayValue::NoneDisplayValue && (position() == AbsolutePositionValue || position() == FixedPositionValue)) {
-            m_display = DisplayValue::BlockDisplayValue;
-        }
-
-        if (lineHeight().isPercent()) {
-            if (lineHeight().percent() == -100) {
-            } else {
-                // The computed value of the property is this percentage multiplied by the element's computed font size. Negative values are illegal.
-                setLineHeight(Length(Length::Fixed, lineHeight().percent() * fontSize().fixed()));
-            }
-        }
-
-        // Convert all non-computed Lengths to computed Length
-        STARFISH_ASSERT(m_inheritedStyles.m_fontSize.isFixed());
-        Length baseFontSize = fontSize();
-        m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(baseFontSize, font());
-        m_inheritedStyles.m_lineHeight.changeToFixedIfNeeded(baseFontSize, font());
-        m_width.changeToFixedIfNeeded(baseFontSize, font());
-        m_height.changeToFixedIfNeeded(baseFontSize, font());
-        m_verticalAlignLength.changeToFixedIfNeeded(baseFontSize, font());
-        if (m_transforms) {
-            size_t sz = m_transforms->size();
-            for (size_t i = 0; i < sz; i++) {
-                StyleTransformData std = m_transforms->at(i);
-                if (std.type() != StyleTransformData::OperationType::Translate)
-                    continue;
-                std.changeToFixedIfNeeded(baseFontSize, font());
-            }
-        }
-
-        if (m_surround) {
-            m_surround->margin.checkComputed(baseFontSize, font());
-
-            m_surround->padding.checkComputed(baseFontSize, font());
-
-            m_surround->offset.checkComputed(baseFontSize, font());
-
-            m_surround->border.checkComputed(baseFontSize, font());
-
-            if (hasBorderStyle() && !hasBorderColor()) {
-                // If an element's border color is not specified with a border property,
-                // user agents must use the value of the element's 'color' property as the computed value for the border color.
-                setBorderTopColor(m_inheritedStyles.m_color);
-                setBorderRightColor(m_inheritedStyles.m_color);
-                setBorderBottomColor(m_inheritedStyles.m_color);
-                setBorderLeftColor(m_inheritedStyles.m_color);
-            }
-        }
-
-        if (m_background)
-            m_background->checkComputed(baseFontSize, font());
-    }
+    void arrangeStyleValues(ComputedStyle* parentStyle, Node* current = nullptr);
 
     void clearTransforms()
     {

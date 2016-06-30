@@ -143,7 +143,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
                 ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
                 newStyle->setDisplay(DisplayValue::BlockDisplayValue);
                 newStyle->loadResources(currentNode);
-                newStyle->arrangeStyleValues(frameBlockBox->style());
+                newStyle->arrangeStyleValues(frameBlockBox->style(), currentNode);
 
                 FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
                 blockBox->appendChild(currentFrame);
@@ -164,7 +164,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
             ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
             newStyle->setDisplay(DisplayValue::BlockDisplayValue);
             newStyle->loadResources(currentNode);
-            newStyle->arrangeStyleValues(frameBlockBox->style());
+            newStyle->arrangeStyleValues(frameBlockBox->style(), currentNode);
 
             FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
             for (unsigned i = 0; i < backup.size(); i++) {
@@ -326,7 +326,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
                 ComputedStyle* newStyle = new ComputedStyle(ctx.currentBlockContainer()->style());
                 newStyle->setDisplay(DisplayValue::BlockDisplayValue);
                 newStyle->loadResources(current);
-                newStyle->arrangeStyleValues(ctx.currentBlockContainer()->style());
+                newStyle->arrangeStyleValues(ctx.currentBlockContainer()->style(), current);
 
                 FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
 
@@ -349,10 +349,10 @@ void FrameTreeBuilder::buildFrameTree(Document* document)
 
     Node* n = document->rootElement();
 
-    // FIXME display of html element always considered as "block"
-    ASSERT(n->style()->display() == DisplayValue::BlockDisplayValue);
-    FrameTreeBuilderContext ctx(document->frame()->asFrameBlockBox());
-    buildTree(n, ctx);
+    if (n->style()->display() != DisplayValue::NoneDisplayValue) {
+        FrameTreeBuilderContext ctx(document->frame()->asFrameBlockBox());
+        buildTree(n, ctx);
+    }
 }
 #ifdef STARFISH_ENABLE_TEST
 void dump(Frame* frm, unsigned depth)
