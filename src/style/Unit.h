@@ -219,7 +219,7 @@ public:
         if (m_a == 0) {
             asprintf(&buf, "rgb(%d, %d, %d)", m_r, m_g, m_b);
         } else {
-            asprintf(&buf, "rgb(%d, %d, %d, %d)", m_r, m_g, m_b, m_a);
+            asprintf(&buf, "rgba(%d, %d, %d, %g)", m_r, m_g, m_b, (float)m_a);
         }
 
         String* toStr = String::createASCIIString(buf);
