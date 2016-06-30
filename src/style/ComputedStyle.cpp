@@ -334,11 +334,11 @@ inline double deg2rad(float degree)
     return degree * 3.14159265358979323846 / 180;
 }
 
-SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight)
+SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight, bool isTransformable)
 {
     SkMatrix matrix;
     matrix.reset();
-    if (!m_transforms) {
+    if (!m_transforms || !isTransformable) {
         return matrix;
     }
     for (size_t i = 0; i < m_transforms->size(); i ++) {

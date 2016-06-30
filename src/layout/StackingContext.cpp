@@ -181,7 +181,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
             canvas->beginOpacityLayer(ownerStyle->opacity());
         }
 
-        m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height());
+        m_matrix = m_owner->style()->transformsToMatrix(m_owner->width(), m_owner->height(), m_owner->isFrameBlockBox() || m_owner->isFrameReplaced());
 
         if (!m_matrix.isIdentity()) {
             /* printf("matrix [%f %f %f][%f %f %f][%f %f %f]\n"

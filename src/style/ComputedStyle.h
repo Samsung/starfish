@@ -179,7 +179,7 @@ public:
 
     StyleTransformDataGroup* transforms(Frame* frame);
 
-    SkMatrix transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight);
+    SkMatrix transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight, bool isTransformable);
     void setTransformIfNeeded()
     {
         if (m_transforms == NULL) {
