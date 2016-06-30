@@ -81,6 +81,9 @@ public:
 
         String* newName = PathResolver::matchLocation(String::fromUTF8(fileName));
 
+        if (!newName)
+            return false;
+
         if (open_cb)
             m_fp = open_cb(newName->utf8Data());
         else
@@ -129,8 +132,9 @@ String* PathResolver::matchLocation(String* filePath)
     if (!matchLocation_cb)
         return filePath;
 
-    // FIXME change type from const char* into char*
     const char* ret = matchLocation_cb(filePath->utf8Data());
+    if (!ret)
+        return nullptr;
     String* r = String::fromUTF8(ret);
     free((char*)ret);
     return r;

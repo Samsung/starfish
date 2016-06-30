@@ -1044,6 +1044,12 @@ void Node::dumpStyle()
     else
         printf("direction: rtl, ");
 
+    // unicode-bidi
+    if (m_style->unicodeBidi() == UnicodeBidiValue::NormalUnicodeBidiValue)
+        printf("unicode-bidi: normal, ");
+    else
+        printf("unicode-bidi: embed, ");
+
     // font-size
     printf("font-size: %.1f, ", m_style->fontSize().fixed());
 

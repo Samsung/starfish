@@ -1300,8 +1300,10 @@ void CSSStyleValuePair::setValueUnicodeBidi(std::vector<String*, gc_allocator<St
 
     if (VALUE_IS_STRING("normal")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiKind;
     } else if (VALUE_IS_STRING("embed")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::EmbedUnicodeBidiValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiKind;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

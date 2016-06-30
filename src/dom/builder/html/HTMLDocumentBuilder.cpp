@@ -20,8 +20,9 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        m_htmlSource = String::createASCIIString("Cannot open page ");
+        m_htmlSource = String::createASCIIString("<div style='text-align:center;margin-top:50px;'>Cannot open page ");
         m_htmlSource = m_htmlSource->concat(m_resource->url().urlString());
+        m_htmlSource = m_htmlSource->concat(String::createASCIIString("</div>"));
         load();
     }
 

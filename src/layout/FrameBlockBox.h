@@ -110,8 +110,9 @@ protected:
 };
 
 class InlineNonReplacedBox : public InlineBox {
-    friend class FrameBlockBox;
-
+    friend FrameBlockBox;
+    friend void splitInlineBoxesAndMarkDirectionForResolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes);
+    friend void reassignLeftRightMBPOfInlineNonReplacedBox(LineFormattingContext& ctx, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes);
 public:
     InlineNonReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameInline* origin)
         : InlineBox(node, style, parent)
@@ -172,6 +173,21 @@ public:
     LayoutUnit decender()
     {
         return m_descender;
+    }
+
+    void setAscender(const LayoutUnit& a)
+    {
+        m_ascender = a;
+    }
+
+    void setDecender(const LayoutUnit& a)
+    {
+        m_descender = a;
+    }
+
+    FrameInline* origin()
+    {
+        return m_origin;
     }
 
     std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes()
@@ -439,6 +455,20 @@ protected:
     LayoutRect m_visibleRect;
 };
 
+struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {
+    DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine()
+    {
+        m_isFirstEdgeProcessed = false;
+    }
+    LayoutBoxSurroundData m_margin;
+    LayoutBoxSurroundData m_border;
+    LayoutBoxSurroundData m_padding;
+    LayoutBoxSurroundData m_orgMargin;
+    LayoutBoxSurroundData m_orgBorder;
+    LayoutBoxSurroundData m_orgPadding;
+    bool m_isFirstEdgeProcessed;
+};
+
 class LineFormattingContext {
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxWidth)
@@ -491,7 +521,11 @@ public:
     LayoutContext& m_layoutContext;
 
     std::set<size_t> m_breakedLinesSet;
+    // we dont need gc_allocater here
+    // frame tree has strong reference already
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
+    std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
+    std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;
 };
 }
 
