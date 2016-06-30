@@ -1,3 +1,6 @@
+test/reftest/vendor/webkit/fast/inline/layout-after-inserting-nested-br.html
+test/reftest/vendor/webkit/fast/layers/layer-content-visibility-change.html
+test/reftest/vendor/webkit/fast/layers/visible-layer-with-hidden-parent.html
 test/reftest/vendor/webkit/fast/animation/request-animation-frame-callback-id.html
 test/reftest/vendor/webkit/fast/backgrounds/background-position-rounding.html
 test/reftest/vendor/webkit/fast/backgrounds/obscured-background-child-style-change.html

@@ -57,6 +57,7 @@ int main(int argc, char *argv[])
             flag |= StarFish::enableRegressionTest;
         } else if (strstr(argv[i], "--screen-shot=") == argv[i]) {
             screenShot = argv[i] + strlen("--screen-shot=");
+            setenv("SCREEN_SHOT_FILE", screenShot.c_str(), 1);
         } else if (strstr(argv[i], "--screen-shot-width=") == argv[i]) {
             setenv("SCREEN_SHOT_WIDTH", argv[i] + strlen("--screen-shot-width="), 1);
         } else if (strstr(argv[i], "--screen-shot-height=") == argv[i]) {

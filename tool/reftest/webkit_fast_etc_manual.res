@@ -4,3 +4,4 @@ test/reftest/vendor/webkit/fast/events/dispatchEvent-crash.html
 test/reftest/vendor/webkit/fast/images/hidpi-image-position-on-device-pixels.html
 test/reftest/vendor/webkit/fast/inline/inline-box-append-child-crash.html
 test/reftest/vendor/webkit/fast/inline/percentage-margins.html
+test/reftest/vendor/webkit/fast/layers/remove-only-this-layer-update.html

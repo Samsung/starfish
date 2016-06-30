@@ -78,10 +78,9 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
             char buff[1024];
             getcwd(buff, 1024);
-            std::string path(buff);
-            path = path + "/" + escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toString()->utf8Data();
-            wnd->screenShot(path);
-            callScriptFunction(instance->currentExecutionContext()->readArgument(1), { }, 0, instance->globalObject());
+            String* path = String::fromUTF8(buff)->concat(String::fromUTF8("/"))->concat(String::fromUTF8(getenv("SCREEN_SHOT_FILE")));
+            wnd->screenShot(path->utf8Data());
+            callScriptFunction(instance->currentExecutionContext()->readArgument(0), { }, 0, instance->globalObject());
         }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("screenShotRelativePath"), 0, false);
