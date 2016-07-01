@@ -585,9 +585,6 @@ wpt_syntax_checker:
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css-transforms-1.res"
 	@echo "[wpt_syntax_checker] COMPLETE.."
 
-regression_test_demo:
-	./tool/reftest/css_test.sh demo true
-
 regression_test_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/dom_conformance_test.res true
 
@@ -692,6 +689,6 @@ regression_test:
 	make internal_test
 
 tidy:
-	./tool/tidy/check-webkit-style `find src/ -name "*.cpp" -o -name "*.h"`> error_report 2>& 1
+	./test/tool/tidy/check-webkit-style `find src/ -name "*.cpp" -o -name "*.h"`> error_report 2>& 1
 
 .PHONY: clean
