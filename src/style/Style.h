@@ -957,9 +957,9 @@ public:
         if (kind == CSSStyleValuePair::ValueKind::Auto)
             return String::fromUTF8("auto");
         else if (kind == CSSStyleValuePair::ValueKind::Inherit)
-            return String::fromUTF8("inherit");
+            return String::inheritString;
         else if (kind == CSSStyleValuePair::ValueKind::Initial)
-            return String::fromUTF8("initial");
+            return String::initialString;
         else if (kind == CSSStyleValuePair::ValueKind::Length)
             return data.m_length.toString();
         else if (kind == CSSStyleValuePair::ValueKind::Percentage)
@@ -1326,7 +1326,7 @@ public:
 
     static String* combineBoxString(String* t, String* r, String* b, String* l)
     {
-        String* space = String::fromUTF8(" ");
+        String* space = String::spaceString;
         if (!r->equals(l))
             return t->concat(space)->concat(r)->concat(space)->concat(b)->concat(space)->concat(l);
         else if (!t->equals(b))
