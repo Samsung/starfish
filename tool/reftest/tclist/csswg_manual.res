@@ -1,5 +1,4 @@
 test/reftest/csswg-test/css1_converted/c526-font-sz-000.htm
-test/reftest/csswg-test/css21_converted/borders/border-color-012.htm
 test/reftest/csswg-test/css21_converted/colors/bidi-color-001.htm
 test/reftest/csswg-test/css21_converted/fonts/font-systemfont-rule-004.htm
 test/reftest/csswg-test/css21_converted/fonts/font-weight-010.htm

@@ -271,6 +271,7 @@ test/reftest/csswg-test/css21_converted/borders/border-color-008.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-009.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-010.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-011.htm
+test/reftest/csswg-test/css21_converted/borders/border-color-012.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-applies-to-008.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-applies-to-009.htm
 test/reftest/csswg-test/css21_converted/borders/border-color-applies-to-012.htm
