@@ -62,6 +62,28 @@ public:
         m_value = f;
     }
 
+    CSSLength(String* unit, float f)
+    {
+        if (unit->length() == 0 || unit->equals("px"))
+            m_kind = PX;
+        else if (unit->equals("em"))
+            m_kind = EM;
+        else if (unit->equals("ex"))
+            m_kind = EX;
+        else if (unit->equals("in"))
+            m_kind = IN;
+        else if (unit->equals("cm"))
+            m_kind = CM;
+        else if (unit->equals("mm"))
+            m_kind = MM;
+        else if (unit->equals("pt"))
+            m_kind = PT;
+        else if (unit->equals("pc"))
+            m_kind = PC;
+
+        m_value = f;
+    }
+
     Kind kind()
     {
         return m_kind;
@@ -1287,16 +1309,18 @@ public:
 #define ATTRIBUTE_SETTER_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight)                                            \
     void set##name(String* value)                                                      \
     {                                                                                  \
+        if (value->length() == 0) {                                                    \
+            set##nameTop(String::emptyString);                                         \
+            set##nameBottom(String::emptyString);                                      \
+            set##nameLeft(String::emptyString);                                        \
+            set##nameRight(String::emptyString);                                       \
+            return;                                                                    \
+        }                                                                              \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
         tokenizeCSSValue(&tokens, value);                                              \
         if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
             size_t len = tokens.size();                                                \
-            if (len == 0) {                                                            \
-                set##nameTop(String::emptyString);                                     \
-                set##nameBottom(String::emptyString);                                  \
-                set##nameLeft(String::emptyString);                                    \
-                set##nameRight(String::emptyString);                                   \
-            } else if (len == 1) {                                                     \
+            if (len == 1) {                                                            \
                 set##nameTop(tokens[0]);                                               \
                 set##nameBottom(tokens[0]);                                            \
                 set##nameLeft(tokens[0]);                                              \

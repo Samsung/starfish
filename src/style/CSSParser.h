@@ -245,6 +245,29 @@ public:
         return CSSPropertyParser::assureUrl(token);
     }
 
+    static float parseNumber(const char* token)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (parser->consumeNumber()) {
+            return parser->parsedNumber();
+        }
+        return 0;
+    }
+
+    static String* parseNumberAndUnit(const char* token, float* result)
+    {
+        // NOTE(example): token("10px") -> result=10.0 + return "px"
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (parser->consumeNumber()) {
+            float num = parser->parsedNumber();
+            if (parser->consumeString()) {
+                *result = num;
+                return parser->parsedString();
+            }
+        }
+        return String::emptyString;
+    }
+
     static bool assureLengthOrPercent(const char* token, bool allowNegative)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -286,6 +309,7 @@ public:
 
     static bool assureLengthOrPercentList(const char* token, bool allowNegative, int minSize, int maxSize)
     {
+        // NOTE: Allowed form - [space*][Length | Percent][space*] , ...
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
         int cnt = 0;
         do {
@@ -532,8 +556,8 @@ public:
 
     static bool assureEssential(const char* token)
     {
-        // initial || inherit || empty string
-        if (strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0 || strcmp(token, "") == 0)
+        // initial || inherit
+        if (strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0)
             return true;
         return false;
     }
