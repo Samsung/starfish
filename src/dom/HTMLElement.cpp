@@ -37,6 +37,7 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
             m_hasDirAttribute = true;
         if (attributeRemoved)
             m_hasDirAttribute = false;
+        setNeedsStyleRecalc();
         String* orgValue = value;
         value = value->toLower();
         if (value->equals("")) {

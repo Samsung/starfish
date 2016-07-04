@@ -94,7 +94,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
             char buff[1024];
             getcwd(buff, 1024);
-            String* path = String::fromUTF8(buff)->concat(String::fromUTF8("/"))->concat(String::fromUTF8(getenv("SCREEN_SHOT_FILE")));
+            String* path = String::fromUTF8(buff)->concat(String::fromUTF8("/"))->concat(String::fromUTF8(getenv("SCREEN_SHOT_FILE") ? getenv("SCREEN_SHOT_FILE") : ""));
             wnd->screenShot(path->utf8Data());
             callScriptFunction(instance->currentExecutionContext()->readArgument(0), { }, 0, instance->globalObject());
         }

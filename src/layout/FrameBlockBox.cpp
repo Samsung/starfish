@@ -76,25 +76,25 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     STARFISH_ASSERT(style->width().isPercent());
                     setContentWidth(parentContentWidth * style->width().percent());
                 }
+            }
 
-                if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
-                    LayoutUnit remain = parentContentWidth;
-                    remain -= contentWidth();
-                    remain -= borderWidth();
-                    remain -= paddingWidth();
-                    if (remain > 0) {
-                        setMarginLeft(remain / 2);
-                        setMarginRight(remain / 2);
-                    }
+            if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
+                LayoutUnit remain = parentContentWidth;
+                remain -= contentWidth();
+                remain -= borderWidth();
+                remain -= paddingWidth();
+                if (remain > 0) {
+                    setMarginLeft(remain / 2);
+                    setMarginRight(remain / 2);
                 }
             }
         } else {
-            LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
-            computeBorderMarginPadding(parentContentWidth);
+            computeBorderMarginPadding(ctx.parentContentWidth(this));
 
             STARFISH_ASSERT(node() != nullptr);
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
+            DirectionValue direction = ctx.blockContainer(this)->style()->direction();
             auto absLoc = parent->absolutePoint(cb);
             LayoutUnit absX = absLoc.x() - cb->borderLeft();
             auto setAbsX = [&](LayoutUnit x)
@@ -102,12 +102,6 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 setX(x - absX);
             };
 
-            auto getPreferredWidth = [&](LayoutUnit parentWidth) -> LayoutUnit {
-                STARFISH_ASSERT(style()->width().isAuto());
-                ComputePreferredWidthContext p(ctx, parentWidth);
-                computePreferredWidth(p);
-                return p.result();
-            };
 
             // 10.3.7 Absolutely positioned, non-replaced elements
             // The constraint that determines the used values for these elements is:
@@ -119,13 +113,6 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             Length marginLeft = style()->marginLeft();
             Length marginRight = style()->marginRight();
 
-            LayoutUnit parentWidthForComputePreferredWidth = parentContentWidth - paddingWidth() - borderWidth() - marginWidth();
-            if (style()->direction() == LtrDirectionValue) {
-                parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidth + ctx.blockContainer(this)->asFrameBox()->paddingLeft();
-            } else {
-                parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidth + ctx.blockContainer(this)->asFrameBox()->paddingRight();
-            }
-
             if (!marginLeft.isAuto() && !marginRight.isAuto()) {
                 if (style()->direction() == LtrDirectionValue) {
                     setMarginRight(0);
@@ -134,14 +121,62 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 }
             }
 
+            auto applyMargin = [&]()
+            {
+                if (!marginLeft.isAuto() && !marginRight.isAuto()) {
+                    if (style()->direction() == LtrDirectionValue) {
+                        moveX(FrameBox::marginLeft());
+                    } else {
+                        moveX(-FrameBox::marginRight());
+                    }
+                } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
+                    moveX(FrameBox::marginLeft());
+                } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
+                    moveX(-FrameBox::marginRight());
+                } else {
+                }
+            };
+
             Length left = style()->left();
             Length right = style()->right();
             Length width = style()->width();
 
-            LayoutUnit parentWidth = cb->contentWidth() + cb->paddingWidth();
+            LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
+
+            auto computeContentWidth = [&](bool shouldUseParentWidthForComputePreferredWidthFromOutside = false, LayoutUnit parentWidthForComputePreferredWidthFromOutside = 0)
+            {
+                if (width.isAuto()) {
+                    LayoutUnit parentWidthForComputePreferredWidth;
+                    if (shouldUseParentWidthForComputePreferredWidthFromOutside) {
+                        parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidthFromOutside;
+                    } else {
+                        parentWidthForComputePreferredWidth = containgBlockContentWidth;
+                        if (direction == LtrDirectionValue) {
+                            parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidth - absX - x();
+                        } else {
+                            parentWidthForComputePreferredWidth = x() + absX;
+                        }
+                    }
+
+                    parentWidthForComputePreferredWidth -= marginWidth() + borderWidth() + paddingWidth();
+
+                    if (parentWidthForComputePreferredWidth < 0)
+                        parentWidthForComputePreferredWidth = 0;
+
+                    ComputePreferredWidthContext p(ctx, parentWidthForComputePreferredWidth);
+                    computePreferredWidth(p);
+                    setContentWidth(p.result());
+                } else if (width.isFixed()) {
+                    setContentWidth(width.fixed());
+                } else if (width.isPercent()) {
+                    setContentWidth(containgBlockContentWidth * width.percent());
+                }
+            };
 
             if (left.isAuto() && width.isAuto() && right.isAuto()) {
                 // If all three of 'left', 'width', and 'right' are 'auto':
+                applyMargin();
+                computeContentWidth();
             } else if (!left.isAuto() && !width.isAuto() && !right.isAuto()) {
                 // If none of the three is 'auto':
                 // If both 'margin-left' and 'margin-right' are 'auto',
@@ -152,72 +187,60 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 // If the values are over-constrained, ignore the value for 'left'
                 // (in case the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
                 if (style()->direction() == DirectionValue::LtrDirectionValue) {
-                    LayoutUnit computedLeft = left.specifiedValue(parentWidth);
+                    LayoutUnit computedLeft = left.specifiedValue(containgBlockContentWidth);
                     setAbsX(computedLeft);
                 } else {
-                    LayoutUnit computedRight = right.specifiedValue(parentWidth);
-                    setAbsX(parentWidth - width.specifiedValue(parentWidth) - computedRight);
+                    LayoutUnit computedRight = right.specifiedValue(containgBlockContentWidth);
+                    setAbsX(containgBlockContentWidth - width.specifiedValue(containgBlockContentWidth) - computedRight);
                 }
+
+                applyMargin();
+                computeContentWidth();
             } else {
                 // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
                 if (left.isAuto() && width.isAuto() && !right.isAuto()) {
                     // 'left' and 'width' are 'auto' and 'right' is not 'auto', then the width is shrink-to-fit. Then solve for 'left'
-                    LayoutUnit w = getPreferredWidth(parentWidthForComputePreferredWidth);
-                    width = Length(Length::Fixed, w);
-                    setAbsX(parentWidth - right.specifiedValue(parentWidth) - w - paddingWidth() - borderWidth());
+                    applyMargin();
+                    computeContentWidth(true, containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth));
+                    setAbsX(containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth) - this->width());
                 } else if (left.isAuto() && right.isAuto() && !width.isAuto()) {
                     // 'left' and 'right' are 'auto' and 'width' is not 'auto',
                     // then if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position,
                     // otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
+                    applyMargin();
+                    computeContentWidth();
                 } else if (width.isAuto() && right.isAuto() && !left.isAuto()) {
                     // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
-                    LayoutUnit w = getPreferredWidth(parentWidthForComputePreferredWidth);
-                    width = Length(Length::Fixed, w);
-                    setAbsX(left.specifiedValue(parentWidth));
+                    setAbsX(left.specifiedValue(containgBlockContentWidth));
+                    applyMargin();
+                    computeContentWidth();
                 } else if (left.isAuto() && !width.isAuto() && !right.isAuto()) {
                     // 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
-                    LayoutUnit w = width.specifiedValue(parentWidth);
-                    setAbsX(parentWidth - right.specifiedValue(parentWidth) - w - paddingWidth() - borderWidth());
+                    applyMargin();
+                    computeContentWidth();
+                    setAbsX(containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth) - this->width());
                 } else if (width.isAuto() && !left.isAuto() && !right.isAuto()) {
                     // 'width' is 'auto', 'left' and 'right' are not 'auto', then solve for 'width'
-                    LayoutUnit l = left.specifiedValue(parentWidth);
-                    LayoutUnit r = right.specifiedValue(parentWidth);
-                    LayoutUnit w = l - r + parentWidth;
-                    w = w - paddingWidth() - borderWidth();
+                    LayoutUnit l = left.specifiedValue(containgBlockContentWidth);
+                    LayoutUnit r = right.specifiedValue(containgBlockContentWidth);
+                    LayoutUnit w = containgBlockContentWidth  - l - r - marginWidth() - paddingWidth() - borderWidth();
+                    if (w < 0)
+                        w = 0;
                     width = Length(Length::Fixed, w);
                     setAbsX(l);
+                    applyMargin();
+                    computeContentWidth();
                 } else {
                     // 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
                     STARFISH_ASSERT(right.isAuto() && !left.isAuto() && !width.isAuto());
-                    setAbsX(left.specifiedValue(parentWidth));
+                    setAbsX(left.specifiedValue(containgBlockContentWidth));
+                    applyMargin();
+                    computeContentWidth();
                 }
             }
 
-            if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                if (style()->direction() == LtrDirectionValue) {
-                    moveX(FrameBox::marginLeft());
-                } else {
-                    moveX(-FrameBox::marginRight());
-                }
-            } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-                moveX(FrameBox::marginLeft());
-            } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-                moveX(-FrameBox::marginRight());
-            } else {
-            }
-
-            if (width.isAuto()) {
-                if (m_flags.m_shouldComputePreferredWidth) {
-                    ComputePreferredWidthContext p(ctx, parentWidthForComputePreferredWidth);
-                    computePreferredWidth(p);
-                    setContentWidth(p.result());
-                } else {
-                    setContentWidth(parentWidth);
-                }
-            } else if (width.isFixed()) {
-                setContentWidth(width.fixed());
-            } else if (width.isPercent()) {
-                setContentWidth(parentWidth * width.percent());
+            if (left.isAuto() && right.isAuto() && direction == DirectionValue::RtlDirectionValue) {
+                moveX(-this->width());
             }
         }
     }
@@ -277,7 +300,6 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
         if (top.isAuto() && height.isAuto() && bottom.isAuto()) {
             // If all three of 'top', 'height', and 'bottom' are auto, set 'top' to the static position and apply rule number three below.
-            // TODO add margin-top, margin-bottom
         } else if (!top.isAuto() && !height.isAuto() && !bottom.isAuto()) {
             // If none of the three are 'auto': If both 'margin-top' and 'margin-bottom' are 'auto',
             // solve the equation under the extra constraint that the two margins get equal values.
@@ -352,12 +374,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     ctx.layoutRegisteredAbsolutePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
         for (size_t i = 0; i < frames.size(); i ++) {
             Frame* f = frames[i];
-            // FIXME
-            // Width resolved before. but,
-            // layout function order is (resolve width[setX])->(set static postion)
-            // so we should need setX again
-            // this is too ugly
-            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+            f->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             mergeVisibleRect(f->asFrameBox());
         }
     });

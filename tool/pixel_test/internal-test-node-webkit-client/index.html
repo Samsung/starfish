@@ -69,6 +69,14 @@ window.onload = function() {
         iframe.contentWindow.document.head.appendChild(style);
         iframe.contentWindow.screenShot = function(filename, cb) {
             console.log("screenShot : " + filename);
+            try {
+                var old = iframe.contentWindow.document.body.style.display
+                iframe.contentWindow.body.style.display = "none";
+                iframe.contentWindow.body.offsetWidth;
+                iframe.contentWindow.body.style.display = old;
+                iframe.contentWindow.body.offsetWidth;
+            } catch(e) { }
+
             window.setTimeout(function() { 
                 win.capturePage(function(img) {
                     // console.log(img)

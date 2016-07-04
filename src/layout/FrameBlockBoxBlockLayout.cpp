@@ -28,7 +28,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     LayoutUnit bottom = paddingBottom() + borderBottom();
     // NOTE: maxNormalFlowBottom : Maximum position after finishing layout for all children
     // normalFlowPosition : Current Position on normal flow
-    LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top, normalFlowPosition = 0;
+    LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top, normalFlowPosition = top;
     LayoutRect visibleRect(0, 0, 0, 0);
     MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() || isFrameDocument(), style()->height());
     LayoutUnit maxPositiveMarginTop, maxNegativeMarginTop;
@@ -49,39 +49,56 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     if (!child)
         marginInfo.setMargin(0, 0);
     bool hasOnlySelfCollapsing = true;
+    DirectionValue direction = style()->direction();
     while (child) {
-        // Place the child.
+        // Set initial position for resolve child width when position: absolute
+        if (!child->isNormalFlow()) {
+            if (direction == LtrDirectionValue) {
+                child->asFrameBox()->setX(paddingLeft() + borderLeft());
+            } else {
+                child->asFrameBox()->setX(width() - borderRight() - paddingRight());
+            }
+        }
+
         child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
-        if (style()->direction() == LtrDirectionValue) {
-            child->asFrameBox()->setX(paddingLeft() + borderLeft());
-        } else {
-            child->asFrameBox()->setX(contentWidth() + borderLeft() + paddingLeft() - child->asFrameBox()->width());
+        // Place the child.
+        if (child->isNormalFlow()) {
+            Length marginLeft = child->style()->marginLeft();
+            Length marginRight = child->style()->marginRight();
+            LayoutUnit mX = 0;
+            if (direction == LtrDirectionValue) {
+                if (!marginLeft.isAuto() && !marginRight.isAuto()) {
+                    mX = child->asFrameBox()->marginLeft();
+                } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
+                } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
+                    mX = child->asFrameBox()->marginLeft();
+                } else {
+                    // auto-auto
+                    mX = child->asFrameBox()->marginLeft();
+                }
+            } else {
+                if (!marginLeft.isAuto() && !marginRight.isAuto()) {
+                    mX = child->asFrameBox()->marginRight();
+                } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
+                    mX = child->asFrameBox()->marginRight();
+                } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
+                } else {
+                    // auto-auto
+                    mX = child->asFrameBox()->marginRight();
+                }
+            }
+
+            if (direction == LtrDirectionValue) {
+                child->asFrameBox()->setX(paddingLeft() + borderLeft() + mX);
+            } else {
+                child->asFrameBox()->setX(width() - child->asFrameBox()->width() - mX - borderRight() - paddingRight());
+            }
         }
 
         child->asFrameBox()->setY(normalFlowHeight + top);
 
         if (child->isNormalFlow()) {
-            Length marginLeft = child->style()->marginLeft();
-            Length marginRight = child->style()->marginRight();
-            LayoutUnit mX = 0;
-            if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                if (style()->direction() == LtrDirectionValue) {
-                    mX = child->asFrameBox()->marginLeft();
-                } else {
-                    mX = -child->asFrameBox()->marginRight();
-                }
-            } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-                mX = contentWidth() - child->asFrameBox()->width();
-                mX -= child->asFrameBox()->marginRight();
-            } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-                mX = child->asFrameBox()->marginLeft();
-            } else {
-                // auto-auto
-                mX = child->asFrameBox()->marginLeft();
-            }
-            child->asFrameBox()->moveX(mX);
-
             // Lay out the child
             child->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             LayoutUnit posTop = marginInfo.positiveMargin(), negTop = marginInfo.negativeMargin();

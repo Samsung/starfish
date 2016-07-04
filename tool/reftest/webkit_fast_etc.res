@@ -28,6 +28,7 @@ test/reftest/vendor/webkit/fast/block/margin-collapse/101.html
 test/reftest/vendor/webkit/fast/block/margin-collapse/block-inside-inline/002.html
 test/reftest/vendor/webkit/fast/block/margin-collapse/negative-margins.html
 test/reftest/vendor/webkit/fast/block/merge-anonymous-block-remove-child-crash.html
+test/reftest/vendor/webkit/fast/block/positioned-block-auto-width-movement.html
 test/reftest/vendor/webkit/fast/block/positioning/003.html
 test/reftest/vendor/webkit/fast/block/positioning/004.html
 test/reftest/vendor/webkit/fast/block/positioning/005.html
@@ -198,7 +199,6 @@ test/reftest/vendor/webkit/fast/selectors/175a.html
 test/reftest/vendor/webkit/fast/selectors/175b.html
 test/reftest/vendor/webkit/fast/selectors/175c.html
 test/reftest/vendor/webkit/fast/sub-pixel/snap-negative-location.html
-test/reftest/vendor/webkit/fast/text/container-align-with-inlines.html
 test/reftest/vendor/webkit/fast/text/crash-complex-unknown-font.html
 test/reftest/vendor/webkit/fast/text/dilation-save-restore.html
 test/reftest/vendor/webkit/fast/text/international/harfbuzz-buffer-overrun.html

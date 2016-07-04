@@ -487,21 +487,25 @@ struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {
 
 class LineFormattingContext {
 public:
-    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxWidth)
+    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth)
         : m_block(block)
         , m_layoutContext(ctx)
     {
+        m_lineBoxX = lineBoxX;
+        m_lineBoxY = lineBoxY;
         m_lineBoxWidth = lineBoxWidth;
         m_block.m_lineBoxes.clear();
         // m_block.m_lineBoxes.shrink_to_fit();
         LineBox* lineBox = new LineBox(&m_block);
+        lineBox->setX(m_lineBoxX);
+        lineBox->setY(m_lineBoxY);
         lineBox->setWidth(m_lineBoxWidth);
         m_block.m_lineBoxes.push_back(lineBox);
         m_currentLine = 0;
         m_currentLineWidth = 0;
     }
 
-    void breakLine(bool dueToBr = false);
+    void breakLine(bool dueToBr, bool isInLineBox);
     void completeLastLine();
 
     bool isBreakedLineWithoutBR(size_t idx)
@@ -530,6 +534,8 @@ public:
         return m_inlineBlockAscender[box];
     }
 
+    LayoutUnit m_lineBoxX;
+    LayoutUnit m_lineBoxY;
     LayoutUnit m_currentLineWidth;
     LayoutUnit m_lineBoxWidth;
     size_t m_currentLine;
@@ -537,9 +543,13 @@ public:
     LayoutContext& m_layoutContext;
 
     std::set<size_t> m_breakedLinesSet;
+
     // we dont need gc_allocater here
     // frame tree has strong reference already
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
+
+    std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
+
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
     std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;
 };

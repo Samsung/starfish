@@ -119,7 +119,7 @@ public:
         m_isIncludedInComputingWindowOnLoadEvent = false;
     }
 
-    bool isThisResourceDoesNotAffectWindowOnLoad()
+    bool isThisResourceDoesAffectWindowOnLoad()
     {
         return m_isIncludedInComputingWindowOnLoadEvent;
     }

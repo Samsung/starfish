@@ -137,7 +137,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
 
     bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
 
-    if (!isBlockChild) {
+    if (!isBlockChild || (!currentFrame->isNormalFlow())) {
         if (currentNode->parentNode()->style()->display() == InlineDisplayValue) {
             auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
             iter->second->appendChild(currentFrame);
@@ -170,6 +170,11 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
         }
     } else {
         if (isBlockChild) {
+            if (!currentFrame->isNormalFlow()) {
+                frameBlockBox->appendChild(currentFrame);
+                return;
+            }
+
             // Inline... + Block case
             std::vector<Frame*, gc_allocator<Frame*> > backup;
             while (frameBlockBox->firstChild()) {
