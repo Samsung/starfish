@@ -1062,7 +1062,7 @@ public:
     F(Width, "width")                           \
     F(FontSize, "font-size")                    \
     F(FontStyle, "font-style")                  \
-    F(Display, "disply")                        \
+    F(Display, "display")                       \
     F(Position, "position")                     \
     F(TextDecoration, "text-decoration")        \
     F(BorderImageRepeat, "border-image-repeat") \
