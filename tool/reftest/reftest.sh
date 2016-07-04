@@ -255,14 +255,23 @@ function doTest {
                 fi
             elif [ $TESTSUITE -eq 2 ] || [ $TESTSUITE -eq 3 ]; then
                 TC=${filenames[$c]}
-                BASEDIR=${TC%fast*}
-                TCDIR=${TC##*fast/}
-                TCDIRNAME=${TCDIR%%/*}
-                EXPDIR=$BASEDIR"fast/"$TCDIRNAME"_result"
-                EXPFILE=${TCDIR#*/}
-                EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
+                if [[ "$TC" = "http://"* ]]; then
+                    BASEDIR="test/reftest/vendor/webkit/"
+                    TCDIRNAME="xmlhttprequest"
+                    EXPDIR=$BASEDIR"fast/"$TCDIRNAME"_result"
+                    EXPFILE=${TC##*/}
+                    EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
+                else
+                    BASEDIR=${TC%fast*}
+                    TCDIR=${TC##*fast/}
+                    TCDIRNAME=${TCDIR%%/*}
+                    EXPDIR=$BASEDIR"fast/"$TCDIRNAME"_result"
+                    EXPFILE=${TCDIR#*/}
+                    EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
+                fi
                 IMGDIFF="./tool/imgdiff/imgdiff"
                 DIFF=`$IMGDIFF $RESIMG $EXPIMG`
+
                 if [[ "$DIFF" = *"passed"* ]]; then
                     PASSTC=`expr $PASSTC + 1`
                     echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
