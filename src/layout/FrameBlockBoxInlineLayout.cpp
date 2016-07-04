@@ -588,7 +588,7 @@ void splitInlineBoxesAndMarkDirectionForResolveBidi(LineFormattingContext& ctx, 
                     splitInlineBoxesAndMarkDirectionForResolveBidi(ctx, parentDir, ib->asInlineNonReplacedBox()->boxes());
                     // split every content for resolve bidi after
                     InlineNonReplacedBox* inrb = ib->asInlineNonReplacedBox();
-                    STARFISH_ASSERT(ctx.m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.find(inrb->origin()) == ctx.m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.end())
+                    STARFISH_ASSERT(ctx.m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.find(inrb->origin()) == ctx.m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine.end());
 
                     DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine mbpData;
 
