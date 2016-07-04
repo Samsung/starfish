@@ -110,22 +110,17 @@ CSSLength parseCSSLength(const char* value)
         return CSSLength(CSSLength::Kind::PX, 0);
     }
 }
-void parseLength(CSSStyleValuePair& ret, const char* value)
-{
-    ret.m_valueKind = CSSStyleValuePair::ValueKind::Length;
-    ret.m_value.m_length = parseCSSLength(value);
-}
 
 void parsePercentageOrLength(CSSStyleValuePair& ret, const char* value)
 {
-    if (endsWith(value, "%")) {
-        float f;
-        sscanf(value, "%f%%", &f);
+    float result;
+    String* unit = CSSPropertyParser::parseNumberAndUnit(value, &result);
+    if (unit->equals("%")) {
         ret.m_valueKind = CSSStyleValuePair::ValueKind::Percentage;
-        f = f / 100.f;
-        ret.m_value.m_floatValue = f;
+        ret.m_value.m_floatValue = result / 100.f;
     } else {
-        parseLength(ret, value);
+        ret.m_valueKind = CSSStyleValuePair::ValueKind::Length;
+        ret.m_value.m_length = CSSLength(unit, result);
     }
 }
 
@@ -1318,7 +1313,7 @@ void CSSStyleValuePair::setValueOpacity(std::vector<String*, gc_allocator<String
 {
     m_valueKind = CSSStyleValuePair::ValueKind::Number;
     float f = CSSPropertyParser::parseNumber(tokens->at(0)->utf8Data());
-    m_value.m_floatValue = f; 
+    m_value.m_floatValue = f;
 }
 
 void CSSStyleValuePair::setValueOverflow(std::vector<String*, gc_allocator<String*> >* tokens)

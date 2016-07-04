@@ -901,7 +901,6 @@ public:
     }
 
     friend void parsePercentageOrLength(CSSStyleValuePair& ret, const char* value);
-    friend void parseLength(CSSStyleValuePair& ret, const char* value);
     friend void parseUrl(const char* value);
     friend CSSLength parseCSSLength(const char* value);
 
