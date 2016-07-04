@@ -365,8 +365,7 @@ public:
             // https://www.w3.org/TR/CSS2/zindex.html
             // Appendix E. Elaborate description of Stacking Contexts
             // All positioned descendants with 'z-index: auto' or 'z-index: 0', in tree order. For those with 'z-index: auto', treat the element as if it created a new stacking context,
-            // m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement && style->IsSpecifiedZIndex());
-            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement); // FIXME: All positioned descendants create a new stacking context. This could be temporary soluation.
+            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (m_flags.m_isPositionedElement && style->IsSpecifiedZIndex());
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->opacity() != 1);
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->hasTransforms(this));
 
