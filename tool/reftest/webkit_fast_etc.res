@@ -160,6 +160,7 @@ test/reftest/vendor/webkit/fast/parser/entity-comment-in-script-tricky.html
 test/reftest/vendor/webkit/fast/parser/head-content-after-head-removal.html
 test/reftest/vendor/webkit/fast/parser/html-html-comment-in-style-block.html
 test/reftest/vendor/webkit/fast/parser/line-number-composite-segmented-string.html
+test/reftest/vendor/webkit/fast/parser/nsup-entity.html
 test/reftest/vendor/webkit/fast/parser/open-comment-in-script-tricky.html
 test/reftest/vendor/webkit/fast/parser/parent-of-script-before-head.html
 test/reftest/vendor/webkit/fast/parser/remove-current-node-parent.html
