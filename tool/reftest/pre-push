@@ -85,6 +85,13 @@ if cat prepush_test_result |grep 'FAIL'; then
  exit 1
 fi
 
+echo "checking... make regression_test_webkit_fast_etc"
+make regression_test_webkit_fast_etc > prepush_test_result
+if cat prepush_test_result |grep 'FAIL'; then
+ echo "$RED[FAIL] make regression_test_webkit_fast_etc$RESET"
+ exit 1
+fi
+
 echo "checking... make regression_test_wpt_dom_events"
 make regression_test_wpt_dom_events > prepush_test_result
 if cat prepush_test_result |grep 'FAIL'; then
