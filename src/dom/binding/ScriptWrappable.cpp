@@ -213,7 +213,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         STARFISH_LOG_INFO("%s", output.c_str());
 
         if (output.find("failed") != std::string::npos) {
-            cmd = "tool/pixel_test/bin/image_diff --diff ";
+            cmd = "test/tool/image_diff --diff ";
             cmd += path;
             cmd += instance->currentExecutionContext()->readArgument(0).toString()->utf8Data();
             cmd += " ";

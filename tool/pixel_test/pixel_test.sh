@@ -89,7 +89,7 @@ for i in $tc ; do
 
     # Print the result
     if [ "${result}" = "failed" ]; then
-        diff=`tool/pixel_test/bin/image_diff --diff ${WEBKIT_PNG} ${STARFISH_PNG} ${DIFF_PNG}`
+        diff=`test/tool/image_diff --diff ${WEBKIT_PNG} ${STARFISH_PNG} ${DIFF_PNG}`
         if [[ "${ratio}" == "0."* ]]; then
             CHECK=`expr $CHECK + 1`
             echo -e "${YELLOW}[CHECK]${RESET}" $i "("$ratio")"
