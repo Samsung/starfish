@@ -23,7 +23,8 @@ function main {
         echo "Please specify the input file"
         exit
     elif [[ "$1" = *".htm" || "$1" = *".html" ||
-            "$1" = "webkit_fast_css" || "$1" = "webkit_fast_etc" || "$1" = "blink_fast_etc" ]]; then
+            "$1" = "blink_fast_css" || "$1" = "blink_fast_etc" ||
+            "$1" = "webkit_fast_css" || "$1" = "webkit_fast_etc" ]]; then
         tc=$1
     elif [[ "$1" = *".res" ]]; then
         tc=$(cat $1)
@@ -120,6 +121,24 @@ function main {
         TESTSUITENAME="CSSWG Tests - $name"
         PASSFILE="test/regression/tool/csswg-test/test_$name"
         doTest "$@"
+    elif [[ "$1" = "blink_fast_css" ]]; then
+        TESTSUITENAME="Blink Fast CSS"
+        #PASSFILE="test/regression/tool/vendor/webkit/test_blink_fast_css"
+        TESTSUITE=2
+        tc=$(cat tool/reftest/blink_fast_css.res)
+        doTest "$@"
+        TESTSUITE=3
+        tc=$(cat tool/reftest/blink_fast_css_manual.res)
+        doTest "$@"
+    elif [[ "$1" = "blink_fast_etc" ]]; then
+        TESTSUITENAME="Blink Fast etc"
+        #PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_etc"
+        TESTSUITE=2
+        tc=$(cat tool/reftest/blink_fast_etc.res)
+        doTest "$@"
+        TESTSUITE=3
+        tc=$(cat tool/reftest/blink_fast_etc_manual.res)
+        doTest "$@"
     elif [[ "$1" = "webkit_fast_css" ]]; then
         TESTSUITENAME="WebKit Fast CSS"
         #PASSFILE="test/regression/tool/vendor/webkit/test_webkit_fast_css"
@@ -137,15 +156,6 @@ function main {
         doTest "$@"
         TESTSUITE=3
         tc=$(cat tool/reftest/webkit_fast_etc_manual.res)
-        doTest "$@"
-    elif [[ "$1" = "blink_fast_etc" ]]; then
-        TESTSUITENAME="Blink Fast etc"
-        #PASSFILE="test/regression/tool/vendor/blink/test_blink_fast_etc"
-        TESTSUITE=2
-        tc=$(cat tool/reftest/blink_fast_etc.res)
-        doTest "$@"
-        TESTSUITE=3
-        tc=$(cat tool/reftest/blink_fast_etc_manual.res)
         doTest "$@"
     else
         echo "Unsupported tests"

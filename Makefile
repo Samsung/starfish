@@ -610,6 +610,10 @@ regression_test_blink_fast_dom:
 	./tool/reftest/reftest.sh tool/reftest/blink_fast_dom.res true
 regression_test_blink_fast_html:
 	./tool/reftest/reftest.sh tool/reftest/blink_fast_html.res true
+regression_test_blink_fast_css:
+	./tool/reftest/reftest.sh blink_fast_css true
+regression_test_blink_fast_css_capture:
+	./tool/reftest/reftest.sh blink_fast_css capture
 regression_test_blink_fast_etc:
 	./tool/reftest/reftest.sh blink_fast_etc true
 regression_test_blink_fast_etc_capture:

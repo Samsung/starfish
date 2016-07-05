@@ -1,7 +1,6 @@
 test/reftest/vendor/webkit/fast/css/008.html
 test/reftest/vendor/webkit/fast/css/bogus-color-span.html
 test/reftest/vendor/webkit/fast/css/border-image-fill-crash.html
-test/reftest/vendor/webkit/fast/css/cached-sheet-restore-crash.html
 test/reftest/vendor/webkit/fast/css/center-align-absolute-position.html
 test/reftest/vendor/webkit/fast/css/center-align-absolute-position-inline-block.html
 test/reftest/vendor/webkit/fast/css/computed-image-width-with-percent-height.html

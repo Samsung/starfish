@@ -37,10 +37,14 @@ test/reftest/vendor/webkit/fast/block/positioning/008.html
 test/reftest/vendor/webkit/fast/block/positioning/009.html
 test/reftest/vendor/webkit/fast/block/positioning/011.html
 test/reftest/vendor/webkit/fast/block/positioning/012.html
+test/reftest/vendor/webkit/fast/block/positioning/014.html
+test/reftest/vendor/webkit/fast/block/positioning/015.html
 test/reftest/vendor/webkit/fast/block/positioning/017.html
 test/reftest/vendor/webkit/fast/block/positioning/018.html
+test/reftest/vendor/webkit/fast/block/positioning/019.html
 test/reftest/vendor/webkit/fast/block/positioning/020.html
 test/reftest/vendor/webkit/fast/block/positioning/021.html
+test/reftest/vendor/webkit/fast/block/positioning/022.html
 test/reftest/vendor/webkit/fast/block/positioning/026.html
 test/reftest/vendor/webkit/fast/block/positioning/027.html
 test/reftest/vendor/webkit/fast/block/positioning/029.html
@@ -146,6 +150,7 @@ test/reftest/vendor/webkit/fast/invalid/016.html
 test/reftest/vendor/webkit/fast/layers/layer-content-visibility-change.html
 test/reftest/vendor/webkit/fast/layers/positioned-inside-root-with-margins.html
 test/reftest/vendor/webkit/fast/layers/visible-layer-with-hidden-parent.html
+test/reftest/vendor/webkit/fast/layers/zindex-inherit.html
 test/reftest/vendor/webkit/fast/layers/zindex-ridonkulous.html
 test/reftest/vendor/webkit/fast/loader/start-load-in-unload.html
 test/reftest/vendor/webkit/fast/parser/broken-comment-in-head-1.html
