@@ -263,7 +263,12 @@ public:
 
     LayoutUnit result()
     {
-        return m_result;
+        return std::max(m_result, m_minimumWidth);
+    }
+
+    void setMinimumWidth(LayoutUnit w)
+    {
+        m_minimumWidth = std::max(m_minimumWidth, w);
     }
 
     LayoutUnit lastKnownWidth()
@@ -293,6 +298,7 @@ private:
     LayoutContext& m_layoutContext;
     LayoutUnit m_result;
     LayoutUnit m_lastKnownWidth;
+    LayoutUnit m_minimumWidth;
 };
 
 class Frame : public gc {

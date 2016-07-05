@@ -1813,7 +1813,6 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
         }
 
     } else {
-
         LayoutUnit currentLineWidth = 0;
         std::function<void(Frame*)> computeInlineLayout = [&](Frame* f)
         {
