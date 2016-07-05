@@ -48,89 +48,13 @@ extern Evas* g_internalCanvas;
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
-
 bool g_fireOnloadEvent = false;
-
-/*
-#define PNG_SKIP_SETJMP_CHECK
-#include <png.h>
-
-int writeImage(const char* filename, int width, int height, void *buffer)
-{
-    int code = 0;
-    FILE* fp = NULL;
-    png_structp png_ptr = NULL;
-    png_infop info_ptr = NULL;
-    png_bytep row = NULL;
-    uint32_t* buf = (uint32_t*)buffer;
-
-    // Open file for writing (binary mode)
-    fp = fopen(filename, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Could not open file %s for writing\n", filename);
-        code = 1;
-        goto finalise;
-    }
-
-    // Initialize write structure
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (png_ptr == NULL) {
-        fprintf(stderr, "Could not allocate write struct\n");
-        code = 1;
-        goto finalise;
-    }
-
-    // Initialize info structure
-    info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == NULL) {
-        fprintf(stderr, "Could not allocate info struct\n");
-        code = 1;
-        goto finalise;
-    }
-
-    // Setup Exception handling
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        fprintf(stderr, "Error during png creation\n");
-        code = 1;
-        goto finalise;
-    }
-
-    png_init_io(png_ptr, fp);
-
-    // Write header (8 bit colour depth)
-    png_set_IHDR(png_ptr, info_ptr, width, height,
-        8, PNG_COLOR_TYPE_RGB_ALPHA, PNG_INTERLACE_NONE,
-        PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-    png_write_info(png_ptr, info_ptr);
-
-    for (int y = 0; y < height; y ++) {
-        png_write_row(png_ptr, (unsigned char*)&buf[width * y]);
-    }
-
-    // End write
-    png_write_end(png_ptr, NULL);
-
-    finalise:
-    if (fp != NULL)
-        fclose(fp);
-    if (info_ptr != NULL)
-        png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
-    if (png_ptr != NULL)
-        png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-    if (row != NULL)
-        free(row);
-
-    return code;
-}
-*/
 #endif
 
 
 namespace StarFish {
 
 Evas* internalCanvas();
-void initInternalCanvas();
 
 namespace {
     class __GET_TICK_COUNT {
@@ -330,11 +254,7 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
 
 Window* Window::create(StarFish* sf, void* win, const URL& url)
 {
-#ifndef STARFISH_TIZEN_WEARABLE_LIB
-    initInternalCanvas();
-#else
     g_internalCanvas = evas_object_evas_get((Evas_Object*)win);
-#endif
     auto wnd = new WindowImplEFL(sf, url);
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;

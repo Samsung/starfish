@@ -43,65 +43,11 @@ Evas* g_internalCanvas;
 
 namespace StarFish {
 
-
-
-void initInternalCanvas()
-{
-    if (!g_internalCanvas) {
-        Evas* canvas;
-        int width = 16;
-        int height = 16;
-        Evas_Engine_Info_Buffer* einfo;
-        int method;
-        void* pixels;
-        method = evas_render_method_lookup("buffer");
-        if (method <= 0) {
-            fputs("ERROR: evas was not compiled with 'buffer' engine!\n", stderr);
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-        canvas = evas_new();
-        if (!canvas) {
-            fputs("ERROR: could not instantiate new evas canvas.\n", stderr);
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-        evas_output_method_set(canvas, method);
-        evas_output_size_set(canvas, width, height);
-        evas_output_viewport_set(canvas, 0, 0, width, height);
-        einfo = (Evas_Engine_Info_Buffer *) evas_engine_info_get(canvas);
-
-        if (!einfo) {
-            fputs("ERROR: could not get evas engine info!\n", stderr);
-            evas_free(canvas);
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        // ARGB32 is sizeof(int), that is 4 bytes, per pixel
-        pixels = malloc(width * height * sizeof(int));
-        if (!pixels) {
-            fputs("ERROR: could not allocate canvas pixels!\n", stderr);
-            evas_free(canvas);
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        einfo->info.depth_type = EVAS_ENGINE_BUFFER_DEPTH_ARGB32;
-        einfo->info.dest_buffer = pixels;
-        einfo->info.dest_buffer_row_bytes = width * sizeof(int);
-        einfo->info.use_color_key = 0;
-        einfo->info.alpha_threshold = 0;
-        einfo->info.func.new_update_region = NULL;
-        einfo->info.func.free_update_region = NULL;
-        evas_engine_info_set(canvas, (Evas_Engine_Info *) einfo);
-        g_internalCanvas = canvas;
-    }
-}
-
 Evas* internalCanvas()
 {
     STARFISH_RELEASE_ASSERT(g_internalCanvas);
-    // initInternalCanvas();
     return g_internalCanvas;
 }
-
 
 class CanvasState {
 public:

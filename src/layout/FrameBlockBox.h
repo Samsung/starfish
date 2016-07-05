@@ -126,7 +126,7 @@ protected:
 };
 
 class InlineNonReplacedBox : public InlineBox {
-    friend FrameBlockBox;
+    friend class FrameBlockBox;
     friend void splitInlineBoxesAndMarkDirectionForResolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes);
     friend void reassignLeftRightMBPOfInlineNonReplacedBox(LineFormattingContext& ctx, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes);
 public:
