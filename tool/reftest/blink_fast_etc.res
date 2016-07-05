@@ -18,4 +18,8 @@ test/reftest/vendor/blink/fast/inline/vertical-align-text-inherit.html
 test/reftest/vendor/blink/fast/js/regexp-charclass-crash.html
 test/reftest/vendor/blink/fast/js/try-catch-crash.html
 test/reftest/vendor/blink/fast/parser/inline-script-order.html
+test/reftest/vendor/blink/fast/repaint/absolute-margin-change-repaint.html
+test/reftest/vendor/blink/fast/repaint/absolute-position-and-opacity-changed.html
+test/reftest/vendor/blink/fast/repaint/abspos-shift-image-incorrect-repaint.html
+test/reftest/vendor/blink/fast/repaint/align-self-change-no-flex.html
 
