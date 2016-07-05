@@ -428,6 +428,10 @@ public:
     {
         return LayoutRect(LayoutLocation(0, 0), LayoutSize(m_frameRect.size()));
     }
+    virtual void setVisibleRect(LayoutRect vis)
+    {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
 
     LayoutLocation absolutePointWithoutRelativePosition(FrameBox* top);
 

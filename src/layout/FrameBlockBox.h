@@ -463,6 +463,11 @@ public:
         return m_visibleRect;
     }
 
+    virtual void setVisibleRect(LayoutRect vis)
+    {
+        m_visibleRect = vis;
+    }
+
 protected:
     std::pair<LayoutUnit, LayoutRect> layoutBlock(LayoutContext& ctx);
     std::pair<LayoutUnit, LayoutRect> layoutInline(LayoutContext& ctx);

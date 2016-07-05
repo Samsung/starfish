@@ -366,6 +366,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     {
         if (!isOverflowHidden) {
             LayoutRect absRect = child->absoluteRect(this);
+            LayoutRect visRect = child->visibleRect();
+            m_visibleRect.unite(visRect);
             m_visibleRect.unite(absRect);
         }
     };

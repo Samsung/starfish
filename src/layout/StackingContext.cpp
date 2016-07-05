@@ -58,6 +58,17 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 
     m_matrix.reset();
     m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || m_owner->style()->hasTransforms(m_owner);
+
+    LayoutRect visibleRect(0, 0, 0, 0);
+    visibleRect.unite(m_owner->visibleRect());
+    Frame* iter3 = m_owner->firstChild();
+    while (iter3) {
+        if (!iter3->isEstablishesStackingContext() && iter3->isFrameBox()) {
+            visibleRect.unite(iter3->asFrameBox()->visibleRect());
+        }
+        iter3 = iter3->next();
+    }
+    m_owner->setVisibleRect(visibleRect);
     return m_needsOwnBuffer;
 }
 
