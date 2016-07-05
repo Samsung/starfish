@@ -286,6 +286,7 @@ endif
 # escargot
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/bdwgc/include/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/src
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/checked_arithmetic/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/double_conversion/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/rapidjson/include/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/yarr/

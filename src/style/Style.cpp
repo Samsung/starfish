@@ -78,7 +78,7 @@ bool endsWithNumber(const char* str)
 
 void parsePercentageOrLength(CSSStyleValuePair& ret, const char* value)
 {
-    float result;
+    float result = 0.f;
     String* unit = CSSPropertyParser::parseNumberAndUnit(value, &result);
     if (unit->equals("%")) {
         ret.m_valueKind = CSSStyleValuePair::ValueKind::Percentage;
@@ -754,7 +754,7 @@ void CSSStyleValuePair::setValueBorderImageWidth(std::vector<String*, gc_allocat
             STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
             values->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
         } else {
-            float result;
+            float result = 0.f;
             String* unit = CSSPropertyParser::parseNumberAndUnit(currentToken, &result);
             ValueData data = { CSSLength(unit, result)};
             values->append(CSSStyleValuePair::ValueKind::Length, data);
@@ -899,7 +899,7 @@ void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocato
         } else if (VALUE_IS_STRING("bottom")) {
             values->append(CSSStyleValuePair::ValueKind::TransformOriginBottom, { 0 });
         } else {
-            float result;
+            float result = 0.f;
             String* unit = CSSPropertyParser::parseNumberAndUnit(value, &result);
             if (unit->equals("%")) {
                 values->append(CSSStyleValuePair::ValueKind::Percentage, { (result / 100.f) });

@@ -72,7 +72,11 @@ wrt::xwalk::Extension* ExtensionManagerInstance::getExtension(const char* apiNam
     if (it == extensions.end()) {
         DEVICEAPI_LOG_INFO("Enter");
         char library_path[512];
+#ifndef STARFISH_TIZEN_3_0
         snprintf(library_path, 512, "/usr/lib/wrt-plugins-widget/lib%s.so", apiName);
+#else
+        snprintf(library_path, 512, "/usr/lib/tizen-extensions-crosswalk/libtizen_%s.so", apiName);
+#endif
         wrt::xwalk::Extension* extension = new wrt::xwalk::Extension(library_path, nullptr);
         if (extension->Initialize()) {
             wrt::xwalk::ExtensionManager::GetInstance()->RegisterExtension(extension);
@@ -99,7 +103,31 @@ escargot::ESObject* ExtensionManagerInstance::initializeExtensionInstance(const 
         return ESObject::create();
     }
     escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
-    escargot::ESFunctionObject* initializer = instance->evaluate(escargot::ESString::create(extension->javascript_api().c_str())).asESPointer()->asESFunctionObject();
+#ifndef STARFISH_TIZEN_3_0
+    escargot::ESString* apiSource = escargot::ESString::create(extension->javascript_api().c_str());
+#else
+    ESStringBuilder apiSourceBuilder;
+    apiSourceBuilder.appendString("(function(extension){");
+    apiSourceBuilder.appendString("extension.internal = {};");
+    apiSourceBuilder.appendString("extension.internal.sendSyncMessage_ = extension.sendSyncMessage;");
+    apiSourceBuilder.appendString("extension.internal.sendSyncMessage = function(){ return extension.internal.sendSyncMessage_.apply(extension, arguments); };");
+    apiSourceBuilder.appendString("delete extension.sendSyncMessage;");
+    apiSourceBuilder.appendString("var exports = {};");
+    apiSourceBuilder.appendString("console.log('Start loading ");
+    apiSourceBuilder.appendString(apiName);
+    apiSourceBuilder.appendString("');");
+    apiSourceBuilder.appendString("(function() {'use strict';");
+    apiSourceBuilder.appendString(escargot::ESString::create(extension->javascript_api().c_str()));
+    apiSourceBuilder.appendString("})();");
+    apiSourceBuilder.appendString("console.log('Loading ");
+    apiSourceBuilder.appendString(apiName);
+    apiSourceBuilder.appendString(" done ');");
+    apiSourceBuilder.appendString("return exports;})");
+
+    escargot::ESString* apiSource = apiSourceBuilder.finalize();
+    DEVICEAPI_LOG_INFO("APISOURCE %s", apiSource->utf8Data());
+#endif
+    escargot::ESFunctionObject* initializer = instance->evaluate(apiSource).asESPointer()->asESFunctionObject();
     escargot::ESObject* extensionObject = createExtensionObject();
     wrt::xwalk::ExtensionInstance* extensionInstance = extension->CreateInstance();
     m_extensionInstances[extensionObject] = extensionInstance;
@@ -379,6 +407,7 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
             strings->initializeLazyStrings();
 
             // initialize xwalk object
+#ifndef STARFISH_TIZEN_3_0
             escargot::ESObject* xwalkObject = ESObject::create();
             xwalkObject->defineAccessorProperty(strings->utils.string(),
                 [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
@@ -388,7 +417,10 @@ ExtensionManagerInstance::ExtensionManagerInstance(escargot::ESVMInstance* insta
                     obj->defineDataProperty(name, false, true, false, utilsObject, true);
                     return utilsObject;
                 }, nullptr, false, true, false);
-
+#else
+            DEVICEAPI_LOG_INFO("Loading plugin for xwalk.utils");
+            escargot::ESObject* xwalkObject = extensionManagerInstance->initializeExtensionInstance("utils");
+#endif
             // re-define xwalk object
             obj->defineDataProperty(strings->xwalk.string(), false, true, false, xwalkObject, true);
 
