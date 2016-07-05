@@ -76,41 +76,6 @@ bool endsWithNumber(const char* str)
 #define STRING_VALUE_IS_NONE() \
     STRING_VALUE_IS_STRING("none")
 
-CSSLength parseCSSLength(const char* value)
-{
-    float f;
-    if (endsWith(value, "px")) {
-        sscanf(value, "%fpx", &f);
-        return CSSLength(f);
-    } else if (VALUE_IS_STRING("0")) {
-        return CSSLength(0.0);
-    } else if (endsWith(value, "em")) {
-        sscanf(value, "%fem", &f);
-        return CSSLength(CSSLength::Kind::EM, f);
-    } else if (endsWith(value, "ex")) {
-        sscanf(value, "%fex", &f);
-        return CSSLength(CSSLength::Kind::EX, f);
-    } else if (endsWith(value, "in")) {
-        sscanf(value, "%fin", &f);
-        return CSSLength(CSSLength::Kind::IN, f);
-    } else if (endsWith(value, "cm")) {
-        sscanf(value, "%fcm", &f);
-        return CSSLength(CSSLength::Kind::CM, f);
-    } else if (endsWith(value, "mm")) {
-        sscanf(value, "%fmm", &f);
-        return CSSLength(CSSLength::Kind::MM, f);
-    } else if (endsWith(value, "pt")) {
-        sscanf(value, "%fpt", &f);
-        return CSSLength(CSSLength::Kind::PT, f);
-    } else if (endsWith(value, "pc")) {
-        sscanf(value, "%fpc", &f);
-        return CSSLength(CSSLength::Kind::PC, f);
-    } else {
-        STARFISH_LOG_ERROR("unsupported css length value %s\n", value);
-        return CSSLength(CSSLength::Kind::PX, 0);
-    }
-}
-
 void parsePercentageOrLength(CSSStyleValuePair& ret, const char* value)
 {
     float result;
@@ -789,7 +754,9 @@ void CSSStyleValuePair::setValueBorderImageWidth(std::vector<String*, gc_allocat
             STARFISH_ASSERT(pEnd == currentToken + tokens->at(i)->length());
             values->append(CSSStyleValuePair::ValueKind::Number, { (float)d });
         } else {
-            CSSStyleValuePair::ValueData data = { parseCSSLength(currentToken) };
+            float result;
+            String* unit = CSSPropertyParser::parseNumberAndUnit(currentToken, &result);
+            ValueData data = { CSSLength(unit, result)};
             values->append(CSSStyleValuePair::ValueKind::Length, data);
         }
     }
@@ -1334,12 +1301,8 @@ void CSSStyleValuePair::setValueZIndex(std::vector<String*, gc_allocator<String*
 {
     const char* value = tokens->at(0)->utf8Data();
     m_valueKind = CSSStyleValuePair::ValueKind::Int32;
-    // TODO check string has right color string
-    if (atof(value) - atoi(value)) {
-        m_value.m_int32Value = 0;
-    } else {
-        sscanf(value, "%d%%", &m_value.m_int32Value);
-    }
+    float f = CSSPropertyParser::parseNumber(value);
+    m_value.m_int32Value = (int) f;
 }
 
 void CSSStyleValuePair::setValueVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)
