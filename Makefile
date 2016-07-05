@@ -526,18 +526,12 @@ install_pixel_test_dep:
 	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
 	javac StarFishTester.java
 	mkdir -p ~/.fonts
-	cp tool/pixel_test/bin/AHEM____.TTF ~/.fonts/
-#	cp tool/pixel_test/bin/CooHew-Roman.ttf ~/.fonts/
-#	cp tool/pixel_test/bin/CooHew-Bold.ttf ~/.fonts/
-	cp tool/pixel_test/bin/SamsungOne-300C_v1.0.ttf ~/.fonts/
-	cp tool/pixel_test/bin/SamsungOne-600C_v1.0.ttf ~/.fonts/
+	cp test/tool/fonts/AHEM____.TTF ~/.fonts/
+	cp test/tool/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts/
+	cp test/tool/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts/
 	fc-cache -fv
 	./set_nodewebkit_env.sh
-	#@echo ""
-	#@echo "============ [ Install Arial Font ] ============"
-	#sudo apt-get install ttf-mscorefonts-installer
-	#sudo fc-cache
-	#fc-match Arial
+	fc-match SamsungOne
 
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc) $(screen)
