@@ -690,9 +690,9 @@ public:
         BorderThick,
 
         OverflowValueKind,
-        TextDecorationKind,
-        VisibilityKind,
-        UnicodeBidiKind,
+        TextDecorationValueKind,
+        VisibilityValueKind,
+        UnicodeBidiValueKind,
 
         // transform
         TransformFunctions,
@@ -794,7 +794,7 @@ public:
 
     UnicodeBidiValue unicodeBidiValue()
     {
-        STARFISH_ASSERT(m_valueKind == UnicodeBidiKind);
+        STARFISH_ASSERT(m_valueKind == UnicodeBidiValueKind);
         return m_value.m_unicodeBidi;
     }
 
@@ -891,7 +891,7 @@ public:
 
     VisibilityValue visibility()
     {
-        STARFISH_ASSERT(m_valueKind == VisibilityKind);
+        STARFISH_ASSERT(m_valueKind == VisibilityValueKind);
         return m_value.m_visibility;
     }
 

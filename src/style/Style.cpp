@@ -596,7 +596,7 @@ void CSSStyleValuePair::setValueTextDecoration(std::vector<String*, gc_allocator
 {
     const char* value = tokens->at(0)->utf8Data();
     // none | [ underline || overline || line-through || blink ] | inherit // Initial value -> none
-    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationKind;
+    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationValueKind;
 
     if (VALUE_IS_NONE()) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
@@ -1254,10 +1254,10 @@ void CSSStyleValuePair::setValueUnicodeBidi(std::vector<String*, gc_allocator<St
 
     if (VALUE_IS_STRING("normal")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
-        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiKind;
+        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
     } else if (VALUE_IS_STRING("embed")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::EmbedUnicodeBidiValue;
-        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiKind;
+        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1267,7 +1267,7 @@ void CSSStyleValuePair::setValueVisibility(std::vector<String*, gc_allocator<Str
 {
     const char* value = tokens->at(0)->utf8Data();
 
-    m_valueKind = CSSStyleValuePair::ValueKind::VisibilityKind;
+    m_valueKind = CSSStyleValuePair::ValueKind::VisibilityValueKind;
 
     if (VALUE_IS_STRING("visible")) {
         m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
@@ -3038,7 +3038,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
                     style->setTextDecoration(cssValues[k].textDecoration());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::TextDecorationKind);
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::TextDecorationValueKind);
                     style->setTextDecoration(cssValues[k].textDecoration());
                 }
                 break;
@@ -3734,7 +3734,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->m_unicodeBidi = parentStyle->m_unicodeBidi;
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::UnicodeBidiKind) {
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::UnicodeBidiValueKind) {
                     style->setUnicodeBidi(cssValues[k].unicodeBidiValue());
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();

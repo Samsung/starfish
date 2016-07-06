@@ -985,17 +985,17 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(Position, PositionValueKind, position)
     ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
     ADD_VALUE_PAIR(TextAlign, TextAlignValueKind, textAlign)
-    ADD_VALUE_PAIR(TextDecoration, TextDecorationKind, textDecoration)
+    ADD_VALUE_PAIR(TextDecoration, TextDecorationValueKind, textDecoration)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
     ADD_VALUE_PAIR(TextOverflow, TextOverflowValueKind, textOverflow)
     ADD_VALUE_PAIR(BorderImageRepeat, BorderImageRepeatValueKind, borderImageRepeatX)
     ADD_VALUE_PAIR(BackgroundRepeatX, BackgroundRepeatValueKind, backgroundRepeatX)
     ADD_VALUE_PAIR(BackgroundRepeatY, BackgroundRepeatValueKind, backgroundRepeatY)
-    ADD_VALUE_PAIR(Visibility, VisibilityKind, visibility)
+    ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
     ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
     ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
     ADD_VALUE_PAIR(Overflow, OverflowValueKind, overflow)
-    ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiKind, unicodeBidi)
+    ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiValueKind, unicodeBidi)
 #undef ADD_VALUE_PAIR
 
     // length properties
@@ -1180,7 +1180,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);
     }
 
-    // TODO: z-index
+    // z-index
     {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
