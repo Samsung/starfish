@@ -2368,11 +2368,7 @@ escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scrip
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     String* width = nd->asElement()->asHTMLElement()->asHTMLImageElement()->width();
-                    if (width->equals(String::emptyString)) {
-                        return escargot::ESValue(escargot::ESValue::ESNull);
-                    } else {
-                        return escargot::ESValue(String::parseInt(width));
-                    }
+                    return escargot::ESValue(String::parseInt(width));
                 }
             }
         }
@@ -2406,11 +2402,7 @@ escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scrip
             if (nd->asElement()->isHTMLElement()) {
                 if (nd->asElement()->asHTMLElement()->isHTMLImageElement()) {
                     String* height = nd->asElement()->asHTMLElement()->asHTMLImageElement()->height();
-                    if (height->equals(String::emptyString)) {
-                        return escargot::ESValue(escargot::ESValue::ESNull);
-                    } else {
-                        return escargot::ESValue(String::parseInt(height));
-                    }
+                    return escargot::ESValue(String::parseInt(height));
                 }
             }
         }
