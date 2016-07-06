@@ -971,22 +971,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     setNeedsPainting();
     document()->window()->rendering();
 
-// general properties
-#define FOR_EACH_STYLE(F)                                                \
-    F(Display, DisplayValueKind, display)                                \
-    F(Position, PositionValueKind, position)                             \
-    F(VerticalAlign, VerticalAlignValueKind, verticalAlign)              \
-    F(TextAlign, TextAlignValueKind, textAlign)                          \
-    F(TextDecoration, TextDecorationKind, textDecoration)                \
-    F(Direction, DirectionValueKind, direction)                          \
-    F(TextOverflow, TextOverflowValueKind, textOverflow)                 \
-    F(BorderImageRepeat, BorderImageRepeatValueKind, borderImageRepeatX) \
-    F(BackgroundRepeatX, BackgroundRepeatValueKind, backgroundRepeatX)   \
-    F(BackgroundRepeatY, BackgroundRepeatValueKind, backgroundRepeatY)   \
-    F(Visibility, VisibilityKind, visibility)                            \
-    F(FontStyle, FontStyleValueKind, fontStyle)                          \
-    F(FontWeight, FontWeightValueKind, fontWeight)                       \
-
+    // general properties
 #define ADD_VALUE_PAIR(keyKind, valueKind, getter)               \
     {                                                            \
         CSSStyleValuePair p;                                     \
@@ -995,29 +980,23 @@ CSSStyleDeclaration* Node::getComputedStyle()
         p.setValue(m_style->getter());                           \
         d->addValuePair(p);                                      \
     }
-    FOR_EACH_STYLE(ADD_VALUE_PAIR)
+
+    ADD_VALUE_PAIR(Display, DisplayValueKind, display)
+    ADD_VALUE_PAIR(Position, PositionValueKind, position)
+    ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
+    ADD_VALUE_PAIR(TextAlign, TextAlignValueKind, textAlign)
+    ADD_VALUE_PAIR(TextDecoration, TextDecorationKind, textDecoration)
+    ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
+    ADD_VALUE_PAIR(TextOverflow, TextOverflowValueKind, textOverflow)
+    ADD_VALUE_PAIR(BorderImageRepeat, BorderImageRepeatValueKind, borderImageRepeatX)
+    ADD_VALUE_PAIR(BackgroundRepeatX, BackgroundRepeatValueKind, backgroundRepeatX)
+    ADD_VALUE_PAIR(BackgroundRepeatY, BackgroundRepeatValueKind, backgroundRepeatY)
+    ADD_VALUE_PAIR(Visibility, VisibilityKind, visibility)
+    ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
+    ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
 #undef ADD_VALUE_PAIR
 
-#undef FOR_EACH_STYLE
-
-// length properties
-#define FOR_EACH_PROP(F)      \
-    F(Width, width)           \
-    F(Height, height)         \
-    F(LineHeight, lineHeight) \
-    F(Top, top)               \
-    F(Right, right)           \
-    F(Bottom, bottom)         \
-    F(Left, left)             \
-    F(MarginTop, marginTop)         \
-    F(MarginRight, marginRight)     \
-    F(MarginBottom, marginBottom)   \
-    F(MarginLeft, marginLeft)       \
-    F(PaddingTop, paddingTop)       \
-    F(PaddingRight, paddingRight)   \
-    F(PaddingBottom, paddingBottom) \
-    F(PaddingLeft, paddingLeft)     \
-
+    // length properties
 #define ADD_LENGTH_PAIR(keyKind, getter)                              \
     {                                                                 \
         CSSStyleValuePair p;                                          \
@@ -1033,20 +1012,25 @@ CSSStyleDeclaration* Node::getComputedStyle()
         }                                                             \
         d->addValuePair(p);                                           \
     }
-    FOR_EACH_PROP(ADD_LENGTH_PAIR)
+
+    ADD_LENGTH_PAIR(Width, width)
+    ADD_LENGTH_PAIR(Height, height)
+    ADD_LENGTH_PAIR(LineHeight, lineHeight)
+    ADD_LENGTH_PAIR(Top, top)
+    ADD_LENGTH_PAIR(Right, right)
+    ADD_LENGTH_PAIR(Bottom, bottom)
+    ADD_LENGTH_PAIR(Left, left)
+    ADD_LENGTH_PAIR(MarginTop, marginTop)
+    ADD_LENGTH_PAIR(MarginRight, marginRight)
+    ADD_LENGTH_PAIR(MarginBottom, marginBottom)
+    ADD_LENGTH_PAIR(MarginLeft, marginLeft)
+    ADD_LENGTH_PAIR(PaddingTop, paddingTop)
+    ADD_LENGTH_PAIR(PaddingRight, paddingRight)
+    ADD_LENGTH_PAIR(PaddingBottom, paddingBottom)
+    ADD_LENGTH_PAIR(PaddingLeft, paddingLeft)
 #undef ADD_LENGTH_PAIR
 
-#undef FOR_EACH_PROP
-
-// color properties
-#define FOR_EACH_COLOR_PROP(F)              \
-    F(Color, color)                         \
-    F(BackgroundColor, backgroundColor)     \
-    F(BorderTopColor, borderTopColor)       \
-    F(BorderRightColor, borderRightColor)   \
-    F(BorderBottomColor, borderBottomColor) \
-    F(BorderLeftColor, borderLeftColor)     \
-
+    // color properties
 #define ADD_COLOR_PAIR(keyKind, getter)                                \
     {                                                                  \
         CSSStyleValuePair p;                                           \
@@ -1056,12 +1040,52 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);                                            \
     }
 
-    FOR_EACH_COLOR_PROP(ADD_COLOR_PAIR)
+    ADD_COLOR_PAIR(Color, color)
+    ADD_COLOR_PAIR(BackgroundColor, backgroundColor)
+    ADD_COLOR_PAIR(BorderTopColor, borderTopColor)
+    ADD_COLOR_PAIR(BorderRightColor, borderRightColor)
+    ADD_COLOR_PAIR(BorderBottomColor, borderBottomColor)
+    ADD_COLOR_PAIR(BorderLeftColor, borderLeftColor)
 #undef ADD_COLOR_PAIR
 
-#undef FOR_EACH_COLOR_PROP
+    // fontSize
+    // border-width
+#define LENGTH_RELATED(keyKind, getter)                       \
+    {                                                         \
+        CSSStyleValuePair p;                                  \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);    \
+        p.setValueKind(CSSStyleValuePair::ValueKind::Length); \
+        p.setValue(CSSLength(m_style->getter().fixed()));     \
+        d->addValuePair(p);                                   \
+    }
 
-// other properties that cannot be generated by macros
+    LENGTH_RELATED(FontSize, fontSize)
+    LENGTH_RELATED(BorderTopWidth, borderTopWidth)
+    LENGTH_RELATED(BorderRightWidth, borderRightWidth)
+    LENGTH_RELATED(BorderBottomWidth, borderBottomWidth)
+    LENGTH_RELATED(BorderLeftWidth, borderLeftWidth)
+#undef LENGTH_RELATED
+
+    // border-style
+#define BORDER_STYLE(keyKind, getter)                                  \
+    {                                                                  \
+        CSSStyleValuePair p;                                           \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);             \
+        if (m_style->getter() == BorderStyleValue::BNone) {            \
+            p.setValueKind(CSSStyleValuePair::ValueKind::BorderNone);  \
+        } else if (m_style->getter() == BorderStyleValue::BSolid) {    \
+            p.setValueKind(CSSStyleValuePair::ValueKind::BorderSolid); \
+        }                                                              \
+        d->addValuePair(p);                                            \
+    }
+
+    BORDER_STYLE(BorderTopStyle, borderTopStyle)
+    BORDER_STYLE(BorderRightStyle, borderRightStyle)
+    BORDER_STYLE(BorderBottomStyle, borderBottomStyle)
+    BORDER_STYLE(BorderLeftStyle, borderLeftStyle)
+#undef BORDER_STYLE
+
+    // other properties that cannot be generated by macros
 
     // backgroundImage
     {
@@ -1141,6 +1165,14 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);
     }
 
+    // TODO: borderImageSlice
+
+    // TODO: borderImageWidth
+
+    // TODO: text-align
+
+    // TODO: visibility
+
     // opacity
     {
         CSSStyleValuePair p;
@@ -1149,6 +1181,16 @@ CSSStyleDeclaration* Node::getComputedStyle()
         p.setValue(m_style->opacity());
         d->addValuePair(p);
     }
+
+    // TODO: overflow
+
+    // TODO: z-index
+
+    // TODO: vertical-align
+
+    // TODO: transform-origin
+
+    // TODO: transform
 
     return d;
 }
