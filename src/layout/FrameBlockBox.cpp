@@ -109,10 +109,10 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 }
             }
         } else {
-            computeBorderMarginPadding(ctx.parentContentWidth(this));
+            FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
+            computeBorderMarginPadding(cb->contentWidth());
 
             STARFISH_ASSERT(node() != nullptr);
-            FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
             DirectionValue direction = ctx.blockContainer(this)->style()->direction();
             auto absLoc = parent->absolutePoint(cb);
