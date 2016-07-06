@@ -1,3 +1,4 @@
+http://52.79.162.207/xmlhttprequest-recursive-sync-event.html
 test/reftest/vendor/blink/fast/backgrounds/root-with-generated-background-and-no-height.html
 test/reftest/vendor/blink/fast/block/inflow-bottom-margin.html
 test/reftest/vendor/blink/fast/block/positioning/abspos-auto-left-and-width-change-parent-margin-left.html
@@ -22,7 +23,6 @@ test/reftest/vendor/blink/fast/repaint/absolute-margin-change-repaint.html
 test/reftest/vendor/blink/fast/repaint/absolute-position-and-opacity-changed.html
 test/reftest/vendor/blink/fast/repaint/abspos-shift-image-incorrect-repaint.html
 test/reftest/vendor/blink/fast/repaint/align-self-change-no-flex.html
-
 test/reftest/vendor/blink/fast/animation/request-animation-frame-callback-id.html
 test/reftest/vendor/blink/fast/backgrounds/obscured-background-child-style-change.html
 test/reftest/vendor/blink/fast/backgrounds/root-background-propagation2.html

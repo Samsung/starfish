@@ -169,11 +169,7 @@ echo -e "${BOLD}###### Ref Tests ######${RESET}\n"
 
 function doTest {
     cnt=-1
-    #if [ "$2" = "capture" ]; then
-    #    ROTATE=1
-    #else
-        ROTATE="$(nproc)"
-    #fi
+    ROTATE="$(nproc)"
     filenames=()
     array=( $tc )
     pos=$(( ${#array[*]} - 1 ))
@@ -266,19 +262,18 @@ function doTest {
             elif [ $TESTSUITE -eq 2 ] || [ $TESTSUITE -eq 3 ]; then
                 TC=${filenames[$c]}
                 if [[ "$TC" = "http://"* ]]; then
-                    BASEDIR="test/reftest/vendor/webkit/"
+                    # XMLHttpRequest TCs
+                    BASEDIR="test/reftest/vendor/"${1%%_*}"/"
                     TCDIRNAME="xmlhttprequest"
-                    EXPDIR=$BASEDIR"fast/"$TCDIRNAME"_result"
-                    EXPFILE=${TC##*/}
-                    EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
+                    TCDIR=$TCDIRNAME/${TC##*/}
                 else
                     BASEDIR=${TC%fast*}
                     TCDIR=${TC##*fast/}
                     TCDIRNAME=${TCDIR%%/*}
-                    EXPDIR=$BASEDIR"fast/"$TCDIRNAME"_result"
-                    EXPFILE=${TCDIR#*/}
-                    EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
                 fi
+                EXPDIR=$BASEDIR"fast/"$TCDIRNAME"_result"
+                EXPFILE=${TCDIR#*/}
+                EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
                 IMGDIFF="./tool/imgdiff/imgdiff"
                 DIFF=`$IMGDIFF $RESIMG $EXPIMG`
 

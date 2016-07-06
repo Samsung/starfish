@@ -123,7 +123,6 @@ test/reftest/vendor/webkit/fast/images/image-load-event-crash.html
 test/reftest/vendor/webkit/fast/images/large-size-image-crash.html
 test/reftest/vendor/webkit/fast/images/png-extra-row-crash.html
 test/reftest/vendor/webkit/fast/images/png_per_row_alpha_decoding.html
-test/reftest/vendor/webkit/fast/images/png-suite/test.html
 test/reftest/vendor/webkit/fast/images/read-past-end-of-buffer.html
 test/reftest/vendor/webkit/fast/images/rgb-jpeg-with-adobe-marker-only.html
 test/reftest/vendor/webkit/fast/inline/001.html
