@@ -994,6 +994,8 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(Visibility, VisibilityKind, visibility)
     ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
     ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
+    ADD_VALUE_PAIR(Overflow, OverflowValueKind, overflow)
+    ADD_VALUE_PAIR(UnicodeBidi, UnicodeBidiKind, unicodeBidi)
 #undef ADD_VALUE_PAIR
 
     // length properties
@@ -1169,10 +1171,6 @@ CSSStyleDeclaration* Node::getComputedStyle()
 
     // TODO: borderImageWidth
 
-    // TODO: text-align
-
-    // TODO: visibility
-
     // opacity
     {
         CSSStyleValuePair p;
@@ -1182,11 +1180,14 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);
     }
 
-    // TODO: overflow
-
     // TODO: z-index
-
-    // TODO: vertical-align
+    {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
+        p.setValue(m_style->zIndex());
+        d->addValuePair(p);
+    }
 
     // TODO: transform-origin
 

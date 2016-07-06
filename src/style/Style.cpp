@@ -286,6 +286,8 @@ String* CSSStyleValuePair::keyName()
         return String::createASCIIString("visibility");
     case ZIndex:
         return String::createASCIIString("z-index");
+    case UnicodeBidi:
+        return String::createASCIIString("unicode-bidi");
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
