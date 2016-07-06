@@ -2,6 +2,7 @@ http://52.79.162.207/xmlhttprequest-gc.html
 test/reftest/vendor/blink/fast/block/positioning/removing-inside-relpositioned-inline-crash.html
 test/reftest/vendor/blink/fast/images/2-comp.html
 test/reftest/vendor/blink/fast/images/do-not-paint-below-image-baseline.html
+test/reftest/vendor/blink/fast/images/png-color-profile-ignore-gamma.html
 test/reftest/vendor/blink/fast/images/png-suite/test.html
 test/reftest/vendor/blink/fast/inline/percentage-margins.html
 test/reftest/vendor/blink/fast/layers/remove-only-this-layer-update.html

@@ -1,6 +1,7 @@
 http://52.79.162.207/xmlhttprequest-recursive-sync-event.html
 test/reftest/vendor/blink/fast/animation/request-animation-frame-callback-id.html
 test/reftest/vendor/blink/fast/backgrounds/obscured-background-child-style-change.html
+test/reftest/vendor/blink/fast/backgrounds/root-background-display-none-no-crash.html
 test/reftest/vendor/blink/fast/backgrounds/root-background-propagation2.html
 test/reftest/vendor/blink/fast/backgrounds/root-background-propagation.html
 test/reftest/vendor/blink/fast/backgrounds/root-with-generated-background-and-no-height.html
@@ -98,6 +99,7 @@ test/reftest/vendor/blink/fast/borders/transparent-currentcolor-crash.html
 test/reftest/vendor/blink/fast/css3-text/css3-text-decoration/text-decoration-color-recalc.html
 test/reftest/vendor/blink/fast/css3-text/css3-text-decoration/text-decoration-line-recalc.html
 test/reftest/vendor/blink/fast/css3-text/css3-text-decoration/text-decoration-style-recalc.html
+test/reftest/vendor/blink/fast/doctypes/005-case-preserving.html
 test/reftest/vendor/blink/fast/dynamic/004.html
 test/reftest/vendor/blink/fast/dynamic/006.html
 test/reftest/vendor/blink/fast/dynamic/009.html
@@ -182,6 +184,7 @@ test/reftest/vendor/blink/fast/parser/smart-quotes-in-tag.html
 test/reftest/vendor/blink/fast/parser/stray-end-tags-with-attributes-001.html
 test/reftest/vendor/blink/fast/parser/tabs-in-scripts.html
 test/reftest/vendor/blink/fast/parser/tag-with-exclamation-point.html
+test/reftest/vendor/blink/fast/repaint/absolute-display-block-to-none.html
 test/reftest/vendor/blink/fast/repaint/absolute-margin-change-repaint.html
 test/reftest/vendor/blink/fast/repaint/absolute-position-and-opacity-changed.html
 test/reftest/vendor/blink/fast/repaint/abspos-shift-image-incorrect-repaint.html
@@ -248,6 +251,5 @@ test/reftest/vendor/blink/fast/tokenizer/null-in-text.html
 test/reftest/vendor/blink/fast/tokenizer/script_extra_close.html
 test/reftest/vendor/blink/fast/transforms/matrix-02.html
 test/reftest/vendor/blink/fast/transforms/transform-hit-test-flipped.html
-test/reftest/vendor/blink/fast/transforms/transform-positioned-container.html
 test/reftest/vendor/blink/fast/transforms/transforms-with-opacity.html
 test/reftest/vendor/blink/fast/transforms/transform-update-frame-overflow.html
