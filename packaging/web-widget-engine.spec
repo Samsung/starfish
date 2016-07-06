@@ -4,7 +4,7 @@ Release:       0
 Summary:       Web Widget Engine
 Source:        %{name}-%{version}.tar.gz
 Group:         Development/Libraries
-License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT
+License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT and MPL-1.1
 
 
 %if "%{?tizen_profile_name}" == "mobile"
