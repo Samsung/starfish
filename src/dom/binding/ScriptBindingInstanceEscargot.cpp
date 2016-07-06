@@ -340,6 +340,30 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(WindowString, true, false, true, WindowFunction);
     fetchData(this)->m_window = WindowFunction;
 
+#ifdef STARFISH_ENABLE_TEST
+    WindowFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getComputedStyle"), true, true, true,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            try {
+                escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+                CHECK_TYPEOF(instance->currentExecutionContext()->readArgument(0), ScriptWrappable::Type::NodeObject);
+                // Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+                Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+                escargot::ESValue pseudoElm = instance->currentExecutionContext()->readArgument(1);
+
+                if (node->isNode() && pseudoElm.isNull()) {
+                    CSSStyleDeclaration* s = node->asNode()->getComputedStyle();
+                    return s->scriptValue();
+                } else {
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+                }
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }, escargot::ESString::create("getComputedStyle"), 2, false));
+#endif
+
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(), escargot::ESString::create("document"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -3248,6 +3272,28 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
         uint32_t len = originalObj->length();
         return escargot::ESValue(len);
     }, nullptr);
+
+#ifdef STARFISH_ENABLE_TEST
+    CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getPropertyValue"), true, true, true,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            try {
+                escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(thisValue, ScriptWrappable::Type::CSSStyleDeclarationObject);
+                CSSStyleDeclaration* decl = (CSSStyleDeclaration*)thisValue.asESPointer()->asESObject()->extraPointerData();
+                escargot::ESValue prop = instance->currentExecutionContext()->readArgument(0);
+
+                if (prop.isESString()) {
+                    String* val = decl->getPropertyValue(toBrowserString(prop));
+                    return toJSString(val);
+                } else {
+                    return escargot::ESString::create("");
+                }
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }, escargot::ESString::create("getPropertyValue"), 2, false));
+#endif
 
     return CSSStyleDeclarationFunction;
 }

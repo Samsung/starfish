@@ -1174,6 +1174,17 @@ public:
         m_cssValues.push_back(p);
     }
 
+    String* getPropertyValue(String* key)
+    {
+        for (size_t i = 0; i < m_cssValues.size(); i++) {
+            CSSStyleValuePair v = m_cssValues[i];
+            if (v.keyName()->equals(key)) {
+                return v.toString();
+            }
+        }
+        return String::emptyString;
+    }
+
     void clear()
     {
         m_cssValues.clear();

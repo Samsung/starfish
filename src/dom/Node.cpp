@@ -962,6 +962,93 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
     }
 }
 #ifdef STARFISH_ENABLE_TEST
+
+CSSStyleDeclaration* Node::getComputedStyle()
+{
+    CSSStyleDeclaration* d = new CSSStyleDeclaration(document());
+    // force render to get computed style
+    setNeedsPainting();
+    document()->window()->rendering();
+
+#define FOR_EACH_STYLE(F)                                                \
+    F(Display, DisplayValueKind, display)                                \
+    F(Position, PositionValueKind, position)                             \
+    F(VerticalAlign, VerticalAlignValueKind, verticalAlign)              \
+    F(TextAlign, TextAlignValueKind, textAlign)                          \
+    F(TextDecoration, TextDecorationKind, textDecoration)                \
+    F(Direction, DirectionValueKind, direction)                          \
+    F(TextOverflow, TextOverflowValueKind, textOverflow)                 \
+    F(BorderImageRepeat, BorderImageRepeatValueKind, borderImageRepeatX) \
+    F(BackgroundRepeatX, BackgroundRepeatValueKind, backgroundRepeatX)   \
+    F(BackgroundRepeatY, BackgroundRepeatValueKind, backgroundRepeatY)   \
+    F(Visibility, VisibilityKind, visibility)                            \
+    F(FontStyle, FontStyleValueKind, fontStyle)                          \
+    F(FontWeight, FontWeightValueKind, fontWeight)                       \
+
+#define ADD_VALUE_PAIR(keyKind, valueKind, getter)               \
+    {                                                            \
+        CSSStyleValuePair p;                                     \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);       \
+        p.setValueKind(CSSStyleValuePair::ValueKind::valueKind); \
+        p.setValue(m_style->getter());                           \
+        d->addValuePair(p);                                      \
+    }
+    FOR_EACH_STYLE(ADD_VALUE_PAIR)
+#undef ADD_VALUE_PAIR
+
+#undef FOR_EACH_STYLE
+
+
+#define FOR_EACH_PROP(F)      \
+    F(Width, width)           \
+    F(Height, height)         \
+    F(LineHeight, lineHeight) \
+    F(Top, top)               \
+    F(Right, right)           \
+    F(Bottom, bottom)         \
+    F(Left, left)             \
+    F(MarginTop, marginTop)         \
+    F(MarginRight, marginRight)     \
+    F(MarginBottom, marginBottom)   \
+    F(MarginLeft, marginLeft)       \
+    F(PaddingTop, paddingTop)       \
+    F(PaddingRight, paddingRight)   \
+    F(PaddingBottom, paddingBottom) \
+    F(PaddingLeft, paddingLeft)     \
+
+
+#define ADD_LENGTH_PAIR(keyKind, getter)                              \
+    {                                                                 \
+        CSSStyleValuePair p;                                          \
+        p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);            \
+        if (m_style->getter().isFixed()) {                            \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
+            p.setValue(CSSLength(m_style->getter().fixed()));         \
+        } else if (m_style->getter().isPercent()) {                   \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Percentage); \
+            p.setValue(m_style->getter().isPercent());                \
+        } else if (m_style->getter().isAuto()) {                      \
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);       \
+        }                                                             \
+        d->addValuePair(p);                                           \
+    }
+    FOR_EACH_PROP(ADD_LENGTH_PAIR)
+#undef ADD_LENGTH_PAIR
+
+#undef FOR_EACH_PROP
+
+    // opacity
+    {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Opacity);
+        p.setValueKind(CSSStyleValuePair::ValueKind::Number);
+        p.setValue(m_style->opacity());
+        d->addValuePair(p);
+    }
+
+    return d;
+}
+
 void Node::dumpStyle()
 {
     dump();

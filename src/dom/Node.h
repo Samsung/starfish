@@ -527,6 +527,7 @@ public:
         printf("[%s] ", localName()->utf8Data());
     }
     virtual void dumpStyle();
+    CSSStyleDeclaration* getComputedStyle();
 #endif
 
     Element* firstElementChild();
