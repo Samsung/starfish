@@ -69,13 +69,9 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
             LayoutUnit mX = 0;
             if (direction == LtrDirectionValue) {
                 mX = child->asFrameBox()->marginLeft();
-            } else {
-                mX = child->asFrameBox()->marginRight();
-            }
-
-            if (direction == LtrDirectionValue) {
                 child->asFrameBox()->setX(paddingLeft() + borderLeft() + mX);
             } else {
+                mX = child->asFrameBox()->marginRight();
                 child->asFrameBox()->setX(width() - child->asFrameBox()->width() - mX - borderRight() - paddingRight());
             }
         }

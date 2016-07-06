@@ -54,7 +54,7 @@ public:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
     {
         std::pair<Length, Length> s = intrinsicSize();
-        LayoutUnit parentContentWidth = ctx.blockContainer(this)->asFrameBox()->contentWidth();
+        LayoutUnit parentContentWidth = ctx.containingBlock(this)->asFrameBox()->contentWidth();
         computeBorderMarginPadding(parentContentWidth);
         LayoutUnit intrinsicWidth;
         LayoutUnit intrinsicHeight;
@@ -142,7 +142,7 @@ public:
                     if (remain > 0) {
                         setMarginLeft(remain);
                     }
-                } else if (!style()->marginLeft().isAuto() && !style()->marginRight().isAuto()) {
+                } else if (!style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
@@ -154,7 +154,29 @@ public:
                 }
             }
         } else {
-            // The used value of 'width' is determined as for inline replaced elements.
+            FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
+            computeBorderMarginPadding(cb->contentWidth());
+
+            FrameBox* parent = Frame::layoutParent()->asFrameBox();
+            DirectionValue direction = ctx.blockContainer(this)->style()->direction();
+            auto absLoc = parent->absolutePoint(cb);
+            LayoutUnit absX = absLoc.x() - cb->borderLeft();
+            auto setAbsX = [&](LayoutUnit x)
+            {
+                setX(x - absX);
+            };
+
+            Length marginLeft = style()->marginLeft();
+            Length marginRight = style()->marginRight();
+
+            if (!marginLeft.isAuto() && !marginRight.isAuto()) {
+                if (style()->direction() == LtrDirectionValue) {
+                    setMarginRight(0);
+                } else {
+                    setMarginLeft(0);
+                }
+            }
+
             if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
                 setContentWidth(0);
                 setContentHeight(0);
@@ -162,52 +184,32 @@ public:
                 setContentWidth(intrinsicWidth);
                 setContentHeight(intrinsicHeight);
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
-                LayoutUnit w = style()->width().specifiedValue(ctx.containingBlock(this)->asFrameBox()->contentWidth());
+                LayoutUnit w = style()->width().specifiedValue(cb->contentWidth());
                 LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
                 setContentWidth(w);
                 setContentHeight(h);
             } else if (style()->width().isAuto() && style()->height().isSpecified()) {
-                if (style()->height().isFixed()) {
-                    LayoutUnit h = style()->height().fixed();
-                    LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                    setContentWidth(w);
-                    setContentHeight(h);
-                } else {
-                    // FIXME
-                    setContentWidth(intrinsicWidth);
-                    setContentHeight(intrinsicHeight);
-                }
+                LayoutUnit h = style()->height().specifiedValue(cb->contentHeight());
+                LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
+                setContentWidth(w);
+                setContentHeight(h);
             } else {
                 STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
-                setContentWidth(style()->width().specifiedValue(ctx.parentContentWidth(this)));
+                setContentWidth(style()->width().specifiedValue(cb->contentWidth()));
                 if (style()->height().isFixed()) {
                     setContentHeight(style()->height().fixed());
                 } else {
                     if (ctx.parentHasFixedHeight(this))
-                        setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
+                        setContentHeight(style()->height().specifiedValue(cb->contentHeight()));
                     else
                         setContentHeight(intrinsicHeight);
                 }
             }
 
-            FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
-            auto absLoc = layoutParent()->asFrameBox()->absolutePoint(cb);
-            LayoutUnit absX = absLoc.x() - cb->borderLeft();
-            auto setAbsX = [&](LayoutUnit x)
-            {
-                setX(x - absX);
-            };
 
-            LayoutUnit absY = absLoc.y() - cb->borderTop();
-            auto setAbsY = [&](LayoutUnit y)
-            {
-                setY(y - absY);
-            };
 
-            LayoutUnit parentWidth = cb->contentWidth() + cb->paddingWidth();
 
-            Length marginLeft = style()->marginLeft();
-            Length marginRight = style()->marginRight();
+            LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
 
             // If 'margin-left' or 'margin-right' is specified as 'auto' its used value is determined by the rules below.
             // If both 'left' and 'right' have the value 'auto'
@@ -216,16 +218,16 @@ public:
             if (style()->left().isAuto() && style()->right().isAuto()) {
                 // static location computed in normal flow processing
             } else if (!style()->left().isAuto() && style()->right().isAuto()) {
-                setAbsX(style()->left().specifiedValue(parentWidth));
+                setAbsX(style()->left().specifiedValue(containgBlockContentWidth));
             } else if (style()->left().isAuto() && !style()->right().isAuto()) {
-                LayoutUnit r = style()->right().specifiedValue(parentWidth);
-                setAbsX(parentWidth - r - width());
+                LayoutUnit r = style()->right().specifiedValue(containgBlockContentWidth);
+                setAbsX(containgBlockContentWidth - r - width());
             } else {
                 if (style()->direction() == LtrDirectionValue) {
-                    setAbsX(style()->left().specifiedValue(parentWidth));
+                    setAbsX(style()->left().specifiedValue(containgBlockContentWidth));
                 } else {
-                    LayoutUnit computedRight = style()->right().specifiedValue(parentWidth);
-                    setAbsX(parentWidth - FrameBox::width() - computedRight);
+                    LayoutUnit computedRight = style()->right().specifiedValue(containgBlockContentWidth);
+                    setAbsX(containgBlockContentWidth - FrameBox::width() - computedRight);
                 }
             }
 
@@ -242,9 +244,19 @@ public:
             } else {
             }
 
+            if (style()->left().isAuto() && style()->right().isAuto() && direction == DirectionValue::RtlDirectionValue) {
+                moveX(-this->width());
+            }
+
             LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
             Length marginTop = style()->marginTop();
             Length marginBottom = style()->marginBottom();
+
+            LayoutUnit absY = absLoc.y() - cb->borderTop();
+            auto setAbsY = [&](LayoutUnit y)
+            {
+                setY(y - absY);
+            };
 
             if (style()->top().isAuto() && style()->bottom().isAuto()) {
                 // static location computed in normal flow processing

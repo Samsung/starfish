@@ -97,7 +97,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     if (remain > 0) {
                         setMarginLeft(remain);
                     }
-                } else if (!style->marginLeft().isAuto() && !style->marginRight().isAuto()) {
+                } else if (!style->marginLeft().isAuto() && style->marginRight().isAuto()) {
                     LayoutUnit remain = parentContentWidth;
                     remain -= contentWidth();
                     remain -= borderWidth();
