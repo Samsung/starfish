@@ -75,7 +75,12 @@ wrt::xwalk::Extension* ExtensionManagerInstance::getExtension(const char* apiNam
 #ifndef STARFISH_TIZEN_3_0
         snprintf(library_path, 512, "/usr/lib/wrt-plugins-widget/lib%s.so", apiName);
 #else
-        snprintf(library_path, 512, "/usr/lib/tizen-extensions-crosswalk/libtizen_%s.so", apiName);
+        if (!strcmp(apiName, "tizen"))
+            snprintf(library_path, 512, "/usr/lib/tizen-extensions-crosswalk/libtizen.so");
+        else if (!strcmp(apiName, "sensorservice"))
+            snprintf(library_path, 512, "/usr/lib/tizen-extensions-crosswalk/libtizen_sensor.so");
+        else
+            snprintf(library_path, 512, "/usr/lib/tizen-extensions-crosswalk/libtizen_%s.so", apiName);
 #endif
         wrt::xwalk::Extension* extension = new wrt::xwalk::Extension(library_path, nullptr);
         if (extension->Initialize()) {
@@ -125,7 +130,6 @@ escargot::ESObject* ExtensionManagerInstance::initializeExtensionInstance(const 
     apiSourceBuilder.appendString("return exports;})");
 
     escargot::ESString* apiSource = apiSourceBuilder.finalize();
-    DEVICEAPI_LOG_INFO("APISOURCE %s", apiSource->utf8Data());
 #endif
     escargot::ESFunctionObject* initializer = instance->evaluate(apiSource).asESPointer()->asESFunctionObject();
     escargot::ESObject* extensionObject = createExtensionObject();
