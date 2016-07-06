@@ -68,25 +68,9 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
             Length marginRight = child->style()->marginRight();
             LayoutUnit mX = 0;
             if (direction == LtrDirectionValue) {
-                if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                    mX = child->asFrameBox()->marginLeft();
-                } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-                } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-                    mX = child->asFrameBox()->marginLeft();
-                } else {
-                    // auto-auto
-                    mX = child->asFrameBox()->marginLeft();
-                }
+                mX = child->asFrameBox()->marginLeft();
             } else {
-                if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                    mX = child->asFrameBox()->marginRight();
-                } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-                    mX = child->asFrameBox()->marginRight();
-                } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-                } else {
-                    // auto-auto
-                    mX = child->asFrameBox()->marginRight();
-                }
+                mX = child->asFrameBox()->marginRight();
             }
 
             if (direction == LtrDirectionValue) {

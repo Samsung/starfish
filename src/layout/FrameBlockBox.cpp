@@ -78,14 +78,34 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 }
             }
 
-            if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
-                LayoutUnit remain = parentContentWidth;
-                remain -= contentWidth();
-                remain -= borderWidth();
-                remain -= paddingWidth();
-                if (remain > 0) {
-                    setMarginLeft(remain / 2);
-                    setMarginRight(remain / 2);
+            if (style->display() == BlockDisplayValue) {
+                if (style->marginLeft().isAuto() && style->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    if (remain > 0) {
+                        setMarginLeft(remain / 2);
+                        setMarginRight(remain / 2);
+                    }
+                } else if (style->marginLeft().isAuto() && !style->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    remain -= marginRight();
+                    if (remain > 0) {
+                        setMarginLeft(remain);
+                    }
+                } else if (!style->marginLeft().isAuto() && !style->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    remain -= marginLeft();
+                    if (remain > 0) {
+                        setMarginRight(remain);
+                    }
                 }
             }
         } else {

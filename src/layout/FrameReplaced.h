@@ -122,6 +122,37 @@ public:
                     setMarginRight(remain / 2);
                 }
             }
+
+            if (style()->display() == BlockDisplayValue) {
+                if (style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    if (remain > 0) {
+                        setMarginLeft(remain / 2);
+                        setMarginRight(remain / 2);
+                    }
+                } else if (style()->marginLeft().isAuto() && !style()->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    remain -= marginRight();
+                    if (remain > 0) {
+                        setMarginLeft(remain);
+                    }
+                } else if (!style()->marginLeft().isAuto() && !style()->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    remain -= marginLeft();
+                    if (remain > 0) {
+                        setMarginRight(remain);
+                    }
+                }
+            }
         } else {
             // The used value of 'width' is determined as for inline replaced elements.
             if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
