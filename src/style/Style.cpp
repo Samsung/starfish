@@ -676,18 +676,15 @@ void CSSStyleValuePair::setValueBackgroundSize(std::vector<String*, gc_allocator
         m_value.m_multiValue = values;
         for (unsigned int i = 0; i < tokens->size(); i++) {
             token = (*tokens)[i];
-            CSSPropertyParser* parser = new CSSPropertyParser((char*)token->utf8Data());
-            // NOTE: CSS 2.1 does not support layering multiple background images(for comma-separated)
-            CSSStyleValuePair::ValueKind kind;
-            while (parser->findNextValueKind(' ', &kind)) {
-                if (kind == CSSStyleValuePair::ValueKind::Auto) {
-                    values->append(kind, { 0 });
-                } else if (kind == CSSStyleValuePair::ValueKind::Percentage) {
-                    values->append(kind, { parser->parsedFloatValue() });
-                } else if (kind == CSSStyleValuePair::ValueKind::Length) {
-                    CSSStyleValuePair::ValueData data = { CSSLength(parser->parsedFloatValue()) };
-                    values->append(kind, data);
-                }
+            float result = 0.f;
+            String* unit = CSSPropertyParser::parseNumberAndUnit((char*)token->utf8Data(), &result);
+            if (unit->equals("%")) {
+                values->append(CSSStyleValuePair::ValueKind::Percentage, { (result / 100.f) });
+            } else if (unit->equals("auto")) {
+                values->append(CSSStyleValuePair::ValueKind::Auto, { 0 });
+            } else {
+                ValueData data = { CSSLength(unit, result)};
+                values->append(CSSStyleValuePair::ValueKind::Length, data);
             }
         }
     }

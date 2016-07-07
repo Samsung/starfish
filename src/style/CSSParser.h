@@ -578,33 +578,6 @@ public:
         return false;
     }
 
-    bool findNextValueKind(char separator, CSSStyleValuePair::ValueKind* kind)
-    {
-        if (m_endPos <= m_curPos)
-            return false;
-        char* nextSep = strchr(m_curPos, separator);
-        if (nextSep == NULL)
-            nextSep = m_curPos + strlen(m_curPos);
-        if (strncmp(m_curPos, "auto", 4) == 0) {
-            *kind = CSSStyleValuePair::ValueKind::Auto;
-        } else if (strncmp(nextSep - 1, "%", 1) == 0) {
-            *kind = CSSStyleValuePair::ValueKind::Percentage;
-            float f;
-            sscanf(m_curPos, "%f%%", &f);
-            f = f / 100.f;
-            m_parsedFloatValue = f;
-        } else if (strncmp(nextSep - 2, "px", 1) == 0) {
-            *kind = CSSStyleValuePair::ValueKind::Length;
-            float f;
-            sscanf(m_curPos, "%fpx", &f);
-            m_parsedFloatValue = f;
-        } else {
-            return false;
-        }
-        m_curPos = nextSep + 1;
-        return true;
-    }
-
     float parsedFloatValue()
     {
         return m_parsedFloatValue;
