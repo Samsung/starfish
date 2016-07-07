@@ -232,7 +232,7 @@ public:
     String* toString() const
     {
         char* buf;
-        if (m_a == 0) {
+        if (m_a == 255) {
             asprintf(&buf, "rgb(%d, %d, %d)", m_r, m_g, m_b);
         } else {
             asprintf(&buf, "rgba(%d, %d, %d, %g)", m_r, m_g, m_b, (float)m_a);

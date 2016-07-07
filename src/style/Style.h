@@ -649,6 +649,7 @@ public:
         Angle, //
         Normal,
         StringValueKind,
+        ColorValueKind,
         UrlValueKind,
 
         DisplayValueKind,
@@ -900,6 +901,12 @@ public:
         return m_value.m_textDecoration;
     }
 
+    ::StarFish::Color colorValue()
+    {
+        STARFISH_ASSERT(m_valueKind == ColorValueKind);
+        return m_value.m_color;
+    }
+
     friend void parsePercentageOrLength(CSSStyleValuePair& ret, const char* value);
     friend void parseUrl(const char* value);
 
@@ -926,6 +933,7 @@ public:
         UnicodeBidiValue m_unicodeBidi;
         TextDecorationValue m_textDecoration;
         CSSTransformFunctions* m_transforms;
+        ::StarFish::Color m_color;
         ValueData(int v) { m_floatValue = v; }
         ValueData(float v) { m_floatValue = v; }
         ValueData(DisplayValue v) { m_display = v; }
@@ -946,6 +954,7 @@ public:
         ValueData(UnicodeBidiValue v) { m_unicodeBidi = v; }
         ValueData(TextDecorationValue v) { m_textDecoration = v; }
         ValueData(CSSTransformFunctions* v) { m_transforms = v; }
+        ValueData(::StarFish::Color v) { m_color = v; }
     };
 
     void setValue(const ValueData& value)

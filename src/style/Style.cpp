@@ -315,8 +315,13 @@ void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*>
 {
     const char* value = tokens->at(0)->utf8Data();
     // color | transparent | inherit
-    m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-    m_value.m_stringValue = tokens->at(0);
+    if (tokens->at(0)->startsWith("#", false) || tokens->at(0)->startsWith("rgb", false)) {
+        m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
+        m_value.m_color = parseColor(tokens->at(0));
+    } else {
+        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+        m_value.m_stringValue = tokens->at(0)->trim();
+    }
 }
 
 void CSSStyleValuePair::setValueBackgroundColor(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -888,6 +893,10 @@ void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocato
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     ValueList* values = new ValueList();
 
+    if (tokens->size() == 1) {
+        tokens->push_back(String::createASCIIString("center"));
+    }
+
     for (unsigned int i = 0; i < tokens->size(); i++) {
         value = tokens->at(i)->utf8Data();
         if (VALUE_IS_STRING("left")) {
@@ -1356,6 +1365,8 @@ String* CSSStyleValuePair::toString()
     case BorderLeftColor: {
         // <color>
         switch (value_kind) {
+        case CSSStyleValuePair::ValueKind::ColorValueKind:
+            return colorValue().toString();
         case CSSStyleValuePair::ValueKind::StringValueKind:
             return stringValue();
         default:
@@ -2929,11 +2940,15 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->m_inheritedStyles.m_color = parseColor(String::fromUTF8("black"));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                        style->m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                        style->m_inheritedStyles.m_color = cssValues[k].colorValue();
                     } else {
-                        style->m_inheritedStyles.m_color = parseColor(cssValues[k].stringValue());
+                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                            style->m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
+                        } else {
+                            style->m_inheritedStyles.m_color = parseColor(cssValues[k].stringValue());
+                        }
                     }
                 }
                 break;
@@ -3072,8 +3087,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundColor(Color(0, 0, 0, 0));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    style->setBackgroundColor(parseColor(cssValues[k].stringValue()));
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                        style->setBackgroundColor(cssValues[k].colorValue());
+                    } else {
+                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                            style->setBackgroundColor(parentStyle->backgroundColor());
+                        } else {
+                            style->setBackgroundColor(parseColor(cssValues[k].stringValue()));
+                        }
+                    }
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundImage:
@@ -3196,12 +3219,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
                     style->clearBorderTopColor();
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                        // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
-                        style->clearBorderTopColor();
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                        style->setBorderTopColor(cssValues[k].colorValue());
                     } else {
-                        style->setBorderTopColor(parseColor(cssValues[k].stringValue()));
+                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                            // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                            style->clearBorderTopColor();
+                        } else {
+                            style->setBorderTopColor(parseColor(cssValues[k].stringValue()));
+                        }
                     }
                 }
                 break;
@@ -3212,12 +3239,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
                     style->clearBorderRightColor();
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                        // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
-                        style->clearBorderRightColor();
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                        style->setBorderRightColor(cssValues[k].colorValue());
                     } else {
-                        style->setBorderRightColor(parseColor(cssValues[k].stringValue()));
+                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                            // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                            style->clearBorderRightColor();
+                        } else {
+                            style->setBorderRightColor(parseColor(cssValues[k].stringValue()));
+                        }
                     }
                 }
                 break;
@@ -3228,12 +3259,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
                     style->clearBorderBottomColor();
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                        // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
-                        style->clearBorderBottomColor();
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                        style->setBorderBottomColor(cssValues[k].colorValue());
                     } else {
-                        style->setBorderBottomColor(parseColor(cssValues[k].stringValue()));
+                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                            // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                            style->clearBorderBottomColor();
+                        } else {
+                            style->setBorderBottomColor(parseColor(cssValues[k].stringValue()));
+                        }
                     }
                 }
                 break;
@@ -3244,12 +3279,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
                     style->clearBorderLeftColor();
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                        // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
-                        style->clearBorderLeftColor();
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                        style->setBorderLeftColor(cssValues[k].colorValue());
                     } else {
-                        style->setBorderLeftColor(parseColor(cssValues[k].stringValue()));
+                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                            // This is done after resolve style (arrangeStyleValues function in ComputedStyle Class)
+                            style->clearBorderLeftColor();
+                        } else {
+                            style->setBorderLeftColor(parseColor(cssValues[k].stringValue()));
+                        }
                     }
                 }
                 break;

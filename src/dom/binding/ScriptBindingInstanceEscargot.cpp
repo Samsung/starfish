@@ -2158,7 +2158,12 @@ escargot::ESFunctionObject* bindingHTMLScriptElement(ScriptBindingInstance* scri
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
-            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_src));
+            size_t idx = nd->asElement()->hasAttribute(nd->document()->window()->starFish()->staticStrings()->m_src);
+            if (idx != SIZE_MAX) {
+                URL u(nd->document()->documentURI().urlString(), nd->asElement()->getAttribute(idx));
+                return toJSString(u.urlString());
+            }
+            return toJSString(String::emptyString);
         }
         THROW_ILLEGAL_INVOCATION();
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -2271,7 +2276,12 @@ escargot::ESFunctionObject* bindingHTMLLinkElement(ScriptBindingInstance* script
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
-            return toJSString(nd->asElement()->getAttribute(nd->document()->window()->starFish()->staticStrings()->m_href));
+            size_t idx = nd->asElement()->hasAttribute(nd->document()->window()->starFish()->staticStrings()->m_href);
+            if (idx != SIZE_MAX) {
+                URL u(nd->document()->documentURI().urlString(), nd->asElement()->getAttribute(idx));
+                return toJSString(u.urlString());
+            }
+            return toJSString(String::emptyString);
         }
         THROW_ILLEGAL_INVOCATION();
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
