@@ -214,6 +214,8 @@ String* CSSStyleValuePair::keyName()
         return String::createASCIIString("background-color");
     case BackgroundImage:
         return String::createASCIIString("background-image");
+    case BackgroundPosition:
+        return String::createASCIIString("background-position");
     case BackgroundSize:
         return String::createASCIIString("background-size");
     case BackgroundRepeatX:
@@ -615,6 +617,46 @@ void CSSStyleValuePair::setValueTextDecoration(std::vector<String*, gc_allocator
     } else if (VALUE_IS_STRING("blink")) {
         m_value.m_textDecoration = TextDecorationValue::BlinkTextDecorationValue;
     }
+}
+
+void CSSStyleValuePair::setValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
+    const char* value;
+
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    ValueList* values = new ValueList();
+
+    if (tokens->size() == 1) {
+        tokens->push_back(String::createASCIIString("center"));
+    }
+
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        value = tokens->at(i)->utf8Data();
+        if (VALUE_IS_STRING("left")) {
+            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionLeft, { 0 });
+        } else if (VALUE_IS_STRING("right")) {
+            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionRight, { 0 });
+        } else if (VALUE_IS_STRING("center")) {
+            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionCenter, { 0 });
+        } else if (VALUE_IS_STRING("top")) {
+            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionTop, { 0 });
+        } else if (VALUE_IS_STRING("bottom")) {
+            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionBottom, { 0 });
+        } else {
+            float result;
+            String* unit = CSSPropertyParser::parseNumberAndUnit(value, &result);
+            if (unit->equals("%")) {
+                values->append(CSSStyleValuePair::ValueKind::Percentage, { (result / 100.f) });
+            } else {
+                ValueData data = { CSSLength(unit, result)};
+                values->append(CSSStyleValuePair::ValueKind::Length, data);
+            }
+        }
+    }
+
+    m_value.m_multiValue = values;
+
 }
 
 void CSSStyleValuePair::setValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -1421,6 +1463,35 @@ String* CSSStyleValuePair::toString()
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         break;
+    case BackgroundPosition:
+        switch (m_valueKind) {
+        case CSSStyleValuePair::ValueKind::ValueListKind: {
+            String* str = String::emptyString;
+            ValueList* vals = multiValue();
+            for (unsigned int i = 0; i < vals->size(); i++) {
+                if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionLeft)
+                    str = str->concat(String::fromUTF8("left"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionRight)
+                    str = str->concat(String::fromUTF8("right"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionTop)
+                    str = str->concat(String::fromUTF8("top"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionBottom)
+                    str = str->concat(String::fromUTF8("bottom"));
+                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionCenter)
+                    str = str->concat(String::fromUTF8("center"));
+                else
+                    str = str->concat(valueToString(vals->getValueKindAtIndex(i), vals->getValueAtIndex(i)));
+
+                if (i < vals->size() - 1) {
+                    str = str->concat(String::spaceString);
+                }
+            }
+            return str;
+        }
+        default:
+            return String::emptyString;
+        }
+        break;
     case BackgroundSize: {
         // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
         switch (m_valueKind) {
@@ -2191,6 +2262,25 @@ bool CSSStyleDeclaration::checkInputErrorBorderImageSource(std::vector<String*, 
     }
     // url
     return CSSPropertyParser::assureUrl(tokens, 0, tokens->size());
+}
+
+bool CSSStyleDeclaration::checkInputErrorBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
+    if (tokens->size() == 1 || tokens->size() == 2) {
+        const char* value;
+        for (unsigned int i = 0; i < tokens->size(); i++) {
+            value = (*tokens)[i]->utf8Data();
+            if (VALUE_IS_STRING("left") || VALUE_IS_STRING("right") || VALUE_IS_STRING("top") || VALUE_IS_STRING("bottom") || VALUE_IS_STRING("center")) {
+                return true;
+            } else if (CSSPropertyParser::assureLength(value, true) || CSSPropertyParser::assurePercent(value, true)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return false;
 }
 
 bool CSSStyleDeclaration::checkInputErrorBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -2995,7 +3085,6 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 }
                 break;
             case CSSStyleValuePair::KeyKind::FontWeight:
-                // TODO: LEESS
                 // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit // initial -> normal
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->m_inheritedStyles.m_fontWeight = parentStyle->m_inheritedStyles.m_fontWeight;
@@ -3109,6 +3198,43 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::UrlValueKind);
                     style->setBackgroundImage(cssValues[k].urlValue(origin));
                 }
+                break;
+            case CSSStyleValuePair::KeyKind::BackgroundPosition:
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                    style->setBackgroundPositionType(parentStyle->backgroundPositionType());
+                    style->setBackgroundPositionValue(parentStyle->backgroundPositionValue());
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->setBackgroundPositionValue(new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)));
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+                    ValueList* list = cssValues[k].multiValue();
+                    Length xAxis, yAxis;
+
+                    xAxis = Length(Length::Percent, 0.5f);
+                    yAxis = Length(Length::Percent, 0.5f);
+
+                    for (unsigned int i = 0; i < list->size(); i++) {
+                        if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionLeft) {
+                            xAxis = Length(Length::Percent, 0.0f);
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionRight) {
+                            xAxis = Length(Length::Percent, 1.0f);
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionCenter) {
+
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionTop) {
+                            yAxis = Length(Length::Percent, 0.0f);
+                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionBottom) {
+                            yAxis = Length(Length::Percent, 1.0f);
+                        } else {
+                            if (i == 0)
+                                xAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                            else
+                                yAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                        }
+                    }
+                    style->setBackgroundPositionValue(new LengthPosition(xAxis, yAxis));
+                } else {
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundSize:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {

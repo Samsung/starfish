@@ -408,6 +408,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Bottom-Style
         // Border-Bottom-Width
         // Border-Bottom-Color
+        // Background-Position
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
@@ -415,6 +416,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "background-repeat-y", 19) == 0) {
                 return CSSStyleKind::BackgroundRepeatY;
+            }
+            if (memcmp(data, "background-position", 19) == 0) {
+                return CSSStyleKind::BackgroundPosition;
             }
             if (memcmp(data, "border-image-repeat", 19) == 0) {
                 return CSSStyleKind::BorderImageRepeat;
@@ -769,6 +773,15 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderBottomColor", 17) == 0) {
                 return CSSStyleKind::BorderBottomColor;
+            }
+            break;
+        }
+        break;
+    case 18:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "backgroundPosition", 18) == 0) {
+                return CSSStyleKind::BackgroundPosition;
             }
             break;
         }

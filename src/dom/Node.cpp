@@ -1441,6 +1441,12 @@ void Node::dumpStyle()
         printf("background-image: %s, ", m_style->backgroundImage()->utf8Data());
     }
 
+    // background-position
+    if (m_style->backgroundPositionType() == BackgroundPositionType::BackgroundPositionValue) {
+        printf("background-position: (%s, %s),", m_style->backgroundPositionValue()->x().dumpString()->utf8Data(),
+            m_style->backgroundPositionValue()->y().dumpString()->utf8Data());
+    }
+
     // background-size
     if (m_style->bgSizeType() == BackgroundSizeType::Cover) {
         printf("background-size: cover, ");

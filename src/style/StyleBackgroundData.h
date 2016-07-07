@@ -29,6 +29,8 @@ public:
     StyleBackgroundData()
         : m_image(String::emptyString)
         , m_imageResource(NULL)
+        , m_positionType(BackgroundPositionType::BackgroundPositionValue)
+        , m_positionValue(new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)))
         , m_sizeType(BackgroundSizeType::SizeValue)
         , m_sizeValue(new LengthSize())
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
@@ -38,6 +40,17 @@ public:
 
     ~StyleBackgroundData()
     {
+    }
+
+    void setPositionType(BackgroundPositionType type)
+    {
+        m_positionType = type;
+    }
+
+    void setPositionValue(LengthPosition* position)
+    {
+        m_positionType = BackgroundPositionType::BackgroundPositionValue;
+        m_positionValue = position;
     }
 
     void setSizeType(BackgroundSizeType type)
@@ -98,6 +111,11 @@ public:
         return m_imageResource;
     }
 
+    BackgroundPositionType positionType()
+    {
+        return m_positionType;
+    }
+
     BackgroundSizeType sizeType()
     {
         return m_sizeType;
@@ -121,10 +139,21 @@ public:
         return m_sizeValue;
     }
 
+    LengthPosition* positionValue()
+    {
+        STARFISH_ASSERT(m_positionType == BackgroundPositionType::BackgroundPositionValue);
+        if (m_positionValue == NULL)
+            m_positionValue = new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
+        return m_positionValue;
+    }
+
     void checkComputed(Length fontSize, Font* font)
     {
         if (m_sizeValue)
             m_sizeValue->checkComputed(fontSize, font);
+
+        if (m_positionValue)
+            m_positionValue->checkComputed(fontSize, font);
     }
 
 private:
@@ -135,6 +164,10 @@ private:
 
     String* m_image;
     ImageResource* m_imageResource;
+
+    // background-position
+    BackgroundPositionType m_positionType;
+    LengthPosition* m_positionValue;
 
     // background-size
     BackgroundSizeType m_sizeType;
@@ -152,6 +185,17 @@ bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
 
     if (a.m_sizeType != b.m_sizeType)
         return false;
+
+    if (a.m_image != b.m_image)
+        return false;
+
+    if (a.m_positionType == BackgroundPositionType::BackgroundPositionValue && *a.m_sizeValue != *b.m_sizeValue) {
+        return false;
+    }
+
+    if (a.m_positionType == BackgroundPositionType::BackgroundPositionValue && *a.m_sizeValue != *b.m_sizeValue) {
+        return false;
+    }
 
     if (a.m_sizeType == BackgroundSizeType::SizeValue && *a.m_sizeValue != *b.m_sizeValue) {
         return false;

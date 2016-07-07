@@ -267,6 +267,11 @@ enum DirectionValue {
     RtlDirectionValue,
 };
 
+enum BackgroundPositionType {
+    BackgroundPositionValue,
+    BackgroundPositionNone,
+};
+
 enum BackgroundSizeType {
     Cover,
     Contain,
@@ -409,6 +414,7 @@ class CSSStyleDeclaration;
     F(Visibility, visibility, "visibility")                        \
     F(Overflow, overflow, "overflow")                              \
     F(BackgroundImage, backgroundImage, "background-image")        \
+    F(BackgroundPosition, backgroundPosition, "background-position")           \
     F(BackgroundSize, backgroundSize, "background-size")           \
     F(ZIndex, zIndex, "z-index")                                   \
     F(VerticalAlign, verticalAlign, "vertical-align")              \
@@ -567,6 +573,8 @@ public:
         BackgroundColor, // color | <transparent> | inherit
         // https://www.w3.org/TR/CSS21/colors.html#propdef-background-image
         BackgroundImage, // uri | <none> | inherit
+        // https://www.w3.org/TR/CSS21/colors.html#propdef-background-position
+        BackgroundPosition, // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
         // https://www.w3.org/TR/css3-background/#the-background-size
         BackgroundSize, // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
         // https://www.w3.org/TR/CSS21/colors.html#propdef-background-repeat
@@ -704,6 +712,13 @@ public:
         TransformOriginTop,
         TransformOriginBottom,
         TransformOriginCenter,
+
+        // background-position
+        BackgroundPositionLeft,
+        BackgroundPositionRight,
+        BackgroundPositionTop,
+        BackgroundPositionBottom,
+        BackgroundPositionCenter,
     };
 
     CSSStyleValuePair()
@@ -1051,6 +1066,7 @@ public:
 #define FOR_EACH_STYLE_ATTRIBUTE(F)             \
     F(Color, "color")                           \
     F(BackgroundColor, "background-color")      \
+    F(BackgroundPosition, "background-position")        \
     F(BackgroundSize, "background-size")        \
     F(LineHeight, "line-height")                \
     F(MarginTop, "margin-top")                  \

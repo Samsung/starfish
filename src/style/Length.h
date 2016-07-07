@@ -197,6 +197,56 @@ public:
     Length m_height;
 };
 
+class LengthPosition : public gc {
+public:
+    LengthPosition()
+    {
+    }
+
+    LengthPosition(Length x)
+        : m_x(x)
+    {
+    }
+
+    LengthPosition(Length x, Length y)
+        : m_x(x)
+        , m_y(y)
+    {
+    }
+
+    Length x()
+    {
+        return m_x;
+    }
+
+    Length y()
+    {
+        return m_y;
+    }
+
+    bool operator==(const LengthPosition& o)
+    {
+        return this->m_x == o.m_x && this->m_y == o.m_y;
+    }
+
+    bool operator!=(const LengthPosition& o)
+    {
+        return !operator==(o);
+    }
+
+    void checkComputed(Length fontSize, Font* font)
+    {
+        m_x.changeToFixedIfNeeded(fontSize, font);
+        m_y.changeToFixedIfNeeded(fontSize, font);
+    }
+
+    Length m_x;
+    Length m_y;
+};
+
+
+
+
 class LengthBox {
 public:
     LengthBox()

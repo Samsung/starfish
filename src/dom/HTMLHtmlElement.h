@@ -55,7 +55,7 @@ public:
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
     {
         HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
-        if (!newStyle->backgroundColor().isTransparent() || newStyle->backgroundImageData()) {
+        if (!newStyle->backgroundColor().isTransparent() || !newStyle->backgroundImage()->equals(String::emptyString)) {
             document()->window()->m_hasRootElementBackground = true;
         } else {
             document()->window()->m_hasRootElementBackground = false;
