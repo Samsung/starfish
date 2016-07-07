@@ -1611,8 +1611,7 @@ String* CSSStyleValuePair::toString()
                 if (values->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::StringValueKind)
                     newstr = String::fromUTF8("fill");
                 else
-                    newstr = valueToString(values->getValueKindAtIndex(i),
-                        values->getValueAtIndex(i));
+                    newstr = valueToString(values->getValueKindAtIndex(i), values->getValueAtIndex(i));
                 s = s->concat(newstr);
                 if (i != values->size() - 1)
                     s = s->concat(String::spaceString);
@@ -1799,6 +1798,21 @@ String* CSSStyleValuePair::toString()
         } else {
             // initial or inherit or none
             return lengthOrPercentageOrKeywordToString();
+        }
+    }
+    case UnicodeBidi: {
+        switch (m_valueKind) {
+        case UnicodeBidiValueKind: {
+            switch (unicodeBidiValue()) {
+            case NormalUnicodeBidiValue:
+                return String::fromUTF8("normal");
+            case EmbedUnicodeBidiValue:
+                return String::fromUTF8("embed");
+            }
+        }
+        default: {
+            return String::emptyString;
+        }
         }
     }
     default: {

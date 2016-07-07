@@ -1167,8 +1167,40 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);
     }
 
-    // TODO: borderImageSlice
+    // borderImageSlice
+    {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSlice);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
 
+        ValueList* vals = new ValueList();
+        LengthBox box = m_style->borderImageSlices();
+        if (box.top().isFixed()) {
+            vals->append(CSSStyleValuePair::ValueKind::Length, CSSLength(box.top().fixed()));
+        } else {
+            vals->append(CSSStyleValuePair::ValueKind::Percentage, box.top().percent());
+        }
+
+        if (box.right().isFixed()) {
+            vals->append(CSSStyleValuePair::ValueKind::Length, CSSLength(box.right().fixed()));
+        } else {
+            vals->append(CSSStyleValuePair::ValueKind::Percentage, box.right().percent());
+        }
+
+        if (box.bottom().isFixed()) {
+            vals->append(CSSStyleValuePair::ValueKind::Length, CSSLength(box.bottom().fixed()));
+        } else {
+            vals->append(CSSStyleValuePair::ValueKind::Percentage, box.bottom().percent());
+        }
+
+        if (box.left().isFixed()) {
+            vals->append(CSSStyleValuePair::ValueKind::Length, CSSLength(box.left().fixed()));
+        } else {
+            vals->append(CSSStyleValuePair::ValueKind::Percentage, box.left().percent());
+        }
+        p.setValue(vals);
+        d->addValuePair(p);
+    }
     // TODO: borderImageWidth
 
     // opacity
@@ -1189,7 +1221,34 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);
     }
 
-    // TODO: transform-origin
+    // transform-origin
+    {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TransformOrigin);
+
+        if (m_style->transformOrigin() == NULL) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+
+            ValueList* vals = new ValueList();
+            Length x = m_style->transformOrigin()->originValue()->getXAxis();
+            Length y = m_style->transformOrigin()->originValue()->getYAxis();
+            if (x.isFixed()) {
+                vals->append(CSSStyleValuePair::ValueKind::Length, CSSLength(x.fixed()));
+            } else {
+                vals->append(CSSStyleValuePair::ValueKind::Percentage, x.percent());
+            }
+
+            if (y.isFixed()) {
+                vals->append(CSSStyleValuePair::ValueKind::Length, CSSLength(y.fixed()));
+            } else {
+                vals->append(CSSStyleValuePair::ValueKind::Percentage, y.percent());
+            }
+            p.setValue(vals);
+        }
+        d->addValuePair(p);
+    }
 
     // TODO: transform
 
