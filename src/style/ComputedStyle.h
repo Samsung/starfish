@@ -355,7 +355,7 @@ public:
     {
         if (m_background == NULL)
             return new LengthPosition();
-        STARFISH_ASSERT(m_background && m_background->positionType() == BackgroundPositionType::BackgroundPositionValue)
+        STARFISH_ASSERT(m_background && m_background->positionType() == BackgroundPositionType::BackgroundPositionValue);
         return m_background->positionValue();
     }
 
