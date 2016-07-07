@@ -260,8 +260,8 @@ public:
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
         if (parser->consumeNumber()) {
             float num = parser->parsedNumber();
+            *result = num;
             if (parser->consumeString()) {
-                *result = num;
                 return parser->parsedString();
             }
         }

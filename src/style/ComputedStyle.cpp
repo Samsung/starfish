@@ -73,7 +73,6 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
         fontWeight = 3;
         break;
     case NormalFontWeightValue:
-    case FourHundredsFontWeightValue:
         fontWeight = 4;
         break;
     case FiveHundredsFontWeightValue:
@@ -83,7 +82,6 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
         fontWeight = 6;
         break;
     case BoldFontWeightValue:
-    case SevenHundredsFontWeightValue:
         fontWeight = 7;
         break;
     case EightHundredsFontWeightValue:

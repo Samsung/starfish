@@ -63,6 +63,7 @@ public:
     }
 
 public:
+    // NOTE: current spec does not support border-image-repeat
     BorderImageRepeatValue m_repeatX; // [border-image-repeat]
     BorderImageRepeatValue m_repeatY; // [border-image-repeat]
 

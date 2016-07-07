@@ -988,7 +988,6 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(TextDecoration, TextDecorationValueKind, textDecoration)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
     ADD_VALUE_PAIR(TextOverflow, TextOverflowValueKind, textOverflow)
-    ADD_VALUE_PAIR(BorderImageRepeat, BorderImageRepeatValueKind, borderImageRepeatX)
     ADD_VALUE_PAIR(BackgroundRepeatX, BackgroundRepeatValueKind, backgroundRepeatX)
     ADD_VALUE_PAIR(BackgroundRepeatY, BackgroundRepeatValueKind, backgroundRepeatY)
     ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
@@ -1349,8 +1348,6 @@ void Node::dumpStyle()
         printf("text-align: right, ");
     } else if (m_style->textAlign() == TextAlignValue::CenterTextAlignValue) {
         printf("text-align: center, ");
-    } else if (m_style->textAlign() == TextAlignValue::JustifyTextAlignValue) {
-        printf("text-align: justify, ");
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1491,30 +1488,6 @@ void Node::dumpStyle()
         printf("left: %f, ", m_style->left().percent());
     } else if (m_style->left().isAuto()) {
         printf("left: auto, ");
-    }
-
-    // border-image-repeat
-    if (m_style->borderImageRepeatX() == BorderImageRepeatValue::StretchValue) {
-        printf("border-image-repeat: (stretch ");
-    } else if (m_style->borderImageRepeatX() == BorderImageRepeatValue::RepeatValue) {
-        printf("border-image-repeat: (repeat ");
-    } else if (m_style->borderImageRepeatX() == BorderImageRepeatValue::RoundValue) {
-        printf("border-image-repeat: (round ");
-    } else if (m_style->borderImageRepeatX() == BorderImageRepeatValue::SpaceValue) {
-        printf("border-image-repeat: (space ");
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    if (m_style->borderImageRepeatY() == BorderImageRepeatValue::StretchValue) {
-        printf("stretch), ");
-    } else if (m_style->borderImageRepeatY() == BorderImageRepeatValue::RepeatValue) {
-        printf("repeat), ");
-    } else if (m_style->borderImageRepeatY() == BorderImageRepeatValue::RoundValue) {
-        printf("round), ");
-    } else if (m_style->borderImageRepeatY() == BorderImageRepeatValue::SpaceValue) {
-        printf("space), ");
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     // border-color

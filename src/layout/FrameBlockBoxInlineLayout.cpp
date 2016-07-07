@@ -1115,10 +1115,11 @@ void LineFormattingContext::completeLastLine()
             FrameBox* childBox = back->m_boxes[k];
             childBox->moveX(diff);
         }
+    /*
+     * justify: No supported value
     } else if (m_block.style()->textAlign() == TextAlignValue::JustifyTextAlignValue) {
         // issue #145
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        /*
         if (lineFormattingContext.isBreakedLineWithoutBR(i)) {
             LayoutUnit remainSpace = (inlineContentWidth - x);
             if (remainSpace > 0) {

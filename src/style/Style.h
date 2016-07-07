@@ -259,7 +259,6 @@ enum TextAlignValue {
     LeftTextAlignValue,
     RightTextAlignValue,
     CenterTextAlignValue,
-    JustifyTextAlignValue,
 };
 
 enum DirectionValue {
@@ -388,7 +387,6 @@ class CSSStyleDeclaration;
     F(BorderStyle, borderStyle, "border-style")                    \
     F(BorderWidth, borderWidth, "border-width")                    \
     F(BorderColor, borderColor, "border-color")                    \
-    F(BorderImageRepeat, borderImageRepeat, "border-image-repeat") \
     F(BorderImageSlice, borderImageSlice, "border-image-slice")    \
     F(BorderImageSource, borderImageSource, "border-image-source") \
     F(BorderImageWidth, borderImageWidth, "border-image-width")    \
@@ -597,8 +595,6 @@ public:
         BorderRightColor, // color | transparent | inherit // initial value -> the value of 'color' property
         BorderBottomColor, // color | transparent | inherit // initial value -> the value of 'color' property
         BorderLeftColor, // color | transparent | inherit // initial value -> the value of 'color' property
-        // https://www.w3.org/TR/css3-background/#the-border-image-repeat
-        BorderImageRepeat, // <stretch> | repeat | round | space {1, 2}
         // https://www.w3.org/TR/css3-background/#border-image-slice
         BorderImageSlice, // number && fill?
         // https://www.w3.org/TR/css3-background/#the-border-image-source
@@ -673,7 +669,6 @@ public:
         Contain,
 
         BackgroundRepeatValueKind,
-        BorderImageRepeatValueKind,
 
         XXSmallFontSizeValueKind,
         XSmallFontSizeValueKind,
@@ -887,12 +882,6 @@ public:
         return m_value.m_backgroundRepeatY;
     }
 
-    BorderImageRepeatValue borderImageRepeatValue()
-    {
-        STARFISH_ASSERT(m_valueKind == BorderImageRepeatValueKind);
-        return m_value.m_borderImageRepeat;
-    }
-
     ValueList* multiValue()
     {
         STARFISH_ASSERT(m_valueKind == ValueListKind);
@@ -941,7 +930,6 @@ public:
         String* m_stringValue;
         BackgroundRepeatValue m_backgroundRepeatX;
         BackgroundRepeatValue m_backgroundRepeatY;
-        BorderImageRepeatValue m_borderImageRepeat;
         ValueList* m_multiValue;
         OverflowValue m_overflow;
         VisibilityValue m_visibility;
@@ -962,7 +950,6 @@ public:
         ValueData(CSSLength v) { m_length = v; }
         ValueData(CSSAngle v) { m_angle = v; }
         ValueData(String* v) { m_stringValue = v; }
-        ValueData(BorderImageRepeatValue v) { m_borderImageRepeat = v; }
         ValueData(ValueList* v) { m_multiValue = v; }
         ValueData(OverflowValue v) { m_overflow = v; }
         ValueData(VisibilityValue v) { m_visibility = v; }
@@ -1089,7 +1076,6 @@ public:
     F(Display, "display")                       \
     F(Position, "position")                     \
     F(TextDecoration, "text-decoration")        \
-    F(BorderImageRepeat, "border-image-repeat") \
     F(BorderImageSlice, "border-image-slice")   \
     F(BorderImageSource, "border-image-source") \
     F(BorderImageWidth, "border-image-width")   \

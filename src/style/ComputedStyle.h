@@ -650,15 +650,11 @@ public:
     }
     LengthBox borderImageSlices() { return surround()->border.image().slices(); }
     bool borderImageSliceFill() { return surround()->border.image().sliceFill(); }
-    BorderImageRepeatValue borderImageRepeatX() { return surround()->border.image().repeatX(); }
-    BorderImageRepeatValue borderImageRepeatY() { return surround()->border.image().repeatY(); }
     BorderImageLengthBox borderImageWidths() { return surround()->border.image().widths(); }
 
     void setBorderImageSource(String* url) { surround()->border.image().setUrl(url); }
     void setBorderImageSlices(LengthBox slices) { surround()->border.image().setSlices(slices); }
     void setBorderImageSliceFill(bool fill) { surround()->border.image().setSliceFill(fill); }
-    void setBorderImageRepeatX(BorderImageRepeatValue value) { surround()->border.image().setRepeatX(value); }
-    void setBorderImageRepeatY(BorderImageRepeatValue value) { surround()->border.image().setRepeatY(value); }
     void setBorderImageWidths(BorderImageLengthBox value) { surround()->border.image().setWidths(value); }
     void setBorderImageResource(ImageResource* value) { surround()->border.image().setImageResource(value); }
 
@@ -666,11 +662,6 @@ public:
     {
         setBorderImageSlices(other->borderImageSlices());
         setBorderImageSliceFill(other->borderImageSliceFill());
-    }
-    void setBorderImageRepeatFromOther(ComputedStyle* other)
-    {
-        setBorderImageRepeatX(other->borderImageRepeatX());
-        setBorderImageRepeatY(other->borderImageRepeatY());
     }
 
     StyleSurroundData* surround()
@@ -902,7 +893,6 @@ public:
     static String* initialBorderImageSource() { return String::emptyString; }
     static LengthBox initialBorderImageSlices() { return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0)); }
     static bool initialBorderImageSliceFill() { return false; }
-    static BorderImageRepeatValue initialBorderImageRepeat() { return BorderImageRepeatValue::StretchValue; }
 
     void loadResources(Node* consumer, ComputedStyle* prevComputedStyleValueForReferenceLoadedResources = nullptr);
     void arrangeStyleValues(ComputedStyle* parentStyle, Node* current = nullptr);
