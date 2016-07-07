@@ -244,11 +244,12 @@ private:
 
 class ComputePreferredWidthContext {
 public:
-    ComputePreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth)
+    ComputePreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth, LayoutUnit minimumWidth)
         : m_layoutContext(lc)
     {
         m_result = 0;
         m_lastKnownWidth = lastKnownWidth;
+        m_minimumWidth = minimumWidth;
     }
 
     LayoutContext& layoutContext()
@@ -258,10 +259,10 @@ public:
 
     void setResult(LayoutUnit r)
     {
-        m_result = std::min(std::max(m_result, r), m_lastKnownWidth);
+        m_result = std::max(m_result, r);
     }
 
-    LayoutUnit result()
+    LayoutUnit result() const
     {
         return std::max(m_result, m_minimumWidth);
     }

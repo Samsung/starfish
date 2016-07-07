@@ -1799,13 +1799,14 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
     if (hasBlockFlow()) {
         if (style()->width().isFixed()) {
             minWidth += style()->width().fixed();
+            ctx.setMinimumWidth(minWidth);
             ctx.setResult(minWidth);
-        } else if (ctx.lastKnownWidth() - minWidth > 0) {
+        } else {
             Frame* child = firstChild();
             while (child) {
                 if (child->isNormalFlow()) {
                     LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
-                    ComputePreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp);
+                    ComputePreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
                     child->computePreferredWidth(newCtx);
                     ctx.setResult(newCtx.result() + mbp);
                 }
@@ -1840,6 +1841,8 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                         w = f->style()->font()->measureText(srcTxt->substring(offset, nextOffset - offset));
                     }
 
+                    ctx.setMinimumWidth(w);
+
                     if (currentLineWidth + w < remainWidth) {
                         currentLineWidth += w;
                     } else {
@@ -1856,9 +1859,23 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 });
             } else if (f->isFrameBlockBox()) {
                 LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
-                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp);
+                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
                 f->computePreferredWidth(newCtx);
-                ctx.setResult(newCtx.result() + mbp);
+                LayoutUnit w = newCtx.result() + mbp;
+                ctx.setResult(w);
+
+                if (currentLineWidth + w < remainWidth) {
+                    currentLineWidth += w;
+                } else {
+                    ctx.setResult(currentLineWidth);
+                    currentLineWidth = w;
+                }
+
+                if (currentLineWidth > remainWidth) {
+                    // linebreaks
+                    ctx.setResult(remainWidth);
+                    currentLineWidth = 0;
+                }
             } else if (f->isFrameLineBreak()) {
                 // linebreaks
                 ctx.setResult(currentLineWidth);
@@ -1887,19 +1904,11 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
             } else {
                 STARFISH_ASSERT(f->isFrameReplaced());
-                std::pair<Length, Length> s = f->asFrameReplaced()->intrinsicSize();
-                LayoutUnit w;
-                if (s.first.isFixed()) {
-                    w = s.first.fixed();
-                } else {
-                    LayoutUnit parentContentWidth = ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
-                    w = s.first.percent() * parentContentWidth;
-                }
 
-                if (f->style()->width().isFixed()) {
-                    w = f->style()->width().fixed();
-                }
-
+                LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
+                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
+                f->computePreferredWidth(newCtx);
+                LayoutUnit w = newCtx.result() + mbp;
                 ctx.setResult(w);
 
                 if (currentLineWidth + w < remainWidth) {
