@@ -73,7 +73,7 @@ static const float fontSizeFactors[8] = { 0.60f, 0.75f, 0.89f, 1.0f, 1.2f, 1.5f,
 static const int fontSizeTableMax = 16;
 static const int fontSizeTableMin = 9;
 
-FontWeightValue lighterWeight(FontWeightValue weight)
+static FontWeightValue lighterWeight(FontWeightValue weight)
 {
     switch (weight) {
     case FontWeightValue::OneHundredFontWeightValue:
@@ -93,7 +93,7 @@ FontWeightValue lighterWeight(FontWeightValue weight)
     }
 }
 
-FontWeightValue bolderWeight(FontWeightValue weight)
+static FontWeightValue bolderWeight(FontWeightValue weight)
 {
     switch (weight) {
     case FontWeightValue::OneHundredFontWeightValue:
@@ -113,7 +113,7 @@ FontWeightValue bolderWeight(FontWeightValue weight)
     }
 }
 
-Length parseAbsoluteFontSize(int col)
+static Length parseAbsoluteFontSize(int col)
 {
     int mediumSize = DEFAULT_FONT_SIZE;
     int row = -1;
@@ -126,21 +126,13 @@ Length parseAbsoluteFontSize(int col)
         return Length(Length::Fixed, fontSizeFactors[col] * mediumSize);
 }
 
-Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data)
+static Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data)
 {
     if (kind == CSSStyleValuePair::ValueKind::Auto)
         return Length();
     else if (kind == CSSStyleValuePair::ValueKind::Length)
         return data.m_length.toLength();
     else if (kind == CSSStyleValuePair::ValueKind::Percentage)
-        return Length(Length::Percent, data.m_floatValue);
-    else
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-}
-
-Length convertPercentOrNumberToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data)
-{
-    if (kind == CSSStyleValuePair::ValueKind::Percentage)
         return Length(Length::Percent, data.m_floatValue);
     else if (kind == CSSStyleValuePair::ValueKind::Number)
         return Length(Length::Fixed, data.m_floatValue);
@@ -282,6 +274,7 @@ bool CSSStyleValuePair::setValueCommon(std::vector<String*, gc_allocator<String*
     return true;
 }
 
+static Color parseColor(String* str);
 void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     const char* value = tokens->at(0)->utf8Data();
@@ -905,7 +898,7 @@ void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocato
     m_value.m_multiValue = values;
 }
 
-String* BorderString(String* width, String* style, String* color)
+static String* BorderString(String* width, String* style, String* color)
 {
     String* space = String::spaceString;
     String* sum = String::emptyString;
@@ -1007,7 +1000,7 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, style, color);
 }
 
-BorderShorthandValueType checkBorderValueType(const char* token)
+static BorderShorthandValueType checkBorderValueType(const char* token)
 {
     if (CSSPropertyParser::assureBorderWidth(token)) {
         return BorderShorthandValueType::BWidth;
@@ -1020,7 +1013,7 @@ BorderShorthandValueType checkBorderValueType(const char* token)
     }
 }
 
-void parseBorderWidthStyleColor(std::vector<String*, gc_allocator<String*> >* tokens, String** result)
+static void parseBorderWidthStyleColor(std::vector<String*, gc_allocator<String*> >* tokens, String** result)
 {
     size_t len = tokens->size();
     String* value = tokens->at(0);
@@ -2490,7 +2483,7 @@ bool CSSStyleDeclaration::checkInputErrorBorderLeft(std::vector<String*, gc_allo
     return checkInputErrorBorder(tokens);
 }
 
-bool checkInputErrorBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens)
+static bool checkInputErrorBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // border-style(<none> | solid)
     if (tokens->size() == 1) {
@@ -2741,7 +2734,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     return ret;
 }
 
-unsigned char parseColorFunctionPart(String* s, bool isAlpha = false)
+static unsigned char parseColorFunctionPart(String* s, bool isAlpha = false)
 {
     float f = 0.f;
     String* unit = CSSPropertyParser::parseNumberAndUnit(s->trim()->utf8Data(), &f);
@@ -2765,7 +2758,7 @@ unsigned char parseColorFunctionPart(String* s, bool isAlpha = false)
     }
 }
 
-Color parseColor(String* str)
+static Color parseColor(String* str)
 {
     if (str->startsWith("rgba")) {
         size_t s1 = str->indexOf('(');
@@ -3305,19 +3298,19 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                         style->setBorderImageSliceFill(true);
                         size--;
                     }
-                    top = convertPercentOrNumberToLength(l->getValueKindAtIndex(0), l->getValueAtIndex(0));
+                    top = convertValueToLength(l->getValueKindAtIndex(0), l->getValueAtIndex(0));
                     if (size > 1) {
-                        right = convertPercentOrNumberToLength(l->getValueKindAtIndex(1), l->getValueAtIndex(1));
+                        right = convertValueToLength(l->getValueKindAtIndex(1), l->getValueAtIndex(1));
                     } else {
                         right = top;
                     }
                     if (size > 2) {
-                        bottom = convertPercentOrNumberToLength(l->getValueKindAtIndex(2), l->getValueAtIndex(2));
+                        bottom = convertValueToLength(l->getValueKindAtIndex(2), l->getValueAtIndex(2));
                     } else {
                         bottom = top;
                     }
                     if (size > 3) {
-                        left = convertPercentOrNumberToLength(l->getValueKindAtIndex(3), l->getValueAtIndex(3));
+                        left = convertValueToLength(l->getValueKindAtIndex(3), l->getValueAtIndex(3));
                     } else {
                         left = right;
                     }
