@@ -1125,7 +1125,7 @@ public:
         drawImageInner(data, dst, l, t, r, b, scale, fill);
     }
 
-    virtual void drawRepeatImage(ImageData* data, const Rect& dst, float imageWidth, float imageHeight)
+    virtual void drawRepeatImage(ImageData* data, const Rect& dst, float imageWidth, float imageHeight, bool xRepeat, bool yRepeat)
     {
         if (!lastState().m_visible) {
             return;
@@ -1148,8 +1148,8 @@ public:
             xx = dst.x();
             yy = dst.y();
             if (!shouldApplyEvasMap()) {
-                xx = lastState().m_baseX + dst.x();
-                yy = lastState().m_baseY + dst.y();
+                xx = lastState().m_baseX; // + dst.x();
+                yy = lastState().m_baseY; // + dst.y();
             }
             ww = dst.width();
             hh = dst.height();
@@ -1175,7 +1175,20 @@ public:
             evas_object_image_alpha_set(eo, EINA_TRUE);
 
             evas_object_image_filled_set(eo, EINA_FALSE);
-            evas_object_image_fill_set(eo, 0, 0, imageWidth, imageHeight);
+
+            float x = 0.0, y = 0.0;
+            if (xRepeat) {
+                x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) - imageWidth;
+            } else {
+                xx += dst.x();
+            }
+            if (yRepeat) {
+                y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) - imageHeight;
+            } else {
+                yy += dst.y();
+            }
+
+            evas_object_image_fill_set(eo, x, y, imageWidth, imageHeight);
             // evas_object_image_alpha_set(eo, EINA_TRUE);
             // evas_object_anti_alias_set(eo, EINA_TRUE);
             evas_object_move(eo, xx, yy);
