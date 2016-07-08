@@ -47,10 +47,10 @@
 
 namespace StarFish {
 
-String* String::emptyString = String::createASCIIStringWithNoGC("");
-String* String::spaceString = String::createASCIIStringWithNoGC(" ");
-String* String::inheritString = String::createASCIIStringWithNoGC("inherit");
-String* String::initialString = String::createASCIIStringWithNoGC("initial");
+String* const String::emptyString = String::createASCIIStringWithNoGC("");
+String* const String::spaceString = String::createASCIIStringWithNoGC(" ");
+String* const String::inheritString = String::createASCIIStringWithNoGC("inherit");
+String* const String::initialString = String::createASCIIStringWithNoGC("initial");
 
 size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
 {

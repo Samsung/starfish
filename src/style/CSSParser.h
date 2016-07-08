@@ -22,54 +22,35 @@
 
 namespace StarFish {
 
-class CSSTokenizer : public gc {
-    // <ident-token>, <function-token>, <at-keyword-token>, <hash-token>, <string-token>, <bad-string-token>, <url-token>, <bad-url-token>, <delim-token>, <number-token>, <percentage-token>, <dimension-token>, <unicode-range-token>, <include-match-token>, <dash-match-token>, <prefix-match-token>, <suffix-match-token>, <substring-match-token>, <column-token>, <whitespace-token>, <CDO-token>, <CDC-token>, <colon-token>, <semicolon-token>, <comma-token>, <[-token>, <]-token>, <(-token>, <)-token>, <{-token>, and <}-token>
-    enum TokenType {
-    };
+static bool isDigit(char c)
+{
+    if (c >= '0' && c <= '9')
+        return true;
+    return false;
+}
 
-public:
-    static bool isDigit(char c)
-    {
-        if (c >= '0' && c <= '9')
-            return true;
-        return false;
-    }
+static bool isAlpha(char c)
+{
+    if (c >= 'a' && c <= 'z')
+        return true;
+    return false;
+}
 
-    static bool isAlpha(char c)
-    {
-        if (c >= 'a' && c <= 'z')
-            return true;
-        return false;
-    }
+static bool isNameChar(char c)
+{
+    if (isAlpha(c) || isDigit(c) || c == '_' || c == '-')
+        return true;
+    return false;
+}
 
-    static bool isNameStart(char c)
-    {
-        if (isAlpha(c))
-            return true;
-        if (c == '_')
-            return true;
-        // TODO
-        return false;
-    }
-
-    static bool isNameChar(char c)
-    {
-        if (isNameStart(c))
-            return true;
-        if (isDigit(c))
-            return true;
-        if (c == '-')
-            return true;
-        return false;
-    }
-
-    static bool isUnitChar(char c)
-    {
-        if (c == '%')
-            return true;
-        return false;
-    }
-};
+static bool isLengthUnit(String* str)
+{
+    if (str->equals("px") || str->equals("em") || str->equals("ex")
+        || str->equals("in") || str->equals("cm") || str->equals("mm")
+        || str->equals("pt") || str->equals("pc"))
+        return true;
+    return false;
+}
 
 class CSSPropertyParser : public gc {
 public:
@@ -92,7 +73,7 @@ public:
             sign = true;
             cur++;
         }
-        while (CSSTokenizer::isDigit(*cur) && cur < m_endPos) {
+        while (isDigit(*cur) && cur < m_endPos) {
             res = res * 10 + (*cur - '0');
             cur++;
         }
@@ -103,7 +84,7 @@ public:
             *hasPoint = true;
             cur++;
             int pt = 10;
-            while (CSSTokenizer::isDigit(*cur) && cur < m_endPos) {
+            while (isDigit(*cur) && cur < m_endPos) {
                 res += (float)(*cur - '0') / pt;
                 pt *= 10;
                 cur++;
@@ -133,11 +114,12 @@ public:
 
     float parsedNumber() { return m_parsedNumber; }
 
+    // a-z | 0-9 | - | _ | %
     bool consumeString()
     {
         int len = 0;
         for (char* cur = m_curPos; cur < m_endPos; cur++, len++) {
-            if (!(CSSTokenizer::isNameChar(*cur) || CSSTokenizer::isUnitChar(*cur)))
+            if (!(isNameChar(*cur) || *cur == '%'))
                 break;
         }
         m_parsedString = String::fromUTF8(m_curPos, len);
@@ -199,16 +181,12 @@ public:
         return (m_curPos == m_endPos);
     }
 
-    static String* parseUrl(std::vector<String*, gc_allocator<String*> >* tokens, unsigned start, unsigned end)
+    static String* parseUrl(String* token)
     {
-        String* str = String::emptyString;
-        for (unsigned i = start; i < end; i++) {
-            str = str->concat(tokens->at(i));
-        }
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)str->utf8Data());
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token->utf8Data());
         if (parser->consumeString()) {
             String* name = parser->parsedString();
-            if (name->toLower()->equals("url") && parser->consumeIfNext('(')) {
+            if (name->equals("url") && parser->consumeIfNext('(')) {
                 if (parser->consumeUrl())
                     return String::fromUTF8(parser->parsedUrl()->utf8Data());
             }
@@ -221,21 +199,12 @@ public:
         CSSPropertyParser* parser = new CSSPropertyParser((char*)str);
         if (parser->consumeString()) {
             String* name = parser->parsedString();
-            if (name->toLower()->equals("url") && parser->consumeIfNext('(')) {
+            if (name->equals("url") && parser->consumeIfNext('(')) {
 
                 return parser->consumeUrl() && parser->isEnd();
             }
         }
         return false;
-    }
-
-    static bool assureUrl(std::vector<String*, gc_allocator<String*> >* tokens, unsigned start, unsigned end)
-    {
-        String* str = String::emptyString;
-        for (unsigned i = start; i < end; i++) {
-            str = str->concat(tokens->at(i));
-        }
-        return CSSPropertyParser::assureUrl(str->utf8Data());
     }
 
     static bool assureUrlOrNone(const char* token)
@@ -257,15 +226,14 @@ public:
     static String* parseNumberAndUnit(const char* token, float* result)
     {
         // NOTE(example): token("10px") -> result=10.0 + return "px"
+        *result = 0;
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
         if (parser->consumeNumber()) {
             float num = parser->parsedNumber();
             *result = num;
-            if (parser->consumeString()) {
-                return parser->parsedString();
-            }
         }
-        return String::emptyString;
+        parser->consumeString();
+        return parser->parsedString();
     }
 
     static bool assureLengthOrPercent(const char* token, bool allowNegative)
@@ -279,14 +247,7 @@ public:
         if (parser->consumeString()) {
             String* str = parser->parsedString();
             if ((str->length() == 0 && num == 0)
-                || str->equals("px")
-                || str->equals("em")
-                || str->equals("ex")
-                || str->equals("in")
-                || str->equals("cm")
-                || str->equals("mm")
-                || str->equals("pt")
-                || str->equals("pc")
+                || isLengthUnit(str)
                 || str->equals("%"))
                 return parser->isEnd();
             return false;
@@ -322,14 +283,7 @@ public:
             if (parser->consumeString()) {
                 String* str = parser->parsedString();
                 if (!((str->length() == 0 && num == 0)
-                    || str->equals("px")
-                    || str->equals("em")
-                    || str->equals("ex")
-                    || str->equals("in")
-                    || str->equals("cm")
-                    || str->equals("mm")
-                    || str->equals("pt")
-                    || str->equals("pc")
+                    || isLengthUnit(str)
                     || str->equals("%")))
                     return false;
             } else {
@@ -354,14 +308,7 @@ public:
         if (parser->consumeString()) {
             String* str = parser->parsedString();
             if ((str->length() == 0 && num == 0)
-                || str->equals("px")
-                || str->equals("em")
-                || str->equals("ex")
-                || str->equals("in")
-                || str->equals("cm")
-                || str->equals("mm")
-                || str->equals("pt")
-                || str->equals("pc"))
+                || isLengthUnit(str))
                 return parser->isEnd();
             return false;
         } else {
@@ -578,15 +525,9 @@ public:
         return false;
     }
 
-    float parsedFloatValue()
-    {
-        return m_parsedFloatValue;
-    }
-
     char* m_startPos;
     char* m_endPos;
     char* m_curPos;
-    float m_parsedFloatValue;
 
     float m_parsedNumber;
     String* m_parsedString;

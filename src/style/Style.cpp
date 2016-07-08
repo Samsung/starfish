@@ -32,7 +32,7 @@ namespace StarFish {
     (strcmp(token, str)) == 0
 
 #define VALUE_IS_STRING(str) \
-    (strcmp(value, str)) == 0
+    ((memcmp(value, str, strlen(str))) == 0 && strlen(str) == strlen(value))
 
 #define VALUE_IS_INHERIT() \
     VALUE_IS_STRING("inherit")
@@ -57,6 +57,9 @@ namespace StarFish {
 
 #define STRING_VALUE_IS_NONE() \
     STRING_VALUE_IS_STRING("none")
+
+#define STRING_VALUE_IS_AUTO() \
+    STRING_VALUE_IS_STRING("auto")
 
 static const int strictFontSizeTable[8][8] = {
     { 9, 9, 9, 9, 11, 14, 18, 27 },
@@ -411,7 +414,7 @@ void CSSStyleValuePair::setValueUrlOrNone(std::vector<String*, gc_allocator<Stri
         m_valueKind = CSSStyleValuePair::ValueKind::None;
     } else if (value->startsWith("url(")) {
         m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
-        m_value.m_stringValue = CSSPropertyParser::parseUrl(tokens, 0, tokens->size());
+        m_value.m_stringValue = CSSPropertyParser::parseUrl(value);
     }
 }
 
@@ -645,12 +648,14 @@ void CSSStyleValuePair::setValueBackgroundSize(std::vector<String*, gc_allocator
         m_value.m_multiValue = values;
         for (unsigned int i = 0; i < tokens->size(); i++) {
             token = (*tokens)[i];
+            if (token->equals("auto")) {
+                values->append(CSSStyleValuePair::ValueKind::Auto, { 0 });
+                continue;
+            }
             float result = 0.f;
             String* unit = CSSPropertyParser::parseNumberAndUnit((char*)token->utf8Data(), &result);
             if (unit->equals("%")) {
                 values->append(CSSStyleValuePair::ValueKind::Percentage, { (result / 100.f) });
-            } else if (unit->equals("auto")) {
-                values->append(CSSStyleValuePair::ValueKind::Auto, { 0 });
             } else {
                 ValueData data = { CSSLength(unit, result)};
                 values->append(CSSStyleValuePair::ValueKind::Length, data);
@@ -903,29 +908,18 @@ static String* BorderString(String* width, String* style, String* color)
     String* space = String::spaceString;
     String* sum = String::emptyString;
 
-    if (!width->equals(String::emptyString)) {
+    if (!width->equals(String::emptyString) && !width->equals(String::initialString)) {
         sum = width;
-        if (!style->equals(String::emptyString)) {
-            sum = sum->concat(space)->concat(style);
-            if (!color->equals(String::emptyString)) {
-                sum = sum->concat(space)->concat(color);
-            }
-        } else {
-            if (!color->equals(String::emptyString)) {
-                sum = sum->concat(space)->concat(color);
-            }
-        }
-    } else {
-        if (!style->equals(String::emptyString)) {
-            sum = style;
-            if (!color->equals(String::emptyString)) {
-                sum = sum->concat(space)->concat(color);
-            }
-        } else {
-            if (!color->equals(String::emptyString)) {
-                sum = color;
-            }
-        }
+    }
+    if (!style->equals(String::emptyString) && !style->equals(String::initialString)) {
+        if (sum->length())
+            sum = sum->concat(space);
+        sum = sum->concat(style);
+    }
+    if (!color->equals(String::emptyString) && !color->equals(String::initialString)) {
+        if (sum->length())
+            sum = sum->concat(space);
+        sum = sum->concat(color);
     }
 
     return sum;
@@ -1428,6 +1422,8 @@ String* CSSStyleValuePair::toString()
             return String::fromUTF8("cover");
         case CSSStyleValuePair::ValueKind::Contain:
             return String::fromUTF8("contain");
+        case CSSStyleValuePair::ValueKind::Auto:
+            return String::fromUTF8("auto");
         case CSSStyleValuePair::ValueKind::ValueListKind: {
             String* str = String::emptyString;
             ValueList* vals = multiValue();
@@ -1865,14 +1861,14 @@ String* CSSStyleDeclaration::Background()
     String* repeat = BackgroundRepeat();
     String* color = BackgroundColor();
 
-    if (image->length() != 0 && !image->equals("initial"))
+    if (image->length() != 0 && !image->equals(String::initialString))
         result = result->concat(image);
-    if (repeat->length() != 0 && !repeat->equals("initial") && !repeat->equals("inherit")) {
+    if (repeat->length() != 0 && !repeat->equals(String::initialString) && !repeat->equals(String::inheritString)) {
         if (result->length())
             result = result->concat(String::spaceString);
         result = result->concat(repeat);
     }
-    if (color->length() != 0 && !color->equals("initial")) {
+    if (color->length() != 0 && !color->equals(String::initialString)) {
         if (result->length())
             result = result->concat(String::spaceString);
         result = result->concat(color);
@@ -2153,9 +2149,10 @@ bool CSSStyleDeclaration::checkInputErrorBorderImageSource(std::vector<String*, 
         String* value = (*tokens)[0];
         if (STRING_VALUE_IS_NONE())
             return true;
+        // url
+        return CSSPropertyParser::assureUrl(value->utf8Data());
     }
-    // url
-    return CSSPropertyParser::assureUrl(tokens, 0, tokens->size());
+    return false;
 }
 
 bool CSSStyleDeclaration::checkInputErrorBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -2181,14 +2178,14 @@ bool CSSStyleDeclaration::checkInputErrorBackgroundSize(std::vector<String*, gc_
 {
     // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
     if (tokens->size() == 1) {
-        const char* value = (*tokens)[0]->utf8Data();
-        if (VALUE_IS_STRING("cover") || VALUE_IS_STRING("contain") || CSSPropertyParser::assureLengthOrPercent(value, false)) {
+        String* value = (*tokens)[0];
+        if (STRING_VALUE_IS_AUTO() || STRING_VALUE_IS_STRING("cover") || STRING_VALUE_IS_STRING("contain") || CSSPropertyParser::assureLengthOrPercent(value->utf8Data(), false)) {
             return true;
         }
     } else if (tokens->size() == 2) {
         for (unsigned int i = 0; i < tokens->size(); i++) {
-            const char* token = (*tokens)[i]->utf8Data();
-            if (!(CSSPropertyParser::assureLengthOrPercent(token, false))) {
+            String* value = (*tokens)[i];
+            if (!(STRING_VALUE_IS_AUTO() || CSSPropertyParser::assureLengthOrPercent(value->utf8Data(), false))) {
                 return false;
             }
         }
@@ -2212,10 +2209,10 @@ bool CSSStyleDeclaration::checkInputErrorBackgroundImage(std::vector<String*, gc
 {
     // none | <image>(=<uri>)
     if (tokens->size() == 1) {
-        const char* value = (*tokens)[0]->utf8Data();
-        if (VALUE_IS_NONE())
+        String* value = (*tokens)[0];
+        if (STRING_VALUE_IS_NONE())
             return true;
-        return CSSPropertyParser::assureUrl(tokens, 0, tokens->size());
+        return CSSPropertyParser::assureUrl(value->utf8Data());
     }
     return false;
 }
@@ -3113,6 +3110,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundSizeType(BackgroundSizeType::Cover);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Contain) {
                     style->setBackgroundSizeType(BackgroundSizeType::Contain);
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                    style->setBackgroundSizeValue(new LengthSize());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueListKind) {
                     ValueList* list = cssValues[k].multiValue();
                     LengthSize* result = new LengthSize();

@@ -78,10 +78,10 @@ public:
     static const unsigned defaultLengthLimit = 1 << 16;
     typedef std::vector<String*, gc_allocator<String*> > Vector;
 
-    static String* emptyString;
-    static String* spaceString;
-    static String* initialString;
-    static String* inheritString;
+    static String* const emptyString;
+    static String* const spaceString;
+    static String* const initialString;
+    static String* const inheritString;
 
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);
