@@ -911,9 +911,6 @@ public:
         return m_value.m_color;
     }
 
-    friend void parsePercentageOrLength(CSSStyleValuePair& ret, const char* value);
-    friend void parseUrl(const char* value);
-
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
