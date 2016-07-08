@@ -203,6 +203,7 @@ test/reftest/vendor/webkit/fast/selectors/175b.html
 test/reftest/vendor/webkit/fast/selectors/175c.html
 test/reftest/vendor/webkit/fast/sub-pixel/snap-negative-location.html
 test/reftest/vendor/webkit/fast/text/crash-complex-unknown-font.html
+test/reftest/vendor/webkit/fast/text/container-align-with-inlines.html
 test/reftest/vendor/webkit/fast/text/dilation-save-restore.html
 test/reftest/vendor/webkit/fast/text/international/harfbuzz-buffer-overrun.html
 test/reftest/vendor/webkit/fast/text/international/rtl-mark.html
