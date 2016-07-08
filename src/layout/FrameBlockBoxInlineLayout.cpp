@@ -1181,6 +1181,7 @@ void LineFormattingContext::completeLastLine()
             else
                 box->setY(0);
         } else {
+            box->setY(0);
             FrameBox* parent = box->layoutParent()->asFrameBox();
             if (parent->isLineBox()) {
                 STARFISH_ASSERT(parent == back);
@@ -1196,7 +1197,6 @@ void LineFormattingContext::completeLastLine()
             back->boxes().push_back(box);
             box->setLayoutParent(back);
         }
-        box->layout(m_layoutContext, Frame::LayoutWantToResolve::ResolveWidth);
     }
 
     m_absolutePositionedBoxes.clear();

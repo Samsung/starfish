@@ -236,6 +236,10 @@ public:
     {
         return atoi(s->utf8Data());
     }
+    static float parseFloat(String* s)
+    {
+        return atof(s->utf8Data());
+    }
 
     String* substring(size_t pos, size_t len);
 

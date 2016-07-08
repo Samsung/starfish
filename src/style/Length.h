@@ -121,6 +121,13 @@ public:
         return isSpecified() && specifiedValue(0) == 0;
     }
 
+    bool isPositveOfZero()
+    {
+        STARFISH_ASSERT(isSpecified());
+        return m_data >= 0;
+    }
+
+
     bool operator==(const Length& src)
     {
         return this->m_type == src.m_type && this->m_data == src.m_data;

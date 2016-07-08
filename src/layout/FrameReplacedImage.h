@@ -46,9 +46,56 @@ public:
             width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
     }
 
-    virtual std::pair<Length, Length> intrinsicSize()
+    virtual IntrinsicSizeUsedInLayout intrinsicSize()
     {
-        return node()->asElement()->asHTMLElement()->asHTMLImageElement()->intrinsicSize();
+        IntrinsicSizeUsedInLayout result;
+        HTMLImageElement* img = node()->asElement()->asHTMLElement()->asHTMLImageElement();
+        ImageData* id = img->imageData();
+        if (id) {
+            result.m_intrinsicContentSize = LayoutSize(id->width(), id->height());
+            String* widthString = img->width();
+            String* heightString = img->height();
+            bool widthIsEmpty = widthString->equals(String::emptyString);
+            bool heightIsEmpty = heightString->equals(String::emptyString);
+            if (widthIsEmpty && heightIsEmpty) {
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), Length());
+            } else if (widthIsEmpty) {
+                float h = String::parseFloat(heightString);
+                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), height);
+            } else if (heightIsEmpty) {
+                float w = String::parseFloat(widthString);
+                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length());
+            } else {
+                float w = String::parseFloat(widthString);
+                float h = String::parseFloat(heightString);
+                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
+            }
+        } else {
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
+        }
+
+        if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isSpecified()) {
+            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isPositveOfZero()) {
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first = Length();
+            }
+        }
+
+        if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isSpecified()) {
+            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isPositveOfZero()) {
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second = Length();
+            }
+        }
+
+
+        return result;
     }
 
     ImageData* imageData()

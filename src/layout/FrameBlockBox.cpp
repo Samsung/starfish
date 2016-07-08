@@ -396,7 +396,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     ctx.layoutRegisteredAbsolutePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
         for (size_t i = 0; i < frames.size(); i ++) {
             Frame* f = frames[i];
-            f->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
             mergeVisibleRect(f->asFrameBox());
         }
     });

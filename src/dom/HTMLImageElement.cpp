@@ -45,22 +45,30 @@ public:
     {
         ResourceClient::didLoadFinished();
 
-        std::pair<Length, Length> sizeBefore = m_element->intrinsicSize();
+        ImageData* imageDataBefore = m_element->imageData();
         ImageData* imageData = m_resource->asImageResource()->imageData();
         STARFISH_ASSERT(imageData);
 
+        LayoutSize sizeBefore(0, 0);
+        LayoutSize sizeNow(imageData->width(), imageData->height());
+
+        if (imageDataBefore) {
+            sizeBefore = LayoutSize(imageDataBefore->width(), imageDataBefore->height());
+        }
+
         m_element->m_imageData = imageData;
 
-        std::pair<Length, Length> size = m_element->intrinsicSize();
         if (m_element->frame()) {
-            if (sizeBefore.first == size.first && sizeBefore.second == size.second) {
+            if (sizeBefore == sizeNow) {
                 m_element->setNeedsPainting();
             } else {
+                // TODO consider width, height attribute
                 m_element->setNeedsLayout();
             }
         } else {
             m_element->setNeedsFrameTreeBuild();
         }
+
         m_element->m_imageResource = nullptr;
     }
 protected:

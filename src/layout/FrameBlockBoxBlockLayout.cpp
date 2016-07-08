@@ -60,10 +60,10 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
         }
 
-        child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
-
         // Place the child.
         if (child->isNormalFlow()) {
+            child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+
             Length marginLeft = child->style()->marginLeft();
             Length marginRight = child->style()->marginRight();
             LayoutUnit mX = 0;

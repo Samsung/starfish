@@ -593,6 +593,13 @@ void Window::rendering()
 
         LayoutContext ctx(starFish());
         m_document->frame()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+
+#ifndef NDEBUG
+        {
+            LayoutContext ctx(starFish());
+            m_document->frame()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+        }
+#endif
         {
             Timer t("computeStackingContextProperties");
             m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
