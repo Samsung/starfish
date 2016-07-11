@@ -216,7 +216,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle, Node* current
     }
 
     if (m_background)
-        m_background->checkComputed(baseFontSize, font());
+        m_background->checkComputed(baseFontSize, font(), color());
 }
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle)

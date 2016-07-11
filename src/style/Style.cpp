@@ -3043,7 +3043,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                         style->setBackgroundColor(cssValues[k].colorValue());
                     } else {
                         if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                            style->setBackgroundColor(parentStyle->backgroundColor());
+                            // currentColor : represents the calculated value of the element's color property
+                            // --> change to valid value when arrangeStyleValues()
+                            style->setBackgroundColorToCurrentColor();
                         } else {
                             style->setBackgroundColor(parseColor(cssValues[k].stringValue()));
                         }

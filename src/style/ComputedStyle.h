@@ -261,6 +261,12 @@ public:
         m_background->setBgColor(color);
     }
 
+    void setBackgroundColorToCurrentColor()
+    {
+        setBackgroundIfNeeded();
+        m_background->setBgColorToCurrentColor();
+    }
+
     void setBackgroundImage(String* img)
     {
         setBackgroundIfNeeded();

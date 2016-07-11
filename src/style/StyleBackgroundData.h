@@ -30,11 +30,12 @@ public:
         : m_image(String::emptyString)
         , m_imageResource(NULL)
         , m_positionType(BackgroundPositionType::BackgroundPositionValue)
-        , m_positionValue(new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)))
-        , m_sizeType(BackgroundSizeType::SizeValue)
-        , m_sizeValue(new LengthSize())
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
+        , m_sizeType(BackgroundSizeType::SizeValue)
+        , m_bgColorNeedToUpdate(false)
+        , m_positionValue(new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)))
+        , m_sizeValue(new LengthSize())
     {
     }
 
@@ -67,6 +68,12 @@ public:
     void setBgColor(Color color)
     {
         m_color = color;
+        m_bgColorNeedToUpdate = false;
+    }
+
+    void setBgColorToCurrentColor()
+    {
+        m_bgColorNeedToUpdate = true;
     }
 
     void setBgImage(String* img)
@@ -147,13 +154,20 @@ public:
         return m_positionValue;
     }
 
-    void checkComputed(Length fontSize, Font* font)
+    void checkComputed(Length fontSize, Font* font, Color color)
     {
+
         if (m_sizeValue)
             m_sizeValue->checkComputed(fontSize, font);
 
         if (m_positionValue)
             m_positionValue->checkComputed(fontSize, font);
+
+        // background-color
+        // - default : transparent
+        // - currentColor : represents the "calculated" value of the element's color property
+        if (m_bgColorNeedToUpdate)
+           setBgColor(color);
     }
 
 private:
@@ -166,16 +180,20 @@ private:
     ImageResource* m_imageResource;
 
     // background-position
-    BackgroundPositionType m_positionType;
-    LengthPosition* m_positionValue;
-
+    BackgroundPositionType m_positionType : 1;
+    // background-repeat
+    BackgroundRepeatValue m_repeatX : 1;
+    BackgroundRepeatValue m_repeatY : 1;
     // background-size
-    BackgroundSizeType m_sizeType;
+    BackgroundSizeType m_sizeType : 2;
+    // background-color type
+    bool m_bgColorNeedToUpdate : 1;
+
+    // background-position
+    LengthPosition* m_positionValue;
+    // background-size
     LengthSize* m_sizeValue;
 
-    // background-repeat
-    BackgroundRepeatValue m_repeatX;
-    BackgroundRepeatValue m_repeatY;
 };
 
 bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
