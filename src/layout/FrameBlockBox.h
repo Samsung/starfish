@@ -375,7 +375,7 @@ public:
                 if (fi->isLeftMBPCleared() && fi->isRightMBPCleared()) {
                     if (!fi->firstChild())
                         return false;
-                    if (fi->firstChild()->isFrameText()) {
+                    if (fi->firstChild() == fi->lastChild() && fi->firstChild()->isFrameText()) {
                         if (fi->firstChild()->asFrameText()->text()->containsOnlyWhitespace())
                             return false;
                     }
