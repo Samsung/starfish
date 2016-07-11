@@ -41,21 +41,13 @@ public:
 
     StyleTransformData()
         : m_type(None)
-        , m_matrix(NULL)
-        , m_translate(NULL)
-        , m_scale(NULL)
-        , m_rotate(NULL)
-        , m_skew(NULL)
+        , m_value(NULL)
     {
     }
 
     StyleTransformData(OperationType type)
         : m_type(type)
-        , m_matrix(NULL)
-        , m_translate(NULL)
-        , m_scale(NULL)
-        , m_rotate(NULL)
-        , m_skew(NULL)
+        , m_value(NULL)
     {
     }
 
@@ -71,81 +63,81 @@ public:
     void setMatrix(double a, double b, double c, double d, double e, double f)
     {
         STARFISH_ASSERT(m_type == Matrix);
-        if (m_matrix == NULL) {
-            m_matrix = new MatrixTransform(a, b, c, d, e, f);
+        if (m_value.m_matrix == NULL) {
+            m_value.m_matrix = new MatrixTransform(a, b, c, d, e, f);
         } else {
-            m_matrix->setData(a, b, c, d, e, f);
+            m_value.m_matrix->setData(a, b, c, d, e, f);
         }
     }
 
     void setScale(double a, double b)
     {
         STARFISH_ASSERT(m_type == Scale);
-        if (m_scale == NULL) {
-            m_scale = new ScaleTransform(a, b);
+        if (m_value.m_scale == NULL) {
+            m_value.m_scale = new ScaleTransform(a, b);
         } else {
-            m_scale->setData(a, b);
+            m_value.m_scale->setData(a, b);
         }
     }
 
     void setRotate(double ang)
     {
         STARFISH_ASSERT(m_type == Rotate);
-        if (m_rotate == NULL) {
-            m_rotate = new RotateTransform(ang);
+        if (m_value.m_rotate == NULL) {
+            m_value.m_rotate = new RotateTransform(ang);
         } else {
-            m_rotate->setData(ang);
+            m_value.m_rotate->setData(ang);
         }
     }
 
     void setSkew(double angX, double angY)
     {
         STARFISH_ASSERT(m_type == Skew);
-        if (m_skew == NULL) {
-            m_skew = new SkewTransform(angX, angY);
+        if (m_value.m_skew == NULL) {
+            m_value.m_skew = new SkewTransform(angX, angY);
         } else {
-            m_skew->setData(angX, angY);
+            m_value.m_skew->setData(angX, angY);
         }
     }
 
     void setTranslate(Length x, Length y)
     {
         STARFISH_ASSERT(m_type == Translate);
-        if (m_translate == NULL) {
-            m_translate = new TranslateTransform(x, y);
+        if (m_value.m_translate == NULL) {
+            m_value.m_translate = new TranslateTransform(x, y);
         } else {
-            m_translate->setData(x, y);
+            m_value.m_translate->setData(x, y);
         }
     }
 
-    MatrixTransform* matrix()
+    MatrixTransform* matrix() const
     {
         STARFISH_ASSERT(type() == OperationType::Matrix);
-        return m_matrix;
+        return m_value.m_matrix;
     }
 
-    TranslateTransform* translate()
+    TranslateTransform* translate() const
     {
         STARFISH_ASSERT(type() == OperationType::Translate);
-        return m_translate;
+        return m_value.m_translate;
     }
 
-    ScaleTransform* scale()
+    ScaleTransform* scale() const
     {
         STARFISH_ASSERT(type() == OperationType::Scale);
-        return m_scale;
+        return m_value.m_scale;
     }
 
-    RotateTransform* rotate()
+    RotateTransform* rotate() const
     {
         STARFISH_ASSERT(type() == OperationType::Rotate);
-        return m_rotate;
+        return m_value.m_rotate;
     }
 
-    SkewTransform* skew()
+    SkewTransform* skew() const
     {
         STARFISH_ASSERT(type() == OperationType::Skew);
-        return m_skew;
+        return m_value.m_skew;
     }
 
     OperationType type() const
@@ -157,28 +149,29 @@ public:
     {
         char temp[100];
         if (m_type == Matrix) {
-            snprintf(temp, sizeof temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", m_matrix->a(), m_matrix->b(), m_matrix->c(), m_matrix->d(), m_matrix->e(), m_matrix->f());
+            snprintf(temp, sizeof temp, "matrix(%.3f %.3f %.3f %.3f %.3f %.3f) ", matrix()->a(), matrix()->b(), matrix()->c(), matrix()->d(), matrix()->e(), matrix()->f());
         } else if (m_type == Scale) {
-            snprintf(temp, sizeof temp, "scale(%.3f %.3f) ", m_scale->x(), m_scale->y());
+            snprintf(temp, sizeof temp, "scale(%.3f %.3f) ", scale()->x(), scale()->y());
         } else if (m_type == Rotate) {
-            snprintf(temp, sizeof temp, "rotate(%.3f) ", m_rotate->angle());
+            snprintf(temp, sizeof temp, "rotate(%.3f) ", rotate()->angle());
         } else if (m_type == Skew) {
-            snprintf(temp, sizeof temp, "skew(%.3f %.3f) ", m_skew->angleX(), m_skew->angleY());
+            snprintf(temp, sizeof temp, "skew(%.3f %.3f) ", skew()->angleX(), skew()->angleY());
         } else if (m_type == Translate) {
-            snprintf(temp, sizeof temp, "translate(%s %s) ", m_translate->tx().dumpString()->utf8Data(), m_translate->ty().dumpString()->utf8Data());
+            snprintf(temp, sizeof temp, "translate(%s %s) ", translate()->tx().dumpString()->utf8Data(), translate()->ty().dumpString()->utf8Data());
+        } else {
+            return String::emptyString;
         }
-        // TODO
         return String::fromUTF8(temp);
     }
 
     void changeToFixedIfNeeded(Length fontSize, Font* font)
     {
         STARFISH_ASSERT(type() == OperationType::Translate);
-        Length x = m_translate->tx();
-        Length y = m_translate->ty();
+        Length x = translate()->tx();
+        Length y = translate()->ty();
         x.changeToFixedIfNeeded(fontSize, font);
         y.changeToFixedIfNeeded(fontSize, font);
-        m_translate->setData(x, y);
+        translate()->setData(x, y);
     }
 
 private:
@@ -186,12 +179,16 @@ private:
     friend inline bool operator!=(const StyleTransformData& a, const StyleTransformData& b);
 
     OperationType m_type;
-    // TODO save pointers in union
-    MatrixTransform* m_matrix;
-    TranslateTransform* m_translate;
-    ScaleTransform* m_scale;
-    RotateTransform* m_rotate;
-    SkewTransform* m_skew;
+    union TransformPointer {
+        MatrixTransform* m_matrix;
+        TranslateTransform* m_translate;
+        ScaleTransform* m_scale;
+        RotateTransform* m_rotate;
+        SkewTransform* m_skew;
+        TransformPointer(MatrixTransform* v) { m_matrix = v; }
+    };
+
+    TransformPointer m_value;
 };
 
 bool operator==(const StyleTransformData& a, const StyleTransformData& b)
@@ -199,25 +196,25 @@ bool operator==(const StyleTransformData& a, const StyleTransformData& b)
     if (a.type() != b.type())
         return false;
 
-    switch (a.m_type) {
+    switch (a.type()) {
     case StyleTransformData::OperationType::Matrix:
-        if (*(a.m_matrix) != *(b.m_matrix))
+        if (*(a.matrix()) != *(b.matrix()))
             return false;
         break;
     case StyleTransformData::OperationType::Scale:
-        if (*(a.m_scale) != *(b.m_scale))
+        if (*(a.scale()) != *(b.scale()))
             return false;
         break;
     case StyleTransformData::OperationType::Translate:
-        if (*(a.m_translate) != *(b.m_translate))
+        if (*(a.translate()) != *(b.translate()))
             return false;
         break;
     case StyleTransformData::OperationType::Rotate:
-        if (*(a.m_rotate) != *(b.m_rotate))
+        if (*(a.rotate()) != *(b.rotate()))
             return false;
         break;
     case StyleTransformData::OperationType::Skew:
-        if (*(a.m_skew) != *(b.m_skew))
+        if (*(a.skew()) != *(b.skew()))
             return false;
         break;
     case StyleTransformData::OperationType::None:
