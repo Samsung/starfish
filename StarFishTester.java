@@ -196,7 +196,7 @@ public class StarFishTester {
 									testStatus = "diff: 100.0% failed";
 								}
 								if (testStatus.contains("failed") || testStatus.contains("not exactly same")) {
-									ss = "tool/pixel_test/bin/image_diff --diff " + outFolder + caseName + "_result.png" + " " + expectedPNG + " " + outFolder + caseName + "_diff.png";
+									ss = "test/tool/image_diff --diff " + outFolder + caseName + "_result.png" + " " + expectedPNG + " " + outFolder + caseName + "_diff.png";
 									process = runtime.exec(ss);
 									process.waitFor();
 								}
