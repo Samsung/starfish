@@ -958,6 +958,7 @@ protected:
     OverflowValue m_overflow : 1;
     TextDecorationValue m_textDecoration : 3;
     UnicodeBidiValue m_unicodeBidi : 2;
+    bool m_zIndexSpecifiedByUser : 1;
 
     Length m_width;
     Length m_height;
@@ -965,7 +966,6 @@ protected:
 
     float m_opacity;
     int32_t m_zIndex;
-    bool m_zIndexSpecifiedByUser;
     Font* m_font;
     StyleBackgroundData* m_background;
     StyleSurroundData* m_surround;
