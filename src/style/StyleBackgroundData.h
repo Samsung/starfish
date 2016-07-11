@@ -167,7 +167,7 @@ public:
         // - default : transparent
         // - currentColor : represents the "calculated" value of the element's color property
         if (m_bgColorNeedToUpdate)
-           setBgColor(color);
+            setBgColor(color);
     }
 
 private:
