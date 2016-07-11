@@ -971,13 +971,18 @@ CSSStyleDeclaration* Node::getComputedStyle()
     setNeedsPainting();
     document()->window()->rendering();
 
+    ComputedStyle* style = m_style;
+    if (style == nullptr) {
+        style = new ComputedStyle();
+    }
+
     // general properties
 #define ADD_VALUE_PAIR(keyKind, valueKind, getter)               \
     {                                                            \
         CSSStyleValuePair p;                                     \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);       \
         p.setValueKind(CSSStyleValuePair::ValueKind::valueKind); \
-        p.setValue(m_style->getter());                           \
+        p.setValue(style->getter());                           \
         d->addValuePair(p);                                      \
     }
 
@@ -1002,13 +1007,13 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {                                                                 \
         CSSStyleValuePair p;                                          \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);            \
-        if (m_style->getter().isFixed()) {                            \
+        if (style->getter().isFixed()) {                              \
             p.setValueKind(CSSStyleValuePair::ValueKind::Length);     \
-            p.setValue(CSSLength(m_style->getter().fixed()));         \
-        } else if (m_style->getter().isPercent()) {                   \
+            p.setValue(CSSLength(style->getter().fixed()));           \
+        } else if (style->getter().isPercent()) {                     \
             p.setValueKind(CSSStyleValuePair::ValueKind::Percentage); \
-            p.setValue(m_style->getter().percent());                  \
-        } else if (m_style->getter().isAuto()) {                      \
+            p.setValue(style->getter().percent());                    \
+        } else if (style->getter().isAuto()) {                        \
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);       \
         }                                                             \
         d->addValuePair(p);                                           \
@@ -1037,7 +1042,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         CSSStyleValuePair p;                                           \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);             \
         p.setValueKind(CSSStyleValuePair::ValueKind::StringValueKind); \
-        p.setValue(m_style->getter().toString());                      \
+        p.setValue(style->getter().toString());                        \
         d->addValuePair(p);                                            \
     }
 
@@ -1056,7 +1061,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         CSSStyleValuePair p;                                  \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);    \
         p.setValueKind(CSSStyleValuePair::ValueKind::Length); \
-        p.setValue(CSSLength(m_style->getter().fixed()));     \
+        p.setValue(CSSLength(style->getter().fixed()));       \
         d->addValuePair(p);                                   \
     }
 
@@ -1072,9 +1077,9 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {                                                                  \
         CSSStyleValuePair p;                                           \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);             \
-        if (m_style->getter() == BorderStyleValue::BNone) {            \
+        if (style->getter() == BorderStyleValue::BNone) {              \
             p.setValueKind(CSSStyleValuePair::ValueKind::BorderNone);  \
-        } else if (m_style->getter() == BorderStyleValue::BSolid) {    \
+        } else if (style->getter() == BorderStyleValue::BSolid) {      \
             p.setValueKind(CSSStyleValuePair::ValueKind::BorderSolid); \
         }                                                              \
         d->addValuePair(p);                                            \
@@ -1110,11 +1115,11 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
-        if (m_style->backgroundImage()->length() == 0) {
+        if (style->backgroundImage()->length() == 0) {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
-            p.setValue(m_style->backgroundImage());
+            p.setValue(style->backgroundImage());
         }
         d->addValuePair(p);
     }
@@ -1123,11 +1128,11 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSource);
-        if (m_style->borderImageSource()->length() == 0) {
+        if (style->borderImageSource()->length() == 0) {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
-            p.setValue(m_style->borderImageSource());
+            p.setValue(style->borderImageSource());
         }
         d->addValuePair(p);
     }
@@ -1136,18 +1141,18 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundSize);
-        if (m_style->bgSizeType() == BackgroundSizeType::Cover) {
+        if (style->bgSizeType() == BackgroundSizeType::Cover) {
             p.setValueKind(CSSStyleValuePair::ValueKind::Cover);
-        } else if (m_style->bgSizeType() == BackgroundSizeType::Contain) {
+        } else if (style->bgSizeType() == BackgroundSizeType::Contain) {
             p.setValueKind(CSSStyleValuePair::ValueKind::Contain);
-        } else if (m_style->bgSizeType() == BackgroundSizeType::SizeValue) {
+        } else if (style->bgSizeType() == BackgroundSizeType::SizeValue) {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
             ValueList* vals = new ValueList();
 
-            CSSStyleValuePair w = lengthToCSSStyleValue(m_style->bgSizeValue()->width());
+            CSSStyleValuePair w = lengthToCSSStyleValue(style->bgSizeValue()->width());
             vals->append(w.valueKind(), w.value());
 
-            CSSStyleValuePair h = lengthToCSSStyleValue(m_style->bgSizeValue()->height());
+            CSSStyleValuePair h = lengthToCSSStyleValue(style->bgSizeValue()->height());
             vals->append(h.valueKind(), h.value());
 
             p.setValue(vals);
@@ -1159,9 +1164,9 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::LineHeight);
-        if (m_style->lineHeight().isFixed()) {
+        if (style->lineHeight().isFixed()) {
             p.setValueKind(CSSStyleValuePair::ValueKind::Length);
-            p.setValue(CSSLength(m_style->lineHeight().fixed()));
+            p.setValue(CSSLength(style->lineHeight().fixed()));
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::Normal);
         }
@@ -1174,7 +1179,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageSlice);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* vals = new ValueList();
-        LengthBox box = m_style->borderImageSlices();
+        LengthBox box = style->borderImageSlices();
 
         CSSStyleValuePair t = lengthToCSSStyleValue(box.top());
         vals->append(t.valueKind(), t.value());
@@ -1199,7 +1204,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageWidth);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* vals = new ValueList();
-        BorderImageLengthBox box = m_style->borderImageWidths();
+        BorderImageLengthBox box = style->borderImageWidths();
 
         if (box.top().isLength()) {
             CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
@@ -1235,7 +1240,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Opacity);
         p.setValueKind(CSSStyleValuePair::ValueKind::Number);
-        p.setValue(m_style->opacity());
+        p.setValue(style->opacity());
         d->addValuePair(p);
     }
 
@@ -1244,7 +1249,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::ZIndex);
         p.setValueKind(CSSStyleValuePair::ValueKind::Int32);
-        p.setValue(m_style->zIndex());
+        p.setValue(style->zIndex());
         d->addValuePair(p);
     }
 
@@ -1253,16 +1258,16 @@ CSSStyleDeclaration* Node::getComputedStyle()
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::TransformOrigin);
 
-        if (m_style->transformOrigin() == NULL) {
+        if (style->transformOrigin() == NULL) {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
             ValueList* vals = new ValueList();
 
-            CSSStyleValuePair x = lengthToCSSStyleValue(m_style->transformOrigin()->originValue()->getXAxis());
+            CSSStyleValuePair x = lengthToCSSStyleValue(style->transformOrigin()->originValue()->getXAxis());
             vals->append(x.valueKind(), x.value());
 
-            CSSStyleValuePair y = lengthToCSSStyleValue(m_style->transformOrigin()->originValue()->getYAxis());
+            CSSStyleValuePair y = lengthToCSSStyleValue(style->transformOrigin()->originValue()->getYAxis());
             vals->append(y.valueKind(), y.value());
 
             p.setValue(vals);

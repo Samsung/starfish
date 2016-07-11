@@ -353,10 +353,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
                 if (node->isNode() && pseudoElm.isNull()) {
                     CSSStyleDeclaration* s = node->asNode()->getComputedStyle();
-                    return s->scriptValue();
-                } else {
-                    return escargot::ESValue(escargot::ESValue::ESNull);
+                    if (s) {
+                        return s->scriptValue();
+                    }
                 }
+                return escargot::ESValue(escargot::ESValue::ESNull);
             } catch(DOMException* e) {
                 escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
