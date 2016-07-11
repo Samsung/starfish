@@ -554,7 +554,7 @@ public:
 
     virtual void paintStackingContextContent(Canvas* canvas);
 
-    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
 

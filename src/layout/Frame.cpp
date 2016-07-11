@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "Frame.h"
 #include "FrameBox.h"
+#include "FrameBlockBox.h"
 
 namespace StarFish {
 
@@ -35,9 +36,8 @@ Frame* LayoutContext::blockContainer(Frame* currentFrame)
     }
 }
 
-Frame* LayoutContext::containingBlock(Frame* currentFrame)
+Frame* LayoutContext::containingFrameBlockBox(Frame* currentFrame)
 {
-    // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
     Frame* block = blockContainer(currentFrame);
     if (currentFrame->style()->position() == AbsolutePositionValue) {
         while (!block->isFrameDocument() && !block->isPositionedElement()) {
@@ -45,6 +45,42 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
         }
         return block;
     } else {
+        return block;
+    }
+}
+
+Frame* LayoutContext::containingBlock(Frame* currentFrame)
+{
+    // https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#containing-block-details
+    if (currentFrame->style()->position() == AbsolutePositionValue) {
+        Frame* block = currentFrame->parent();
+        while (!block->isFrameDocument() && !block->isPositionedElement()) {
+            block = block->parent();
+        }
+
+        if (block->isFrameBox()) {
+            return block;
+        } else {
+            STARFISH_ASSERT(block->isFrameInline());
+            FrameBlockBox* c = blockContainer(block)->asFrameBlockBox();
+            bool finded = false;
+            FrameBox* first = nullptr;
+            FrameInline* in = block->asFrameInline();
+            c->iterateChildBoxes([&finded, &first, &in](FrameBox* box) {
+                if (!finded) {
+                    if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
+                        if (box->asInlineBox()->asInlineNonReplacedBox()->origin() == in) {
+                            first = box->asInlineBox()->asInlineNonReplacedBox();
+                            finded = true;
+                        }
+                    }
+                }
+            });
+            STARFISH_ASSERT(first && finded);
+            return first;
+        }
+    } else {
+        Frame* block = blockContainer(currentFrame);
         return block;
     }
 }

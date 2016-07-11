@@ -25,6 +25,7 @@
 
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
+#include "layout/FrameBlockBox.h"
 
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
@@ -591,12 +592,12 @@ void Window::rendering()
             box->clearStackingContextIfNeeds();
         });
 
-        LayoutContext ctx(starFish());
+        LayoutContext ctx(starFish(), m_document->frame()->asFrameBox()->asFrameBlockBox()->asFrameDocument());
         m_document->frame()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
 #ifndef NDEBUG
         {
-            LayoutContext ctx(starFish());
+            LayoutContext ctx(starFish(), m_document->frame()->asFrameBox()->asFrameBlockBox()->asFrameDocument());
             m_document->frame()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
         }
 #endif

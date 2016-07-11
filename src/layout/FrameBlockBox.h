@@ -171,7 +171,7 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
 #endif
-    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
         for (size_t i = 0; i < m_boxes.size(); i ++) {
@@ -252,7 +252,7 @@ public:
         return m_boxes;
     }
 
-    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
 
@@ -362,6 +362,11 @@ public:
         return "FrameBlockBox";
     }
 
+    FrameDocument* asFrameDocument()
+    {
+        return (FrameDocument*)this;
+    }
+
     bool isNecessaryBlockBox()
     {
         if (!node()) {
@@ -391,7 +396,7 @@ public:
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
-    virtual void iterateChildBoxes(void (*fn)(FrameBox*))
+    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
     {
         if (hasBlockFlow()) {
             FrameBox::iterateChildBoxes(fn);

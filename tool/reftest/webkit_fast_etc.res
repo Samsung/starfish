@@ -64,6 +64,8 @@ test/reftest/vendor/webkit/fast/block/positioning/050.html
 test/reftest/vendor/webkit/fast/block/positioning/052.html
 test/reftest/vendor/webkit/fast/block/positioning/054.html
 test/reftest/vendor/webkit/fast/block/positioning/055.html
+test/reftest/vendor/webkit/fast/block/positioning/057.html
+test/reftest/vendor/webkit/fast/block/positioning/058.html
 test/reftest/vendor/webkit/fast/block/positioning/061.html
 test/reftest/vendor/webkit/fast/block/positioning/absolute-positioning-no-scrollbar.html
 test/reftest/vendor/webkit/fast/block/positioning/absolute-with-html-border-strict.html

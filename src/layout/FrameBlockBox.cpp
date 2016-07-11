@@ -18,6 +18,7 @@
 #include "FrameBlockBox.h"
 #include "FrameText.h"
 #include "FrameInline.h"
+#include "FrameDocument.h"
 
 namespace StarFish {
 
@@ -115,7 +116,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             STARFISH_ASSERT(node() != nullptr);
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
             DirectionValue direction = ctx.blockContainer(this)->style()->direction();
-            auto absLoc = parent->absolutePoint(cb);
+
+            LayoutLocation l1 = cb->absolutePoint(ctx.frameDocument());
+            LayoutLocation l2 = parent->absolutePoint(ctx.frameDocument());
+            LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
+
             LayoutUnit absX = absLoc.x() - cb->borderLeft();
             auto setAbsX = [&](LayoutUnit x)
             {
@@ -299,7 +304,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     } else {
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
         FrameBox* parent = Frame::layoutParent()->asFrameBox();
-        auto absLoc = parent->absolutePoint(cb);
+
+        LayoutLocation l1 = cb->absolutePoint(ctx.frameDocument());
+        LayoutLocation l2 = parent->absolutePoint(ctx.frameDocument());
+        LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
+
         LayoutUnit absY = absLoc.y() - cb->borderTop();
         auto setAbsY = [&](LayoutUnit y)
         {
@@ -416,7 +425,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             Length right = f->style()->right();
             Length top = f->style()->top();
             Length bottom = f->style()->bottom();
-            Frame* cb = ctx.containingBlock(f);
+            Frame* cb = ctx.containingFrameBlockBox(f);
             LayoutUnit parentWidth = cb->asFrameBox()->contentWidth();
             LayoutUnit parentHeight = cb->asFrameBox()->contentHeight();
             LayoutUnit mX = 0;

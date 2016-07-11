@@ -66,6 +66,8 @@ test/reftest/vendor/blink/fast/block/positioning/050.html
 test/reftest/vendor/blink/fast/block/positioning/052.html
 test/reftest/vendor/blink/fast/block/positioning/054.html
 test/reftest/vendor/blink/fast/block/positioning/055.html
+test/reftest/vendor/blink/fast/block/positioning/057.html
+test/reftest/vendor/blink/fast/block/positioning/058.html
 test/reftest/vendor/blink/fast/block/positioning/061.html
 test/reftest/vendor/blink/fast/block/positioning/absolute-positioning-no-scrollbar.html
 test/reftest/vendor/blink/fast/block/positioning/absolute-with-html-border-strict.html
@@ -237,6 +239,7 @@ test/reftest/vendor/blink/fast/selectors/175b.html
 test/reftest/vendor/blink/fast/selectors/175c.html
 test/reftest/vendor/blink/fast/sub-pixel/snap-negative-location.html
 test/reftest/vendor/blink/fast/text-autosizing/constrained-height-ancestor.html
+test/reftest/vendor/blink/fast/text/container-align-with-inlines.html
 test/reftest/vendor/blink/fast/text/international/bdi-break-crash-1.html
 test/reftest/vendor/blink/fast/text/international/bdi-break-crash-2.html
 test/reftest/vendor/blink/fast/text/international/rtl-mark.html

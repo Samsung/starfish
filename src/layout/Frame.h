@@ -33,6 +33,7 @@ class FrameBox;
 class FrameBlockBox;
 class FrameReplaced;
 class FrameInline;
+class FrameDocument;
 
 enum PaintingStage {
     PaintingNormalFlowBlock, // the in-flow, non-inline-level, non-positioned descendants.
@@ -55,8 +56,9 @@ class MarginInfo;
 
 class LayoutContext {
 public:
-    LayoutContext(StarFish* starFish)
+    LayoutContext(StarFish* starFish, FrameDocument* frameDocument)
         : m_starFish(starFish)
+        , m_frameDocument(frameDocument)
     {
         establishBlockFormattingContext(true);
     }
@@ -71,6 +73,11 @@ public:
     StarFish* starFish()
     {
         return m_starFish;
+    }
+
+    FrameDocument* frameDocument()
+    {
+        return m_frameDocument;
     }
 
     void establishBlockFormattingContext(bool isNormalFlow)
@@ -90,7 +97,8 @@ public:
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
     Frame* blockContainer(Frame* currentFrame);
-    Frame* containingBlock(Frame* currentFrame);
+    Frame* containingFrameBlockBox(Frame* currentFrame); // this function returns most near blockContainer
+    Frame* containingBlock(Frame* currentFrame); // this function returns real containing block
 
     void setLastLineBox(LineBox* l)
     {
@@ -104,7 +112,7 @@ public:
 
     void registerAbsolutePositionedFrames(Frame* frm)
     {
-        Frame* cb = containingBlock(frm);
+        Frame* cb = containingFrameBlockBox(frm);
         m_absolutePositionedFrames.insert(std::make_pair(cb, std::vector<Frame*>()));
         std::vector<Frame*>& vec = m_absolutePositionedFrames[cb];
         STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
@@ -125,7 +133,7 @@ public:
 
     void registerRelativePositionedFrames(Frame* frm)
     {
-        Frame* cb = containingBlock(frm);
+        Frame* cb = containingFrameBlockBox(frm);
         m_relativePositionedFrames.insert(std::make_pair(cb, std::vector<Frame*>()));
         std::vector<Frame*>& vec = m_relativePositionedFrames[cb];
         STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
@@ -235,6 +243,7 @@ private:
     };
 
     StarFish* m_starFish;
+    FrameDocument* m_frameDocument;
 
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
@@ -315,6 +324,8 @@ public:
 
         bool isRootElement = node && node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLHtmlElement();
         m_flags.m_isRootElement = isRootElement;
+
+        m_flags.m_isInFrameInlineScope = true;
 
         m_flags.m_isLeftMBPCleared = false;
         m_flags.m_isRightMBPCleared = false;
@@ -654,6 +665,16 @@ public:
         m_flags.m_isRightMBPCleared = true;
     }
 
+    void setInFrameInlineScope()
+    {
+        m_flags.m_isInFrameInlineScope = true;
+    }
+
+    bool InFrameInlineScope()
+    {
+        return m_flags.m_isInFrameInlineScope;
+    }
+
 protected:
     struct {
         bool m_needsLayout : 1;
@@ -674,6 +695,7 @@ protected:
         bool m_shouldComputePreferredWidth : 1;
         bool m_isNormalFlow : 1;
         bool m_isRootElement : 1;
+        bool m_isInFrameInlineScope: 1;
 
         bool m_isLeftMBPCleared: 1;
         bool m_isRightMBPCleared: 1;
