@@ -150,10 +150,10 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
             setBorderImageResource(res);
         }
 
-        setBorderLeftStyle(BorderStyleValue::BSolid);
-        setBorderTopStyle(BorderStyleValue::BSolid);
-        setBorderRightStyle(BorderStyleValue::BSolid);
-        setBorderBottomStyle(BorderStyleValue::BSolid);
+        setBorderLeftStyle(BorderStyleValue::SolidBorderStyleValue);
+        setBorderTopStyle(BorderStyleValue::SolidBorderStyleValue);
+        setBorderRightStyle(BorderStyleValue::SolidBorderStyleValue);
+        setBorderBottomStyle(BorderStyleValue::SolidBorderStyleValue);
     }
 }
 

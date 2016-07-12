@@ -1077,11 +1077,8 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {                                                                  \
         CSSStyleValuePair p;                                           \
         p.setKeyKind(CSSStyleValuePair::KeyKind::keyKind);             \
-        if (style->getter() == BorderStyleValue::BNone) {              \
-            p.setValueKind(CSSStyleValuePair::ValueKind::BorderNone);  \
-        } else if (style->getter() == BorderStyleValue::BSolid) {      \
-            p.setValueKind(CSSStyleValuePair::ValueKind::BorderSolid); \
-        }                                                              \
+        p.setValueKind(CSSStyleValuePair::ValueKind::BorderStyleValueKind); \
+        p.setValue(style->getter());                                   \
         d->addValuePair(p);                                            \
     }
 
@@ -1531,24 +1528,24 @@ void Node::dumpStyle()
 
     // border-style
     printf("border-style(t, r, b, l): (");
-    if (m_style->borderTopStyle() == BorderStyleValue::BNone) {
+    if (m_style->borderTopStyle() == BorderStyleValue::NoneBorderStyleValue) {
         printf("none,");
-    } else if (m_style->borderTopStyle() == BorderStyleValue::BSolid) {
+    } else if (m_style->borderTopStyle() == BorderStyleValue::SolidBorderStyleValue) {
         printf("solid,");
     }
-    if (m_style->borderRightStyle() == BorderStyleValue::BNone) {
+    if (m_style->borderRightStyle() == BorderStyleValue::NoneBorderStyleValue) {
         printf("none,");
-    } else if (m_style->borderRightStyle() == BorderStyleValue::BSolid) {
+    } else if (m_style->borderRightStyle() == BorderStyleValue::SolidBorderStyleValue) {
         printf("solid,");
     }
-    if (m_style->borderBottomStyle() == BorderStyleValue::BNone) {
+    if (m_style->borderBottomStyle() == BorderStyleValue::NoneBorderStyleValue) {
         printf("none,");
-    } else if (m_style->borderBottomStyle() == BorderStyleValue::BSolid) {
+    } else if (m_style->borderBottomStyle() == BorderStyleValue::SolidBorderStyleValue) {
         printf("solid,");
     }
-    if (m_style->borderLeftStyle() == BorderStyleValue::BNone) {
+    if (m_style->borderLeftStyle() == BorderStyleValue::NoneBorderStyleValue) {
         printf("none), ");
-    } else if (m_style->borderLeftStyle() == BorderStyleValue::BSolid) {
+    } else if (m_style->borderLeftStyle() == BorderStyleValue::SolidBorderStyleValue) {
         printf("solid), ");
     }
 

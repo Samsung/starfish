@@ -281,6 +281,18 @@ enum BackgroundRepeatValue {
     NoRepeatRepeatValue,
 };
 
+enum FontSizeValue {
+    XXSmallFontSizeValue,
+    XSmallFontSizeValue,
+    SmallFontSizeValue,
+    MediumFontSizeValue,
+    LargeFontSizeValue,
+    XLargeFontSizeValue,
+    XXLargeFontSizeValue,
+    LargerFontSizeValue,
+    SmallerFontSizeValue,
+};
+
 // Widget Engine will support only visible and hidden values.
 enum OverflowValue {
     VisibleOverflow,
@@ -302,8 +314,14 @@ enum BorderShorthandValueType {
 };
 
 enum BorderStyleValue {
-    BNone,
-    BSolid,
+    NoneBorderStyleValue,
+    SolidBorderStyleValue,
+};
+
+enum BorderWidthValue {
+    ThinBorderWidthValue,
+    MediumBorderWidthValue,
+    ThickBorderWidthValue,
 };
 
 enum TextDecorationValue {
@@ -668,28 +686,13 @@ public:
 
         BackgroundRepeatValueKind,
 
-        XXSmallFontSizeValueKind,
-        XSmallFontSizeValueKind,
-        SmallFontSizeValueKind,
-        MediumFontSizeValueKind,
-        LargeFontSizeValueKind,
-        XLargeFontSizeValueKind,
-        XXLargeFontSizeValueKind,
-        LargerFontSizeValueKind,
-        SmallerFontSizeValueKind,
-
+        FontSizeValueKind,
         FontStyleValueKind,
         FontWeightValueKind,
         TextOverflowValueKind,
 
-        // border-style
-        BorderNone,
-        BorderSolid,
-
-        // border-width
-        BorderThin,
-        BorderMedium,
-        BorderThick,
+        BorderStyleValueKind,
+        BorderWidthValueKind,
 
         OverflowValueKind,
         TextDecorationValueKind,
@@ -783,6 +786,12 @@ public:
         return m_value.m_textOverflow;
     }
 
+    FontSizeValue fontSizeValue()
+    {
+        STARFISH_ASSERT(m_valueKind == FontSizeValueKind);
+        return m_value.m_fontSize;
+    }
+
     FontStyleValue fontStyleValue()
     {
         STARFISH_ASSERT(m_valueKind == FontStyleValueKind);
@@ -805,6 +814,18 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == UnicodeBidiValueKind);
         return m_value.m_unicodeBidi;
+    }
+
+    BorderStyleValue borderStyleValue()
+    {
+        STARFISH_ASSERT(m_valueKind == BorderStyleValueKind);
+        return m_value.m_borderStyle;
+    }
+
+    BorderWidthValue borderWidthValue()
+    {
+        STARFISH_ASSERT(m_valueKind == BorderWidthValueKind);
+        return m_value.m_borderWidth;
     }
 
     CSSLength lengthValue()
@@ -915,6 +936,7 @@ public:
         DisplayValue m_display;
         PositionValue m_position;
         VerticalAlignValue m_verticalAlign;
+        FontSizeValue m_fontSize;
         FontStyleValue m_fontStyle;
         FontWeightValue m_fontWeight;
         TextOverflowValue m_textOverflow;
@@ -925,6 +947,8 @@ public:
         String* m_stringValue;
         BackgroundRepeatValue m_backgroundRepeatX;
         BackgroundRepeatValue m_backgroundRepeatY;
+        BorderStyleValue m_borderStyle;
+        BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
         OverflowValue m_overflow;
         VisibilityValue m_visibility;
@@ -937,6 +961,7 @@ public:
         ValueData(DisplayValue v) { m_display = v; }
         ValueData(PositionValue v) { m_position = v; }
         ValueData(VerticalAlignValue v) { m_verticalAlign = v; }
+        ValueData(FontSizeValue v) { m_fontSize = v; }
         ValueData(FontStyleValue v) { m_fontStyle = v; }
         ValueData(FontWeightValue v) { m_fontWeight = v; }
         ValueData(TextOverflowValue v) { m_textOverflow = v; }
@@ -945,6 +970,8 @@ public:
         ValueData(CSSLength v) { m_length = v; }
         ValueData(CSSAngle v) { m_angle = v; }
         ValueData(String* v) { m_stringValue = v; }
+        ValueData(BorderStyleValue v) { m_borderStyle = v; }
+        ValueData(BorderWidthValue v) { m_borderWidth = v; }
         ValueData(ValueList* v) { m_multiValue = v; }
         ValueData(OverflowValue v) { m_overflow = v; }
         ValueData(VisibilityValue v) { m_visibility = v; }

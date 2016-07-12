@@ -485,7 +485,7 @@ public:
     BorderStyleValue borderTopStyle()
     {
         if (m_surround == nullptr) {
-            return BorderStyleValue::BNone;
+            return BorderStyleValue::NoneBorderStyleValue;
         } else {
             return m_surround->border.top().style();
         }
@@ -494,7 +494,7 @@ public:
     BorderStyleValue borderRightStyle()
     {
         if (m_surround == nullptr) {
-            return BorderStyleValue::BNone;
+            return BorderStyleValue::NoneBorderStyleValue;
         } else {
             return m_surround->border.right().style();
         }
@@ -503,7 +503,7 @@ public:
     BorderStyleValue borderBottomStyle()
     {
         if (m_surround == nullptr) {
-            return BorderStyleValue::BNone;
+            return BorderStyleValue::NoneBorderStyleValue;
         } else {
             return m_surround->border.bottom().style();
         }
@@ -512,7 +512,7 @@ public:
     BorderStyleValue borderLeftStyle()
     {
         if (m_surround == nullptr) {
-            return BorderStyleValue::BNone;
+            return BorderStyleValue::NoneBorderStyleValue;
         } else {
             return m_surround->border.left().style();
         }

@@ -24,10 +24,10 @@ namespace StarFish {
 class BorderValue {
 public:
     BorderValue()
-        : m_style(BorderStyleValue::BNone)
+        : m_style(BorderStyleValue::NoneBorderStyleValue)
+        , m_hasBorderColor(false)
         , m_width(Length(Length::Fixed, 3))
         , m_color(Color(0, 0, 0, 255))
-        , m_hasBorderColor(false)
     {
     }
 
@@ -38,7 +38,7 @@ public:
 
     Length width()
     {
-        if (style() == BorderStyleValue::BNone)
+        if (style() == BorderStyleValue::NoneBorderStyleValue)
             return Length(Length::Fixed, 0);
         return m_width;
     }
@@ -76,7 +76,7 @@ public:
 
     bool hasBorderStyle()
     {
-        return style() != BorderStyleValue::BNone;
+        return style() != BorderStyleValue::NoneBorderStyleValue;
     }
 
     void checkComputed(Length fontSize, Font* font)
@@ -97,10 +97,11 @@ public:
     }
 
 protected:
-    BorderStyleValue m_style;
+    BorderStyleValue m_style : 1;
+    bool m_hasBorderColor : 1;
+
     Length m_width;
     Color m_color;
-    bool m_hasBorderColor;
 };
 
 } /* namespace StarFish */

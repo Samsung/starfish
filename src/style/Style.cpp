@@ -447,24 +447,25 @@ void CSSStyleValuePair::setValueFontSize(std::vector<String*, gc_allocator<Strin
     // absolute-size | relative-size | length | percentage | inherit // initial value -> medium
     //        O      |       O       |   O    |    O       |    O
     String* value = tokens->at(0);
+    m_valueKind = CSSStyleValuePair::ValueKind::FontSizeValueKind;
     if (STRING_VALUE_IS_STRING("xx-small")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::XXSmallFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::XXSmallFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("x-small")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::XSmallFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::XSmallFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("small")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SmallFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::SmallFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("medium")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::MediumFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::MediumFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("large")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::LargeFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::LargeFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("x-large")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::XLargeFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::XLargeFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("xx-large")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::XXLargeFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::XXLargeFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("larger")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::LargerFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::LargerFontSizeValue;
     } else if (STRING_VALUE_IS_STRING("smaller")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SmallerFontSizeValueKind;
+        m_value.m_fontSize = FontSizeValue::SmallerFontSizeValue;
     } else {
         setValuePercentageOrLength(value->utf8Data());
     }
@@ -1140,10 +1141,11 @@ void CSSStyleDeclaration::setBorderLeft(String* value)
 void CSSStyleValuePair::setValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // border-style(<none> | solid)
+    m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
     if (tokens->at(0)->equals("solid")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::BorderSolid;
+        m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
     } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::BorderNone;
+        m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
     }
 }
 
@@ -1171,12 +1173,13 @@ void CSSStyleValuePair::setValueBorderUnitWidth(std::vector<String*, gc_allocato
 {
     String* value = tokens->at(0);
     // border-width(thin | <medium> | thick | length)
+    m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
     if (STRING_VALUE_IS_STRING("thin")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::BorderThin;
+        m_value.m_borderWidth = BorderWidthValue::ThinBorderWidthValue;
     } else if (STRING_VALUE_IS_STRING("medium")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::BorderMedium;
+        m_value.m_borderWidth = BorderWidthValue::MediumBorderWidthValue;
     } else if (STRING_VALUE_IS_STRING("thick")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::BorderThick;
+        m_value.m_borderWidth = BorderWidthValue::ThickBorderWidthValue;
     } else {
         setValuePercentageOrLength(value->utf8Data());
     }
@@ -1488,24 +1491,27 @@ String* CSSStyleValuePair::toString()
     }
     case FontSize: {
         switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::XXSmallFontSizeValueKind:
-            return String::fromUTF8("xx-small");
-        case CSSStyleValuePair::ValueKind::XSmallFontSizeValueKind:
-            return String::fromUTF8("x-small");
-        case CSSStyleValuePair::ValueKind::SmallFontSizeValueKind:
-            return String::fromUTF8("small");
-        case CSSStyleValuePair::ValueKind::MediumFontSizeValueKind:
-            return String::fromUTF8("medium");
-        case CSSStyleValuePair::ValueKind::LargeFontSizeValueKind:
-            return String::fromUTF8("large");
-        case CSSStyleValuePair::ValueKind::XLargeFontSizeValueKind:
-            return String::fromUTF8("x-large");
-        case CSSStyleValuePair::ValueKind::XXLargeFontSizeValueKind:
-            return String::fromUTF8("xx-large");
-        case CSSStyleValuePair::ValueKind::LargerFontSizeValueKind:
-            return String::fromUTF8("larger");
-        case CSSStyleValuePair::ValueKind::SmallerFontSizeValueKind:
-            return String::fromUTF8("smaller");
+        case CSSStyleValuePair::ValueKind::FontSizeValueKind:
+            switch (fontSizeValue()) {
+            case FontSizeValue::XXSmallFontSizeValue:
+                return String::fromUTF8("xx-small");
+            case FontSizeValue::XSmallFontSizeValue:
+                return String::fromUTF8("x-small");
+            case FontSizeValue::SmallFontSizeValue:
+                return String::fromUTF8("small");
+            case FontSizeValue::MediumFontSizeValue:
+                return String::fromUTF8("medium");
+            case FontSizeValue::LargeFontSizeValue:
+                return String::fromUTF8("large");
+            case FontSizeValue::XLargeFontSizeValue:
+                return String::fromUTF8("x-large");
+            case FontSizeValue::XXLargeFontSizeValue:
+                return String::fromUTF8("xx-large");
+            case FontSizeValue::LargerFontSizeValue:
+                return String::fromUTF8("larger");
+            case FontSizeValue::SmallerFontSizeValue:
+                return String::fromUTF8("smaller");
+            }
         default:
             return lengthOrPercentageOrKeywordToString();
         }
@@ -1620,10 +1626,13 @@ String* CSSStyleValuePair::toString()
     case BorderBottomStyle:
     case BorderLeftStyle: {
         switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::BorderNone:
-            return String::fromUTF8("none");
-        case CSSStyleValuePair::ValueKind::BorderSolid:
-            return String::fromUTF8("solid");
+        case CSSStyleValuePair::ValueKind::BorderStyleValueKind:
+            switch (borderStyleValue()) {
+            case BorderStyleValue::NoneBorderStyleValue:
+                return String::fromUTF8("none");
+            case BorderStyleValue::SolidBorderStyleValue:
+                return String::fromUTF8("solid");
+            }
         default:
             return String::emptyString;
         }
@@ -1633,12 +1642,15 @@ String* CSSStyleValuePair::toString()
     case BorderRightWidth:
     case BorderLeftWidth: {
         switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::BorderThin:
-            return String::fromUTF8("thin");
-        case CSSStyleValuePair::ValueKind::BorderMedium:
-            return String::fromUTF8("medium");
-        case CSSStyleValuePair::ValueKind::BorderThick:
-            return String::fromUTF8("thick");
+        case CSSStyleValuePair::ValueKind::BorderWidthValueKind:
+            switch (borderWidthValue()) {
+            case BorderWidthValue::ThinBorderWidthValue:
+                return String::fromUTF8("thin");
+            case BorderWidthValue::MediumBorderWidthValue:
+                return String::fromUTF8("medium");
+            case BorderWidthValue::ThickBorderWidthValue:
+                return String::fromUTF8("thick");
+            }
         default:
             return lengthOrPercentageOrKeywordToString();
         }
@@ -2912,24 +2924,26 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->m_inheritedStyles.m_fontSize = parentStyle->m_inheritedStyles.m_fontSize;
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(3);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::XXSmallFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(0);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::XSmallFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(1);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::SmallFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(2);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::MediumFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(3);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::LargeFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(4);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::XLargeFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(5);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::XXLargeFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(6);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::LargerFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = Length(Length::Fixed, parentStyle->m_inheritedStyles.m_fontSize.fixed() * 1.2f);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::SmallerFontSizeValueKind) {
-                    style->m_inheritedStyles.m_fontSize = Length(Length::Fixed, parentStyle->m_inheritedStyles.m_fontSize.fixed() / 1.2f);
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::FontSizeValueKind) {
+                    if (cssValues[k].fontSizeValue() == FontSizeValue::XXSmallFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(0);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::XSmallFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(1);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::SmallFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(2);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::MediumFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(3);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::LargeFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(4);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::XLargeFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(5);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::XXLargeFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(6);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::LargerFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = Length(Length::Fixed, parentStyle->m_inheritedStyles.m_fontSize.fixed() * 1.2f);
+                    } else if (cssValues[k].fontSizeValue() == FontSizeValue::SmallerFontSizeValue) {
+                        style->m_inheritedStyles.m_fontSize = Length(Length::Fixed, parentStyle->m_inheritedStyles.m_fontSize.fixed() / 1.2f);
+                    }
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
                     float parentComputedFontSize = parentStyle->fontSize().fixed();
                     style->m_inheritedStyles.m_fontSize = Length(Length::Fixed, cssValues[k].percentageValue() * parentComputedFontSize);
@@ -3375,126 +3389,48 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderImageWidths(BorderImageLengthBox(top, right, bottom, left));
                 }
                 break;
-            case CSSStyleValuePair::KeyKind::BorderTopStyle:
-                // border-style(<none> | solid) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderTopStyle(parentStyle->borderTopStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
-                    style->setBorderTopStyle(BorderStyleValue::BNone);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
-                    style->setBorderTopStyle(BorderStyleValue::BSolid);
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
+#define ADD_RESOLVE_STYLE_BORDER_STYLE(POS) \
+            case CSSStyleValuePair::KeyKind::Border##POS##Style: \
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
+                    style->setBorder##POS##Style(parentStyle->borderTopStyle()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) { \
+                    style->setBorder##POS##Style(BorderStyleValue::NoneBorderStyleValue); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderStyleValueKind) { \
+                    style->setBorder##POS##Style(cssValues[k].borderStyleValue()); \
+                } else { \
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+                } \
                 break;
-            case CSSStyleValuePair::KeyKind::BorderRightStyle:
-                // border-style(<none> | solid) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderRightStyle(parentStyle->borderRightStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
-                    style->setBorderRightStyle(BorderStyleValue::BNone);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
-                    style->setBorderRightStyle(BorderStyleValue::BSolid);
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Top);
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Right);
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom);
+            ADD_RESOLVE_STYLE_BORDER_STYLE(Left);
+#undef ADD_RESOLVE_STYLE_BORDER_STYLE
+#define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS) \
+            case CSSStyleValuePair::KeyKind::Border##POS##Width: \
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
+                    style->setBorder##POS##Width(parentStyle->borderTopWidth()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) { \
+                    style->setBorder##POS##Width(Length(Length::Fixed, 3)); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) { \
+                    style->setBorder##POS##Width(cssValues[k].lengthValue().toLength()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderWidthValueKind) { \
+                    if (cssValues[k].borderWidthValue() == BorderWidthValue::ThinBorderWidthValue) { \
+                        style->setBorder##POS##Width(Length(Length::Fixed, 1)); \
+                    } else if (cssValues[k].borderWidthValue() == BorderWidthValue::MediumBorderWidthValue) { \
+                        style->setBorder##POS##Width(Length(Length::Fixed, 3)); \
+                    } else if (cssValues[k].borderWidthValue() == BorderWidthValue::ThickBorderWidthValue) { \
+                        style->setBorder##POS##Width(Length(Length::Fixed, 5)); \
+                    } \
+                } else { \
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+                } \
                 break;
-            case CSSStyleValuePair::KeyKind::BorderBottomStyle:
-                // border-style(<none> | solid) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderBottomStyle(parentStyle->borderBottomStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
-                    style->setBorderBottomStyle(BorderStyleValue::BNone);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
-                    style->setBorderBottomStyle(BorderStyleValue::BSolid);
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::BorderLeftStyle:
-                // border-style(<none> | solid) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderLeftStyle(parentStyle->borderLeftStyle());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderNone) {
-                    style->setBorderLeftStyle(BorderStyleValue::BNone);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderSolid) {
-                    style->setBorderLeftStyle(BorderStyleValue::BSolid);
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::BorderTopWidth:
-                // border-width(thin | <medium> | thick | length) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderTopWidth(parentStyle->borderTopWidth());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setBorderTopWidth(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
-                    style->setBorderTopWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
-                    style->setBorderTopWidth(Length(Length::Fixed, 3));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
-                    style->setBorderTopWidth(Length(Length::Fixed, 5));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::BorderRightWidth:
-                // border-width(thin | <medium> | thick | length) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderRightWidth(parentStyle->borderRightWidth());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setBorderRightWidth(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
-                    style->setBorderRightWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
-                    style->setBorderRightWidth(Length(Length::Fixed, 3));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
-                    style->setBorderRightWidth(Length(Length::Fixed, 5));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::BorderBottomWidth:
-                // border-width(thin | <medium> | thick | length) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderBottomWidth(parentStyle->borderBottomWidth());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setBorderBottomWidth(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
-                    style->setBorderBottomWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
-                    style->setBorderBottomWidth(Length(Length::Fixed, 3));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
-                    style->setBorderBottomWidth(Length(Length::Fixed, 5));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::BorderLeftWidth:
-                // border-width(thin | <medium> | thick | length) | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBorderLeftWidth(parentStyle->borderLeftWidth());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setBorderLeftWidth(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThin) {
-                    style->setBorderLeftWidth(Length(Length::Fixed, 1));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderMedium) {
-                    style->setBorderLeftWidth(Length(Length::Fixed, 3));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BorderThick) {
-                    style->setBorderLeftWidth(Length(Length::Fixed, 5));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Top);
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Right);
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom);
+            ADD_RESOLVE_STYLE_BORDER_WIDTH(Left);
+#undef ADD_RESOLVE_STYLE_BORDER_WIDTH
             case CSSStyleValuePair::KeyKind::LineHeight:
                 // <normal> | number | length | percentage | inherit
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
