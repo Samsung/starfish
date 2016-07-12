@@ -138,4 +138,25 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
     return result;
 }
 
+void LayoutContext::registerYPositionForVerticalAlignInlineBlock(LineBox* lb)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i ++) {
+        (*c.m_registeredYPositionForVerticalAlignInlineBlock)[c.m_inlineBlockBoxStack->at(i)] = lb->absolutePoint(c.m_inlineBlockBoxStack->at(i)).y() + lb->ascender();
+    }
+}
+
+std::pair<bool, LayoutUnit> LayoutContext::readRegisteredLastLineBoxYPos(FrameBlockBox* box)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    STARFISH_ASSERT(c.m_inlineBlockBoxStack->back() == box);
+    auto iter = (*c.m_registeredYPositionForVerticalAlignInlineBlock).find(box);
+    if (iter == c.m_registeredYPositionForVerticalAlignInlineBlock->end()) {
+        return std::pair<bool, LayoutUnit>(false, 0);
+    }
+    LayoutUnit r = iter->second;
+    c.m_registeredYPositionForVerticalAlignInlineBlock->erase(iter);
+    return std::pair<bool, LayoutUnit>(true, r);
+}
+
 }

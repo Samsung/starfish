@@ -24,12 +24,16 @@ namespace StarFish {
 class InlineBox;
 class LineBox;
 
+struct MarginCollapseResult {
+    LayoutUnit m_advanceY;
+    LayoutUnit m_normalFlowHeightAdvance;
+};
+
 class FrameBox : public Frame {
 public:
     FrameBox(Node* node, ComputedStyle* style)
         : Frame(node, style)
         , m_frameRect(0, 0, 0, 0)
-        , m_positionRelativeOffset(0, 0)
         , m_stackingContext(nullptr)
     {
     }
@@ -45,11 +49,6 @@ public:
     }
 
     virtual bool isInlineBox()
-    {
-        return false;
-    }
-
-    virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
     {
         return false;
     }
@@ -171,14 +170,14 @@ public:
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
 
-    LayoutLocation positionRelativeOffset()
+    void setMarginCollapseResult(const MarginCollapseResult& r)
     {
-        return m_positionRelativeOffset;
+        m_marginCollapseResult = r;
     }
 
-    void setPositionRelativeOffset(LayoutLocation l)
+    const MarginCollapseResult& marginCollapseResult()
     {
-        m_positionRelativeOffset = l;
+        return m_marginCollapseResult;
     }
 
     virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage)
@@ -449,8 +448,6 @@ public:
         STARFISH_ASSERT_NOT_REACHED();
     }
 
-    LayoutLocation absolutePointWithoutRelativePosition(FrameBox* top);
-
     LayoutLocation absolutePoint(FrameBox* top)
     {
         LayoutLocation l(0, 0);
@@ -587,8 +584,7 @@ protected:
     // content + padding + border
     LayoutRect m_frameRect;
     LayoutBoxSurroundData m_padding, m_border, m_margin;
-
-    LayoutLocation m_positionRelativeOffset;
+    MarginCollapseResult m_marginCollapseResult;
     StackingContext* m_stackingContext;
 };
 

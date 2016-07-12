@@ -419,14 +419,17 @@ public:
         return child->style()->originalDisplay() == BlockDisplayValue;
     }
 
-    bool isSelfCollapsingBlock(LayoutContext& ctx)
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
     {
         if (isEstablishesBlockFormattingContext())
             return false;
-        if (asFrameBox()->height() > 0)
-            return false;
         if (!isNecessaryBlockBox())
             return true;
+
+        if (paddingHeight() || borderHeight()) {
+            return false;
+        }
+
         Length heightLength = style()->height();
         // NOTE: In case of percentage height,
         // if containing blocks' height is fixed, the block is not self-collaping block.
@@ -435,26 +438,13 @@ public:
         }
 
         if (heightLength.isAuto() || heightLength.isZero()) {
-            // If the block is inline flow and has any line boxes,
-            // this is not self-collapsing.
-            if (!hasBlockFlow()) {
-                for (unsigned i = 0; i < m_lineBoxes.size(); i++) {
-                    for (unsigned j = 0; j < m_lineBoxes[i]->boxes().size(); j++) {
-                        if (!m_lineBoxes[i]->boxes()[j]->isNormalFlow())
-                            continue;
-                        if (!m_lineBoxes[i]->boxes()[j]->isSelfCollapsingBlock(ctx))
-                            return false;
-                    }
-                }
-                return true;
-            }
             Frame* child = firstChild();
             while (child) {
                 if (!child->isNormalFlow()) {
                     child = child->next();
                     continue;
                 }
-                if (!child->asFrameBox()->isSelfCollapsingBlock(ctx))
+                if (!child->isSelfCollapsingBlock(ctx))
                     return false;
                 child = child->next();
             }
@@ -523,11 +513,7 @@ public:
         return m_breakedLinesSet.find(idx) != m_breakedLinesSet.end();
     }
 
-    void registerInlineContent()
-    {
-        m_layoutContext.setLastLineBox(m_block.m_lineBoxes.back());
-    }
-
+    void registerInlineContent();
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();

@@ -21,22 +21,6 @@
 
 namespace StarFish {
 
-LayoutLocation FrameBox::absolutePointWithoutRelativePosition(FrameBox* top)
-{
-    LayoutLocation l(0, 0);
-    Frame* p = this;
-    while (top != p) {
-        l.setX(l.x() + p->asFrameBox()->x());
-        l.setY(l.y() + p->asFrameBox()->y());
-        if (p->isPositionedElement() && p->style()->position() == RelativePositionValue) {
-            l.setX(l.x() - p->asFrameBox()->m_positionRelativeOffset.x());
-            l.setY(l.y() - p->asFrameBox()->m_positionRelativeOffset.y());
-        }
-        p = p->layoutParent();
-    }
-    return l;
-}
-
 void FrameBox::paintStackingContextContent(Canvas* canvas)
 {
     // the in-flow, non-inline-level, non-positioned descendants.

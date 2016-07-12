@@ -34,6 +34,7 @@ class FrameBlockBox;
 class FrameReplaced;
 class FrameInline;
 class FrameDocument;
+class LineBox;
 
 enum PaintingStage {
     PaintingNormalFlowBlock, // the in-flow, non-inline-level, non-positioned descendants.
@@ -60,12 +61,13 @@ public:
         : m_starFish(starFish)
         , m_frameDocument(frameDocument)
     {
-        establishBlockFormattingContext(true);
+        establishBlockFormattingContext(true, true);
     }
 
     ~LayoutContext()
     {
-        STARFISH_ASSERT(m_blockFormattingContextInfo.size() == 1);
+        removeBlockFormattingContext();
+        STARFISH_ASSERT(m_blockFormattingContextInfo.size() == 0);
         STARFISH_ASSERT(m_absolutePositionedFrames.size() == 0);
         STARFISH_ASSERT(m_relativePositionedFrames.size() == 0);
     }
@@ -80,15 +82,23 @@ public:
         return m_frameDocument;
     }
 
-    void establishBlockFormattingContext(bool isNormalFlow)
+    void establishBlockFormattingContext(bool isNormalFlow, bool isRoot = false)
     {
-        m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow));
+        if (!isNormalFlow || isRoot) {
+            std::vector<FrameBlockBox*>* s = new std::vector<FrameBlockBox*>();
+            std::unordered_map<FrameBlockBox*, LayoutUnit>* s2 = new std::unordered_map<FrameBlockBox*, LayoutUnit>();
+            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, s, s2));
+        } else {
+            BlockFormattingContext& back = m_blockFormattingContextInfo.back();
+            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, back.m_registeredYPositionForVerticalAlignInlineBlock));
+        }
     }
 
     void removeBlockFormattingContext()
     {
-        if (m_blockFormattingContextInfo.size() > 1 && m_blockFormattingContextInfo.back().m_isNormalFlow) {
-            m_blockFormattingContextInfo[m_blockFormattingContextInfo.size() - 2].m_lastLineBox = m_blockFormattingContextInfo.back().m_lastLineBox;
+        if (m_blockFormattingContextInfo.back().m_isRoot || !m_blockFormattingContextInfo.back().m_isNormalFlow) {
+            delete m_blockFormattingContextInfo.back().m_inlineBlockBoxStack;
+            delete m_blockFormattingContextInfo.back().m_registeredYPositionForVerticalAlignInlineBlock;
         }
         m_blockFormattingContextInfo.pop_back();
     }
@@ -100,16 +110,18 @@ public:
     Frame* containingFrameBlockBox(Frame* currentFrame); // this function returns most near blockContainer
     Frame* containingBlock(Frame* currentFrame); // this function returns real containing block
 
-    void setLastLineBox(LineBox* l)
+    void pushInlineBlockBox(FrameBlockBox* ib)
     {
-        m_blockFormattingContextInfo.back().m_lastLineBox = l;
+        m_blockFormattingContextInfo.back().m_inlineBlockBoxStack->push_back(ib);
     }
 
-    LineBox* lastLineBox()
+    void popInlineBlockBox()
     {
-        return m_blockFormattingContextInfo.back().m_lastLineBox;
+        m_blockFormattingContextInfo.back().m_inlineBlockBoxStack->pop_back();
     }
 
+    void registerYPositionForVerticalAlignInlineBlock(LineBox* lb);
+    std::pair<bool, LayoutUnit> readRegisteredLastLineBoxYPos(FrameBlockBox* box);
     void registerAbsolutePositionedFrames(Frame* frm)
     {
         Frame* cb = containingFrameBlockBox(frm);
@@ -229,17 +241,21 @@ public:
 
 private:
     struct BlockFormattingContext {
-        BlockFormattingContext(bool isNormalFlow)
+        BlockFormattingContext(bool isNormalFlow, bool isRoot, std::vector<FrameBlockBox*>* inlineBlockBoxStack, std::unordered_map<FrameBlockBox*, LayoutUnit>* registeredYPositionForVerticalAlignInlineBlock)
         {
-            m_lastLineBox = nullptr;
+            m_isRoot = isRoot;
             m_isNormalFlow = isNormalFlow;
+            m_inlineBlockBoxStack = inlineBlockBoxStack;
+            m_registeredYPositionForVerticalAlignInlineBlock = registeredYPositionForVerticalAlignInlineBlock;
         }
+        bool m_isRoot;
         bool m_isNormalFlow;
         LayoutUnit m_maxPositiveMarginTop;
         LayoutUnit m_maxNegativeMarginTop;
         LayoutUnit m_maxPositiveMarginBottom;
         LayoutUnit m_maxNegativeMarginBottom;
-        LineBox* m_lastLineBox;
+        std::vector<FrameBlockBox*>* m_inlineBlockBoxStack;
+        std::unordered_map<FrameBlockBox*, LayoutUnit>* m_registeredYPositionForVerticalAlignInlineBlock;
     };
 
     StarFish* m_starFish;
@@ -588,6 +604,11 @@ public:
     virtual void layout(LayoutContext& ctx, LayoutWantToResolve resolveWhat)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
+    {
+        return false;
     }
 
     virtual void computePreferredWidth(ComputePreferredWidthContext& ctx)

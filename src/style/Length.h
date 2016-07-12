@@ -118,7 +118,7 @@ public:
 
     bool isZero()
     {
-        return isSpecified() && specifiedValue(0) == 0;
+        return isSpecified() && !m_data;
     }
 
     bool isPositveOfZero()

@@ -1082,6 +1082,15 @@ static void removeBoxFromLine(FrameBox* box)
     }
 }
 
+void LineFormattingContext::registerInlineContent()
+{
+    if (m_block.m_lineBoxes.size()) {
+        LineBox* lb = m_block.m_lineBoxes.back();
+        if (lb->boxes().size())
+            m_layoutContext.registerYPositionForVerticalAlignInlineBlock(lb);
+    }
+}
+
 void LineFormattingContext::completeLastLine()
 {
     LineBox* back = m_block.m_lineBoxes.back();
@@ -1200,6 +1209,8 @@ void LineFormattingContext::completeLastLine()
     }
 
     m_absolutePositionedBoxes.clear();
+
+    registerInlineContent();
 }
 
 void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox)
@@ -1356,16 +1367,19 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
         } else if (f->isFrameBlockBox()) {
             // inline-block
             FrameBlockBox* r = f->asFrameBlockBox();
+            ctx.pushInlineBlockBox(r);
             STARFISH_ASSERT(f->style()->display() == DisplayValue::InlineBlockDisplayValue);
             f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
-            LayoutUnit ascender = 0;
-            if (ctx.lastLineBox() && r->isAncestorOf(ctx.lastLineBox()) && r->style()->overflow() == OverflowValue::VisibleOverflow) {
-                LayoutUnit topToLineBox = ctx.lastLineBox()->absolutePointWithoutRelativePosition(r).y();
-                ascender = topToLineBox + ctx.lastLineBox()->ascender();
+            LayoutUnit ascender;
+
+            std::pair<bool, LayoutUnit> p = ctx.readRegisteredLastLineBoxYPos(r);
+            if (p.first && r->style()->overflow() == OverflowValue::VisibleOverflow) {
+                ascender = p.second;
             } else {
                 ascender = f->asFrameBox()->height();
             }
+            ctx.popInlineBlockBox();
             lineFormattingContext.registerInlineBlockAscender(ascender, r);
 
         insertBlockBox:
@@ -1416,13 +1430,11 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
     inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, unused, [&](FrameBox* ib) {
         lineFormattingContext.currentLine()->boxes().push_back(ib);
         ib->setLayoutParent(lineFormattingContext.currentLine());
-        lineFormattingContext.registerInlineContent();
     }, [&](bool dueToBr)
     {
         lineFormattingContext.breakLine(dueToBr, true);
     }, [&](FrameInline* f)
     {
-        lineFormattingContext.registerInlineContent();
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
         InlineNonReplacedBox::layoutInline(inlineBox, ctx, this, &lineFormattingContext, nullptr, true);
 
@@ -1462,6 +1474,8 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
             m_lineBoxes.erase(m_lineBoxes.begin() + p);
         }
     }
+
+    lineFormattingContext.registerInlineContent();
 
     LayoutUnit contentHeight = 0;
     for (size_t i = 0; i < m_lineBoxes.size(); i++) {
@@ -1525,8 +1539,6 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             layoutParentBox->boxes().push_back(self);
             self->setLayoutParent(layoutParentBox);
         }
-
-        lineFormattingContext.registerInlineContent();
     }
 
     if (layoutParentBox) {

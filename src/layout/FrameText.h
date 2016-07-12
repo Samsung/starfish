@@ -56,6 +56,11 @@ public:
         return node()->asCharacterData()->data();
     }
 
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx)
+    {
+        return text()->containsOnlyWhitespace();
+    }
+
     static std::string replaceAll(const std::string& str, const std::string& pattern, const std::string& replace)
     {
         std::string result = str;
