@@ -1125,7 +1125,7 @@ public:
         drawImageInner(data, dst, l, t, r, b, scale, fill);
     }
 
-    virtual void drawRepeatImage(ImageData* data, const Rect& dst, float imageWidth, float imageHeight, bool xRepeat, bool yRepeat)
+    virtual void drawRepeatImage(ImageData* data, const Rect& dst, float imageWidth, float imageHeight, bool xRepeat, bool yRepeat, bool isRootElement)
     {
         if (!lastState().m_visible) {
             return;
@@ -1179,11 +1179,17 @@ public:
             float x = 0.0, y = 0.0;
             if (xRepeat) {
                 x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) - imageWidth;
+                if (isRootElement) {
+                    x += xx;
+                }
             } else {
                 xx += dst.x();
             }
             if (yRepeat) {
                 y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) - imageHeight;
+                if (isRootElement) {
+                    y += yy;
+                }
             } else {
                 yy += dst.y();
             }

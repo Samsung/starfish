@@ -518,11 +518,21 @@ void Window::paintWindowBackground(Canvas* canvas)
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         int width, height;
         evas_object_geometry_get(eflWindow->m_window, NULL, NULL, &width, &height);
-        LayoutRect rt(0, 0, width, height);
+        LayoutRect colorRect(0, 0, width, height);
         if (m_hasRootElementBackground) {
-            FrameBox::paintBackground(canvas, document()->rootElement()->style(), rt, rt);
+            FrameBox* rootRect = document()->rootElement()->frame()->asFrameBox();
+            LayoutLocation rootRectPos = rootRect->absolutePoint(document()->frame()->asFrameBox());
+            LayoutRect imgRect(rootRectPos.x() + rootRect->borderLeft(), rootRectPos.y() + rootRect->borderTop(), rootRect->width() - rootRect->borderWidth(), rootRect->height() - rootRect->borderHeight());
+
+            FrameBox::paintBackground(canvas, document()->rootElement()->style(), imgRect, colorRect, true);
         } else {
-            FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), rt, rt);
+            LayoutRect imgRect(0, 0, width, height);
+            if (document()->rootElement()->body()->frame()) {
+                FrameBox* bodyRect = document()->rootElement()->body()->frame()->asFrameBox();
+                imgRect.setHeight(bodyRect->height() + bodyRect->marginHeight());
+            }
+
+            FrameBox::paintBackground(canvas, document()->rootElement()->body()->style(), imgRect, colorRect, true);
         }
 
     }

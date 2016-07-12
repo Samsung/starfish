@@ -193,7 +193,7 @@ public:
         }
     }
 
-    static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect imageRect, LayoutRect colorRect)
+    static void paintBackground(Canvas* canvas, ComputedStyle* style, LayoutRect imageRect, LayoutRect colorRect, bool isRootElement)
     {
         if (!style->backgroundColor().isTransparent() && style->visibility() == VisibilityValue::VisibleVisibilityValue) {
             canvas->save();
@@ -205,10 +205,16 @@ public:
         ImageData* id = style->backgroundImageData();
         if (id && id->width() && id->height()) {
             canvas->save();
-            canvas->translate(imageRect.x(), imageRect.y());
+            if (isRootElement) {
+                canvas->translate(0, 0);
+                canvas->clip(Rect(0, 0, colorRect.width(), colorRect.height()));
+            } else {
+                canvas->translate(imageRect.x(), imageRect.y());
+                canvas->clip(Rect(0, 0, imageRect.width(), imageRect.height()));
+            }
+
             float bw = imageRect.width();
             float bh = imageRect.height();
-            canvas->clip(Rect(0, 0, imageRect.width(), imageRect.height()));
 
             if (style->bgSizeType() == BackgroundSizeType::Cover) {
                 float imgR = id->width() / (float)id->height();
@@ -222,13 +228,13 @@ public:
                 float imgR = id->width() / (float)id->height();
                 if (boxR > imgR) {
                     if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bh*imgR, bh, true, false);
+                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bh*imgR, bh, true, false, isRootElement);
                     } else {
                         canvas->drawImage(id, Rect(0, 0, bh*imgR, bh));
                     }
                 } else {
                     if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bw / imgR, true, false);
+                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bw / imgR, true, false, isRootElement);
                     } else {
                         canvas->drawImage(id, Rect(0, 0, bw, bw / imgR));
                     }
@@ -254,14 +260,22 @@ public:
                 LayoutUnit x = style->backgroundPositionValue()->x().specifiedValue(bw - w);
                 LayoutUnit y = style->backgroundPositionValue()->y().specifiedValue(bh - h);
 
+                if (isRootElement) {
+                    x += imageRect.x();
+                    y += imageRect.y();
+                    bw = colorRect.width();
+                    bh = colorRect.height();
+                }
+
                 auto repeatX = style->backgroundRepeatX();
                 auto repeatY = style->backgroundRepeatY();
+
                 if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                    canvas->drawRepeatImage(id, Rect(x, y, bw, bh), w, h, true, true);
+                    canvas->drawRepeatImage(id, Rect(x, y, bw, bh), w, h, true, true, isRootElement);
                 } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                    canvas->drawRepeatImage(id, Rect(x, y, w, bh), w, h, false, true);
+                    canvas->drawRepeatImage(id, Rect(x, y, w, bh), w, h, false, true, isRootElement);
                 } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
-                    canvas->drawRepeatImage(id, Rect(x, y, bw, h), w, h, true, false);
+                    canvas->drawRepeatImage(id, Rect(x, y, bw, h), w, h, true, false, isRootElement);
                 } else {
                     canvas->drawImage(id, Rect(x, y, w, h));
                 }
@@ -288,9 +302,8 @@ public:
                 }
             }
 
-            // LEESS: need to set background-position
             LayoutRect bgRect(borderLeft(), borderTop(), m_frameRect.width() - borderWidth(), m_frameRect.height() - borderHeight());
-            paintBackground(canvas, style(), bgRect, LayoutRect(0, 0, width(), height()));
+            paintBackground(canvas, style(), bgRect, LayoutRect(0, 0, width(), height()), false);
 
         } while (false);
 
