@@ -1989,7 +1989,7 @@ bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator
         return false;
 
     const char* token = tokens->at(0)->utf8Data();
-        if (!CSSPropertyParser::assureColor(token)) {
+    if (!CSSPropertyParser::assureColor(token)) {
         return false;
     }
 
