@@ -215,33 +215,24 @@ public:
             float bw = imageRect.width();
             float bh = imageRect.height();
 
+            float w = bw;
+            float h = bh;
+
+            float boxR = bw / bh;
+            float imgR = id->width() / (float)id->height();
             if (style->bgSizeType() == BackgroundSizeType::Cover) {
-                float imgR = id->width() / (float)id->height();
-                if (id->width() < id->height())
-                    canvas->drawImage(id, Rect(0, 0, bw, bh / imgR));
-                else
-                    canvas->drawImage(id, Rect(0, 0, bw*imgR, bh));
-
-            } else if (style->bgSizeType() == BackgroundSizeType::Contain) {
-                float boxR = bw / bh;
-                float imgR = id->width() / (float)id->height();
-                if (boxR > imgR) {
-                    if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bh*imgR, bh, true, false, isRootElement);
-                    } else {
-                        canvas->drawImage(id, Rect(0, 0, bh*imgR, bh));
-                    }
+                if (boxR < imgR) {
+                    w = bh * imgR;
                 } else {
-                    if (style->backgroundRepeatX() == BackgroundRepeatValue::RepeatRepeatValue) {
-                        canvas->drawRepeatImage(id, Rect(0, 0, bw, bh), bw, bw / imgR, true, false, isRootElement);
-                    } else {
-                        canvas->drawImage(id, Rect(0, 0, bw, bw / imgR));
-                    }
+                    h = bw / imgR;
                 }
-
+            } else if (style->bgSizeType() == BackgroundSizeType::Contain) {
+                if (boxR > imgR) {
+                    w = bh * imgR;
+                } else {
+                    h = bw / imgR;
+                }
             } else if (style->bgSizeType() == BackgroundSizeType::SizeValue) {
-                float w, h;
-
                 if (style->bgSizeValue()->width().isAuto() && style->bgSizeValue()->height().isAuto()) {
                     w = id->width();
                     h = id->height();
@@ -255,33 +246,31 @@ public:
                     w = style->bgSizeValue()->width().specifiedValue(bw);
                     h = style->bgSizeValue()->height().specifiedValue(bh);
                 }
-
-                LayoutUnit x = style->backgroundPositionValue()->x().specifiedValue(bw - w);
-                LayoutUnit y = style->backgroundPositionValue()->y().specifiedValue(bh - h);
-
-                if (isRootElement) {
-                    x += imageRect.x();
-                    y += imageRect.y();
-                    bw = colorRect.width();
-                    bh = colorRect.height();
-                }
-
-                auto repeatX = style->backgroundRepeatX();
-                auto repeatY = style->backgroundRepeatY();
-
-                if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                    canvas->drawRepeatImage(id, Rect(x, y, bw, bh), w, h, true, true, isRootElement);
-                } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                    canvas->drawRepeatImage(id, Rect(x, y, w, bh), w, h, false, true, isRootElement);
-                } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
-                    canvas->drawRepeatImage(id, Rect(x, y, bw, h), w, h, true, false, isRootElement);
-                } else {
-                    canvas->drawImage(id, Rect(x, y, w, h));
-                }
-
             } else {
                 STARFISH_ASSERT(style->bgSizeType() == BackgroundSizeType::SizeNone);
                 STARFISH_ASSERT_NOT_REACHED();
+            }
+
+            LayoutUnit x = style->backgroundPositionValue()->x().specifiedValue(bw - w);
+            LayoutUnit y = style->backgroundPositionValue()->y().specifiedValue(bh - h);
+
+            if (isRootElement) {
+                x += imageRect.x();
+                y += imageRect.y();
+                bw = colorRect.width();
+                bh = colorRect.height();
+            }
+
+            auto repeatX = style->backgroundRepeatX();
+            auto repeatY = style->backgroundRepeatY();
+            if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+                canvas->drawRepeatImage(id, Rect(x, y, bw, bh), w, h, true, true, isRootElement);
+            } else if (repeatX == BackgroundRepeatValue::NoRepeatRepeatValue && repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+                canvas->drawRepeatImage(id, Rect(x, y, w, bh), w, h, false, true, isRootElement);
+            } else if (repeatX == BackgroundRepeatValue::RepeatRepeatValue && repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
+                canvas->drawRepeatImage(id, Rect(x, y, bw, h), w, h, true, false, isRootElement);
+            } else {
+                canvas->drawImage(id, Rect(x, y, w, h));
             }
 
             canvas->restore();

@@ -3401,10 +3401,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
                 } \
                 break;
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Top);
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Right);
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom);
-            ADD_RESOLVE_STYLE_BORDER_STYLE(Left);
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Top);
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Right);
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom);
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Left);
 #undef ADD_RESOLVE_STYLE_BORDER_STYLE
 #define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS) \
             case CSSStyleValuePair::KeyKind::Border##POS##Width: \
@@ -3426,10 +3426,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
                 } \
                 break;
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Top);
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Right);
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom);
-            ADD_RESOLVE_STYLE_BORDER_WIDTH(Left);
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Top);
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Right);
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom);
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Left);
 #undef ADD_RESOLVE_STYLE_BORDER_WIDTH
             case CSSStyleValuePair::KeyKind::LineHeight:
                 // <normal> | number | length | percentage | inherit
