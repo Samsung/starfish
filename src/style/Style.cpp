@@ -1954,14 +1954,17 @@ void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator<Str
         }
 
         if (!inParenthesis && String::isSpaceOrNewline(data[i])) {
-            tokens->push_back(String::fromUTF8(str.data(), str.length() - 1)->toLower());
+            String* newToken = String::fromUTF8(str.data(), str.length() - 1)->toLower();
+            if (!newToken->containsOnlyWhitespace())
+                tokens->push_back(newToken);
             isWhiteSpaceState = true;
             str.clear();
         } else if ((inParenthesis && data[i] == ')') || i == length - 1) {
             if (str.length() > 3 && (str[0] == 'u' || str[0] == 'U') && (str[1] == 'r' || str[1] == 'R') && (str[2] == 'l' || str[2] == 'L'))
                 tokens->push_back(String::fromUTF8("url")->concat(String::fromUTF8(str.data() + 3, str.length() - 3)));
-            else
+            else if (str.length() != 0) {
                 tokens->push_back(String::fromUTF8(str.data(), str.length())->toLower());
+            }
             inParenthesis = false;
             isWhiteSpaceState = true;
             str.clear();
@@ -1986,7 +1989,7 @@ bool CSSStyleDeclaration::checkInputErrorColor(std::vector<String*, gc_allocator
         return false;
 
     const char* token = tokens->at(0)->utf8Data();
-    if (!CSSPropertyParser::assureColor(token)) {
+        if (!CSSPropertyParser::assureColor(token)) {
         return false;
     }
 
