@@ -83,13 +83,13 @@ public:
         }
 
         if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isSpecified()) {
-            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isPositveOfZero()) {
+            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isPositiveOrZero()) {
                 result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first = Length();
             }
         }
 
         if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isSpecified()) {
-            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isPositveOfZero()) {
+            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isPositiveOrZero()) {
                 result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second = Length();
             }
         }

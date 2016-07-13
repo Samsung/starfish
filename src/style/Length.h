@@ -121,7 +121,7 @@ public:
         return isSpecified() && !m_data;
     }
 
-    bool isPositveOfZero()
+    bool isPositiveOrZero()
     {
         STARFISH_ASSERT(isSpecified());
         return m_data >= 0;

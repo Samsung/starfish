@@ -235,6 +235,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     if (newStyle->m_inheritedStyles.m_fontSize != oldStyle->m_inheritedStyles.m_fontSize)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
+    if (newStyle->m_inheritedStyles.m_fontStyle != oldStyle->m_inheritedStyles.m_fontStyle)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
     if (newStyle->m_inheritedStyles.m_fontWeight != oldStyle->m_inheritedStyles.m_fontWeight)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 

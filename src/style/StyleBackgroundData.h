@@ -207,11 +207,10 @@ bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
     if (a.m_image != b.m_image)
         return false;
 
-    if (a.m_positionType == BackgroundPositionType::BackgroundPositionValue && *a.m_sizeValue != *b.m_sizeValue) {
+    if (a.m_positionType != b.m_positionType)
         return false;
-    }
 
-    if (a.m_positionType == BackgroundPositionType::BackgroundPositionValue && *a.m_sizeValue != *b.m_sizeValue) {
+    if (a.m_positionType == BackgroundPositionType::BackgroundPositionValue && *a.m_positionValue != *b.m_positionValue) {
         return false;
     }
 
