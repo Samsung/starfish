@@ -98,9 +98,6 @@ test/reftest/vendor/blink/fast/borders/border-image-width-rounding.html
 test/reftest/vendor/blink/fast/borders/border-left-right-same-bottom-different-color.html
 test/reftest/vendor/blink/fast/borders/negative-border-width.html
 test/reftest/vendor/blink/fast/borders/transparent-currentcolor-crash.html
-test/reftest/vendor/blink/fast/css3-text/css3-text-decoration/text-decoration-color-recalc.html
-test/reftest/vendor/blink/fast/css3-text/css3-text-decoration/text-decoration-line-recalc.html
-test/reftest/vendor/blink/fast/css3-text/css3-text-decoration/text-decoration-style-recalc.html
 test/reftest/vendor/blink/fast/doctypes/005-case-preserving.html
 test/reftest/vendor/blink/fast/dynamic/004.html
 test/reftest/vendor/blink/fast/dynamic/006.html
