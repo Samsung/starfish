@@ -155,6 +155,7 @@ test/reftest/vendor/blink/fast/js/regexp-charclass-crash.html
 test/reftest/vendor/blink/fast/js/try-catch-crash.html
 test/reftest/vendor/blink/fast/js/uncaught-exception-line-number.html
 test/reftest/vendor/blink/fast/layers/layer-content-visibility-change.html
+test/reftest/vendor/blink/fast/layers/layer-visibility-sublayer.html
 test/reftest/vendor/blink/fast/layers/positioned-inside-root-with-margins.html
 test/reftest/vendor/blink/fast/layers/visible-layer-with-hidden-parent.html
 test/reftest/vendor/blink/fast/layers/zindex-inherit.html

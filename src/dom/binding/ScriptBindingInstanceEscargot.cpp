@@ -22,6 +22,7 @@
 #include "platform/window/Window.h"
 #include "dom/DOM.h"
 #include "dom/NodeList.h"
+#include "style/CSSStyleLookupTrie.h"
 
 #include "Escargot.h"
 #include "vm/ESVMInstance.h"
@@ -3241,33 +3242,7 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
 {
     /* style-related getter/setter start here */
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(CSSStyleDeclaration, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
-/*
-#define DEFINE_ACCESSOR_PROPERTY(name, nameLower, lowerCaseName)                                                                 \
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(                                                                     \
-        CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create(#nameLower),            \
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {                                                              \
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CSSStyleDeclarationObject, CSSStyleDeclaration);                     \
-        String* c = originalObj->name();                                                                                         \
-        STARFISH_ASSERT(c);                                                                                                      \
-        return toJSString(c);                                                                                                    \
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {                                                               \
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CSSStyleDeclarationObject, CSSStyleDeclaration);                     \
-        if (v.isESString()) {                                                                                                    \
-            originalObj->set##name(v.asESString()->utf8Data());                                                                  \
-        } else if (v.isNumber()) {                                                                                               \
-            originalObj->set##name(std::to_string(v.toNumber()).c_str());                                                        \
-        } else if (v.isObject()) { \
-            escargot::ESObject* vObj = v.asESPointer()->asESObject(); \
-            escargot::ESValue toStringFunc = vObj->get(escargot::ESString::create("toString")); \
-            STARFISH_ASSERT(toStringFunc.asESPointer()->isESFunctionObject()); \
-            escargot::ESValue convertedStr =  escargot::ESFunctionObject::call(instance, toStringFunc, vObj, NULL, 0, false); \
-            STARFISH_ASSERT(convertedStr.isESString()); \
-            originalObj->set##name(convertedStr.asESString()->utf8Data()); \
-        } \
-        return escargot::ESValue(); \
-    });
-    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(DEFINE_ACCESSOR_PROPERTY)
-*/
+
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -3296,6 +3271,37 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }, escargot::ESString::create("getPropertyValue"), 2, false));
+
+    CSSStyleDeclarationFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setProperty"), true, true, true,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            try {
+                escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+                CHECK_TYPEOF(thisValue, ScriptWrappable::Type::CSSStyleDeclarationObject);
+                CSSStyleDeclaration* decl = (CSSStyleDeclaration*)thisValue.asESPointer()->asESObject()->extraPointerData();
+                escargot::ESValue prop = instance->currentExecutionContext()->readArgument(0);
+                escargot::ESValue val = instance->currentExecutionContext()->readArgument(1);
+
+                String* name = toBrowserString(prop.toString());
+                const char* c = name->utf8Data();
+                CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
+
+                if (kind == CSSStyleKind::Unknown) {
+                } else {
+                    if (false) {
+
+                    }
+#define SET_ATTR(name, nameLower, nameCSSCase) \
+                    else if (kind == CSSStyleKind::name) { \
+                        decl->set##name(toBrowserString(val)); \
+                    }
+                    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                }
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            return escargot::ESValue();
+        }, escargot::ESString::create("setProperty"), 3, false));
 #endif
 
     return CSSStyleDeclarationFunction;

@@ -148,6 +148,7 @@ test/reftest/vendor/webkit/fast/invalid/013.html
 test/reftest/vendor/webkit/fast/invalid/015.html
 test/reftest/vendor/webkit/fast/invalid/016.html
 test/reftest/vendor/webkit/fast/layers/layer-content-visibility-change.html
+test/reftest/vendor/webkit/fast/layers/layer-visibility-sublayer.html
 test/reftest/vendor/webkit/fast/layers/positioned-inside-root-with-margins.html
 test/reftest/vendor/webkit/fast/layers/visible-layer-with-hidden-parent.html
 test/reftest/vendor/webkit/fast/layers/zindex-inherit.html
