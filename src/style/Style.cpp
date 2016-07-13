@@ -673,7 +673,7 @@ void CSSStyleValuePair::setValueBackgroundRepeatX(std::vector<String*, gc_alloca
 
     if (STRING_VALUE_IS_STRING("no-repeat")) {
         m_value.m_backgroundRepeatX = BackgroundRepeatValue::NoRepeatRepeatValue;
-    } else if (STRING_VALUE_IS_STRING("repeat")) {
+    } else if (STRING_VALUE_IS_STRING("repeat") || STRING_VALUE_IS_STRING("initial")) {
         m_value.m_backgroundRepeatX = BackgroundRepeatValue::RepeatRepeatValue;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -688,7 +688,7 @@ void CSSStyleValuePair::setValueBackgroundRepeatY(std::vector<String*, gc_alloca
 
     if (STRING_VALUE_IS_STRING("no-repeat")) {
         m_value.m_backgroundRepeatY = BackgroundRepeatValue::NoRepeatRepeatValue;
-    } else if (STRING_VALUE_IS_STRING("repeat")) {
+    } else if (STRING_VALUE_IS_STRING("repeat") || STRING_VALUE_IS_STRING("initial")) {
         m_value.m_backgroundRepeatY = BackgroundRepeatValue::RepeatRepeatValue;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -2252,7 +2252,8 @@ bool CSSStyleDeclaration::checkInputErrorBackgroundRepeat(std::vector<String*, g
     return VALUE_IS_STRING("repeat")
         || VALUE_IS_STRING("repeat-x")
         || VALUE_IS_STRING("repeat-y")
-        || VALUE_IS_STRING("no-repeat");
+        || VALUE_IS_STRING("no-repeat")
+        || VALUE_IS_STRING("initial");
 }
 
 bool CSSStyleDeclaration::checkInputErrorBackground(std::vector<String*, gc_allocator<String*> >* tokens)
