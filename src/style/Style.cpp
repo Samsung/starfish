@@ -3175,62 +3175,6 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundRepeatY(cssValues[k].backgroundRepeatYValue());
                 }
                 break;
-            case CSSStyleValuePair::KeyKind::Top:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setTop(parentStyle->top());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                    style->setTop(Length());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setTop(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-                    style->setTop(Length(Length::Percent, cssValues[k].percentageValue()));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::Right:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setRight(parentStyle->right());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                    style->setRight(Length());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setRight(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-                    style->setRight(Length(Length::Percent, cssValues[k].percentageValue()));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::Bottom:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBottom(parentStyle->bottom());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                    style->setBottom(Length());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setBottom(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-                    style->setBottom(Length(Length::Percent, cssValues[k].percentageValue()));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::Left:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setLeft(parentStyle->left());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                    style->setLeft(Length());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
-                    style->setLeft(cssValues[k].lengthValue().toLength());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-                    style->setLeft(Length(Length::Percent, cssValues[k].percentageValue()));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                break;
             case CSSStyleValuePair::KeyKind::BorderImageSlice:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBorderImageSlices(ComputedStyle::initialBorderImageSlices());
@@ -3319,6 +3263,45 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorderImageWidths(BorderImageLengthBox(top, right, bottom, left));
                 }
                 break;
+            case CSSStyleValuePair::KeyKind::LineHeight:
+                // <normal> | number | length | percentage | inherit
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                    style->setLineHeight(parentStyle->lineHeight());
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Normal) {
+                    // The compute value should be 'normal'.
+                    // https://developer.mozilla.org/ko/docs/Web/CSS/line-height.
+                    style->setLineHeight(Length(Length::Percent, -100));
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Number) {
+                    // The computed value should be same as the specified value.
+                    style->setLineHeight(Length(Length::InheritableNumber, cssValues[k].numberValue()));
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+                    style->setLineHeight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
+                } else {
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+                break;
+#define ADD_RESOLVE_STYLE_POS(POS, pos) \
+            case CSSStyleValuePair::KeyKind::POS: \
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
+                    style->set##POS(parentStyle->pos()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial \
+                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) { \
+                    style->set##POS(Length()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) { \
+                    style->set##POS(cssValues[k].lengthValue().toLength()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) { \
+                    style->set##POS(Length(Length::Percent, cssValues[k].percentageValue())); \
+                } else { \
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+                } \
+                break;
+                ADD_RESOLVE_STYLE_POS(Top, top)
+                ADD_RESOLVE_STYLE_POS(Right, right)
+                ADD_RESOLVE_STYLE_POS(Bottom, bottom)
+                ADD_RESOLVE_STYLE_POS(Left, left)
+#undef ADD_RESOLVE_STYLE_POS
 #define ADD_RESOLVE_STYLE_BORDER_STYLE(POS) \
             case CSSStyleValuePair::KeyKind::Border##POS##Style: \
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
@@ -3331,10 +3314,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
                 } \
                 break;
-                ADD_RESOLVE_STYLE_BORDER_STYLE(Top);
-                ADD_RESOLVE_STYLE_BORDER_STYLE(Right);
-                ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom);
-                ADD_RESOLVE_STYLE_BORDER_STYLE(Left);
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Top)
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Right)
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Bottom)
+                ADD_RESOLVE_STYLE_BORDER_STYLE(Left)
 #undef ADD_RESOLVE_STYLE_BORDER_STYLE
 #define ADD_RESOLVE_STYLE_BORDER_WIDTH(POS) \
             case CSSStyleValuePair::KeyKind::Border##POS##Width: \
@@ -3356,10 +3339,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
                 } \
                 break;
-                ADD_RESOLVE_STYLE_BORDER_WIDTH(Top);
-                ADD_RESOLVE_STYLE_BORDER_WIDTH(Right);
-                ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom);
-                ADD_RESOLVE_STYLE_BORDER_WIDTH(Left);
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Top)
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Right)
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Bottom)
+                ADD_RESOLVE_STYLE_BORDER_WIDTH(Left)
 #undef ADD_RESOLVE_STYLE_BORDER_WIDTH
 #define ADD_RESOLVE_STYLE_BORDER_COLOR(POS) \
             case CSSStyleValuePair::KeyKind::Border##POS##Color: \
@@ -3380,124 +3363,46 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     } \
                 } \
                 break;
-                ADD_RESOLVE_STYLE_BORDER_COLOR(Top);
-                ADD_RESOLVE_STYLE_BORDER_COLOR(Right);
-                ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom);
-                ADD_RESOLVE_STYLE_BORDER_COLOR(Left);
+                ADD_RESOLVE_STYLE_BORDER_COLOR(Top)
+                ADD_RESOLVE_STYLE_BORDER_COLOR(Right)
+                ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom)
+                ADD_RESOLVE_STYLE_BORDER_COLOR(Left)
 #undef ADD_RESOLVE_STYLE_BORDER_COLOR
-            case CSSStyleValuePair::KeyKind::LineHeight:
-                // <normal> | number | length | percentage | inherit
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setLineHeight(parentStyle->lineHeight());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Normal) {
-                    // The compute value should be 'normal'.
-                    // https://developer.mozilla.org/ko/docs/Web/CSS/line-height.
-                    style->setLineHeight(Length(Length::Percent, -100));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Number) {
-                    // The computed value should be same as the specified value.
-                    style->setLineHeight(Length(Length::InheritableNumber, cssValues[k].numberValue()));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
-                    style->setLineHeight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
+#define ADD_RESOLVE_STYLE_MARGIN(POS) \
+            case CSSStyleValuePair::KeyKind::Margin##POS: \
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
+                    style->setMargin##POS(parentStyle->margin##POS()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) { \
+                    style->setMargin##POS(Length(Length::Fixed, 0)); \
+                } else { \
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto \
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length \
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage); \
+                    style->setMargin##POS(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value())); \
+                } \
                 break;
-            case CSSStyleValuePair::KeyKind::MarginTop:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setMarginTop(parentStyle->marginTop());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setMarginTop(Length(Length::Fixed, 0));
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setMarginTop(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
+                ADD_RESOLVE_STYLE_MARGIN(Top)
+                ADD_RESOLVE_STYLE_MARGIN(Right)
+                ADD_RESOLVE_STYLE_MARGIN(Bottom)
+                ADD_RESOLVE_STYLE_MARGIN(Left)
+#undef ADD_RESOLVE_STYLE_MARGIN
+#define ADD_RESOLVE_STYLE_PADDING(POS) \
+            case CSSStyleValuePair::KeyKind::Padding##POS: \
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
+                    style->setPadding##POS(parentStyle->padding##POS()); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) { \
+                    style->setPadding##POS(ComputedStyle::initialPadding()); \
+                } else { \
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length \
+                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage); \
+                    style->setPadding##POS(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value())); \
+                } \
                 break;
-            case CSSStyleValuePair::KeyKind::MarginBottom:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                    style->setMarginBottom(Length(Length::Auto));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setMarginBottom(parentStyle->marginBottom());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setMarginBottom(ComputedStyle::initialMargin());
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setMarginBottom(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::MarginLeft:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setMarginLeft(parentStyle->marginLeft());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setMarginLeft(Length(Length::Fixed, 0));
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setMarginLeft(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::MarginRight:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setMarginRight(parentStyle->marginRight());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setMarginRight(Length(Length::Fixed, 0));
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setMarginRight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::PaddingTop:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setPaddingTop(parentStyle->paddingTop());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setPaddingTop(Length(Length::Fixed, 0));
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setPaddingTop(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::PaddingRight:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setPaddingRight(parentStyle->paddingRight());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setPaddingRight(ComputedStyle::initialPadding());
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setPaddingRight(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::PaddingBottom:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setPaddingBottom(parentStyle->paddingBottom());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setPaddingBottom(Length(Length::Fixed, 0));
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setPaddingBottom(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::PaddingLeft:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setPaddingLeft(parentStyle->paddingLeft());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setPaddingLeft(Length(Length::Fixed, 0));
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length
-                        || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage);
-                    style->setPaddingLeft(convertValueToLength(cssValues[k].valueKind(), cssValues[k].value()));
-                }
-                break;
+                ADD_RESOLVE_STYLE_PADDING(Top)
+                ADD_RESOLVE_STYLE_PADDING(Right)
+                ADD_RESOLVE_STYLE_PADDING(Bottom)
+                ADD_RESOLVE_STYLE_PADDING(Left)
+#undef ADD_RESOLVE_STYLE_PADDING
             case CSSStyleValuePair::KeyKind::Opacity:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->m_opacity = parentStyle->m_opacity;

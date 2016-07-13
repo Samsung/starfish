@@ -929,7 +929,6 @@ public:
         FontStyleValue m_fontStyle;
         FontWeightValue m_fontWeight;
         TextOverflowValue m_textOverflow;
-        // TextAlignValue m_textAlign;
         SideValue m_side;
         DirectionValue m_direction;
         CSSLength m_length;
