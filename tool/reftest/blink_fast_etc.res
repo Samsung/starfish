@@ -196,6 +196,7 @@ test/reftest/vendor/blink/fast/repaint/block-no-inflow-children.html
 test/reftest/vendor/blink/fast/repaint/block-shift-repaint.html
 test/reftest/vendor/blink/fast/repaint/clip-unclip-and-change.html
 test/reftest/vendor/blink/fast/repaint/erase-overflow.html
+test/reftest/vendor/blink/fast/repaint/inline-block-resize.html
 test/reftest/vendor/blink/fast/repaint/invalidation-with-zero-size-object.html
 test/reftest/vendor/blink/fast/repaint/invisible-objects.html
 test/reftest/vendor/blink/fast/repaint/layer-hide-when-needs-layout.html
