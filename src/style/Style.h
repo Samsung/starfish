@@ -972,8 +972,8 @@ public:
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
-        : m_valueKind(kind),
-          m_value(value)
+        : m_valueKind(kind)
+        , m_value(value)
     {
     }
 
