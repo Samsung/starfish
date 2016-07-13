@@ -609,15 +609,15 @@ void CSSStyleValuePair::setValueBackgroundPosition(std::vector<String*, gc_alloc
     for (unsigned int i = 0; i < tokens->size(); i++) {
         value = tokens->at(i)->utf8Data();
         if (VALUE_IS_STRING("left")) {
-            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionLeft, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::LeftSideValue);
         } else if (VALUE_IS_STRING("right")) {
-            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionRight, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::RightSideValue);
         } else if (VALUE_IS_STRING("center")) {
-            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionCenter, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
         } else if (VALUE_IS_STRING("top")) {
-            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionTop, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::TopSideValue);
         } else if (VALUE_IS_STRING("bottom")) {
-            values->append(CSSStyleValuePair::ValueKind::BackgroundPositionBottom, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::BottomSideValue);
         } else {
             float result;
             String* unit = CSSPropertyParser::parseNumberAndUnit(value, &result);
@@ -880,15 +880,15 @@ void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocato
     for (unsigned int i = 0; i < tokens->size(); i++) {
         String* value = tokens->at(i);
         if (STRING_VALUE_IS_STRING("left")) {
-            values->append(CSSStyleValuePair::ValueKind::TransformOriginLeft, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::LeftSideValue);
         } else if (STRING_VALUE_IS_STRING("right")) {
-            values->append(CSSStyleValuePair::ValueKind::TransformOriginRight, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::RightSideValue);
         } else if (STRING_VALUE_IS_STRING("center")) {
-            values->append(CSSStyleValuePair::ValueKind::TransformOriginCenter, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
         } else if (STRING_VALUE_IS_STRING("top")) {
-            values->append(CSSStyleValuePair::ValueKind::TransformOriginTop, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::TopSideValue);
         } else if (STRING_VALUE_IS_STRING("bottom")) {
-            values->append(CSSStyleValuePair::ValueKind::TransformOriginBottom, { 0 });
+            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::BottomSideValue);
         } else {
             float result = 0.f;
             String* unit = CSSPropertyParser::parseNumberAndUnit(value->utf8Data(), &result);
@@ -1212,14 +1212,14 @@ void CSSStyleValuePair::setValueTextAlign(std::vector<String*, gc_allocator<Stri
     m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
 
     if (VALUE_IS_STRING("left")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-        m_value.m_textAlign = TextAlignValue::LeftTextAlignValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+        m_value.m_side = SideValue::LeftSideValue;
     } else if (VALUE_IS_STRING("center")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-        m_value.m_textAlign = TextAlignValue::CenterTextAlignValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+        m_value.m_side = SideValue::CenterSideValue;
     } else if (VALUE_IS_STRING("right")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-        m_value.m_textAlign = TextAlignValue::RightTextAlignValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+        m_value.m_side = SideValue::RightSideValue;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -1395,18 +1395,21 @@ String* CSSStyleValuePair::toString()
             String* str = String::emptyString;
             ValueList* vals = multiValue();
             for (unsigned int i = 0; i < vals->size(); i++) {
-                if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionLeft)
-                    str = str->concat(String::fromUTF8("left"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionRight)
-                    str = str->concat(String::fromUTF8("right"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionTop)
-                    str = str->concat(String::fromUTF8("top"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionBottom)
-                    str = str->concat(String::fromUTF8("bottom"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionCenter)
-                    str = str->concat(String::fromUTF8("center"));
-                else
-                    str = str->concat(valueToString(vals->getValueKindAtIndex(i), vals->getValueAtIndex(i)));
+                CSSStyleValuePair& item = vals->atIndex(i);
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                    if (item.sideValue() == SideValue::LeftSideValue)
+                        str = str->concat(String::fromUTF8("left"));
+                    else if (item.sideValue() == SideValue::RightSideValue)
+                        str = str->concat(String::fromUTF8("right"));
+                    else if (item.sideValue() == SideValue::CenterSideValue)
+                        str = str->concat(String::fromUTF8("center"));
+                    else if (item.sideValue() == SideValue::TopSideValue)
+                        str = str->concat(String::fromUTF8("top"));
+                    else if (item.sideValue() == SideValue::BottomSideValue)
+                        str = str->concat(String::fromUTF8("bottom"));
+                } else {
+                    str = str->concat(valueToString(item.valueKind(), item.value()));
+                }
 
                 if (i < vals->size() - 1) {
                     str = str->concat(String::spaceString);
@@ -1431,8 +1434,8 @@ String* CSSStyleValuePair::toString()
             String* str = String::emptyString;
             ValueList* vals = multiValue();
             for (unsigned int i = 0; i < vals->size(); i++) {
-                str = str->concat(valueToString(vals->getValueKindAtIndex(i),
-                    vals->getValueAtIndex(i)));
+                CSSStyleValuePair& item = vals->atIndex(i);
+                str = str->concat(valueToString(item.valueKind(), item.value()));
                 if (i < vals->size() - 1) {
                     str = str->concat(String::spaceString);
                 }
@@ -1588,10 +1591,11 @@ String* CSSStyleValuePair::toString()
             String* s = String::emptyString;
             for (unsigned int i = 0; i < values->size(); i++) {
                 String* newstr;
-                if (values->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::StringValueKind)
+                CSSStyleValuePair& item = values->atIndex(i);
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::StringValueKind)
                     newstr = String::fromUTF8("fill");
                 else
-                    newstr = valueToString(values->getValueKindAtIndex(i), values->getValueAtIndex(i));
+                    newstr = valueToString(item.valueKind(), item.value());
                 s = s->concat(newstr);
                 if (i != values->size() - 1)
                     s = s->concat(String::spaceString);
@@ -1609,8 +1613,8 @@ String* CSSStyleValuePair::toString()
             ValueList* values = multiValue();
             String* s = String::emptyString;
             for (unsigned int i = 0; i < values->size(); i++) {
-                String* newstr = valueToString(values->getValueKindAtIndex(i),
-                    values->getValueAtIndex(i));
+                CSSStyleValuePair& item = values->atIndex(i);
+                String* newstr = valueToString(item.valueKind(), item.value());
                 s = s->concat(newstr);
                 if (i != values->size() - 1)
                     s = s->concat(String::spaceString);
@@ -1656,14 +1660,14 @@ String* CSSStyleValuePair::toString()
         }
     }
     case TextAlign: {
-        switch (textAlignValue()) {
-        case TextAlignValue::NamelessTextAlignValue:
+        switch (sideValue()) {
+        case SideValue::NoneSideValue:
             return String::fromUTF8("left");
-        case TextAlignValue::LeftTextAlignValue:
+        case SideValue::LeftSideValue:
             return String::fromUTF8("left");
-        case TextAlignValue::RightTextAlignValue:
+        case SideValue::RightSideValue:
             return String::fromUTF8("right");
-        case TextAlignValue::CenterTextAlignValue:
+        case SideValue::CenterSideValue:
             return String::fromUTF8("center");
         default:
             return String::emptyString;
@@ -1736,19 +1740,21 @@ String* CSSStyleValuePair::toString()
             String* str = String::emptyString;
             ValueList* vals = multiValue();
             for (unsigned int i = 0; i < vals->size(); i++) {
-
-                if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginLeft)
-                    str = str->concat(String::fromUTF8("left"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginRight)
-                    str = str->concat(String::fromUTF8("right"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginTop)
-                    str = str->concat(String::fromUTF8("top"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginBottom)
-                    str = str->concat(String::fromUTF8("bottom"));
-                else if (vals->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginCenter)
-                    str = str->concat(String::fromUTF8("center"));
-                else
-                    str = str->concat(valueToString(vals->getValueKindAtIndex(i), vals->getValueAtIndex(i)));
+                CSSStyleValuePair& item = vals->atIndex(i);
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                    if (item.sideValue() == SideValue::LeftSideValue)
+                        str = str->concat(String::fromUTF8("left"));
+                    else if (item.sideValue() == SideValue::RightSideValue)
+                        str = str->concat(String::fromUTF8("right"));
+                    else if (item.sideValue() == SideValue::CenterSideValue)
+                        str = str->concat(String::fromUTF8("center"));
+                    else if (item.sideValue() == SideValue::TopSideValue)
+                        str = str->concat(String::fromUTF8("top"));
+                    else if (item.sideValue() == SideValue::BottomSideValue)
+                        str = str->concat(String::fromUTF8("bottom"));
+                } else {
+                    str = str->concat(valueToString(item.valueKind(), item.value()));
+                }
 
                 if (i < vals->size() - 1) {
                     str = str->concat(String::spaceString);
@@ -1768,8 +1774,8 @@ String* CSSStyleValuePair::toString()
                 String* itemStr = item.functionName()->concat(String::fromUTF8("("));
                 ValueList* values = item.values();
                 for (unsigned int j = 0; j < values->size(); j++) {
-                    String* newstr = valueToString(values->getValueKindAtIndex(j),
-                        values->getValueAtIndex(j));
+                    CSSStyleValuePair& subitem = values->atIndex(j);
+                    String* newstr = valueToString(subitem.valueKind(), subitem.value());
                     itemStr = itemStr->concat(newstr);
                     if (j != values->size() - 1)
                         itemStr = itemStr->concat(String::fromUTF8(", "));
@@ -2741,7 +2747,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     ComputedStyle* ret = new ComputedStyle();
     ret->m_display = DisplayValue::BlockDisplayValue;
     ret->m_inheritedStyles.m_color = Color(0, 0, 0, 255);
-    ret->m_inheritedStyles.m_textAlign = TextAlignValue::NamelessTextAlignValue;
+    ret->m_inheritedStyles.m_textAlign = SideValue::NoneSideValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->loadResources(doc);
     return ret;
@@ -3021,11 +3027,11 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     //         (to remove direction dependency)
                     style->setTextAlign(parentStyle->m_inheritedStyles.m_textAlign);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    // Initial: a nameless value that acts as 'left' if 'direction' is 'ltr', 'right' if 'direction' is 'rtl'
+                    // Initial: none_value that acts as 'left' if 'direction' is 'ltr', 'right' if 'direction' is 'rtl'
                     style->setTextAlign(ComputedStyle::initialTextAlign());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::TextAlignValueKind);
-                    style->setTextAlign(cssValues[k].textAlignValue());
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::SideValueKind);
+                    style->setTextAlign(cssValues[k].sideValue());
                 }
                 break;
             case CSSStyleValuePair::KeyKind::TextDecoration:
@@ -3095,21 +3101,24 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     yAxis = Length(Length::Percent, 0.5f);
 
                     for (unsigned int i = 0; i < list->size(); i++) {
-                        if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionLeft) {
-                            xAxis = Length(Length::Percent, 0.0f);
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionRight) {
-                            xAxis = Length(Length::Percent, 1.0f);
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionCenter) {
+                        CSSStyleValuePair& item = list->atIndex(i);
+                        if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                            if (item.sideValue() == SideValue::LeftSideValue) {
+                                xAxis = Length(Length::Percent, 0.0f);
+                            } else if (item.sideValue() == SideValue::RightSideValue) {
+                                xAxis = Length(Length::Percent, 1.0f);
+                            } else if (item.sideValue() == SideValue::CenterSideValue) {
 
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionTop) {
-                            yAxis = Length(Length::Percent, 0.0f);
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::BackgroundPositionBottom) {
-                            yAxis = Length(Length::Percent, 1.0f);
+                            } else if (item.sideValue() == SideValue::TopSideValue) {
+                                yAxis = Length(Length::Percent, 0.0f);
+                            } else if (item.sideValue() == SideValue::BottomSideValue) {
+                                yAxis = Length(Length::Percent, 1.0f);
+                            } 
                         } else {
                             if (i == 0)
-                                xAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                                xAxis = convertValueToLength(item.valueKind(), item.value());
                             else
-                                yAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                                yAxis = convertValueToLength(item.valueKind(), item.value());
                         }
                     }
                     style->setBackgroundPositionValue(new LengthPosition(xAxis, yAxis));
@@ -3136,10 +3145,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     ValueList* list = cssValues[k].multiValue();
                     LengthSize* result = new LengthSize();
                     if (list->size() >= 1) {
-                        result->m_width = convertValueToLength(list->getValueKindAtIndex(0), list->getValueAtIndex(0));
+                        result->m_width = convertValueToLength(list->atIndex(0).valueKind(), list->atIndex(0).value());
                     }
                     if (list->size() >= 2) {
-                        result->m_height = convertValueToLength(list->getValueKindAtIndex(1), list->getValueAtIndex(1));
+                        result->m_height = convertValueToLength(list->atIndex(1).valueKind(), list->atIndex(1).value());
                     }
                     style->setBackgroundSizeValue(result);
                 } else {
@@ -3233,23 +3242,23 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     Length top, right, bottom, left;
                     ValueList* l = cssValues[k].multiValue();
                     unsigned int size = l->size();
-                    if (l->getValueKindAtIndex(size - 1) == CSSStyleValuePair::ValueKind::StringValueKind) {
+                    if (l->atIndex(size - 1).valueKind() == CSSStyleValuePair::ValueKind::StringValueKind) {
                         style->setBorderImageSliceFill(true);
                         size--;
                     }
-                    top = convertValueToLength(l->getValueKindAtIndex(0), l->getValueAtIndex(0));
+                    top = convertValueToLength(l->atIndex(0).valueKind(), l->atIndex(0).value());
                     if (size > 1) {
-                        right = convertValueToLength(l->getValueKindAtIndex(1), l->getValueAtIndex(1));
+                        right = convertValueToLength(l->atIndex(1).valueKind(), l->atIndex(1).value());
                     } else {
                         right = top;
                     }
                     if (size > 2) {
-                        bottom = convertValueToLength(l->getValueKindAtIndex(2), l->getValueAtIndex(2));
+                        bottom = convertValueToLength(l->atIndex(2).valueKind(), l->atIndex(2).value());
                     } else {
                         bottom = top;
                     }
                     if (size > 3) {
-                        left = convertValueToLength(l->getValueKindAtIndex(3), l->getValueAtIndex(3));
+                        left = convertValueToLength(l->atIndex(3).valueKind(), l->atIndex(3).value());
                     } else {
                         left = right;
                     }
@@ -3279,31 +3288,31 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     BorderImageLength top, right, bottom, left;
                     ValueList* l = cssValues[k].multiValue();
                     unsigned int size = l->size();
-                    if (l->getValueKindAtIndex(0) == CSSStyleValuePair::ValueKind::Number)
-                        top.setValue(l->getValueAtIndex(0).m_floatValue);
+                    if (l->atIndex(0).valueKind() == CSSStyleValuePair::ValueKind::Number)
+                        top.setValue(l->atIndex(0).numberValue());
                     else
-                        top.setValue(convertValueToLength(l->getValueKindAtIndex(0), l->getValueAtIndex(0)));
+                        top.setValue(convertValueToLength(l->atIndex(0).valueKind(), l->atIndex(0).value()));
                     if (size > 1) {
-                        if (l->getValueKindAtIndex(1) == CSSStyleValuePair::ValueKind::Number)
-                            right.setValue(l->getValueAtIndex(1).m_floatValue);
+                        if (l->atIndex(1).valueKind() == CSSStyleValuePair::ValueKind::Number)
+                            right.setValue(l->atIndex(1).numberValue());
                         else
-                            right.setValue(convertValueToLength(l->getValueKindAtIndex(1), l->getValueAtIndex(1)));
+                            right.setValue(convertValueToLength(l->atIndex(1).valueKind(), l->atIndex(1).value()));
                     } else {
                         right = top;
                     }
                     if (size > 2) {
-                        if (l->getValueKindAtIndex(2) == CSSStyleValuePair::ValueKind::Number)
-                            bottom.setValue(l->getValueAtIndex(2).m_floatValue);
+                        if (l->atIndex(2).valueKind() == CSSStyleValuePair::ValueKind::Number)
+                            bottom.setValue(l->atIndex(2).numberValue());
                         else
-                            bottom.setValue(convertValueToLength(l->getValueKindAtIndex(2), l->getValueAtIndex(2)));
+                            bottom.setValue(convertValueToLength(l->atIndex(2).valueKind(), l->atIndex(2).value()));
                     } else {
                         bottom = top;
                     }
                     if (size > 3) {
-                        if (l->getValueKindAtIndex(3) == CSSStyleValuePair::ValueKind::Number)
-                            left.setValue(l->getValueAtIndex(3).m_floatValue);
+                        if (l->atIndex(3).valueKind() == CSSStyleValuePair::ValueKind::Number)
+                            left.setValue(l->atIndex(3).numberValue());
                         else
-                            left.setValue(convertValueToLength(l->getValueKindAtIndex(3), l->getValueAtIndex(3)));
+                            left.setValue(convertValueToLength(l->atIndex(3).valueKind(), l->atIndex(3).value()));
                     } else {
                         left = right;
                     }
@@ -3543,10 +3552,11 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                         int valueSize = f.values()->size();
                         float dValues[valueSize];
                         for (int i = 0; i < valueSize; i++) {
-                            if (f.values()->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::Number) {
-                                dValues[i] = f.values()->getValueAtIndex(i).m_floatValue;
-                            } else if (f.values()->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::Angle) {
-                                dValues[i] = f.values()->getValueAtIndex(i).m_angle.toDegreeValue();
+                            CSSStyleValuePair& item = f.values()->atIndex(i);
+                            if (item.valueKind() == CSSStyleValuePair::ValueKind::Number) {
+                                dValues[i] = item.numberValue();
+                            } else if (item.valueKind() == CSSStyleValuePair::ValueKind::Angle) {
+                                dValues[i] = item.angleValue().toDegreeValue();
                             }
                         }
 
@@ -3557,21 +3567,21 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                         case CSSTransformFunction::Kind::Translate:
                             {
                             Length a, b(Length::Fixed, 0);
-                            a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
+                            a = convertValueToLength(f.values()->atIndex(0).valueKind(), f.values()->atIndex(0).value());
                             if (valueSize > 1)
-                                b = convertValueToLength(f.values()->getValueKindAtIndex(1), f.values()->getValueAtIndex(1));
+                                b = convertValueToLength(f.values()->atIndex(1).valueKind(), f.values()->atIndex(1).value());
                             style->setTransformTranslate(a, b);
                             break;
                             }
                         case CSSTransformFunction::Kind::TranslateX:
                             {
-                            Length a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
+                            Length a = convertValueToLength(f.values()->atIndex(0).valueKind(), f.values()->atIndex(0).value());
                             style->setTransformTranslate(a, Length(Length::Fixed, 0));
                             }
                             break;
                         case CSSTransformFunction::Kind::TranslateY:
                             {
-                            Length a = convertValueToLength(f.values()->getValueKindAtIndex(0), f.values()->getValueAtIndex(0));
+                            Length a = convertValueToLength(f.values()->atIndex(0).valueKind(), f.values()->atIndex(0).value());
                             style->setTransformTranslate(Length(Length::Fixed, 0), a);
                             }
                             break;
@@ -3622,21 +3632,24 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     yAxis = Length(Length::Percent, 0.5f);
 
                     for (unsigned int i = 0; i < list->size(); i++) {
-                        if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginLeft) {
-                            xAxis = Length(Length::Percent, 0.0f);
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginRight) {
-                            xAxis = Length(Length::Percent, 1.0f);
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginCenter) {
+                        CSSStyleValuePair& item = list->atIndex(i);
+                        if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                            if (item.sideValue() == SideValue::LeftSideValue) {
+                                xAxis = Length(Length::Percent, 0.0f);
+                            } else if (item.sideValue() == SideValue::RightSideValue) {
+                                xAxis = Length(Length::Percent, 1.0f);
+                            } else if (item.sideValue() == SideValue::CenterSideValue) {
 
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginTop) {
-                            yAxis = Length(Length::Percent, 0.0f);
-                        } else if (list->getValueKindAtIndex(i) == CSSStyleValuePair::ValueKind::TransformOriginBottom) {
-                            yAxis = Length(Length::Percent, 1.0f);
+                            } else if (item.sideValue() == SideValue::TopSideValue) {
+                                yAxis = Length(Length::Percent, 0.0f);
+                            } else if (item.sideValue() == SideValue::BottomSideValue) {
+                                yAxis = Length(Length::Percent, 1.0f);
+                            }
                         } else {
                             if (i == 0)
-                                xAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                                xAxis = convertValueToLength(item.valueKind(), item.value());
                             else
-                                yAxis = convertValueToLength(list->getValueKindAtIndex(i), list->getValueAtIndex(i));
+                                yAxis = convertValueToLength(item.valueKind(), item.value());
                         }
                     }
 

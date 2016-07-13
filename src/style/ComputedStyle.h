@@ -143,17 +143,17 @@ public:
         return (verticalAlign() == VerticalAlignValue::NumericVAlignValue);
     }
 
-    TextAlignValue textAlign()
+    SideValue textAlign()
     {
-        if (m_inheritedStyles.m_textAlign == TextAlignValue::NamelessTextAlignValue) {
+        if (m_inheritedStyles.m_textAlign == SideValue::NoneSideValue) {
             if (m_inheritedStyles.m_direction == DirectionValue::RtlDirectionValue)
-                return TextAlignValue::RightTextAlignValue;
-            return TextAlignValue::LeftTextAlignValue;
+                return SideValue::RightSideValue;
+            return SideValue::LeftSideValue;
         }
         return m_inheritedStyles.m_textAlign;
     }
 
-    void setTextAlign(TextAlignValue t)
+    void setTextAlign(SideValue t)
     {
         m_inheritedStyles.m_textAlign = t;
     }
@@ -892,7 +892,7 @@ public:
     }
 
     static VerticalAlignValue initialVerticalAlign() { return VerticalAlignValue::BaselineVAlignValue; }
-    static TextAlignValue initialTextAlign() { return TextAlignValue::NamelessTextAlignValue; }
+    static SideValue initialTextAlign() { return SideValue::NoneSideValue; }
     static Length initialPadding() { return Length(Length::Fixed, 0); }
     static Length initialMargin() { return Length(Length::Fixed, 0); }
     static String* initialBgImage() { return String::emptyString; }
@@ -945,7 +945,7 @@ protected:
         Length m_lineHeight;
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
-        TextAlignValue m_textAlign : 3;
+        SideValue m_textAlign : 3;
         DirectionValue m_direction : 2;
         VisibilityValue m_visibility : 1;
     } m_inheritedStyles;

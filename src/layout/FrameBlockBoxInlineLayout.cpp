@@ -1117,8 +1117,8 @@ void LineFormattingContext::completeLastLine()
     }
 
     // text align
-    if (m_block.style()->textAlign() == TextAlignValue::LeftTextAlignValue) {
-    } else if (m_block.style()->textAlign() == TextAlignValue::RightTextAlignValue) {
+    if (m_block.style()->textAlign() == SideValue::LeftSideValue) {
+    } else if (m_block.style()->textAlign() == SideValue::RightSideValue) {
         LayoutUnit diff = (m_lineBoxWidth - x);
         for (size_t k = 0; k < back->m_boxes.size(); k++) {
             FrameBox* childBox = back->m_boxes[k];
@@ -1126,7 +1126,7 @@ void LineFormattingContext::completeLastLine()
         }
     /*
      * justify: No supported value
-    } else if (m_block.style()->textAlign() == TextAlignValue::JustifyTextAlignValue) {
+    } else if (m_block.style()->textAlign() == SideValue::JustifySideValue) {
         // issue #145
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         if (lineFormattingContext.isBreakedLineWithoutBR(i)) {
@@ -1165,7 +1165,7 @@ void LineFormattingContext::completeLastLine()
         }
         */
     } else {
-        STARFISH_ASSERT(m_block.style()->textAlign() == TextAlignValue::CenterTextAlignValue);
+        STARFISH_ASSERT(m_block.style()->textAlign() == SideValue::CenterSideValue);
         LayoutUnit diff = (m_lineBoxWidth - x) / 2;
         if (diff > 0) {
             for (size_t k = 0; k < back->m_boxes.size(); k++) {

@@ -252,11 +252,14 @@ enum VerticalAlignValue {
     NumericVAlignValue,
 };
 
-enum TextAlignValue {
-    NamelessTextAlignValue, // Depends on direction
-    LeftTextAlignValue,
-    RightTextAlignValue,
-    CenterTextAlignValue,
+// text-align, tranform-origin, background-position
+enum SideValue {
+    NoneSideValue, // Depends on direction
+    TopSideValue,
+    RightSideValue,
+    BottomSideValue,
+    LeftSideValue,
+    CenterSideValue,
 };
 
 enum DirectionValue {
@@ -675,7 +678,7 @@ public:
         DisplayValueKind,
         PositionValueKind,
         VerticalAlignValueKind,
-        TextAlignValueKind,
+        SideValueKind,
         DirectionValueKind,
 
         ValueListKind,
@@ -701,20 +704,6 @@ public:
 
         // transform
         TransformFunctions,
-
-        // tranform-origin
-        TransformOriginLeft,
-        TransformOriginRight,
-        TransformOriginTop,
-        TransformOriginBottom,
-        TransformOriginCenter,
-
-        // background-position
-        BackgroundPositionLeft,
-        BackgroundPositionRight,
-        BackgroundPositionTop,
-        BackgroundPositionBottom,
-        BackgroundPositionCenter,
     };
 
     CSSStyleValuePair()
@@ -774,10 +763,10 @@ public:
         return m_value.m_verticalAlign;
     }
 
-    TextAlignValue textAlignValue()
+    SideValue sideValue()
     {
-        STARFISH_ASSERT(m_valueKind == TextAlignValueKind);
-        return m_value.m_textAlign;
+        STARFISH_ASSERT(m_valueKind == SideValueKind);
+        return m_value.m_side;
     }
 
     TextOverflowValue textOverflowValue()
@@ -940,7 +929,8 @@ public:
         FontStyleValue m_fontStyle;
         FontWeightValue m_fontWeight;
         TextOverflowValue m_textOverflow;
-        TextAlignValue m_textAlign;
+        // TextAlignValue m_textAlign;
+        SideValue m_side;
         DirectionValue m_direction;
         CSSLength m_length;
         CSSAngle m_angle;
@@ -965,7 +955,7 @@ public:
         ValueData(FontStyleValue v) { m_fontStyle = v; }
         ValueData(FontWeightValue v) { m_fontWeight = v; }
         ValueData(TextOverflowValue v) { m_textOverflow = v; }
-        ValueData(TextAlignValue v) { m_textAlign = v; }
+        ValueData(SideValue v) { m_side = v; }
         ValueData(DirectionValue v) { m_direction = v; }
         ValueData(CSSLength v) { m_length = v; }
         ValueData(CSSAngle v) { m_angle = v; }
@@ -980,6 +970,12 @@ public:
         ValueData(CSSTransformFunctions* v) { m_transforms = v; }
         ValueData(::StarFish::Color v) { m_color = v; }
     };
+
+    CSSStyleValuePair(ValueKind kind, ValueData value)
+        : m_valueKind(kind),
+          m_value(value)
+    {
+    }
 
     void setValue(const ValueData& value)
     {
@@ -1159,29 +1155,22 @@ public:
 
     void append(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData value)
     {
-        m_valueKinds.push_back(kind);
-        m_values.push_back(value);
+        m_values.push_back(CSSStyleValuePair(kind, value));
     }
 
-    CSSStyleValuePair::ValueKind getValueKindAtIndex(int idx)
-    {
-        return m_valueKinds[idx];
-    }
-
-    CSSStyleValuePair::ValueData& getValueAtIndex(int idx)
+    CSSStyleValuePair& atIndex(int idx)
     {
         return m_values[idx];
     }
 
     unsigned int size()
     {
-        return m_valueKinds.size();
+        return m_values.size();
     }
 
 protected:
     Separator m_separator;
-    std::vector<CSSStyleValuePair::ValueKind, gc_allocator<CSSStyleValuePair::ValueKind> > m_valueKinds;
-    std::vector<CSSStyleValuePair::ValueData, gc_allocator<CSSStyleValuePair::ValueData> > m_values;
+    std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> > m_values;
 };
 
 class CSSStyleDeclaration : public ScriptWrappable {

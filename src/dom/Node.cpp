@@ -989,7 +989,7 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(Display, DisplayValueKind, display)
     ADD_VALUE_PAIR(Position, PositionValueKind, position)
     ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
-    ADD_VALUE_PAIR(TextAlign, TextAlignValueKind, textAlign)
+    ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
     ADD_VALUE_PAIR(TextDecoration, TextDecorationValueKind, textDecoration)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
     ADD_VALUE_PAIR(TextOverflow, TextOverflowValueKind, textOverflow)
@@ -1344,11 +1344,11 @@ void Node::dumpStyle()
     }
 
     // text-align
-    if (m_style->textAlign() == TextAlignValue::LeftTextAlignValue) {
+    if (m_style->textAlign() == SideValue::LeftSideValue) {
         printf("text-align: left, ");
-    } else if (m_style->textAlign() == TextAlignValue::RightTextAlignValue) {
+    } else if (m_style->textAlign() == SideValue::RightSideValue) {
         printf("text-align: right, ");
-    } else if (m_style->textAlign() == TextAlignValue::CenterTextAlignValue) {
+    } else if (m_style->textAlign() == SideValue::CenterSideValue) {
         printf("text-align: center, ");
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
