@@ -1407,7 +1407,7 @@ static void registerRelativePositionInlineBoxes(LayoutContext& ctx, std::vector<
         FrameBox* childBox = boxes[k];
         if (!childBox->isFrameBlockBox()) {
             if (childBox->style()->position() == PositionValue::RelativePositionValue) {
-                ctx.registerRelativePositionedFrames(childBox);
+                ctx.registerRelativePositionedFrames(childBox, true);
             }
             if (childBox->isInlineBox() && childBox->asInlineBox()->isInlineNonReplacedBox()) {
                 registerRelativePositionInlineBoxes(ctx, childBox->asInlineBox()->asInlineNonReplacedBox()->boxes());
@@ -1487,7 +1487,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
             FrameBox* childBox = b.m_boxes[k];
             if (!childBox->isFrameBlockBox()) {
                 if (childBox->style()->position() == PositionValue::RelativePositionValue) {
-                    ctx.registerRelativePositionedFrames(childBox);
+                    ctx.registerRelativePositionedFrames(childBox, true);
                 }
 
                 if (childBox->isInlineBox() && childBox->asInlineBox()->isInlineNonReplacedBox()) {
@@ -2073,6 +2073,9 @@ Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage st
 void InlineNonReplacedBox::dump(int depth)
 {
     InlineBox::dump(depth);
+
+    printf(" origin %p", m_origin);
+
     puts("");
     auto iter = boxes().begin();
     while (iter != boxes().end()) {

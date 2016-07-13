@@ -473,7 +473,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     }
 
     if (style()->position() == PositionValue::RelativePositionValue)
-        ctx.registerRelativePositionedFrames(this);
+        ctx.registerRelativePositionedFrames(this, true);
 
     // compute visible rect
     bool isOverflowHidden = style()->overflow() == OverflowValue::HiddenOverflow;
@@ -502,55 +502,96 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         }
     });
 
-    // NOTE //
-    // In latest css spec, relative position is decided after
-    // the size of containing block is fixed with recursive calculation,
-    // while the position is decided "before" the containing block's size is fixed in nodewebkit or Chrome.
-    // So, as for relative position, the results of StarFish can be quite different from those of nodewebkit or Chrome.
-
-    // layout relative positioned blocks
-    ctx.layoutRegisteredRelativePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
-        for (size_t i = 0; i < frames.size(); i ++) {
-            Frame* f = frames[i];
-
-            Length left = f->style()->left();
-            Length right = f->style()->right();
-            Length top = f->style()->top();
-            Length bottom = f->style()->bottom();
-            Frame* cb = ctx.containingFrameBlockBox(f);
-            LayoutUnit parentWidth = cb->asFrameBox()->contentWidth();
-            LayoutUnit parentHeight = cb->asFrameBox()->contentHeight();
-            LayoutUnit mX = 0;
-            LayoutUnit mY = 0;
-
-            // left, right
-            if (!left.isAuto() && !right.isAuto()) {
-                if (f->style()->direction() == LtrDirectionValue) {
-                    mX = left.specifiedValue(parentWidth);
-                } else {
-                    mX = -right.specifiedValue(parentWidth);
-                }
-            } else if (!left.isAuto() && right.isAuto()) {
+    auto applyRelativePosition = [&](FrameBox* f, Length left, Length right, Length top, Length bottom, LayoutUnit parentWidth, LayoutUnit parentHeight)
+    {
+        LayoutUnit mX = 0;
+        LayoutUnit mY = 0;
+        // left, right
+        if (!left.isAuto() && !right.isAuto()) {
+            if (f->style()->direction() == LtrDirectionValue) {
                 mX = left.specifiedValue(parentWidth);
-            } else if (left.isAuto() && !right.isAuto()) {
+            } else {
                 mX = -right.specifiedValue(parentWidth);
             }
+        } else if (!left.isAuto() && right.isAuto()) {
+            mX = left.specifiedValue(parentWidth);
+        } else if (left.isAuto() && !right.isAuto()) {
+            mX = -right.specifiedValue(parentWidth);
+        }
 
-            // top, bottom
-            if (!top.isAuto() && !bottom.isAuto()) {
-                mY = top.specifiedValue(parentHeight);
-            } else if (!top.isAuto() && bottom.isAuto()) {
-                mY = top.specifiedValue(parentHeight);
-            } else if (top.isAuto() && !bottom.isAuto()) {
-                mY = -bottom.specifiedValue(parentHeight);
+        // NOTE //
+        // In latest css spec, relative position is decided after
+        // the size of containing block is fixed with recursive calculation,
+        // while the position is decided "before" the containing block's size is fixed in nodewebkit or Chrome.
+        // we can compute percentage of top, bottom offset correctly
+        // but, modern browsers(webkit, blink, gecko..) are not compute position correctly yet
+        // we change implementations follow modern browsers
+
+        // top, bottom
+        /*
+        // original code
+        if (!top.isAuto() && !bottom.isAuto()) {
+            mY = top.specifiedValue(parentHeight);
+        } else if (!top.isAuto() && bottom.isAuto()) {
+            mY = top.specifiedValue(parentHeight);
+        } else if (top.isAuto() && !bottom.isAuto()) {
+            mY = -bottom.specifiedValue(parentHeight);
+        }*/
+
+        auto computeVerticalPosition = [&](const Length& l) -> LayoutUnit
+        {
+            STARFISH_ASSERT(!l.isAuto());
+            if (l.isFixed()) {
+                return l.fixed();
+            } else {
+                STARFISH_ASSERT(l.isPercent());
+                if (ctx.parentHasFixedHeight(f)) {
+                    return l.specifiedValue(ctx.parentFixedHeight(f));
+                }
+                return 0;
             }
+        };
 
-            f->asFrameBox()->moveX(mX);
-            f->asFrameBox()->moveY(mY);
+        if (!top.isAuto() && !bottom.isAuto()) {
+            mY = computeVerticalPosition(top);
+        } else if (!top.isAuto() && bottom.isAuto()) {
+            mY = computeVerticalPosition(top);
+        } else if (top.isAuto() && !bottom.isAuto()) {
+            mY = -computeVerticalPosition(bottom);
+        }
+
+        f->moveX(mX);
+        f->moveY(mY);
+    };
+
+    // layout relative positioned blocks
+    ctx.layoutRegisteredRelativePositionedFrames(this, [&](const std::vector<std::pair<Frame*, bool> >& frames) {
+        for (size_t i = 0; i < frames.size(); i ++) {
+            Frame* f = frames[i].first;
+
+            if (frames[i].second) {
+                Frame* cb = ctx.containingFrameBlockBox(f);
+                applyRelativePosition(f->asFrameBox(), f->style()->left(), f->style()->right(), f->style()->top(), f->style()->bottom(), cb->asFrameBox()->contentWidth(), cb->asFrameBox()->contentHeight());
+            } else {
+                Node* nd = f->node()->parentElement();
+                while (nd && nd->frame()->isFrameInline() && nd->style()->position() == RelativePositionValue) {
+                    Frame* cb = ctx.containingBlock(nd->frame());
+                    applyRelativePosition(f->asFrameBox(), nd->style()->left(), nd->style()->right(), nd->style()->top(), nd->style()->bottom(),
+                        cb->asFrameBox()->contentWidth(), cb->asFrameBox()->contentHeight());
+                    nd = nd->parentElement();
+                }
+            }
 
             mergeVisibleRect(f->asFrameBox());
         }
     });
+
+    if (node() && node()->parentElement()) {
+        Node* nd = node()->parentElement();
+        if (nd->frame()->isFrameInline() && nd->style()->position() == RelativePositionValue) {
+            ctx.registerRelativePositionedFrames(this, false);
+        }
+    }
 }
 
 Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage s)

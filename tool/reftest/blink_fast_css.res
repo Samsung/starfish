@@ -17,6 +17,11 @@ test/reftest/vendor/blink/fast/css/parsing-expr-error-recovery.html
 test/reftest/vendor/blink/fast/css/parsing-invalid-block-recovery.html
 test/reftest/vendor/blink/fast/css/parsing-selector-error-recovery.html
 test/reftest/vendor/blink/fast/css/position-negative-top-margin.html
+test/reftest/vendor/blink/fast/css/relative-positioned-block-nested-with-inline-parent-dynamic-removed.html
+test/reftest/vendor/blink/fast/css/relative-positioned-block-nested-with-inline-parent-dynamic.html
+test/reftest/vendor/blink/fast/css/relative-positioned-block-nested-with-inline-parent-multiple-descendant-blocks-dynamic.html
+test/reftest/vendor/blink/fast/css/relative-positioned-block-nested-with-inline-parent.html
+test/reftest/vendor/blink/fast/css/relative-positioned-block-with-inline-parent.html
 test/reftest/vendor/blink/fast/css/style-outside-head.html
 test/reftest/vendor/blink/fast/css/style-parsed-outside-head.html
 test/reftest/vendor/blink/fast/css/transform-all-spaces.html

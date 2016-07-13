@@ -12,7 +12,14 @@ test/reftest/vendor/webkit/fast/css/link-outside-head.html
 test/reftest/vendor/webkit/fast/css/non-empty-span.html
 test/reftest/vendor/webkit/fast/css/parsing-expr-error-recovery.html
 test/reftest/vendor/webkit/fast/css/parsing-invalid-block-recovery.html
+test/reftest/vendor/webkit/fast/css/percent-top-relative-container-height-unspecified.html
+test/reftest/vendor/webkit/fast/css/percent-top-value-with-relative-position.html
 test/reftest/vendor/webkit/fast/css/position-negative-top-margin.html
+test/reftest/vendor/webkit/fast/css/relative-positioned-block-nested-with-inline-parent-dynamic-removed.html
+test/reftest/vendor/webkit/fast/css/relative-positioned-block-nested-with-inline-parent-dynamic.html
+test/reftest/vendor/webkit/fast/css/relative-positioned-block-nested-with-inline-parent-multiple-descendant-blocks-dynamic.html
+test/reftest/vendor/webkit/fast/css/relative-positioned-block-nested-with-inline-parent.html
+test/reftest/vendor/webkit/fast/css/relative-positioned-block-with-inline-parent.html
 test/reftest/vendor/webkit/fast/css/style-outside-head.html
 test/reftest/vendor/webkit/fast/css/style-parsed-outside-head.html
 test/reftest/vendor/webkit/fast/css/transform-function-lowercase-assert.html

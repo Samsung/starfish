@@ -935,7 +935,7 @@ protected:
 
 class LayoutLocation {
 public:
-    LayoutLocation(LayoutUnit x, LayoutUnit y)
+    LayoutLocation(LayoutUnit x = 0, LayoutUnit y = 0)
     {
         m_x = x;
         m_y = y;

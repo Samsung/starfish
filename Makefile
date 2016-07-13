@@ -625,6 +625,8 @@ regression_test_webkit_fast_html:
 	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html.res true
 regression_test_webkit_fast_css:
 	./tool/reftest/reftest.sh webkit_fast_css true
+regression_test_webkit_fast_css_capture:
+	./tool/reftest/reftest.sh webkit_fast_css capture
 regression_test_webkit_fast_etc:
 	./tool/reftest/reftest.sh webkit_fast_etc true
 regression_test_webkit_fast_etc_capture:

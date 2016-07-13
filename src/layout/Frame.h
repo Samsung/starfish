@@ -143,13 +143,12 @@ public:
         }
     }
 
-    void registerRelativePositionedFrames(Frame* frm)
+    void registerRelativePositionedFrames(Frame* frm, bool dueToSelf)
     {
         Frame* cb = containingFrameBlockBox(frm);
-        m_relativePositionedFrames.insert(std::make_pair(cb, std::vector<Frame*>()));
-        std::vector<Frame*>& vec = m_relativePositionedFrames[cb];
-        STARFISH_ASSERT(std::find(vec.begin(), vec.end(), frm) == vec.end());
-        vec.push_back(frm);
+        m_relativePositionedFrames.insert(std::make_pair(cb, std::vector<std::pair<Frame*, bool> >()));
+        std::vector<std::pair<Frame*, bool> >& vec = m_relativePositionedFrames[cb];
+        vec.push_back(std::make_pair(frm, dueToSelf));
     }
 
     template <typename Fn>
@@ -264,7 +263,7 @@ private:
     // NOTE. we dont need gc_allocator here. because, FrameTree already has referenece for Frames
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
     std::map<Frame*, std::vector<Frame*> > m_absolutePositionedFrames;
-    std::map<Frame*, std::vector<Frame*> > m_relativePositionedFrames;
+    std::map<Frame*, std::vector<std::pair<Frame*, bool> > > m_relativePositionedFrames;
 };
 
 class ComputePreferredWidthContext {

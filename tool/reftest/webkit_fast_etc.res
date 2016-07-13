@@ -180,6 +180,7 @@ test/reftest/vendor/webkit/fast/parser/tabs-in-scripts.html
 test/reftest/vendor/webkit/fast/parser/tag-with-exclamation-point.html
 test/reftest/vendor/webkit/fast/repaint/block-no-inflow-children.html
 test/reftest/vendor/webkit/fast/repaint/erase-overflow.html
+test/reftest/vendor/webkit/fast/repaint/inline-block-resize.html
 test/reftest/vendor/webkit/fast/repaint/invisible-objects.html
 test/reftest/vendor/webkit/fast/repaint/layer-hide-when-needs-layout.html
 test/reftest/vendor/webkit/fast/repaint/layer-visibility.html
