@@ -24,7 +24,7 @@
 #include "dom/binding/ScriptBindingInstance.h"
 
 #include <Elementary.h>
-#ifdef STARFISH_TIZEN_3_0
+#if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>
 #else
 #include <Ecore_X.h>

@@ -78,11 +78,9 @@ else ifneq (,$(findstring tizen3_wearable_emulator,$(MAKECMDGOALS)))
   TIZEN_DEVICE=emulator
 else ifneq (,$(findstring tizen_obs_arm,$(MAKECMDGOALS)))
   HOST=tizen_obs
-  TIZEN_VERSION=3.0
 else ifneq (,$(findstring tizen_obs_emulator,$(MAKECMDGOALS)))
   HOST=tizen_obs
   ARCH=x86
-  TIZEN_VERSION=3.0
 endif
 
 ifneq (,$(findstring exe,$(MAKECMDGOALS)))
@@ -109,6 +107,9 @@ endif
 
 ifneq (,$(findstring tizen,$(HOST)))
   #LTO=1
+  ifeq ($(TYPE), lib)
+    TIZEN_DEVICE_API=true
+  endif
 endif
 
 $(info host... $(HOST))
@@ -186,6 +187,7 @@ ifneq (,$(findstring tizen,$(HOST)))
 
   ifeq ($(HOST),tizen_obs)
     CXXFLAGS_DEBUG += -O1 # _FORTIFY_SOURCE requires compiling with optimization
+    CXXFLAGS += -DSTARFISH_TIZEN_OBS
   endif
 endif
 

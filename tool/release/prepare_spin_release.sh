@@ -1,7 +1,7 @@
 make clean
 ./build_third_party.sh
-make tizen_wearable_arm.lib.release TIZEN_DEVICE_API=true -j
-make tizen_wearable_emulator.lib.release TIZEN_DEVICE_API=true -j
+make tizen_wearable_arm.lib.release -j
+make tizen_wearable_emulator.lib.release -j
 
 git branch -D tizen_2.3
 git checkout -b tizen_2.3

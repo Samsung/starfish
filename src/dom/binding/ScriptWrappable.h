@@ -96,11 +96,8 @@ public:
         URLObject = 1 << 13,
         DOMExceptionObject = 1 << 14,
         AttributeStringEventFunctionObject = 1 << 15,
-#ifdef TIZEN_DEVICE_API
-        NativePluginManagerObject = 1 << 16,
-#endif
 #ifdef STARFISH_EXP
-        DOMImplementationObject = 1 << 17,
+        DOMImplementationObject = 1 << 16,
 #endif
     };
     ScriptWrappable(void* extraPointerData);

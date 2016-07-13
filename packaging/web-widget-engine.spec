@@ -48,10 +48,10 @@ web-widget-engine development headers
 %build
 
 %ifarch %{arm}
-make tizen_obs_arm.lib.release TIZEN_DEVICE_API=true %{?jobs:-j%jobs}
+make tizen_obs_arm.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?jobs:-j%jobs}
 make tizen_obs_arm.exe.debug %{?jobs:-j%jobs}
 %else
-make tizen_obs_emulator.lib.release TIZEN_DEVICE_API=true %{?jobs:-j%jobs}
+make tizen_obs_emulator.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?jobs:-j%jobs}
 make tizen_obs_emulator.exe.debug %{?jobs:-j%jobs}
 %endif
 
