@@ -370,21 +370,33 @@ enum UnicodeBidiValue {
 class ValueList;
 class CSSStyleDeclaration;
 
-#define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
+// https://www.w3.org/TR/CSS2/visufx.html
+// https://www.w3.org/TR/CSS2/text.html
+// https://www.w3.org/TR/CSS21/visuren.html
+// https://www.w3.org/TR/CSS21/visudet.html
+// https://www.w3.org/TR/CSS21/colors.html
+// https://www.w3.org/TR/CSS21/fonts.html
+// https://www.w3.org/TR/CSS21/text.html
+// https://www.w3.org/TR/CSS21/box.html
+// https://www.w3.org/TR/css3-transforms
+// https://www.w3.org/TR/css3-background
+// https://www.w3.org/TR/css3-color
+#define FOR_EACH_STYLE_ATTRIBUTE(F)                                \
     F(Color, color, "color")                                       \
     F(Direction, direction, "direction")                           \
     F(BackgroundColor, backgroundColor, "background-color")        \
+    F(BackgroundImage, backgroundImage, "background-image")        \
+    F(BackgroundPosition, backgroundPosition, "background-position") \
+    F(BackgroundSize, backgroundSize, "background-size")           \
     F(LineHeight, lineHeight, "line-height")                       \
     F(PaddingTop, paddingTop, "padding-top")                       \
     F(PaddingRight, paddingRight, "padding-right")                 \
     F(PaddingBottom, paddingBottom, "padding-bottom")              \
     F(PaddingLeft, paddingLeft, "padding-left")                    \
-    F(Padding, padding, "padding")                                 \
     F(MarginTop, marginTop, "margin-top")                          \
     F(MarginRight, marginRight, "margin-right")                    \
     F(MarginBottom, marginBottom, "margin-bottom")                 \
     F(MarginLeft, marginLeft, "margin-left")                       \
-    F(Margin, margin, "margin")                                    \
     F(Top, top, "top")                                             \
     F(Bottom, bottom, "bottom")                                    \
     F(Left, left, "left")                                          \
@@ -396,17 +408,9 @@ class CSSStyleDeclaration;
     F(Position, position, "position")                              \
     F(TextDecoration, textDecoration, "text-decoration")           \
     F(Display, display, "display")                                 \
-    F(Border, border, "border")                                    \
-    F(BorderStyle, borderStyle, "border-style")                    \
-    F(BorderWidth, borderWidth, "border-width")                    \
-    F(BorderColor, borderColor, "border-color")                    \
     F(BorderImageSlice, borderImageSlice, "border-image-slice")    \
     F(BorderImageSource, borderImageSource, "border-image-source") \
     F(BorderImageWidth, borderImageWidth, "border-image-width")    \
-    F(BorderTop, borderTop, "border-top")                          \
-    F(BorderRight, borderRight, "border-right")                    \
-    F(BorderBottom, borderBottom, "border-bottom")                 \
-    F(BorderLeft, borderLeft, "border-left")                       \
     F(BorderTopColor, borderTopColor, "border-top-color")          \
     F(BorderRightColor, borderRightColor, "border-right-color")    \
     F(BorderBottomColor, borderBottomColor, "border-bottom-color") \
@@ -424,19 +428,28 @@ class CSSStyleDeclaration;
     F(TransformOrigin, transformOrigin, "transform-origin")        \
     F(Visibility, visibility, "visibility")                        \
     F(Overflow, overflow, "overflow")                              \
-    F(BackgroundImage, backgroundImage, "background-image")        \
-    F(BackgroundPosition, backgroundPosition, "background-position")           \
-    F(BackgroundSize, backgroundSize, "background-size")           \
     F(ZIndex, zIndex, "z-index")                                   \
     F(VerticalAlign, verticalAlign, "vertical-align")              \
-    F(BackgroundRepeat, backgroundRepeat, "background-repeat")     \
     F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x") \
     F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y") \
-    F(Background, background, "background")                        \
     F(Opacity, opacity, "opacity")                                 \
     F(FontWeight, fontWeight, "font-weight")                       \
-    F(UnicodeBidi, unicodeBidi, "unicode-bidi")                    \
+    F(UnicodeBidi, unicodeBidi, "unicode-bidi")
 
+#define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
+    FOR_EACH_STYLE_ATTRIBUTE(F)                                    \
+    F(Border, border, "border")                                    \
+    F(BorderTop, borderTop, "border-top")                          \
+    F(BorderRight, borderRight, "border-right")                    \
+    F(BorderBottom, borderBottom, "border-bottom")                 \
+    F(BorderLeft, borderLeft, "border-left")                       \
+    F(BorderStyle, borderStyle, "border-style")                    \
+    F(BorderWidth, borderWidth, "border-width")                    \
+    F(BorderColor, borderColor, "border-color")                    \
+    F(Background, background, "background")                        \
+    F(BackgroundRepeat, backgroundRepeat, "background-repeat")     \
+    F(Margin, margin, "margin")                                    \
+    F(Padding, padding, "padding")
 
 class CSSTransformFunction {
 public:
@@ -549,107 +562,10 @@ class CSSStyleValuePair : public gc {
 
 public:
     enum KeyKind {
-        // <name> <- initial value
-        // http://www.w3.org/TR/CSS21/visuren.html#propdef-display
-        Display, // <inline> | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit
-        // http://www.w3.org/TR/CSS21/visuren.html#choose-position
-        Position, // <static> | relative | absolute | inherit
-        // https://www.w3.org/TR/CSS21/visudet.html#the-width-property
-        Width, // length | percentage | <auto> | inherit
-        // https://www.w3.org/TR/CSS21/visudet.html#the-height-property
-        Height, // length | percentage | <auto> | inherit
-        // https://www.w3.org/TR/CSS21/colors.html
-        Color, // color | inherit // initial value -> depends on user agent
-        // https://www.w3.org/TR/CSS21/fonts.html#font-size-props
-        FontSize, // absolute-size | relative-size | length | percentage | inherit // initial value -> medium
-        // https://www.w3.org/TR/CSS2/fonts.html#propdef-font-style
-        FontStyle, // <normal> | italic | oblique | inherit
-        // https://www.w3.org/TR/CSS21/fonts.html#font-boldness
-        FontWeight, // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit // initial -> normal
-        // https://www.w3.org/TR/CSS21/visudet.html#propdef-vertical-align
-        VerticalAlign, // <baseline> | sub | super | top | text-top | middle | bottom | text-bottom | percentage | length | inherit
-        // https://www.w3.org/TR/CSS21/text.html#propdef-text-align
-        TextAlign, // left | right | center | justify | <inherit>
-        // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
-        TextDecoration, // none | [ underline || overline || line-through || blink ] | inherit // Initial value -> none
-        // https://www.w3.org/TR/css3-transforms/#propdef-transform
-        Transform, // none | <transform-function>+
-        // https://www.w3.org/TR/css3-transforms/#transform-origin-property
-        TransformOrigin, // [ left | center | right | top | bottom | <percentage> | <length> ] | [ left | center | right | <percentage> | <length> ] [ top | center | bottom | <percentage> | <length> ] <length>? | [ center | [ left | right ] ] && [ center | [ top | bottom ] ] <length>? // Initial: 50% 50%
-        // https://www.w3.org/TR/CSS21/visuren.html#propdef-direction
-        Direction, // <ltr> | rtl | inherit
-        // https://www.w3.org/TR/2011/REC-CSS2-20110607/colors.html#background-properties
-        BackgroundColor, // color | <transparent> | inherit
-        // https://www.w3.org/TR/CSS21/colors.html#propdef-background-image
-        BackgroundImage, // uri | <none> | inherit
-        // https://www.w3.org/TR/CSS21/colors.html#propdef-background-position
-        BackgroundPosition, // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
-        // https://www.w3.org/TR/css3-background/#the-background-size
-        BackgroundSize, // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
-        // https://www.w3.org/TR/CSS21/colors.html#propdef-background-repeat
-        // BackgroundRepeat, // repeat | repeat-x | repeat-y | no-repeat | initial | inherit
-        BackgroundRepeatX, // repeat | no-repeat | initial | inherit
-        BackgroundRepeatY, // repeat | no-repeat | initial | inherit
-        // https://www.w3.org/TR/CSS21/visuren.html#propdef-top
-        Top, // length | percentage | <auto> | inherit
-        // https://www.w3.org/TR/CSS21/visuren.html#propdef-right
-        Right, // length | percentage | <auto> | inherit
-        // https://www.w3.org/TR/CSS21/visuren.html#propdef-bottom
-        Bottom, // length | percentage | <auto> | inherit
-        // https://www.w3.org/TR/CSS21/visuren.html#propdef-left
-        Left, // length | percentage | <auto> | inherit
-        // https://www.w3.org/TR/CSS21/visudet.html#line-height
-        LineHeight, // <normal> | number | length | percentage | inherit
-        // https://www.w3.org/TR/CSS21/box.html#border-color-properties
-        // BorderColor // color | transparent | inherit
-        BorderTopColor, // color | transparent | inherit // initial value -> the value of 'color' property
-        BorderRightColor, // color | transparent | inherit // initial value -> the value of 'color' property
-        BorderBottomColor, // color | transparent | inherit // initial value -> the value of 'color' property
-        BorderLeftColor, // color | transparent | inherit // initial value -> the value of 'color' property
-        // https://www.w3.org/TR/css3-background/#border-image-slice
-        BorderImageSlice, // number && fill?
-        // https://www.w3.org/TR/css3-background/#the-border-image-source
-        BorderImageSource, // none | <image>
-        // https://www.w3.org/TR/css3-background/#border-image-width
-        BorderImageWidth, // [ <length> | <number> ]
-        // https://www.w3.org/TR/CSS21/box.html#border-style-properties
-        // BorderStyle, // border-style(<none> | hidden | dotted | dashed | solid | double | groove | ridge | inset | outset) | inherit
-        BorderTopStyle, // border-style(<none> | solid) | inherit -> We doesn't support all type because of implementation issues of Evas
-        BorderRightStyle, // border-style(<none> | solid) | inherit -> We doesn't support all type because of implementation issues of Evas
-        BorderBottomStyle, // border-style(<none> | solid) | inherit -> We doesn't support all type because of implementation issues of Evas
-        BorderLeftStyle, // border-style(<none> | solid) | inherit -> We doesn't support all type because of implementation issues of Evas
-        // https://www.w3.org/TR/CSS21/box.html#border-width-properties
-        // BorderWidth, // border-width(thin | <medium> | thick | length) | inherit
-        BorderTopWidth, // border-width(thin | <medium> | thick | length) | inherit
-        BorderRightWidth, // border-width(thin | <medium> | thick | length) | inherit
-        BorderBottomWidth, // border-width(thin | <medium> | thick | length) | inherit
-        BorderLeftWidth, // border-width(thin | <medium> | thick | length) | inherit
-        // https://www.w3.org/TR/2011/REC-CSS2-20110607/box.html#propdef-margin-top
-        MarginTop, // length | percentage | auto | inherit // Initial value -> 0
-        // https://www.w3.org/TR/CSS21/box.html#propdef-margin-bottom
-        MarginBottom, // length | percentage | auto | inherit // Initial value -> 0
-        // https://www.w3.org/TR/CSS21/box.html#propdef-margin-left
-        MarginLeft, // length | percentage | auto | inherit // Initial value -> 0
-        // https://www.w3.org/TR/CSS2/box.html#propdef-margin-right
-        MarginRight, // length | percentage | auto | inherit // Initial value -> 0
-        // https://www.w3.org/TR/CSS21/box.html#propdef-padding-top
-        PaddingTop, // length | percentage | inherit // Initial value -> 0
-        // https://www.w3.org/TR/CSS21/box.html#propdef-padding-right
-        PaddingRight, // length | percentage | inherit // Initial value -> 0
-        // https://www.w3.org/TR/CSS21/box.html#propdef-padding-bottom
-        PaddingBottom, // length | percentage | inherit // Initial value -> 0
-        // https://www.w3.org/TR/CSS21/box.html#propdef-padding-left
-        PaddingLeft, // length | percentage | inherit // Initial value -> 0
-        // https://www.w3.org/TR/css3-color/#transparency
-        Opacity, // alphavalue | inherit // <1>
-        // https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#propdef-overflow
-        Overflow, // visible | hidden | scroll | auto | inherit // Initial value -> visible
-        // https://www.w3.org/TR/CSS21/visuren.html#propdef-unicode-bidi
-        UnicodeBidi,
-        // https://www.w3.org/TR/CSS2/visufx.html#visibility
-        Visibility, // visible | hidden | collapse | inherit // Initial value -> visible
-        // http://www.w3.org/TR/CSS2/visuren.html#z-index
-        ZIndex, //  <auto> | integer | inherit
+#define ADD_CSS_KEYKIND(Name, name, cssname) \
+        Name,
+        FOR_EACH_STYLE_ATTRIBUTE(ADD_CSS_KEYKIND)
+#undef ADD_CSS_KEYKIND
     };
 
     enum ValueKind {
@@ -1050,62 +966,7 @@ public:
     void setValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens);
     void setValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens);
 
-#define FOR_EACH_STYLE_ATTRIBUTE(F)             \
-    F(Color, "color")                           \
-    F(BackgroundColor, "background-color")      \
-    F(BackgroundPosition, "background-position")        \
-    F(BackgroundSize, "background-size")        \
-    F(LineHeight, "line-height")                \
-    F(MarginTop, "margin-top")                  \
-    F(MarginRight, "margin-right")              \
-    F(MarginBottom, "margin-bottom")            \
-    F(MarginLeft, "margin-left")                \
-    F(PaddingTop, "padding-top")                \
-    F(PaddingRight, "padding-right")            \
-    F(PaddingBottom, "padding-bottom")          \
-    F(PaddingLeft, "padding-left")              \
-    F(Top, "top")                               \
-    F(Right, "right")                           \
-    F(Bottom, "bottom")                         \
-    F(Left, "left")                             \
-    F(Direction, "direction")                   \
-    F(Height, "height")                         \
-    F(Width, "width")                           \
-    F(FontSize, "font-size")                    \
-    F(FontStyle, "font-style")                  \
-    F(Display, "display")                       \
-    F(Position, "position")                     \
-    F(TextDecoration, "text-decoration")        \
-    F(BorderImageSlice, "border-image-slice")   \
-    F(BorderImageSource, "border-image-source") \
-    F(BorderImageWidth, "border-image-width")   \
-    F(BorderTopColor, "border-top-color")       \
-    F(BorderRightColor, "border-right-color")   \
-    F(BorderBottomColor, "border-bottom-color") \
-    F(BorderLeftColor, "border-left-color")     \
-    F(BorderTopStyle, "border-top-style")       \
-    F(BorderRightStyle, "border-right-style")   \
-    F(BorderBottomStyle, "border-bottom-style") \
-    F(BorderLeftStyle, "border-left-style")     \
-    F(BorderTopWidth, "border-top-width")       \
-    F(BorderRightWidth, "border-right-width")   \
-    F(BorderBottomWidth, "border-bottom-width") \
-    F(BorderLeftWidth, "border-left-width")     \
-    F(TextAlign, "text-align")                  \
-    F(Transform, "transform")                   \
-    F(TransformOrigin, "transform-origin")      \
-    F(Visibility, "visibility")                 \
-    F(Opacity, "opacity")                       \
-    F(Overflow, "overflow")                     \
-    F(BackgroundImage, "background-image")      \
-    F(ZIndex, "z-index")                        \
-    F(VerticalAlign, "vertical-align")          \
-    F(BackgroundRepeatX, "background-repeat-x") \
-    F(BackgroundRepeatY, "background-repeat-y") \
-    F(UnicodeBidi, "unicode-bidi")              \
-    F(FontWeight, "font-weight")
-
-#define SET_VALUE(name, nameCSSCase) \
+#define SET_VALUE(name, ...) \
     void setValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
 
     FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
@@ -1222,7 +1083,7 @@ public:
 
     bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
 
-#define CHECK_INPUT_ERROR(name, nameCSSCase) \
+#define CHECK_INPUT_ERROR(name, ...) \
     bool checkInputError##name(std::vector<String*, gc_allocator<String*> >* tokens);
 
     FOR_EACH_STYLE_ATTRIBUTE(CHECK_INPUT_ERROR)
@@ -1249,7 +1110,7 @@ public:
     bool checkInputErrorBorderBottom(std::vector<String*, gc_allocator<String*> >* tokens);
     bool checkInputErrorBorderLeft(std::vector<String*, gc_allocator<String*> >* tokens);
     bool checkHavingOneTokenAndLengthOrPercentage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
-#define ATTRIBUTE_GETTER(name, nameCSSCase)                                      \
+#define ATTRIBUTE_GETTER(name, ...)                                              \
     String* name()                                                               \
     {                                                                            \
         for (unsigned i = 0; i < m_cssValues.size(); i++) {                      \
@@ -1262,7 +1123,7 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_GETTER)
 #undef ATTRIBUTE_GETTER
 
-#define ATTRIBUTE_SETTER(name, nameCSSCase)                                            \
+#define ATTRIBUTE_SETTER(name, ...)                                                    \
     void set##name(String* value)                                                      \
     {                                                                                  \
         if (value->length() == 0) {                                                    \
