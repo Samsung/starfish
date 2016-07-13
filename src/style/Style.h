@@ -357,12 +357,6 @@ enum FontWeightValue {
     NineHundredsFontWeightValue,
 };
 
-// Widget Engine will support only clip and ellipsis values.
-enum TextOverflowValue {
-    ClipTextOverflowValue,
-    EllipsisTextOverflowValue,
-};
-
 enum VisibilityValue {
     VisibleVisibilityValue,
     HiddenVisibilityValue,
@@ -578,8 +572,6 @@ public:
         TextAlign, // left | right | center | justify | <inherit>
         // https://www.w3.org/TR/CSS2/text.html#propdef-text-decoration
         TextDecoration, // none | [ underline || overline || line-through || blink ] | inherit // Initial value -> none
-        // https://www.w3.org/TR/2010/WD-css3-text-20101005/#text-overflow0
-        TextOverflow, // <clip> | ellipsis | string
         // https://www.w3.org/TR/css3-transforms/#propdef-transform
         Transform, // none | <transform-function>+
         // https://www.w3.org/TR/css3-transforms/#transform-origin-property
@@ -692,7 +684,6 @@ public:
         FontSizeValueKind,
         FontStyleValueKind,
         FontWeightValueKind,
-        TextOverflowValueKind,
 
         BorderStyleValueKind,
         BorderWidthValueKind,
@@ -767,12 +758,6 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == SideValueKind);
         return m_value.m_side;
-    }
-
-    TextOverflowValue textOverflowValue()
-    {
-        STARFISH_ASSERT(m_valueKind == TextOverflowValueKind);
-        return m_value.m_textOverflow;
     }
 
     FontSizeValue fontSizeValue()
@@ -928,7 +913,6 @@ public:
         FontSizeValue m_fontSize;
         FontStyleValue m_fontStyle;
         FontWeightValue m_fontWeight;
-        TextOverflowValue m_textOverflow;
         SideValue m_side;
         DirectionValue m_direction;
         CSSLength m_length;
@@ -953,7 +937,6 @@ public:
         ValueData(FontSizeValue v) { m_fontSize = v; }
         ValueData(FontStyleValue v) { m_fontStyle = v; }
         ValueData(FontWeightValue v) { m_fontWeight = v; }
-        ValueData(TextOverflowValue v) { m_textOverflow = v; }
         ValueData(SideValue v) { m_side = v; }
         ValueData(DirectionValue v) { m_direction = v; }
         ValueData(CSSLength v) { m_length = v; }

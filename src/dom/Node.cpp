@@ -992,7 +992,6 @@ CSSStyleDeclaration* Node::getComputedStyle()
     ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
     ADD_VALUE_PAIR(TextDecoration, TextDecorationValueKind, textDecoration)
     ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
-    ADD_VALUE_PAIR(TextOverflow, TextOverflowValueKind, textOverflow)
     ADD_VALUE_PAIR(BackgroundRepeatX, BackgroundRepeatValueKind, backgroundRepeatX)
     ADD_VALUE_PAIR(BackgroundRepeatY, BackgroundRepeatValueKind, backgroundRepeatY)
     ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
@@ -1419,13 +1418,6 @@ void Node::dumpStyle()
         printf("line-height: %.1f, ", m_style->lineHeight().fixed());
     else
         printf("line-height: normal, ");
-
-    // text-overflow
-    printf("text-overflow: ");
-    if (m_style->textOverflow() == TextOverflowValue::ClipTextOverflowValue)
-        printf("clip, ");
-    else if (m_style->textOverflow() == TextOverflowValue::EllipsisTextOverflowValue)
-        printf("ellipsis, ");
 
     // color
     printf("color: (%d,%d,%d,%d), ", m_style->color().r(), m_style->color().g(), m_style->color().b(), m_style->color().a());

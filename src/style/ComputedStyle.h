@@ -856,19 +856,9 @@ public:
         return m_inheritedStyles.m_fontSize;
     }
 
-    void setTextOverflow(TextOverflowValue val)
-    {
-        m_textOverflow = val;
-    }
-
     void setLetterSpacing(Length len)
     {
         m_inheritedStyles.m_letterSpacing = len;
-    }
-
-    TextOverflowValue textOverflow()
-    {
-        return m_textOverflow;
     }
 
     VisibilityValue visibility()
@@ -953,7 +943,6 @@ protected:
     DisplayValue m_display : 3;
     DisplayValue m_originalDisplay : 3;
     PositionValue m_position : 2;
-    TextOverflowValue m_textOverflow : 1;
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflow : 1;
     TextDecorationValue m_textDecoration : 3;

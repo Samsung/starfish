@@ -168,8 +168,6 @@ String* CSSStyleValuePair::keyName()
         return String::createASCIIString("text-align");
     case TextDecoration:
         return String::createASCIIString("text-decoration");
-    case TextOverflow:
-        return String::createASCIIString("text-overflow");
     case Transform:
         return String::createASCIIString("transform");
     case TransformOrigin:
@@ -2991,16 +2989,6 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else {
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::FontStyleValueKind);
                     style->m_inheritedStyles.m_fontStyle = cssValues[k].fontStyleValue();
-                }
-                break;
-            case CSSStyleValuePair::KeyKind::TextOverflow:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setTextOverflow(parentStyle->textOverflow());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setTextOverflow(TextOverflowValue::ClipTextOverflowValue);
-                } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::TextOverflowValueKind);
-                    style->setTextOverflow(cssValues[k].textOverflowValue());
                 }
                 break;
             case CSSStyleValuePair::KeyKind::VerticalAlign:
