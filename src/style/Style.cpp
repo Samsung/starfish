@@ -29,7 +29,7 @@
 namespace StarFish {
 
 #define TOKEN_IS_STRING(str) \
-    (strcmp(token, str)) == 0
+    ((memcmp(token, str, strlen(str))) == 0 && strlen(str) == strlen(token))
 
 #define VALUE_IS_STRING(str) \
     ((memcmp(value, str, strlen(str))) == 0 && strlen(str) == strlen(value))
