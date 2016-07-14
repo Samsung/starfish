@@ -81,12 +81,16 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
         if (m_imageResource) {
             m_imageResource->cancel();
+            m_imageResource = nullptr;
         }
-
-        m_imageResource = document()->resourceLoader()->fetchImage(URL(document()->documentURI().baseURI(), value));
-        m_imageResource->addResourceClient(new ImageDownloadClient(this, m_imageResource));
-        m_imageResource->addResourceClient(new ElementResourceClient(this, m_imageResource));
-        m_imageResource->request();
+        if (value->length()) {
+            m_imageResource = document()->resourceLoader()->fetchImage(URL(document()->documentURI().baseURI(), value));
+            m_imageResource->addResourceClient(new ImageDownloadClient(this, m_imageResource));
+            m_imageResource->addResourceClient(new ElementResourceClient(this, m_imageResource));
+            m_imageResource->request();
+        } else {
+            m_imageData = nullptr;
+        }
     } else if (name == document()->window()->starFish()->staticStrings()->m_width
         || name == document()->window()->starFish()->staticStrings()->m_height) {
         if (frame()) {

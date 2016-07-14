@@ -132,6 +132,7 @@ class InlineNonReplacedBox : public InlineBox {
 public:
     InlineNonReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameInline* origin)
         : InlineBox(node, style, parent)
+        , m_isCollapsed(false)
     {
         if (origin->isLeftMBPCleared())
             setLeftMBPCleared();
@@ -211,7 +212,18 @@ public:
         return m_boxes;
     }
 
+    bool isCollapsed()
+    {
+        return m_isCollapsed;
+    }
+
+    void markCollapsed()
+    {
+        m_isCollapsed = true;
+    }
+
 protected:
+    bool m_isCollapsed;
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
     FrameInline* m_origin;

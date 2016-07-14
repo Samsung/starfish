@@ -56,15 +56,33 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
         boxes = &parentBox->asInlineBox()->asInlineNonReplacedBox()->boxes();
     }
 
-    if (!boxes->size() && isLineBox) {
-        if (dueToBr) {
-            ascenderInOut = maxAscender;
-            descenderInOut = maxDescender;
-            return ascenderInOut - descenderInOut;
+    if (isLineBox) {
+        if (!boxes->size()) {
+            if (dueToBr) {
+                ascenderInOut = maxAscender;
+                descenderInOut = maxDescender;
+                return ascenderInOut - descenderInOut;
+            }
+            ascenderInOut = 0;
+            descenderInOut = 0;
+            return 0;
         }
-        ascenderInOut = 0;
-        descenderInOut = 0;
-        return 0;
+
+        bool hasOnlyCollapsedInlineNonReplacedBox = true;
+        for (size_t i = 0; i < boxes->size(); i ++) {
+            if (boxes->at(i)->isInlineBox() && boxes->at(i)->asInlineBox()->isInlineNonReplacedBox() && boxes->at(i)->asInlineBox()->asInlineNonReplacedBox()->isCollapsed()) {
+
+            } else {
+                hasOnlyCollapsedInlineNonReplacedBox = false;
+                break;
+            }
+        }
+
+        if (hasOnlyCollapsedInlineNonReplacedBox) {
+            ascenderInOut = 0;
+            descenderInOut = 0;
+            return 0;
+        }
     }
 
     LayoutUnit pascender = parentStyle->font()->metrics().m_ascender;
@@ -219,6 +237,13 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
+    }
+
+    if (!isLineBox && !hasNormalFlowChild && parentBox->width() == 0 && parentBox->marginLeft() == 0 && parentBox->marginRight() == 0 && parentBox->style()->hasNormalLineHeight()) {
+        parentBox->asInlineBox()->asInlineNonReplacedBox()->markCollapsed();
+        ascenderInOut = pascender;
+        descenderInOut = pdescender;
+        return pascender - pdescender;
     }
 
     if (!hasNormalFlowChild && boxes->size() != 0) {
@@ -1094,7 +1119,7 @@ void LineFormattingContext::registerInlineContent()
 void LineFormattingContext::completeLastLine()
 {
     LineBox* back = m_block.m_lineBoxes.back();
-    FrameBox* last;
+    FrameBox* last = nullptr;
     while ((last = findLastInlineBox(back), last) && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
         if (last->asInlineBox()->asInlineTextBox()->text()->equals(String::spaceString)) {
             removeBoxFromLine(last);
@@ -1226,7 +1251,6 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox)
     back->m_descender = descender;
     back->setHeight(back->ascender() - back->decender());
     completeLastLine();
-
     m_lineBoxY += back->height();
 
     m_block.m_lineBoxes.push_back(new LineBox(&m_block));
@@ -1686,8 +1710,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
                 lineFormattingContext.m_currentLineWidth += selfForFinishLayout->paddingLeft() + selfForFinishLayout->borderLeft() + selfForFinishLayout->marginLeft();
             }
 
-            // Q : Should consider LTR/RTL
-            selfForFinishLayout->setWidth(selfForFinishLayout->width() + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight());
+            selfForFinishLayout->setWidth(selfForFinishLayout->width() + selfForFinishLayout->paddingWidth() + selfForFinishLayout->borderWidth());
             if (selfForFinishLayout->width() < 0) {
                 selfForFinishLayout->setWidth(0);
             }
@@ -2000,24 +2023,26 @@ void InlineTextBox::paint(Canvas* canvas, PaintingStage stage)
 
 void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
 {
-    LayoutRect frameRectBack = m_frameRect;
-    LayoutBoxSurroundData paddingBack = m_padding, borderBack = m_border, marginBack = m_margin;
+    if (!isCollapsed()) {
+        LayoutRect frameRectBack = m_frameRect;
+        LayoutBoxSurroundData paddingBack = m_padding, borderBack = m_border, marginBack = m_margin;
 
-    m_padding = m_orgPadding;
-    m_margin = m_orgMargin;
-    m_border = m_orgBorder;
+        m_padding = m_orgPadding;
+        m_margin = m_orgMargin;
+        m_border = m_orgBorder;
 
-    canvas->save();
-    canvas->translate(LayoutUnit(0), m_ascender  - (style()->font()->metrics().m_ascender) - borderTop() - paddingTop());
-    setContentHeight(style()->font()->metrics().m_ascender - style()->font()->metrics().m_descender);
-    setHeight(contentHeight() + paddingHeight() + borderHeight());
-    FrameBox::paintBackgroundAndBorders(canvas);
-    canvas->restore();
+        canvas->save();
+        canvas->translate(LayoutUnit(0), m_ascender  - (style()->font()->metrics().m_ascender) - borderTop() - paddingTop());
+        setContentHeight(style()->font()->metrics().m_ascender - style()->font()->metrics().m_descender);
+        setHeight(contentHeight() + paddingHeight() + borderHeight());
+        FrameBox::paintBackgroundAndBorders(canvas);
+        canvas->restore();
 
-    m_frameRect = frameRectBack;
-    m_padding = paddingBack;
-    m_border = borderBack;
-    m_margin = marginBack;
+        m_frameRect = frameRectBack;
+        m_padding = paddingBack;
+        m_border = borderBack;
+        m_margin = marginBack;
+    }
 }
 
 void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)

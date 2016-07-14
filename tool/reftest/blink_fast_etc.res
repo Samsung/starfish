@@ -69,6 +69,7 @@ test/reftest/vendor/blink/fast/block/positioning/055.html
 test/reftest/vendor/blink/fast/block/positioning/057.html
 test/reftest/vendor/blink/fast/block/positioning/058.html
 test/reftest/vendor/blink/fast/block/positioning/061.html
+test/reftest/vendor/blink/fast/block/positioning/abs-inside-inline-rel.html
 test/reftest/vendor/blink/fast/block/positioning/absolute-positioning-no-scrollbar.html
 test/reftest/vendor/blink/fast/block/positioning/absolute-with-html-border-strict.html
 test/reftest/vendor/blink/fast/block/positioning/abspos-auto-left-and-width-change-parent-margin-left.html
@@ -78,6 +79,7 @@ test/reftest/vendor/blink/fast/block/positioning/auto/001.html
 test/reftest/vendor/blink/fast/block/positioning/auto/002.html
 test/reftest/vendor/blink/fast/block/positioning/auto-height-with-top-and-bottom.html
 test/reftest/vendor/blink/fast/block/positioning/complex-positioned-movement.html
+test/reftest/vendor/blink/fast/block/positioning/hiding-inside-relpositioned-inline.html
 test/reftest/vendor/blink/fast/block/positioning/insert-positioned-in-anonymous-crash.html
 test/reftest/vendor/blink/fast/block/positioning/offsetLeft-offsetTop-borders.html
 test/reftest/vendor/blink/fast/block/positioning/pref-width-change.html
@@ -121,6 +123,7 @@ test/reftest/vendor/blink/fast/images/gray-scale-png-with-color-profile.html
 test/reftest/vendor/blink/fast/images/icon-0colors.html
 test/reftest/vendor/blink/fast/images/icon-decoding.html
 test/reftest/vendor/blink/fast/images/image-load-event-crash.html
+test/reftest/vendor/blink/fast/images/image-change-src.html
 test/reftest/vendor/blink/fast/images/large-size-image-crash.html
 test/reftest/vendor/blink/fast/images/png-extra-row-crash.html
 test/reftest/vendor/blink/fast/images/png-missing-plte-before-trns-crash.html

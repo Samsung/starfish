@@ -67,6 +67,7 @@ test/reftest/vendor/webkit/fast/block/positioning/055.html
 test/reftest/vendor/webkit/fast/block/positioning/057.html
 test/reftest/vendor/webkit/fast/block/positioning/058.html
 test/reftest/vendor/webkit/fast/block/positioning/061.html
+test/reftest/vendor/webkit/fast/block/positioning/abs-inside-inline-rel.html
 test/reftest/vendor/webkit/fast/block/positioning/absolute-positioning-no-scrollbar.html
 test/reftest/vendor/webkit/fast/block/positioning/absolute-with-html-border-strict.html
 test/reftest/vendor/webkit/fast/block/positioning/auto/001.html
@@ -75,6 +76,7 @@ test/reftest/vendor/webkit/fast/block/positioning/auto-height-with-top-and-botto
 test/reftest/vendor/webkit/fast/block/positioning/complex-positioned-movement.html
 test/reftest/vendor/webkit/fast/block/positioning/crash-when-transform-is-removed.html
 test/reftest/vendor/webkit/fast/block/positioning/insert-positioned-in-anonymous-crash.html
+test/reftest/vendor/webkit/fast/block/positioning/hiding-inside-relpositioned-inline.html
 test/reftest/vendor/webkit/fast/block/positioning/negative-rel-position.html
 test/reftest/vendor/webkit/fast/block/positioning/offsetLeft-offsetTop-borders.html
 test/reftest/vendor/webkit/fast/block/positioning/pref-width-change.html
