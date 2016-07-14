@@ -974,6 +974,7 @@ public:
     bool updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
+    bool updateValueBorderStyle(std::vector<String*, gc_allocator<String*> >* tokens);
 
     static bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
 

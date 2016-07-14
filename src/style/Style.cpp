@@ -28,6 +28,12 @@
 
 namespace StarFish {
 
+#define GEN_FOURSIDE(F) \
+F(Top, top) \
+F(Right, right) \
+F(Bottom, bottom) \
+F(Left, left)
+
 #define TOKEN_IS_STRING(str) \
     ((memcmp(token, str, strlen(str))) == 0 && strlen(str) == strlen(token))
 
@@ -3527,6 +3533,88 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         m_sheets.push_back(sheet);
 }
 
+bool CSSStyleValuePair::updateValueBorderStyle(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
+    if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("solid")) {
+        m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+#define UPDATE_VALUE_BORDER_STYLE(POS, ...) \
+bool CSSStyleValuePair::updateValueBorder##POS##Style(std::vector<String*, gc_allocator<String*> >* tokens) \
+{ \
+    return updateValueBorderStyle(tokens); \
+}
+GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
+#undef UPDATE_VALUE_BORDER_STYLE
+
+bool CSSStyleValuePair::updateValueDirection(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::DirectionValueKind;
+    if (STRING_VALUE_IS_STRING("ltr")) {
+        m_value.m_direction = DirectionValue::LtrDirectionValue;
+    } else if (STRING_VALUE_IS_STRING("rtl")) {
+        m_value.m_direction = DirectionValue::RtlDirectionValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueDisplay(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::DisplayValueKind;
+    if (STRING_VALUE_IS_STRING("block")) {
+        m_value.m_display = DisplayValue::BlockDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("inline")) {
+        m_value.m_display = DisplayValue::InlineDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("inline-block")) {
+        m_value.m_display = DisplayValue::InlineBlockDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_display = DisplayValue::NoneDisplayValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueFontStyle(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
+    if (STRING_VALUE_IS_STRING("normal")) {
+        m_value.m_fontStyle = FontStyleValue::NormalFontStyleValue;
+    } else if (STRING_VALUE_IS_STRING("italic")) {
+        m_value.m_fontStyle = FontStyleValue::ItalicFontStyleValue;
+    } else if (STRING_VALUE_IS_STRING("oblique")) {
+        m_value.m_fontStyle = FontStyleValue::ObliqueFontStyleValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
 // TODO: This is temp code
 #define NEW_SET_VALUE_DEF(name) \
 bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens) \
@@ -3543,26 +3631,19 @@ NEW_SET_VALUE_DEF(BackgroundRepeatX);
 NEW_SET_VALUE_DEF(BackgroundRepeatY);
 NEW_SET_VALUE_DEF(BackgroundSize);
 NEW_SET_VALUE_DEF(BorderBottomColor);
-NEW_SET_VALUE_DEF(BorderBottomStyle);
 NEW_SET_VALUE_DEF(BorderBottomWidth);
 NEW_SET_VALUE_DEF(BorderImageSlice);
 NEW_SET_VALUE_DEF(BorderImageSource);
 NEW_SET_VALUE_DEF(BorderImageWidth);
 NEW_SET_VALUE_DEF(BorderLeftColor);
-NEW_SET_VALUE_DEF(BorderLeftStyle);
 NEW_SET_VALUE_DEF(BorderLeftWidth);
 NEW_SET_VALUE_DEF(BorderRightColor);
-NEW_SET_VALUE_DEF(BorderRightStyle);
 NEW_SET_VALUE_DEF(BorderRightWidth);
 NEW_SET_VALUE_DEF(BorderTopColor);
-NEW_SET_VALUE_DEF(BorderTopStyle);
 NEW_SET_VALUE_DEF(BorderTopWidth);
 NEW_SET_VALUE_DEF(Bottom);
 NEW_SET_VALUE_DEF(Color);
-NEW_SET_VALUE_DEF(Direction);
-NEW_SET_VALUE_DEF(Display);
 NEW_SET_VALUE_DEF(FontSize);
-NEW_SET_VALUE_DEF(FontStyle);
 NEW_SET_VALUE_DEF(Height);
 NEW_SET_VALUE_DEF(Left);
 NEW_SET_VALUE_DEF(LineHeight);
@@ -3802,4 +3883,6 @@ void StyleResolver::dumpDOMStyle(Document* document)
     printf("\n");
 }
 #endif
+
+#undef GEN_FOURSIDE
 }
