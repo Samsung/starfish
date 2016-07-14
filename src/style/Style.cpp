@@ -2978,7 +2978,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::BackgroundPosition:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBackgroundPositionType(parentStyle->backgroundPositionType());
-                    style->setBackgroundPositionValue(parentStyle->backgroundPositionValue());
+                    style->setBackgroundPositionValue(parentStyle->backgroundPosition());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundPositionValue(new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
@@ -3001,7 +3001,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                                 yAxis = Length(Length::Percent, 0.0f);
                             } else if (item.sideValue() == SideValue::BottomSideValue) {
                                 yAxis = Length(Length::Percent, 1.0f);
-                            } 
+                            }
                         } else {
                             if (i == 0)
                                 xAxis = convertValueToLength(item.valueKind(), item.value());

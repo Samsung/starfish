@@ -267,9 +267,15 @@ enum DirectionValue {
     RtlDirectionValue,
 };
 
-enum BackgroundPositionType {
-    BackgroundPositionValue,
-    BackgroundPositionNone,
+enum BackgroundPositionValue {
+    NoneBPValue,
+    LeftBPValue,
+    RightBPValue,
+    TopBPValue,
+    BottomBPValue,
+    CenterBPValue,
+    ValueBPValue,
+
 };
 
 enum BackgroundSizeType {
@@ -595,6 +601,7 @@ public:
         Cover,
         Contain,
 
+        BackgroundPositionValueKind,
         BackgroundRepeatValueKind,
 
         FontSizeValueKind,
@@ -824,6 +831,7 @@ public:
         float m_floatValue;
         int32_t m_int32Value;
         DisplayValue m_display;
+        BackgroundPositionValue m_backgroundPosition;
         PositionValue m_position;
         VerticalAlignValue m_verticalAlign;
         FontSizeValue m_fontSize;
@@ -848,6 +856,7 @@ public:
         ValueData(int v) { m_floatValue = v; }
         ValueData(float v) { m_floatValue = v; }
         ValueData(DisplayValue v) { m_display = v; }
+        ValueData(BackgroundPositionValue v) { m_backgroundPosition = v; }
         ValueData(PositionValue v) { m_position = v; }
         ValueData(VerticalAlignValue v) { m_verticalAlign = v; }
         ValueData(FontSizeValue v) { m_fontSize = v; }

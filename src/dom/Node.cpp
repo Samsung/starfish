@@ -1156,6 +1156,23 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);
     }
 
+    // backgroundPosition
+    {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPosition);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* vals = new ValueList();
+
+        CSSStyleValuePair x = lengthToCSSStyleValue(style->backgroundPosition()->x());
+        vals->append(x.valueKind(), x.value());
+
+        CSSStyleValuePair y = lengthToCSSStyleValue(style->backgroundPosition()->y());
+        vals->append(y.valueKind(), y.value());
+
+        p.setValue(vals);
+        d->addValuePair(p);
+    }
+
     // LineHeight
     {
         CSSStyleValuePair p;
@@ -1433,9 +1450,9 @@ void Node::dumpStyle()
     }
 
     // background-position
-    if (m_style->backgroundPositionType() == BackgroundPositionType::BackgroundPositionValue) {
-        printf("background-position: (%s, %s),", m_style->backgroundPositionValue()->x().dumpString()->utf8Data(),
-            m_style->backgroundPositionValue()->y().dumpString()->utf8Data());
+    if (m_style->backgroundPositionType() == BackgroundPositionValue::ValueBPValue) {
+        printf("background-position: (%s, %s),", m_style->backgroundPosition()->x().dumpString()->utf8Data(),
+            m_style->backgroundPosition()->y().dumpString()->utf8Data());
     }
 
     // background-size
