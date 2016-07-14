@@ -2218,6 +2218,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     return ret;
 }
 
+// TODO: Move to CSSParser
 static unsigned char parseColorFunctionPart(String* s, bool isAlpha = false)
 {
     float f = 0.f;
@@ -2242,6 +2243,7 @@ static unsigned char parseColorFunctionPart(String* s, bool isAlpha = false)
     }
 }
 
+// TODO: Move to CSSParser
 static Color parseColor(String* str)
 {
     if (str->startsWith("rgba")) {
@@ -2375,19 +2377,19 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 break;
             case CSSStyleValuePair::KeyKind::Color:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
+                    style->setColor(parentStyle->m_inheritedStyles.m_color);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->m_inheritedStyles.m_color = parseColor(String::fromUTF8("black"));
+                    style->setColor(Color(0, 0, 0, 255));
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                    style->setColor(cssValues[k].colorValue());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
-                        style->m_inheritedStyles.m_color = cssValues[k].colorValue();
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                        style->m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
                     } else {
-                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                            style->m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
-                        } else {
-                            style->m_inheritedStyles.m_color = parseColor(cssValues[k].stringValue());
-                        }
+                        Color ret;
+                        CSSPropertyParser::parseNamedColor(cssValues[k].stringValue(), &ret);
+                        style->setColor(ret);
                     }
                 }
                 break;
@@ -2516,18 +2518,18 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundColor(parentStyle->backgroundColor());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundColor(Color(0, 0, 0, 0));
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
+                    style->setBackgroundColor(cssValues[k].colorValue());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
-                        style->setBackgroundColor(cssValues[k].colorValue());
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
+                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                        // currentColor : represents the calculated value of the element's color property
+                        // --> change to valid value when arrangeStyleValues()
+                        style->setBackgroundColorToCurrentColor();
                     } else {
-                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-                            // currentColor : represents the calculated value of the element's color property
-                            // --> change to valid value when arrangeStyleValues()
-                            style->setBackgroundColorToCurrentColor();
-                        } else {
-                            style->setBackgroundColor(parseColor(cssValues[k].stringValue()));
-                        }
+                        Color ret;
+                        CSSPropertyParser::parseNamedColor(cssValues[k].stringValue(), &ret);
+                        style->setBackgroundColor(ret);
                     }
                 }
                 break;
@@ -2805,16 +2807,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBorder##POS##Color(parentStyle->border##POS##Color());     \
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) { \
                     style->clearBorder##POS##Color(); \
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) { \
+                    style->setBorder##POS##Color(cssValues[k].colorValue()); \
                 } else { \
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind); \
-                    if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) { \
-                        style->setBorder##POS##Color(cssValues[k].colorValue()); \
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind); \
+                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) { \
+                        style->clearBorder##POS##Color();   \
                     } else { \
-                        if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) { \
-                            style->clearBorder##POS##Color();   \
-                        } else { \
-                            style->setBorder##POS##Color(parseColor(cssValues[k].stringValue()));   \
-                        } \
+                        Color ret; \
+                        CSSPropertyParser::parseNamedColor(cssValues[k].stringValue(), &ret); \
+                        style->setBorder##POS##Color(ret); \
                     } \
                 } \
                 break;
@@ -3366,6 +3368,35 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         m_sheets.push_back(sheet);
 }
 
+bool CSSStyleValuePair::updateValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    if (CSSPropertyParser::parseNonNamedColor(tokens->at(0), &(m_value.m_color))) {
+        m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
+    } else if (CSSPropertyParser::assureNamedColor(tokens->at(0))) {
+        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
+        m_value.m_stringValue = tokens->at(0)->trim();
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBackgroundColor(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    return updateValueColor(tokens);
+}
+
+#define UPDATE_VALUE_BORDER_COLOR(POS, ...) \
+bool CSSStyleValuePair::updateValueBorder##POS##Color(std::vector<String*, gc_allocator<String*> >* tokens) \
+{ \
+    return updateValueColor(tokens); \
+}
+GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
+#undef UPDATE_VALUE_BORDER_COLOR
+
 bool CSSStyleValuePair::updateValueBorderStyle(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() != 1)
@@ -3457,25 +3488,25 @@ bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<Stri
     setValue##name(tokens); \
     return true; \
 }
-NEW_SET_VALUE_DEF(BackgroundColor);
+// NEW_SET_VALUE_DEF(BackgroundColor);
 NEW_SET_VALUE_DEF(BackgroundImage);
 NEW_SET_VALUE_DEF(BackgroundPosition);
 NEW_SET_VALUE_DEF(BackgroundRepeatX);
 NEW_SET_VALUE_DEF(BackgroundRepeatY);
 NEW_SET_VALUE_DEF(BackgroundSize);
-NEW_SET_VALUE_DEF(BorderBottomColor);
+// NEW_SET_VALUE_DEF(BorderBottomColor);
 NEW_SET_VALUE_DEF(BorderBottomWidth);
 NEW_SET_VALUE_DEF(BorderImageSlice);
 NEW_SET_VALUE_DEF(BorderImageSource);
 NEW_SET_VALUE_DEF(BorderImageWidth);
-NEW_SET_VALUE_DEF(BorderLeftColor);
+// NEW_SET_VALUE_DEF(BorderLeftColor);
 NEW_SET_VALUE_DEF(BorderLeftWidth);
-NEW_SET_VALUE_DEF(BorderRightColor);
+// NEW_SET_VALUE_DEF(BorderRightColor);
 NEW_SET_VALUE_DEF(BorderRightWidth);
-NEW_SET_VALUE_DEF(BorderTopColor);
+// NEW_SET_VALUE_DEF(BorderTopColor);
 NEW_SET_VALUE_DEF(BorderTopWidth);
 NEW_SET_VALUE_DEF(Bottom);
-NEW_SET_VALUE_DEF(Color);
+// NEW_SET_VALUE_DEF(Color);
 NEW_SET_VALUE_DEF(FontSize);
 NEW_SET_VALUE_DEF(Height);
 NEW_SET_VALUE_DEF(Left);

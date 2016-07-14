@@ -492,11 +492,153 @@ public:
         return parser->isEnd();
     }
 
+    static bool parseColorFunctionPart(String* s, bool isAlpha, unsigned char* ret, bool* isPercent)
+    {
+        const char* piece = s->trim()->utf8Data();
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)piece);
+
+        bool hasPoint = false;
+        parser->consumeWhitespaces();
+        if (!parser->consumeNumber(&hasPoint))
+            return false;
+
+        *isPercent = false;
+        if (parser->consumeIfNext('%'))
+            *isPercent = true;
+
+        // NOTE: decimal-point is disallowed for rgb value.
+        if (!isAlpha && !(*isPercent) && hasPoint)
+            return false;
+
+        parser->consumeWhitespaces();
+        if (!parser->isEnd())
+            return false;
+
+        float f = 0.f;
+        String* unit = CSSPropertyParser::parseNumberAndUnit(piece, &f);
+        if (unit->equals("%")) {
+            if (f < 0)
+                f = 0;
+            if (f > 100)
+                f = 100;
+            *ret = 255 * f / 100;
+            return true;
+        }
+        if (f < 0)
+            f = 0;
+        if (isAlpha) {
+            if (f > 1)
+                f = 1;
+            f = f * 255;
+        } else if (f > 255) {
+            f = 255;
+        }
+        *ret = f;
+        return true;
+    }
+
+    static bool parseNonNamedColor(String* str, Color* ret)
+    {
+        bool maybeRGBA = str->startsWith("rgba(");
+        bool maybeRGB = str->startsWith("rgb(");
+        bool maybeCode = str->startsWith("#");
+
+        if (maybeRGBA || maybeRGB) {
+            size_t s1 = str->indexOf('(');
+            size_t s2 = str->indexOf(')');
+            if (s1 == SIZE_MAX || s2 != str->length() - 1 || s1 >= s2)
+                return false;
+
+            String* sub = str->substring(s1 + 1, s2 - s1 - 1);
+            String::Vector v;
+            sub->split(',', v);
+            size_t size = v.size();
+            if (!(maybeRGBA && size == 4) && !(maybeRGB && size == 3))
+                return false;
+
+            bool isPercent = false, shouldPercent;
+            unsigned char parsed[4];
+            for (size_t i = 0; i < size; i++) {
+                if (!parseColorFunctionPart(v[i], (i == 3), &parsed[i], &isPercent))
+                    return false;
+                if (i == 0)
+                    shouldPercent = isPercent;
+                else if (shouldPercent != isPercent)
+                    return false;
+            }
+            *ret = Color(parsed[0], parsed[1], parsed[2], maybeRGBA ? parsed[3] : 255);
+        } else if (maybeCode) {
+            const char* s = str->utf8Data();
+            const unsigned len = strlen(s);
+            if (!(len == 9 || len == 7 || len == 4))
+                return false;
+            for (unsigned i = 1; i < len; i++) {
+                if (!(s[i] >= '0' && s[i] <= '9') && !(s[i] >= 'A' && s[i] <= 'F') && !(s[i] >= 'a' && s[i] <= 'f'))
+                    return false;
+            }
+            if (len == 9) {
+                unsigned int r, g, b, a;
+                sscanf(s, "#%02x%02x%02x%02x", &r, &g, &b, &a);
+                *ret = Color(r, g, b, a);
+            } else if (len == 7) {
+                unsigned int r, g, b;
+                sscanf(s, "#%02x%02x%02x", &r, &g, &b);
+                *ret = Color(r, g, b, 255);
+            } else if (len == 4) {
+                unsigned int r, g, b;
+                sscanf(s, "#%01x%01x%01x", &r, &g, &b);
+                *ret = Color(r * 17, g * 17, b * 17, 255);
+            }
+        } else if (str->equals("transparent")) {
+            *ret = Color(0, 0, 0, 0);
+        } else {
+            return false;
+        }
+        return true;
+    }
+
+    // TODO: Replace if-else statement with better one
+    static bool parseNamedColor(String* str, Color* ret)
+    {
+        if (false) {
+        }
+#define ADD_ENUM_COLOR(name, value) \
+        else if (str->equals(#name)) \
+        { \
+            char r = (value & 0xff0000) >> 16; \
+            char g = (value & 0xff00) >> 8; \
+            char b = (value & 0xff); \
+            char a = 255; \
+            *ret = Color(r, g, b, a); \
+        }
+        NAMED_COLOR_FOR_EACH(ADD_ENUM_COLOR)
+#undef ADD_ENUM_COLOR
+        else {
+            return false;
+        }
+        return true;
+    }
+
+    // TODO: Replace if-else statement with better one
+    static bool assureNamedColor(String* str)
+    {
+        if (str->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+            return true;
+        }
+#define ADD_ENUM_COLOR(name, value) \
+        else if (str->equals(#name)) \
+        { \
+            return true; \
+        }
+        NAMED_COLOR_FOR_EACH(ADD_ENUM_COLOR)
+#undef ADD_ENUM_COLOR
+        return false;
+    }
+
+    // TODO: Remove assureColor in the future
     static bool assureColor(const char* token)
     {
-        if (strcmp("currentcolor", token) == 0) {
-            return true;
-        } else if (token[0] == '#') {
+        if (token[0] == '#') {
             if (!(strlen(token) == 9 || strlen(token) == 7 || strlen(token) == 4)) {
                 return false;
             }
@@ -508,17 +650,7 @@ public:
                 }
             }
             return true;
-        }
-#define PARSE_COLOR(name, value)        \
-    else if (strcmp(#name, token) == 0) \
-    {                                   \
-        return true;                    \
-    }
-
-        NAMED_COLOR_FOR_EACH(PARSE_COLOR)
-#undef PARSE_COLOR
-
-        else if (strstr(token, "rgb") == token) {
+        } else if (strstr(token, "rgb") == token) {
             CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
             if (parser->consumeString()) {
                 String* str = parser->parsedString();
@@ -555,7 +687,7 @@ public:
                 return parser->isEnd();
             }
         }
-        return false;
+        return assureNamedColor(String::fromUTF8(token));
     }
 
     static bool assureEssential(const char* token)
