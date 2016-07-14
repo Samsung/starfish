@@ -127,6 +127,7 @@ public:
         if (cur != m_endPos)
             return false;
 
+        m_curPos = cur;
         if (!sign)
             res *= (-1);
         m_parsedInt32 = res;
@@ -244,6 +245,19 @@ public:
         return 0;
     }
 
+    static bool parseNumber(const char* token, bool allowNegative, float* val)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (parser->consumeNumber()) {
+            float t = parser->parsedNumber();
+            if (!allowNegative && t < 0)
+                return false;
+            *val = t;
+            return parser->isEnd();
+        }
+        return false;
+    }
+
     static int32_t parseInt32(const char* token)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -261,7 +275,7 @@ public:
             if (!allowNegative && t < 0)
                 return false;
             *val = t;
-            return true;
+            return parser->isEnd();
         }
         return false;
     }
