@@ -104,15 +104,36 @@ public:
         return consumeNumber(&t);
     }
 
-    bool consumeInteger()
+    float parsedNumber() { return m_parsedNumber; }
+
+    bool consumeInt32()
     {
-        bool t = false;
-        if (!consumeNumber(&t))
+        int32_t res = 0;
+        bool sign = true; // +
+        char* cur = m_curPos;
+        if (*cur == '-') {
+            sign = false;
+            cur++;
+        } else if (*cur == '+') {
+            sign = true;
+            cur++;
+        }
+
+        while (isDigit(*cur) && cur < m_endPos) {
+            res = res * 10 + (*cur - '0');
+            cur++;
+        }
+
+        if (cur != m_endPos)
             return false;
-        return !t;
+
+        if (!sign)
+            res *= (-1);
+        m_parsedInt32 = res;
+        return true;
     }
 
-    float parsedNumber() { return m_parsedNumber; }
+    int32_t parsedInt32() { return m_parsedInt32; }
 
     // a-z | 0-9 | - | _ | %
     bool consumeString()
@@ -219,6 +240,15 @@ public:
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
         if (parser->consumeNumber()) {
             return parser->parsedNumber();
+        }
+        return 0;
+    }
+
+    static int32_t parseInt32(const char* token)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (parser->consumeInt32()) {
+            return parser->parsedInt32();
         }
         return 0;
     }
@@ -530,6 +560,7 @@ public:
     char* m_curPos;
 
     float m_parsedNumber;
+    int32_t m_parsedInt32;
     String* m_parsedString;
     String* m_parsedUrl;
 };

@@ -1178,8 +1178,7 @@ void CSSStyleValuePair::setValueZIndex(std::vector<String*, gc_allocator<String*
 {
     const char* value = tokens->at(0)->utf8Data();
     m_valueKind = CSSStyleValuePair::ValueKind::Int32;
-    float f = CSSPropertyParser::parseNumber(value);
-    m_value.m_int32Value = (int) f;
+    m_value.m_int32Value = CSSPropertyParser::parseInt32(value);
 }
 
 void CSSStyleValuePair::setValueVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)

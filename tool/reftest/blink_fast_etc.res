@@ -150,6 +150,7 @@ test/reftest/vendor/blink/fast/invalid/011.html
 test/reftest/vendor/blink/fast/invalid/013.html
 test/reftest/vendor/blink/fast/invalid/015.html
 test/reftest/vendor/blink/fast/invalid/016.html
+test/reftest/vendor/blink/fast/js/missing-style-end-tag-js.html
 test/reftest/vendor/blink/fast/js/invalid-syntax-for-function.html
 test/reftest/vendor/blink/fast/js/regexp-charclass-crash.html
 test/reftest/vendor/blink/fast/js/try-catch-crash.html

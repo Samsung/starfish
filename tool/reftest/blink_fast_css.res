@@ -11,6 +11,7 @@ test/reftest/vendor/blink/fast/css/empty-span.html
 test/reftest/vendor/blink/fast/css/end-of-buffer-crash.html
 test/reftest/vendor/blink/fast/css/hexColor-isDigit-assert.html
 test/reftest/vendor/blink/fast/css/inputtext-crash.html
+test/reftest/vendor/blink/fast/css/large-integer-value-serializing.html
 test/reftest/vendor/blink/fast/css/link-outside-head.html
 test/reftest/vendor/blink/fast/css/non-empty-span.html
 test/reftest/vendor/blink/fast/css/parsing-expr-error-recovery.html
