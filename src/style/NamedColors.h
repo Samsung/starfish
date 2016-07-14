@@ -42,7 +42,7 @@
     F(azure   , 0xf0ffff) \
     F(beige   , 0xf5f5dc) \
     F(bisque  , 0xffe4c4) \
-    F(blanchedalmond  , 0xffe4c4) \
+    F(blanchedalmond  , 0xffebcd) \
     F(blueviolet  , 0x8a2be2) \
     F(brown   , 0xa52a2a) \
     F(burlywood   , 0xdeb887) \
@@ -114,6 +114,7 @@
     F(lightyellow , 0xffffe0) \
     F(limegreen   , 0x32cd32) \
     F(linen   , 0xfaf0e6) \
+    F(magenta   , 0xff00ff) \
     F(mediumaquamarine    , 0x66cdaa) \
     F(mediumblue  , 0x0000cd) \
     F(mediumorchid    , 0xba55d3) \
