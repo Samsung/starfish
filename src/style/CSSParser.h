@@ -253,6 +253,19 @@ public:
         return 0;
     }
 
+    static bool parseInt32(const char* token, bool allowNegative, int32_t* val)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (parser->consumeInt32()) {
+            int32_t t = parser->parsedInt32();
+            if (!allowNegative && t < 0)
+                return false;
+            *val = t;
+            return true;
+        }
+        return false;
+    }
+
     static String* parseNumberAndUnit(const char* token, float* result)
     {
         // NOTE(example): token("10px") -> result=10.0 + return "px"
