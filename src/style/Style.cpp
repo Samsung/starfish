@@ -3541,9 +3541,9 @@ bool CSSStyleValuePair::updateValueBorderStyle(std::vector<String*, gc_allocator
     String* value = (*tokens)[0];
     m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
     if (STRING_VALUE_IS_STRING("none")) {
-        m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
-    } else if (STRING_VALUE_IS_STRING("solid")) {
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
+    } else if (STRING_VALUE_IS_STRING("solid")) {
+        m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
     } else {
         return false;
     }
