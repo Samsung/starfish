@@ -206,7 +206,15 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
     std::vector<FrameInline*, gc_allocator<FrameInline*>> stackedFrameInline;
-    FrameTextTextDecorationData* textDecoBack = ctx.currentDecorationData();
+    FrameTextTextDecorationData* curDeco = ctx.currentDecorationData();
+    FrameTextTextDecorationData* textDecoBack =  new FrameTextTextDecorationData;
+    if (curDeco) {
+        textDecoBack->m_hasLineThrough = curDeco->m_hasLineThrough;
+        textDecoBack->m_hasUnderLine = curDeco->m_hasUnderLine;
+        textDecoBack->m_lineThroughColor = curDeco->m_lineThroughColor;
+        textDecoBack->m_underLineColor = curDeco->m_underLineColor;
+    }
+
     if (current->needsFrameTreeBuild() || force) {
         force = true;
 
