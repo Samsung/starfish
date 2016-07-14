@@ -470,28 +470,6 @@ void CSSStyleValuePair::setValuePosition(std::vector<String*, gc_allocator<Strin
     }
 }
 
-void CSSStyleValuePair::setValueTextDecoration(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    String* value = tokens->at(0);
-    // none | [ underline || overline || line-through || blink ] | inherit // Initial value -> none
-    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationValueKind;
-
-    if (STRING_VALUE_IS_NONE()) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-        m_value.m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
-    } else if (STRING_VALUE_IS_STRING("underline")) {
-        m_value.m_textDecoration = TextDecorationValue::UnderLineTextDecorationValue;
-    } else if (STRING_VALUE_IS_STRING("overline")) {
-        m_value.m_textDecoration = TextDecorationValue::OverLineTextDecorationValue;
-    } else if (STRING_VALUE_IS_STRING("line-through")) {
-        m_value.m_textDecoration = TextDecorationValue::LineThroughTextDecorationValue;
-    } else if (STRING_VALUE_IS_STRING("blink")) {
-        m_value.m_textDecoration = TextDecorationValue::BlinkTextDecorationValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 void CSSStyleValuePair::setValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
@@ -1103,56 +1081,6 @@ void CSSStyleValuePair::setValueBorderLeftWidth(std::vector<String*, gc_allocato
     setValueBorderUnitWidth(tokens);
 }
 
-void CSSStyleValuePair::setValueTextAlign(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-
-    const char* value = tokens->at(0)->utf8Data();
-    m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
-
-    if (VALUE_IS_STRING("left")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-        m_value.m_side = SideValue::LeftSideValue;
-    } else if (VALUE_IS_STRING("center")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-        m_value.m_side = SideValue::CenterSideValue;
-    } else if (VALUE_IS_STRING("right")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
-        m_value.m_side = SideValue::RightSideValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-void CSSStyleValuePair::setValueUnicodeBidi(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    const char* value = tokens->at(0)->utf8Data();
-
-    if (VALUE_IS_STRING("normal")) {
-        m_value.m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
-        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
-    } else if (VALUE_IS_STRING("embed")) {
-        m_value.m_unicodeBidi = UnicodeBidiValue::EmbedUnicodeBidiValue;
-        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-void CSSStyleValuePair::setValueVisibility(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    const char* value = tokens->at(0)->utf8Data();
-
-    m_valueKind = CSSStyleValuePair::ValueKind::VisibilityValueKind;
-
-    if (VALUE_IS_STRING("visible")) {
-        m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
-    } else if (VALUE_IS_STRING("hidden")) {
-        m_value.m_visibility = VisibilityValue::HiddenVisibilityValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 void CSSStyleValuePair::setValueOpacity(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::Number;
@@ -1173,12 +1101,6 @@ void CSSStyleValuePair::setValueOverflow(std::vector<String*, gc_allocator<Strin
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-}
-void CSSStyleValuePair::setValueZIndex(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    const char* value = tokens->at(0)->utf8Data();
-    m_valueKind = CSSStyleValuePair::ValueKind::Int32;
-    m_value.m_int32Value = CSSPropertyParser::parseInt32(value);
 }
 
 void CSSStyleValuePair::setValueVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -2292,17 +2214,6 @@ bool CSSStyleValuePair::checkInputErrorPosition(std::vector<String*, gc_allocato
     return false;
 }
 
-bool CSSStyleValuePair::checkInputErrorTextDecoration(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if ((TOKEN_IS_STRING("none")) || (TOKEN_IS_STRING("underline")) || (TOKEN_IS_STRING("overline")) || (TOKEN_IS_STRING("line-through")) || (TOKEN_IS_STRING("blink"))) {
-            return true;
-        }
-    }
-    return false;
-}
-
 bool CSSStyleValuePair::checkInputErrorBorderImageSlice(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // number && fill?
@@ -2482,28 +2393,6 @@ bool CSSStyleValuePair::checkInputErrorBorderWidth(std::vector<String*, gc_alloc
     return true;
 }
 
-bool CSSStyleValuePair::checkInputErrorTextAlign(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if ((TOKEN_IS_STRING("left")) || (TOKEN_IS_STRING("right")) || (TOKEN_IS_STRING("center"))) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorVisibility(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if ((TOKEN_IS_STRING("visible")) || (TOKEN_IS_STRING("hidden"))) {
-            return true;
-        }
-    }
-    return false;
-}
-
 bool CSSStyleValuePair::checkInputErrorOpacity(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() != 1)
@@ -2516,16 +2405,6 @@ bool CSSStyleValuePair::checkInputErrorOverflow(std::vector<String*, gc_allocato
     if (tokens->size() == 1) {
         const char* token = (*tokens)[0]->utf8Data();
         if ((TOKEN_IS_STRING("visible")) || (TOKEN_IS_STRING("hidden"))) {
-            return true;
-        }
-    }
-    return false;
-}
-bool CSSStyleValuePair::checkInputErrorZIndex(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = tokens->at(0)->utf8Data();
-        if ((TOKEN_IS_STRING("auto")) || CSSPropertyParser::assureInteger(token, false)) {
             return true;
         }
     }
@@ -2617,17 +2496,6 @@ bool CSSStyleValuePair::checkInputErrorTransformOrigin(std::vector<String*, gc_a
             } else {
                 return false;
             }
-        }
-    }
-    return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorUnicodeBidi(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if ((TOKEN_IS_STRING("normal")) || (TOKEN_IS_STRING("embed"))) {
-            return true;
         }
     }
     return false;
@@ -3850,17 +3718,108 @@ NEW_SET_VALUE_DEF(PaddingRight);
 NEW_SET_VALUE_DEF(PaddingTop);
 NEW_SET_VALUE_DEF(Position);
 NEW_SET_VALUE_DEF(Right);
-NEW_SET_VALUE_DEF(TextAlign);
-NEW_SET_VALUE_DEF(TextDecoration);
 NEW_SET_VALUE_DEF(Top);
 NEW_SET_VALUE_DEF(Transform);
 NEW_SET_VALUE_DEF(TransformOrigin);
-NEW_SET_VALUE_DEF(UnicodeBidi);
 NEW_SET_VALUE_DEF(VerticalAlign);
-NEW_SET_VALUE_DEF(Visibility);
 NEW_SET_VALUE_DEF(Width);
-NEW_SET_VALUE_DEF(ZIndex);
 #undef NEW_SET_VALUE_DEF
+
+bool CSSStyleValuePair::updateValueTextDecoration(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = tokens->at(0);
+    // none | [ underline || line-through ] | inherit // Initial value -> none
+    m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationValueKind;
+
+    if (STRING_VALUE_IS_NONE()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+        m_value.m_textDecoration = TextDecorationValue::NoneTextDecorationValue;
+    } else if (STRING_VALUE_IS_STRING("underline")) {
+        m_value.m_textDecoration = TextDecorationValue::UnderLineTextDecorationValue;
+    } else if (STRING_VALUE_IS_STRING("line-through")) {
+        m_value.m_textDecoration = TextDecorationValue::LineThroughTextDecorationValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueTextAlign(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = tokens->at(0);
+    if (STRING_VALUE_IS_STRING("left")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+        m_value.m_side = SideValue::LeftSideValue;
+    } else if (STRING_VALUE_IS_STRING("center")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+        m_value.m_side = SideValue::CenterSideValue;
+    } else if (STRING_VALUE_IS_STRING("right")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+        m_value.m_side = SideValue::RightSideValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueUnicodeBidi(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    if (STRING_VALUE_IS_STRING("normal")) {
+        m_value.m_unicodeBidi = UnicodeBidiValue::NormalUnicodeBidiValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
+    } else if (STRING_VALUE_IS_STRING("embed")) {
+        m_value.m_unicodeBidi = UnicodeBidiValue::EmbedUnicodeBidiValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueVisibility(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    m_valueKind = CSSStyleValuePair::ValueKind::VisibilityValueKind;
+    String* value = (*tokens)[0];
+    if (STRING_VALUE_IS_STRING("visible")) {
+        m_value.m_visibility = VisibilityValue::VisibleVisibilityValue;
+    } else if (STRING_VALUE_IS_STRING("hidden")) {
+        m_value.m_visibility = VisibilityValue::HiddenVisibilityValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueZIndex(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    const char* token = tokens->at(0)->utf8Data();
+    int32_t val = 0;
+    if (TOKEN_IS_STRING("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+    } else if (CSSPropertyParser::parseInt32(token, true, &val)) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Int32;
+        m_value.m_int32Value = val;
+    } else {
+        return false;
+    }
+    return true;
+}
 
 
 #ifdef STARFISH_ENABLE_TEST
