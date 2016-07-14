@@ -24,7 +24,8 @@ function main {
         exit
     elif [[ "$1" = *".htm" || "$1" = *".html" ||
             "$1" = "blink_fast_css" || "$1" = "blink_fast_etc" ||
-            "$1" = "webkit_fast_css" || "$1" = "webkit_fast_etc" ]]; then
+            "$1" = "webkit_fast_css" || "$1" = "webkit_fast_etc" ||
+            "$1" = "internal_test" ]]; then
         tc=$1
     elif [[ "$1" = *".res" ]]; then
         tc=$(cat $1)
@@ -36,11 +37,13 @@ function main {
     # Test Suites
     # 0: W3C DOM Conformace Test Suites
     # 1: Web Platform Tests
-    # 2: Vendor Tests - Pixel Tests
-    # 3: Vendor Tests - Regression Tests
+    # 2: Vendor Tests - Pixel Test
+    # 3: Vendor Tests - Regression Test
     # 4: Vendor Tests
-    # 5: Bidi Tests - Pixel Tests
+    # 5: Bidi Tests - Pixel Test
     # 6: CSSWG - Pixel Tests (font-dependent)
+    # 7: Internal Tests - Pixel Test
+    # 8: Internal Tests - Regression Test
     if [[ "$1" = *"dom_conformance_test.res" ||
           "$1" = *"dom-conformance-test"*".htm"* || "$1" = *"blink/dom"*".htm"* ||
           "$1" = *"gecko/dom_tests_mochitest"*".htm"* || "$1" = *"webkit/dom"*".htm"* ]]; then
@@ -157,6 +160,14 @@ function main {
         TESTSUITE=3
         tc=$(cat tool/reftest/webkit_fast_etc_manual.res)
         doTest "$@"
+    elif [[ "$1" = "internal_test" ]]; then
+        TESTSUITENAME="Internal Tests"
+        TESTSUITE=7
+        tc=$(cat tool/reftest/internal.res)
+        doTest "$@"
+        TESTSUITE=8
+        tc=$(cat tool/reftest/internal_manual.res)
+        doTest "$@"
     else
         echo "Unsupported tests"
         exit
@@ -186,12 +197,16 @@ function doTest {
         if [ $TESTSUITE -eq 2 ]; then
             RESIMG="out"$cnt".png"
             ./StarFish $i --pixel-test --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 --width=800 --height=600 &> /dev/null 2>&1 &
-        elif [ $TESTSUITE -eq 5 ]; then
-            RESIMG="out"$cnt".png"
-            ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 --width=900 --height=900 &> /dev/null 2>&1 &
         elif [ $TESTSUITE -eq 3 ] || [ $TESTSUITE -eq 6 ]; then
             RESIMG="out"$cnt".png"
             ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 --width=800 --height=600 &> /dev/null 2>&1 &
+        elif [ $TESTSUITE -eq 5 ]; then
+            RESIMG="out"$cnt".png"
+            ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 --width=900 --height=900 &> /dev/null 2>&1 &
+        elif [ $TESTSUITE -eq 7 ]; then
+            ./StarFish $i --hide-window --width=800 --height=600 &> $RESFILE &
+        elif [ $TESTSUITE -eq 8 ]; then
+            ./StarFish $i --regression-test --hide-window --width=800 --height=600 &> $RESFILE &
         else
             ./StarFish $i --hide-window &> $RESFILE &
         fi
@@ -399,6 +414,23 @@ function doTest {
                     fi
                 fi
                 rm -f $RESIMG
+            elif [ $TESTSUITE -eq 7 ] || [ $TESTSUITE -eq 8 ]; then
+                RESIMG=${filenames[$c]%.*}".png"
+                FAIL=`grep -Eo "FAIL|could not be opened for reading" $TMPFILE | wc -l`
+                if [ $FAIL -eq 0 ]; then
+                    echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
+                    #rm $RESIMG
+                else
+                    echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
+
+                    # Capture the expected image
+                    if [ $TESTSUITE -eq 7 ]; then
+                        ./tool/pixel_test/run_nw_for_getting_internal_test_expected.sh ${filenames[$c]}
+                    else
+                        EXPIMG=${RESIMG%.*}"_expected.png"
+                        mv $RESIMG $EXPIMG
+                    fi
+                fi
             fi
 
             TCFILE=`expr $TCFILE + 1`

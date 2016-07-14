@@ -564,7 +564,7 @@ pixel_test_css_all:
 	@diff out/wpt_css_passed.res out/wpt_css_passed.orig
 
 internal_test:
-	./test/reftest/internaltest.sh test/internal-test/test.res
+	./tool/reftest/reftest.sh internal_test
 
 reftest:
 	./tool/reftest/reftest.sh $(tc) $(regression)
@@ -586,7 +586,6 @@ regression_test_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/dom_conformance_test.res true
 
 regression_test_wpt_dom:
-
 	./tool/reftest/reftest.sh tool/reftest/wpt_dom.res true
 regression_test_wpt_dom_events:
 	./tool/reftest/reftest.sh tool/reftest/wpt_dom_events.res true
@@ -609,12 +608,8 @@ regression_test_blink_fast_html:
 	./tool/reftest/reftest.sh tool/reftest/blink_fast_html.res true
 regression_test_blink_fast_css:
 	./tool/reftest/reftest.sh blink_fast_css true
-regression_test_blink_fast_css_capture:
-	./tool/reftest/reftest.sh blink_fast_css capture
 regression_test_blink_fast_etc:
 	./tool/reftest/reftest.sh blink_fast_etc true
-regression_test_blink_fast_etc_capture:
-	./tool/reftest/reftest.sh blink_fast_etc capture
 regression_test_gecko_dom_conformance_test:
 	./tool/reftest/reftest.sh tool/reftest/gecko_dom_conformance_test.res true
 regression_test_webkit_dom_conformance_test:
@@ -625,12 +620,8 @@ regression_test_webkit_fast_html:
 	./tool/reftest/reftest.sh tool/reftest/webkit_fast_html.res true
 regression_test_webkit_fast_css:
 	./tool/reftest/reftest.sh webkit_fast_css true
-regression_test_webkit_fast_css_capture:
-	./tool/reftest/reftest.sh webkit_fast_css capture
 regression_test_webkit_fast_etc:
 	./tool/reftest/reftest.sh webkit_fast_etc true
-regression_test_webkit_fast_etc_capture:
-	./tool/reftest/reftest.sh webkit_fast_etc capture
 
 regression_test_bidi:
 	./tool/reftest/reftest.sh tool/reftest/bidi.res true
