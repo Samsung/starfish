@@ -22,6 +22,7 @@
 namespace StarFish {
 
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
+    : m_visibleRect(0, 0, 0, 0)
 {
     m_owner = owner;
     m_parent = parent;
@@ -59,16 +60,31 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     m_matrix.reset();
     m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || m_owner->style()->hasTransforms(m_owner);
 
-    LayoutRect visibleRect(0, 0, 0, 0);
-    visibleRect.unite(m_owner->visibleRect());
-    Frame* iter3 = m_owner->firstChild();
-    while (iter3) {
-        if (!iter3->isEstablishesStackingContext() && iter3->isFrameBox()) {
-            visibleRect.unite(iter3->asFrameBox()->visibleRect());
-        }
-        iter3 = iter3->next();
+    if (m_needsOwnBuffer) {
+        LayoutLocation l(-m_owner->frameRect().location().x(), -m_owner->frameRect().location().y());
+        m_owner->iterateChildBoxes([&](FrameBox* box) -> bool
+        {
+            if (box != m_owner && box->stackingContext() && box->stackingContext()->needsOwnBuffer())
+                return false;
+            LayoutRect r = box->frameRect();
+            r.setX(r.x() + l.x());
+            r.setY(r.y() + l.y());
+            m_visibleRect.unite(r);
+            if (box->style() && box->style()->overflow() == OverflowValue::HiddenOverflow) {
+                return false;
+            }
+            return true;
+        }, [&](FrameBox* box)
+        {
+            l.setX(l.x() + box->x());
+            l.setY(l.y() + box->y());
+        }, [&](FrameBox* box)
+        {
+            l.setX(l.x() - box->x());
+            l.setY(l.y() - box->y());
+        });
     }
-    m_owner->setVisibleRect(visibleRect);
+
     return m_needsOwnBuffer;
 }
 
@@ -77,7 +93,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
 
     Canvas* oldCanvas = nullptr;
-    LayoutRect visibleRect = m_owner->visibleRect();
+    LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
     LayoutUnit maxX = visibleRect.maxX();
     LayoutUnit minY = visibleRect.y();
@@ -109,7 +125,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     {
         // draw debug rect
         // canvas->save();
-        // canvas->setColor(Color(0, 0, 255, 32));
+        // canvas->setColor(Color(0, 0, 255, 64));
         // canvas->drawRect(visibleRect);
         // canvas->restore();
     }
@@ -185,7 +201,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 {
     STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
 
-    LayoutRect visibleRect = m_owner->visibleRect();
+    LayoutRect visibleRect = StackingContext::visibleRect();
     ComputedStyle* ownerStyle = m_owner->style();
     canvas->save();
 

@@ -70,8 +70,6 @@ public:
     {
         Frame::dump(depth);
         printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(), (float)width(), (float)height());
-        LayoutRect rt = visibleRect();
-        printf(" visibleRect(%g,%g,%g,%g) ", (float)rt.x(), (float)rt.y(), (float)rt.width(), (float)rt.height());
         printf(" padding(%g,%g,%g,%g) ", (float)paddingTop(), (float)paddingRight(), (float)paddingBottom(), (float)paddingLeft());
         printf(" border(%g,%g,%g,%g) ", (float)borderTop(), (float)borderRight(), (float)borderBottom(), (float)borderLeft());
         printf(" margin(%g,%g,%g,%g) ", (float)marginTop(), (float)marginRight(), (float)marginBottom(), (float)marginLeft());
@@ -428,15 +426,6 @@ public:
         return result;
     }
 
-    virtual LayoutRect visibleRect()
-    {
-        return LayoutRect(LayoutLocation(0, 0), LayoutSize(m_frameRect.size()));
-    }
-    virtual void setVisibleRect(LayoutRect vis)
-    {
-        STARFISH_ASSERT_NOT_REACHED();
-    }
-
     LayoutLocation absolutePoint(FrameBox* top)
     {
         LayoutLocation l(0, 0);
@@ -553,19 +542,24 @@ public:
 
     virtual void paintStackingContextContent(Canvas* canvas);
 
-    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
+    // first return value of callback means should continue iterate its child
+    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
-        fn(this);
+        if (fn(this) && firstChild()) {
+            if (beforeIterateChild)
+                beforeIterateChild(this);
 
-        if (firstChild()) {
             FrameBox* child = firstChild()->asFrameBox();
             while (true) {
-                child->iterateChildBoxes(fn);
+                child->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
                 if (child->next())
                     child = child->next()->asFrameBox();
                 else
                     break;
             }
+
+            if (afterIterateChild)
+                afterIterateChild(this);
         }
     }
 

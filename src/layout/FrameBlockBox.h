@@ -172,12 +172,18 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
 #endif
-    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
+    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
-        fn(this);
+        if (!fn(this))
+            return;
+
+        if (beforeIterateChild)
+            beforeIterateChild(this);
         for (size_t i = 0; i < m_boxes.size(); i ++) {
-            m_boxes[i]->iterateChildBoxes(fn);
+            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
         }
+        if (afterIterateChild)
+            afterIterateChild(this);
     }
 
     virtual void paintBackgroundAndBorders(Canvas* canvas);
@@ -264,13 +270,20 @@ public:
         return m_boxes;
     }
 
-    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
+    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
-        fn(this);
+        if (!fn(this))
+            return;
+
+        if (beforeIterateChild)
+            beforeIterateChild(this);
 
         for (size_t i = 0; i < m_boxes.size(); i ++) {
-            m_boxes[i]->iterateChildBoxes(fn);
+            m_boxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
         }
+
+        if (afterIterateChild)
+            afterIterateChild(this);
     }
 
 protected:
@@ -359,7 +372,6 @@ class FrameBlockBox : public FrameBox {
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
-        , m_visibleRect(0, 0, 0, 0)
     {
         STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
     }
@@ -408,18 +420,25 @@ public:
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 
-    virtual void iterateChildBoxes(const std::function<void(FrameBox*)>& fn)
+    virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
         if (hasBlockFlow()) {
-            FrameBox::iterateChildBoxes(fn);
+            FrameBox::iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
             return;
         }
 
-        fn(this);
+        if (!fn(this))
+            return;
+
+        if (beforeIterateChild)
+            beforeIterateChild(this);
 
         for (size_t i = 0; i < m_lineBoxes.size(); i ++) {
-            m_lineBoxes[i]->iterateChildBoxes(fn);
+            m_lineBoxes[i]->iterateChildBoxes(fn, beforeIterateChild, afterIterateChild);
         }
+
+        if (afterIterateChild)
+            afterIterateChild(this);
     }
 
     bool hasBlockFlow()
@@ -465,22 +484,10 @@ public:
         return false;
     }
 
-    virtual LayoutRect visibleRect()
-    {
-        return m_visibleRect;
-    }
-
-    virtual void setVisibleRect(LayoutRect vis)
-    {
-        m_visibleRect = vis;
-    }
-
 protected:
-    std::pair<LayoutUnit, LayoutRect> layoutBlock(LayoutContext& ctx);
-    std::pair<LayoutUnit, LayoutRect> layoutInline(LayoutContext& ctx);
+    LayoutUnit layoutBlock(LayoutContext& ctx);
+    LayoutUnit layoutInline(LayoutContext& ctx);
     std::vector<LineBox*, gc_allocator<LineBox*> > m_lineBoxes;
-
-    LayoutRect m_visibleRect;
 };
 
 struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {

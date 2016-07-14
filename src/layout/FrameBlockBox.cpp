@@ -369,13 +369,9 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     LayoutUnit contentHeight;
     LayoutRect visibleRect(0, 0, 0, 0);
     if (hasBlockFlow()) {
-        auto ret = layoutBlock(ctx);
-        contentHeight = ret.first;
-        visibleRect = ret.second;
+        contentHeight = layoutBlock(ctx);
     } else {
-        auto ret = layoutInline(ctx);
-        contentHeight = ret.first;
-        visibleRect = ret.second;
+        contentHeight = layoutInline(ctx);
     }
 
     // Now the intrinsic height of the object is known because the children are placed
@@ -475,30 +471,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     if (style()->position() == PositionValue::RelativePositionValue)
         ctx.registerRelativePositionedFrames(this, true);
 
-    // compute visible rect
-    bool isOverflowHidden = style()->overflow() == OverflowValue::HiddenOverflow;
-
-    m_visibleRect = LayoutRect(LayoutLocation(0, 0), LayoutSize(m_frameRect.size()));
-    if (!isOverflowHidden) {
-        m_visibleRect.unite(visibleRect);
-    }
-
-    auto mergeVisibleRect = [&](FrameBox* child)
-    {
-        if (!isOverflowHidden) {
-            LayoutRect absRect = child->absoluteRect(this);
-            LayoutRect visRect = child->visibleRect();
-            m_visibleRect.unite(visRect);
-            m_visibleRect.unite(absRect);
-        }
-    };
-
     // layout absolute positioned blocks
     ctx.layoutRegisteredAbsolutePositionedFrames(this, [&](const std::vector<Frame*>& frames) {
         for (size_t i = 0; i < frames.size(); i ++) {
             Frame* f = frames[i];
             f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
-            mergeVisibleRect(f->asFrameBox());
         }
     });
 
@@ -581,8 +558,6 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     nd = nd->parentElement();
                 }
             }
-
-            mergeVisibleRect(f->asFrameBox());
         }
     });
 

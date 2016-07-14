@@ -22,12 +22,11 @@
 namespace StarFish {
 
 
-std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
+LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 {
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
     LayoutUnit normalFlowHeight = 0, maxNormalFlowBottom = top, normalFlowPosition = top;
-    LayoutRect visibleRect(0, 0, 0, 0);
     Frame* child = firstChild();
     DirectionValue direction = style()->direction();
 
@@ -68,7 +67,6 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
             }
             normalFlowPosition = child->asFrameBox()->y() + child->asFrameBox()->height() + child->asFrameBox()->marginBottom();
-            visibleRect.unite(child->asFrameBox()->visibleRect());
         } else {
             child->asFrameBox()->setY(normalFlowPosition);
             ctx.registerAbsolutePositionedFrames(child);
@@ -78,7 +76,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutBlock(LayoutContext& ctx)
     }
 
     normalFlowHeight = maxNormalFlowBottom - top + m_marginCollapseResult.m_normalFlowHeightAdvance;
-    return std::make_pair(normalFlowHeight, visibleRect);
+    return normalFlowHeight;
 }
 
 }

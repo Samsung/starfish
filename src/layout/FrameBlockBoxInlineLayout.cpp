@@ -1440,10 +1440,10 @@ static void registerRelativePositionInlineBoxes(LayoutContext& ctx, std::vector<
     }
 }
 
-std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx)
+LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 {
     if (!isNecessaryBlockBox()) {
-        return std::make_pair(0, LayoutRect(0, 0, 0, 0));
+        return 0;
     }
 
     LayoutRect visibleRect(0, 0, 0, 0);
@@ -1528,7 +1528,7 @@ std::pair<LayoutUnit, LayoutRect> FrameBlockBox::layoutInline(LayoutContext& ctx
         contentHeight += b.m_frameRect.height();
     }
 
-    return std::make_pair(contentHeight, visibleRect);
+    return contentHeight;
 }
 
 struct InlineNonReplacedBoxMBPStore {

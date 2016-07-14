@@ -61,6 +61,11 @@ public:
         m_buffer = nullptr;
     }
 
+    const LayoutRect& visibleRect()
+    {
+        return m_visibleRect;
+    }
+
     bool computeStackingContextProperties(bool forceNeedsBuffer = false);
 
     void paintStackingContext(Canvas* canvas);
@@ -69,6 +74,7 @@ public:
 protected:
     bool m_needsOwnBuffer;
     FrameBox* m_owner;
+    LayoutRect m_visibleRect;
     StackingContext* m_parent;
     CanvasSurface* m_buffer;
 

@@ -32,8 +32,6 @@ void FrameDocument::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         STARFISH_ASSERT(firstChild()->isRootElement());
 
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
-
-        firstChild()->asFrameBox()->asFrameBlockBox()->m_visibleRect.unite(m_visibleRect);
     }
 }
 

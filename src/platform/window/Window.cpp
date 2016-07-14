@@ -572,14 +572,13 @@ void Window::rendering()
 #endif
     }
 
-    bool shouldClearStackingContext = true;
     if (m_needsFrameTreeBuild) {
 
         if (m_document->frame()) {
-            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
+            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool {
                 box->clearStackingContextIfNeeds();
+                return true;
             });
-            shouldClearStackingContext = false;
 
             // create frame tree
             Timer t("create frame tree");
@@ -592,14 +591,9 @@ void Window::rendering()
         // lay out frame tree
         Timer t("lay out frame tree");
 
-        if (shouldClearStackingContext) {
-            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
-                box->clearStackingContextIfNeeds();
-            });
-        }
-
-        m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
+        m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool {
             box->clearStackingContextIfNeeds();
+            return true;
         });
 
         LayoutContext ctx(starFish(), m_document->frame()->asFrameBox()->asFrameBlockBox()->asFrameDocument());
@@ -613,68 +607,70 @@ void Window::rendering()
 #endif
         {
             Timer t("computeStackingContextProperties");
-            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) {
+            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool {
                 box->establishesStackingContextIfNeeds();
+                return true;
             });
             if (m_document->frame()->firstChild())
                 m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
         }
         m_needsLayout = false;
-    }
 #ifdef STARFISH_ENABLE_TEST
-    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableFrameTreeDump) {
-        FrameTreeBuilder::dumpFrameTree(m_document);
-    }
+        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableFrameTreeDump) {
+            FrameTreeBuilder::dumpFrameTree(m_document);
+        }
 
-    if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
-        if (m_document->frame()->firstChild()) {
-            STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
-            StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
+        if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
+            if (m_document->frame()->firstChild()) {
+                STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
+                StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
 
-            std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](StackingContext* ctx, int depth)
-            {
-                for (int i = 0; i < depth; i ++) {
-                    printf("  ");
-                }
-
-                auto fr = ctx->owner()->visibleRect();
-
-
-                std::string className;
-                for (unsigned i = 0; i < ctx->owner()->node()->asElement()->asHTMLElement()->classNames().size(); i++) {
-                    className += ctx->owner()->node()->asElement()->asHTMLElement()->classNames()[i]->utf8Data();
-                    className += " ";
-                }
-
-                printf("StackingContext[%p, node %p %s id:%s className:%s , frame %p, buf %d, %d %d %d %d]\n",
-                    ctx, ctx->owner()->node(), ctx->owner()->node()->localName()->utf8Data(), ctx->owner()->node()->asElement()->asHTMLElement()->id()->utf8Data(), className.data(), ctx->owner(), (int)ctx->needsOwnBuffer()
-                    , (int)fr.x(), (int)fr.y(), (int)fr.width(), (int)fr.height());
-
-                auto iter = ctx->childContexts().begin();
-                while (iter != ctx->childContexts().end()) {
-
-                    int32_t num = iter->first;
-
-                    for (int i = 0; i < depth + 1; i ++) {
+                std::function<void(StackingContext*, int)> dumpSC = [&dumpSC](StackingContext* ctx, int depth)
+                {
+                    for (int i = 0; i < depth; i ++) {
                         printf("  ");
                     }
 
-                    printf("z-index: %d\n", (int)num);
+                    auto fr = ctx->visibleRect();
 
-                    auto iter2 = iter->second->begin();
-                    while (iter2 != iter->second->end()) {
-                        dumpSC(*iter2, depth + 2);
-                        iter2++;
+
+                    std::string className;
+                    for (unsigned i = 0; i < ctx->owner()->node()->asElement()->asHTMLElement()->classNames().size(); i++) {
+                        className += ctx->owner()->node()->asElement()->asHTMLElement()->classNames()[i]->utf8Data();
+                        className += " ";
                     }
 
-                    iter++;
-                }
-            };
+                    printf("StackingContext[%p, node %p %s id:%s className:%s , frame %p, buf %d, %d %d %d %d]\n",
+                        ctx, ctx->owner()->node(), ctx->owner()->node()->localName()->utf8Data(), ctx->owner()->node()->asElement()->asHTMLElement()->id()->utf8Data(), className.data(), ctx->owner(), (int)ctx->needsOwnBuffer()
+                        , (int)fr.x(), (int)fr.y(), (int)fr.width(), (int)fr.height());
 
-            dumpSC(ctx, 0);
+                    auto iter = ctx->childContexts().begin();
+                    while (iter != ctx->childContexts().end()) {
+
+                        int32_t num = iter->first;
+
+                        for (int i = 0; i < depth + 1; i ++) {
+                            printf("  ");
+                        }
+
+                        printf("z-index: %d\n", (int)num);
+
+                        auto iter2 = iter->second->begin();
+                        while (iter2 != iter->second->end()) {
+                            dumpSC(*iter2, depth + 2);
+                            iter2++;
+                        }
+
+                        iter++;
+                    }
+                };
+
+                dumpSC(ctx, 0);
+            }
         }
-    }
 #endif
+    }
+
     if (m_needsPainting) {
         Timer t("painting");
 
