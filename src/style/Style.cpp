@@ -3802,8 +3802,6 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
 #define NEW_SET_VALUE_DEF(name) \
 bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens) \
 { \
-    if (setValueCommon(tokens)) \
-        return true; \
     if (!checkInputError##name(tokens)) \
         return false; \
     setValue##name(tokens); \

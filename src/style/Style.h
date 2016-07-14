@@ -1170,11 +1170,11 @@ public:
             }                                                                          \
             notifyNeedsStyleRecalc();                                                  \
             return;                                                                    \
-        } \
+        }                                                                              \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
         tokenizeCSSValue(&tokens, value);                                              \
         CSSStyleValuePair ret;                                                         \
-        if (ret.updateValue##name(&tokens)) {                                          \
+        if (ret.setValueCommon(&tokens) || ret.updateValue##name(&tokens)) {           \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, &ret);                   \
             notifyNeedsStyleRecalc();                                                  \
         }                                                                              \
