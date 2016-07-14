@@ -29,7 +29,7 @@ public:
     StyleBackgroundData()
         : m_image(String::emptyString)
         , m_imageResource(NULL)
-        , m_positionType(BackgroundPositionValue::ValueBPValue)
+        , m_positionType(SideValue::ValueSideValue)
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
         , m_sizeType(BackgroundSizeType::SizeValue)
@@ -43,14 +43,14 @@ public:
     {
     }
 
-    void setPositionType(BackgroundPositionValue type)
+    void setPositionType(SideValue type)
     {
         m_positionType = type;
     }
 
     void setPositionValue(LengthPosition* position)
     {
-        m_positionType = BackgroundPositionValue::ValueBPValue;
+        m_positionType = SideValue::ValueSideValue;
         m_positionValue = position;
     }
 
@@ -118,7 +118,7 @@ public:
         return m_imageResource;
     }
 
-    BackgroundPositionValue positionType()
+    SideValue positionType()
     {
         return m_positionType;
     }
@@ -148,7 +148,7 @@ public:
 
     LengthPosition* positionValue()
     {
-        STARFISH_ASSERT(m_positionType == BackgroundPositionValue::ValueBPValue);
+        STARFISH_ASSERT(m_positionType == SideValue::ValueSideValue);
         if (m_positionValue == NULL)
             m_positionValue = new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
         return m_positionValue;
@@ -180,7 +180,7 @@ private:
     ImageResource* m_imageResource;
 
     // background-position
-    BackgroundPositionValue m_positionType = BackgroundPositionValue::NoneBPValue;
+    SideValue m_positionType = SideValue::NoneSideValue;
     // background-repeat
     BackgroundRepeatValue m_repeatX = BackgroundRepeatValue::NoRepeatRepeatValue;
     BackgroundRepeatValue m_repeatY = BackgroundRepeatValue::NoRepeatRepeatValue;
@@ -210,7 +210,7 @@ bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
     if (a.m_positionType != b.m_positionType)
         return false;
 
-    if (a.m_positionType == BackgroundPositionValue::ValueBPValue && *a.m_positionValue != *b.m_positionValue) {
+    if (a.m_positionType == SideValue::ValueSideValue && *a.m_positionValue != *b.m_positionValue) {
         return false;
     }
 

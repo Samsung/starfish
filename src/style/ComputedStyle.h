@@ -291,7 +291,7 @@ public:
         m_background->setRepeatY(repeat);
     }
 
-    void setBackgroundPositionType(BackgroundPositionValue type)
+    void setBackgroundPositionType(SideValue type)
     {
         setBackgroundIfNeeded();
         m_background->setPositionType(type);
@@ -350,10 +350,10 @@ public:
         return m_background->repeatY();
     }
 
-    BackgroundPositionValue backgroundPositionType()
+    SideValue backgroundPositionType()
     {
         if (m_background == NULL)
-            return BackgroundPositionValue::NoneBPValue;
+            return SideValue::NoneSideValue;
         return m_background->positionType();
     }
 
@@ -361,7 +361,7 @@ public:
     {
         if (m_background == NULL)
             return new LengthPosition();
-        STARFISH_ASSERT(m_background && m_background->positionType() == BackgroundPositionValue::ValueBPValue);
+        STARFISH_ASSERT(m_background && m_background->positionType() == SideValue::ValueSideValue);
         return m_background->positionValue();
     }
 

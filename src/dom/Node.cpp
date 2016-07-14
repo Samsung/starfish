@@ -1422,7 +1422,7 @@ void Node::dumpStyle()
     }
 
     // background-position
-    if (m_style->backgroundPositionType() == BackgroundPositionValue::ValueBPValue) {
+    if (m_style->backgroundPositionType() == SideValue::ValueSideValue) {
         printf("background-position: (%s, %s),", m_style->backgroundPosition()->x().dumpString()->utf8Data(),
             m_style->backgroundPosition()->y().dumpString()->utf8Data());
     }
