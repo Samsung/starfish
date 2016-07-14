@@ -969,6 +969,16 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
 #undef SET_VALUE
 
+// TODO: ADD checkInput logic in updateValue
+#define UPDATE_VALUE(name, ...) \
+    bool updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens) { \
+        setValue##name(tokens); \
+        return true; \
+    }
+
+    FOR_EACH_STYLE_ATTRIBUTE(UPDATE_VALUE)
+#undef UPDATE_VALUE
+
 protected:
     KeyKind m_keyKind;
     ValueKind m_valueKind;
@@ -1120,6 +1130,38 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_GETTER)
 #undef ATTRIBUTE_GETTER
 
+    void addCSSValuePair(CSSStyleValuePair::KeyKind name, CSSStyleValuePair* ret)
+    {
+        for (unsigned i = 0; i < m_cssValues.size(); i++) {
+            if (m_cssValues.at(i).keyKind() == name) {
+                m_cssValues.at(i).setValueKind(ret->valueKind());
+                m_cssValues.at(i).setValue(ret->value());
+                return;
+            }
+        }
+        ret->setKeyKind(name);
+        m_cssValues.push_back(*ret);
+    }
+    // FIXME(june0.cho) remove below
+    /*
+       if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
+       for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
+       if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
+       if (!m_cssValues.at(i).setValueCommon(&tokens))                    \
+       m_cssValues.at(i).setValue##name(&tokens);                     \
+       notifyNeedsStyleRecalc();                                          \
+       return;                                                            \
+       }                                                                      \
+       }                                                                          \
+       CSSStyleValuePair ret;                                                     \
+       ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                          \
+       if (!ret.setValueCommon(&tokens))                                          \
+       ret.setValue##name(&tokens);                                           \
+       notifyNeedsStyleRecalc();                                                  \
+       m_cssValues.push_back(ret);                                                \
+       }                                                                              \
+       */
+
 #define ATTRIBUTE_SETTER(name, ...)                                                    \
     void set##name(String* value)                                                      \
     {                                                                                  \
@@ -1131,24 +1173,13 @@ public:
             }                                                                          \
             notifyNeedsStyleRecalc();                                                  \
             return;                                                                    \
-        }                                                                              \
+        } \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
         tokenizeCSSValue(&tokens, value);                                              \
-        if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
-            for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
-                if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
-                    if (!m_cssValues.at(i).setValueCommon(&tokens))                    \
-                        m_cssValues.at(i).setValue##name(&tokens);                     \
-                    notifyNeedsStyleRecalc();                                          \
-                    return;                                                            \
-                }                                                                      \
-            }                                                                          \
-            CSSStyleValuePair ret;                                                     \
-            ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                          \
-            if (!ret.setValueCommon(&tokens))                                          \
-                ret.setValue##name(&tokens);                                           \
+        CSSStyleValuePair ret;                                                         \
+        if (ret.updateValue##name(&tokens)) {                                          \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, &ret);                   \
             notifyNeedsStyleRecalc();                                                  \
-            m_cssValues.push_back(ret);                                                \
         }                                                                              \
     }
 
