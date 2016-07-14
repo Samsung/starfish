@@ -182,12 +182,12 @@ private:
     // background-position
     SideValue m_positionType = SideValue::NoneSideValue;
     // background-repeat
-    BackgroundRepeatValue m_repeatX = BackgroundRepeatValue::NoRepeatRepeatValue;
-    BackgroundRepeatValue m_repeatY = BackgroundRepeatValue::NoRepeatRepeatValue;
+    BackgroundRepeatValue m_repeatX : 1;
+    BackgroundRepeatValue m_repeatY : 1;
     // background-size
-    BackgroundSizeType m_sizeType = BackgroundSizeType::SizeValue;
+    BackgroundSizeType m_sizeType : 2;
     // background-color type
-    bool m_bgColorNeedToUpdate = true;
+    bool m_bgColorNeedToUpdate : 1;
 
     // background-position
     LengthPosition* m_positionValue;
