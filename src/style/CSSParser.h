@@ -43,15 +43,6 @@ static bool isNameChar(char c)
     return false;
 }
 
-static bool isLengthUnit(String* str)
-{
-    if (str->equals("px") || str->equals("em") || str->equals("ex")
-        || str->equals("in") || str->equals("cm") || str->equals("mm")
-        || str->equals("pt") || str->equals("pc"))
-        return true;
-    return false;
-}
-
 class CSSPropertyParser : public gc {
 public:
     CSSPropertyParser(char* value)
@@ -59,6 +50,15 @@ public:
         , m_endPos(value + strlen(value))
         , m_curPos(value)
     {
+    }
+
+    static bool isLengthUnit(String* str)
+    {
+        if (str->equals("px") || str->equals("em") || str->equals("ex")
+            || str->equals("in") || str->equals("cm") || str->equals("mm")
+            || str->equals("pt") || str->equals("pc"))
+            return true;
+        return false;
     }
 
     bool consumeNumber(bool* hasPoint)
