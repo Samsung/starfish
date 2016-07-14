@@ -14,6 +14,7 @@ test/reftest/vendor/blink/fast/block/basic/009.html
 test/reftest/vendor/blink/fast/block/basic/012.html
 test/reftest/vendor/blink/fast/block/basic/021.html
 test/reftest/vendor/blink/fast/block/block-not-removed-from-parent-lineboxes-crash.html
+test/reftest/vendor/blink/fast/block/containing-block-change-percentage-padding-width-recalc.html
 test/reftest/vendor/blink/fast/block/child-not-removed-from-parent-lineboxes-crash.html
 test/reftest/vendor/blink/fast/block/inflow-bottom-margin.html
 test/reftest/vendor/blink/fast/block/line-layout/negative-max-height.html
@@ -259,3 +260,4 @@ test/reftest/vendor/blink/fast/transforms/matrix-02.html
 test/reftest/vendor/blink/fast/transforms/transform-hit-test-flipped.html
 test/reftest/vendor/blink/fast/transforms/transforms-with-opacity.html
 test/reftest/vendor/blink/fast/transforms/transform-update-frame-overflow.html
+test/reftest/vendor/blink/fast/transforms/transform-positioned-container.html
