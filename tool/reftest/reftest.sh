@@ -291,7 +291,6 @@ function doTest {
                 EXPIMG=`echo $EXPDIR/$EXPFILE | sed 's/\.html/_expected\.png/g'`
                 IMGDIFF="./tool/imgdiff/imgdiff"
                 DIFF=`$IMGDIFF $RESIMG $EXPIMG`
-
                 if [[ "$DIFF" = *"passed"* ]]; then
                     PASSTC=`expr $PASSTC + 1`
                     echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}

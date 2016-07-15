@@ -4,3 +4,4 @@ test/reftest/vendor/blink/fast/css/border-solid-single-edge-antialias.html
 test/reftest/vendor/blink/fast/css/percent-top-relative-container-height-unspecified.html
 test/reftest/vendor/blink/fast/css/percent-top-value-with-relative-position.html
 test/reftest/vendor/blink/fast/css/positioned-in-relative-position-inline-crash.html
+test/reftest/vendor/blink/fast/css/invalid-hex-color.html

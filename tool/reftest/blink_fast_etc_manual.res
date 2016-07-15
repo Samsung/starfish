@@ -12,9 +12,11 @@ test/reftest/vendor/blink/fast/repaint/percent-size-image-resize-container.html
 test/reftest/vendor/blink/fast/repaint/positioned-document-element.html
 test/reftest/vendor/blink/fast/replaced/001.html
 test/reftest/vendor/blink/fast/replaced/absolute-image-sizing.html
+test/reftest/vendor/blink/fast/text/international/rtl-mark2.html
 test/reftest/vendor/blink/fast/text/international/bidi-crash-reached-end-of-line.html
 test/reftest/vendor/blink/fast/text/international/bidi-CS-after-AN.html
 test/reftest/vendor/blink/fast/text/international/bidi-L2-run-reordering.html
 test/reftest/vendor/blink/fast/text/international/inline-block-with-mixed-direction-words.html
 test/reftest/vendor/blink/fast/text/line-break-between-text-nodes-latin1.html
 test/reftest/vendor/blink/fast/transforms/skew-with-unitless-zero.html
+test/reftest/vendor/blink/fast/transforms/transform-on-inline.html
