@@ -18,7 +18,6 @@
 #define __StarFishCSSParser__
 
 #include "style/Style.h"
-#include "style/NamedColors.h"
 
 namespace StarFish {
 
@@ -598,21 +597,18 @@ public:
     }
 
     // TODO: Replace if-else statement with better one
-    static bool parseNamedColor(String* str, Color* ret)
+    static bool parseNamedColor(String* str, NamedColorValue* ret)
     {
-        if (false) {
+        if (str->equals(String::fromUTF8("currentcolor"))) {
+            *ret = NamedColorValue::currentColor;
         }
-#define ADD_ENUM_COLOR(name, value) \
+#define ADD_COLOR_ITEM(name, ...) \
         else if (str->equals(#name)) \
         { \
-            char r = (value & 0xff0000) >> 16; \
-            char g = (value & 0xff00) >> 8; \
-            char b = (value & 0xff); \
-            char a = 255; \
-            *ret = Color(r, g, b, a); \
+            *ret = NamedColorValue::name##NamedColor; \
         }
-        NAMED_COLOR_FOR_EACH(ADD_ENUM_COLOR)
-#undef ADD_ENUM_COLOR
+        NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
+#undef ADD_COLOR_ITEM
         else {
             return false;
         }
