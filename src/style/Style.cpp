@@ -278,28 +278,6 @@ void CSSStyleValuePair::setValueMarginLeft(std::vector<String*, gc_allocator<Str
     setValuePercentageOrLength(tokens);
 }
 
-void CSSStyleValuePair::setValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // none | <image>
-    String* value = tokens->at(0);
-    if (STRING_VALUE_IS_STRING("none")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-    } else if (value->startsWith("url(")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
-        m_value.m_stringValue = CSSPropertyParser::parseUrl(value);
-    }
-}
-
-void CSSStyleValuePair::setValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueUrlOrNone(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderImageSource(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueUrlOrNone(tokens);
-}
-
 void CSSStyleValuePair::setValueFontSize(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // absolute-size | relative-size | length | percentage | inherit // initial value -> medium
@@ -1558,19 +1536,6 @@ bool CSSStyleValuePair::checkInputErrorMargin(std::vector<String*, gc_allocator<
             return false;
     }
     return true;
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderImageSource(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // none | <image>(=<uri>)
-    if (tokens->size() == 1) {
-        String* value = (*tokens)[0];
-        if (STRING_VALUE_IS_NONE())
-            return true;
-        // url
-        return CSSPropertyParser::assureUrl(value->utf8Data());
-    }
-    return false;
 }
 
 bool CSSStyleValuePair::checkInputErrorBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -3068,6 +3033,32 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatY(std::vector<String*, gc_all
     return updateValueBackgroundRepeatX(tokens);
 }
 
+bool CSSStyleValuePair::updateValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    if (STRING_VALUE_IS_NONE()) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+    } else if (CSSPropertyParser::parseUrl(value, &(m_value.m_stringValue))) {
+        m_valueKind = CSSStyleValuePair::ValueKind::UrlValueKind;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    return updateValueUrlOrNone(tokens);
+}
+
+bool CSSStyleValuePair::updateValueBorderImageSource(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    return updateValueUrlOrNone(tokens);
+}
+
 // TODO: This is temp code
 #define NEW_SET_VALUE_DEF(name) \
 bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens) \
@@ -3077,12 +3068,10 @@ bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<Stri
     setValue##name(tokens); \
     return true; \
 }
-NEW_SET_VALUE_DEF(BackgroundImage);
 NEW_SET_VALUE_DEF(BackgroundPosition);
 NEW_SET_VALUE_DEF(BackgroundSize);
 NEW_SET_VALUE_DEF(BorderBottomWidth);
 NEW_SET_VALUE_DEF(BorderImageSlice);
-NEW_SET_VALUE_DEF(BorderImageSource);
 NEW_SET_VALUE_DEF(BorderImageWidth);
 NEW_SET_VALUE_DEF(BorderLeftWidth);
 NEW_SET_VALUE_DEF(BorderRightWidth);

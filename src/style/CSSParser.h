@@ -202,6 +202,22 @@ public:
         return (m_curPos == m_endPos);
     }
 
+    static bool parseUrl(String* token, String** ret)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token->utf8Data());
+        if (parser->consumeString()) {
+            String* name = parser->parsedString();
+            if (name->equals("url") && parser->consumeIfNext('(')) {
+                if (parser->consumeUrl() && parser->isEnd()) {
+                    *ret = parser->parsedUrl();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // TODO : DEPRECATE
     static String* parseUrl(String* token)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token->utf8Data());
@@ -215,6 +231,7 @@ public:
         return String::emptyString;
     }
 
+    // TODO : DEPRECATE
     static bool assureUrl(const char* str)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)str);
@@ -228,6 +245,7 @@ public:
         return false;
     }
 
+    // TODO : DEPRECATE
     static bool assureUrlOrNone(const char* token)
     {
         if (strcmp(token, "none") == 0)
@@ -615,7 +633,7 @@ public:
         return true;
     }
 
-    // TODO: Replace if-else statement with better one
+    // TODO : DEPRECATE
     static bool assureNamedColor(String* str)
     {
         if (str->equalsWithoutCase(String::fromUTF8("currentColor"))) {
@@ -631,7 +649,7 @@ public:
         return false;
     }
 
-    // TODO: Remove assureColor in the future
+    // TODO : DEPRECATE
     static bool assureColor(const char* token)
     {
         if (token[0] == '#') {
