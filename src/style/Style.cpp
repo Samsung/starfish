@@ -181,45 +181,6 @@ bool CSSStyleValuePair::setValueCommon(std::vector<String*, gc_allocator<String*
     return true;
 }
 
-static Color parseColor(String* str);
-void CSSStyleValuePair::setValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    const char* value = tokens->at(0)->utf8Data();
-    // color | transparent | inherit
-    if (tokens->at(0)->startsWith("#", false) || tokens->at(0)->startsWith("rgb", false)) {
-        m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
-        m_value.m_color = parseColor(tokens->at(0));
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = tokens->at(0)->trim();
-    }
-}
-
-void CSSStyleValuePair::setValueBackgroundColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueColor(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderTopColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueColor(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderRightColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueColor(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderBottomColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueColor(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderLeftColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueColor(tokens);
-}
-
 // <length> | <percentage> (| auto)
 void CSSStyleValuePair::setValuePercentageOrLength(std::vector<String*, gc_allocator<String*> >* tokens)
 {
@@ -332,20 +293,6 @@ void CSSStyleValuePair::setValueBorderImageSource(std::vector<String*, gc_alloca
     setValueUrlOrNone(tokens);
 }
 
-void CSSStyleValuePair::setValueDirection(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // <ltr> | rtl | inherit
-    String* value = tokens->at(0);
-    m_valueKind = CSSStyleValuePair::ValueKind::DirectionValueKind;
-    if (STRING_VALUE_IS_STRING("ltr")) {
-        m_value.m_direction = DirectionValue::LtrDirectionValue;
-    } else if (STRING_VALUE_IS_STRING("rtl")) {
-        m_value.m_direction = DirectionValue::RtlDirectionValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 void CSSStyleValuePair::setValueFontSize(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // absolute-size | relative-size | length | percentage | inherit // initial value -> medium
@@ -372,42 +319,6 @@ void CSSStyleValuePair::setValueFontSize(std::vector<String*, gc_allocator<Strin
         m_value.m_fontSize = FontSizeValue::SmallerFontSizeValue;
     } else {
         setValuePercentageOrLength(value->utf8Data());
-    }
-}
-
-void CSSStyleValuePair::setValueFontStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    String* value = tokens->at(0);
-    // <normal> | italic | oblique | inherit
-    if (STRING_VALUE_IS_STRING("normal")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
-        m_value.m_fontStyle = FontStyleValue::NormalFontStyleValue;
-    } else if (STRING_VALUE_IS_STRING("italic")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
-        m_value.m_fontStyle = FontStyleValue::ItalicFontStyleValue;
-    } else if (STRING_VALUE_IS_STRING("oblique")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
-        m_value.m_fontStyle = FontStyleValue::ObliqueFontStyleValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-void CSSStyleValuePair::setValueDisplay(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    String* value = tokens->at(0);
-    // <inline> | block | list-item | inline-block | table | inline-table | table-row-group | table-header-group | table-footer-group | table-row | table-column-group | table-column | table-cell | table-caption | none | inherit
-    m_valueKind = CSSStyleValuePair::ValueKind::DisplayValueKind;
-    if (STRING_VALUE_IS_STRING("block")) {
-        m_value.m_display = DisplayValue::BlockDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline")) {
-        m_value.m_display = DisplayValue::InlineDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("inline-block")) {
-        m_value.m_display = DisplayValue::InlineBlockDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("none")) {
-        m_value.m_display = DisplayValue::NoneDisplayValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
 
@@ -482,36 +393,6 @@ void CSSStyleValuePair::setValueBackgroundSize(std::vector<String*, gc_allocator
     }
 }
 
-void CSSStyleValuePair::setValueBackgroundRepeatX(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // repeat | no-repeat | initial | inherit // initial value -> repeat
-    String* value = tokens->at(0);
-    m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
-
-    if (STRING_VALUE_IS_STRING("no-repeat")) {
-        m_value.m_backgroundRepeatX = BackgroundRepeatValue::NoRepeatRepeatValue;
-    } else if (STRING_VALUE_IS_STRING("repeat") || STRING_VALUE_IS_STRING("initial")) {
-        m_value.m_backgroundRepeatX = BackgroundRepeatValue::RepeatRepeatValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-void CSSStyleValuePair::setValueBackgroundRepeatY(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // repeat | no-repeat | initial | inherit // initial value -> repeat
-    String* value = tokens->at(0);
-    m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
-
-    if (STRING_VALUE_IS_STRING("no-repeat")) {
-        m_value.m_backgroundRepeatY = BackgroundRepeatValue::NoRepeatRepeatValue;
-    } else if (STRING_VALUE_IS_STRING("repeat") || STRING_VALUE_IS_STRING("initial")) {
-        m_value.m_backgroundRepeatY = BackgroundRepeatValue::RepeatRepeatValue;
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
 void CSSStyleValuePair::setValueLineHeight(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // <normal> | number | length | percentage | inherit
@@ -568,6 +449,114 @@ void CSSStyleValuePair::setValueBorderImageWidth(std::vector<String*, gc_allocat
         }
     }
     m_value.m_multiValue = values;
+}
+
+void CSSStyleValuePair::setValueTransform(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->at(0)->equals("none")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+    } else {
+        m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
+        CSSTransformFunction::Kind fkind;
+        m_value.m_transforms = new CSSTransformFunctions();
+
+        bool hasClosing = false;
+        for (unsigned i = 0; i< tokens->size(); i++) {
+            if (tokens->at(i)->indexOf(')') != SIZE_MAX) {
+                hasClosing = true;
+                break;
+            }
+        }
+        if (hasClosing) {
+            String* str = String::emptyString;
+            for (unsigned i = 0; i< tokens->size(); i++) {
+                str = str->concat(tokens->at(i));
+            }
+            tokens->clear();
+            str->split(')', *tokens);
+        }
+        for (unsigned i = 0; i < tokens->size(); i++) {
+            CSSPropertyParser* parser = new CSSPropertyParser((char*)tokens->at(i)->utf8Data());
+            parser->consumeString() && parser->consumeIfNext('(');
+            String* name = parser->parsedString();
+            enum {
+                Number, // <number>
+                Angle, // <angle>
+                TranslationValue // <translation-value>: percentage or length
+            } unit = Number;
+            int expectedArgCnt = 1;
+            if (name->equals("matrix")) {
+                fkind = CSSTransformFunction::Kind::Matrix;
+                expectedArgCnt = 6;
+            } else if (name->equals("translate")) {
+                fkind = CSSTransformFunction::Kind::Translate;
+                expectedArgCnt = 2;
+                unit = TranslationValue;
+            } else if (name->equals("translatex")) {
+                fkind = CSSTransformFunction::Kind::TranslateX;
+                unit = TranslationValue;
+            } else if (name->equals("translatey")) {
+                fkind = CSSTransformFunction::Kind::TranslateY;
+                unit = TranslationValue;
+            } else if (name->equals("translatez")) {
+                continue;
+            } else if (name->equals("scale")) {
+                expectedArgCnt = 2;
+                fkind = CSSTransformFunction::Kind::Scale;
+            } else if (name->equals("scalex")) {
+                fkind = CSSTransformFunction::Kind::ScaleX;
+            } else if (name->equals("scaley")) {
+                fkind = CSSTransformFunction::Kind::ScaleY;
+            } else if (name->equals("rotate")) {
+                fkind = CSSTransformFunction::Kind::Rotate;
+                unit = Angle;
+            } else if (name->equals("skew")) {
+                fkind = CSSTransformFunction::Kind::Skew;
+                expectedArgCnt = 2;
+                unit = Angle;
+            } else if (name->equals("skewx")) {
+                fkind = CSSTransformFunction::Kind::SkewX;
+                unit = Angle;
+            } else if (name->equals("skewy")) {
+                fkind = CSSTransformFunction::Kind::SkewY;
+                unit = Angle;
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+
+            ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
+            for (int i = 0; i < expectedArgCnt; i++) {
+                parser->consumeWhitespaces();
+                if (unit == Number) {
+                    parser->consumeNumber();
+                    float num = parser->parsedNumber();
+                    values->append(CSSStyleValuePair::ValueKind::Number, { num});
+                } else if (unit == Angle) {
+                    parser->consumeNumber();
+                    parser->consumeString();
+                    ValueData data = { CSSAngle(parser->parsedString(), parser->parsedNumber())};
+                    values->append(CSSStyleValuePair::ValueKind::Angle, data);
+                } else { // TranslationValue
+                    parser->consumeNumber();
+                    float num = parser->parsedNumber();
+                    if (parser->consumeString()) {
+                        String* str = parser->parsedString();
+                        if (str->equals("%")) {
+                            ValueData data = { num / 100.f};
+                            values->append(CSSStyleValuePair::ValueKind::Percentage, data);
+                        } else {
+                            ValueData data = { CSSLength(str, num)};
+                            values->append(CSSStyleValuePair::ValueKind::Length, data);
+                        }
+                    }
+                }
+                parser->consumeWhitespaces();
+                if (!parser->consumeIfNext(','))
+                    break;
+            }
+            m_value.m_transforms->append(CSSTransformFunction(fkind, values));
+        }
+    }
 }
 
 void CSSStyleValuePair::setValueTransformOrigin(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -845,37 +834,6 @@ void CSSStyleDeclaration::setBorderLeft(String* value)
         setBorderLeftStyle(result[1]);
         setBorderLeftColor(result[2]);
     }
-}
-
-void CSSStyleValuePair::setValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // border-style(<none> | solid)
-    m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
-    if (tokens->at(0)->equals("solid")) {
-        m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
-    } else {
-        m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
-    }
-}
-
-void CSSStyleValuePair::setValueBorderTopStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueBorderUnitStyle(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderRightStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueBorderUnitStyle(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderBottomStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueBorderUnitStyle(tokens);
-}
-
-void CSSStyleValuePair::setValueBorderLeftStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    setValueBorderUnitStyle(tokens);
 }
 
 void CSSStyleValuePair::setValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -1479,26 +1437,29 @@ String* CSSStyleDeclaration::BackgroundRepeat()
 
 void CSSStyleDeclaration::setBackgroundRepeat(String* value)
 {
+    if (value->length() == 0) {
+        setBackgroundRepeatX(String::emptyString);
+        setBackgroundRepeatY(String::emptyString);
+        return;
+    }
+
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value);
-
-    if (CSSStyleValuePair::checkInputErrorBackgroundRepeat(&tokens)) {
-        if (STRING_VALUE_IS_STRING("repeat")) {
-            setBackgroundRepeatX(String::createASCIIString("repeat"));
-            setBackgroundRepeatY(String::createASCIIString("repeat"));
-        } else if (STRING_VALUE_IS_STRING("repeat-x")) {
-            setBackgroundRepeatX(String::createASCIIString("repeat"));
-            setBackgroundRepeatY(String::createASCIIString("no-repeat"));
-        } else if (STRING_VALUE_IS_STRING("repeat-y")) {
-            setBackgroundRepeatX(String::createASCIIString("no-repeat"));
-            setBackgroundRepeatY(String::createASCIIString("repeat"));
-        } else if (STRING_VALUE_IS_STRING("no-repeat")) {
-            setBackgroundRepeatX(String::createASCIIString("no-repeat"));
-            setBackgroundRepeatY(String::createASCIIString("no-repeat"));
-        } else {
-            setBackgroundRepeatX(value);
-            setBackgroundRepeatY(value);
-        }
+    if (STRING_VALUE_IS_STRING("repeat")) {
+        setBackgroundRepeatX(String::createASCIIString("repeat"));
+        setBackgroundRepeatY(String::createASCIIString("repeat"));
+    } else if (STRING_VALUE_IS_STRING("repeat-x")) {
+        setBackgroundRepeatX(String::createASCIIString("repeat"));
+        setBackgroundRepeatY(String::createASCIIString("no-repeat"));
+    } else if (STRING_VALUE_IS_STRING("repeat-y")) {
+        setBackgroundRepeatX(String::createASCIIString("no-repeat"));
+        setBackgroundRepeatY(String::createASCIIString("repeat"));
+    } else if (STRING_VALUE_IS_STRING("no-repeat")) {
+        setBackgroundRepeatX(String::createASCIIString("no-repeat"));
+        setBackgroundRepeatY(String::createASCIIString("no-repeat"));
+    } else {
+        setBackgroundRepeatX(value);
+        setBackgroundRepeatY(value);
     }
 }
 
@@ -1651,26 +1612,6 @@ bool CSSStyleValuePair::checkInputErrorColor(std::vector<String*, gc_allocator<S
 }
 
 bool CSSStyleValuePair::checkInputErrorBackgroundColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorColor(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderTopColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorColor(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderRightColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorColor(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderBottomColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorColor(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderLeftColor(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     return checkInputErrorColor(tokens);
 }
@@ -1868,18 +1809,6 @@ bool CSSStyleValuePair::checkInputErrorBackgroundImage(std::vector<String*, gc_a
     return false;
 }
 
-bool CSSStyleValuePair::checkInputErrorBackgroundRepeatX(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() != 1)
-        return false;
-    const char* value = (*tokens)[0]->utf8Data();
-    return VALUE_IS_STRING("repeat")
-        || VALUE_IS_STRING("no-repeat");
-}
-bool CSSStyleValuePair::checkInputErrorBackgroundRepeatY(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBackgroundRepeatX(tokens);
-}
 bool CSSStyleValuePair::checkInputErrorBackgroundRepeat(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() != 1)
@@ -1943,18 +1872,6 @@ bool CSSStyleValuePair::checkInputErrorBackground(std::vector<String*, gc_alloca
     return false;
 }
 
-bool CSSStyleValuePair::checkInputErrorDirection(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // <ltr> | rtl | inherit
-    if (tokens->size() == 1) {
-        const char* value = (*tokens)[0]->utf8Data();
-        if (VALUE_IS_STRING("ltr") || VALUE_IS_STRING("rtl")) {
-            return true;
-        }
-    }
-    return false;
-}
-
 bool CSSStyleValuePair::checkInputErrorFontSize(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() == 1) {
@@ -1963,28 +1880,6 @@ bool CSSStyleValuePair::checkInputErrorFontSize(std::vector<String*, gc_allocato
             return true;
 
         if (TOKEN_IS_STRING("xx-small") || (TOKEN_IS_STRING("x-small")) || (TOKEN_IS_STRING("small")) || (TOKEN_IS_STRING("medium")) || (TOKEN_IS_STRING("large")) || (TOKEN_IS_STRING("x-large")) || (TOKEN_IS_STRING("xx-large")) || (TOKEN_IS_STRING("larger")) || (TOKEN_IS_STRING("smaller"))) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorFontStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if ((TOKEN_IS_STRING("normal")) || (TOKEN_IS_STRING("italic")) || (TOKEN_IS_STRING("oblique"))) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorDisplay(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if ((TOKEN_IS_STRING("inline")) || (TOKEN_IS_STRING("block")) || (TOKEN_IS_STRING("inline-block")) || (TOKEN_IS_STRING("none"))) {
             return true;
         }
     }
@@ -2087,16 +1982,6 @@ bool CSSStyleValuePair::checkInputErrorBorderLeft(std::vector<String*, gc_alloca
     return checkInputErrorBorder(tokens);
 }
 
-static bool checkInputErrorBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // border-style(<none> | solid)
-    if (tokens->size() == 1) {
-        const char* token = tokens->at(0)->utf8Data();
-        return CSSPropertyParser::assureBorderStyle(token);
-    }
-    return false;
-}
-
 bool CSSStyleValuePair::checkInputErrorBorderStyle(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // {none | solid} {1,4}
@@ -2106,26 +1991,6 @@ bool CSSStyleValuePair::checkInputErrorBorderStyle(std::vector<String*, gc_alloc
             return false;
     }
     return true;
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderTopStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorderUnitStyle(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderRightStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorderUnitStyle(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderBottomStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorderUnitStyle(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderLeftStyle(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorderUnitStyle(tokens);
 }
 
 bool checkInputErrorBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -2183,6 +2048,65 @@ bool CSSStyleValuePair::checkInputErrorVerticalAlign(std::vector<String*, gc_all
     return false;
 }
 
+bool CSSStyleValuePair::checkInputErrorTransform(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    const char* token = tokens->at(0)->utf8Data();
+    if (tokens->size() == 1) {
+        if (TOKEN_IS_STRING("none"))
+            return true;
+    }
+
+    String* str = String::emptyString;
+    for (unsigned i = 0; i< tokens->size(); i++)
+        str = str->concat(tokens->at(i));
+    tokens->clear();
+    str->split(')', *tokens);
+    for (unsigned i = 0; i < tokens->size(); i++) {
+        token = tokens->at(i)->utf8Data();
+        if (tokens->at(i)->startsWith("matrix(")) {
+            // NOTE: strlen("matrix(") => 7
+            if (!CSSPropertyParser::assureNumberList(token + 7, true, 6, 6))
+                return false;
+        } else if (tokens->at(i)->startsWith("translate(")) {
+            if (!CSSPropertyParser::assureLengthOrPercentList(token + 10, true, 1, 2))
+                return false;
+        } else if (tokens->at(i)->startsWith("translatex(")) {
+            if (!CSSPropertyParser::assureLengthOrPercentList(token + 11, true, 1, 1))
+                return false;
+        } else if (tokens->at(i)->startsWith("translatey(")) {
+            if (!CSSPropertyParser::assureLengthOrPercentList(token + 11, true, 1, 1))
+                return false;
+        } else if (tokens->at(i)->startsWith("translatez(")) {
+            if (!CSSPropertyParser::assureLengthOrPercentList(token + 11, true, 1, 1))
+                return false;
+        } else if (tokens->at(i)->startsWith("scale(")) {
+            if (!CSSPropertyParser::assureNumberList(token + 6, true, 1, 2))
+                return false;
+        } else if (tokens->at(i)->startsWith("scalex(")) {
+            if (!CSSPropertyParser::assureNumberList(token + 7, true, 1, 1))
+                return false;
+        } else if (tokens->at(i)->startsWith("scaley(")) {
+            if (!CSSPropertyParser::assureNumberList(token + 7, true, 1, 1))
+                return false;
+        } else if (tokens->at(i)->startsWith("rotate(")) {
+            if (!CSSPropertyParser::assureAngleList(token + 7, 1, 1))
+                return false;
+        } else if (tokens->at(i)->startsWith("skew(")) {
+            if (!CSSPropertyParser::assureAngleList(token + 5, 1, 2))
+                return false;
+        } else if (tokens->at(i)->startsWith("skewx(")) {
+            if (!CSSPropertyParser::assureAngleList(token + 6, 1, 1))
+                return false;
+        } else if (tokens->at(i)->startsWith("skewy(")) {
+            if (!CSSPropertyParser::assureAngleList(token + 6, 1, 1))
+                return false;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::checkInputErrorTransformOrigin(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() == 1 || tokens->size() == 2) {
@@ -2216,105 +2140,6 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->loadResources(doc);
     return ret;
-}
-
-// TODO: Move to CSSParser
-static unsigned char parseColorFunctionPart(String* s, bool isAlpha = false)
-{
-    float f = 0.f;
-    String* unit = CSSPropertyParser::parseNumberAndUnit(s->trim()->utf8Data(), &f);
-    if (unit->equals("%")) {
-        if (f < 0)
-            f = 0;
-        if (f > 100)
-            f = 100;
-        return 255 * f / 100;
-    }
-    if (f < 0)
-        f = 0;
-    if (isAlpha) {
-        if (f > 1)
-            f = 1;
-        return f * 255;
-    } else {
-        if (f > 255)
-            f = 255;
-        return f;
-    }
-}
-
-// TODO: Move to CSSParser
-static Color parseColor(String* str)
-{
-    if (str->startsWith("rgba")) {
-        size_t s1 = str->indexOf('(');
-        size_t s2 = str->indexOf(')');
-
-        STARFISH_ASSERT(s1 != SIZE_MAX && s2 != SIZE_MAX && s1 < s2);
-        String* sub = str->substring(s1 + 1, s2 - s1 - 1);
-        String::Vector v;
-        sub->split(',', v);
-        STARFISH_ASSERT(v.size() == 4);
-
-        unsigned char r = parseColorFunctionPart(v[0]);
-        unsigned char g = parseColorFunctionPart(v[1]);
-        unsigned char b = parseColorFunctionPart(v[2]);
-        unsigned char a = parseColorFunctionPart(v[3], true);
-        return Color(r, g, b, a);
-    } else if (str->startsWith("rgb")) {
-
-        size_t s1 = str->indexOf('(');
-        size_t s2 = str->indexOf(')');
-
-        STARFISH_ASSERT(s1 != SIZE_MAX && s2 != SIZE_MAX && s1 < s2);
-        String* sub = str->substring(s1 + 1, s2 - s1 - 1);
-        String::Vector v;
-        sub->split(',', v);
-        STARFISH_ASSERT(v.size() == 3);
-
-        unsigned char r = parseColorFunctionPart(v[0]);
-        unsigned char g = parseColorFunctionPart(v[1]);
-        unsigned char b = parseColorFunctionPart(v[2]);
-        return Color(r, g, b, 255);
-    } else if (str->startsWith("#") && (str->length() == 9)) {
-        const char* s = str->utf8Data();
-        unsigned int r, g, b, a;
-        sscanf(s, "#%02x%02x%02x%02x", &r, &g, &b, &a);
-        return Color(r, g, b, a);
-    } else if (str->startsWith("#") && (str->length() == 7)) {
-        const char* s = str->utf8Data();
-        unsigned int r, g, b;
-        sscanf(s, "#%02x%02x%02x", &r, &g, &b);
-        return Color(r, g, b, 255);
-    } else if (str->startsWith("#") && (str->length() == 4)) {
-        const char* s = str->utf8Data();
-        unsigned int r, g, b;
-        sscanf(s, "#%01x%01x%01x", &r, &g, &b);
-        return Color(r * 17, g * 17, b * 17, 255);
-    } else {
-        if (str->equals("transparent")) {
-            return Color(0, 0, 0, 0);
-        } else if (str->equals("currentcolor")) {
-            // Others think it as a black color
-            return Color(0, 0, 0, 255);
-        }
-#define PARSE_COLOR(name, value)           \
-    else if (str->equals(#name))        \
-    {                                      \
-        char r = (value & 0xff0000) >> 16; \
-        char g = (value & 0xff00) >> 8;    \
-        char b = (value & 0xff);           \
-        char a = 255;                      \
-        return Color(r, g, b, a);          \
-    }
-
-        NAMED_COLOR_FOR_EACH(PARSE_COLOR)
-
-#undef PARSE_COLOR
-        else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    }
 }
 
 ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* parent)
@@ -3479,6 +3304,28 @@ bool CSSStyleValuePair::updateValueFontStyle(std::vector<String*, gc_allocator<S
     return true;
 }
 
+bool CSSStyleValuePair::updateValueBackgroundRepeatX(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
+    if (STRING_VALUE_IS_STRING("no-repeat")) {
+        m_value.m_backgroundRepeatX = BackgroundRepeatValue::NoRepeatRepeatValue;
+    } else if (STRING_VALUE_IS_STRING("repeat")) {
+        m_value.m_backgroundRepeatX = BackgroundRepeatValue::RepeatRepeatValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBackgroundRepeatY(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    return updateValueBackgroundRepeatX(tokens);
+}
+
 // TODO: This is temp code
 #define NEW_SET_VALUE_DEF(name) \
 bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens) \
@@ -3488,25 +3335,17 @@ bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<Stri
     setValue##name(tokens); \
     return true; \
 }
-// NEW_SET_VALUE_DEF(BackgroundColor);
 NEW_SET_VALUE_DEF(BackgroundImage);
 NEW_SET_VALUE_DEF(BackgroundPosition);
-NEW_SET_VALUE_DEF(BackgroundRepeatX);
-NEW_SET_VALUE_DEF(BackgroundRepeatY);
 NEW_SET_VALUE_DEF(BackgroundSize);
-// NEW_SET_VALUE_DEF(BorderBottomColor);
 NEW_SET_VALUE_DEF(BorderBottomWidth);
 NEW_SET_VALUE_DEF(BorderImageSlice);
 NEW_SET_VALUE_DEF(BorderImageSource);
 NEW_SET_VALUE_DEF(BorderImageWidth);
-// NEW_SET_VALUE_DEF(BorderLeftColor);
 NEW_SET_VALUE_DEF(BorderLeftWidth);
-// NEW_SET_VALUE_DEF(BorderRightColor);
 NEW_SET_VALUE_DEF(BorderRightWidth);
-// NEW_SET_VALUE_DEF(BorderTopColor);
 NEW_SET_VALUE_DEF(BorderTopWidth);
 NEW_SET_VALUE_DEF(Bottom);
-// NEW_SET_VALUE_DEF(Color);
 NEW_SET_VALUE_DEF(FontSize);
 NEW_SET_VALUE_DEF(Height);
 NEW_SET_VALUE_DEF(Left);
@@ -3521,127 +3360,11 @@ NEW_SET_VALUE_DEF(PaddingRight);
 NEW_SET_VALUE_DEF(PaddingTop);
 NEW_SET_VALUE_DEF(Right);
 NEW_SET_VALUE_DEF(Top);
+NEW_SET_VALUE_DEF(Transform);
 NEW_SET_VALUE_DEF(TransformOrigin);
 NEW_SET_VALUE_DEF(VerticalAlign);
 NEW_SET_VALUE_DEF(Width);
 #undef NEW_SET_VALUE_DEF
-
-bool CSSStyleValuePair::updateValueTransform(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1 && tokens->at(0)->equals("none")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::None;
-        return true;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::TransformFunctions;
-        CSSTransformFunction::Kind fkind;
-        m_value.m_transforms = new CSSTransformFunctions();
-
-        for (unsigned i = 0; i < tokens->size(); i++) {
-            CSSPropertyParser* parser = new CSSPropertyParser((char*)tokens->at(i)->utf8Data());
-            bool res = parser->consumeString() && parser->consumeIfNext('(');
-            if (!res)
-                return false;
-            String* name = parser->parsedString();
-            enum {
-                Number, // <number>
-                Angle, // <angle>
-                TranslationValue // <translation-value>: percentage or length
-            } unit = Number;
-            int minArgCnt = 1, maxArgCnt = 1;
-            if (name->equals("matrix")) {
-                fkind = CSSTransformFunction::Kind::Matrix;
-                minArgCnt = maxArgCnt = 6;
-            } else if (name->equals("translate")) {
-                fkind = CSSTransformFunction::Kind::Translate;
-                maxArgCnt = 2;
-                unit = TranslationValue;
-            } else if (name->equals("translatex")) {
-                fkind = CSSTransformFunction::Kind::TranslateX;
-                unit = TranslationValue;
-            } else if (name->equals("translatey")) {
-                fkind = CSSTransformFunction::Kind::TranslateY;
-                unit = TranslationValue;
-            } else if (name->equals("translatez")) {
-                continue;
-            } else if (name->equals("scale")) {
-                maxArgCnt = 2;
-                fkind = CSSTransformFunction::Kind::Scale;
-            } else if (name->equals("scalex")) {
-                fkind = CSSTransformFunction::Kind::ScaleX;
-            } else if (name->equals("scaley")) {
-                fkind = CSSTransformFunction::Kind::ScaleY;
-            } else if (name->equals("rotate")) {
-                fkind = CSSTransformFunction::Kind::Rotate;
-                unit = Angle;
-            } else if (name->equals("skew")) {
-                fkind = CSSTransformFunction::Kind::Skew;
-                maxArgCnt = 2;
-                unit = Angle;
-            } else if (name->equals("skewx")) {
-                fkind = CSSTransformFunction::Kind::SkewX;
-                unit = Angle;
-            } else if (name->equals("skewy")) {
-                fkind = CSSTransformFunction::Kind::SkewY;
-                unit = Angle;
-            } else {
-                return false;
-            }
-
-            ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
-            int idx = -1;
-            for (idx = 0; idx < maxArgCnt; idx++) {
-                parser->consumeWhitespaces();
-                if (!parser->consumeNumber())
-                    return false;
-                float num = parser->parsedNumber();
-
-                if (unit == Number) {
-                    values->append(CSSStyleValuePair::ValueKind::Number, { num});
-                } else if (unit == Angle) {
-                    String* str = String::emptyString;
-                    if (parser->consumeString()) {
-                        str = parser->parsedString();
-                        if (!((str->length() == 0 && num == 0)
-                            || str->equals("deg")
-                            || str->equals("grad")
-                            || str->equals("rad")
-                            || str->equals("turn"))) {
-                            return false;
-                        }
-                    } else if (num != 0) {
-                        return false;
-                    }
-                    ValueData data = { CSSAngle(str, num)};
-                    values->append(CSSStyleValuePair::ValueKind::Angle, data);
-                } else { // TranslationValue
-                    if (parser->consumeString()) {
-                        String* str = parser->parsedString();
-                        if (str->equals("%")) {
-                            ValueData data = { num / 100.f};
-                            values->append(CSSStyleValuePair::ValueKind::Percentage, data);
-                        } else {
-                            if (!((str->length() == 0 && num == 0)
-                                || CSSPropertyParser::isLengthUnit(str))) {
-                                return false;
-                            }
-                            ValueData data = { CSSLength(str, num)};
-                            values->append(CSSStyleValuePair::ValueKind::Length, data);
-                        }
-                    } else if (num != 0) {
-                        return false;
-                    }
-                }
-                parser->consumeWhitespaces();
-                if (!parser->consumeIfNext(','))
-                    break;
-            }
-            if (!(parser->consumeIfNext(')') && parser->isEnd()) || idx + 1 < minArgCnt)
-                return false;
-            m_value.m_transforms->append(CSSTransformFunction(fkind, values));
-        }
-    }
-    return true;
-}
 
 bool CSSStyleValuePair::updateValueOpacity(std::vector<String*, gc_allocator<String*> >* tokens)
 {

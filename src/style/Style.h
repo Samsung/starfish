@@ -1206,7 +1206,7 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(ATTRIBUTE_GETTER_FOURSIDE)
 #undef ATTRIBUTE_GETTER_FOURSIDE
 
-#define ATTRIBUTE_SETTER_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight)                                            \
+#define ATTRIBUTE_SETTER_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight) \
     void set##name(String* value)                                                      \
     {                                                                                  \
         if (value->length() == 0) {                                                    \
@@ -1243,6 +1243,45 @@ public:
             }                                                                          \
         }                                                                              \
     }
+    // TODO: FUTURE CODE
+    /*
+    void set##name(String* value)                                                      \
+    {                                                                                  \
+        if (value->length() == 0) {                                                    \
+            set##nameTop(String::emptyString);                                         \
+            set##nameBottom(String::emptyString);                                      \
+            set##nameLeft(String::emptyString);                                        \
+            set##nameRight(String::emptyString);                                       \
+            return;                                                                    \
+        }                                                                              \
+        if (value->length() < 1 || value->length() > 4) \
+            return; \
+        \
+        std::vector<String*, gc_allocator<String*> > tokens; \
+        std::vector<String*, gc_allocator<String*> > tokenTop, tokenRight, tokenBottom, tokenLeft; \
+        tokenizeCSSValue(&tokens, value); \
+        size_t len = tokens.size(); \
+        \
+        tokenTop.push_back(tokens[0]); \
+        tokenRight.push_back(len < 2 ? tokenTop[0] : tokens[1]); \
+        tokenBottom.push_back(len < 3 ? tokenTop[0] : tokens[2]); \
+        tokenLeft.push_back(len < 4 ? tokenRight[0] : tokens[3]); \
+        \
+        CSSStyleValuePair top, right, bottom, left; \
+        bool valid = true; \
+        valid &= (top.setValueCommon(&tokenTop) || top.updateValue##nameTop(&tokenTop)); \
+        valid &= (bottom.setValueCommon(&tokenRight) || bottom.updateValue##nameLeft(&tokenRight)); \
+        valid &= (left.setValueCommon(&tokenBottom) || left.updateValue##nameRight(&tokenBottom)); \
+        valid &= (right.setValueCommon(&tokenLeft) || right.updateValue##nameBottom(&tokenLeft)); \
+        if (valid) { \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::nameTop, &top); \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::nameRight, &right); \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::nameBottom, &bottom); \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::nameLeft, &left); \
+            notifyNeedsStyleRecalc(); \
+        } \
+    }
+    */
 
     FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(ATTRIBUTE_SETTER_FOURSIDE)
 #undef ATTRIBUTE_SETTER_FOURSIDE
