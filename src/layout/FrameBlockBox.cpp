@@ -663,10 +663,15 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         return;
     }
 
+    canvas->save();
     bool hiddenApplied = shouldApplyOverflow();
     if (hiddenApplied) {
-        canvas->save();
-        canvas->clip(Rect(0, 0, width(), height()));
+        if (PaintingStage::PaintingNormalFlowBlock == stage) {
+            canvas->clip(Rect(0, 0, width(), height()));
+        } else {
+            canvas->clip(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
+        }
+
     }
 
     if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
@@ -702,9 +707,7 @@ void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
         }
     }
 
-    if (hiddenApplied) {
-        canvas->restore();
-    }
+    canvas->restore();
 }
 #ifdef STARFISH_ENABLE_TEST
 void FrameBlockBox::dump(int depth)
