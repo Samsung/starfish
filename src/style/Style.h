@@ -977,8 +977,6 @@ public:
 
     void setValuePercentageOrLength(const char* value);
     void setValuePercentageOrLength(std::vector<String*, gc_allocator<String*> >* tokens);
-    void setValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens);
-    void setValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens);
     void setValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens);
 
 #define SET_VALUE(name, ...) \
@@ -993,6 +991,7 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
     bool updateValueBorderStyle(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool updateValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens);
     bool updateValueLengthOrPercent(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercent(String* token, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
