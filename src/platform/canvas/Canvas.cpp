@@ -881,7 +881,7 @@ public:
 
             evas_object_show(eo);
         } else {
-            if (text->equals(String::spaceString)) {
+            if (text->equals(String::spaceString) || (text->length() == 1 && text->charAt(0) == 0xA0)) {
                 // FIXME evas textblock doesn't render 1 length space char
                 text = text->concat(String::spaceString);
             }
