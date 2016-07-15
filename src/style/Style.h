@@ -989,7 +989,6 @@ public:
 
     void setValuePercentageOrLength(const char* value);
     void setValuePercentageOrLength(std::vector<String*, gc_allocator<String*> >* tokens);
-    void setValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens);
 
 #define SET_VALUE(name, ...) \
     void setValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
@@ -1254,51 +1253,12 @@ public:
             set##nameRight(String::emptyString);                                       \
             return;                                                                    \
         }                                                                              \
-        std::vector<String*, gc_allocator<String*> > tokens;                           \
-        tokenizeCSSValue(&tokens, value);                                              \
-        if (CSSStyleValuePair::checkEssentialValue(&tokens) || CSSStyleValuePair::checkInputError##name(&tokens)) {                                          \
-            size_t len = tokens.size();                                                \
-            if (len == 1) {                                                            \
-                set##nameTop(tokens[0]);                                               \
-                set##nameBottom(tokens[0]);                                            \
-                set##nameLeft(tokens[0]);                                              \
-                set##nameRight(tokens[0]);                                             \
-            } else if (len == 2) {                                                     \
-                set##nameTop(tokens[0]);                                               \
-                set##nameBottom(tokens[0]);                                            \
-                set##nameLeft(tokens[1]);                                              \
-                set##nameRight(tokens[1]);                                             \
-            } else if (len == 3) {                                                     \
-                set##nameTop(tokens[0]);                                               \
-                set##nameLeft(tokens[1]);                                              \
-                set##nameRight(tokens[1]);                                             \
-                set##nameBottom(tokens[2]);                                            \
-            } else if (len == 4) {                                                     \
-                set##nameTop(tokens[0]);                                               \
-                set##nameRight(tokens[1]);                                             \
-                set##nameBottom(tokens[2]);                                            \
-                set##nameLeft(tokens[3]);                                              \
-            }                                                                          \
-        }                                                                              \
-    }
-    // TODO: FUTURE CODE
-    /*
-    void set##name(String* value)                                                      \
-    {                                                                                  \
-        if (value->length() == 0) {                                                    \
-            set##nameTop(String::emptyString);                                         \
-            set##nameBottom(String::emptyString);                                      \
-            set##nameLeft(String::emptyString);                                        \
-            set##nameRight(String::emptyString);                                       \
-            return;                                                                    \
-        }                                                                              \
-        if (value->length() < 1 || value->length() > 4) \
-            return; \
-        \
         std::vector<String*, gc_allocator<String*> > tokens; \
         std::vector<String*, gc_allocator<String*> > tokenTop, tokenRight, tokenBottom, tokenLeft; \
         tokenizeCSSValue(&tokens, value); \
         size_t len = tokens.size(); \
+        if (len < 1 || len > 4) \
+            return; \
         \
         tokenTop.push_back(tokens[0]); \
         tokenRight.push_back(len < 2 ? tokenTop[0] : tokens[1]); \
@@ -1308,9 +1268,9 @@ public:
         CSSStyleValuePair top, right, bottom, left; \
         bool valid = true; \
         valid &= (top.setValueCommon(&tokenTop) || top.updateValue##nameTop(&tokenTop)); \
-        valid &= (bottom.setValueCommon(&tokenRight) || bottom.updateValue##nameLeft(&tokenRight)); \
-        valid &= (left.setValueCommon(&tokenBottom) || left.updateValue##nameRight(&tokenBottom)); \
-        valid &= (right.setValueCommon(&tokenLeft) || right.updateValue##nameBottom(&tokenLeft)); \
+        valid &= (right.setValueCommon(&tokenRight) || right.updateValue##nameLeft(&tokenRight)); \
+        valid &= (bottom.setValueCommon(&tokenBottom) || bottom.updateValue##nameRight(&tokenBottom)); \
+        valid &= (left.setValueCommon(&tokenLeft) || left.updateValue##nameBottom(&tokenLeft)); \
         if (valid) { \
             addCSSValuePair(CSSStyleValuePair::KeyKind::nameTop, &top); \
             addCSSValuePair(CSSStyleValuePair::KeyKind::nameRight, &right); \
@@ -1319,7 +1279,6 @@ public:
             notifyNeedsStyleRecalc(); \
         } \
     }
-    */
 
     FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(ATTRIBUTE_SETTER_FOURSIDE)
 #undef ATTRIBUTE_SETTER_FOURSIDE
