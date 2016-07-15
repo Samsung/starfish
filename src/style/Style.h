@@ -975,6 +975,9 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
     bool updateValueBorderStyle(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool updateValueLengthOrPercent(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
+    bool updateValueLengthOrPercent(String* token, bool allowNegative);
+    bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
 
     static bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
 
@@ -1033,6 +1036,11 @@ public:
     void append(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData value)
     {
         m_values.push_back(CSSStyleValuePair(kind, value));
+    }
+
+    void append(CSSStyleValuePair& pair)
+    {
+        m_values.push_back(pair);
     }
 
     CSSStyleValuePair& atIndex(int idx)
