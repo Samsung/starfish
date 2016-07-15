@@ -149,6 +149,43 @@ static Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleVa
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
+static String* namedColorToString(NamedColorValue namedColor)
+{
+    switch (namedColor) {
+#define ADD_COLOR_ITEM(name, ...) \
+    case NamedColorValue::name##NamedColor: \
+        return String::createASCIIString(#name);
+
+        NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
+#undef ADD_COLOR_ITEM
+    case NamedColorValue::currentColor:
+        return String::createASCIIString("currentColor");
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+static Color namedColorToColor(NamedColorValue namedColor)
+{
+    switch (namedColor) {
+#define ADD_COLOR_ITEM(name, value) \
+    case NamedColorValue::name##NamedColor: \
+        { \
+            char r = (value & 0xff0000) >> 16; \
+            char g = (value & 0xff00) >> 8; \
+            char b = (value & 0xff); \
+            char a = 255; \
+            return Color(r, g, b, a); \
+        }
+
+        NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
+#undef ADD_COLOR_ITEM
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    return Color();
+}
+
 String* CSSStyleValuePair::keyName()
 {
     switch (keyKind()) {
@@ -742,8 +779,8 @@ String* CSSStyleValuePair::toString()
         switch (value_kind) {
         case CSSStyleValuePair::ValueKind::ColorValueKind:
             return colorValue().toString();
-        case CSSStyleValuePair::ValueKind::StringValueKind:
-            return stringValue();
+        case CSSStyleValuePair::ValueKind::NamedColorValueKind:
+            return namedColorToString(namedColorValue());
         default:
             return String::emptyString;
         }
@@ -1920,13 +1957,11 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
                     style->setColor(cssValues[k].colorValue());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::NamedColorValueKind);
+                    if (cssValues[k].namedColorValue() == NamedColorValue::currentColor) {
                         style->m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
                     } else {
-                        Color ret;
-                        CSSPropertyParser::parseNamedColor(cssValues[k].stringValue(), &ret);
-                        style->setColor(ret);
+                        style->setColor(namedColorToColor(cssValues[k].namedColorValue()));
                     }
                 }
                 break;
@@ -2058,15 +2093,13 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
                     style->setBackgroundColor(cssValues[k].colorValue());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind);
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) {
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::NamedColorValueKind);
+                    if (cssValues[k].namedColorValue() == NamedColorValue::currentColor) {
                         // currentColor : represents the calculated value of the element's color property
                         // --> change to valid value when arrangeStyleValues()
                         style->setBackgroundColorToCurrentColor();
                     } else {
-                        Color ret;
-                        CSSPropertyParser::parseNamedColor(cssValues[k].stringValue(), &ret);
-                        style->setBackgroundColor(ret);
+                        style->setBackgroundColor(namedColorToColor(cssValues[k].namedColorValue()));
                     }
                 }
                 break;
@@ -2347,13 +2380,11 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) { \
                     style->setBorder##POS##Color(cssValues[k].colorValue()); \
                 } else { \
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::StringValueKind); \
-                    if (cssValues[k].stringValue()->equalsWithoutCase(String::fromUTF8("currentColor"))) { \
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::NamedColorValueKind); \
+                    if (cssValues[k].namedColorValue() == NamedColorValue::currentColor) { \
                         style->clearBorder##POS##Color();   \
                     } else { \
-                        Color ret; \
-                        CSSPropertyParser::parseNamedColor(cssValues[k].stringValue(), &ret); \
-                        style->setBorder##POS##Color(ret); \
+                        style->setBorder##POS##Color(namedColorToColor(cssValues[k].namedColorValue())); \
                     } \
                 } \
                 break;
@@ -2912,9 +2943,8 @@ bool CSSStyleValuePair::updateValueColor(std::vector<String*, gc_allocator<Strin
 
     if (CSSPropertyParser::parseNonNamedColor(tokens->at(0), &(m_value.m_color))) {
         m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
-    } else if (CSSPropertyParser::assureNamedColor(tokens->at(0))) {
-        m_valueKind = CSSStyleValuePair::ValueKind::StringValueKind;
-        m_value.m_stringValue = tokens->at(0)->trim();
+    } else if (CSSPropertyParser::parseNamedColor(tokens->at(0), &(m_value.m_namedColor))) {
+        m_valueKind = CSSStyleValuePair::ValueKind::NamedColorValueKind;
     } else {
         return false;
     }

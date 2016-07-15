@@ -25,6 +25,7 @@
 #include "style/UnitHelper.h"
 #include "dom/EventTarget.h"
 #include "dom/DOMTokenList.h"
+#include "style/NamedColors.h"
 
 #include <sstream>
 
@@ -363,6 +364,14 @@ enum UnicodeBidiValue {
     EmbedUnicodeBidiValue,
 };
 
+enum NamedColorValue {
+#define ADD_COLOR_ITEM(name, ...) \
+    name##NamedColor,
+    NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
+#undef ADD_COLOR_ITEM
+    currentColor,
+};
+
 class ValueList;
 class CSSStyleDeclaration;
 
@@ -577,6 +586,7 @@ public:
         Normal,
         StringValueKind,
         ColorValueKind,
+        NamedColorValueKind,
         UrlValueKind,
 
         DisplayValueKind,
@@ -817,6 +827,12 @@ public:
         return m_value.m_color;
     }
 
+    NamedColorValue namedColorValue()
+    {
+        STARFISH_ASSERT(m_valueKind == NamedColorValueKind);
+        return m_value.m_namedColor;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -842,6 +858,7 @@ public:
         TextDecorationValue m_textDecoration;
         CSSTransformFunctions* m_transforms;
         ::StarFish::Color m_color;
+        NamedColorValue m_namedColor;
         ValueData(int v) { m_floatValue = v; }
         ValueData(float v) { m_floatValue = v; }
         ValueData(DisplayValue v) { m_display = v; }
@@ -864,6 +881,7 @@ public:
         ValueData(TextDecorationValue v) { m_textDecoration = v; }
         ValueData(CSSTransformFunctions* v) { m_transforms = v; }
         ValueData(::StarFish::Color v) { m_color = v; }
+        ValueData(NamedColorValue v) { m_namedColor = v; }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
