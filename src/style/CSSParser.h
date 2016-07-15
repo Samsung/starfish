@@ -310,6 +310,34 @@ public:
         return parser->parsedString();
     }
 
+    static bool parseLengthOrPercent(const char* token, bool allowNegative, CSSStyleValuePair* pair)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
+        float num = parser->parsedNumber();
+        if (!allowNegative && num < 0)
+            return false;
+        if (parser->consumeString()) {
+            String* str = parser->parsedString();
+            if (str->equals("%")) {
+                pair->setPercentageValue(num / 100.f);
+                return parser->isEnd();
+            } else if ((str->length() == 0 && num == 0)
+                || isLengthUnit(str)) {
+                pair->setLengthValue(CSSLength(str, num));
+                return parser->isEnd();
+            }
+            return false;
+        } else {
+            // After a zero length, the unit identifier is optional
+            if (num == 0)
+                return true;
+            return false;
+        }
+        return true;
+    }
+
     static bool assureLengthOrPercent(const char* token, bool allowNegative)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -497,16 +525,6 @@ public:
             parser->consumeWhitespaces();
         } while (parser->consumeIfNext(','));
         return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
-    }
-
-    static bool assureInteger(const char* token, bool allowNegative)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        parser->consumeNumber();
-        float num = parser->parsedNumber();
-        if (num != std::floor(num))
-            return false;
-        return parser->isEnd();
     }
 
     static bool parseColorFunctionPart(String* s, bool isAlpha, unsigned char* ret, bool* isPercent)

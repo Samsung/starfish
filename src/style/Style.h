@@ -956,6 +956,18 @@ public:
 
     void setLengthValue(const char* value);
 
+    void setLengthValue(CSSLength val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::Length;
+        m_value.m_length = val;
+    }
+
+    void setPercentageValue(float val)
+    {
+        m_valueKind = CSSStyleValuePair::ValueKind::Percentage;
+        m_value.m_floatValue = val;
+    }
+
     void setValue(KeyKind kKind, const char* value)
     {
         switch (kKind) {
