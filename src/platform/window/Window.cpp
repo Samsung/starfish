@@ -607,9 +607,21 @@ void Window::rendering()
 #endif
         {
             Timer t("computeStackingContextProperties");
-            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool {
-                box->establishesStackingContextIfNeeds();
+            size_t forceNeedsStackingContextJustPositionedElementsSince = SIZE_MAX;
+            size_t depth = 0;
+            m_document->frame()->asFrameBox()->iterateChildBoxes([&](FrameBox* box) -> bool
+            {
+                box->establishesStackingContextIfNeeds(depth >= forceNeedsStackingContextJustPositionedElementsSince);
+                if (box->needsGraphicsBuffer()) {
+                    forceNeedsStackingContextJustPositionedElementsSince = std::min(forceNeedsStackingContextJustPositionedElementsSince, depth);
+                }
                 return true;
+            }, [&](FrameBox* box)
+            {
+                depth++;
+            }, [&](FrameBox* box)
+            {
+                depth--;
             });
             if (m_document->frame()->firstChild())
                 m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
