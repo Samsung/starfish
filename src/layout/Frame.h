@@ -357,7 +357,7 @@ public:
             return style()->overflow() != OverflowValue::VisibleOverflow;
         }
 
-        if (m_node && m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+        if (m_node && m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLBodyElement() && m_node->document()->rootElement()) {
             HTMLHtmlElement* rootElement = m_node->document()->rootElement();
             return rootElement->style()->overflow() != style()->overflow();
         }
@@ -367,7 +367,7 @@ public:
 
     bool shouldApplyOverflow()
     {
-        return isOverflowPropagatedToViewPort()? false: style()->overflow() != OverflowValue::VisibleOverflow;
+        return isOverflowPropagatedToViewPort() ? false : style()->overflow() != OverflowValue::VisibleOverflow;
     }
 
     void computeStyleFlags()
