@@ -706,38 +706,6 @@ void CSSStyleValuePair::setValueBorderLeftWidth(std::vector<String*, gc_allocato
     setValueBorderUnitWidth(tokens);
 }
 
-void CSSStyleValuePair::setValueVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    const char* value = tokens->at(0)->utf8Data();
-    if (VALUE_IS_STRING("baseline")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
-    } else if (VALUE_IS_STRING("sub")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::SubVAlignValue;
-    } else if (VALUE_IS_STRING("super")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::SuperVAlignValue;
-    } else if (VALUE_IS_STRING("top")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::TopVAlignValue;
-    } else if (VALUE_IS_STRING("text-top")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::TextTopVAlignValue;
-    } else if (VALUE_IS_STRING("middle")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::MiddleVAlignValue;
-    } else if (VALUE_IS_STRING("bottom")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::BottomVAlignValue;
-    } else if (VALUE_IS_STRING("text-bottom")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
-        m_value.m_verticalAlign = VerticalAlignValue::TextBottomVAlignValue;
-    } else {
-        setValuePercentageOrLength(value);
-    }
-}
-
 String* CSSStyleValuePair::toString()
 {
     ValueKind value_kind = valueKind();
@@ -1461,31 +1429,6 @@ bool CSSStyleValuePair::checkInputErrorBorderColor(std::vector<String*, gc_alloc
     return true;
 }
 
-// <length> | <percentage>
-bool CSSStyleValuePair::checkInputErrorPaddingTop(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() != 1)
-        return false;
-    (*tokens)[0] = (*tokens)[0];
-    const char* value = (*tokens)[0]->utf8Data();
-    return (CSSPropertyParser::assureLengthOrPercent(value, false));
-}
-
-bool CSSStyleValuePair::checkInputErrorPaddingRight(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorPaddingTop(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorPaddingBottom(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorPaddingTop(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorPaddingLeft(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorPaddingTop(tokens);
-}
-
 bool CSSStyleValuePair::checkInputErrorPadding(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // {length | percentage} {1,4}
@@ -1495,36 +1438,6 @@ bool CSSStyleValuePair::checkInputErrorPadding(std::vector<String*, gc_allocator
             return false;
     }
     return true;
-}
-
-bool CSSStyleValuePair::checkHavingOneTokenAndLengthOrPercentage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if (CSSPropertyParser::assureLengthOrPercentOrAuto(token, allowNegative))
-            return true;
-    }
-    return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorMarginTop(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkHavingOneTokenAndLengthOrPercentage(tokens, true);
-}
-
-bool CSSStyleValuePair::checkInputErrorMarginRight(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkHavingOneTokenAndLengthOrPercentage(tokens, true);
-}
-
-bool CSSStyleValuePair::checkInputErrorMarginBottom(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkHavingOneTokenAndLengthOrPercentage(tokens, true);
-}
-
-bool CSSStyleValuePair::checkInputErrorMarginLeft(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkHavingOneTokenAndLengthOrPercentage(tokens, true);
 }
 
 bool CSSStyleValuePair::checkInputErrorMargin(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -1824,19 +1737,6 @@ bool CSSStyleValuePair::checkInputErrorBorderWidth(std::vector<String*, gc_alloc
             return false;
     }
     return true;
-}
-
-bool CSSStyleValuePair::checkInputErrorVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() == 1) {
-        const char* token = (*tokens)[0]->utf8Data();
-        if ((TOKEN_IS_STRING("baseline")) || (TOKEN_IS_STRING("sub")) || (TOKEN_IS_STRING("super")) || (TOKEN_IS_STRING("top")) || (TOKEN_IS_STRING("text-top")) || (TOKEN_IS_STRING("middle")) || (TOKEN_IS_STRING("bottom")) || (TOKEN_IS_STRING("text-bottom"))) {
-            return true;
-        } else if (CSSPropertyParser::assureLengthOrPercent(token, true)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()
@@ -3078,15 +2978,13 @@ NEW_SET_VALUE_DEF(BorderRightWidth);
 NEW_SET_VALUE_DEF(BorderTopWidth);
 NEW_SET_VALUE_DEF(FontSize);
 NEW_SET_VALUE_DEF(LineHeight);
-NEW_SET_VALUE_DEF(VerticalAlign);
 #undef NEW_SET_VALUE_DEF
 
 bool CSSStyleValuePair::updateValueLengthOrPercent(String* token, bool allowNegative)
 {
     // FIXME(june0cho)
-    if (!CSSPropertyParser::assureLengthOrPercent(token->utf8Data(), allowNegative))
+    if (!CSSPropertyParser::parseLengthOrPercent(token->utf8Data(), allowNegative, this))
         return false;
-    setValuePercentageOrLength(token->utf8Data());
     return true;
 }
 
@@ -3140,6 +3038,42 @@ bool CSSStyleValuePair::updateValueWidth(std::vector<String*, gc_allocator<Strin
 bool CSSStyleValuePair::updateValueHeight(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     return updateValueLengthOrPercentOrAuto(tokens, false);
+}
+
+bool CSSStyleValuePair::updateValueVerticalAlign(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = tokens->at(0);
+    if (STRING_VALUE_IS_STRING("baseline")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
+    } else if (STRING_VALUE_IS_STRING("sub")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::SubVAlignValue;
+    } else if (STRING_VALUE_IS_STRING("super")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::SuperVAlignValue;
+    } else if (STRING_VALUE_IS_STRING("top")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::TopVAlignValue;
+    } else if (STRING_VALUE_IS_STRING("text-top")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::TextTopVAlignValue;
+    } else if (STRING_VALUE_IS_STRING("middle")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::MiddleVAlignValue;
+    } else if (STRING_VALUE_IS_STRING("bottom")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::BottomVAlignValue;
+    } else if (STRING_VALUE_IS_STRING("text-bottom")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
+        m_value.m_verticalAlign = VerticalAlignValue::TextBottomVAlignValue;
+    } else {
+        return updateValueLengthOrPercent(value, true);
+    }
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueTransformOrigin(std::vector<String*, gc_allocator<String*> >* tokens)
