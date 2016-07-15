@@ -2829,7 +2829,7 @@ bool CSSStyleValuePair::updateValueBorder##POS##Color(std::vector<String*, gc_al
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
 #undef UPDATE_VALUE_BORDER_COLOR
 
-bool CSSStyleValuePair::updateValueBorderStyle(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() != 1)
         return false;
@@ -2849,7 +2849,7 @@ bool CSSStyleValuePair::updateValueBorderStyle(std::vector<String*, gc_allocator
 #define UPDATE_VALUE_BORDER_STYLE(POS, ...) \
 bool CSSStyleValuePair::updateValueBorder##POS##Style(std::vector<String*, gc_allocator<String*> >* tokens) \
 { \
-    return updateValueBorderStyle(tokens); \
+    return updateValueBorderUnitStyle(tokens); \
 }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
@@ -2959,6 +2959,37 @@ bool CSSStyleValuePair::updateValueBorderImageSource(std::vector<String*, gc_all
     return updateValueUrlOrNone(tokens);
 }
 
+bool CSSStyleValuePair::updateValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
+    if (STRING_VALUE_IS_STRING("thick")) {
+        m_value.m_borderWidth = BorderWidthValue::ThickBorderWidthValue;
+    } else if (STRING_VALUE_IS_STRING("thin")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
+        m_value.m_borderWidth = BorderWidthValue::ThinBorderWidthValue;
+    } else if (STRING_VALUE_IS_STRING("medium")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
+        m_value.m_borderWidth = BorderWidthValue::MediumBorderWidthValue;
+    } else if (CSSPropertyParser::parseLength(value->utf8Data(), false, &(m_value.m_length))) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Length;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+#define UPDATE_VALUE_BORDER_WIDTH(POS, ...) \
+bool CSSStyleValuePair::updateValueBorder##POS##Width(std::vector<String*, gc_allocator<String*> >* tokens) \
+{ \
+    return updateValueBorderUnitWidth(tokens); \
+}
+GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
+#undef UPDATE_VALUE_BORDER_WIDTH
+
 // TODO: This is temp code
 #define NEW_SET_VALUE_DEF(name) \
 bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens) \
@@ -2970,12 +3001,8 @@ bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<Stri
 }
 NEW_SET_VALUE_DEF(BackgroundPosition);
 NEW_SET_VALUE_DEF(BackgroundSize);
-NEW_SET_VALUE_DEF(BorderBottomWidth);
 NEW_SET_VALUE_DEF(BorderImageSlice);
 NEW_SET_VALUE_DEF(BorderImageWidth);
-NEW_SET_VALUE_DEF(BorderLeftWidth);
-NEW_SET_VALUE_DEF(BorderRightWidth);
-NEW_SET_VALUE_DEF(BorderTopWidth);
 NEW_SET_VALUE_DEF(FontSize);
 NEW_SET_VALUE_DEF(LineHeight);
 #undef NEW_SET_VALUE_DEF
