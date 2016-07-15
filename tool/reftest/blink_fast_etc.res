@@ -242,6 +242,7 @@ test/reftest/vendor/blink/fast/selectors/175a.html
 test/reftest/vendor/blink/fast/selectors/175b.html
 test/reftest/vendor/blink/fast/selectors/175c.html
 test/reftest/vendor/blink/fast/sub-pixel/snap-negative-location.html
+test/reftest/vendor/blink/fast/sub-pixel/sub-pixel-root-layer.html
 test/reftest/vendor/blink/fast/text-autosizing/constrained-height-ancestor.html
 test/reftest/vendor/blink/fast/text/container-align-with-inlines.html
 test/reftest/vendor/blink/fast/text/international/bdi-break-crash-1.html
