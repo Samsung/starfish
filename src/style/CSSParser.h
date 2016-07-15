@@ -310,6 +310,23 @@ public:
         return parser->parsedString();
     }
 
+    static bool parseLength(const char* token, bool allowNegative, CSSLength* ret)
+    {
+        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
+        if (!parser->consumeNumber())
+            return false;
+        float num = parser->parsedNumber();
+        if (!allowNegative && num < 0)
+            return false;
+        parser->consumeString();
+        String* str = parser->parsedString();
+        if ((str->length() == 0 && num == 0) || isLengthUnit(str)) {
+            *ret = CSSLength(str, num);
+            return parser->isEnd();
+        }
+        return false;
+    }
+
     static bool parseLengthOrPercent(const char* token, bool allowNegative, CSSStyleValuePair* pair)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -318,24 +335,17 @@ public:
         float num = parser->parsedNumber();
         if (!allowNegative && num < 0)
             return false;
-        if (parser->consumeString()) {
-            String* str = parser->parsedString();
-            if (str->equals("%")) {
-                pair->setPercentageValue(num / 100.f);
-                return parser->isEnd();
-            } else if ((str->length() == 0 && num == 0)
-                || isLengthUnit(str)) {
-                pair->setLengthValue(CSSLength(str, num));
-                return parser->isEnd();
-            }
-            return false;
-        } else {
-            // After a zero length, the unit identifier is optional
-            if (num == 0)
-                return true;
-            return false;
+        parser->consumeString();
+        String* str = parser->parsedString();
+        if (str->equals("%")) {
+            pair->setPercentageValue(num / 100.f);
+            return parser->isEnd();
+        } else if ((str->length() == 0 && num == 0)
+            || isLengthUnit(str)) {
+            pair->setLengthValue(CSSLength(str, num));
+            return parser->isEnd();
         }
-        return true;
+        return false;
     }
 
     static bool assureLengthOrPercent(const char* token, bool allowNegative)
@@ -730,6 +740,7 @@ public:
         return false;
     }
 
+    // TODO : DEPRECATE
     static bool assureBorderWidth(const char* token)
     {
         // border-width(thin | <medium> | thick) | length
@@ -738,6 +749,7 @@ public:
         return false;
     }
 
+    // TODO : DEPRECATE
     static bool assureBorderStyle(const char* token)
     {
         // border-style(<none> | solid) | inherit
