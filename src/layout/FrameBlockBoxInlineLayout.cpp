@@ -1306,7 +1306,19 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
     while (f) {
         if (!f->isNormalFlow()) {
             ctx.registerAbsolutePositionedFrames(f->asFrameBox());
-            lineFormattingContext.m_absolutePositionedBoxes.push_back(std::make_pair(f->asFrameBox(), lineFormattingContext.currentLine()->boxes().size()));
+            bool shouldBreak = false;
+            lineFormattingContext.currentLine()->iterateChildBoxes([&shouldBreak](FrameBox* box) -> bool {
+                if (box->isInlineBox()) {
+                    InlineBox* ib = box->asInlineBox();
+                    if (ib->isInlineTextBox()) {
+                        shouldBreak |= ib->isNormalFlow();
+                    }
+                }
+
+                return !shouldBreak;
+            });
+
+            lineFormattingContext.m_absolutePositionedBoxes.push_back(std::make_pair(f->asFrameBox(), shouldBreak));
             absBoxCallback(f->asFrameBox());
             f = f->next();
             continue;
