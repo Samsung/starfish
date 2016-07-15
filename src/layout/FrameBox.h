@@ -514,9 +514,15 @@ public:
         }
     }
 
-    void establishesStackingContextIfNeeds()
+    void establishesStackingContextIfNeeds(bool shouldEveryPositionedElementEstablishesStackingContext)
     {
-        if (isEstablishesStackingContext()) {
+        bool c = isEstablishesStackingContext();
+        if (shouldEveryPositionedElementEstablishesStackingContext) {
+            if (isPositionedElement()) {
+                c = true;
+            }
+        }
+        if (c) {
             STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
             if (!isRootElement()) {
                 FrameBox* p = layoutParent()->asFrameBox();

@@ -58,7 +58,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
     }
 
     m_matrix.reset();
-    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->style()->opacity() != 1 || m_owner->style()->hasTransforms(m_owner);
+    m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->needsGraphicsBuffer();
 
     if (m_needsOwnBuffer) {
         LayoutLocation l(-m_owner->frameRect().location().x(), -m_owner->frameRect().location().y());
@@ -90,8 +90,6 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 
 void StackingContext::paintStackingContext(Canvas* canvas)
 {
-    STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
-
     Canvas* oldCanvas = nullptr;
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
@@ -199,8 +197,6 @@ void StackingContext::paintStackingContext(Canvas* canvas)
 
 void StackingContext::compositeStackingContext(Canvas* canvas)
 {
-    STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
-
     LayoutRect visibleRect = StackingContext::visibleRect();
     ComputedStyle* ownerStyle = m_owner->style();
     canvas->save();
@@ -314,8 +310,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 
 Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
 {
-    STARFISH_ASSERT(m_owner->isEstablishesStackingContext());
-
     if (!m_matrix.isIdentity()) {
         SkMatrix invert;
         if (!m_matrix.invert(&invert)) {
