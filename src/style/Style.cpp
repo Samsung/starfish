@@ -307,47 +307,47 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, style, color);
 }
 
-static BorderShorthandValueType checkBorderValueType(const char* token)
-{
-    if (CSSPropertyParser::assureBorderWidth(token)) {
-        return BorderShorthandValueType::BWidth;
-    } else if (CSSPropertyParser::assureBorderStyle(token)) {
-        return BorderShorthandValueType::BStyle;
-    } else if (CSSPropertyParser::assureColor(token)) {
-        return BorderShorthandValueType::BColor;
-    } else {
-        return BorderShorthandValueType::BInvalid;
-    }
-}
-
-static void parseBorderWidthStyleColor(std::vector<String*, gc_allocator<String*> >* tokens, String** result)
+static bool parseBorderWidthStyleColor(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* width, CSSStyleValuePair* style, CSSStyleValuePair* color)
 {
     size_t len = tokens->size();
-    String* value = tokens->at(0);
-    if (len == 0) {
-        result[0] = result[1] = result[2] = String::emptyString;
-    } else if (len == 1 && STRING_VALUE_IS_INHERIT()) {
-        result[0] = result[1] = result[2] = String::inheritString;
-    } else if (len == 1 && STRING_VALUE_IS_INITIAL()) {
-        result[0] = result[1] = result[2] = String::initialString;
-    } else {
-        for (unsigned i = 0; i < tokens->size(); i++) {
-            String* str = tokens->at(i);
-            switch (checkBorderValueType(str->utf8Data())) {
-            case BorderShorthandValueType::BWidth:
-                result[0] = str;
-                break;
-            case BorderShorthandValueType::BStyle:
-                result[1] = str;
-                break;
-            case BorderShorthandValueType::BColor:
-                result[2] = str;
-                break;
-            default:
-                break;
-            }
+    if (len < 1 || len > 3)
+        return false;
+
+    bool hasWidth = false, hasStyle = false, hasColor = false;
+    CSSStyleValuePair temp;
+    std::vector<String*, gc_allocator<String*> > tok;
+    for (size_t i = 0; i < len; i++) {
+        tok.push_back(tokens->at(i));
+        if (temp.updateValueBorderUnitWidth(&tok)) {
+            if (hasWidth)
+                return false;
+            *width = temp;
+            hasWidth = true;
+        } else if (temp.updateValueBorderUnitStyle(&tok)) {
+            if (hasStyle)
+                return false;
+            *style = temp;
+            hasStyle = true;
+        } else if (temp.updateValueColor(&tok)) {
+            if (hasColor)
+                return false;
+            *color = temp;
+            hasColor = true;
+        } else {
+            return false;
         }
+        tok.pop_back();
     }
+    if (!hasWidth) {
+        width->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    }
+    if (!hasStyle) {
+        style->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    }
+    if (!hasColor) {
+        color->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    }
+    return true;
 }
 
 void CSSStyleDeclaration::setBorder(String* value)
@@ -360,95 +360,46 @@ void CSSStyleDeclaration::setBorder(String* value)
     }
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value);
-    if (CSSStyleValuePair::checkInputErrorBorder(&tokens)) {
-        String** result = new(GC) String*[3];
-        result[0] = result[1] = result[2] = String::initialString;
-        parseBorderWidthStyleColor(&tokens, result);
-        setBorderWidth(result[0]);
-        setBorderStyle(result[1]);
-        setBorderColor(result[2]);
+    CSSStyleValuePair width, style, color;
+    if (parseBorderWidthStyleColor(&tokens, &width, &style, &color)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth, &width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle, &style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor, &color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth, &width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle, &style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor, &color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth, &width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle, &style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor, &color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth, &width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle, &style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor, &color);
+        notifyNeedsStyleRecalc();
     }
 }
 
-void CSSStyleDeclaration::setBorderTop(String* value)
-{
-    if (value->length() == 0) {
-        setBorderTopWidth(String::emptyString);
-        setBorderTopStyle(String::emptyString);
-        setBorderTopColor(String::emptyString);
-        return;
-    }
-    std::vector<String*, gc_allocator<String*> > tokens;
-    tokenizeCSSValue(&tokens, value);
-    if (CSSStyleValuePair::checkInputErrorBorderTop(&tokens)) {
-        String** result = new(GC) String*[3];
-        result[0] = result[1] = result[2] = String::initialString;
-        parseBorderWidthStyleColor(&tokens, result);
-        setBorderTopWidth(result[0]);
-        setBorderTopStyle(result[1]);
-        setBorderTopColor(result[2]);
-    }
+#define ADD_SET_BORDER(POS, ...) \
+void CSSStyleDeclaration::setBorder##POS(String* value) \
+{ \
+    if (value->length() == 0) { \
+        setBorder##POS##Width(String::emptyString); \
+        setBorder##POS##Style(String::emptyString); \
+        setBorder##POS##Color(String::emptyString); \
+        return; \
+    } \
+    std::vector<String*, gc_allocator<String*> > tokens; \
+    tokenizeCSSValue(&tokens, value); \
+    CSSStyleValuePair width, style, color; \
+    if (parseBorderWidthStyleColor(&tokens, &width, &style, &color)) { \
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Width, &width); \
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Style, &style); \
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Color, &color); \
+        notifyNeedsStyleRecalc(); \
+    } \
 }
 
-void CSSStyleDeclaration::setBorderRight(String* value)
-{
-    if (value->length() == 0) {
-        setBorderRightWidth(String::emptyString);
-        setBorderRightStyle(String::emptyString);
-        setBorderRightColor(String::emptyString);
-        return;
-    }
-    std::vector<String*, gc_allocator<String*> > tokens;
-    tokenizeCSSValue(&tokens, value);
-    if (CSSStyleValuePair::checkInputErrorBorderRight(&tokens)) {
-        String** result = new(GC) String*[3];
-        result[0] = result[1] = result[2] = String::initialString;
-        parseBorderWidthStyleColor(&tokens, result);
-        setBorderRightWidth(result[0]);
-        setBorderRightStyle(result[1]);
-        setBorderRightColor(result[2]);
-    }
-}
-
-void CSSStyleDeclaration::setBorderBottom(String* value)
-{
-    if (value->length() == 0) {
-        setBorderBottomWidth(String::emptyString);
-        setBorderBottomStyle(String::emptyString);
-        setBorderBottomColor(String::emptyString);
-        return;
-    }
-    std::vector<String*, gc_allocator<String*> > tokens;
-    tokenizeCSSValue(&tokens, value);
-    if (CSSStyleValuePair::checkInputErrorBorderBottom(&tokens)) {
-        String** result = new(GC) String*[3];
-        result[0] = result[1] = result[2] = String::initialString;
-        parseBorderWidthStyleColor(&tokens, result);
-        setBorderBottomWidth(result[0]);
-        setBorderBottomStyle(result[1]);
-        setBorderBottomColor(result[2]);
-    }
-}
-
-void CSSStyleDeclaration::setBorderLeft(String* value)
-{
-    if (value->length() == 0) {
-        setBorderLeftWidth(String::emptyString);
-        setBorderLeftStyle(String::emptyString);
-        setBorderLeftColor(String::emptyString);
-        return;
-    }
-    std::vector<String*, gc_allocator<String*> > tokens;
-    tokenizeCSSValue(&tokens, value);
-    if (CSSStyleValuePair::checkInputErrorBorderLeft(&tokens)) {
-        String** result = new(GC) String*[3];
-        result[0] = result[1] = result[2] = String::initialString;
-        parseBorderWidthStyleColor(&tokens, result);
-        setBorderLeftWidth(result[0]);
-        setBorderLeftStyle(result[1]);
-        setBorderLeftColor(result[2]);
-    }
-}
+GEN_FOURSIDE(ADD_SET_BORDER)
+#undef ADD_SET_BORDER
 
 String* CSSStyleValuePair::toString()
 {
@@ -1227,60 +1178,6 @@ bool CSSStyleValuePair::checkInputErrorBackground(std::vector<String*, gc_alloca
     }
 
     return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorBorder(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (checkEssentialValue(tokens))
-        return true;
-
-    // [border-width || border-style || border-color] | inherit | initial
-    bool hasWidth = false, hasStyle = false, hasColor = false;
-    if (tokens->size() > 0 && tokens->size() <= 3) {
-        for (unsigned i = 0; i < tokens->size(); i++) {
-            switch (checkBorderValueType(tokens->at(i)->utf8Data())) {
-            case BorderShorthandValueType::BWidth:
-                if (hasWidth)
-                    return false;
-                hasWidth = true;
-                break;
-            case BorderShorthandValueType::BStyle:
-                if (hasStyle)
-                    return false;
-                hasStyle = true;
-                break;
-            case BorderShorthandValueType::BColor:
-                if (hasColor)
-                    return false;
-                hasColor = true;
-                break;
-            case BorderShorthandValueType::BInvalid:
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderTop(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorder(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderRight(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorder(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderBottom(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorder(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBorderLeft(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorBorder(tokens);
 }
 
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()

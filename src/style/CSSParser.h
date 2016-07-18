@@ -546,6 +546,7 @@ public:
         return assureNamedColor(String::fromUTF8(token));
     }
 
+    // TODO : DEPRECATE
     static bool assureEssential(const char* token)
     {
         // initial || inherit
