@@ -5,6 +5,8 @@ test/internal-test/css/background/background_properties.html
 test/internal-test/css/display/block.html
 test/internal-test/css/display/block-inline-basic.html
 test/internal-test/css/display/display-internal-test.html
+test/internal-test/css/position/ltr-position-internal-test-1.html
+test/internal-test/css/position/ltr-position-internal-test-2.html
 test/internal-test/css/position/position-absolute.html
 test/internal-test/css/preferred-width/preferred-width-1.html
 test/internal-test/css/preferred-width/preferred-width-2.html
