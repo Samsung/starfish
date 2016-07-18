@@ -253,15 +253,6 @@ public:
         return CSSPropertyParser::assureUrl(token);
     }
 
-    static float parseNumber(const char* token)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (parser->consumeNumber()) {
-            return parser->parsedNumber();
-        }
-        return 0;
-    }
-
     static bool parseNumber(const char* token, bool allowNegative, float* val)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -273,15 +264,6 @@ public:
             return parser->isEnd();
         }
         return false;
-    }
-
-    static int32_t parseInt32(const char* token)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (parser->consumeInt32()) {
-            return parser->parsedInt32();
-        }
-        return 0;
     }
 
     static bool parseInt32(const char* token, bool allowNegative, int32_t* val)
@@ -297,6 +279,7 @@ public:
         return false;
     }
 
+    // TODO : DEPRECATE
     static String* parseNumberAndUnit(const char* token, float* result)
     {
         // NOTE(example): token("10px") -> result=10.0 + return "px"
@@ -348,67 +331,7 @@ public:
         return false;
     }
 
-    static bool assureLengthOrPercent(const char* token, bool allowNegative)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber())
-            return false;
-        float num = parser->parsedNumber();
-        if (!allowNegative && num < 0)
-            return false;
-        if (parser->consumeString()) {
-            String* str = parser->parsedString();
-            if ((str->length() == 0 && num == 0)
-                || isLengthUnit(str)
-                || str->equals("%"))
-                return parser->isEnd();
-            return false;
-        } else {
-            // After a zero length, the unit identifier is optional
-            if (num == 0)
-                return true;
-            return false;
-        }
-        return true;
-    }
-
-    static bool assureLengthOrPercentOrAuto(const char* token, bool allowNegative)
-    {
-        // <length> | <percentage> | auto
-        if (assureLengthOrPercent(token, allowNegative) || strcmp(token, "auto") == 0)
-            return true;
-        return false;
-    }
-
-    static bool assureLengthOrPercentList(const char* token, bool allowNegative, int minSize, int maxSize)
-    {
-        // NOTE: Allowed form - [space*][Length | Percent][space*] , ...
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        int cnt = 0;
-        do {
-            parser->consumeWhitespaces();
-            if (!parser->consumeNumber())
-                return false;
-            float num = parser->parsedNumber();
-            if (!allowNegative && num < 0)
-                return false;
-            if (parser->consumeString()) {
-                String* str = parser->parsedString();
-                if (!((str->length() == 0 && num == 0)
-                    || isLengthUnit(str)
-                    || str->equals("%")))
-                    return false;
-            } else {
-                // After a zero length, the unit identifier is optional
-                if (num != 0)
-                    return false;
-            }
-            cnt++;
-            parser->consumeWhitespaces();
-        } while (parser->consumeIfNext(','));
-        return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
-    }
-
+    // TODO : DEPRECATE
     static bool assureLength(const char* token, bool allowNegative)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -430,111 +353,6 @@ public:
             return false;
         }
         return true;
-    }
-
-    static bool assureAngle(const char* token)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber())
-            return false;
-        float num = parser->parsedNumber();
-        if (parser->consumeString()) {
-            String* str = parser->parsedString();
-            if ((str->length() == 0 && num == 0)
-                || str->equals("deg")
-                || str->equals("grad")
-                || str->equals("rad")
-                || str->equals("turn"))
-                return parser->isEnd();
-            return false;
-        } else {
-            // After a zero length, the unit identifier is optional
-            if (num == 0)
-                return true;
-            return false;
-        }
-        return true;
-    }
-
-    // comma-seperated list
-    static bool assureAngleList(const char* token, int minSize, int maxSize)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        int cnt = 0;
-        do {
-            parser->consumeWhitespaces();
-            if (!parser->consumeNumber())
-                return false;
-            float num = parser->parsedNumber();
-            if (parser->consumeString()) {
-                String* str = parser->parsedString();
-                if ((str->length() == 0 && num == 0)
-                    || str->equals("deg")
-                    || str->equals("grad")
-                    || str->equals("rad")
-                    || str->equals("turn"))
-                    cnt++;
-                else
-                    return false;
-            } else {
-                // After a zero length, the unit identifier is optional
-                if (num == 0)
-                    cnt++;
-                else
-                    return false;
-            }
-            parser->consumeWhitespaces();
-        } while (parser->consumeIfNext(','));
-        return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
-    }
-
-    static bool assurePercent(const char* token, bool allowNegative)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber())
-            return false;
-        float num = parser->parsedNumber();
-        if (!allowNegative && num < 0)
-            return false;
-        if (parser->consumeString()) {
-            String* str = parser->parsedString();
-            if (str->equals("%"))
-                return parser->isEnd();
-            return false;
-        } else {
-            // After a zero length, the unit identifier is optional
-            if (num == 0)
-                return true;
-            return false;
-        }
-        return true;
-    }
-
-    static bool assureNumber(const char* token, bool allowNegative)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber())
-            return false;
-        float num = parser->parsedNumber();
-        if (!allowNegative && num < 0)
-            return false;
-        return parser->isEnd();
-    }
-
-    static bool assureNumberList(const char* token, bool allowNegative, int minSize, int maxSize) // comma-seperated list
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        int cnt = 0;
-        do {
-            parser->consumeWhitespaces();
-            if (!parser->consumeNumber())
-                return false;
-            if (!allowNegative && parser->parsedNumber() < 0)
-                return false;
-            cnt++;
-            parser->consumeWhitespaces();
-        } while (parser->consumeIfNext(','));
-        return parser->isEnd() && minSize <= cnt && cnt <= maxSize;
     }
 
     static bool parseColorFunctionPart(String* s, bool isAlpha, unsigned char* ret, bool* isPercent)

@@ -987,16 +987,6 @@ public:
         }
     }
 
-    void setValuePercentageOrLength(const char* value);
-    void setValuePercentageOrLength(std::vector<String*, gc_allocator<String*> >* tokens);
-
-#define SET_VALUE(name, ...) \
-    void setValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
-
-    FOR_EACH_STYLE_ATTRIBUTE(SET_VALUE)
-#undef SET_VALUE
-
-// TODO: This will replace "checkInputError##name" And "setValue##name"
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
@@ -1178,25 +1168,6 @@ public:
         ret->setKeyKind(name);
         m_cssValues.push_back(*ret);
     }
-    // FIXME(june0.cho) remove below
-    /*
-       if (checkEssentialValue(&tokens) || checkInputError##name(&tokens)) {                                          \
-       for (unsigned i = 0; i < m_cssValues.size(); i++) {                        \
-       if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) { \
-       if (!m_cssValues.at(i).setValueCommon(&tokens))                    \
-       m_cssValues.at(i).setValue##name(&tokens);                     \
-       notifyNeedsStyleRecalc();                                          \
-       return;                                                            \
-       }                                                                      \
-       }                                                                          \
-       CSSStyleValuePair ret;                                                     \
-       ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                          \
-       if (!ret.setValueCommon(&tokens))                                          \
-       ret.setValue##name(&tokens);                                           \
-       notifyNeedsStyleRecalc();                                                  \
-       m_cssValues.push_back(ret);                                                \
-       }                                                                              \
-       */
 
 #define ATTRIBUTE_SETTER(name, ...)                                                    \
     void set##name(String* value)                                                      \

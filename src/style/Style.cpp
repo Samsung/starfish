@@ -216,20 +216,6 @@ bool CSSStyleValuePair::setValueCommon(std::vector<String*, gc_allocator<String*
     return true;
 }
 
-// <length> | <percentage> (| auto)
-void CSSStyleValuePair::setValuePercentageOrLength(const char* value)
-{
-    float result = 0.f;
-    String* unit = CSSPropertyParser::parseNumberAndUnit(value, &result);
-    if (unit->equals("%")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Percentage;
-        m_value.m_floatValue = result / 100.f;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::Length;
-        m_value.m_length = CSSLength(unit, result);
-    }
-}
-
 static String* BorderString(String* width, String* style, String* color)
 {
     String* space = String::spaceString;
@@ -963,15 +949,7 @@ String* CSSStyleValuePair::toString()
 
 void CSSStyleValuePair::setLengthValue(const char* value)
 {
-    if (VALUE_IS_STRING("auto")) {
-        setValueKind(CSSStyleValuePair::ValueKind::Auto);
-    } else if (VALUE_IS_INHERIT()) {
-        setValueKind(CSSStyleValuePair::ValueKind::Inherit);
-    } else if (VALUE_IS_INITIAL()) {
-        setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    } else {
-        setValuePercentageOrLength(value);
-    }
+    updateValueLengthOrPercent(String::fromUTF8(value), true);
 }
 
 String* CSSStyleDeclaration::BackgroundRepeat()
@@ -2566,17 +2544,6 @@ bool CSSStyleValuePair::updateValueBorder##POS##Width(std::vector<String*, gc_al
 }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
 #undef UPDATE_VALUE_BORDER_WIDTH
-
-// TODO: This is temp code
-#define NEW_SET_VALUE_DEF(name) \
-bool CSSStyleValuePair::updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens) \
-{ \
-    if (!checkInputError##name(tokens)) \
-        return false; \
-    setValue##name(tokens); \
-    return true; \
-}
-#undef NEW_SET_VALUE_DEF
 
 bool CSSStyleValuePair::updateValueLengthOrPercent(String* token, bool allowNegative)
 {
