@@ -180,7 +180,7 @@ private:
     ImageResource* m_imageResource;
 
     // background-position
-    SideValue m_positionType = SideValue::NoneSideValue;
+    SideValue m_positionType : 6;
     // background-repeat
     BackgroundRepeatValue m_repeatX : 1;
     BackgroundRepeatValue m_repeatY : 1;
