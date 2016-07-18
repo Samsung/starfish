@@ -1419,10 +1419,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundPosition:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBackgroundPositionType(parentStyle->backgroundPositionType());
                     style->setBackgroundPositionValue(parentStyle->backgroundPosition());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setBackgroundPositionValue(new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)));
+                    style->setBackgroundPositionValue(LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
                     ValueList* list = cssValues[k].multiValue();
                     Length xAxis, yAxis;
@@ -1451,7 +1450,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                                 yAxis = convertValueToLength(item.valueKind(), item.value());
                         }
                     }
-                    style->setBackgroundPositionValue(new LengthPosition(xAxis, yAxis));
+                    style->setBackgroundPositionValue(LengthPosition(xAxis, yAxis));
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
@@ -1462,23 +1461,21 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundSizeType(parentStyle->bgSizeType());
                     style->setBackgroundSizeValue(parentStyle->bgSizeValue());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    // initial value : auto
-                    LengthSize* result = new LengthSize();
-                    style->setBackgroundSizeValue(result);
+                    style->setBackgroundSizeValue(LengthSize());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Cover) {
                     style->setBackgroundSizeType(BackgroundSizeType::Cover);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Contain) {
                     style->setBackgroundSizeType(BackgroundSizeType::Contain);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                    style->setBackgroundSizeValue(new LengthSize());
+                    style->setBackgroundSizeValue(LengthSize());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueListKind) {
                     ValueList* list = cssValues[k].multiValue();
-                    LengthSize* result = new LengthSize();
+                    LengthSize result;
                     if (list->size() >= 1) {
-                        result->m_width = convertValueToLength(list->atIndex(0).valueKind(), list->atIndex(0).value());
+                        result.m_width = convertValueToLength(list->atIndex(0).valueKind(), list->atIndex(0).value());
                     }
                     if (list->size() >= 2) {
-                        result->m_height = convertValueToLength(list->atIndex(1).valueKind(), list->atIndex(1).value());
+                        result.m_height = convertValueToLength(list->atIndex(1).valueKind(), list->atIndex(1).value());
                     }
                     style->setBackgroundSizeValue(result);
                 } else {

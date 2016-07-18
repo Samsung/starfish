@@ -1135,10 +1135,10 @@ CSSStyleDeclaration* Node::getComputedStyle()
             p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
             ValueList* vals = new ValueList();
 
-            CSSStyleValuePair w = lengthToCSSStyleValue(style->bgSizeValue()->width());
+            CSSStyleValuePair w = lengthToCSSStyleValue(style->bgSizeValue().width());
             vals->append(w.valueKind(), w.value());
 
-            CSSStyleValuePair h = lengthToCSSStyleValue(style->bgSizeValue()->height());
+            CSSStyleValuePair h = lengthToCSSStyleValue(style->bgSizeValue().height());
             vals->append(h.valueKind(), h.value());
 
             p.setValue(vals);
@@ -1153,10 +1153,10 @@ CSSStyleDeclaration* Node::getComputedStyle()
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* vals = new ValueList();
 
-        CSSStyleValuePair x = lengthToCSSStyleValue(style->backgroundPosition()->x());
+        CSSStyleValuePair x = lengthToCSSStyleValue(style->backgroundPosition().x());
         vals->append(x.valueKind(), x.value());
 
-        CSSStyleValuePair y = lengthToCSSStyleValue(style->backgroundPosition()->y());
+        CSSStyleValuePair y = lengthToCSSStyleValue(style->backgroundPosition().y());
         vals->append(y.valueKind(), y.value());
 
         p.setValue(vals);
@@ -1422,9 +1422,9 @@ void Node::dumpStyle()
     }
 
     // background-position
-    if (m_style->backgroundPositionType() == SideValue::ValueSideValue) {
-        printf("background-position: (%s, %s),", m_style->backgroundPosition()->x().dumpString()->utf8Data(),
-            m_style->backgroundPosition()->y().dumpString()->utf8Data());
+    if (m_style->hasBackgroundPosition()) {
+        printf("background-position: (%s, %s),", m_style->backgroundPosition().x().dumpString()->utf8Data(),
+            m_style->backgroundPosition().y().dumpString()->utf8Data());
     }
 
     // background-size
@@ -1433,8 +1433,8 @@ void Node::dumpStyle()
     } else if (m_style->bgSizeType() == BackgroundSizeType::Contain) {
         printf("background-size: contain, ");
     } else if (m_style->bgSizeType() == BackgroundSizeType::SizeValue) {
-        printf("background-size: (%s, %s),", m_style->bgSizeValue()->width().dumpString()->utf8Data(),
-            m_style->bgSizeValue()->height().dumpString()->utf8Data());
+        printf("background-size: (%s, %s),", m_style->bgSizeValue().width().dumpString()->utf8Data(),
+            m_style->bgSizeValue().height().dumpString()->utf8Data());
     }
 
     // box offsets: top

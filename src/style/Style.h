@@ -364,14 +364,6 @@ enum UnicodeBidiValue {
     EmbedUnicodeBidiValue,
 };
 
-enum NamedColorValue {
-#define ADD_COLOR_ITEM(name, ...) \
-    name##NamedColor,
-    NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
-#undef ADD_COLOR_ITEM
-    currentColor,
-};
-
 class ValueList;
 class CSSStyleDeclaration;
 

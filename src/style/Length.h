@@ -128,12 +128,12 @@ public:
     }
 
 
-    bool operator==(const Length& src)
+    bool operator==(const Length& src) const
     {
         return this->m_type == src.m_type && this->m_data == src.m_data;
     }
 
-    bool operator!=(const Length& src)
+    bool operator!=(const Length& src) const
     {
         return !operator==(src);
     }
@@ -184,12 +184,12 @@ public:
         return m_height;
     }
 
-    bool operator==(const LengthSize& o)
+    bool operator==(const LengthSize& o) const
     {
         return this->m_width == o.m_width && this->m_height == o.m_height;
     }
 
-    bool operator!=(const LengthSize& o)
+    bool operator!=(const LengthSize& o) const
     {
         return !operator==(o);
     }
@@ -231,12 +231,12 @@ public:
         return m_y;
     }
 
-    bool operator==(const LengthPosition& o)
+    bool operator==(const LengthPosition& o) const
     {
         return this->m_x == o.m_x && this->m_y == o.m_y;
     }
 
-    bool operator!=(const LengthPosition& o)
+    bool operator!=(const LengthPosition& o) const
     {
         return !operator==(o);
     }

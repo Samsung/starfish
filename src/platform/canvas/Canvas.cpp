@@ -35,16 +35,51 @@
 
 #include <cairo.h>
 
-#ifndef STARFISH_TIZEN_WEARABLE
-__thread Evas* g_internalCanvas;
-#else
 Evas* g_internalCanvas;
-#endif
 
 namespace StarFish {
 
 Evas* internalCanvas()
 {
+    if (!g_internalCanvas) {
+        Evas* canvas;
+        int method;
+        method = evas_render_method_lookup("buffer");
+        if (method <= 0) {
+            fputs("ERROR: evas was not compiled with 'buffer' engine!\n", stderr);
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        canvas = evas_new();
+        if (!canvas) {
+            fputs("ERROR: could not instantiate new evas canvas.\n", stderr);
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        evas_output_method_set(canvas, method);
+
+        Evas_Engine_Info_Buffer* einfo;
+        void* pixels = malloc(4 * 32 * 32);
+
+        evas_output_size_set(canvas, 32, 32);
+        evas_output_viewport_set(canvas, 0, 0, 32, 32);
+        einfo = (Evas_Engine_Info_Buffer*)evas_engine_info_get(canvas);
+
+        if (!einfo) {
+            fputs("ERROR: could not get evas engine info!\n", stderr);
+            evas_free(canvas);
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+
+        einfo->info.depth_type = EVAS_ENGINE_BUFFER_DEPTH_ARGB32;
+        einfo->info.dest_buffer = pixels;
+        einfo->info.dest_buffer_row_bytes = 32 * 4;
+        einfo->info.use_color_key = 0;
+        einfo->info.alpha_threshold = 0;
+        einfo->info.func.new_update_region = NULL;
+        einfo->info.func.free_update_region = NULL;
+        evas_engine_info_set(canvas, (Evas_Engine_Info*)einfo);
+
+        g_internalCanvas = canvas;
+    }
     STARFISH_RELEASE_ASSERT(g_internalCanvas);
     return g_internalCanvas;
 }

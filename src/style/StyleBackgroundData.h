@@ -29,13 +29,12 @@ public:
     StyleBackgroundData()
         : m_image(String::emptyString)
         , m_imageResource(NULL)
-        , m_positionType(SideValue::ValueSideValue)
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
         , m_sizeType(BackgroundSizeType::SizeValue)
         , m_bgColorNeedToUpdate(false)
-        , m_positionValue(new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)))
-        , m_sizeValue(new LengthSize())
+        , m_positionValue(nullptr)
+        , m_sizeValue(nullptr)
     {
     }
 
@@ -43,15 +42,9 @@ public:
     {
     }
 
-    void setPositionType(SideValue type)
+    void setPositionValue(LengthPosition position)
     {
-        m_positionType = type;
-    }
-
-    void setPositionValue(LengthPosition* position)
-    {
-        m_positionType = SideValue::ValueSideValue;
-        m_positionValue = position;
+        m_positionValue = new LengthPosition(position);
     }
 
     void setSizeType(BackgroundSizeType type)
@@ -59,10 +52,15 @@ public:
         m_sizeType = type;
     }
 
-    void setSizeValue(LengthSize* size)
+    void setSizeValue(LengthSize size)
     {
         m_sizeType = BackgroundSizeType::SizeValue;
-        m_sizeValue = size;
+        if (!m_sizeValue) {
+            if (size == LengthSize())
+                return;
+            m_sizeValue = new LengthSize(size);
+        } else
+            *m_sizeValue = size;
     }
 
     void setBgColor(Color color)
@@ -118,11 +116,6 @@ public:
         return m_imageResource;
     }
 
-    SideValue positionType()
-    {
-        return m_positionType;
-    }
-
     BackgroundSizeType sizeType()
     {
         return m_sizeType;
@@ -138,25 +131,28 @@ public:
         return m_repeatY;
     }
 
-    LengthSize* sizeValue()
+    LengthSize sizeValue() const
     {
         STARFISH_ASSERT(m_sizeType == BackgroundSizeType::SizeValue);
-        if (m_sizeValue == NULL)
-            m_sizeValue = new LengthSize();
-        return m_sizeValue;
+        if (m_sizeValue)
+            return *m_sizeValue;
+        return LengthSize();
     }
 
-    LengthPosition* positionValue()
+    bool hasPositionValue()
     {
-        STARFISH_ASSERT(m_positionType == SideValue::ValueSideValue);
-        if (m_positionValue == NULL)
-            m_positionValue = new LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
         return m_positionValue;
+    }
+
+    LengthPosition positionValue() const
+    {
+        if (m_positionValue == NULL)
+            return LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
+        return *m_positionValue;
     }
 
     void checkComputed(Length fontSize, Font* font, Color color)
     {
-
         if (m_sizeValue)
             m_sizeValue->checkComputed(fontSize, font);
 
@@ -179,8 +175,6 @@ private:
     String* m_image;
     ImageResource* m_imageResource;
 
-    // background-position
-    SideValue m_positionType : 6;
     // background-repeat
     BackgroundRepeatValue m_repeatX : 1;
     BackgroundRepeatValue m_repeatY : 1;
@@ -207,14 +201,14 @@ bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
     if (a.m_image != b.m_image)
         return false;
 
-    if (a.m_positionType != b.m_positionType)
-        return false;
-
-    if (a.m_positionType == SideValue::ValueSideValue && *a.m_positionValue != *b.m_positionValue) {
+    if (a.positionValue() != b.positionValue()) {
         return false;
     }
 
-    if (a.m_sizeType == BackgroundSizeType::SizeValue && *a.m_sizeValue != *b.m_sizeValue) {
+    if (a.m_sizeType != b.m_sizeType)
+        return false;
+
+    if (a.m_sizeType == BackgroundSizeType::SizeValue && a.sizeValue() != b.sizeValue()) {
         return false;
     }
 
