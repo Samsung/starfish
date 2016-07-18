@@ -356,18 +356,18 @@ void CSSStyleDeclaration::setBorder(String* value)
     tokenizeCSSValue(&tokens, value);
     CSSStyleValuePair width, style, color;
     if (parseBorderWidthStyleColor(&tokens, &width, &style, &color)) {
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth, &width);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle, &style);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor, &color);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth, &width);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle, &style);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor, &color);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth, &width);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle, &style);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor, &color);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth, &width);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle, &style);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor, &color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth, width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor, color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth, width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor, color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth, width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor, color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth, width);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor, color);
         notifyNeedsStyleRecalc();
     }
 }
@@ -385,9 +385,9 @@ void CSSStyleDeclaration::setBorder##POS(String* value) \
     tokenizeCSSValue(&tokens, value); \
     CSSStyleValuePair width, style, color; \
     if (parseBorderWidthStyleColor(&tokens, &width, &style, &color)) { \
-        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Width, &width); \
-        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Style, &style); \
-        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Color, &color); \
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Width, width); \
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Style, style); \
+        addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Color, color); \
         notifyNeedsStyleRecalc(); \
     } \
 }
@@ -460,7 +460,7 @@ String* CSSStyleValuePair::toString()
     case BackgroundRepeatX:
     case BackgroundRepeatY:
         if (m_valueKind == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
-            if (backgroundRepeatYValue() == RepeatRepeatValue)
+            if (backgroundRepeatValue() == RepeatRepeatValue)
                 return String::fromUTF8("repeat");
             else
                 return String::fromUTF8("no-repeat");
@@ -928,21 +928,25 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
 
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value);
-    if (STRING_VALUE_IS_STRING("repeat")) {
-        setBackgroundRepeatX(String::createASCIIString("repeat"));
-        setBackgroundRepeatY(String::createASCIIString("repeat"));
-    } else if (STRING_VALUE_IS_STRING("repeat-x")) {
-        setBackgroundRepeatX(String::createASCIIString("repeat"));
-        setBackgroundRepeatY(String::createASCIIString("no-repeat"));
-    } else if (STRING_VALUE_IS_STRING("repeat-y")) {
-        setBackgroundRepeatX(String::createASCIIString("no-repeat"));
-        setBackgroundRepeatY(String::createASCIIString("repeat"));
-    } else if (STRING_VALUE_IS_STRING("no-repeat")) {
-        setBackgroundRepeatX(String::createASCIIString("no-repeat"));
-        setBackgroundRepeatY(String::createASCIIString("no-repeat"));
-    } else {
-        setBackgroundRepeatX(value);
-        setBackgroundRepeatY(value);
+    if (tokens.size() != 1)
+        return;
+
+    CSSStyleValuePair temp;
+    if (temp.setValueCommon(&tokens) || temp.updateValueBackgroundRepeatUnit(&tokens)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, temp);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, temp);
+        return;
+    }
+
+    CSSStyleValuePair noRepeat(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, BackgroundRepeatValue::NoRepeatRepeatValue);
+    CSSStyleValuePair repeat(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, BackgroundRepeatValue::RepeatRepeatValue);
+    fprintf(stderr, "%s\n", tokens[0]->utf8Data());
+    if (tokens[0]->equals("repeat-x")) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, repeat);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, noRepeat);
+    } else if (tokens[0]->equals("repeat-y")) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, noRepeat);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, repeat);
     }
 }
 
@@ -1489,7 +1493,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundRepeatX(BackgroundRepeatValue::RepeatRepeatValue);
                 } else {
                     STARFISH_ASSERT(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind == cssValues[k].valueKind());
-                    style->setBackgroundRepeatX(cssValues[k].backgroundRepeatXValue());
+                    style->setBackgroundRepeatX(cssValues[k].backgroundRepeatValue());
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundRepeatY:
@@ -1499,7 +1503,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundRepeatY(BackgroundRepeatValue::RepeatRepeatValue);
                 } else {
                     STARFISH_ASSERT(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind == cssValues[k].valueKind());
-                    style->setBackgroundRepeatY(cssValues[k].backgroundRepeatYValue());
+                    style->setBackgroundRepeatY(cssValues[k].backgroundRepeatValue());
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BorderImageSlice:
@@ -2357,7 +2361,7 @@ bool CSSStyleValuePair::updateValueFontStyle(std::vector<String*, gc_allocator<S
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundRepeatX(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueBackgroundRepeatUnit(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() != 1)
         return false;
@@ -2365,18 +2369,23 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatX(std::vector<String*, gc_all
     String* value = (*tokens)[0];
     m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
     if (STRING_VALUE_IS_STRING("no-repeat")) {
-        m_value.m_backgroundRepeatX = BackgroundRepeatValue::NoRepeatRepeatValue;
+        m_value.m_backgroundRepeat = BackgroundRepeatValue::NoRepeatRepeatValue;
     } else if (STRING_VALUE_IS_STRING("repeat")) {
-        m_value.m_backgroundRepeatX = BackgroundRepeatValue::RepeatRepeatValue;
+        m_value.m_backgroundRepeat = BackgroundRepeatValue::RepeatRepeatValue;
     } else {
         return false;
     }
     return true;
 }
 
+bool CSSStyleValuePair::updateValueBackgroundRepeatX(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    return updateValueBackgroundRepeatUnit(tokens);
+}
+
 bool CSSStyleValuePair::updateValueBackgroundRepeatY(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    return updateValueBackgroundRepeatX(tokens);
+    return updateValueBackgroundRepeatUnit(tokens);
 }
 
 bool CSSStyleValuePair::updateValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens)
