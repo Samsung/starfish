@@ -793,16 +793,10 @@ public:
         m_value.m_stringValue = value;
     }
 
-    BackgroundRepeatValue backgroundRepeatXValue()
+    BackgroundRepeatValue backgroundRepeatValue()
     {
         STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
-        return m_value.m_backgroundRepeatX;
-    }
-
-    BackgroundRepeatValue backgroundRepeatYValue()
-    {
-        STARFISH_ASSERT(m_valueKind == BackgroundRepeatValueKind);
-        return m_value.m_backgroundRepeatY;
+        return m_value.m_backgroundRepeat;
     }
 
     ValueList* multiValue()
@@ -854,8 +848,7 @@ public:
         CSSLength m_length;
         CSSAngle m_angle;
         String* m_stringValue;
-        BackgroundRepeatValue m_backgroundRepeatX;
-        BackgroundRepeatValue m_backgroundRepeatY;
+        BackgroundRepeatValue m_backgroundRepeat;
         BorderStyleValue m_borderStyle;
         BorderWidthValue m_borderWidth;
         ValueList* m_multiValue;
@@ -879,6 +872,7 @@ public:
         ValueData(CSSLength v) { m_length = v; }
         ValueData(CSSAngle v) { m_angle = v; }
         ValueData(String* v) { m_stringValue = v; }
+        ValueData(BackgroundRepeatValue v) { m_backgroundRepeat = v; }
         ValueData(BorderStyleValue v) { m_borderStyle = v; }
         ValueData(BorderWidthValue v) { m_borderWidth = v; }
         ValueData(ValueList* v) { m_multiValue = v; }
@@ -994,10 +988,14 @@ public:
         }
     }
 
+    // TODO : DEPRECATE
+    static bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
+
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
+    bool updateValueBackgroundRepeatUnit(std::vector<String*, gc_allocator<String*> >* tokens);
     bool updateValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens);
     bool updateValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens);
     bool updateValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens);
@@ -1006,35 +1004,15 @@ public:
     bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
 
-    static bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
-
+// TODO : DEPRECATE
 #define CHECK_INPUT_ERROR(name, ...) \
     static bool checkInputError##name(std::vector<String*, gc_allocator<String*> >* tokens);
 
     FOR_EACH_STYLE_ATTRIBUTE(CHECK_INPUT_ERROR)
 #undef CHECK_INPUT_ERROR
 
-#define FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(F)                  \
-    F(Margin, MarginTop, MarginBottom, MarginLeft, MarginRight)         \
-    F(Padding, PaddingTop, PaddingBottom, PaddingLeft, PaddingRight)    \
-    F(BorderStyle, BorderTopStyle, BorderBottomStyle, BorderLeftStyle, BorderRightStyle)    \
-    F(BorderWidth, BorderTopWidth, BorderBottomWidth, BorderLeftWidth, BorderRightWidth)    \
-    F(BorderColor, BorderTopColor, BorderBottomColor, BorderLeftColor, BorderRightColor)
-
-#define CHECK_INPUT_ERROR_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight) \
-    static bool checkInputError##name(std::vector<String*, gc_allocator<String*> >* tokens);
-
-    FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(CHECK_INPUT_ERROR_FOURSIDE)
-#undef CHECK_INPUT_ERROR_FOURSIDE
-
     static bool checkInputErrorBackground(std::vector<String*, gc_allocator<String*> >* tokens);
     static bool checkInputErrorBackgroundRepeat(std::vector<String*, gc_allocator<String*> >* tokens);
-    static bool checkInputErrorBorder(std::vector<String*, gc_allocator<String*> >* tokens);
-    static bool checkInputErrorBorderTop(std::vector<String*, gc_allocator<String*> >* tokens);
-    static bool checkInputErrorBorderRight(std::vector<String*, gc_allocator<String*> >* tokens);
-    static bool checkInputErrorBorderBottom(std::vector<String*, gc_allocator<String*> >* tokens);
-    static bool checkInputErrorBorderLeft(std::vector<String*, gc_allocator<String*> >* tokens);
-    static bool checkHavingOneTokenAndLengthOrPercentage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
 
 protected:
     KeyKind m_keyKind;
@@ -1150,6 +1128,13 @@ public:
 
     void tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src);
 
+    String* Border();
+    String* BorderTop();
+    String* BorderRight();
+    String* BorderBottom();
+    String* BorderLeft();
+    String* Background();
+    String* BackgroundRepeat();
 #define ATTRIBUTE_GETTER(name, ...)                                              \
     String* name()                                                               \
     {                                                                            \
@@ -1163,19 +1148,26 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_GETTER)
 #undef ATTRIBUTE_GETTER
 
-    void addCSSValuePair(CSSStyleValuePair::KeyKind name, CSSStyleValuePair* ret)
+    void addCSSValuePair(CSSStyleValuePair::KeyKind name, CSSStyleValuePair ret)
     {
         for (unsigned i = 0; i < m_cssValues.size(); i++) {
             if (m_cssValues.at(i).keyKind() == name) {
-                m_cssValues.at(i).setValueKind(ret->valueKind());
-                m_cssValues.at(i).setValue(ret->value());
+                m_cssValues.at(i).setValueKind(ret.valueKind());
+                m_cssValues.at(i).setValue(ret.value());
                 return;
             }
         }
-        ret->setKeyKind(name);
-        m_cssValues.push_back(*ret);
+        ret.setKeyKind(name);
+        m_cssValues.push_back(ret);
     }
 
+    void setBorder(String* value);
+    void setBorderTop(String* value);
+    void setBorderRight(String* value);
+    void setBorderBottom(String* value);
+    void setBorderLeft(String* value);
+    void setBackground(String* value);
+    void setBackgroundRepeat(String* value);
 #define ATTRIBUTE_SETTER(name, ...)                                                    \
     void set##name(String* value)                                                      \
     {                                                                                  \
@@ -1192,7 +1184,7 @@ public:
         tokenizeCSSValue(&tokens, value);                                              \
         CSSStyleValuePair ret;                                                         \
         if (ret.setValueCommon(&tokens) || ret.updateValue##name(&tokens)) {           \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::name, &ret);                   \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);                    \
             notifyNeedsStyleRecalc();                                                  \
         }                                                                              \
     }
@@ -1200,38 +1192,41 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE(ATTRIBUTE_SETTER)
 #undef ATTRIBUTE_SETTER
 
-#define ATTRIBUTE_GETTER_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight)                                            \
-    String* name()                                                               \
-    {                                                                            \
-        String* top = nameTop();                                                 \
-        if (!top->equals(String::emptyString)) {                                 \
-            String* right = nameRight();                                         \
-            if (!right->equals(String::emptyString)) {                           \
-                String* bottom = nameBottom();                                   \
-                if (!bottom->equals(String::emptyString)) {                      \
-                    String* left = nameLeft();                                   \
-                    if (!left->equals(String::emptyString)) {                    \
-                        return combineBoxString(top, right, bottom, left);       \
-                    }                                                            \
-                }                                                                \
-            }                                                                    \
-        }                                                                        \
-        return String::emptyString;                                              \
+#define ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \
+    String* PRE##__VA_ARGS__() \
+    { \
+        String* top = PRE##Top##__VA_ARGS__(); \
+        if (!top->equals(String::emptyString)) { \
+            String* right = PRE##Right##__VA_ARGS__(); \
+            if (!right->equals(String::emptyString)) { \
+                String* bottom = PRE##Bottom##__VA_ARGS__(); \
+                if (!bottom->equals(String::emptyString)) { \
+                    String* left = PRE##Left##__VA_ARGS__(); \
+                    if (!left->equals(String::emptyString)) { \
+                        return combineBoxString(top, right, bottom, left); \
+                    } \
+                } \
+            } \
+        } \
+        return String::emptyString; \
     }
-
-    FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(ATTRIBUTE_GETTER_FOURSIDE)
+    ATTRIBUTE_GETTER_FOURSIDE(Margin);
+    ATTRIBUTE_GETTER_FOURSIDE(Padding);
+    ATTRIBUTE_GETTER_FOURSIDE(Border, Width);
+    ATTRIBUTE_GETTER_FOURSIDE(Border, Style);
+    ATTRIBUTE_GETTER_FOURSIDE(Border, Color);
 #undef ATTRIBUTE_GETTER_FOURSIDE
 
-#define ATTRIBUTE_SETTER_FOURSIDE(name, nameTop, nameBottom, nameLeft, nameRight) \
-    void set##name(String* value)                                                      \
-    {                                                                                  \
-        if (value->length() == 0) {                                                    \
-            set##nameTop(String::emptyString);                                         \
-            set##nameBottom(String::emptyString);                                      \
-            set##nameLeft(String::emptyString);                                        \
-            set##nameRight(String::emptyString);                                       \
-            return;                                                                    \
-        }                                                                              \
+#define ATTRIBUTE_SETTER_FOURSIDE(PRE, ...) \
+    void set##PRE##__VA_ARGS__(String* value) \
+    { \
+        if (value->length() == 0) { \
+            set##PRE##Top##__VA_ARGS__(String::emptyString); \
+            set##PRE##Bottom##__VA_ARGS__(String::emptyString); \
+            set##PRE##Left##__VA_ARGS__(String::emptyString); \
+            set##PRE##Right##__VA_ARGS__(String::emptyString); \
+            return; \
+        } \
         std::vector<String*, gc_allocator<String*> > tokens; \
         std::vector<String*, gc_allocator<String*> > tokenTop, tokenRight, tokenBottom, tokenLeft; \
         tokenizeCSSValue(&tokens, value); \
@@ -1246,38 +1241,24 @@ public:
         \
         CSSStyleValuePair top, right, bottom, left; \
         bool valid = true; \
-        valid &= (top.setValueCommon(&tokenTop) || top.updateValue##nameTop(&tokenTop)); \
-        valid &= (right.setValueCommon(&tokenRight) || right.updateValue##nameRight(&tokenRight)); \
-        valid &= (bottom.setValueCommon(&tokenBottom) || bottom.updateValue##nameBottom(&tokenBottom)); \
-        valid &= (left.setValueCommon(&tokenLeft) || left.updateValue##nameLeft(&tokenLeft)); \
+        valid &= (top.setValueCommon(&tokenTop) || top.updateValue##PRE##Top##__VA_ARGS__(&tokenTop)); \
+        valid &= (right.setValueCommon(&tokenRight) || right.updateValue##PRE##Right##__VA_ARGS__(&tokenRight)); \
+        valid &= (bottom.setValueCommon(&tokenBottom) || bottom.updateValue##PRE##Bottom##__VA_ARGS__(&tokenBottom)); \
+        valid &= (left.setValueCommon(&tokenLeft) || left.updateValue##PRE##Left##__VA_ARGS__(&tokenLeft)); \
         if (valid) { \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::nameTop, &top); \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::nameRight, &right); \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::nameBottom, &bottom); \
-            addCSSValuePair(CSSStyleValuePair::KeyKind::nameLeft, &left); \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Top##__VA_ARGS__, top); \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Right##__VA_ARGS__, right); \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__, bottom); \
+            addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__, left); \
             notifyNeedsStyleRecalc(); \
         } \
     }
-
-    FOR_EACH_STYLE_ATTRIBUTE_FOURSIDE_SHORTHAND(ATTRIBUTE_SETTER_FOURSIDE)
+    ATTRIBUTE_SETTER_FOURSIDE(Margin);
+    ATTRIBUTE_SETTER_FOURSIDE(Padding);
+    ATTRIBUTE_SETTER_FOURSIDE(Border, Width);
+    ATTRIBUTE_SETTER_FOURSIDE(Border, Style);
+    ATTRIBUTE_SETTER_FOURSIDE(Border, Color);
 #undef ATTRIBUTE_SETTER_FOURSIDE
-
-    String* Border();
-    String* BorderTop();
-    String* BorderRight();
-    String* BorderBottom();
-    String* BorderLeft();
-    void setBorder(String* value);
-    void setBorderTop(String* value);
-    void setBorderRight(String* value);
-    void setBorderBottom(String* value);
-    void setBorderLeft(String* value);
-
-    String* BackgroundRepeat();
-    void setBackgroundRepeat(String* value);
-
-    String* Background();
-    void setBackground(String* value);
 
     static String* combineBoxString(String* t, String* r, String* b, String* l)
     {
