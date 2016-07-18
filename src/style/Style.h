@@ -1007,6 +1007,7 @@ public:
     bool updateValueLengthOrPercent(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercent(String* token, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
+    bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
 
     static bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
 
