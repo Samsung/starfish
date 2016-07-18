@@ -1240,9 +1240,9 @@ public:
         CSSStyleValuePair top, right, bottom, left; \
         bool valid = true; \
         valid &= (top.setValueCommon(&tokenTop) || top.updateValue##nameTop(&tokenTop)); \
-        valid &= (right.setValueCommon(&tokenRight) || right.updateValue##nameLeft(&tokenRight)); \
-        valid &= (bottom.setValueCommon(&tokenBottom) || bottom.updateValue##nameRight(&tokenBottom)); \
-        valid &= (left.setValueCommon(&tokenLeft) || left.updateValue##nameBottom(&tokenLeft)); \
+        valid &= (right.setValueCommon(&tokenRight) || right.updateValue##nameRight(&tokenRight)); \
+        valid &= (bottom.setValueCommon(&tokenBottom) || bottom.updateValue##nameBottom(&tokenBottom)); \
+        valid &= (left.setValueCommon(&tokenLeft) || left.updateValue##nameLeft(&tokenLeft)); \
         if (valid) { \
             addCSSValuePair(CSSStyleValuePair::KeyKind::nameTop, &top); \
             addCSSValuePair(CSSStyleValuePair::KeyKind::nameRight, &right); \
