@@ -185,6 +185,13 @@ public:
         }
     }
 
+    void setSurroundIfNeeded()
+    {
+        if (m_surround == nullptr) {
+            m_surround = new StyleSurroundData();
+        }
+    }
+
     bool hasTransforms(Frame* frame);
 
     // DO NOT USE THIS FUNCTION
@@ -196,6 +203,7 @@ public:
     StyleTransformDataGroup* transforms(Frame* frame);
 
     SkMatrix transformsToMatrix(LayoutUnit containerWidth, LayoutUnit containerHeight, bool isTransformable);
+
     void setTransformIfNeeded()
     {
         if (m_transforms == NULL) {
@@ -446,113 +454,41 @@ public:
         }
     }
 
-    Color borderTopColor()
-    {
-        if (m_surround == nullptr || !m_surround->border.top().hasBorderColor()) {
-            return m_inheritedStyles.m_color;
-        } else {
-            return m_surround->border.top().color();
-        }
+#define BORDER_COLOR(UPOS, LPOS, ...) \
+    Color border##UPOS##Color() \
+    { \
+        if (m_surround == nullptr || !m_surround->border.LPOS().hasBorderColor()) { \
+            return m_inheritedStyles.m_color; \
+        } else { \
+            return m_surround->border.LPOS().color(); \
+        } \
     }
+    GEN_FOURSIDE(BORDER_COLOR)
+#undef BORDER_COLOR
 
-    Color borderRightColor()
-    {
-        if (m_surround == nullptr || !m_surround->border.right().hasBorderColor()) {
-            return m_inheritedStyles.m_color;
-        } else {
-            return m_surround->border.right().color();
-        }
+#define BORDER_STYLE(UPOS, LPOS, ...) \
+    BorderStyleValue border##UPOS##Style() \
+    { \
+        if (m_surround == nullptr) { \
+            return initialBorderStyle(); \
+        } else { \
+            return m_surround->border.LPOS().style(); \
+        } \
     }
+    GEN_FOURSIDE(BORDER_STYLE)
+#undef BORDER_STYLE
 
-    Color borderBottomColor()
-    {
-        if (m_surround == nullptr || !m_surround->border.bottom().hasBorderColor()) {
-            return m_inheritedStyles.m_color;
-        } else {
-            return m_surround->border.bottom().color();
-        }
+#define BORDER_WIDTH(UPOS, LPOS, ...) \
+    Length border##UPOS##Width() \
+    { \
+        if (m_surround == nullptr) { \
+            return initialBorderWidth(); \
+        } else { \
+            return m_surround->border.LPOS().width(); \
+        } \
     }
-
-    Color borderLeftColor()
-    {
-        if (m_surround == nullptr || !m_surround->border.left().hasBorderColor()) {
-            return m_inheritedStyles.m_color;
-        } else {
-            return m_surround->border.left().color();
-        }
-    }
-
-    BorderStyleValue borderTopStyle()
-    {
-        if (m_surround == nullptr) {
-            return BorderStyleValue::NoneBorderStyleValue;
-        } else {
-            return m_surround->border.top().style();
-        }
-    }
-
-    BorderStyleValue borderRightStyle()
-    {
-        if (m_surround == nullptr) {
-            return BorderStyleValue::NoneBorderStyleValue;
-        } else {
-            return m_surround->border.right().style();
-        }
-    }
-
-    BorderStyleValue borderBottomStyle()
-    {
-        if (m_surround == nullptr) {
-            return BorderStyleValue::NoneBorderStyleValue;
-        } else {
-            return m_surround->border.bottom().style();
-        }
-    }
-
-    BorderStyleValue borderLeftStyle()
-    {
-        if (m_surround == nullptr) {
-            return BorderStyleValue::NoneBorderStyleValue;
-        } else {
-            return m_surround->border.left().style();
-        }
-    }
-
-    Length borderTopWidth()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->border.top().width();
-        }
-    }
-
-    Length borderRightWidth()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->border.right().width();
-        }
-    }
-
-    Length borderBottomWidth()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->border.bottom().width();
-        }
-    }
-
-    Length borderLeftWidth()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->border.left().width();
-        }
-    }
+    GEN_FOURSIDE(BORDER_WIDTH)
+#undef BORDER_WIDTH
 
     StyleTransformOrigin* transformOrigin()
     {
@@ -588,81 +524,90 @@ public:
             surround()->border.left().clearColor();
     }
 
-    void setBorderTopColor(Color color)
-    {
-        surround()->border.top().setColor(color);
+#define SET_BORDER_COLOR(UPOS, LPOS, ...) \
+    void setBorder##UPOS##Color(Color color) \
+    { \
+        setSurroundIfNeeded(); \
+        surround()->border.LPOS().setColor(color); \
     }
+    GEN_FOURSIDE(SET_BORDER_COLOR)
+#undef SET_BORDER_COLOR
 
-    void setBorderRightColor(Color color)
-    {
-        surround()->border.right().setColor(color);
+#define SET_BORDER_STYLE(UPOS, LPOS, ...) \
+    void setBorder##UPOS##Style(BorderStyleValue style) \
+    { \
+        setSurroundIfNeeded(); \
+        surround()->border.LPOS().setStyle(style); \
     }
+    GEN_FOURSIDE(SET_BORDER_STYLE)
+#undef SET_BORDER_STYLE
 
-    void setBorderBottomColor(Color color)
-    {
-        surround()->border.bottom().setColor(color);
+#define SET_BORDER_WIDTH(UPOS, LPOS, ...) \
+    void setBorder##UPOS##Width(Length width) \
+    { \
+        setSurroundIfNeeded(); \
+        surround()->border.LPOS().setWidth(width); \
     }
-
-    void setBorderLeftColor(Color color)
-    {
-        surround()->border.left().setColor(color);
-    }
-
-    void setBorderTopStyle(BorderStyleValue style)
-    {
-        surround()->border.top().setStyle(style);
-    }
-
-    void setBorderRightStyle(BorderStyleValue style)
-    {
-        surround()->border.right().setStyle(style);
-    }
-
-    void setBorderBottomStyle(BorderStyleValue style)
-    {
-        surround()->border.bottom().setStyle(style);
-    }
-
-    void setBorderLeftStyle(BorderStyleValue style)
-    {
-        surround()->border.left().setStyle(style);
-    }
-
-    void setBorderTopWidth(Length width)
-    {
-        surround()->border.top().setWidth(width);
-    }
-
-    void setBorderRightWidth(Length width)
-    {
-        surround()->border.right().setWidth(width);
-    }
-
-    void setBorderBottomWidth(Length width)
-    {
-        surround()->border.bottom().setWidth(width);
-    }
-
-    void setBorderLeftWidth(Length width)
-    {
-        surround()->border.left().setWidth(width);
-    }
+    GEN_FOURSIDE(SET_BORDER_WIDTH)
+#undef SET_BORDER_WIDTH
 
     String* borderImageSource()
     {
         if (m_surround)
             return surround()->border.image().url();
-        return String::emptyString;
+        return initialBorderImageSource();
     }
-    LengthBox borderImageSlices() { return surround()->border.image().slices(); }
-    bool borderImageSliceFill() { return surround()->border.image().sliceFill(); }
-    BorderImageLengthBox borderImageWidths() { return surround()->border.image().widths(); }
 
-    void setBorderImageSource(String* url) { surround()->border.image().setUrl(url); }
-    void setBorderImageSlices(LengthBox slices) { surround()->border.image().setSlices(slices); }
-    void setBorderImageSliceFill(bool fill) { surround()->border.image().setSliceFill(fill); }
-    void setBorderImageWidths(BorderImageLengthBox value) { surround()->border.image().setWidths(value); }
-    void setBorderImageResource(ImageResource* value) { surround()->border.image().setImageResource(value); }
+    LengthBox borderImageSlices()
+    {
+        if (m_surround)
+            return surround()->border.image().slices();
+        return initialBorderImageSlices();
+    }
+
+    bool borderImageSliceFill()
+    {
+        if (m_surround)
+            return surround()->border.image().sliceFill();
+        return initialBorderImageSliceFill();
+    }
+
+    BorderImageLengthBox borderImageWidths()
+    {
+        if (m_surround)
+            return surround()->border.image().widths();
+        return initialBorderImageWidths();
+    }
+
+    void setBorderImageSource(String* url)
+    {
+        setSurroundIfNeeded();
+        surround()->border.image().setUrl(url);
+    }
+
+    void setBorderImageSlices(LengthBox slices)
+    {
+        setSurroundIfNeeded();
+        surround()->border.image().setSlices(slices);
+    }
+
+    void setBorderImageSliceFill(bool fill)
+    {
+        setSurroundIfNeeded();
+        surround()->border.image().setSliceFill(fill);
+    }
+
+    void setBorderImageWidths(BorderImageLengthBox value)
+    {
+        setSurroundIfNeeded();
+        surround()->border.image().setWidths(value);
+    }
+
+    void setBorderImageResource(ImageResource* value)
+    {
+        setSurroundIfNeeded();
+        surround()->border.image().setImageResource(value);
+    }
 
     void setBorderImageSliceFromOther(ComputedStyle* other)
     {
@@ -672,9 +617,6 @@ public:
 
     StyleSurroundData* surround()
     {
-        if (m_surround == nullptr) {
-            m_surround = new StyleSurroundData();
-        }
         return m_surround;
     }
 
@@ -683,173 +625,68 @@ public:
         return m_overflow;
     }
 
-    void setTop(Length top)
-    {
-        surround()->offset.setTop(top);
+#define SET_SIDE(UPOS, ...) \
+    void set##UPOS(Length unit) \
+    { \
+        setSurroundIfNeeded(); \
+        surround()->offset.set##UPOS(unit); \
     }
+    GEN_FOURSIDE(SET_SIDE)
+#undef SET_SIDE
 
-    void setRight(Length right)
-    {
-        surround()->offset.setRight(right);
+#define SET_MARGIN(UPOS, ...) \
+    void setMargin##UPOS(Length unit) \
+    { \
+        setSurroundIfNeeded(); \
+        surround()->margin.set##UPOS(unit); \
     }
+    GEN_FOURSIDE(SET_MARGIN)
+#undef SET_MARGIN
 
-    void setBottom(Length bottom)
-    {
-        surround()->offset.setBottom(bottom);
+#define SET_PADDING(UPOS, ...) \
+    void setPadding##UPOS(Length unit) \
+    { \
+        setSurroundIfNeeded(); \
+        surround()->padding.set##UPOS(unit); \
     }
+    GEN_FOURSIDE(SET_PADDING)
+#undef SET_PADDING
 
-    void setLeft(Length left)
-    {
-        surround()->offset.setLeft(left);
+#define GET_SIDE(UPOS, LPOS, ...) \
+    Length LPOS() \
+    { \
+        if (m_surround == nullptr) { \
+            return Length(); \
+        } else { \
+            return m_surround->offset.LPOS(); \
+        } \
     }
+    GEN_FOURSIDE(GET_SIDE)
+#undef GET_SIDE
 
-    void setMarginTop(Length top)
-    {
-        surround()->margin.setTop(top);
+#define GET_MARGIN(UPOS, LPOS, ...) \
+    Length margin##UPOS() \
+    { \
+        if (m_surround == nullptr) { \
+            return initialMargin(); \
+        } else { \
+            return m_surround->margin.LPOS(); \
+        } \
     }
+    GEN_FOURSIDE(GET_MARGIN)
+#undef GET_MARGIN
 
-    void setMarginBottom(Length bottom)
-    {
-        surround()->margin.setBottom(bottom);
+#define GET_PADDING(UPOS, LPOS, ...) \
+    Length padding##UPOS() \
+    { \
+        if (m_surround == nullptr) { \
+            return initialPadding(); \
+        } else { \
+            return m_surround->padding.LPOS(); \
+        } \
     }
-
-    void setMarginRight(Length right)
-    {
-        surround()->margin.setRight(right);
-    }
-
-    void setMarginLeft(Length left)
-    {
-        surround()->margin.setLeft(left);
-    }
-
-    void setPaddingTop(Length top)
-    {
-        surround()->padding.setTop(top);
-    }
-
-    void setPaddingRight(Length right)
-    {
-        surround()->padding.setRight(right);
-    }
-
-    void setPaddingBottom(Length bottom)
-    {
-        surround()->padding.setBottom(bottom);
-    }
-
-    void setPaddingLeft(Length left)
-    {
-        surround()->padding.setLeft(left);
-    }
-
-    Length top()
-    {
-        if (m_surround == nullptr) {
-            return Length();
-        } else {
-            return m_surround->offset.top();
-        }
-    }
-
-    Length right()
-    {
-        if (m_surround == nullptr) {
-            return Length();
-        } else {
-            return m_surround->offset.right();
-        }
-    }
-
-    Length bottom()
-    {
-        if (m_surround == nullptr) {
-            return Length();
-        } else {
-            return m_surround->offset.bottom();
-        }
-    }
-
-    Length left()
-    {
-        if (m_surround == nullptr) {
-            return Length();
-        } else {
-            return m_surround->offset.left();
-        }
-    }
-
-    Length marginTop()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->margin.top();
-        }
-    }
-
-    Length marginRight()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->margin.right();
-        }
-    }
-
-    Length marginBottom()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->margin.bottom();
-        }
-    }
-
-    Length marginLeft()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->margin.left();
-        }
-    }
-
-    Length paddingTop()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->padding.top();
-        }
-    }
-
-    Length paddingRight()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->padding.right();
-        }
-    }
-
-    Length paddingBottom()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->padding.bottom();
-        }
-    }
-
-    Length paddingLeft()
-    {
-        if (m_surround == nullptr) {
-            return Length(Length::Fixed, 0);
-        } else {
-            return m_surround->padding.left();
-        }
-    }
+    GEN_FOURSIDE(GET_PADDING)
+#undef GET_PADDING
 
     Length fontSize()
     {
@@ -885,8 +722,11 @@ public:
     static SideValue initialTextAlign() { return SideValue::NoneSideValue; }
     static Length initialPadding() { return Length(Length::Fixed, 0); }
     static Length initialMargin() { return Length(Length::Fixed, 0); }
+    static Length initialBorderWidth() { return Length(Length::Fixed, 0); }
+    static BorderStyleValue initialBorderStyle() { return BorderStyleValue::NoneBorderStyleValue; }
     static String* initialBgImage() { return String::emptyString; }
     static String* initialBorderImageSource() { return String::emptyString; }
+    static BorderImageLengthBox initialBorderImageWidths() { return BorderImageLengthBox(1.0); }
     static LengthBox initialBorderImageSlices() { return LengthBox(Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0), Length(Length::Fixed, 0)); }
     static bool initialBorderImageSliceFill() { return false; }
 
