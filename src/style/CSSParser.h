@@ -398,23 +398,13 @@ public:
         return true;
     }
 
-    // TODO: Replace if-else statement with better one
     static bool parseNamedColor(String* str, NamedColorValue* ret)
     {
         if (str->equals(String::fromUTF8("currentcolor"))) {
             *ret = NamedColorValue::currentColor;
+            return true;
         }
-#define ADD_COLOR_ITEM(name, ...) \
-        else if (str->equals(#name)) \
-        { \
-            *ret = NamedColorValue::name##NamedColor; \
-        }
-        NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
-#undef ADD_COLOR_ITEM
-        else {
-            return false;
-        }
-        return true;
+        return ::parseNamedColor(str->utf8Data(), str->length(), *ret);
     }
 
     // TODO : DEPRECATE

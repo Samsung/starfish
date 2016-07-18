@@ -177,6 +177,6 @@ enum NamedColorValue {
     currentColor,
 };
 
-// bool parseNamedColor(const char* str, size_t length, NamedColorValue& ret);
+bool parseNamedColor(const char* str, size_t length, NamedColorValue& ret);
 
 #endif
