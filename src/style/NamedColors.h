@@ -17,7 +17,7 @@
 #ifndef __StarFishNamedColors__
 #define __StarFishNamedColors__
 
-// https://developer.mozilla.org/en/docs/Web/CSS/color_value
+// https://www.w3.org/TR/css3-color/
 #define NAMED_COLOR_FOR_EACH(F) \
     F(black   , 0x000000) \
     F(silver  , 0xc0c0c0) \
@@ -168,5 +168,15 @@
     F(yellowgreen , 0x9acd32) \
     F(transparent , 0x000000)
 
+
+enum NamedColorValue {
+#define ADD_COLOR_ITEM(name, ...) \
+    name##NamedColor,
+    NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
+#undef ADD_COLOR_ITEM
+    currentColor,
+};
+
+// bool parseNamedColor(const char* str, size_t length, NamedColorValue& ret);
 
 #endif

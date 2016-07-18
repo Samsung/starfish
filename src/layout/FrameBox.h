@@ -231,26 +231,26 @@ public:
                     h = bw / imgR;
                 }
             } else if (style->bgSizeType() == BackgroundSizeType::SizeValue) {
-                if (style->bgSizeValue()->width().isAuto() && style->bgSizeValue()->height().isAuto()) {
+                if (style->bgSizeValue().width().isAuto() && style->bgSizeValue().height().isAuto()) {
                     w = id->width();
                     h = id->height();
-                } else if (style->bgSizeValue()->width().isAuto() && !style->bgSizeValue()->height().isAuto()) {
-                    h = style->bgSizeValue()->height().specifiedValue(bh);
+                } else if (style->bgSizeValue().width().isAuto() && !style->bgSizeValue().height().isAuto()) {
+                    h = style->bgSizeValue().height().specifiedValue(bh);
                     w = h * id->width() / id->height();
-                } else if (!style->bgSizeValue()->width().isAuto() && style->bgSizeValue()->height().isAuto()) {
-                    w = style->bgSizeValue()->width().specifiedValue(bw);
+                } else if (!style->bgSizeValue().width().isAuto() && style->bgSizeValue().height().isAuto()) {
+                    w = style->bgSizeValue().width().specifiedValue(bw);
                     h = w * id->height() / id->width();
                 } else {
-                    w = style->bgSizeValue()->width().specifiedValue(bw);
-                    h = style->bgSizeValue()->height().specifiedValue(bh);
+                    w = style->bgSizeValue().width().specifiedValue(bw);
+                    h = style->bgSizeValue().height().specifiedValue(bh);
                 }
             } else {
                 STARFISH_ASSERT(style->bgSizeType() == BackgroundSizeType::SizeNone);
                 STARFISH_ASSERT_NOT_REACHED();
             }
 
-            LayoutUnit x = style->backgroundPosition()->x().specifiedValue(bw - w);
-            LayoutUnit y = style->backgroundPosition()->y().specifiedValue(bh - h);
+            LayoutUnit x = style->backgroundPosition().x().specifiedValue(bw - w);
+            LayoutUnit y = style->backgroundPosition().y().specifiedValue(bh - h);
 
             if (isRootElement) {
                 x += imageRect.x();

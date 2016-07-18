@@ -299,13 +299,7 @@ public:
         m_background->setRepeatY(repeat);
     }
 
-    void setBackgroundPositionType(SideValue type)
-    {
-        setBackgroundIfNeeded();
-        m_background->setPositionType(type);
-    }
-
-    void setBackgroundPositionValue(LengthPosition* position)
+    void setBackgroundPositionValue(LengthPosition position)
     {
         setBackgroundIfNeeded();
         m_background->setPositionValue(position);
@@ -317,7 +311,7 @@ public:
         m_background->setSizeType(type);
     }
 
-    void setBackgroundSizeValue(LengthSize* size)
+    void setBackgroundSizeValue(LengthSize size)
     {
         setBackgroundIfNeeded();
         m_background->setSizeValue(size);
@@ -358,18 +352,17 @@ public:
         return m_background->repeatY();
     }
 
-    SideValue backgroundPositionType()
+    bool hasBackgroundPosition()
     {
         if (m_background == NULL)
-            return SideValue::NoneSideValue;
-        return m_background->positionType();
+            return false;
+        return m_background->hasPositionValue();
     }
 
-    LengthPosition* backgroundPosition()
+    LengthPosition backgroundPosition()
     {
         if (m_background == NULL)
-            return new LengthPosition();
-        STARFISH_ASSERT(m_background && m_background->positionType() == SideValue::ValueSideValue);
+            return LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
         return m_background->positionValue();
     }
 
@@ -380,10 +373,10 @@ public:
         return m_background->sizeType();
     }
 
-    LengthSize* bgSizeValue()
+    LengthSize bgSizeValue()
     {
         if (m_background == NULL)
-            return new LengthSize();
+            return LengthSize();
 
         STARFISH_ASSERT(m_background && m_background->sizeType() == BackgroundSizeType::SizeValue);
         return m_background->sizeValue();

@@ -42,12 +42,6 @@
 #include <tizen.h>
 #endif
 
-#ifndef STARFISH_TIZEN_WEARABLE
-extern __thread Evas* g_internalCanvas;
-#else
-extern Evas* g_internalCanvas;
-#endif
-
 #ifdef STARFISH_ENABLE_TEST
 bool g_fireOnloadEvent = false;
 #endif
@@ -255,7 +249,6 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
 
 Window* Window::create(StarFish* sf, void* win, const URL& url)
 {
-    g_internalCanvas = evas_object_evas_get((Evas_Object*)win);
     auto wnd = new WindowImplEFL(sf, url);
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
@@ -329,7 +322,6 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
     }, wnd);
 
 #else
-    g_internalCanvas = evas_object_evas_get((Evas_Object*)win);
     Evas* e = evas_object_evas_get(wnd->m_window);
     Evas_Object* mainBox = elm_box_add(wnd->m_window);
     evas_object_size_hint_weight_set(mainBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
@@ -1082,7 +1074,7 @@ void Window::resume()
 
 void Window::close()
 {
-    STARFISH_LOG_INFO("onClose\n");
+    STARFISH_LOG_INFO("window::onClose\n");
 
     m_document->close();
 
