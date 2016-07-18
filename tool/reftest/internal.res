@@ -2,6 +2,10 @@ test/internal-test/click/click.html
 test/internal-test/page-visibilty/visibilitychange_test.html
 test/internal-test/css/background/current-color.html
 test/internal-test/css/background/background_properties.html
+test/internal-test/css/color/color_currentColor.html
+test/internal-test/css/color/color_keyword_1.html
+test/internal-test/css/color/color_keyword_2.html
+test/internal-test/css/color/color_keyword_3.html
 test/internal-test/css/display/block.html
 test/internal-test/css/display/block-inline-basic.html
 test/internal-test/css/display/display-internal-test.html
