@@ -940,7 +940,6 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
 
     CSSStyleValuePair noRepeat(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, BackgroundRepeatValue::NoRepeatRepeatValue);
     CSSStyleValuePair repeat(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, BackgroundRepeatValue::RepeatRepeatValue);
-    fprintf(stderr, "%s\n", tokens[0]->utf8Data());
     if (tokens[0]->equals("repeat-x")) {
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, repeat);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, noRepeat);
