@@ -456,6 +456,13 @@ class CSSStyleDeclaration;
     F(Margin, margin, "margin")                                    \
     F(Padding, padding, "padding")
 
+#define GEN_FOURSIDE(F) \
+    F(Top, top) \
+    F(Right, right) \
+    F(Bottom, bottom) \
+    F(Left, left)
+
+
 class CSSTransformFunction {
 public:
     enum Kind {

@@ -28,12 +28,6 @@
 
 namespace StarFish {
 
-#define GEN_FOURSIDE(F) \
-F(Top, top) \
-F(Right, right) \
-F(Bottom, bottom) \
-F(Left, left)
-
 #define TOKEN_IS_STRING(str) \
     ((memcmp(token, str, strlen(str))) == 0 && strlen(str) == strlen(token))
 
@@ -3085,5 +3079,4 @@ void StyleResolver::dumpDOMStyle(Document* document)
 }
 #endif
 
-#undef GEN_FOURSIDE
 }
