@@ -955,10 +955,25 @@ String* CSSStyleDeclaration::Background()
     String* image = BackgroundImage();
     String* repeat = BackgroundRepeat();
     String* color = BackgroundColor();
+    String* position = BackgroundPosition();
+    String* size = BackgroundSize();
 
     if (image->length() != 0 && !image->equals(String::initialString))
         result = result->concat(image);
-    if (repeat->length() != 0 && !repeat->equals(String::initialString) && !repeat->equals(String::inheritString)) {
+    if (position->length() != 0 && !position->equals(String::initialString)) {
+        if (result->length())
+            result = result->concat(String::spaceString);
+        result = result->concat(position);
+    }
+    if (size->length() != 0 && !size->equals(String::initialString)) {
+        if (result->length())
+            result = result->concat(String::spaceString);
+        if (position->length() == 0)
+            result = result->concat(String::fromUTF8("0% 0%"));
+        result = result->concat(String::fromUTF8(" / "));
+        result = result->concat(size);
+    }
+    if (repeat->length() != 0 && !repeat->equals(String::initialString)) {
         if (result->length())
             result = result->concat(String::spaceString);
         result = result->concat(repeat);
@@ -973,7 +988,7 @@ String* CSSStyleDeclaration::Background()
 
 void CSSStyleDeclaration::setBackground(String* value)
 {
-    //  [<'background-color'> || <'background-image'> || <'background-repeat'>] | inherit
+    //  [<'background-color'> || <'background-image'> || <'background-repeat'> || <'background-position'> [/<bg-size>]?] | inherit
     if (value->length() == 0) {
         setBackgroundColor(String::emptyString);
         setBackgroundImage(String::emptyString);
