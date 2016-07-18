@@ -1259,6 +1259,7 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox)
     m_block.m_lineBoxes.back()->setWidth(m_lineBoxWidth);
     m_currentLine++;
     m_currentLineWidth = 0;
+    m_hasNormalFlowContent = false;
 }
 
 template <typename fn>
@@ -1306,19 +1307,8 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
     while (f) {
         if (!f->isNormalFlow()) {
             ctx.registerAbsolutePositionedFrames(f->asFrameBox());
-            bool shouldBreak = false;
-            lineFormattingContext.currentLine()->iterateChildBoxes([&shouldBreak](FrameBox* box) -> bool {
-                if (box->isInlineBox()) {
-                    InlineBox* ib = box->asInlineBox();
-                    if (ib->isInlineTextBox()) {
-                        shouldBreak |= ib->isNormalFlow();
-                    }
-                }
 
-                return !shouldBreak;
-            });
-
-            lineFormattingContext.m_absolutePositionedBoxes.push_back(std::make_pair(f->asFrameBox(), shouldBreak));
+            lineFormattingContext.m_absolutePositionedBoxes.push_back(std::make_pair(f->asFrameBox(), lineFormattingContext.m_hasNormalFlowContent));
             absBoxCallback(f->asFrameBox());
             f = f->next();
             continue;
@@ -1381,6 +1371,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     lineBreakCallback(false);
                     goto textAppendRetry;
                 }
+                lineFormattingContext.m_hasNormalFlowContent |= f->parent()->isNormalFlow();
                 InlineBox* ib = new InlineTextBox(f->node(), f->style(), nullptr, resultString, f->asFrameText(), InlineTextBox::CharDirection::Mixed);
                 ib->setWidth(textWidth);
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);
@@ -1391,7 +1382,6 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
         } else if (f->isFrameReplaced()) {
             FrameReplaced* r = f->asFrameReplaced();
             r->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
-
         insertReplacedBox:
             if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - extraWidthDueToFrameInlineFirstChild) || lineFormattingContext.m_currentLineWidth == 0) {
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
