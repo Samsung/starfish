@@ -218,20 +218,6 @@ public:
     }
 
     // TODO : DEPRECATE
-    static String* parseUrl(String* token)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token->utf8Data());
-        if (parser->consumeString()) {
-            String* name = parser->parsedString();
-            if (name->equals("url") && parser->consumeIfNext('(')) {
-                if (parser->consumeUrl())
-                    return String::fromUTF8(parser->parsedUrl()->utf8Data());
-            }
-        }
-        return String::emptyString;
-    }
-
-    // TODO : DEPRECATE
     static bool assureUrl(const char* str)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)str);
@@ -278,21 +264,6 @@ public:
         }
         return false;
     }
-
-    // TODO : DEPRECATE
-    static String* parseNumberAndUnit(const char* token, float* result)
-    {
-        // NOTE(example): token("10px") -> result=10.0 + return "px"
-        *result = 0;
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (parser->consumeNumber()) {
-            float num = parser->parsedNumber();
-            *result = num;
-        }
-        parser->consumeString();
-        return parser->parsedString();
-    }
-
     static bool parseLength(const char* token, bool allowNegative, CSSLength* ret)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -331,30 +302,6 @@ public:
         return false;
     }
 
-    // TODO : DEPRECATE
-    static bool assureLength(const char* token, bool allowNegative)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-        if (!parser->consumeNumber())
-            return false;
-        float num = parser->parsedNumber();
-        if (!allowNegative && num < 0)
-            return false;
-        if (parser->consumeString()) {
-            String* str = parser->parsedString();
-            if ((str->length() == 0 && num == 0)
-                || isLengthUnit(str))
-                return parser->isEnd();
-            return false;
-        } else {
-            // After a zero length, the unit identifier is optional
-            if (num == 0)
-                return true;
-            return false;
-        }
-        return true;
-    }
-
     static bool parseColorFunctionPart(String* s, bool isAlpha, unsigned char* ret, bool* isPercent)
     {
         const char* piece = s->trim()->utf8Data();
@@ -365,38 +312,33 @@ public:
         if (!parser->consumeNumber(&hasPoint))
             return false;
 
-        *isPercent = false;
+        float number = parser->parsedNumber();
+        bool percent = false;
         if (parser->consumeIfNext('%'))
-            *isPercent = true;
+            percent = true;
 
         // NOTE: decimal-point is disallowed for rgb value.
-        if (!isAlpha && !(*isPercent) && hasPoint)
+        if (!isAlpha && !percent && hasPoint)
             return false;
 
         parser->consumeWhitespaces();
         if (!parser->isEnd())
             return false;
 
-        float f = 0.f;
-        String* unit = CSSPropertyParser::parseNumberAndUnit(piece, &f);
-        if (unit->equals("%")) {
-            if (f < 0)
-                f = 0;
-            if (f > 100)
-                f = 100;
-            *ret = 255 * f / 100;
-            return true;
+        number = number < 0 ? 0 : number;
+        if (percent) {
+            if (number > 100)
+                number = 100;
+            number = 255 * number / 100;
+        } else if (isAlpha) {
+            if (number > 1)
+                number = 1;
+            number = number * 255;
+        } else if (number > 255) {
+            number = 255;
         }
-        if (f < 0)
-            f = 0;
-        if (isAlpha) {
-            if (f > 1)
-                f = 1;
-            f = f * 255;
-        } else if (f > 255) {
-            f = 255;
-        }
-        *ret = f;
+        *ret = number;
+        *isPercent = percent;
         return true;
     }
 
@@ -551,24 +493,6 @@ public:
     {
         // initial || inherit
         if (strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0)
-            return true;
-        return false;
-    }
-
-    // TODO : DEPRECATE
-    static bool assureBorderWidth(const char* token)
-    {
-        // border-width(thin | <medium> | thick) | length
-        if (strcmp(token, "thin") == 0 || strcmp(token, "medium") == 0 || strcmp(token, "thick") == 0 || assureLength(token, false))
-            return true;
-        return false;
-    }
-
-    // TODO : DEPRECATE
-    static bool assureBorderStyle(const char* token)
-    {
-        // border-style(<none> | solid) | inherit
-        if (strcmp(token, "none") == 0 || strcmp(token, "solid") == 0)
             return true;
         return false;
     }
