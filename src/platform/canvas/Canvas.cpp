@@ -837,6 +837,9 @@ public:
         }
 #endif
 
+        // FIXME: evas textblock doesn't render 1 length space char
+        bool isSpace = false;
+
         if (!lastState().m_hasUnderLine && !lastState().m_hasLineThrough) {
             if (text->equals(String::spaceString))
                 return;
@@ -884,12 +887,16 @@ public:
             if (text->equals(String::spaceString) || (text->length() == 1 && text->charAt(0) == 0xA0)) {
                 // FIXME evas textblock doesn't render 1 length space char
                 text = text->concat(String::spaceString);
+                isSpace = true;
             }
 
             Evas_Object* eo = evas_object_textblock_add(m_canvas);
             if (m_objList)
                 m_objList->push_back(eo);
             LayoutSize sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
+            // FIXME: evas textblock doesn't render 1 length space char
+            if (isSpace)
+                sz.setWidth(sz.width() / 2);
             LayoutRect rt(x, y, sz.width(), sz.height());
 
             float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
