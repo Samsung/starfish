@@ -433,17 +433,13 @@ public:
         } else if (maybeCode) {
             const char* s = str->utf8Data();
             const unsigned len = strlen(s);
-            if (!(len == 9 || len == 7 || len == 4))
+            if (!(len == 7 || len == 4))
                 return false;
             for (unsigned i = 1; i < len; i++) {
                 if (!(s[i] >= '0' && s[i] <= '9') && !(s[i] >= 'A' && s[i] <= 'F') && !(s[i] >= 'a' && s[i] <= 'f'))
                     return false;
             }
-            if (len == 9) {
-                unsigned int r, g, b, a;
-                sscanf(s, "#%02x%02x%02x%02x", &r, &g, &b, &a);
-                *ret = Color(r, g, b, a);
-            } else if (len == 7) {
+            if (len == 7) {
                 unsigned int r, g, b;
                 sscanf(s, "#%02x%02x%02x", &r, &g, &b);
                 *ret = Color(r, g, b, 255);
