@@ -1154,6 +1154,7 @@ void CSSStyleDeclaration::setBackground(String* value)
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, v);
+        notifyNeedsStyleRecalc();
         return;
     }
 
