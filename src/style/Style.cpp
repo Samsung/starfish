@@ -232,6 +232,153 @@ static String* BorderString(String* width, String* style, String* color)
     return sum;
 }
 
+// Parse backgroundRepeat string in case it has single token
+static bool parseBackgroundRepeatShorhand(String* tok, CSSStyleValuePair* retx, CSSStyleValuePair* rety)
+{
+    if (retx->updateValueUnitBackgroundRepeat(tok)) {
+        *rety = *retx;
+    } else if (tok->equals("repeat-x")) {
+        *retx = CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, RepeatRepeatValue);
+        *rety = CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, NoRepeatRepeatValue);
+    } else if (tok->equals("repeat-y")) {
+        *retx = CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, NoRepeatRepeatValue);
+        *rety = CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, RepeatRepeatValue);
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static bool parseBackgroundRepeatShorhand(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* retx, CSSStyleValuePair* rety)
+{
+    size_t len = tokens->size();
+    if (len == 1) {
+        return parseBackgroundRepeatShorhand(tokens->at(0), retx, rety);
+    } else if (len == 2) {
+        return retx->updateValueUnitBackgroundRepeat(tokens->at(0)) && rety->updateValueUnitBackgroundRepeat(tokens->at(1));
+    }
+    return false;
+}
+
+static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> >* tokens,
+    CSSStyleValuePair* _Color,
+    CSSStyleValuePair* _Image,
+    CSSStyleValuePair* _RepeatX,
+    CSSStyleValuePair* _RepeatY,
+    CSSStyleValuePair* _Position,
+    CSSStyleValuePair* _Size)
+{
+    // - initial|inherit
+    // - SUPPORT__ : bg-color, bg-image, position/bg-size, bg-repeat
+    // - UNSUPPORT : bg-origin, bg-clip, bg-attachment
+    //
+    // - ACCEPT only 1-word_ : bg-color, bg-image
+    // - ACCEPT 1 to 2 words : bg-repeat, position, bg-size
+
+    size_t len = tokens->size();
+    if (len < 1 || len > 9)
+        return false;
+
+    _Color->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Image->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _RepeatX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _RepeatY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Position->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _Size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+
+    // TODO : tokenizeCSSValue-> should parse slash(/) for size
+    bool hasColor = false, hasImage = false, hasRepeat = false;
+    bool hasPosition = false, hasSize = false, canBeSize = false;
+    CSSStyleValuePair temp, tempX, tempY;
+    String* tok;
+    std::vector<String*, gc_allocator<String*> > toks;
+
+#define SET_SINGLE_PROP(PROP) \
+    fprintf(stderr, "--%s\n", #PROP); \
+    *_##PROP = temp; \
+    has##PROP = true;
+#define SET_DOUBLE_PROP(PROP) \
+    fprintf(stderr, "--%s\n", #PROP); \
+    *_##PROP##X = tempX; \
+    *_##PROP##Y = tempY; \
+    has##PROP = true;
+#define SINGLE_CONTINUE() continue;
+#define DOUBLE_CONTINUE() i++; continue;
+
+    for (size_t i = 0; i < len; i++) {
+        fprintf(stderr, "token[%d] : %s\n", (int)i, tokens->at(i)->utf8Data());
+        if (tokens->at(i)->equals("/"))
+            continue;
+        // 1. Verify 2 tokens (current and next token at once)
+        // e.g. background: top center; -> means background-position(x:top, y:center)
+        if (i + 1 < len) {
+            toks.clear();
+            toks.push_back(tokens->at(i));
+            toks.push_back(tokens->at(i + 1));
+            // 1-1. BackgroundSize (canBeSize : set true only after backgroundPosition)
+            if (canBeSize) {
+                STARFISH_ASSERT(!hasSize);
+                if (temp.updateValueBackgroundSize(&toks)) {
+                    canBeSize = false;
+                    SET_SINGLE_PROP(Size)
+                    DOUBLE_CONTINUE()
+                }
+            }
+            // 1-2. BackgroundRepeat, BackgroundPosition
+            if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY)) {
+                SET_DOUBLE_PROP(Repeat)
+                DOUBLE_CONTINUE()
+            } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks)) {
+                canBeSize = true;
+                SET_SINGLE_PROP(Position)
+                DOUBLE_CONTINUE()
+            }
+        }
+        // 2. Verify single token
+        tok = tokens->at(i);
+        // 2-1. BackgroundSize (canBeSize : set true only after backgroundPosition)
+        if (canBeSize) {
+            STARFISH_ASSERT(!hasSize);
+            canBeSize = false;
+            toks.clear();
+            toks.push_back(tok);
+            if (temp.updateValueBackgroundSize(&toks)) {
+                SET_SINGLE_PROP(Size)
+                SINGLE_CONTINUE()
+            }
+        }
+        // 2-2. BackgroundColor, BackgroundImage, BackgroundRepeat, BackgroundPosition
+        if (!hasColor && temp.updateValueUnitColor(tok)) {
+            SET_SINGLE_PROP(Color)
+            SINGLE_CONTINUE()
+        } else if (!hasImage && temp.updateValueUnitUrlOrNone(tok)) {
+            SET_SINGLE_PROP(Image)
+            SINGLE_CONTINUE()
+        } else if (!hasRepeat && parseBackgroundRepeatShorhand(tok, &tempX, &tempY)) {
+            SET_DOUBLE_PROP(Repeat)
+            SINGLE_CONTINUE()
+        } else if (!hasPosition && temp.updateValueUnitBackgroundPosition(tok)) {
+            canBeSize = true;
+            SET_SINGLE_PROP(Position)
+            SINGLE_CONTINUE()
+        } else {
+            return false;
+        }
+    }
+#undef SINGLE_CONTINUE
+#undef DOUBLE_CONTINUE
+#undef SET_SINGLE_PROP
+#undef SET_DOUBLE_PROP
+
+    if (hasPosition && _Position->valueKind() != CSSStyleValuePair::ValueKind::ValueListKind) {
+        ValueList* values = new ValueList();
+        values->append(CSSStyleValuePair::ValueKind::SideValueKind, _Position->sideValue());
+        values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+        *_Position = CSSStyleValuePair(CSSStyleValuePair::ValueKind::ValueListKind, values);
+    }
+    return true;
+}
+
 URL CSSStyleSheet::url()
 {
     if (m_origin->isElement() && m_origin->asElement()->isHTMLElement() && m_origin->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -301,7 +448,7 @@ String* CSSStyleDeclaration::BorderLeft()
     return BorderString(width, style, color);
 }
 
-static bool parseBorderWidthStyleColor(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* width, CSSStyleValuePair* style, CSSStyleValuePair* color)
+static bool parseBorderShorthand(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* width, CSSStyleValuePair* style, CSSStyleValuePair* color)
 {
     size_t len = tokens->size();
     if (len < 1 || len > 3)
@@ -324,22 +471,20 @@ static bool parseBorderWidthStyleColor(std::vector<String*, gc_allocator<String*
 
     bool hasWidth = false, hasStyle = false, hasColor = false;
     CSSStyleValuePair temp;
-    std::vector<String*, gc_allocator<String*> > tok;
     for (size_t i = 0; i < len; i++) {
-        tok.push_back(tokens->at(i));
-        if (!hasWidth && temp.updateValueBorderUnitWidth(&tok)) {
+        String* tok = tokens->at(i);
+        if (!hasWidth && temp.updateValueUnitBorderWidth(tok)) {
             *width = temp;
             hasWidth = true;
-        } else if (!hasStyle && temp.updateValueBorderUnitStyle(&tok)) {
+        } else if (!hasStyle && temp.updateValueUnitBorderStyle(tok)) {
             *style = temp;
             hasStyle = true;
-        } else if (!hasColor && temp.updateValueColor(&tok)) {
+        } else if (!hasColor && temp.updateValueUnitColor(tok)) {
             *color = temp;
             hasColor = true;
         } else {
             return false;
         }
-        tok.pop_back();
     }
     return true;
 }
@@ -352,10 +497,11 @@ void CSSStyleDeclaration::setBorder(String* value)
         setBorderColor(String::emptyString);
         return;
     }
+    // TODO : initial / inherit
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value);
     CSSStyleValuePair width, style, color;
-    if (parseBorderWidthStyleColor(&tokens, &width, &style, &color)) {
+    if (parseBorderShorthand(&tokens, &width, &style, &color)) {
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth, width);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle, style);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor, color);
@@ -384,7 +530,7 @@ void CSSStyleDeclaration::setBorder##POS(String* value) \
     std::vector<String*, gc_allocator<String*> > tokens; \
     tokenizeCSSValue(&tokens, value); \
     CSSStyleValuePair width, style, color; \
-    if (parseBorderWidthStyleColor(&tokens, &width, &style, &color)) { \
+    if (parseBorderShorthand(&tokens, &width, &style, &color)) { \
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Width, width); \
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Style, style); \
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Color, color); \
@@ -928,31 +1074,16 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
 
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(","));
-    size_t len = tokens.size();
 
-    CSSStyleValuePair::KeyKind keyX = CSSStyleValuePair::KeyKind::BackgroundRepeatX;
-    CSSStyleValuePair::KeyKind keyY = CSSStyleValuePair::KeyKind::BackgroundRepeatY;
-    if (len == 1) {
-        CSSStyleValuePair single;
-        if (single.setValueCommon(&tokens) || single.updateValueBackgroundRepeatUnit(&tokens)) {
-            addCSSValuePair(keyX, single);
-            addCSSValuePair(keyY, single);
-        } else if (tokens[0]->equals("repeat-x")) {
-            addCSSValuePair(keyX, CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, RepeatRepeatValue));
-            addCSSValuePair(keyY, CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, NoRepeatRepeatValue));
-        } else if (tokens[0]->equals("repeat-y")) {
-            addCSSValuePair(keyX, CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, NoRepeatRepeatValue));
-            addCSSValuePair(keyY, CSSStyleValuePair(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind, RepeatRepeatValue));
-        }
-    } else if (len == 2) {
-        CSSStyleValuePair x, y;
-        std::vector<String*, gc_allocator<String*> > tokX, tokY;
-        tokX.push_back(tokens[0]);
-        tokY.push_back(tokens[1]);
-        if (x.updateValueBackgroundRepeatUnit(&tokX) && y.updateValueBackgroundRepeatUnit(&tokY)) {
-            addCSSValuePair(keyX, x);
-            addCSSValuePair(keyY, y);
-        }
+    CSSStyleValuePair c, x, y;
+    if (c.setValueCommon(&tokens)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
+        notifyNeedsStyleRecalc();
+    } else if (parseBackgroundRepeatShorhand(&tokens, &x, &y)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, x);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, y);
+        notifyNeedsStyleRecalc();
     }
 }
 
@@ -995,58 +1126,49 @@ String* CSSStyleDeclaration::Background()
 
 void CSSStyleDeclaration::setBackground(String* value)
 {
-    // - initial|inherit
-    // - SUPPORT__ : bg-color, bg-image, position/bg-size, bg-repeat
-    // - UNSUPPORT : bg-origin, bg-clip, bg-attachment
-    //
-    // - ACCEPT only 1-word_ : bg-color, bg-image
-    // - ACCEPT 1 to 2 words : bg-repeat, position, bg-size
-
-    //  [<'background-color'> || <'background-image'> || <'background-repeat'>] | inherit
     if (value->length() == 0) {
         setBackgroundColor(String::emptyString);
         setBackgroundImage(String::emptyString);
         setBackgroundRepeat(String::emptyString);
+        setBackgroundPosition(String::emptyString);
+        setBackgroundSize(String::emptyString);
         return;
     }
+    CSSStyleValuePair v;
+    if (STRING_VALUE_IS_INITIAL()) {
+        v.setValueKind(CSSStyleValuePair::ValueKind::Initial);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, v);
+        notifyNeedsStyleRecalc();
+        return;
+    }
+    if (STRING_VALUE_IS_INHERIT()) {
+        v.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, v);
+        return;
+    }
+
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(",/"));
-
-    if (!CSSStyleValuePair::checkEssentialValue(&tokens) && !CSSStyleValuePair::checkInputErrorBackground(&tokens))
+    CSSStyleValuePair color, image, repeatX, repeatY, position, size;
+    if (parseBackgroundShorthand(&tokens, &color, &image, &repeatX, &repeatY, &position, &size)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, color);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, image);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, repeatX);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, repeatY);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, position);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, size);
+        notifyNeedsStyleRecalc();
         return;
-
-    size_t len = tokens.size();
-    const char* token = tokens[0]->utf8Data();
-    if (len == 1 && TOKEN_IS_STRING("inherit")) {
-        setBackgroundColor(String::inheritString);
-        setBackgroundImage(String::inheritString);
-        setBackgroundRepeat(String::inheritString);
-    } else if (len == 1 && TOKEN_IS_STRING("initial")) {
-        setBackgroundColor(String::initialString);
-        setBackgroundImage(String::initialString);
-        setBackgroundRepeat(String::initialString);
-    } else {
-        String* colorStr = String::emptyString;
-        String* imageStr = String::emptyString;
-        String* repeatStr = String::emptyString;
-        for (unsigned i = 0; i < tokens.size(); i++) {
-            String* str = tokens[i];
-            if (CSSPropertyParser::assureColor(str->utf8Data()))
-                colorStr = colorStr->concat(str);
-            else if (CSSPropertyParser::assureUrlOrNone(str->utf8Data()))
-                imageStr = imageStr->concat(str);
-            else
-                repeatStr = repeatStr->concat(str);
-        }
-        if (colorStr->length() == 0)
-            colorStr = colorStr->concat(String::initialString);
-        if (imageStr->length() == 0)
-            imageStr = imageStr->concat(String::initialString);
-        if (repeatStr->length() == 0)
-            repeatStr = repeatStr->concat(String::initialString);
-        setBackgroundColor(colorStr);
-        setBackgroundImage(imageStr);
-        setBackgroundRepeat(repeatStr);
     }
 }
 
@@ -2282,19 +2404,24 @@ void StyleResolver::addSheet(CSSStyleSheet* sheet)
         m_sheets.push_back(sheet);
 }
 
-bool CSSStyleValuePair::updateValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueUnitColor(String* token)
 {
-    if (tokens->size() != 1)
-        return false;
-
-    if (CSSPropertyParser::parseNonNamedColor(tokens->at(0), &(m_value.m_color))) {
+    if (CSSPropertyParser::parseNonNamedColor(token, &(m_value.m_color))) {
         m_valueKind = CSSStyleValuePair::ValueKind::ColorValueKind;
-    } else if (CSSPropertyParser::parseNamedColor(tokens->at(0), &(m_value.m_namedColor))) {
+    } else if (CSSPropertyParser::parseNamedColor(token, &(m_value.m_namedColor))) {
         m_valueKind = CSSStyleValuePair::ValueKind::NamedColorValueKind;
     } else {
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    return updateValueUnitColor(tokens->at(0));
 }
 
 bool CSSStyleValuePair::updateValueBackgroundColor(std::vector<String*, gc_allocator<String*> >* tokens)
@@ -2310,12 +2437,8 @@ bool CSSStyleValuePair::updateValueBorder##POS##Color(std::vector<String*, gc_al
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_COLOR)
 #undef UPDATE_VALUE_BORDER_COLOR
 
-bool CSSStyleValuePair::updateValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueUnitBorderStyle(String* value)
 {
-    if (tokens->size() != 1)
-        return false;
-
-    String* value = (*tokens)[0];
     m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
     if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
@@ -2330,7 +2453,9 @@ bool CSSStyleValuePair::updateValueBorderUnitStyle(std::vector<String*, gc_alloc
 #define UPDATE_VALUE_BORDER_STYLE(POS, ...) \
 bool CSSStyleValuePair::updateValueBorder##POS##Style(std::vector<String*, gc_allocator<String*> >* tokens) \
 { \
-    return updateValueBorderUnitStyle(tokens); \
+    if (tokens->size() != 1) \
+        return false; \
+    return updateValueUnitBorderStyle(tokens->at(0)); \
 }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
@@ -2392,12 +2517,8 @@ bool CSSStyleValuePair::updateValueFontStyle(std::vector<String*, gc_allocator<S
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundRepeatUnit(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueUnitBackgroundRepeat(String* value)
 {
-    if (tokens->size() != 1)
-        return false;
-
-    String* value = (*tokens)[0];
     m_valueKind = CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind;
     if (STRING_VALUE_IS_STRING("no-repeat")) {
         m_value.m_backgroundRepeat = BackgroundRepeatValue::NoRepeatRepeatValue;
@@ -2411,20 +2532,20 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatUnit(std::vector<String*, gc_
 
 bool CSSStyleValuePair::updateValueBackgroundRepeatX(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    return updateValueBackgroundRepeatUnit(tokens);
+    if (tokens->size() != 1)
+        return false;
+    return updateValueUnitBackgroundRepeat(tokens->at(0));
 }
 
 bool CSSStyleValuePair::updateValueBackgroundRepeatY(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    return updateValueBackgroundRepeatUnit(tokens);
-}
-
-bool CSSStyleValuePair::updateValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens)
-{
     if (tokens->size() != 1)
         return false;
+    return updateValueUnitBackgroundRepeat(tokens->at(0));
+}
 
-    String* value = (*tokens)[0];
+bool CSSStyleValuePair::updateValueUnitUrlOrNone(String* value)
+{
     if (STRING_VALUE_IS_NONE()) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
     } else if (CSSPropertyParser::parseUrl(value, &(m_value.m_stringValue))) {
@@ -2437,20 +2558,30 @@ bool CSSStyleValuePair::updateValueUrlOrNone(std::vector<String*, gc_allocator<S
 
 bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    return updateValueUrlOrNone(tokens);
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    if (updateValueUnitUrlOrNone(value))
+        return true;
+
+    return false;
 }
 
 bool CSSStyleValuePair::updateValueBorderImageSource(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return updateValueUrlOrNone(tokens);
-}
-
-bool CSSStyleValuePair::updateValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     if (tokens->size() != 1)
         return false;
 
     String* value = (*tokens)[0];
+    if (updateValueUnitUrlOrNone(value))
+        return true;
+
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueUnitBorderWidth(String* value)
+{
     m_valueKind = CSSStyleValuePair::ValueKind::BorderWidthValueKind;
     if (STRING_VALUE_IS_STRING("thick")) {
         m_value.m_borderWidth = BorderWidthValue::ThickBorderWidthValue;
@@ -2471,7 +2602,9 @@ bool CSSStyleValuePair::updateValueBorderUnitWidth(std::vector<String*, gc_alloc
 #define UPDATE_VALUE_BORDER_WIDTH(POS, ...) \
 bool CSSStyleValuePair::updateValueBorder##POS##Width(std::vector<String*, gc_allocator<String*> >* tokens) \
 { \
-    return updateValueBorderUnitWidth(tokens); \
+    if (tokens->size() != 1) \
+        return false; \
+    return updateValueUnitBorderWidth(tokens->at(0)); \
 }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
 #undef UPDATE_VALUE_BORDER_WIDTH
@@ -2523,38 +2656,47 @@ bool CSSStyleValuePair::updateValueBorderImageWidth(std::vector<String*, gc_allo
     return true;
 }
 
+bool CSSStyleValuePair::updateValueUnitBackgroundPosition(String* value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+    if (STRING_VALUE_IS_STRING("left")) {
+        m_value.m_side = SideValue::LeftSideValue;
+    } else if (STRING_VALUE_IS_STRING("right")) {
+        m_value.m_side = SideValue::RightSideValue;
+    } else if (STRING_VALUE_IS_STRING("center")) {
+        m_value.m_side = SideValue::CenterSideValue;
+    } else if (STRING_VALUE_IS_STRING("top")) {
+        m_value.m_side = SideValue::TopSideValue;
+    } else if (STRING_VALUE_IS_STRING("bottom")) {
+        m_value.m_side = SideValue::BottomSideValue;
+    } else if (!updateValueLengthOrPercent(value, true)) {
+        return false;
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
-    if (tokens->size() != 1 && tokens->size() != 2)
+    size_t len = tokens->size();
+    if (len != 1 && len != 2)
         return false;
+
+    CSSStyleValuePair x, y;
+    if (!x.updateValueUnitBackgroundPosition(tokens->at(0))) {
+        return false;
+    }
+
+    if (len == 1) {
+        y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+    } else if (!y.updateValueUnitBackgroundPosition(tokens->at(1))) {
+        return false;
+    }
 
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     ValueList* values = new ValueList();
-
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = tokens->at(i);
-        if (STRING_VALUE_IS_STRING("left")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::LeftSideValue);
-        } else if (STRING_VALUE_IS_STRING("right")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::RightSideValue);
-        } else if (STRING_VALUE_IS_STRING("center")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
-        } else if (STRING_VALUE_IS_STRING("top")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::TopSideValue);
-        } else if (STRING_VALUE_IS_STRING("bottom")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::BottomSideValue);
-        } else {
-            CSSStyleValuePair ret;
-            if (!ret.updateValueLengthOrPercent(value, true))
-                return false;
-            values->append(ret);
-        }
-    }
-
-    if (tokens->size() == 1) {
-        values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
-    }
+    values->append(x);
+    values->append(y);
     m_value.m_multiValue = values;
 
     return true;
