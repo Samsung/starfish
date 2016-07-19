@@ -6,3 +6,4 @@ test/internal-test/css/text/text-decoration-propagation-001.html
 test/internal-test/css/text/text-decoration-propagation-002.html
 test/internal-test/css/text/text-decoration-propagation-003.html
 test/internal-test/css/text/text-decoration-propagation-004.html
+test/internal-test/css/text/text-decoration-propagation-005.html
