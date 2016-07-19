@@ -927,7 +927,7 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
     }
 
     std::vector<String*, gc_allocator<String*> > tokens;
-    tokenizeCSSValue(&tokens, value);
+    tokenizeCSSValue(&tokens, value, String::fromUTF8(","));
     size_t len = tokens.size();
 
     CSSStyleValuePair::KeyKind keyX = CSSStyleValuePair::KeyKind::BackgroundRepeatX;
@@ -1010,7 +1010,7 @@ void CSSStyleDeclaration::setBackground(String* value)
         return;
     }
     std::vector<String*, gc_allocator<String*> > tokens;
-    tokenizeCSSValue(&tokens, value);
+    tokenizeCSSValue(&tokens, value, String::fromUTF8(",/"));
 
     if (!CSSStyleValuePair::checkEssentialValue(&tokens) && !CSSStyleValuePair::checkInputErrorBackground(&tokens))
         return;
@@ -1050,7 +1050,7 @@ void CSSStyleDeclaration::setBackground(String* value)
     }
 }
 
-void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src)
+void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src, String* seperator)
 {
     tokens->clear();
 
@@ -1076,13 +1076,19 @@ void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator<Str
             isWhiteSpaceState = true;
             continue;
         }
+        bool hasSepChar = false;
+        if (seperator->length() > 0 && seperator->indexOf(data[i]) != SIZE_MAX) {
+            hasSepChar = true;
+        }
 
-        if (!inParenthesis && String::isSpaceOrNewline(data[i])) {
+        if (!inParenthesis && (String::isSpaceOrNewline(data[i]) || hasSepChar)) {
             String* newToken = String::fromUTF8(str.data(), str.length() - 1)->toLower();
             if (!newToken->containsOnlyWhitespace())
                 tokens->push_back(newToken);
             isWhiteSpaceState = true;
             str.clear();
+            if (hasSepChar)
+                tokens->push_back(String::fromUTF8(data + i, 1));
         } else if ((inParenthesis && data[i] == ')') || i == length - 1) {
             if (str.length() > 3 && (str[0] == 'u' || str[0] == 'U') && (str[1] == 'r' || str[1] == 'R') && (str[2] == 'l' || str[2] == 'L'))
                 tokens->push_back(String::fromUTF8("url")->concat(String::fromUTF8(str.data() + 3, str.length() - 3)));

@@ -1118,7 +1118,7 @@ public:
 
     void notifyNeedsStyleRecalc();
 
-    void tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src);
+    void tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src, String* seperator = String::emptyString);
 
     String* Border();
     String* BorderTop();
@@ -1173,7 +1173,7 @@ public:
             return;                                                                    \
         }                                                                              \
         std::vector<String*, gc_allocator<String*> > tokens;                           \
-        tokenizeCSSValue(&tokens, value);                                              \
+        tokenizeCSSValue(&tokens, value, String::fromUTF8(","));                       \
         CSSStyleValuePair ret;                                                         \
         if (ret.setValueCommon(&tokens) || ret.updateValue##name(&tokens)) {           \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);                    \
