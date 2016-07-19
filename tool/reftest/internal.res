@@ -6,6 +6,7 @@ test/internal-test/css/color/color_currentColor.html
 test/internal-test/css/color/color_keyword_1.html
 test/internal-test/css/color/color_keyword_2.html
 test/internal-test/css/color/color_keyword_3.html
+test/internal-test/css/color/color_rgb_rgba_hex.html
 test/internal-test/css/display/block.html
 test/internal-test/css/display/block-inline-basic.html
 test/internal-test/css/display/display-internal-test.html
