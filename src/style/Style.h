@@ -987,14 +987,18 @@ public:
     bool updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
-    bool updateValueBackgroundRepeatUnit(std::vector<String*, gc_allocator<String*> >* tokens);
-    bool updateValueBorderUnitStyle(std::vector<String*, gc_allocator<String*> >* tokens);
-    bool updateValueBorderUnitWidth(std::vector<String*, gc_allocator<String*> >* tokens);
-    bool updateValueUrlOrNone(std::vector<String*, gc_allocator<String*> >* tokens);
+
     bool updateValueLengthOrPercent(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercent(String* token, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
+
+    bool updateValueUnitBackgroundRepeat(String* token);
+    bool updateValueUnitBackgroundPosition(String* token);
+    bool updateValueUnitBorderStyle(String* token);
+    bool updateValueUnitBorderWidth(String* token);
+    bool updateValueUnitColor(String* token);
+    bool updateValueUnitUrlOrNone(String* token);
 
 // TODO : DEPRECATE
 #define CHECK_INPUT_ERROR(name, ...) \
