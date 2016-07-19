@@ -38,6 +38,8 @@ test/internal-test/css/display/display-internal-test-with-image-element-12.html
 test/internal-test/css/left_right_top_bottom/LRTB_basic.html
 test/internal-test/css/position/ltr-position-internal-test-1.html
 test/internal-test/css/position/ltr-position-internal-test-2.html
+test/internal-test/css/position/ltr-position-internal-test-3.html
+test/internal-test/css/position/ltr-position-internal-test-4.html
 test/internal-test/css/short-hand/background_shorthand.html
 test/internal-test/css/short-hand/border_shorthand.html
 test/internal-test/css/short-hand/margin_shorthand.html
