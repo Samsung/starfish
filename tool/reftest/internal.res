@@ -20,11 +20,21 @@ test/internal-test/css/style/style-tag-remove.html
 test/internal-test/page-visibilty/visibilitychange_test.html
 
 test/internal-test/css/background/background_properties.html
-test/internal-test/css/display/display-internal-test.html
+test/internal-test/css/display/display-internal-test-1.html
+test/internal-test/css/display/display-internal-test-2.html
+test/internal-test/css/display/display-internal-test-3.html
+test/internal-test/css/display/display-internal-test-with-image-element-1.html
 test/internal-test/css/display/display-internal-test-with-image-element-2.html
 test/internal-test/css/display/display-internal-test-with-image-element-3.html
 test/internal-test/css/display/display-internal-test-with-image-element-4.html
-test/internal-test/css/display/display-internal-test-with-image-element.html
+test/internal-test/css/display/display-internal-test-with-image-element-5.html
+test/internal-test/css/display/display-internal-test-with-image-element-6.html
+test/internal-test/css/display/display-internal-test-with-image-element-7.html
+test/internal-test/css/display/display-internal-test-with-image-element-8.html
+test/internal-test/css/display/display-internal-test-with-image-element-9.html
+test/internal-test/css/display/display-internal-test-with-image-element-10.html
+test/internal-test/css/display/display-internal-test-with-image-element-11.html
+test/internal-test/css/display/display-internal-test-with-image-element-12.html
 test/internal-test/css/left_right_top_bottom/LRTB_basic.html
 test/internal-test/css/position/ltr-position-internal-test-1.html
 test/internal-test/css/position/ltr-position-internal-test-2.html
