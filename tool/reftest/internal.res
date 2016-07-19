@@ -30,3 +30,4 @@ test/internal-test/css/short-hand/background_shorthand.html
 test/internal-test/css/short-hand/border_shorthand.html
 test/internal-test/css/short-hand/margin_shorthand.html
 test/internal-test/css/short-hand/padding_shorthand.html
+test/internal-test/css/left_right_top_bottom/LRTB_basic.html
