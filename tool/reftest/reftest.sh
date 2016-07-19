@@ -192,6 +192,12 @@ function doTest {
         fi
         RESFILE="tmp"$cnt
 
+        if [[ "$i" != "http"* ]] && [ ! -f $i ]; then
+            echo -e "${BOLD}[FAIL] File not found:${RESET}" $i
+            echo -e "${BOLD}Check your test submodule.${RESET}"
+            exit
+        fi
+
         # Running the tests
         filenames[$cnt]=$i
         if [ $TESTSUITE -eq 2 ]; then
@@ -417,9 +423,11 @@ function doTest {
                 RESIMG=${filenames[$c]%.*}".png"
                 FAIL=`grep -Eo "FAIL|could not be opened for reading" $TMPFILE | wc -l`
                 if [ $FAIL -eq 0 ]; then
+                    PASSTC=`expr $PASSTC + 1`
                     echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
                     #rm $RESIMG
                 else
+                    FAILTC=`expr $FAILTC + 1`
                     echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
 
                     # Capture the expected image
