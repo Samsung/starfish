@@ -431,12 +431,12 @@ function doTest {
                     echo -e "${RED}[FAIL]${RESET}" ${filenames[$c]}
 
                     # Capture the expected image
-                    if [ $TESTSUITE -eq 7 ]; then
-                        ./tool/pixel_test/run_nw_for_getting_internal_test_expected.sh ${filenames[$c]}
-                    else
-                        EXPIMG=${RESIMG%.*}"_expected.png"
-                        mv $RESIMG $EXPIMG
-                    fi
+                    # if [ $TESTSUITE -eq 7 ]; then
+                    #     ./tool/pixel_test/run_nw_for_getting_internal_test_expected.sh ${filenames[$c]}
+                    # else
+                    #    EXPIMG=${RESIMG%.*}"_expected.png"
+                    #    mv $RESIMG $EXPIMG
+                    # fi
                 fi
             fi
 
