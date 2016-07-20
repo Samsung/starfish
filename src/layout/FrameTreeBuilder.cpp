@@ -205,6 +205,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 {
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
+    FrameBlockBox* originalFrameBlockBox = nullptr;
     std::vector<FrameInline*, gc_allocator<FrameInline*>> stackedFrameInline;
     FrameTextTextDecorationData* curDeco = ctx.currentDecorationData();
     FrameTextTextDecorationData* textDecoBack =  new FrameTextTextDecorationData;
@@ -306,6 +307,18 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             STARFISH_ASSERT(parent);
             ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
             ctx.setIsInFrameInlineFlow(false);
+        } else if (!currentFrame->isNormalFlow()) {
+            // To prevent inline contents from splitting, add absolute positioned block to inline-box, inline-boxes + Block(absolute positioned)
+            if (ctx.currentBlockContainer()->hasBlockFlow()) {
+                Frame* last = ctx.currentBlockContainer()->lastChild();
+                if (last) {
+                    ASSERT(last->isFrameBlockBox());
+                    if (!last->asFrameBlockBox()->hasBlockFlow()) {
+                        originalFrameBlockBox = ctx.currentBlockContainer();
+                        ctx.setCurrentBlockContainer(last->asFrameBlockBox());
+                    }
+                }
+            }
         }
 
         frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame, current, ctx);
@@ -367,6 +380,9 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             }
             prev = in;
         }
+    }
+    if (originalFrameBlockBox) {
+        ctx.setCurrentBlockContainer(originalFrameBlockBox);
     }
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
     ctx.setCurrentTextDecorationData(textDecoBack);

@@ -95,7 +95,6 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
     for (size_t k = 0; k < boxes->size(); k ++) {
         FrameBox* box = boxes->at(k);
         if (!box->isNormalFlow()) {
-            box->asFrameBox()->setY(box->asFrameBox()->marginTop());
             continue;
         } else {
             hasNormalFlowChild = true;
@@ -1226,7 +1225,6 @@ void LineFormattingContext::completeLastLine()
                 auto pos = box->absolutePoint(back);
                 boxes.erase(std::find(boxes.begin(), boxes.end(), box));
                 box->setX(pos.x());
-                box->setY(pos.y());
             }
             back->boxes().push_back(box);
             box->setLayoutParent(back);
@@ -1259,7 +1257,7 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox)
     m_block.m_lineBoxes.back()->setWidth(m_lineBoxWidth);
     m_currentLine++;
     m_currentLineWidth = 0;
-    m_hasNormalFlowContent = false;
+    m_shouldLineBreakForabsolutePositionedBlock = false;
 }
 
 template <typename fn>
@@ -1308,7 +1306,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
         if (!f->isNormalFlow()) {
             ctx.registerAbsolutePositionedFrames(f->asFrameBox());
 
-            lineFormattingContext.m_absolutePositionedBoxes.push_back(std::make_pair(f->asFrameBox(), lineFormattingContext.m_hasNormalFlowContent));
+            lineFormattingContext.m_absolutePositionedBoxes.push_back(std::make_pair(f->asFrameBox(), lineFormattingContext.m_shouldLineBreakForabsolutePositionedBlock));
             absBoxCallback(f->asFrameBox());
             f = f->next();
             continue;
@@ -1371,7 +1369,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                     lineBreakCallback(false);
                     goto textAppendRetry;
                 }
-                lineFormattingContext.m_hasNormalFlowContent |= f->parent()->isNormalFlow();
+                lineFormattingContext.m_shouldLineBreakForabsolutePositionedBlock |= !isWhiteSpace;
                 InlineBox* ib = new InlineTextBox(f->node(), f->style(), nullptr, resultString, f->asFrameText(), InlineTextBox::CharDirection::Mixed);
                 ib->setWidth(textWidth);
                 ib->setHeight(f->style()->font()->metrics().m_fontHeight);

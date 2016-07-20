@@ -620,7 +620,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
                 return result;
             s = (HitTestStage)(s + 1);
         }
-        return result;
+        return FrameBox::hitTest(x, y, stage);
     } else if (style()->display() == InlineBlockDisplayValue) {
         if (stage == HitTestNormalFlowInline) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;

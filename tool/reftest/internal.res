@@ -44,6 +44,10 @@ test/internal-test/css/position/ltr-position-internal-test-1.html
 test/internal-test/css/position/ltr-position-internal-test-2.html
 test/internal-test/css/position/ltr-position-internal-test-3.html
 test/internal-test/css/position/ltr-position-internal-test-4.html
+test/internal-test/css/position/ltr-position-internal-test-with-image-element-1.html
+test/internal-test/css/position/ltr-position-internal-test-with-image-element-2.html
+test/internal-test/css/position/ltr-position-internal-test-with-image-element-3.html
+test/internal-test/css/position/ltr-position-internal-test-with-image-element-4.html
 test/internal-test/css/short-hand/background_shorthand.html
 test/internal-test/css/short-hand/border_shorthand.html
 test/internal-test/css/short-hand/margin_shorthand.html
