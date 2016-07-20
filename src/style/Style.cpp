@@ -249,15 +249,46 @@ static bool parseBackgroundRepeatShorhand(String* tok, CSSStyleValuePair* retx, 
     return true;
 }
 
-static bool parseBackgroundRepeatShorhand(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* retx, CSSStyleValuePair* rety)
+static bool parseBackgroundRepeatShorhand(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* retx, CSSStyleValuePair* rety, bool allowComma = true)
 {
-    size_t len = tokens->size();
-    if (len == 1) {
-        return parseBackgroundRepeatShorhand(tokens->at(0), retx, rety);
-    } else if (len == 2) {
-        return retx->updateValueUnitBackgroundRepeat(tokens->at(0)) && rety->updateValueUnitBackgroundRepeat(tokens->at(1));
+    // <repeat-style> = repeat-x | repeat-y | [repeat | no-repeat]{1,2}
+    // <repeat-style> [, <repeat-style>]*
+    size_t len = 0;
+    retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        String* value = tokens->at(i);
+        if (value->equals(",")) {
+            if (!allowComma || i == 0 || i == tokens->size() - 1)
+                return false;
+        } else if (i == tokens->size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
+        }
+        if (len == 1) {
+            CSSStyleValuePair x, y;
+            if (parseBackgroundRepeatShorhand(tokens->at(i - 1), &x, &y)) {
+                retx->multiValue()->append(x);
+                rety->multiValue()->append(y);
+            } else {
+                return false;
+            }
+        } else if (len == 2) {
+            CSSStyleValuePair x, y;
+            if (x.updateValueUnitBackgroundRepeat(tokens->at(i - 2)) && y.updateValueUnitBackgroundRepeat(tokens->at(i - 1))) {
+                retx->multiValue()->append(x);
+                rety->multiValue()->append(y);
+            } else
+                return false;
+        } else {
+            return false;
+        }
+        len = 0;
     }
-    return false;
+    return true;
 }
 
 static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> >* tokens,
@@ -335,7 +366,7 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
                 }
             }
             // 1-2. BackgroundRepeat, BackgroundPosition
-            if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY)) {
+            if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY, false)) {
                 SET_DOUBLE_PROP(Repeat)
                 DOUBLE_CONTINUE()
             } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks)) {
@@ -606,18 +637,30 @@ String* CSSStyleValuePair::toString()
         return lengthOrPercentageOrKeywordToString();
     }
     break;
-    case BackgroundImage:
-    case BorderImageSource: {
-        // <image> | none
-        if (m_valueKind == CSSStyleValuePair::ValueKind::None) {
-            return String::fromUTF8("none");
-        } else if (m_valueKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
-            String* str = String::fromUTF8("url(\"");
-            str = str->concat(urlStringValue())->concat(String::fromUTF8("\")"));
+    case BackgroundImage: {
+        if (m_valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
+            String* str = String::emptyString;
+            ValueList* list = multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                CSSStyleValuePair& item = list->atIndex(i);
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Inherit)
+                    str = str->concat(String::inheritString);
+                else if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
+                    str = str->concat(String::initialString);
+                else
+                    str = str->concat(item.urlValueToString());
+                if (i != list->size() - 1)
+                    str = str->concat(list->separatorString());
+            }
             return str;
         } else {
-            STARFISH_LOG_INFO("[BackgroundImage/BorderImageSource] Unsupported value");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    }
+    break;
+    case BorderImageSource: {
+        // <image> | none
+        return urlValueToString();
     }
     break;
     case BackgroundRepeatX:
@@ -627,6 +670,25 @@ String* CSSStyleValuePair::toString()
                 return String::fromUTF8("repeat");
             else
                 return String::fromUTF8("no-repeat");
+        } else if (m_valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
+            String* str = String::emptyString;
+            ValueList* list = multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                CSSStyleValuePair& item = list->atIndex(i);
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::Inherit)
+                    str = str->concat(String::inheritString);
+                else if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
+                    str = str->concat(String::initialString);
+                else if (item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
+                    if (item.backgroundRepeatValue() == RepeatRepeatValue)
+                        str = str->concat(String::fromUTF8("repeat"));
+                    else
+                        str = str->concat(String::fromUTF8("no-repeat"));
+                }
+                if (i != list->size() - 1)
+                    str = str->concat(list->separatorString());
+            }
+            return str;
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -639,16 +701,7 @@ String* CSSStyleValuePair::toString()
             for (unsigned int i = 0; i < vals->size(); i++) {
                 CSSStyleValuePair& item = vals->atIndex(i);
                 if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                    if (item.sideValue() == SideValue::LeftSideValue)
-                        str = str->concat(String::fromUTF8("left"));
-                    else if (item.sideValue() == SideValue::RightSideValue)
-                        str = str->concat(String::fromUTF8("right"));
-                    else if (item.sideValue() == SideValue::CenterSideValue)
-                        str = str->concat(String::fromUTF8("center"));
-                    else if (item.sideValue() == SideValue::TopSideValue)
-                        str = str->concat(String::fromUTF8("top"));
-                    else if (item.sideValue() == SideValue::BottomSideValue)
-                        str = str->concat(String::fromUTF8("bottom"));
+                    str = str->concat(item.sideValueToString());
                 } else {
                     str = str->concat(valueToString(item.valueKind(), item.value()));
                 }
@@ -902,18 +955,7 @@ String* CSSStyleValuePair::toString()
         }
     }
     case TextAlign: {
-        switch (sideValue()) {
-        case SideValue::NoneSideValue:
-            return String::fromUTF8("left");
-        case SideValue::LeftSideValue:
-            return String::fromUTF8("left");
-        case SideValue::RightSideValue:
-            return String::fromUTF8("right");
-        case SideValue::CenterSideValue:
-            return String::fromUTF8("center");
-        default:
-            return String::emptyString;
-        }
+        return sideValueToString();
     }
     case Visibility: {
         switch (visibility()) {
@@ -984,16 +1026,7 @@ String* CSSStyleValuePair::toString()
             for (unsigned int i = 0; i < vals->size(); i++) {
                 CSSStyleValuePair& item = vals->atIndex(i);
                 if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                    if (item.sideValue() == SideValue::LeftSideValue)
-                        str = str->concat(String::fromUTF8("left"));
-                    else if (item.sideValue() == SideValue::RightSideValue)
-                        str = str->concat(String::fromUTF8("right"));
-                    else if (item.sideValue() == SideValue::CenterSideValue)
-                        str = str->concat(String::fromUTF8("center"));
-                    else if (item.sideValue() == SideValue::TopSideValue)
-                        str = str->concat(String::fromUTF8("top"));
-                    else if (item.sideValue() == SideValue::BottomSideValue)
-                        str = str->concat(String::fromUTF8("bottom"));
+                    str = str->concat(item.sideValueToString());
                 } else {
                     str = str->concat(valueToString(item.valueKind(), item.value()));
                 }
@@ -1153,10 +1186,14 @@ void CSSStyleDeclaration::setBackground(String* value)
 
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(",/"));
+    CSSStyleValuePair images;
+    images.setValueList(new ValueList());
+    // TODO: should check comma-seperated input
     CSSStyleValuePair color, image, repeatX, repeatY, position, size;
     if (parseBackgroundShorthand(&tokens, &color, &image, &repeatX, &repeatY, &position, &size)) {
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, color);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, image);
+        images.multiValue()->append(image);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, images);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, repeatX);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, repeatY);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, position);
@@ -1615,14 +1652,27 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundImage:
-                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial
-                    || cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundImage(ComputedStyle::initialBgImage());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBackgroundImage(parentStyle->backgroundImage());
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::UrlValueKind);
-                    style->setBackgroundImage(cssValues[k].urlValue(origin));
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
+                    ValueList* list = cssValues[k].multiValue();
+                    for (unsigned int i = 0; i < list->size(); i++) {
+                        CSSStyleValuePair& item = list->atIndex(i);
+                        if (item.valueKind() == CSSStyleValuePair::ValueKind::None) {
+                            style->setBackgroundImage(String::emptyString, i);
+                        } else if (item.valueKind() == CSSStyleValuePair::ValueKind::UrlValueKind) {
+                            style->setBackgroundImage(item.urlValue(origin), i);
+                        } else if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                            style->setBackgroundImage(ComputedStyle::initialBgImage(), i);
+                        } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                            style->setBackgroundImage(parentStyle->backgroundImage(), i);
+                        } else {
+                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        }
+                    }
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundPosition:
@@ -1695,9 +1745,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundRepeatX(parentStyle->backgroundRepeatX());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundRepeatX(BackgroundRepeatValue::RepeatRepeatValue);
-                } else {
-                    STARFISH_ASSERT(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind == cssValues[k].valueKind());
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
                     style->setBackgroundRepeatX(cssValues[k].backgroundRepeatValue());
+                } else {
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
+                    ValueList* list = cssValues[k].multiValue();
+                    for (unsigned int i = 0; i < list->size(); i++) {
+                        CSSStyleValuePair& item = list->atIndex(i);
+                        STARFISH_ASSERT(item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind);
+                        style->setBackgroundRepeatX(item.backgroundRepeatValue(), i);
+                    }
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundRepeatY:
@@ -1705,9 +1762,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundRepeatY(parentStyle->backgroundRepeatY());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundRepeatY(BackgroundRepeatValue::RepeatRepeatValue);
-                } else {
-                    STARFISH_ASSERT(CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind == cssValues[k].valueKind());
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
                     style->setBackgroundRepeatY(cssValues[k].backgroundRepeatValue());
+                } else {
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
+                    ValueList* list = cssValues[k].multiValue();
+                    for (unsigned int i = 0; i < list->size(); i++) {
+                        CSSStyleValuePair& item = list->atIndex(i);
+                        STARFISH_ASSERT(item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind);
+                        style->setBackgroundRepeatY(item.backgroundRepeatValue(), i);
+                    }
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BorderImageSlice:
@@ -2624,14 +2688,25 @@ bool CSSStyleValuePair::updateValueUnitUrlOrNone(String* value)
 
 bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    if (tokens->size() != 1)
-        return false;
-
-    String* value = (*tokens)[0];
-    if (updateValueUnitUrlOrNone(value))
-        return true;
-
-    return false;
+    bool shouldBeComma = false;
+    ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        String* value = tokens->at(i);
+        if (value->equals(",")) {
+            if (!shouldBeComma)
+                return false;
+            shouldBeComma = false;
+            continue;
+        }
+        CSSStyleValuePair ret;
+        if (shouldBeComma || !ret.updateValueUnitUrlOrNone(value))
+            return false;
+        shouldBeComma = true;
+        values->append(ret);
+    }
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    m_value.m_multiValue = values;
+    return shouldBeComma;
 }
 
 bool CSSStyleValuePair::updateValueBorderImageSource(std::vector<String*, gc_allocator<String*> >* tokens)
