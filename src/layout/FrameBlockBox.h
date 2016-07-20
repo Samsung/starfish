@@ -522,7 +522,7 @@ public:
         m_block.m_lineBoxes.push_back(lineBox);
         m_currentLine = 0;
         m_currentLineWidth = 0;
-        m_hasNormalFlowContent = false;
+        m_shouldLineBreakForabsolutePositionedBlock = false;
     }
 
     void breakLine(bool dueToBr, bool isInLineBox);
@@ -557,7 +557,7 @@ public:
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
-    bool m_hasNormalFlowContent;
+    bool m_shouldLineBreakForabsolutePositionedBlock;
 
     std::set<size_t> m_breakedLinesSet;
 
