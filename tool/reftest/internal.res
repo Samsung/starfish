@@ -1,6 +1,7 @@
 test/internal-test/css/url/url.html
 test/internal-test/click/click.html
 test/internal-test/css/background/current-color.html
+test/internal-test/css/color/color_change.html
 test/internal-test/css/color/color_currentColor.html
 test/internal-test/css/color/color_keyword_1.html
 test/internal-test/css/color/color_keyword_2.html
