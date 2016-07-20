@@ -286,6 +286,19 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
     _Position->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     _Size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
+    if (len == 1 && tokens->at(0)->equals("initial")) {
+        return true;
+    }
+    if (len == 1 && tokens->at(0)->equals("inherit")) {
+        _Color->setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        _Image->setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        _RepeatX->setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        _RepeatY->setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        _Position->setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        _Size->setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        return true;
+    }
+
     // TODO : tokenizeCSSValue-> should parse slash(/) for size
     bool hasColor = false, hasImage = false, hasRepeat = false;
     bool hasPosition = false, hasSize = false, canBeSize = false;
@@ -492,9 +505,18 @@ static bool parseBorderShorthand(std::vector<String*, gc_allocator<String*> >* t
 void CSSStyleDeclaration::setBorder(String* value)
 {
     if (value->length() == 0) {
-        setBorderWidth(String::emptyString);
-        setBorderStyle(String::emptyString);
-        setBorderColor(String::emptyString);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopWidth);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderTopColor);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightWidth);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderRightColor);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomWidth);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderBottomColor);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor);
         return;
     }
     // TODO : initial / inherit
@@ -514,7 +536,6 @@ void CSSStyleDeclaration::setBorder(String* value)
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftWidth, width);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftStyle, style);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor, color);
-        notifyNeedsStyleRecalc();
     }
 }
 
@@ -522,9 +543,9 @@ void CSSStyleDeclaration::setBorder(String* value)
 void CSSStyleDeclaration::setBorder##POS(String* value) \
 { \
     if (value->length() == 0) { \
-        setBorder##POS##Width(String::emptyString); \
-        setBorder##POS##Style(String::emptyString); \
-        setBorder##POS##Color(String::emptyString); \
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Width); \
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Style); \
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Color); \
         return; \
     } \
     std::vector<String*, gc_allocator<String*> > tokens; \
@@ -534,7 +555,6 @@ void CSSStyleDeclaration::setBorder##POS(String* value) \
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Width, width); \
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Style, style); \
         addCSSValuePair(CSSStyleValuePair::KeyKind::Border##POS##Color, color); \
-        notifyNeedsStyleRecalc(); \
     } \
 }
 
@@ -1079,11 +1099,9 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
     if (c.setValueCommon(&tokens)) {
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
-        notifyNeedsStyleRecalc();
     } else if (parseBackgroundRepeatShorhand(&tokens, &x, &y)) {
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, x);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, y);
-        notifyNeedsStyleRecalc();
     }
 }
 
@@ -1127,34 +1145,12 @@ String* CSSStyleDeclaration::Background()
 void CSSStyleDeclaration::setBackground(String* value)
 {
     if (value->length() == 0) {
-        setBackgroundColor(String::emptyString);
-        setBackgroundImage(String::emptyString);
-        setBackgroundRepeat(String::emptyString);
-        setBackgroundPosition(String::emptyString);
-        setBackgroundSize(String::emptyString);
-        return;
-    }
-    CSSStyleValuePair v;
-    if (STRING_VALUE_IS_INITIAL()) {
-        v.setValueKind(CSSStyleValuePair::ValueKind::Initial);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, v);
-        notifyNeedsStyleRecalc();
-        return;
-    }
-    if (STRING_VALUE_IS_INHERIT()) {
-        v.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, v);
-        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, v);
-        notifyNeedsStyleRecalc();
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize);
         return;
     }
 
@@ -1168,10 +1164,67 @@ void CSSStyleDeclaration::setBackground(String* value)
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, repeatY);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, position);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, size);
-        notifyNeedsStyleRecalc();
         return;
     }
 }
+
+#define ADD_PAIRS(PRE, ...) \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Top##__VA_ARGS__, top); \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Right##__VA_ARGS__, right); \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__, bottom); \
+    addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__, left);
+#define RM_PAIRS(PRE, ...) \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Top##__VA_ARGS__); \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Right##__VA_ARGS__); \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__); \
+    removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__);
+#define ATTRIBUTE_SETTER_FOURSIDE(PRE, ...) \
+void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value) \
+{ \
+    if (value->length() == 0) { \
+        RM_PAIRS(PRE, __VA_ARGS__); \
+        return; \
+    } \
+    CSSStyleValuePair c, top, right, bottom, left; \
+    if (value->equals(String::initialString)) { \
+        c.setValueKind(CSSStyleValuePair::ValueKind::Initial); \
+        top = right = bottom = left = c; \
+        ADD_PAIRS(PRE, __VA_ARGS__); \
+        return; \
+    } \
+    if (value->equals(String::inheritString)) { \
+        c.setValueKind(CSSStyleValuePair::ValueKind::Inherit); \
+        top = right = bottom = left = c; \
+        ADD_PAIRS(PRE, __VA_ARGS__); \
+        return; \
+    } \
+    std::vector<String*, gc_allocator<String*> > tokens; \
+    tokenizeCSSValue(&tokens, value); \
+    size_t len = tokens.size(); \
+    if (len < 1 || len > 4) \
+        return; \
+    \
+    std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> > result; \
+    for (size_t i = 0; i < len; i++) { \
+        CSSStyleValuePair v; \
+        if (!v.updateValueUnit##PRE##__VA_ARGS__(tokens[i])) { \
+            return; \
+        } \
+        result.push_back(v); \
+    } \
+    top = result[0]; \
+    right = len < 2 ? top : result[1]; \
+    bottom = len < 3 ? top : result[2]; \
+    left = len < 4 ? right : result[3]; \
+    ADD_PAIRS(PRE, __VA_ARGS__); \
+}
+ATTRIBUTE_SETTER_FOURSIDE(Margin);
+ATTRIBUTE_SETTER_FOURSIDE(Padding);
+ATTRIBUTE_SETTER_FOURSIDE(Border, Width);
+ATTRIBUTE_SETTER_FOURSIDE(Border, Style);
+ATTRIBUTE_SETTER_FOURSIDE(Border, Color);
+#undef ADD_PAIRS
+#undef RM_PAIRS
 
 void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src, String* seperator)
 {
@@ -2415,6 +2468,21 @@ bool CSSStyleValuePair::updateValueUnitColor(String* token)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitBorderColor(String* token)
+{
+    return updateValueUnitColor(token);
+}
+
+bool CSSStyleValuePair::updateValueUnitMargin(String* value)
+{
+    return updateValueLengthOrPercentOrAuto(value, true);
+}
+
+bool CSSStyleValuePair::updateValueUnitPadding(String* value)
+{
+    return updateValueLengthOrPercent(value, false);
 }
 
 bool CSSStyleValuePair::updateValueColor(std::vector<String*, gc_allocator<String*> >* tokens)
