@@ -22,6 +22,7 @@ test/internal-test/css/style/style-tag-remove.html
 test/internal-test/page-visibilty/visibilitychange_test.html
 
 test/internal-test/css/background/background_properties.html
+test/internal-test/css/background/background_shorthand.html
 test/internal-test/css/display/display-internal-test-1.html
 test/internal-test/css/display/display-internal-test-2.html
 test/internal-test/css/display/display-internal-test-3.html
