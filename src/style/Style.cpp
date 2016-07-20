@@ -307,11 +307,9 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
     std::vector<String*, gc_allocator<String*> > toks;
 
 #define SET_SINGLE_PROP(PROP) \
-    fprintf(stderr, "--%s\n", #PROP); \
     *_##PROP = temp; \
     has##PROP = true;
 #define SET_DOUBLE_PROP(PROP) \
-    fprintf(stderr, "--%s\n", #PROP); \
     *_##PROP##X = tempX; \
     *_##PROP##Y = tempY; \
     has##PROP = true;
@@ -319,7 +317,6 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
 #define DOUBLE_CONTINUE() i++; continue;
 
     for (size_t i = 0; i < len; i++) {
-        fprintf(stderr, "token[%d] : %s\n", (int)i, tokens->at(i)->utf8Data());
         if (tokens->at(i)->equals("/"))
             continue;
         // 1. Verify 2 tokens (current and next token at once)
