@@ -275,46 +275,46 @@ public:
         m_background->setBgColorToCurrentColor();
     }
 
-    void setBackgroundImage(String* img)
+    void setBackgroundImage(String* img, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setBgImage(img);
+        m_background->setBgImage(img, layer);
     }
 
-    void setBackgroundImageResource(ImageResource* img)
+    void setBackgroundImageResource(ImageResource* img, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setBgImageResource(img);
+        m_background->setBgImageResource(img, layer);
     }
 
-    void setBackgroundRepeatX(BackgroundRepeatValue repeat)
+    void setBackgroundRepeatX(BackgroundRepeatValue repeat, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setRepeatX(repeat);
+        m_background->setRepeatX(repeat, layer);
     }
 
-    void setBackgroundRepeatY(BackgroundRepeatValue repeat)
+    void setBackgroundRepeatY(BackgroundRepeatValue repeat, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setRepeatY(repeat);
+        m_background->setRepeatY(repeat, layer);
     }
 
-    void setBackgroundPositionValue(LengthPosition position)
+    void setBackgroundPositionValue(LengthPosition position, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setPositionValue(position);
+        m_background->setPositionValue(position, layer);
     }
 
-    void setBackgroundSizeType(BackgroundSizeType type)
+    void setBackgroundSizeType(BackgroundSizeType type, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setSizeType(type);
+        m_background->setSizeType(type, layer);
     }
 
-    void setBackgroundSizeValue(LengthSize size)
+    void setBackgroundSizeValue(LengthSize size, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setSizeValue(size);
+        m_background->setSizeValue(size, layer);
     }
 
     Color backgroundColor()

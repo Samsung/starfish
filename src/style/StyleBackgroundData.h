@@ -24,21 +24,20 @@ namespace StarFish {
 
 class ImageResource;
 
-class StyleBackgroundData : public gc {
+class BackgroundLayer : public gc {
 public:
-    StyleBackgroundData()
+    BackgroundLayer()
         : m_image(String::emptyString)
         , m_imageResource(NULL)
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
         , m_sizeType(BackgroundSizeType::SizeValue)
-        , m_bgColorNeedToUpdate(false)
         , m_positionValue(nullptr)
         , m_sizeValue(nullptr)
     {
     }
 
-    ~StyleBackgroundData()
+    ~BackgroundLayer()
     {
     }
 
@@ -63,17 +62,6 @@ public:
             *m_sizeValue = size;
     }
 
-    void setBgColor(Color color)
-    {
-        m_color = color;
-        m_bgColorNeedToUpdate = false;
-    }
-
-    void setBgColorToCurrentColor()
-    {
-        m_bgColorNeedToUpdate = true;
-    }
-
     void setBgImage(String* img)
     {
         m_image = img;
@@ -92,11 +80,6 @@ public:
     void setRepeatY(BackgroundRepeatValue repeat)
     {
         m_repeatY = repeat;
-    }
-
-    Color bgColor()
-    {
-        return m_color;
     }
 
     String* bgImage()
@@ -151,13 +134,178 @@ public:
         return *m_positionValue;
     }
 
-    void checkComputed(Length fontSize, Font* font, Color color)
+    void checkComputed(Length fontSize, Font* font)
     {
         if (m_sizeValue)
             m_sizeValue->checkComputed(fontSize, font);
 
         if (m_positionValue)
             m_positionValue->checkComputed(fontSize, font);
+    }
+
+private:
+    friend inline bool operator==(const BackgroundLayer& a, const BackgroundLayer& b);
+    friend inline bool operator!=(const BackgroundLayer& a, const BackgroundLayer& b);
+
+    String* m_image;
+    ImageResource* m_imageResource;
+
+    // background-repeat
+    BackgroundRepeatValue m_repeatX : 1;
+    BackgroundRepeatValue m_repeatY : 1;
+    // background-size
+    BackgroundSizeType m_sizeType : 2;
+
+    // background-position
+    LengthPosition* m_positionValue;
+    // background-size
+    LengthSize* m_sizeValue;
+};
+
+class StyleBackgroundData : public gc {
+public:
+    StyleBackgroundData()
+        : m_bgColorNeedToUpdate(false)
+    {
+    }
+
+    ~StyleBackgroundData()
+    {
+    }
+
+    void setBgColor(Color color)
+    {
+        m_color = color;
+        m_bgColorNeedToUpdate = false;
+    }
+
+    void setBgColorToCurrentColor()
+    {
+        m_bgColorNeedToUpdate = true;
+    }
+
+    void resizeLayerIfNeeded(unsigned int layer)
+    {
+        if (m_layers.size() <= layer)
+            m_layers.resize(layer + 1);
+    }
+
+    void setPositionValue(LengthPosition position, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        m_layers[layer].setPositionValue(position);
+    }
+
+    void setSizeType(BackgroundSizeType type, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        m_layers[layer].setSizeType(type);
+    }
+
+    void setSizeValue(LengthSize size, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        m_layers[layer].setSizeValue(size);
+    }
+
+    void setBgImage(String* img, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        m_layers[layer].setBgImage(img);
+    }
+
+    void setBgImageResource(ImageResource* data, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        m_layers[layer].setBgImageResource(data);
+    }
+
+    void setRepeatX(BackgroundRepeatValue repeat, unsigned int layer = 0)
+    {
+        resizeLayerIfNeeded(layer);
+        m_layers[layer].setRepeatX(repeat);
+    }
+
+    void setRepeatY(BackgroundRepeatValue repeat, unsigned int layer = 0)
+    {
+        resizeLayerIfNeeded(layer);
+        m_layers[layer].setRepeatY(repeat);
+    }
+
+    Color bgColor()
+    {
+        return m_color;
+    }
+
+    String* bgImage(unsigned int layer = 0)
+    {
+        if (m_layers.size() <= layer)
+            return String::emptyString;
+        return m_layers[layer].bgImage();
+    }
+
+    ImageData* bgImageData(unsigned int layer = 0)
+    {
+        if (m_layers.size() <= layer)
+            return nullptr;
+        return m_layers[layer].bgImageData();
+    }
+
+    ImageResource* bgImageResource(unsigned int layer = 0)
+    {
+        if (m_layers.size() <= layer)
+            return nullptr;
+        return m_layers[layer].bgImageResource();
+    }
+
+    BackgroundSizeType sizeType(unsigned int layer = 0)
+    {
+        if (m_layers.size() <= layer)
+            return BackgroundSizeType::SizeValue;
+        return m_layers[layer].sizeType();
+    }
+
+    BackgroundRepeatValue repeatX(unsigned int layer = 0)
+    {
+        if (m_layers.size() <= layer)
+            return BackgroundRepeatValue::RepeatRepeatValue;
+        return m_layers[layer].repeatX();
+    }
+
+    BackgroundRepeatValue repeatY(unsigned int layer = 0)
+    {
+        if (m_layers.size() <= layer)
+            return BackgroundRepeatValue::RepeatRepeatValue;
+        return m_layers[layer].repeatY();
+    }
+
+    LengthSize sizeValue(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer)
+            return LengthSize();
+        return m_layers[layer].sizeValue();
+    }
+
+    bool hasPositionValue(unsigned int layer = 0)
+    {
+        if (m_layers.size() <= layer)
+            return false;
+        return m_layers[layer].hasPositionValue();
+    }
+
+    LengthPosition positionValue(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer)
+            return LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
+        return m_layers[layer].positionValue();
+    }
+
+    void checkComputed(Length fontSize, Font* font, Color color)
+    {
+        if (m_layers.size()) {
+            for (unsigned int i = 0; i < m_layers.size(); i++)
+                m_layers[i].checkComputed(fontSize, font);
+        }
 
         // background-color
         // - default : transparent
@@ -171,52 +319,56 @@ private:
     friend inline bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b);
 
     Color m_color;
-
-    String* m_image;
-    ImageResource* m_imageResource;
-
-    // background-repeat
-    BackgroundRepeatValue m_repeatX : 1;
-    BackgroundRepeatValue m_repeatY : 1;
-    // background-size
-    BackgroundSizeType m_sizeType : 2;
     // background-color type
     bool m_bgColorNeedToUpdate : 1;
 
-    // background-position
-    LengthPosition* m_positionValue;
-    // background-size
-    LengthSize* m_sizeValue;
+    std::vector<BackgroundLayer, gc_allocator<BackgroundLayer> > m_layers;
 
 };
 
-bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
+bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
 {
-    if (a.m_color != b.m_color)
-        return false;
-
     if (a.m_sizeType != b.m_sizeType)
         return false;
 
     if (a.m_image != b.m_image)
         return false;
 
-    if (a.positionValue() != b.positionValue()) {
+    if (a.positionValue() != b.positionValue())
         return false;
-    }
 
     if (a.m_sizeType != b.m_sizeType)
         return false;
 
-    if (a.m_sizeType == BackgroundSizeType::SizeValue && a.sizeValue() != b.sizeValue()) {
+    if (a.m_sizeType == BackgroundSizeType::SizeValue && a.sizeValue() != b.sizeValue())
         return false;
-    }
 
     if (a.m_repeatX != b.m_repeatX)
         return false;
 
     if (a.m_repeatY != b.m_repeatY)
         return false;
+
+    return true;
+}
+
+bool operator!=(const BackgroundLayer& a, const BackgroundLayer& b)
+{
+    return !operator==(a, b);
+}
+
+bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b)
+{
+    if (a.m_color != b.m_color)
+        return false;
+
+    if (a.m_layers.size() != b.m_layers.size())
+        return false;
+
+    for (unsigned int i = 0; i < a.m_layers.size(); i++) {
+        if (a.m_layers[i] != b.m_layers[i])
+            return false;
+    }
 
     return true;
 }
