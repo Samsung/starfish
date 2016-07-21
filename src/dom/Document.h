@@ -69,7 +69,7 @@ public:
     }
 
     DocumentFragment* createDocumentFragment();
-    Element* createElement(QualifiedName localName);
+    Element* createElement(QualifiedName localName, bool shouldCheckName);
     Text* createTextNode(String* data);
     Comment* createComment(String* data);
     // Moved to Node as it is common to Document and Element

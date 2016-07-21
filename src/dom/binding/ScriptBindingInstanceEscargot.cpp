@@ -1680,12 +1680,12 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
                 if (argValue.isUndefined()) {
                     QualifiedName name = QualifiedName(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), "undefined"));
-                    Element* elem = doc->createElement(name);
+                    Element* elem = doc->createElement(name, true);
                     if (elem != nullptr)
                         return elem->scriptValue();
                 } else if (argValue.isNull()) {
                     QualifiedName name = QualifiedName(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), "null"));
-                    Element* elem = doc->createElement(name);
+                    Element* elem = doc->createElement(name, true);
                     if (elem != nullptr)
                         return elem->scriptValue();
                 } else if (argValue.isESString()) {
@@ -1694,7 +1694,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
                     if (!QualifiedName::checkNameProductionRule(bStr, bStr->length()))
                         throw new DOMException(doc->window()->starFish()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
                     QualifiedName name = QualifiedName(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), argStr->utf8Data()));
-                    Element* elem = doc->createElement(name);
+                    Element* elem = doc->createElement(name, true);
                     if (elem != nullptr)
                         return elem->scriptValue();
                 }
