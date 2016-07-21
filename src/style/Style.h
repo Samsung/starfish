@@ -1018,9 +1018,6 @@ public:
         }
     }
 
-    // TODO : DEPRECATE
-    static bool checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens);
-
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
@@ -1040,16 +1037,6 @@ public:
     bool updateValueUnitUrlOrNone(String* token);
     bool updateValueUnitMargin(String* token);
     bool updateValueUnitPadding(String* token);
-
-// TODO : DEPRECATE
-#define CHECK_INPUT_ERROR(name, ...) \
-    static bool checkInputError##name(std::vector<String*, gc_allocator<String*> >* tokens);
-
-    FOR_EACH_STYLE_ATTRIBUTE(CHECK_INPUT_ERROR)
-#undef CHECK_INPUT_ERROR
-
-    static bool checkInputErrorBackground(std::vector<String*, gc_allocator<String*> >* tokens);
-    static bool checkInputErrorBackgroundRepeat(std::vector<String*, gc_allocator<String*> >* tokens);
 
 protected:
     KeyKind m_keyKind;
