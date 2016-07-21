@@ -728,18 +728,21 @@ String* CSSStyleValuePair::toString()
         switch (m_valueKind) {
         case CSSStyleValuePair::ValueKind::ValueListKind: {
             String* str = String::emptyString;
-            ValueList* vals = multiValue();
-            for (unsigned int i = 0; i < vals->size(); i++) {
-                CSSStyleValuePair& item = vals->atIndex(i);
-                switch (item.valueKind()) {
+            ValueList* layers = multiValue();
+            for (unsigned int l = 0; l < layers->size(); l++) {
+                CSSStyleValuePair& layer = layers->atIndex(l);
+                switch (layer.valueKind()) {
                 case CSSStyleValuePair::ValueKind::Cover:
                     str->concat(String::fromUTF8("cover"));
+                    break;
                 case CSSStyleValuePair::ValueKind::Contain:
                     str->concat(String::fromUTF8("contain"));
+                    break;
                 case CSSStyleValuePair::ValueKind::Auto:
                     str->concat(String::fromUTF8("auto"));
+                    break;
                 case CSSStyleValuePair::ValueKind::ValueListKind: {
-                    ValueList* vals = multiValue();
+                    ValueList* vals = layer.multiValue();
                     for (unsigned int i = 0; i < vals->size(); i++) {
                         CSSStyleValuePair& item = vals->atIndex(i);
                         str = str->concat(valueToString(item.valueKind(), item.value()));
@@ -747,11 +750,12 @@ String* CSSStyleValuePair::toString()
                             str = str->concat(String::spaceString);
                         }
                     }
+                    break;
                 }
                 default:
                 break;
                 }
-                if (i < vals->size() - 1) {
+                if (l < layers->size() - 1) {
                     str = str->concat(String::fromUTF8(", "));
                 }
             }
