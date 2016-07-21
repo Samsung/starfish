@@ -377,11 +377,11 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
         // 2. Verify single token
         tok = tokens->at(i);
         // 2-1. BackgroundSize (canBeSize : set true only after backgroundPosition)
+        toks.clear();
+        toks.push_back(tok);
         if (canBeSize) {
             STARFISH_ASSERT(!hasSize);
             canBeSize = false;
-            toks.clear();
-            toks.push_back(tok);
             if (temp.updateValueBackgroundSize(&toks, false)) {
                 SET_SINGLE_PROP(Size)
                 SINGLE_CONTINUE()
@@ -397,7 +397,7 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
         } else if (!hasRepeat && parseBackgroundRepeatShorhand(tok, &tempX, &tempY)) {
             SET_DOUBLE_PROP(Repeat)
             SINGLE_CONTINUE()
-        } else if (!hasPosition && temp.updateValueUnitBackgroundPosition(tok)) {
+        } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks, false)) {
             canBeSize = true;
             SET_SINGLE_PROP(Position)
             SINGLE_CONTINUE()
@@ -733,13 +733,13 @@ String* CSSStyleValuePair::toString()
                 CSSStyleValuePair& layer = layers->atIndex(l);
                 switch (layer.valueKind()) {
                 case CSSStyleValuePair::ValueKind::Cover:
-                    str->concat(String::fromUTF8("cover"));
+                    str = str->concat(String::fromUTF8("cover"));
                     break;
                 case CSSStyleValuePair::ValueKind::Contain:
-                    str->concat(String::fromUTF8("contain"));
+                    str = str->concat(String::fromUTF8("contain"));
                     break;
                 case CSSStyleValuePair::ValueKind::Auto:
-                    str->concat(String::fromUTF8("auto"));
+                    str = str->concat(String::fromUTF8("auto"));
                     break;
                 case CSSStyleValuePair::ValueKind::ValueListKind: {
                     ValueList* vals = layer.multiValue();
