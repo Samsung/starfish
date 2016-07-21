@@ -314,6 +314,11 @@ public:
             setBgColor(color);
     }
 
+    unsigned int sizeOfLayers()
+    {
+        return m_layers.size();
+    }
+
 private:
     friend inline bool operator==(const StyleBackgroundData& a, const StyleBackgroundData& b);
     friend inline bool operator!=(const StyleBackgroundData& a, const StyleBackgroundData& b);

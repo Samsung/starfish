@@ -317,6 +317,13 @@ public:
         m_background->setSizeValue(size, layer);
     }
 
+    unsigned int backgroundLayerSize()
+    {
+        if (m_background == NULL)
+            return 0;
+        return m_background->sizeOfLayers();
+    }
+
     Color backgroundColor()
     {
         if (m_background == NULL)
@@ -324,62 +331,62 @@ public:
         return m_background->bgColor();
     }
 
-    String* backgroundImage()
+    String* backgroundImage(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return String::emptyString;
-        return m_background->bgImage();
+        return m_background->bgImage(layer);
     }
 
-    ImageData* backgroundImageData()
+    ImageData* backgroundImageData(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return NULL;
-        return m_background->bgImageData();
+        return m_background->bgImageData(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatX()
+    BackgroundRepeatValue backgroundRepeatX(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return BackgroundRepeatValue::RepeatRepeatValue;
-        return m_background->repeatX();
+        return m_background->repeatX(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatY()
+    BackgroundRepeatValue backgroundRepeatY(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return BackgroundRepeatValue::RepeatRepeatValue;
-        return m_background->repeatY();
+        return m_background->repeatY(layer);
     }
 
-    bool hasBackgroundPosition()
+    bool hasBackgroundPosition(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return false;
-        return m_background->hasPositionValue();
+        return m_background->hasPositionValue(layer);
     }
 
-    LengthPosition backgroundPosition()
+    LengthPosition backgroundPosition(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
-        return m_background->positionValue();
+        return m_background->positionValue(layer);
     }
 
-    BackgroundSizeType bgSizeType()
+    BackgroundSizeType bgSizeType(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return BackgroundSizeType::SizeValue;
-        return m_background->sizeType();
+        return m_background->sizeType(layer);
     }
 
-    LengthSize bgSizeValue()
+    LengthSize bgSizeValue(unsigned int layer = 0)
     {
         if (m_background == NULL)
             return LengthSize();
 
         STARFISH_ASSERT(m_background && m_background->sizeType() == BackgroundSizeType::SizeValue);
-        return m_background->sizeValue();
+        return m_background->sizeValue(layer);
     }
 
     Font* font()

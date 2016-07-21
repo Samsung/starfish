@@ -1101,12 +1101,19 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
-        if (style->backgroundImage()->length() == 0) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::None);
-        } else {
-            p.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
-            p.setValue(style->backgroundImage());
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* vals = new ValueList(ValueList::Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+            if (style->backgroundImage(i)->length() == 0) {
+                item.setValueKind(CSSStyleValuePair::ValueKind::None);
+            } else {
+                item.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
+                item.setValue(style->backgroundImage(i));
+            }
+            vals->append(item);
         }
+        p.setValueList(vals);
         d->addValuePair(p);
     }
 
@@ -1127,22 +1134,29 @@ CSSStyleDeclaration* Node::getComputedStyle()
     {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundSize);
-        if (style->bgSizeType() == BackgroundSizeType::Cover) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Cover);
-        } else if (style->bgSizeType() == BackgroundSizeType::Contain) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::Contain);
-        } else if (style->bgSizeType() == BackgroundSizeType::SizeValue) {
-            p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* vals = new ValueList();
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+            if (style->bgSizeType(i) == BackgroundSizeType::Cover) {
+                item.setValueKind(CSSStyleValuePair::ValueKind::Cover);
+            } else if (style->bgSizeType(i) == BackgroundSizeType::Contain) {
+                item.setValueKind(CSSStyleValuePair::ValueKind::Contain);
+            } else if (style->bgSizeType(i) == BackgroundSizeType::SizeValue) {
+                item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+                ValueList* vals = new ValueList();
 
-            CSSStyleValuePair w = lengthToCSSStyleValue(style->bgSizeValue().width());
-            vals->append(w.valueKind(), w.value());
+                CSSStyleValuePair w = lengthToCSSStyleValue(style->bgSizeValue(i).width());
+                vals->append(w.valueKind(), w.value());
 
-            CSSStyleValuePair h = lengthToCSSStyleValue(style->bgSizeValue().height());
-            vals->append(h.valueKind(), h.value());
+                CSSStyleValuePair h = lengthToCSSStyleValue(style->bgSizeValue(i).height());
+                vals->append(h.valueKind(), h.value());
 
-            p.setValue(vals);
+                item.setValue(vals);
+            }
+            values->append(item);
         }
+        p.setValueList(values);
         d->addValuePair(p);
     }
 
@@ -1151,15 +1165,20 @@ CSSStyleDeclaration* Node::getComputedStyle()
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPosition);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList();
+        ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item;
+            item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+            ValueList* vals = new ValueList();
+            CSSStyleValuePair x = lengthToCSSStyleValue(style->backgroundPosition().x());
+            vals->append(x.valueKind(), x.value());
 
-        CSSStyleValuePair x = lengthToCSSStyleValue(style->backgroundPosition().x());
-        vals->append(x.valueKind(), x.value());
-
-        CSSStyleValuePair y = lengthToCSSStyleValue(style->backgroundPosition().y());
-        vals->append(y.valueKind(), y.value());
-
-        p.setValue(vals);
+            CSSStyleValuePair y = lengthToCSSStyleValue(style->backgroundPosition().y());
+            vals->append(y.valueKind(), y.value());
+            item.setValueList(vals);
+            values->append(item);
+        }
+        p.setValueList(values);
         d->addValuePair(p);
     }
 
