@@ -760,7 +760,7 @@ void HTMLConstructionSite::takeAllChildren(HTMLStackItem* newParent, HTMLElement
 Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token, const AtomicString& namespaceURI)
 {
     QualifiedName tagName(namespaceURI, AtomicString::createAttrAtomicString(m_document->window()->starFish(), token->name()));
-    Element* element = ownerDocumentForCurrentNode().createElement(tagName);
+    Element* element = ownerDocumentForCurrentNode().createElement(tagName, false);
     setAttributes(element, token);
     return element;
 }
@@ -784,7 +784,7 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     // to occur after construction to allow better code sharing here.
     // Element* element = HTMLElementFactory::createHTMLElement(token->name(), document, form, true);
     QualifiedName tagName = QualifiedName(token->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(m_document->window()->starFish(), token->name()));
-    Element* element = ownerDocumentForCurrentNode().createElement(tagName);
+    Element* element = ownerDocumentForCurrentNode().createElement(tagName, false);
     setAttributes(element, token);
     ASSERT(element->isHTMLElement());
     return element;

@@ -289,9 +289,9 @@ DocumentFragment* Document::createDocumentFragment()
     return new DocumentFragment(this);
 }
 
-Element* Document::createElement(QualifiedName localName)
+Element* Document::createElement(QualifiedName localName, bool shouldCheckName)
 {
-    if (!QualifiedName::checkNameProductionRule(localName.localName(), localName.localName()->length()))
+    if (shouldCheckName && !QualifiedName::checkNameProductionRule(localName.localName(), localName.localName()->length()))
         throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
 #ifdef STARFISH_TC_COVERAGE

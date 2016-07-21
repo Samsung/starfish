@@ -67,7 +67,14 @@ void HTMLDocumentBuilder::build(const URL& url)
 {
     m_textResource = m_document->resourceLoader()->fetchText(url);
     m_textResource->addResourceClient(new HTMLResourceClient(m_textResource, *this));
+#ifndef STARFISH_TIZEN_WEARABLE
     m_textResource->request();
+#else
+    if (url.isFileURL())
+        m_textResource->request(true);
+    else
+        m_textResource->request();
+#endif
 }
 
 void HTMLDocumentBuilder::resume()

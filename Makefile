@@ -156,7 +156,7 @@ endif
 CXXFLAGS_DEBUG = -O0 -g3 -D_GLIBCXX_DEBUG -fno-omit-frame-pointer -Wall -Wextra -Werror
 CXXFLAGS_DEBUG += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
 CXXFLAGS_DEBUG += -Wno-unused-variable
-CXXFLAGS_RELEASE = -O2 -g3 -DNDEBUG -fomit-frame-pointer -fno-stack-protector -funswitch-loops -Wno-deprecated-declarations
+CXXFLAGS_RELEASE = -O2 -g3 -DNDEBUG -fno-omit-frame-pointer -fstack-protector -funswitch-loops -Wno-deprecated-declarations
 
 # flags for shared library
 ifeq ($(TYPE), lib)

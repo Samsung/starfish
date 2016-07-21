@@ -44,6 +44,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
 {
+    GC_set_abort_func([](const char* msg) {
+        STARFISH_LOG_ERROR("gc abort called\n");
+        STARFISH_LOG_ERROR("%s\n", msg);
+    });
+
     if (!win) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
         elm_win_title_set(wndObj, "StarFish");

@@ -185,7 +185,7 @@ Node* Element::clone()
 {
     Element* newNode = nullptr;
     if (isHTMLElement()) {
-        newNode = document()->createElement(name());
+        newNode = document()->createElement(name(), false);
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
