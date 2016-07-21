@@ -74,6 +74,8 @@ public:
     WindowImplEFL(StarFish* sf, const URL& url)
         : Window(sf, url)
     {
+        m_mainBox = nullptr;
+        m_dummyBox = nullptr;
         m_isActive = true;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
@@ -81,7 +83,6 @@ public:
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
             STARFISH_LOG_INFO("WindowImplEFL::~WindowImplEFL\n");
         }, NULL, NULL, NULL);
-
     }
 
     virtual int width()
@@ -147,6 +148,17 @@ public:
             a++;
         }
         eflWindow->m_drawnImageList.clear();
+
+        if (m_dummyBox) {
+            evas_object_del(m_dummyBox);
+            m_dummyBox = nullptr;
+        }
+
+        if (m_mainBox) {
+            elm_win_resize_object_del(m_window, m_mainBox);
+            evas_object_del(m_mainBox);
+            m_mainBox = nullptr;
+        }
     }
 
     bool m_isActive;
@@ -157,6 +169,7 @@ public:
     std::vector<Evas_Object*> m_objectList;
     std::vector<Evas_Object*> m_surfaceList;
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > > m_drawnImageList;
+    Evas_Object* m_mainBox;
     Evas_Object* m_dummyBox;
 
     Ecore_Event_Handler* m_desktopMouseDownEventHandler;
@@ -259,11 +272,11 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
     Ecore_Window ew = ecore_evas_window_get(ee);
     wnd->m_handle = (uintptr_t)ew;
 
-    wnd->m_dummyBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set(wnd->m_dummyBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wnd->m_window, wnd->m_dummyBox);
-    elm_box_layout_set(wnd->m_dummyBox, mainRenderingFunction, wnd, NULL);
-    evas_object_show(wnd->m_dummyBox);
+    wnd->m_mainBox = elm_box_add(wnd->m_window);
+    evas_object_size_hint_weight_set(wnd->m_mainBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(wnd->m_window, wnd->m_mainBox);
+    elm_box_layout_set(wnd->m_mainBox, mainRenderingFunction, wnd, NULL);
+    evas_object_show(wnd->m_mainBox);
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
@@ -323,11 +336,11 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
 
 #else
     Evas* e = evas_object_evas_get(wnd->m_window);
-    Evas_Object* mainBox = elm_box_add(wnd->m_window);
-    evas_object_size_hint_weight_set(mainBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wnd->m_window, mainBox);
-    elm_box_layout_set(mainBox, mainRenderingFunction, wnd, NULL);
-    evas_object_show(mainBox);
+    wnd->m_mainBox = elm_box_add(wnd->m_window);
+    evas_object_size_hint_weight_set(wnd->m_mainBox, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(wnd->m_window, wnd->m_mainBox);
+    elm_box_layout_set(wnd->m_mainBox, mainRenderingFunction, wnd, NULL);
+    evas_object_show(wnd->m_mainBox);
 
     wnd->m_dummyBox = evas_object_rectangle_add(e);
     evas_object_color_set(wnd->m_dummyBox, 0, 0, 0, 0); // opaque background
@@ -364,19 +377,6 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
         return;
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, wnd->m_mobileMouseMoveEventHandler, wnd);
-    /*
-    eext_rotary_event_handler_add([](void *data, Eext_Rotary_Event_Info *info) -> Eina_Bool {
-        Window* sf = (Window*)data;
-        if (info->direction == EEXT_ROTARY_DIRECTION_CLOCKWISE) {
-            sf->dispatchKeyEvent(String::createASCIIString("rotaryClockWise"), Window::KeyEventDown);
-            sf->dispatchKeyEvent(String::createASCIIString("rotaryClockWise"), Window::KeyEventUp);
-        } else {
-            sf->dispatchKeyEvent(String::createASCIIString("rotaryCounterClockWise"), Window::KeyEventDown);
-            sf->dispatchKeyEvent(String::createASCIIString("rotaryCounterClockWise"), Window::KeyEventUp);
-        }
-        return EINA_TRUE;
-    }, this);
-    */
 #endif
     return wnd;
 }
