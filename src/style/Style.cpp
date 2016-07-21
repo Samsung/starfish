@@ -950,6 +950,7 @@ String* CSSStyleValuePair::toString()
             case BorderWidthValue::ThickBorderWidthValue:
                 return String::fromUTF8("thick");
             }
+            break;
         default:
             return lengthOrPercentageOrKeywordToString();
         }
@@ -1073,6 +1074,8 @@ String* CSSStyleValuePair::toString()
                 return String::fromUTF8("normal");
             case EmbedUnicodeBidiValue:
                 return String::fromUTF8("embed");
+            default:
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         }
         default: {
