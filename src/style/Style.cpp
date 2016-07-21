@@ -330,7 +330,6 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
         return true;
     }
 
-    // TODO : tokenizeCSSValue-> should parse slash(/) for size
     bool hasColor = false, hasImage = false, hasRepeat = false;
     bool hasPosition = false, hasSize = false, canBeSize = false;
     CSSStyleValuePair temp, tempX, tempY;
@@ -547,7 +546,7 @@ void CSSStyleDeclaration::setBorder(String* value)
         removeCSSValuePair(CSSStyleValuePair::KeyKind::BorderLeftColor);
         return;
     }
-    // TODO : initial / inherit
+
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value);
     CSSStyleValuePair width, style, color;
@@ -1120,14 +1119,15 @@ String* CSSStyleDeclaration::BackgroundRepeat()
 void CSSStyleDeclaration::setBackgroundRepeat(String* value)
 {
     if (value->length() == 0) {
-        setBackgroundRepeatX(String::emptyString);
-        setBackgroundRepeatY(String::emptyString);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
         return;
     }
 
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(","));
 
+    // TODO : Move setValueCommon code to parseBackgroundRepeatShorhand (and then fix parseCackground code)
     CSSStyleValuePair c, x, y;
     if (c.setValueCommon(&tokens)) {
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
@@ -1313,116 +1313,6 @@ void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator<Str
             str.clear();
         }
     }
-}
-
-bool CSSStyleValuePair::checkEssentialValue(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // NOTE: check if string is the value which all property can have. (e.g. initial, inherit, "")
-    if (tokens->size() != 1)
-        return false;
-    const char* value = tokens->at(0)->utf8Data();
-    return CSSPropertyParser::assureEssential(value);
-}
-
-bool CSSStyleValuePair::checkInputErrorColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // <color>
-    size_t size = tokens->size();
-    if (size != 1)
-        return false;
-
-    const char* token = tokens->at(0)->utf8Data();
-    if (!CSSPropertyParser::assureColor(token)) {
-        return false;
-    }
-
-    // Valid format? : Both Chrome & Firefox produce color string that contains comma with single whitespace.
-    String* newstr = tokens->at(0)->replaceAll(String::spaceString, String::emptyString);
-    newstr = newstr->replaceAll(String::fromUTF8(","), String::fromUTF8(", "));
-    tokens->clear();
-    tokens->push_back(newstr);
-
-    return true;
-}
-
-bool CSSStyleValuePair::checkInputErrorBackgroundColor(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    return checkInputErrorColor(tokens);
-}
-
-bool CSSStyleValuePair::checkInputErrorBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    // none | <image>(=<uri>)
-    if (tokens->size() == 1) {
-        String* value = (*tokens)[0];
-        if (STRING_VALUE_IS_NONE())
-            return true;
-        return CSSPropertyParser::assureUrl(value->utf8Data());
-    }
-    return false;
-}
-
-bool CSSStyleValuePair::checkInputErrorBackgroundRepeat(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    if (tokens->size() != 1)
-        return false;
-    const char* value = (*tokens)[0]->utf8Data();
-    return VALUE_IS_STRING("repeat")
-        || VALUE_IS_STRING("repeat-x")
-        || VALUE_IS_STRING("repeat-y")
-        || VALUE_IS_STRING("no-repeat")
-        || VALUE_IS_STRING("initial");
-}
-
-bool CSSStyleValuePair::checkInputErrorBackground(std::vector<String*, gc_allocator<String*> >* tokens)
-{
-    //  [<'background-color'> || <'background-image'> || <'background-repeat'>] | inherit
-    size_t len = tokens->size();
-    if (len == 1) {
-        if (checkInputErrorBackgroundColor(tokens)
-            || checkInputErrorBackgroundImage(tokens)
-            || checkInputErrorBackgroundRepeat(tokens))
-            return true;
-    } else if (len == 2) {
-        std::vector<String*, gc_allocator<String*> > token0;
-        std::vector<String*, gc_allocator<String*> > token1;
-
-        token0.assign(tokens->begin(), tokens->end() - 1);
-        token1.assign(tokens->begin() + 1, tokens->end());
-
-        if ((checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundImage(&token1))
-            || (checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundColor(&token1)))
-            return true;
-        else if ((checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundRepeat(&token1))
-            || (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundColor(&token1)))
-            return true;
-        else if ((checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundRepeat(&token1))
-            || (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundImage(&token1)))
-            return true;
-    } else if (len == 3) {
-        std::vector<String*, gc_allocator<String*> > token0;
-        std::vector<String*, gc_allocator<String*> > token1;
-        std::vector<String*, gc_allocator<String*> > token2;
-
-        token0.assign(tokens->begin(), tokens->end() - 2);
-        token1.assign(tokens->begin() + 1, tokens->end() - 1);
-        token2.assign(tokens->begin() + 2, tokens->end());
-
-        if (checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundImage(&token1) && checkInputErrorBackgroundRepeat(&token2))
-            return true;
-        else if (checkInputErrorBackgroundColor(&token0) && checkInputErrorBackgroundRepeat(&token1) && checkInputErrorBackgroundImage(&token2))
-            return true;
-        else if (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundColor(&token1) && checkInputErrorBackgroundImage(&token2))
-            return true;
-        else if (checkInputErrorBackgroundRepeat(&token0) && checkInputErrorBackgroundImage(&token1) && checkInputErrorBackgroundColor(&token2))
-            return true;
-        else if (checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundColor(&token1) && checkInputErrorBackgroundRepeat(&token2))
-            return true;
-        else if (checkInputErrorBackgroundImage(&token0) && checkInputErrorBackgroundRepeat(&token1) && checkInputErrorBackgroundColor(&token2))
-            return true;
-    }
-
-    return false;
 }
 
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()

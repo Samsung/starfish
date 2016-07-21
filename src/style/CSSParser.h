@@ -217,28 +217,6 @@ public:
         return false;
     }
 
-    // TODO : DEPRECATE
-    static bool assureUrl(const char* str)
-    {
-        CSSPropertyParser* parser = new CSSPropertyParser((char*)str);
-        if (parser->consumeString()) {
-            String* name = parser->parsedString();
-            if (name->equals("url") && parser->consumeIfNext('(')) {
-
-                return parser->consumeUrl() && parser->isEnd();
-            }
-        }
-        return false;
-    }
-
-    // TODO : DEPRECATE
-    static bool assureUrlOrNone(const char* token)
-    {
-        if (strcmp(token, "none") == 0)
-            return true;
-        return CSSPropertyParser::assureUrl(token);
-    }
-
     static bool parseNumber(const char* token, bool allowNegative, float* val)
     {
         CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
@@ -405,86 +383,6 @@ public:
             return true;
         }
         return ::parseNamedColor(str->utf8Data(), str->length(), *ret);
-    }
-
-    // TODO : DEPRECATE
-    static bool assureNamedColor(String* str)
-    {
-        if (str->equalsWithoutCase(String::fromUTF8("currentColor"))) {
-            return true;
-        }
-#define ADD_ENUM_COLOR(name, value) \
-        else if (str->equals(#name)) \
-        { \
-            return true; \
-        }
-        NAMED_COLOR_FOR_EACH(ADD_ENUM_COLOR)
-#undef ADD_ENUM_COLOR
-        return false;
-    }
-
-    // TODO : DEPRECATE
-    static bool assureColor(const char* token)
-    {
-        if (token[0] == '#') {
-            if (!(strlen(token) == 9 || strlen(token) == 7 || strlen(token) == 4)) {
-                return false;
-            }
-
-            for (unsigned i = 1; i < strlen(token); i++) {
-                if ((token[i] >= '0' && token[i] <= '9') || (token[i] >= 'A' && token[i] <= 'F') || (token[i] >= 'a' && token[i] <= 'f')) {
-                } else {
-                    return false;
-                }
-            }
-            return true;
-        } else if (strstr(token, "rgb") == token) {
-            CSSPropertyParser* parser = new CSSPropertyParser((char*)token);
-            if (parser->consumeString()) {
-                String* str = parser->parsedString();
-                int numcnt;
-                if (str->equals("rgb") && parser->consumeIfNext('(')) {
-                    numcnt = 3;
-                } else if (str->equals("rgba") && parser->consumeIfNext('(')) {
-                    numcnt = 4;
-                } else {
-                    return false;
-                }
-                bool isPercent = false;
-                for (int i = 0; i < numcnt; i++) {
-                    bool hasPoint = false;
-                    parser->consumeWhitespaces();
-                    if (!parser->consumeNumber(&hasPoint))
-                        return false;
-
-                    if (i == 0 && parser->consumeIfNext('%'))
-                        isPercent = true;
-                    else if (isPercent && !parser->consumeIfNext('%'))
-                        return false;
-
-                    // NOTE: decimal-point is disallowed for rgb value.
-                    if (i < 3 && !isPercent && hasPoint)
-                        return false;
-
-                    parser->consumeWhitespaces();
-                    if (i == numcnt - 1)
-                        parser->consumeIfNext(')');
-                    else
-                        parser->consumeIfNext(',');
-                }
-                return parser->isEnd();
-            }
-        }
-        return assureNamedColor(String::fromUTF8(token));
-    }
-
-    // TODO : DEPRECATE
-    static bool assureEssential(const char* token)
-    {
-        // initial || inherit
-        if (strcmp(token, "initial") == 0 || strcmp(token, "inherit") == 0)
-            return true;
-        return false;
     }
 
     char* m_startPos;
