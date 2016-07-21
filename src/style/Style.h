@@ -1028,6 +1028,8 @@ public:
     bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
 
+    bool updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
+    bool updateValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(String* token);
     bool updateValueUnitBackgroundPosition(String* token);
     bool updateValueUnitBorderStyle(String* token);

@@ -358,7 +358,7 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
             // 1-1. BackgroundSize (canBeSize : set true only after backgroundPosition)
             if (canBeSize) {
                 STARFISH_ASSERT(!hasSize);
-                if (temp.updateValueBackgroundSize(&toks)) {
+                if (temp.updateValueBackgroundSize(&toks, false)) {
                     canBeSize = false;
                     SET_SINGLE_PROP(Size)
                     DOUBLE_CONTINUE()
@@ -368,7 +368,7 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
             if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY, false)) {
                 SET_DOUBLE_PROP(Repeat)
                 DOUBLE_CONTINUE()
-            } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks)) {
+            } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks, false)) {
                 canBeSize = true;
                 SET_SINGLE_PROP(Position)
                 DOUBLE_CONTINUE()
@@ -382,7 +382,7 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
             canBeSize = false;
             toks.clear();
             toks.push_back(tok);
-            if (temp.updateValueBackgroundSize(&toks)) {
+            if (temp.updateValueBackgroundSize(&toks, false)) {
                 SET_SINGLE_PROP(Size)
                 SINGLE_CONTINUE()
             }
@@ -699,14 +699,22 @@ String* CSSStyleValuePair::toString()
             ValueList* vals = multiValue();
             for (unsigned int i = 0; i < vals->size(); i++) {
                 CSSStyleValuePair& item = vals->atIndex(i);
-                if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                    str = str->concat(item.sideValueToString());
-                } else {
-                    str = str->concat(valueToString(item.valueKind(), item.value()));
+                if (item.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+                    ValueList* subItems = item.multiValue();
+                    for (unsigned int j = 0; j < subItems->size(); j++) {
+                        CSSStyleValuePair& subitem = subItems->atIndex(j);
+                        if (subitem.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                            str = str->concat(subitem.sideValueToString());
+                        } else {
+                            str = str->concat(valueToString(subitem.valueKind(), subitem.value()));
+                        }
+                        if (j < subItems->size() - 1) {
+                            str = str->concat(String::spaceString);
+                        }
+                    } // j
                 }
-
                 if (i < vals->size() - 1) {
-                    str = str->concat(String::spaceString);
+                    str = str->concat(String::fromUTF8(", "));
                 }
             }
             return str;
@@ -718,20 +726,33 @@ String* CSSStyleValuePair::toString()
     case BackgroundSize: {
         // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
         switch (m_valueKind) {
-        case CSSStyleValuePair::ValueKind::Cover:
-            return String::fromUTF8("cover");
-        case CSSStyleValuePair::ValueKind::Contain:
-            return String::fromUTF8("contain");
-        case CSSStyleValuePair::ValueKind::Auto:
-            return String::fromUTF8("auto");
         case CSSStyleValuePair::ValueKind::ValueListKind: {
             String* str = String::emptyString;
             ValueList* vals = multiValue();
             for (unsigned int i = 0; i < vals->size(); i++) {
                 CSSStyleValuePair& item = vals->atIndex(i);
-                str = str->concat(valueToString(item.valueKind(), item.value()));
+                switch (item.valueKind()) {
+                case CSSStyleValuePair::ValueKind::Cover:
+                    str->concat(String::fromUTF8("cover"));
+                case CSSStyleValuePair::ValueKind::Contain:
+                    str->concat(String::fromUTF8("contain"));
+                case CSSStyleValuePair::ValueKind::Auto:
+                    str->concat(String::fromUTF8("auto"));
+                case CSSStyleValuePair::ValueKind::ValueListKind: {
+                    ValueList* vals = multiValue();
+                    for (unsigned int i = 0; i < vals->size(); i++) {
+                        CSSStyleValuePair& item = vals->atIndex(i);
+                        str = str->concat(valueToString(item.valueKind(), item.value()));
+                        if (i < vals->size() - 1) {
+                            str = str->concat(String::spaceString);
+                        }
+                    }
+                }
+                default:
+                break;
+                }
                 if (i < vals->size() - 1) {
-                    str = str->concat(String::spaceString);
+                    str = str->concat(String::fromUTF8(", "));
                 }
             }
             return str;
@@ -1574,34 +1595,39 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundPositionValue(LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)));
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
-                    ValueList* list = cssValues[k].multiValue();
-                    Length xAxis, yAxis;
+                    ValueList* layers = cssValues[k].multiValue();
+                    for (unsigned int l = 0; l < layers->size(); l++) {
+                        CSSStyleValuePair& layer = layers->atIndex(l);
+                        STARFISH_ASSERT(layer.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
+                        ValueList* list = layer.multiValue();
+                        Length xAxis, yAxis;
+                        xAxis = Length(Length::Percent, 0.5f);
+                        yAxis = Length(Length::Percent, 0.5f);
 
-                    xAxis = Length(Length::Percent, 0.5f);
-                    yAxis = Length(Length::Percent, 0.5f);
+                        for (unsigned int i = 0; i < list->size(); i++) {
+                            CSSStyleValuePair& item = list->atIndex(i);
+                            if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                                if (item.sideValue() == SideValue::LeftSideValue) {
+                                    xAxis = Length(Length::Percent, 0.0f);
+                                } else if (item.sideValue() == SideValue::RightSideValue) {
+                                    xAxis = Length(Length::Percent, 1.0f);
+                                } else if (item.sideValue() == SideValue::CenterSideValue) {
 
-                    for (unsigned int i = 0; i < list->size(); i++) {
-                        CSSStyleValuePair& item = list->atIndex(i);
-                        if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                            if (item.sideValue() == SideValue::LeftSideValue) {
-                                xAxis = Length(Length::Percent, 0.0f);
-                            } else if (item.sideValue() == SideValue::RightSideValue) {
-                                xAxis = Length(Length::Percent, 1.0f);
-                            } else if (item.sideValue() == SideValue::CenterSideValue) {
-
-                            } else if (item.sideValue() == SideValue::TopSideValue) {
-                                yAxis = Length(Length::Percent, 0.0f);
-                            } else if (item.sideValue() == SideValue::BottomSideValue) {
-                                yAxis = Length(Length::Percent, 1.0f);
+                                } else if (item.sideValue() == SideValue::TopSideValue) {
+                                    yAxis = Length(Length::Percent, 0.0f);
+                                } else if (item.sideValue() == SideValue::BottomSideValue) {
+                                    yAxis = Length(Length::Percent, 1.0f);
+                                }
+                            } else {
+                                if (i == 0)
+                                    xAxis = convertValueToLength(item.valueKind(), item.value());
+                                else
+                                    yAxis = convertValueToLength(item.valueKind(), item.value());
                             }
-                        } else {
-                            if (i == 0)
-                                xAxis = convertValueToLength(item.valueKind(), item.value());
-                            else
-                                yAxis = convertValueToLength(item.valueKind(), item.value());
                         }
+                        style->setBackgroundPositionValue(LengthPosition(xAxis, yAxis), l);
                     }
-                    style->setBackgroundPositionValue(LengthPosition(xAxis, yAxis));
+
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
@@ -1613,22 +1639,30 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->setBackgroundSizeValue(parentStyle->bgSizeValue());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
                     style->setBackgroundSizeValue(LengthSize());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Cover) {
-                    style->setBackgroundSizeType(BackgroundSizeType::Cover);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Contain) {
-                    style->setBackgroundSizeType(BackgroundSizeType::Contain);
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
-                    style->setBackgroundSizeValue(LengthSize());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueListKind) {
-                    ValueList* list = cssValues[k].multiValue();
-                    LengthSize result;
-                    if (list->size() >= 1) {
-                        result.m_width = convertValueToLength(list->atIndex(0).valueKind(), list->atIndex(0).value());
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+                    ValueList* layers = cssValues[k].multiValue();
+                    for (unsigned int l = 0; l < layers->size(); l++) {
+                        CSSStyleValuePair& layer = layers->atIndex(l);
+                        if (layer.valueKind() == CSSStyleValuePair::ValueKind::Cover) {
+                            style->setBackgroundSizeType(BackgroundSizeType::Cover, l);
+                        } else if (layer.valueKind() == CSSStyleValuePair::ValueKind::Contain) {
+                            style->setBackgroundSizeType(BackgroundSizeType::Contain, l);
+                        } else if (layer.valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                            style->setBackgroundSizeValue(LengthSize(), l);
+                        } else if (layer.valueKind() == CSSStyleValuePair::ValueListKind) {
+                            ValueList* list = layer.multiValue();
+                            LengthSize result;
+                            if (list->size() >= 1) {
+                                result.m_width = convertValueToLength(list->atIndex(0).valueKind(), list->atIndex(0).value());
+                            }
+                            if (list->size() >= 2) {
+                                result.m_height = convertValueToLength(list->atIndex(1).valueKind(), list->atIndex(1).value());
+                            }
+                            style->setBackgroundSizeValue(result, l);
+                        } else {
+                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        }
                     }
-                    if (list->size() >= 2) {
-                        result.m_height = convertValueToLength(list->atIndex(1).valueKind(), list->atIndex(1).value());
-                    }
-                    style->setBackgroundSizeValue(result);
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
@@ -2709,56 +2743,106 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPosition(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma)
 {
     // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
-    size_t len = tokens->size();
-    if (len != 1 && len != 2)
-        return false;
-
-    CSSStyleValuePair x, y;
-    if (!x.updateValueUnitBackgroundPosition(tokens->at(0))) {
-        return false;
-    }
-
-    if (len == 1) {
-        y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
-    } else if (!y.updateValueUnitBackgroundPosition(tokens->at(1))) {
-        return false;
-    }
-
+    size_t len = 0;
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    ValueList* values = new ValueList();
-    values->append(x);
-    values->append(y);
-    m_value.m_multiValue = values;
+    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        String* value = tokens->at(i);
+        if (value->equals(",")) {
+            if (!allowComma || i == 0 || i == tokens->size() - 1)
+                return false;
+        } else if (i == tokens->size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
+        }
+
+        CSSStyleValuePair ret;
+        CSSStyleValuePair x, y;
+        if (len == 1) {
+            if (!x.updateValueUnitBackgroundPosition(tokens->at(i - 1))) {
+                return false;
+            }
+            y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+        } else if (len == 2) {
+            if (!x.updateValueUnitBackgroundPosition(tokens->at(i - 2)) || !y.updateValueUnitBackgroundPosition(tokens->at(i - 1))) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        ret.setValueList(new ValueList());
+        ret.multiValue()->append(x);
+        ret.multiValue()->append(y);
+        multiValue()->append(ret);
+    }
 
     return true;
 }
 
+bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    return updateValueBackgroundPosition(tokens, true);
+}
+
 bool CSSStyleValuePair::updateValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
-    if (tokens->size() != 1 && tokens->size() != 2)
-        return false;
+    return updateValueBackgroundSize(tokens, true);
+}
 
-    String* token = (*tokens)[0];
-    if (tokens->size() == 1 && token->equals("cover")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Cover;
-    } else if (tokens->size() == 1 && token->equals("contain")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Contain;
-    } else {
-        m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-        ValueList* values = new ValueList(ValueList::Separator::SpaceSeparator);
-        m_value.m_multiValue = values;
-        for (unsigned int i = 0; i < tokens->size(); i++) {
-            token = (*tokens)[i];
-            CSSStyleValuePair ret;
-            if (!ret.updateValueLengthOrPercentOrAuto(token, false))
+bool CSSStyleValuePair::updateValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma)
+{
+    // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
+    size_t len = 0;
+    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
+    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        String* value = tokens->at(i);
+        if (value->equals(",")) {
+            if (!allowComma || i == 0 || i == tokens->size() - 1)
                 return false;
-            values->append(ret);
+        } else if (i == tokens->size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
         }
+
+        CSSStyleValuePair ret;
+        if (len == 1) {
+            if (value->equals("cover")) {
+                ret.setValueKind(CSSStyleValuePair::ValueKind::Cover);
+            } else if (value->equals("contain")) {
+                ret.setValueKind(CSSStyleValuePair::ValueKind::Contain);
+            } else {
+                ret.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+                CSSStyleValuePair r;
+                if (!r.updateValueLengthOrPercentOrAuto(tokens->at(i - 1), false))
+                    return false;
+                ret.multiValue()->append(r);
+            }
+        } else if (len == 2) {
+            ret.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
+            CSSStyleValuePair r1, r2;
+            if (!r1.updateValueLengthOrPercentOrAuto(tokens->at(i - 2), false) || !r2.updateValueLengthOrPercentOrAuto(tokens->at(i - 1), false))
+                return false;
+            ret.multiValue()->append(r1);
+            ret.multiValue()->append(r2);
+        } else {
+            return false;
+        }
+        multiValue()->append(ret);
     }
+
     return true;
 }
 
