@@ -49,8 +49,6 @@ bool g_fireOnloadEvent = false;
 
 namespace StarFish {
 
-Evas* internalCanvas();
-
 namespace {
     class __GET_TICK_COUNT {
     public:
@@ -735,10 +733,14 @@ void Window::rendering()
 #ifdef STARFISH_ENABLE_TEST
 void Window::screenShot(std::string filePath)
 {
+    bool oldNeedsPainting = m_needsPainting;
     setNeedsPainting();
     setenv("SCREEN_SHOT", filePath.data(), 1);
     rendering();
     setenv("SCREEN_SHOT", "", 1);
+
+    m_needsPainting = oldNeedsPainting;
+    setNeedsRendering();
 }
 
 void Window::forceDisableOnloadCapture()

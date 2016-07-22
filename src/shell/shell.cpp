@@ -20,6 +20,8 @@
 
 #include "dom/binding/ScriptBindingInstance.h"
 
+#include "StarFishPublic.h"
+
 #include <pthread.h>
 #include <Elementary.h>
 
@@ -95,8 +97,6 @@ int main(int argc, char *argv[])
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
     StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "en-us", "Asia/Seoul", nullptr, width, height, 1);
-
-
     sf->loadHTMLDocument(String::createASCIIString(argv[1]));
 
     pthread_t t;
@@ -143,6 +143,19 @@ int main(int argc, char *argv[])
     }, sf);
 
     sf->run();
+/*
+    Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+    elm_win_title_set(wndObj, "StarFish");
+    elm_win_autodel_set(wndObj, EINA_TRUE);
+    evas_object_resize(wndObj, 360, 360);
+    auto sf = starfishInit(wndObj, 360, 360, "ko-KR", "Asia/Seoul", 1);
+    starfishLoadHTMLDocument(sf, argv[1]);
+    starfishNotifyResume(sf);
+
+    elm_run();
+
+    starfishRemove(sf);
+    */
     return 0;
 }
 

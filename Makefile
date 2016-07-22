@@ -280,8 +280,8 @@ SRC += $(foreach dir, src/platform/canvas/image , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/font , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/file_io , $(wildcard $(dir)/*.cpp))
 
+SRC += $(foreach dir, src/public , $(wildcard $(dir)/*.cpp))
 ifeq ($(TYPE), lib)
-  SRC += $(foreach dir, src/public , $(wildcard $(dir)/*.cpp))
 else
   SRC += $(foreach dir, src/shell , $(wildcard $(dir)/*.cpp))
 endif
