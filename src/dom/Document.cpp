@@ -35,6 +35,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
     , m_compatibilityMode(Document::NoQuirksMode)
+    , m_window(window)
     , m_documentURI(uri)
     , m_resourceLoader(*this)
     , m_styleResolver(*this)
@@ -42,7 +43,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_pageVisibilityState(PageVisibilityStateVisible)
     , m_domVersion(0)
 {
-    m_window = window;
     m_scriptBindingInstance = scriptBindingInstance;
     setStyle(m_styleResolver.resolveDocumentStyle(this));
 

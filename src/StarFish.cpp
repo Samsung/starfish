@@ -39,10 +39,11 @@ namespace StarFish {
 bool g_enablePixelTest = false;
 #endif
 
-StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h)
+StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier)
     : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
+    , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
 {
     GC_set_abort_func([](const char* msg) {
         STARFISH_LOG_ERROR("gc abort called\n");
@@ -137,7 +138,10 @@ void StarFish::loadHTMLDocument(String* filePath)
     m_scriptBindingInstance = new ScriptBindingInstance();
     ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_scriptBindingInstance->initBinding(this);
-    m_window = Window::create(this, m_nativeWindow, URL(String::emptyString, String::fromUTF8(path.c_str())));
+    int width;
+    int height;
+    evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width, &height);
+    m_window = Window::create(this, m_nativeWindow, width, height, URL(String::emptyString, String::fromUTF8(path.c_str())));
 
     m_window->document()->open();
 }

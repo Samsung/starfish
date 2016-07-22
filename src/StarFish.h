@@ -238,7 +238,7 @@ class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
 public:
-    StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h);
+    StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier);
     ~StarFish();
     void run();
 
@@ -306,6 +306,11 @@ public:
         return m_threadPool;
     }
 
+    float defaultFontSizeMultiplier()
+    {
+        return m_defaultFontSizeMultiplier;
+    }
+
     void addPointerInRootSet(void *ptr);
     void removePointerFromRootSet(void *ptr);
 
@@ -320,6 +325,7 @@ protected:
     icu::BreakIterator* m_lineBreaker;
     String* m_timezoneID;
     unsigned int m_startUpFlag;
+    float m_defaultFontSizeMultiplier;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
     ScriptBindingInstance* m_scriptBindingInstance;

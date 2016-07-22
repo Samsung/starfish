@@ -43,10 +43,10 @@ extern sfmatchLocation_cb matchLocation_cb;
 
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 
-extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* locale, const char* timezoneID)
+extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, int windowWidth, int windowHeight, const char* locale, const char* timezoneID, float defaultFontSizeMultiplier)
 {
     StarFishInstance* instance = new(NoGC) StarFishInstance;
-    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, 360, 360);
+    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, windowWidth, windowHeight, defaultFontSizeMultiplier);
     return instance;
 }
 

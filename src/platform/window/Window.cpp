@@ -249,7 +249,7 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
 }
 
 
-Window* Window::create(StarFish* sf, void* win, const URL& url)
+Window* Window::create(StarFish* sf, void* win, int width, int height, const URL& url)
 {
     auto wnd = new WindowImplEFL(sf, url);
     wnd->m_starFish = sf;
@@ -335,7 +335,7 @@ Window* Window::create(StarFish* sf, void* win, const URL& url)
     evas_object_color_set(wnd->m_dummyBox, 0, 0, 0, 0); // opaque background
     int w, h;
     evas_object_geometry_get(wnd->m_window, &w, &h, NULL, NULL);
-    evas_object_resize(wnd->m_dummyBox, 360, 360); // FIXME: temporary for click-event listener
+    evas_object_resize(wnd->m_dummyBox, width, height);
     evas_object_move(wnd->m_dummyBox, 0, 0);
     evas_object_show(wnd->m_dummyBox);
     evas_object_show(wnd->m_window);
