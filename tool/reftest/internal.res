@@ -11,6 +11,8 @@ test/internal-test/css/display/block.html
 test/internal-test/css/display/block-inline-basic.html
 test/internal-test/css/margin/margin.html
 test/internal-test/css/margin/margin_block.html
+test/internal-test/css/percentage/percentage_block_height.html
+test/internal-test/css/percentage/percentage_block_width.html
 test/internal-test/css/percentage/percentage_line_height.html
 test/internal-test/css/position/position-absolute.html
 test/internal-test/css/preferred-width/preferred-width-1.html
