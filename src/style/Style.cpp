@@ -194,7 +194,7 @@ String* CSSStyleValuePair::keyName()
     }
 }
 
-bool CSSStyleValuePair::setValueCommon(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueCommon(std::vector<String*, gc_allocator<String*> >* tokens)
 {
     // NOTE: set common value (e.g. initial, inherit, "")
     if (tokens->size() != 1)
@@ -556,23 +556,13 @@ void CSSStyleDeclaration::setBorder(String* value)
         return;
     }
 
-    CSSStyleValuePair v;
-    if (STRING_VALUE_IS_INITIAL()) {
-        v.setValueKind(CSSStyleValuePair::ValueKind::Initial);
-        addBorderCSSValuePairs(this, v, v, v);
-        return;
-    }
-
-    if (STRING_VALUE_IS_INHERIT()) {
-        v.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
-        addBorderCSSValuePairs(this, v, v, v);
-        return;
-    }
-
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value);
-    CSSStyleValuePair width, style, color;
-    if (parseBorderShorthand(&tokens, &width, &style, &color)) {
+
+    CSSStyleValuePair v, width, style, color;
+    if (v.updateValueCommon(&tokens)) {
+        addBorderCSSValuePairs(this, v, v, v);
+    } else if (parseBorderShorthand(&tokens, &width, &style, &color)) {
         addBorderCSSValuePairs(this, width, style, color);
     }
 }
@@ -584,21 +574,14 @@ void CSSStyleDeclaration::setBorder##POS(String* value) \
         removeBorder##POS##CSSValuePairs(this); \
         return; \
     } \
-    CSSStyleValuePair v; \
-    if (STRING_VALUE_IS_INITIAL()) { \
-        v.setValueKind(CSSStyleValuePair::ValueKind::Initial); \
-        addBorder##POS##CSSValuePairs(this, v, v, v); \
-        return; \
-    } \
-    if (STRING_VALUE_IS_INHERIT()) { \
-        v.setValueKind(CSSStyleValuePair::ValueKind::Inherit); \
-        addBorder##POS##CSSValuePairs(this, v, v, v); \
-        return; \
-    } \
+    \
     std::vector<String*, gc_allocator<String*> > tokens; \
     tokenizeCSSValue(&tokens, value); \
-    CSSStyleValuePair width, style, color; \
-    if (parseBorderShorthand(&tokens, &width, &style, &color)) { \
+    \
+    CSSStyleValuePair v, width, style, color; \
+    if (v.updateValueCommon(&tokens)) { \
+        addBorder##POS##CSSValuePairs(this, v, v, v); \
+    } else if (parseBorderShorthand(&tokens, &width, &style, &color)) { \
         addBorder##POS##CSSValuePairs(this, width, style, color); \
     } \
 }
@@ -1170,9 +1153,8 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(","));
 
-    // TODO : Move setValueCommon code to parseBackgroundRepeatShorhand (and then fix parseCackground code)
     CSSStyleValuePair c, x, y;
-    if (c.setValueCommon(&tokens)) {
+    if (c.updateValueCommon(&tokens)) {
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
     } else if (parseBackgroundRepeatShorhand(&tokens, &x, &y)) {
@@ -1251,23 +1233,14 @@ void CSSStyleDeclaration::setBackground(String* value)
         return;
     }
 
-    CSSStyleValuePair v;
-    if (STRING_VALUE_IS_INITIAL()) {
-        v.setValueKind(CSSStyleValuePair::ValueKind::Initial);
-        addBackgroundCSSValuePairs(this, v, v, v, v, v, v);
-        return;
-    }
-    if (STRING_VALUE_IS_INHERIT()) {
-        v.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
-        addBackgroundCSSValuePairs(this, v, v, v, v, v, v);
-        return;
-    }
-
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(",/"));
+
     // TODO: should check comma-seperated input
-    CSSStyleValuePair color, image, repeatX, repeatY, position, size;
-    if (parseBackgroundShorthand(&tokens, &color, &image, &repeatX, &repeatY, &position, &size)) {
+    CSSStyleValuePair v, color, image, repeatX, repeatY, position, size;
+    if (v.updateValueCommon(&tokens)) {
+        addBackgroundCSSValuePairs(this, v, v, v, v, v, v);
+    } else if (parseBackgroundShorthand(&tokens, &color, &image, &repeatX, &repeatY, &position, &size)) {
         addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY, position, size);
     }
 }
@@ -1289,21 +1262,15 @@ void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value) \
         RM_PAIRS(PRE, __VA_ARGS__); \
         return; \
     } \
-    CSSStyleValuePair c, top, right, bottom, left; \
-    if (value->equals(String::initialString)) { \
-        c.setValueKind(CSSStyleValuePair::ValueKind::Initial); \
-        top = right = bottom = left = c; \
-        ADD_PAIRS(PRE, __VA_ARGS__); \
-        return; \
-    } \
-    if (value->equals(String::inheritString)) { \
-        c.setValueKind(CSSStyleValuePair::ValueKind::Inherit); \
-        top = right = bottom = left = c; \
-        ADD_PAIRS(PRE, __VA_ARGS__); \
-        return; \
-    } \
     std::vector<String*, gc_allocator<String*> > tokens; \
     tokenizeCSSValue(&tokens, value); \
+    \
+    CSSStyleValuePair c, top, right, bottom, left; \
+    if (c.updateValueCommon(&tokens)) { \
+        top = right = bottom = left = c; \
+        ADD_PAIRS(PRE, __VA_ARGS__); \
+        return; \
+    } \
     size_t len = tokens.size(); \
     if (len < 1 || len > 4) \
         return; \
