@@ -212,15 +212,20 @@ static String* BorderString(String* width, String* style, String* color)
     String* space = String::spaceString;
     String* sum = String::emptyString;
 
-    if (!width->equals(String::emptyString) && !width->equals(String::initialString)) {
+    if (width->equals(style) && style->equals(color)) {
+        STARFISH_ASSERT(width->equals(String::emptyString) || width->equals(String::initialString) || width->equals(String::inheritString));
+        return width;
+    }
+
+    if (!width->equals(String::emptyString) && !width->equals(String::initialString) && !width->contains(String::spaceString)) {
         sum = width;
     }
-    if (!style->equals(String::emptyString) && !style->equals(String::initialString)) {
+    if (!style->equals(String::emptyString) && !style->equals(String::initialString) && !style->contains(String::spaceString)) {
         if (sum->length())
             sum = sum->concat(space);
         sum = sum->concat(style);
     }
-    if (!color->equals(String::emptyString) && !color->equals(String::initialString)) {
+    if (!color->equals(String::emptyString) && !color->equals(String::initialString) && !color->contains(String::spaceString)) {
         if (sum->length())
             sum = sum->concat(space);
         sum = sum->concat(color);

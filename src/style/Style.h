@@ -1235,7 +1235,7 @@ public:
         std::vector<String*, gc_allocator<String*> > tokens;                           \
         tokenizeCSSValue(&tokens, value, String::fromUTF8(","));                       \
         CSSStyleValuePair ret;                                                         \
-        if (ret.updateValueCommon(&tokens) || ret.updateValue##name(&tokens)) {           \
+        if (ret.updateValueCommon(&tokens) || ret.updateValue##name(&tokens)) {        \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);                    \
         }                                                                              \
     }
@@ -1270,6 +1270,17 @@ public:
 
     static String* combineBoxString(String* t, String* r, String* b, String* l)
     {
+        // [NOTICE]
+        // All initial --> return "initial"
+        // Not all, but more than 1 initial --> return ""
+        int initialCount = 0;
+        initialCount += t->equals(String::initialString) ? 1 : 0;
+        initialCount += r->equals(String::initialString) ? 1 : 0;
+        initialCount += b->equals(String::initialString) ? 1 : 0;
+        initialCount += l->equals(String::initialString) ? 1 : 0;
+        if (initialCount > 0 && initialCount < 4)
+            return String::emptyString;
+
         String* space = String::spaceString;
         if (!r->equals(l))
             return t->concat(space)->concat(r)->concat(space)->concat(b)->concat(space)->concat(l);
