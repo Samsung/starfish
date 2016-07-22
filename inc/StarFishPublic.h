@@ -27,7 +27,7 @@ typedef struct StarFishInstance {
     void* m_starfish;
 } StarFishInstance;
 
-STARFISH_EXPORT StarFishInstance* starfishInit(void* window, int windowWidth, int windowHeight, const char* locale, const char* timezoneID, float defaultFontSizeMultiplier);
+STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* locale, const char* timezoneID);
 STARFISH_EXPORT void starfishRemove(StarFishInstance* instance);
 
 STARFISH_EXPORT void starfishLoadHTMLDocument(StarFishInstance* instance, const char* path);

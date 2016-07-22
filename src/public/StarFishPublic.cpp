@@ -14,8 +14,6 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_TIZEN_WEARABLE_LIB
-
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
@@ -33,20 +31,19 @@ typedef size_t (*sfread_cb) (void * buf, size_t size, size_t count, FILE * fp);
 typedef int (*sfclose_cb) (FILE * fp);
 typedef const char* (*sfmatchLocation_cb) (const char* filename);
 
-extern sfopen_cb open_cb;
-extern sflength_cb length_cb;
-extern sfread_cb read_cb;
-extern sfclose_cb close_cb;
-extern sfmatchLocation_cb matchLocation_cb;
-
+sfopen_cb open_cb = nullptr;
+sflength_cb length_cb = nullptr;
+sfread_cb read_cb = nullptr;
+sfclose_cb close_cb = nullptr;
+sfmatchLocation_cb matchLocation_cb = nullptr;
 }
 
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 
-extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, int windowWidth, int windowHeight, const char* locale, const char* timezoneID, float defaultFontSizeMultiplier)
+extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const char* locale, const char* timezoneID)
 {
     StarFishInstance* instance = new(NoGC) StarFishInstance;
-    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, windowWidth, windowHeight, defaultFontSizeMultiplier);
+    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, 360, 360, 1);
     return instance;
 }
 
@@ -99,4 +96,3 @@ extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(const char* (*cb)(co
     matchLocation_cb = cb;
 }
 
-#endif

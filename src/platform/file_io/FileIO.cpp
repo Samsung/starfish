@@ -73,11 +73,11 @@ typedef size_t (*sfread_cb)(void* buf, size_t size, size_t count, FILE* fp);
 typedef int (*sfclose_cb)(FILE* fp);
 typedef const char* (*sfmatchLocation_cb) (const char* fileName);
 
-sfopen_cb open_cb = nullptr;
-sflength_cb length_cb = nullptr;
-sfread_cb read_cb = nullptr;
-sfclose_cb close_cb = nullptr;
-sfmatchLocation_cb matchLocation_cb = nullptr;
+extern sfopen_cb open_cb;
+extern sflength_cb length_cb;
+extern sfread_cb read_cb;
+extern sfclose_cb close_cb;
+extern sfmatchLocation_cb matchLocation_cb;
 
 class FileIOTizen : public FileIO {
 public:
