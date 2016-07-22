@@ -1404,10 +1404,7 @@ protected:
 
 class StyleResolver {
 public:
-    StyleResolver(Document& document)
-        : m_document(document)
-    {
-    }
+    StyleResolver(Document& document);
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
     {
@@ -1429,6 +1426,7 @@ public:
 
 protected:
     Document& m_document;
+    float m_mediumFontSize;
     std::vector<CSSStyleSheet*, gc_allocator<CSSStyleSheet*> > m_sheets;
 };
 }

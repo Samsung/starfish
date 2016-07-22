@@ -186,11 +186,11 @@ protected:
     bool m_inParsing : 1;
     bool m_didLoadBrokenImage : 1;
     CompatibilityMode m_compatibilityMode;
+    Window* m_window;
     URL m_documentURI;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
     DocumentBuilder* m_documentBuilder;
-    Window* m_window;
     ImageData* m_brokenImage;
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;

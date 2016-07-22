@@ -43,12 +43,12 @@ class ComputedStyle : public gc {
     friend ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyle);
 
 public:
-    ComputedStyle()
+    ComputedStyle(float mediumFontSize = DEFAULT_FONT_SIZE)
     {
         m_font = nullptr;
 
         m_inheritedStyles.m_color = Color(0, 0, 0, 255);
-        m_inheritedStyles.m_fontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
+        m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
         m_inheritedStyles.m_visibility = VisibilityValue::VisibleVisibilityValue;

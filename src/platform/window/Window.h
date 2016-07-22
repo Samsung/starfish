@@ -36,7 +36,7 @@ class Window : public EventTarget {
     friend class HTMLBodyElement;
     friend class Node;
 public:
-    static Window* create(StarFish* sf, void* win, const URL& url);
+    static Window* create(StarFish* sf, void* win, int width, int height, const URL& url);
     virtual bool isWindow()
     {
         return true;

@@ -61,20 +61,7 @@ namespace StarFish {
 #define STRING_VALUE_IS_AUTO() \
     STRING_VALUE_IS_STRING("auto")
 
-static const int strictFontSizeTable[8][8] = {
-    { 9, 9, 9, 9, 11, 14, 18, 27 },
-    { 9, 9, 9, 10, 12, 15, 20, 30 },
-    { 9, 9, 10, 11, 13, 17, 22, 33 },
-    { 9, 9, 10, 12, 14, 18, 24, 36 },
-    { 9, 10, 12, 13, 16, 20, 26, 39 }, // fixed font default (13)
-    { 9, 10, 12, 14, 17, 21, 28, 42 },
-    { 9, 10, 13, 15, 18, 23, 30, 45 },
-    { 9, 10, 13, 16, 18, 24, 32, 48 } // proportional font default (16)
-};
 static const float fontSizeFactors[8] = { 0.60f, 0.75f, 0.89f, 1.0f, 1.2f, 1.5f, 2.0f, 3.0f };
-
-static const int fontSizeTableMax = 16;
-static const int fontSizeTableMin = 9;
 
 static FontWeightValue lighterWeight(FontWeightValue weight)
 {
@@ -116,17 +103,27 @@ static FontWeightValue bolderWeight(FontWeightValue weight)
     }
 }
 
-static Length parseAbsoluteFontSize(int col)
+static const int strictFontSizeTable[8][8] = {
+    { 9, 9, 9, 9, 11, 14, 18, 27 },
+    { 9, 9, 9, 10, 12, 15, 20, 30 },
+    { 9, 9, 10, 11, 13, 17, 22, 33 },
+    { 9, 9, 10, 12, 14, 18, 24, 36 },
+    { 9, 10, 12, 13, 16, 20, 26, 39 }, // fixed font default (13)
+    { 9, 10, 12, 14, 17, 21, 28, 42 },
+    { 9, 10, 13, 15, 18, 23, 30, 45 },
+    { 9, 10, 13, 16, 18, 24, 32, 48 } // proportional font default (16)
+};
+
+static const int fontSizeTableMax = 16;
+static const int fontSizeTableMin = 9;
+
+static Length parseAbsoluteFontSize(int col, float mediumSize)
 {
-    int mediumSize = DEFAULT_FONT_SIZE;
     int row = -1;
     if (mediumSize >= fontSizeTableMin && mediumSize <= fontSizeTableMax)
         row = mediumSize - fontSizeTableMin;
 
-    if (row >= 0)
-        return Length(Length::Fixed, strictFontSizeTable[row][col]);
-    else
-        return Length(Length::Fixed, fontSizeFactors[col] * mediumSize);
+    return Length(Length::Fixed, strictFontSizeTable[row][col]);
 }
 
 static Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data)
@@ -1355,9 +1352,15 @@ void CSSStyleDeclaration::notifyNeedsStyleRecalc()
         m_element->notifyInlineStyleChanged();
 }
 
+StyleResolver::StyleResolver(Document& document)
+    : m_document(document)
+    , m_mediumFontSize(document.window()->starFish()->defaultFontSizeMultiplier() * DEFAULT_FONT_SIZE)
+{
+}
+
 ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 {
-    ComputedStyle* ret = new ComputedStyle();
+    ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
     ret->m_display = DisplayValue::BlockDisplayValue;
     ret->m_inheritedStyles.m_color = Color(0, 0, 0, 255);
     ret->m_inheritedStyles.m_textAlign = SideValue::NoneSideValue;
@@ -1370,7 +1373,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 {
     ComputedStyle* ret = new ComputedStyle(parent);
 
-    auto apply = [](const URL& origin, std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
+    auto apply = [](StyleResolver& resolver, const URL& origin, std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
     {
         for (unsigned k = 0; k < cssValues.size(); k++) {
             switch (cssValues[k].keyKind()) {
@@ -1444,22 +1447,22 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->m_inheritedStyles.m_fontSize = parentStyle->m_inheritedStyles.m_fontSize;
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(3);
+                    style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(3, resolver.m_mediumFontSize);
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::FontSizeValueKind) {
                     if (cssValues[k].fontSizeValue() == FontSizeValue::XXSmallFontSizeValue) {
-                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(0);
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(0, resolver.m_mediumFontSize);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::XSmallFontSizeValue) {
-                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(1);
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(1, resolver.m_mediumFontSize);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::SmallFontSizeValue) {
-                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(2);
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(2, resolver.m_mediumFontSize);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::MediumFontSizeValue) {
-                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(3);
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(3, resolver.m_mediumFontSize);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::LargeFontSizeValue) {
-                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(4);
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(4, resolver.m_mediumFontSize);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::XLargeFontSizeValue) {
-                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(5);
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(5, resolver.m_mediumFontSize);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::XXLargeFontSizeValue) {
-                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(6);
+                        style->m_inheritedStyles.m_fontSize = parseAbsoluteFontSize(6, resolver.m_mediumFontSize);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::LargerFontSizeValue) {
                         style->m_inheritedStyles.m_fontSize = Length(Length::Fixed, parentStyle->m_inheritedStyles.m_fontSize.fixed() * 1.2f);
                     } else if (cssValues[k].fontSizeValue() == FontSizeValue::SmallerFontSizeValue) {
@@ -2154,7 +2157,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 STARFISH_LOG_INFO("+++selector:universal-selector\n");
 #endif
                 auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                apply(sheet->url(), cssValues, ret, parent);
+                apply(*this, sheet->url(), cssValues, ret, parent);
             }
         }
 
@@ -2166,7 +2169,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 #endif
                 if (sheet->rules()[j]->m_ruleText[0]->equalsWithoutCase(element->localName())) {
                     auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                    apply(sheet->url(), cssValues, ret, parent);
+                    apply(*this, sheet->url(), cssValues, ret, parent);
                 }
             }
         }
@@ -2181,7 +2184,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 for (unsigned f = 0; f < className.size(); f++) {
                     if (className[f]->equals(sheet->rules()[j]->m_ruleText[0])) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(sheet->url(), cssValues, ret, parent);
+                        apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -2198,7 +2201,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     for (unsigned f = 0; f < className.size(); f++) {
                         if (className[f]->equals(sheet->rules()[j]->m_ruleText[1])) {
                             auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(sheet->url(), cssValues, ret, parent);
+                            apply(*this, sheet->url(), cssValues, ret, parent);
                         }
                     }
                 }
@@ -2213,7 +2216,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 #endif
                 if (element->id()->equals(sheet->rules()[j]->m_ruleText[0])) {
                     auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                    apply(sheet->url(), cssValues, ret, parent);
+                    apply(*this, sheet->url(), cssValues, ret, parent);
                 }
             }
         }
@@ -2227,7 +2230,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
                     if (element->id()->equals(sheet->rules()[j]->m_ruleText[1])) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(sheet->url(), cssValues, ret, parent);
+                        apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -2245,7 +2248,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
 #endif
                     auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                    apply(sheet->url(), cssValues, ret, parent);
+                    apply(*this, sheet->url(), cssValues, ret, parent);
                 }
             }
         }
@@ -2259,7 +2262,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 #endif
                     if (sheet->rules()[j]->m_ruleText[0]->equalsWithoutCase(element->localName())) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(sheet->url(), cssValues, ret, parent);
+                        apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -2276,7 +2279,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     for (unsigned f = 0; f < className.size(); f++) {
                         if (className[f]->equals(sheet->rules()[j]->m_ruleText[0])) {
                             auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(sheet->url(), cssValues, ret, parent);
+                            apply(*this, sheet->url(), cssValues, ret, parent);
                         }
                     }
                 }
@@ -2294,7 +2297,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     for (unsigned f = 0; f < className.size(); f++) {
                         if (className[f]->equals(sheet->rules()[j]->m_ruleText[1])) {
                             auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(sheet->url(), cssValues, ret, parent);
+                            apply(*this, sheet->url(), cssValues, ret, parent);
                         }
                     }
                 }
@@ -2310,7 +2313,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 #endif
                     if (element->id()->equals(sheet->rules()[j]->m_ruleText[0])) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(sheet->url(), cssValues, ret, parent);
+                        apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -2325,7 +2328,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
                     if (element->id()->equals(sheet->rules()[j]->m_ruleText[1])) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(sheet->url(), cssValues, ret, parent);
+                        apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
             }
@@ -2335,7 +2338,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
     // inline style
     if (element->inlineStyleWithoutCreation()) {
         auto inlineCssValues = element->inlineStyleWithoutCreation()->m_cssValues;
-        apply(element->document()->documentURI(), inlineCssValues, ret, parent);
+        apply(*this, element->document()->documentURI(), inlineCssValues, ret, parent);
     }
 
     ret->loadResources(element, element->style());
