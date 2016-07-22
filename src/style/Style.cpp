@@ -2380,7 +2380,8 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
         element->clearNeedsStyleRecalc();
     }
 
-    bool shouldWeStopTreeTraverseHere = element->style() && element->style()->display() == DisplayValue::NoneDisplayValue;
+    STARFISH_ASSERT(element->style());
+    bool shouldWeStopTreeTraverseHere = element->style()->display() == DisplayValue::NoneDisplayValue;
     if (shouldWeStopTreeTraverseHere) {
         return;
     }
