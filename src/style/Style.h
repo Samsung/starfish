@@ -646,7 +646,7 @@ public:
         m_valueKind = kind;
     }
 
-    bool setValueCommon(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool updateValueCommon(std::vector<String*, gc_allocator<String*> >* tokens);
 
     bool isAuto()
     {
@@ -1235,7 +1235,7 @@ public:
         std::vector<String*, gc_allocator<String*> > tokens;                           \
         tokenizeCSSValue(&tokens, value, String::fromUTF8(","));                       \
         CSSStyleValuePair ret;                                                         \
-        if (ret.setValueCommon(&tokens) || ret.updateValue##name(&tokens)) {           \
+        if (ret.updateValueCommon(&tokens) || ret.updateValue##name(&tokens)) {           \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);                    \
         }                                                                              \
     }
