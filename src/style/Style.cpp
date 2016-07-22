@@ -177,6 +177,27 @@ static Color namedColorToColor(NamedColorValue namedColor)
     return Color();
 }
 
+String* CSSTransformFunctions::toString()
+{
+    String* result = String::emptyString;
+    for (unsigned i = 0; i < size(); i++) {
+        CSSTransformFunction item = at(i);
+        String* itemStr = item.functionName()->concat(String::fromUTF8("("));
+        ValueList* values = item.values();
+        for (unsigned int j = 0; j < values->size(); j++) {
+            CSSStyleValuePair& subitem = values->atIndex(j);
+            String* newstr = subitem.toString();
+            itemStr = itemStr->concat(newstr);
+            if (j != values->size() - 1)
+                itemStr = itemStr->concat(String::fromUTF8(", "));
+            else
+                itemStr = itemStr->concat(String::fromUTF8(") "));
+        }
+        result = result->concat(itemStr);
+    }
+    return result;
+}
+
 String* CSSStyleValuePair::keyName()
 {
     switch (keyKind()) {
@@ -593,200 +614,49 @@ GEN_FOURSIDE(ADD_SET_BORDER)
 
 String* CSSStyleValuePair::toString()
 {
-    ValueKind value_kind = valueKind();
-    if (value_kind == CSSStyleValuePair::ValueKind::Initial)
+    switch (valueKind()) {
+    case CSSStyleValuePair::ValueKind::Initial:
         return String::initialString;
-    else if (value_kind == CSSStyleValuePair::ValueKind::Inherit)
+    case CSSStyleValuePair::ValueKind::Inherit:
         return String::inheritString;
-
-    switch (keyKind()) {
-    case Color:
-    case BackgroundColor:
-    case BorderTopColor:
-    case BorderRightColor:
-    case BorderBottomColor:
-    case BorderLeftColor: {
-        // <color>
-        switch (value_kind) {
-        case CSSStyleValuePair::ValueKind::ColorValueKind:
-            return colorValue().toString();
-        case CSSStyleValuePair::ValueKind::NamedColorValueKind:
-            return namedColorToString(namedColorValue());
+    case CSSStyleValuePair::ValueKind::Length:
+        return lengthValue().toString();
+    case CSSStyleValuePair::ValueKind::Percentage:
+        return String::fromFloat(percentageValue() * 100.f)->concat(String::createASCIIString("%"));
+    case CSSStyleValuePair::ValueKind::Auto:
+        return String::fromUTF8("auto");
+    case CSSStyleValuePair::ValueKind::None:
+        return String::fromUTF8("none");
+    case CSSStyleValuePair::ValueKind::Number:
+        return String::fromFloat(numberValue());
+    case CSSStyleValuePair::ValueKind::Int32:
+        return String::fromUTF8(std::to_string(int32Value()).c_str());
+    case CSSStyleValuePair::ValueKind::Angle:
+        return angleValue().toString();
+    case CSSStyleValuePair::ValueKind::Normal:
+        return String::fromUTF8("normal");
+    case CSSStyleValuePair::ValueKind::StringValueKind:
+        return stringValue();
+    case CSSStyleValuePair::ValueKind::ColorValueKind:
+        return colorValue().toString();
+    case CSSStyleValuePair::ValueKind::NamedColorValueKind:
+        return namedColorToString(namedColorValue());
+    case CSSStyleValuePair::ValueKind::UrlValueKind:
+        return String::fromUTF8("url(\"")->concat(urlStringValue())->concat(String::fromUTF8("\")"));
+    case CSSStyleValuePair::ValueKind::DisplayValueKind:
+        switch (displayValue()) {
+        case DisplayValue::InlineDisplayValue:
+            return String::fromUTF8("inline");
+        case DisplayValue::BlockDisplayValue:
+            return String::fromUTF8("block");
+        case DisplayValue::InlineBlockDisplayValue:
+            return String::fromUTF8("inline-block");
+        case DisplayValue::NoneDisplayValue:
+            return String::fromUTF8("none");
         default:
-            return String::emptyString;
-        }
-    }
-    break;
-    case PaddingTop:
-    case PaddingRight:
-    case PaddingBottom:
-    case PaddingLeft: {
-        // <length> | <percentage>
-        return lengthOrPercentageOrKeywordToString();
-    }
-    break;
-    case MarginTop:
-    case MarginRight:
-    case MarginBottom:
-    case MarginLeft:
-    case Top:
-    case Bottom:
-    case Left:
-    case Right:
-    case Height:
-    case Width: {
-        // <length> | <percentage> | auto
-        return lengthOrPercentageOrKeywordToString();
-    }
-    break;
-    case BackgroundImage: {
-        if (m_valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
-            String* str = String::emptyString;
-            ValueList* list = multiValue();
-            for (unsigned int i = 0; i < list->size(); i++) {
-                CSSStyleValuePair& item = list->atIndex(i);
-                if (item.valueKind() == CSSStyleValuePair::ValueKind::Inherit)
-                    str = str->concat(String::inheritString);
-                else if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
-                    str = str->concat(String::initialString);
-                else
-                    str = str->concat(item.urlValueToString());
-                if (i != list->size() - 1)
-                    str = str->concat(list->separatorString());
-            }
-            return str;
-        } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    break;
-    case BorderImageSource: {
-        // <image> | none
-        return urlValueToString();
-    }
-    break;
-    case BackgroundRepeatX:
-    case BackgroundRepeatY:
-        if (m_valueKind == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
-            if (backgroundRepeatValue() == RepeatRepeatValue)
-                return String::fromUTF8("repeat");
-            else
-                return String::fromUTF8("no-repeat");
-        } else if (m_valueKind == CSSStyleValuePair::ValueKind::ValueListKind) {
-            String* str = String::emptyString;
-            ValueList* list = multiValue();
-            for (unsigned int i = 0; i < list->size(); i++) {
-                CSSStyleValuePair& item = list->atIndex(i);
-                if (item.valueKind() == CSSStyleValuePair::ValueKind::Inherit)
-                    str = str->concat(String::inheritString);
-                else if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
-                    str = str->concat(String::initialString);
-                else if (item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind) {
-                    if (item.backgroundRepeatValue() == RepeatRepeatValue)
-                        str = str->concat(String::fromUTF8("repeat"));
-                    else
-                        str = str->concat(String::fromUTF8("no-repeat"));
-                }
-                if (i != list->size() - 1)
-                    str = str->concat(list->separatorString());
-            }
-            return str;
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-        break;
-    case BackgroundPosition:
-        switch (m_valueKind) {
-        case CSSStyleValuePair::ValueKind::ValueListKind: {
-            String* str = String::emptyString;
-            ValueList* vals = multiValue();
-            for (unsigned int i = 0; i < vals->size(); i++) {
-                CSSStyleValuePair& item = vals->atIndex(i);
-                if (item.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
-                    ValueList* subItems = item.multiValue();
-                    for (unsigned int j = 0; j < subItems->size(); j++) {
-                        CSSStyleValuePair& subitem = subItems->atIndex(j);
-                        if (subitem.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                            str = str->concat(subitem.sideValueToString());
-                        } else {
-                            str = str->concat(valueToString(subitem.valueKind(), subitem.value()));
-                        }
-                        if (j < subItems->size() - 1) {
-                            str = str->concat(String::spaceString);
-                        }
-                    } // j
-                }
-                if (i < vals->size() - 1) {
-                    str = str->concat(String::fromUTF8(", "));
-                }
-            }
-            return str;
-        }
-        default:
-            return String::emptyString;
-        }
-        break;
-    case BackgroundSize: {
-        // [length | percentage | auto]{1, 2} | cover | contain // initial value -> auto
-        switch (m_valueKind) {
-        case CSSStyleValuePair::ValueKind::ValueListKind: {
-            String* str = String::emptyString;
-            ValueList* layers = multiValue();
-            for (unsigned int l = 0; l < layers->size(); l++) {
-                CSSStyleValuePair& layer = layers->atIndex(l);
-                switch (layer.valueKind()) {
-                case CSSStyleValuePair::ValueKind::Cover:
-                    str = str->concat(String::fromUTF8("cover"));
-                    break;
-                case CSSStyleValuePair::ValueKind::Contain:
-                    str = str->concat(String::fromUTF8("contain"));
-                    break;
-                case CSSStyleValuePair::ValueKind::Auto:
-                    str = str->concat(String::fromUTF8("auto"));
-                    break;
-                case CSSStyleValuePair::ValueKind::ValueListKind: {
-                    ValueList* vals = layer.multiValue();
-                    for (unsigned int i = 0; i < vals->size(); i++) {
-                        CSSStyleValuePair& item = vals->atIndex(i);
-                        str = str->concat(valueToString(item.valueKind(), item.value()));
-                        if (i < vals->size() - 1) {
-                            str = str->concat(String::spaceString);
-                        }
-                    }
-                    break;
-                }
-                default:
-                break;
-                }
-                if (l < layers->size() - 1) {
-                    str = str->concat(String::fromUTF8(", "));
-                }
-            }
-            return str;
-        }
-        default:
-            return String::emptyString;
-        }
-    }
-    case Direction: {
-        switch (directionValue()) {
-        case LtrDirectionValue:
-            return String::fromUTF8("ltr");
-        case RtlDirectionValue:
-            return String::fromUTF8("rtl");
-        default:
-            return String::emptyString;
-        }
-    }
-    case LineHeight:
-        if (m_valueKind == CSSStyleValuePair::ValueKind::Normal) {
-            return String::fromUTF8("normal");
-        } else {
-            return valueToString();
-        }
-        break;
-
-    case Position: {
+    case CSSStyleValuePair::ValueKind::PositionValueKind:
         switch (positionValue()) {
         case PositionValue::StaticPositionValue:
             return String::fromUTF8("static");
@@ -795,68 +665,107 @@ String* CSSStyleValuePair::toString()
         case PositionValue::AbsolutePositionValue:
             return String::fromUTF8("absolute");
         default:
-            return String::emptyString;
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case TextDecoration: {
-        switch (textDecoration()) {
-        case TextDecorationValue::NoneTextDecorationValue:
-            return String::fromUTF8("none");
-        case TextDecorationValue::UnderLineTextDecorationValue:
-            return String::fromUTF8("underline");
-        case TextDecorationValue::OverLineTextDecorationValue:
-            return String::fromUTF8("overline");
-        case TextDecorationValue::LineThroughTextDecorationValue:
-            return String::fromUTF8("line-through");
-        case TextDecorationValue::BlinkTextDecorationValue:
-            return String::fromUTF8("blink");
+    case CSSStyleValuePair::ValueKind::VerticalAlignValueKind:
+        switch (verticalAlignValue()) {
+        case VerticalAlignValue::BaselineVAlignValue:
+            return String::fromUTF8("baseline");
+        case VerticalAlignValue::SubVAlignValue:
+            return String::fromUTF8("sub");
+        case VerticalAlignValue::SuperVAlignValue:
+            return String::fromUTF8("super");
+        case VerticalAlignValue::TopVAlignValue:
+            return String::fromUTF8("top");
+        case VerticalAlignValue::TextTopVAlignValue:
+            return String::fromUTF8("text-top");
+        case VerticalAlignValue::MiddleVAlignValue:
+            return String::fromUTF8("middle");
+        case VerticalAlignValue::BottomVAlignValue:
+            return String::fromUTF8("bottom");
+        case VerticalAlignValue::TextBottomVAlignValue:
+            return String::fromUTF8("text-bottom");
+        case VerticalAlignValue::NumericVAlignValue:
+            // FIXME:mh.byun
+            // FIXED: NumericVAlignValue cannot be here. (only used in ComputedStyle)
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         default:
-            return String::emptyString;
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case FontSize: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::FontSizeValueKind:
-            switch (fontSizeValue()) {
-            case FontSizeValue::XXSmallFontSizeValue:
-                return String::fromUTF8("xx-small");
-            case FontSizeValue::XSmallFontSizeValue:
-                return String::fromUTF8("x-small");
-            case FontSizeValue::SmallFontSizeValue:
-                return String::fromUTF8("small");
-            case FontSizeValue::MediumFontSizeValue:
-                return String::fromUTF8("medium");
-            case FontSizeValue::LargeFontSizeValue:
-                return String::fromUTF8("large");
-            case FontSizeValue::XLargeFontSizeValue:
-                return String::fromUTF8("x-large");
-            case FontSizeValue::XXLargeFontSizeValue:
-                return String::fromUTF8("xx-large");
-            case FontSizeValue::LargerFontSizeValue:
-                return String::fromUTF8("larger");
-            case FontSizeValue::SmallerFontSizeValue:
-                return String::fromUTF8("smaller");
-            }
+    case CSSStyleValuePair::ValueKind::SideValueKind:
+        switch (sideValue()) {
+        case SideValue::NoneSideValue:
+            return String::fromUTF8("left");
+        case SideValue::LeftSideValue:
+            return String::fromUTF8("left");
+        case SideValue::RightSideValue:
+            return String::fromUTF8("right");
+        case SideValue::CenterSideValue:
+            return String::fromUTF8("center");
+        case SideValue::TopSideValue:
+            return String::fromUTF8("top");
+        case SideValue::BottomSideValue:
+            return String::fromUTF8("bottom");
         default:
-            return lengthOrPercentageOrKeywordToString();
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case FontStyle: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::FontStyleValueKind:
-            switch (fontStyleValue()) {
-            case FontStyleValue::NormalFontStyleValue:
-                return String::fromUTF8("normal");
-            case FontStyleValue::ItalicFontStyleValue:
-                return String::fromUTF8("italic");
-            case FontStyleValue::ObliqueFontStyleValue:
-                return String::fromUTF8("oblique");
-            }
+    case CSSStyleValuePair::ValueKind::DirectionValueKind:
+        switch (directionValue()) {
+        case LtrDirectionValue:
+            return String::fromUTF8("ltr");
+        case RtlDirectionValue:
+            return String::fromUTF8("rtl");
         default:
-            return lengthOrPercentageOrKeywordToString();
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case FontWeight: {
+    case CSSStyleValuePair::ValueKind::Cover:
+        return String::fromUTF8("cover");
+    case CSSStyleValuePair::ValueKind::Contain:
+        return String::fromUTF8("contain");    
+    case CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind:
+        switch (backgroundRepeatValue()) {
+        case RepeatRepeatValue:
+            return String::fromUTF8("repeat");
+        case NoRepeatRepeatValue:
+            return String::fromUTF8("no-repeat");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::FontSizeValueKind:
+        switch (fontSizeValue()) {
+        case FontSizeValue::XXSmallFontSizeValue:
+            return String::fromUTF8("xx-small");
+        case FontSizeValue::XSmallFontSizeValue:
+            return String::fromUTF8("x-small");
+        case FontSizeValue::SmallFontSizeValue:
+            return String::fromUTF8("small");
+        case FontSizeValue::MediumFontSizeValue:
+            return String::fromUTF8("medium");
+        case FontSizeValue::LargeFontSizeValue:
+            return String::fromUTF8("large");
+        case FontSizeValue::XLargeFontSizeValue:
+            return String::fromUTF8("x-large");
+        case FontSizeValue::XXLargeFontSizeValue:
+            return String::fromUTF8("xx-large");
+        case FontSizeValue::LargerFontSizeValue:
+            return String::fromUTF8("larger");
+        case FontSizeValue::SmallerFontSizeValue:
+            return String::fromUTF8("smaller");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::FontStyleValueKind:
+        switch (fontStyleValue()) {
+        case FontStyleValue::NormalFontStyleValue:
+            return String::fromUTF8("normal");
+        case FontStyleValue::ItalicFontStyleValue:
+            return String::fromUTF8("italic");
+        case FontStyleValue::ObliqueFontStyleValue:
+            return String::fromUTF8("oblique");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    case CSSStyleValuePair::ValueKind::FontWeightValueKind:
         switch (fontWeightValue()) {
         case FontWeightValue::NormalFontWeightValue:
             return String::fromUTF8("normal");
@@ -887,233 +796,84 @@ String* CSSStyleValuePair::toString()
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        break;
-    }
-    case Display: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::DisplayValueKind:
-            switch (displayValue()) {
-            case DisplayValue::InlineDisplayValue:
-                return String::fromUTF8("inline");
-            case DisplayValue::BlockDisplayValue:
-                return String::fromUTF8("block");
-            case DisplayValue::InlineBlockDisplayValue:
-                return String::fromUTF8("inline-block");
-            case DisplayValue::NoneDisplayValue:
-                return String::fromUTF8("none");
-            }
+    case CSSStyleValuePair::ValueKind::BorderStyleValueKind:
+        switch (borderStyleValue()) {
+        case BorderStyleValue::NoneBorderStyleValue:
+            return String::fromUTF8("none");
+        case BorderStyleValue::SolidBorderStyleValue:
+            return String::fromUTF8("solid");
         default:
-            return lengthOrPercentageOrKeywordToString();
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case BorderImageSlice: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::ValueListKind: {
-            ValueList* values = multiValue();
-            String* s = String::emptyString;
-            for (unsigned int i = 0; i < values->size(); i++) {
-                String* newstr;
-                CSSStyleValuePair& item = values->atIndex(i);
-                if (item.valueKind() == CSSStyleValuePair::ValueKind::StringValueKind)
-                    newstr = String::fromUTF8("fill");
-                else
-                    newstr = valueToString(item.valueKind(), item.value());
-                s = s->concat(newstr);
-                if (i != values->size() - 1)
-                    s = s->concat(String::spaceString);
-            }
-            return s;
-        }
+    case CSSStyleValuePair::ValueKind::BorderWidthValueKind:
+        switch (borderWidthValue()) {
+        case BorderWidthValue::ThinBorderWidthValue:
+            return String::fromUTF8("thin");
+        case BorderWidthValue::MediumBorderWidthValue:
+            return String::fromUTF8("medium");
+        case BorderWidthValue::ThickBorderWidthValue:
+            return String::fromUTF8("thick");
         default:
-            // initial or inherit
-            return lengthOrPercentageOrKeywordToString();
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case BorderImageWidth: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::ValueListKind: {
-            ValueList* values = multiValue();
-            String* s = String::emptyString;
-            for (unsigned int i = 0; i < values->size(); i++) {
-                CSSStyleValuePair& item = values->atIndex(i);
-                String* newstr = valueToString(item.valueKind(), item.value());
-                s = s->concat(newstr);
-                if (i != values->size() - 1)
-                    s = s->concat(String::spaceString);
-            }
-            return s;
-        }
-        default:
-            return lengthOrPercentageOrKeywordToString();
-        }
-    }
-    case BorderTopStyle:
-    case BorderRightStyle:
-    case BorderBottomStyle:
-    case BorderLeftStyle: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::BorderStyleValueKind:
-            switch (borderStyleValue()) {
-            case BorderStyleValue::NoneBorderStyleValue:
-                return String::fromUTF8("none");
-            case BorderStyleValue::SolidBorderStyleValue:
-                return String::fromUTF8("solid");
-            }
-        default:
-            return String::emptyString;
-        }
-    }
-    case BorderTopWidth:
-    case BorderBottomWidth:
-    case BorderRightWidth:
-    case BorderLeftWidth: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::BorderWidthValueKind:
-            switch (borderWidthValue()) {
-            case BorderWidthValue::ThinBorderWidthValue:
-                return String::fromUTF8("thin");
-            case BorderWidthValue::MediumBorderWidthValue:
-                return String::fromUTF8("medium");
-            case BorderWidthValue::ThickBorderWidthValue:
-                return String::fromUTF8("thick");
-            }
-            break;
-        default:
-            return lengthOrPercentageOrKeywordToString();
-        }
-    }
-    case TextAlign: {
-        return sideValueToString();
-    }
-    case Visibility: {
-        switch (visibility()) {
-        case VisibilityValue::VisibleVisibilityValue:
-            return String::fromUTF8("visible");
-        case VisibilityValue::HiddenVisibilityValue:
-            return String::fromUTF8("hidden");
-        default:
-            return String::emptyString;
-        }
-    }
-    case Opacity: {
-        return String::fromFloat(numberValue());
-    }
-    case Overflow: {
+    case CSSStyleValuePair::ValueKind::OverflowValueKind:
         switch (overflowValue()) {
         case OverflowValue::VisibleOverflow:
             return String::fromUTF8("visible");
         case OverflowValue::HiddenOverflow:
             return String::fromUTF8("hidden");
         default:
-            return String::emptyString;
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case ZIndex: {
-        if (m_valueKind == CSSStyleValuePair::ValueKind::Auto)
-            return String::fromUTF8("auto");
-        else if (m_valueKind == CSSStyleValuePair::ValueKind::Int32)
-            return String::fromUTF8(std::to_string(int32Value()).c_str());
-        break;
-    }
-    case VerticalAlign: {
-        switch (valueKind()) {
-        case CSSStyleValuePair::ValueKind::VerticalAlignValueKind:
-            switch (verticalAlignValue()) {
-            case VerticalAlignValue::BaselineVAlignValue:
-                return String::fromUTF8("baseline");
-            case VerticalAlignValue::SubVAlignValue:
-                return String::fromUTF8("sub");
-            case VerticalAlignValue::SuperVAlignValue:
-                return String::fromUTF8("super");
-            case VerticalAlignValue::TopVAlignValue:
-                return String::fromUTF8("top");
-            case VerticalAlignValue::TextTopVAlignValue:
-                return String::fromUTF8("text-top");
-            case VerticalAlignValue::MiddleVAlignValue:
-                return String::fromUTF8("middle");
-            case VerticalAlignValue::BottomVAlignValue:
-                return String::fromUTF8("bottom");
-            case VerticalAlignValue::TextBottomVAlignValue:
-                return String::fromUTF8("text-bottom");
-            case VerticalAlignValue::NumericVAlignValue:
-                // FIXME:mh.byun
-                // FIXED: NumericVAlignValue cannot be here. (only used in ComputedStyle)
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            default:
-                return String::emptyString;
-            }
+    case CSSStyleValuePair::ValueKind::TextDecorationValueKind:
+        switch (textDecoration()) {
+        case TextDecorationValue::NoneTextDecorationValue:
+            return String::fromUTF8("none");
+        case TextDecorationValue::UnderLineTextDecorationValue:
+            return String::fromUTF8("underline");
+        case TextDecorationValue::OverLineTextDecorationValue:
+            return String::fromUTF8("overline");
+        case TextDecorationValue::LineThroughTextDecorationValue:
+            return String::fromUTF8("line-through");
+        case TextDecorationValue::BlinkTextDecorationValue:
+            return String::fromUTF8("blink");
         default:
-            return lengthOrPercentageOrKeywordToString();
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    }
-    case TransformOrigin:
-        switch (m_valueKind) {
-        case CSSStyleValuePair::ValueKind::ValueListKind: {
-            String* str = String::emptyString;
-            ValueList* vals = multiValue();
-            for (unsigned int i = 0; i < vals->size(); i++) {
-                CSSStyleValuePair& item = vals->atIndex(i);
-                if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                    str = str->concat(item.sideValueToString());
-                } else {
-                    str = str->concat(valueToString(item.valueKind(), item.value()));
-                }
-
-                if (i < vals->size() - 1) {
-                    str = str->concat(String::spaceString);
-                }
-            }
-            return str;
-        }
+    case CSSStyleValuePair::ValueKind::VisibilityValueKind:
+        switch (visibility()) {
+        case VisibilityValue::VisibleVisibilityValue:
+            return String::fromUTF8("visible");
+        case VisibilityValue::HiddenVisibilityValue:
+            return String::fromUTF8("hidden");
         default:
-            return String::emptyString;
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-    case Transform: {
-        if (m_valueKind == TransformFunctions) {
-            CSSTransformFunctions* trans = transformValue();
-            String* result = String::emptyString;
-            for (unsigned i = 0; i < trans->size(); i++) {
-                CSSTransformFunction item = trans->at(i);
-                String* itemStr = item.functionName()->concat(String::fromUTF8("("));
-                ValueList* values = item.values();
-                for (unsigned int j = 0; j < values->size(); j++) {
-                    CSSStyleValuePair& subitem = values->atIndex(j);
-                    String* newstr = valueToString(subitem.valueKind(), subitem.value());
-                    itemStr = itemStr->concat(newstr);
-                    if (j != values->size() - 1)
-                        itemStr = itemStr->concat(String::fromUTF8(", "));
-                    else
-                        itemStr = itemStr->concat(String::fromUTF8(") "));
-                }
-                result = result->concat(itemStr);
-            }
-            return result;
-        } else {
-            // initial or inherit or none
-            return lengthOrPercentageOrKeywordToString();
+    case CSSStyleValuePair::ValueKind::UnicodeBidiValueKind:
+        switch (unicodeBidiValue()) {
+        case NormalUnicodeBidiValue:
+            return String::fromUTF8("normal");
+        case EmbedUnicodeBidiValue:
+            return String::fromUTF8("embed");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::TransformFunctions:
+        return transformValue()->toString();
+    case CSSStyleValuePair::ValueKind::ValueListKind:
+    {
+        String* str = String::emptyString;
+        ValueList* list = multiValue();
+        size_t len = list->size();
+        for (size_t i = 0; i < len; i++) {
+            str = str->concat(list->atIndex(i).toString());
+            if (i != len - 1)
+                str = str->concat(list->separatorString());
+        }
+        return str;
     }
-    case UnicodeBidi: {
-        switch (m_valueKind) {
-        case UnicodeBidiValueKind: {
-            switch (unicodeBidiValue()) {
-            case NormalUnicodeBidiValue:
-                return String::fromUTF8("normal");
-            case EmbedUnicodeBidiValue:
-                return String::fromUTF8("embed");
-            default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
-        }
-        default: {
-            return String::emptyString;
-        }
-        }
-    }
-    default: {
-        STARFISH_LOG_INFO("[CSSStyleValuePair::toString] Unsupported spec or something wrong");
-        return String::emptyString;
-    }
+    default:
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
@@ -2889,7 +2649,7 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(std::vector<String*, gc_allo
                 isFill = true;
             else
                 return false;
-            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::StringValueKind, { 0 });
+            m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::StringValueKind, String::fromUTF8("fill"));
         } else if (CSSPropertyParser::parseNumber(tokens->at(i)->utf8Data(), false, &result)) {
             isNum = true;
             m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Number, { (float)result });

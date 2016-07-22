@@ -557,6 +557,8 @@ public:
         return m_transforms.size();
     }
 
+    String* toString();
+
 protected:
     std::vector<CSSTransformFunction, gc_allocator<CSSTransformFunction> > m_transforms;
 };
@@ -600,7 +602,6 @@ public:
         Cover,
         Contain,
 
-        BackgroundPositionValueKind,
         BackgroundRepeatValueKind,
 
         FontSizeValueKind,
@@ -891,90 +892,6 @@ public:
     const ValueData& value()
     {
         return m_value;
-    }
-
-    String* percentageToString(float f)
-    {
-        float v = f * 100.f;
-        return String::fromFloat(v)->concat(String::createASCIIString("%"));
-    }
-
-    String* lengthOrPercentageOrKeywordToString()
-    {
-        if (valueKind() == CSSStyleValuePair::ValueKind::Auto)
-            return String::fromUTF8("auto");
-        else if (valueKind() == CSSStyleValuePair::ValueKind::None)
-            return String::fromUTF8("none");
-        else if (valueKind() == CSSStyleValuePair::ValueKind::Length)
-            return lengthValue().toString();
-        else if (valueKind() == CSSStyleValuePair::ValueKind::Percentage)
-            return percentageToString(percentageValue());
-        else
-            return String::emptyString;
-    }
-
-    String* numberToString(float f)
-    {
-        return String::fromFloat(f);
-    }
-
-    String* valueToString()
-    {
-        return valueToString(valueKind(), m_value);
-    }
-
-    String* urlValueToString()
-    {
-        if (m_valueKind == CSSStyleValuePair::ValueKind::None) {
-            return String::fromUTF8("none");
-        } else if (m_valueKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
-            String* str = String::fromUTF8("url(\"");
-            str = str->concat(urlStringValue())->concat(String::fromUTF8("\")"));
-            return str;
-        }
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    String* sideValueToString()
-    {
-        switch (sideValue()) {
-        case SideValue::NoneSideValue:
-            return String::fromUTF8("left");
-        case SideValue::LeftSideValue:
-            return String::fromUTF8("left");
-        case SideValue::RightSideValue:
-            return String::fromUTF8("right");
-        case SideValue::CenterSideValue:
-            return String::fromUTF8("center");
-        case SideValue::TopSideValue:
-            return String::fromUTF8("top");
-        case SideValue::BottomSideValue:
-            return String::fromUTF8("bottom");
-        default:
-            return String::emptyString;
-        }
-    }
-
-    String* valueToString(CSSStyleValuePair::ValueKind kind, CSSStyleValuePair::ValueData data)
-    {
-        if (kind == CSSStyleValuePair::ValueKind::Auto)
-            return String::fromUTF8("auto");
-        else if (kind == CSSStyleValuePair::ValueKind::Inherit)
-            return String::inheritString;
-        else if (kind == CSSStyleValuePair::ValueKind::Initial)
-            return String::initialString;
-        else if (kind == CSSStyleValuePair::ValueKind::Length)
-            return data.m_length.toString();
-        else if (kind == CSSStyleValuePair::ValueKind::Percentage)
-            return percentageToString(data.m_floatValue);
-        else if (kind == CSSStyleValuePair::ValueKind::Number)
-            return numberToString(data.m_floatValue);
-        else if (kind == CSSStyleValuePair::ValueKind::Angle)
-            return data.m_angle.toString();
-        else if (kind == CSSStyleValuePair::ValueKind::StringValueKind)
-            return data.m_stringValue;
-        else
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     String* toString();
