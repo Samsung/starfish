@@ -125,11 +125,12 @@ $(info build dir... $(OUTDIR))
 ################################################################################
 
 # common flags
-CXXFLAGS += -std=c++0x
+CXXFLAGS += -std=c++0x -g3
 CXXFLAGS += -fno-rtti -fno-math-errno -Isrc/ -Iinc/
 CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof -fvisibility=hidden
+CXXFLAGS += -fno-omit-frame-pointer -fstack-protector
 CXXFLAGS += -DSTARFISH_ENABLE_TEST
 
 LDFLAGS += -lpthread -lcurl
@@ -153,10 +154,10 @@ else ifeq ($(MODE), release)
 endif
 
 # flags for debug/release
-CXXFLAGS_DEBUG = -O0 -g3 -D_GLIBCXX_DEBUG -fno-omit-frame-pointer -Wall -Wextra -Werror
+CXXFLAGS_DEBUG = -O0 -D_GLIBCXX_DEBUG -Wall -Wextra -Werror
 CXXFLAGS_DEBUG += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
 CXXFLAGS_DEBUG += -Wno-unused-variable
-CXXFLAGS_RELEASE = -O2 -g3 -DNDEBUG -fno-omit-frame-pointer -fstack-protector -funswitch-loops -Wno-deprecated-declarations
+CXXFLAGS_RELEASE = -O2 -DNDEBUG -funswitch-loops -Wno-deprecated-declarations
 
 # flags for shared library
 ifeq ($(TYPE), lib)
