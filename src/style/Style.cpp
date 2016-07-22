@@ -378,10 +378,10 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
         if (!hasColor && temp.updateValueUnitColor(tok)) {
             SET_SINGLE_PROP(Color)
             SINGLE_CONTINUE()
-        } else if (!hasImage && temp.updateValueUnitUrlOrNone(tok)) {
+        } else if (!hasImage && temp.updateValueBackgroundImage(&toks, false)) {
             SET_SINGLE_PROP(Image)
             SINGLE_CONTINUE()
-        } else if (!hasRepeat && parseBackgroundRepeatShorhand(tok, &tempX, &tempY)) {
+        } else if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY, false)) {
             SET_DOUBLE_PROP(Repeat)
             SINGLE_CONTINUE()
         } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks, false)) {
@@ -1265,13 +1265,10 @@ void CSSStyleDeclaration::setBackground(String* value)
 
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(",/"));
-    CSSStyleValuePair images;
-    images.setValueList(new ValueList());
     // TODO: should check comma-seperated input
     CSSStyleValuePair color, image, repeatX, repeatY, position, size;
     if (parseBackgroundShorthand(&tokens, &color, &image, &repeatX, &repeatY, &position, &size)) {
-        images.multiValue()->append(image);
-        addBackgroundCSSValuePairs(this, color, images, repeatX, repeatY, position, size);
+        addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY, position, size);
     }
 }
 
@@ -2416,7 +2413,7 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
         element->clearNeedsStyleRecalc();
     }
 
-    bool shouldWeStopTreeTraverseHere = element->style()->display() == DisplayValue::NoneDisplayValue;
+    bool shouldWeStopTreeTraverseHere = element->style() && element->style()->display() == DisplayValue::NoneDisplayValue;
     if (shouldWeStopTreeTraverseHere) {
         return;
     }
@@ -2662,14 +2659,14 @@ bool CSSStyleValuePair::updateValueUnitUrlOrNone(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma)
 {
     bool shouldBeComma = false;
     ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
     for (unsigned int i = 0; i < tokens->size(); i++) {
         String* value = tokens->at(i);
         if (value->equals(",")) {
-            if (!shouldBeComma)
+            if (!allowComma || !shouldBeComma)
                 return false;
             shouldBeComma = false;
             continue;
@@ -2683,6 +2680,11 @@ bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_alloc
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     m_value.m_multiValue = values;
     return shouldBeComma;
+}
+
+bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    return updateValueBackgroundImage(tokens, true);
 }
 
 bool CSSStyleValuePair::updateValueBorderImageSource(std::vector<String*, gc_allocator<String*> >* tokens)
