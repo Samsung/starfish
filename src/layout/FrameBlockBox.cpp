@@ -541,6 +541,61 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         f->moveY(mY);
     };
 
+    auto applyRelativePositionInlineCase = [&](Frame* ref_f, FrameBox* f, LayoutUnit parentWidth)
+    {
+
+        LayoutUnit mX = 0;
+        LayoutUnit mY = 0;
+
+        Length left = ref_f->style()->left();
+        Length right = ref_f->style()->right();
+        Length top = ref_f->style()->top();
+        Length bottom = ref_f->style()->bottom();
+
+        // left, right
+        if (!left.isAuto() && !right.isAuto()) {
+            if (f->style()->direction() == LtrDirectionValue) {
+                mX = left.specifiedValue(parentWidth);
+            } else {
+                mX = -right.specifiedValue(parentWidth);
+            }
+        } else if (!left.isAuto() && right.isAuto()) {
+            mX = left.specifiedValue(parentWidth);
+        } else if (left.isAuto() && !right.isAuto()) {
+            mX = -right.specifiedValue(parentWidth);
+        }
+
+        auto computeVerticalPosition = [&](const Length& l) -> LayoutUnit
+        {
+            STARFISH_ASSERT(!l.isAuto());
+            if (l.isFixed()) {
+                return l.fixed();
+            } else {
+                STARFISH_ASSERT(l.isPercent());
+                if (ctx.parentHasFixedHeight(ref_f)) {
+                    return l.specifiedValue(ctx.parentFixedHeight(ref_f));
+                }
+                return 0;
+            }
+        };
+
+        if (!top.isAuto() && !bottom.isAuto()) {
+            mY = computeVerticalPosition(top);
+        } else if (!top.isAuto() && bottom.isAuto()) {
+            mY = computeVerticalPosition(top);
+        } else if (top.isAuto() && !bottom.isAuto()) {
+            mY = -computeVerticalPosition(bottom);
+        }
+
+        if (f->style()->left().isAuto() && f->style()->right().isAuto()) {
+            f->moveX(mX);
+        }
+        if (f->style()->top().isAuto() && f->style()->bottom().isAuto()) {
+            f->moveY(mY);
+        }
+
+    };
+
     // layout relative positioned blocks
     ctx.layoutRegisteredRelativePositionedFrames(this, [&](const std::vector<std::pair<Frame*, bool> >& frames) {
         for (size_t i = 0; i < frames.size(); i ++) {
@@ -553,8 +608,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 Node* nd = f->node()->parentElement();
                 while (nd && nd->frame()->isFrameInline() && nd->style()->position() == RelativePositionValue) {
                     Frame* cb = ctx.containingBlock(nd->frame());
-                    applyRelativePosition(f->asFrameBox(), nd->style()->left(), nd->style()->right(), nd->style()->top(), nd->style()->bottom(),
-                        cb->asFrameBox()->contentWidth(), cb->asFrameBox()->contentHeight());
+                    applyRelativePositionInlineCase(nd->frame(), f->asFrameBox(),
+                        cb->asFrameBox()->contentWidth());
                     nd = nd->parentElement();
                 }
             }
