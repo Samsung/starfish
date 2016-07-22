@@ -148,17 +148,6 @@ public:
             a++;
         }
         eflWindow->m_drawnImageList.clear();
-
-        if (m_dummyBox) {
-            evas_object_del(m_dummyBox);
-            m_dummyBox = nullptr;
-        }
-
-        if (m_mainBox) {
-            elm_win_resize_object_del(m_window, m_mainBox);
-            evas_object_del(m_mainBox);
-            m_mainBox = nullptr;
-        }
     }
 
     bool m_isActive;
@@ -1106,6 +1095,17 @@ void Window::close()
     }
 
     eflWindow->clearEFLResources();
+
+    if (eflWindow->m_dummyBox) {
+        evas_object_del(eflWindow->m_dummyBox);
+        eflWindow->m_dummyBox = nullptr;
+    }
+
+    if (eflWindow->m_mainBox) {
+        elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
+        evas_object_del(eflWindow->m_mainBox);
+        eflWindow->m_mainBox = nullptr;
+    }
 
     eflWindow->m_objectList.clear();
     eflWindow->m_objectList.shrink_to_fit();
