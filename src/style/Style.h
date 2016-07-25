@@ -949,7 +949,8 @@ public:
     bool updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
     bool updateValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(String* token);
-    bool updateValueUnitBackgroundPosition(String* token);
+    bool updateValueUnitBackgroundPositionX(String* token);
+    bool updateValueUnitBackgroundPositionY(String* token);
     bool updateValueUnitBorderStyle(String* token);
     bool updateValueUnitBorderWidth(String* token);
     bool updateValueUnitBorderColor(String* token);
