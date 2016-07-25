@@ -49,10 +49,24 @@ web-widget-engine development headers
 
 %ifarch %{arm}
 make tizen_obs_arm.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?jobs:-j%jobs}
-make tizen_obs_arm.exe.debug %{?jobs:-j%jobs}
 %else
 make tizen_obs_emulator.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?jobs:-j%jobs}
+%endif
+
+%if 0%{?only_release}
+%ifarch %{arm}
+mkdir -p out/tizen_obs/arm/exe/debug
+touch    out/tizen_obs/arm/exe/debug/StarFish
+%else
+mkdir -p out/tizen_obs/x86/exe/debug
+touch    out/tizen_obs/x86/exe/debug/StarFish
+%endif
+%else
+%ifarch %{arm}
+make tizen_obs_arm.exe.debug %{?jobs:-j%jobs}
+%else
 make tizen_obs_emulator.exe.debug %{?jobs:-j%jobs}
+%endif
 %endif
 
 %install
