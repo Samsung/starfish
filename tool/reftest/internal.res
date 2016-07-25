@@ -9,6 +9,8 @@ test/internal-test/css/color/color_keyword_3.html
 test/internal-test/css/color/color_rgb_rgba_hex.html
 test/internal-test/css/display/block.html
 test/internal-test/css/display/block-inline-basic.html
+test/internal-test/css/length/absolute_length.html
+test/internal-test/css/length/relative_length.html
 test/internal-test/css/margin/margin.html
 test/internal-test/css/margin/margin_block.html
 test/internal-test/css/percentage/percentage_block_height.html
