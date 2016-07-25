@@ -2603,7 +2603,7 @@ bool CSSStyleValuePair::updateValueBorderImageWidth(std::vector<String*, gc_allo
     return true;
 }
 
-bool CSSStyleValuePair::updateValueUnitBackgroundPosition(String* value)
+bool CSSStyleValuePair::updateValueUnitBackgroundPositionX(String* value)
 {
     m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
     if (STRING_VALUE_IS_STRING("left")) {
@@ -2612,11 +2612,26 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPosition(String* value)
         m_value.m_side = SideValue::RightSideValue;
     } else if (STRING_VALUE_IS_STRING("center")) {
         m_value.m_side = SideValue::CenterSideValue;
-    } else if (STRING_VALUE_IS_STRING("top")) {
+    } else if (updateValueLengthOrPercent(value, true)) {
+
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(String* value)
+{
+    m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
+    if (STRING_VALUE_IS_STRING("top")) {
         m_value.m_side = SideValue::TopSideValue;
     } else if (STRING_VALUE_IS_STRING("bottom")) {
         m_value.m_side = SideValue::BottomSideValue;
-    } else if (!updateValueLengthOrPercent(value, true)) {
+    } else if (STRING_VALUE_IS_STRING("center")) {
+        m_value.m_side = SideValue::CenterSideValue;
+    } else if (updateValueLengthOrPercent(value, true)) {
+
+    } else {
         return false;
     }
     return true;
@@ -2645,23 +2660,37 @@ bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_al
         CSSStyleValuePair ret;
         CSSStyleValuePair x, y;
         if (len == 1) {
-            if (!x.updateValueUnitBackgroundPosition(tokens->at(i - 1))) {
+            String* tok = tokens->at(i - 1);
+            if (x.updateValueUnitBackgroundPositionX(tok)) {
+                y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+            } else if (y.updateValueUnitBackgroundPositionY(tok)) {
+                x = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+            } else {
                 return false;
             }
-            y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
         } else if (len == 2) {
-            if (!x.updateValueUnitBackgroundPosition(tokens->at(i - 2)) || !y.updateValueUnitBackgroundPosition(tokens->at(i - 1))) {
+            // !!! NOTICE !!!
+            // background-position: right bottom <- (O) [enum-x enum-y]
+            // background-position: bottom right <- (O) [enum-y enum-x] !!!
+            // background-position: 20px 20px    <- (O) [length length]
+            // background-position: right 20px   <- (O) [enum-x length]
+            // background-position: 20px bottom  <- (O) [length enum-y]
+            // background-position: bottom 20px  <- (X) [enum-y length] !!!
+            // background-position: 20px right   <- (X) [length enum-x] !!!
+            bool checker = true;
+            String* tok1 = tokens->at(i - 2);
+            String* tok2 = tokens->at(i - 1);
+            CSSStyleValuePair::ValueKind sideKind = CSSStyleValuePair::ValueKind::SideValueKind;
+            checker &= x.updateValueUnitBackgroundPositionX(tok1);
+            checker &= y.updateValueUnitBackgroundPositionY(tok2);
+
+            if (!checker && x.valueKind() == sideKind && y.valueKind() == sideKind) {
+                checker &= x.updateValueUnitBackgroundPositionX(tok2);
+                checker &= y.updateValueUnitBackgroundPositionY(tok1);
+            }
+            if (!checker) {
                 return false;
             }
-            // Check Invalid Case
-            bool xSide = x.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind;
-            bool ySide = y.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind;
-            bool xHoriz = xSide && (x.sideValue() == SideValue::LeftSideValue || x.sideValue() == SideValue::RightSideValue);
-            bool yHoriz = ySide && (y.sideValue() == SideValue::LeftSideValue || y.sideValue() == SideValue::RightSideValue);
-            bool xVerti = xSide && (x.sideValue() == SideValue::TopSideValue || x.sideValue() == SideValue::BottomSideValue);
-            bool yVerti = ySide && (y.sideValue() == SideValue::TopSideValue || y.sideValue() == SideValue::BottomSideValue);
-            if ((xHoriz && yHoriz) || (xVerti && yVerti))
-                return false;
         } else {
             return false;
         }
