@@ -128,14 +128,20 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         // canvas->restore();
     }
 
+    canvas->save();
+
+    if (owner()->style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
+        canvas->setVisible(false);
+    } else {
+        canvas->setVisible(true);
+    }
     // Within each stacking context, the following layers are painted in back-to-front order:
 
     // the background and borders of the element forming the stacking context.
     m_owner->paintBackgroundAndBorders(canvas);
 
     if (!m_needsOwnBuffer && owner()->shouldApplyOverflow()) {
-        canvas->save();
-        canvas->clip(Rect(owner()->borderLeft(), owner()->borderTop(), owner()->width()-owner()->borderWidth(), owner()->height()-owner()->borderHeight()));
+        canvas->clip(Rect(owner()->borderLeft(), owner()->borderTop(), owner()->width() - owner()->borderWidth(), owner()->height() - owner()->borderHeight()));
     }
 
     // the child stacking contexts with negative stack levels (most negative first).
@@ -186,12 +192,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         }
     }
 
+    canvas->restore();
     if (m_needsOwnBuffer) {
         delete canvas;
-    } else {
-        if (owner()->shouldApplyOverflow()) {
-            canvas->restore();
-        }
     }
 }
 

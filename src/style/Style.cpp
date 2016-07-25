@@ -241,12 +241,14 @@ static String* BorderString(String* width, String* style, String* color)
     if (!width->equals(String::emptyString) && !width->equals(String::initialString) && !width->contains(String::spaceString)) {
         sum = width;
     }
+
     if (!style->equals(String::emptyString) && !style->equals(String::initialString) && !style->contains(String::spaceString)) {
         if (sum->length())
             sum = sum->concat(space);
         sum = sum->concat(style);
     }
-    if (!color->equals(String::emptyString) && !color->equals(String::initialString) && !color->contains(String::spaceString)) {
+
+    if (!color->equals(String::emptyString) && !color->equals(String::initialString) && (color->startsWith("rgb(") || !color->contains(String::spaceString))) {
         if (sum->length())
             sum = sum->concat(space);
         sum = sum->concat(color);
