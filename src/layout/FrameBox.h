@@ -514,19 +514,27 @@ public:
         }
     }
 
-    void establishesStackingContextIfNeeds(bool shouldEveryPositionedElementEstablishesStackingContext)
+    void establishesStackingContextIfNeeds()
     {
-        bool c = isEstablishesStackingContext();
-        if (shouldEveryPositionedElementEstablishesStackingContext) {
-            if (isPositionedElement()) {
-                c = true;
-            }
-        }
-        if (c) {
+        if (isEstablishesStackingContext()) {
             STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
             if (!isRootElement()) {
+                bool isAtomic = true;
+                if (isPositionedElement() && !style()->IsSpecifiedZIndex()) {
+                    isAtomic = false;
+                }
                 FrameBox* p = layoutParent()->asFrameBox();
-                while (!p->isEstablishesStackingContext()) {
+                while (true) {
+                    if (p->isEstablishesStackingContext()) {
+                        if (p->isRootElement())
+                            break;
+                        if (!isAtomic)
+                            break;
+                        if (!p->isPositionedElement())
+                            break;
+                        if (p->style()->IsSpecifiedZIndex())
+                            break;
+                    }
                     p = p->layoutParent()->asFrameBox();
                 }
                 m_stackingContext = new StackingContext(this, p->stackingContext());
