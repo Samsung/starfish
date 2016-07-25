@@ -320,7 +320,8 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
     CSSStyleValuePair* _RepeatX,
     CSSStyleValuePair* _RepeatY,
     CSSStyleValuePair* _Position,
-    CSSStyleValuePair* _Size)
+    CSSStyleValuePair* _Size,
+    bool allowColor)
 {
     // - SUPPORT__ : bg-color, bg-image, position/bg-size, bg-repeat
     // - UNSUPPORT : bg-origin, bg-clip, bg-attachment
@@ -402,6 +403,8 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
                 SINGLE_CONTINUE()
             }
         } else if (!hasColor && temp.updateValueUnitColor(tok)) {
+            if (!allowColor)
+                return false;
             SET_SINGLE_PROP(Color)
             SINGLE_CONTINUE()
         } else if (!hasImage && temp.updateValueBackgroundImage(&toks, false)) {
@@ -927,15 +930,9 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
     }
 }
 
-String* CSSStyleDeclaration::Background()
+static String* printBackground(String* image, String* repeat, String* color, String* position, String* size)
 {
     String* result = String::emptyString;
-    String* image = BackgroundImage();
-    String* repeat = BackgroundRepeat();
-    String* color = BackgroundColor();
-    String* position = BackgroundPosition();
-    String* size = BackgroundSize();
-
     if (image->length() != 0 && !image->equals(String::initialString))
         result = result->concat(image);
     if (position->length() != 0 && !position->equals(String::initialString)) {
@@ -962,6 +959,41 @@ String* CSSStyleDeclaration::Background()
         result = result->concat(color);
     }
     return result;
+}
+
+String* CSSStyleDeclaration::Background()
+{
+    String* res = String::emptyString;
+    String* color = BackgroundColor();
+    String* images = BackgroundImage();
+    String* repeats = BackgroundRepeat();
+    String* positions = BackgroundPosition();
+    String* sizes = BackgroundSize();
+    String::Vector vImages, vRepeats, vPositions, vSizes;
+    images->split(',', vImages);
+    repeats->split(',', vRepeats);
+    positions->split(',', vPositions);
+    sizes->split(',', vSizes);
+
+    size_t max = vImages.size();
+    if (max < vRepeats.size())
+        max = vRepeats.size();
+    if (max < vPositions.size())
+        max = vPositions.size();
+    if (max < vSizes.size())
+        max = vSizes.size();
+
+    for (unsigned int i = 0; i < max; i++) {
+        String* img = (i < vImages.size())? vImages[i]->trim() : String::emptyString;
+        String* rep = (i < vRepeats.size())? vRepeats[i]->trim() : String::emptyString;
+        String* pos = (i < vPositions.size())? vPositions[i]->trim() : String::emptyString;
+        String* size = (i < vSizes.size())? vSizes[i]->trim() : String::emptyString;
+        String* col = (i == max - 1)? color : String::emptyString;
+        res = res->concat(printBackground(img, rep, col, pos, size));
+        if (i != max - 1)
+            res = res->concat(String::fromUTF8(", "));
+    }
+    return res;
 }
 
 static void removeBackgroundCSSValuePairs(CSSStyleDeclaration* target)
@@ -999,14 +1031,68 @@ void CSSStyleDeclaration::setBackground(String* value)
 
     std::vector<String*, gc_allocator<String*> > tokens;
     tokenizeCSSValue(&tokens, value, String::fromUTF8(",/"));
+    if (tokens.size() == 0) {
+        return;
+    }
 
     // TODO: should check comma-seperated input
     CSSStyleValuePair v, color, image, repeatX, repeatY, position, size;
     if (v.updateValueCommon(&tokens)) {
         addBackgroundCSSValuePairs(this, v, v, v, v, v, v);
-    } else if (parseBackgroundShorthand(&tokens, &color, &image, &repeatX, &repeatY, &position, &size)) {
+    } else {
+
+#define APPEND_NEW_LAYER(PROP, NEWPROP) \
+    if (PROP.valueKind() != CSSStyleValuePair::ValueKind::ValueListKind) { \
+        CSSStyleValuePair tmp = PROP;                                    \
+        PROP.setValueList(new ValueList(ValueList::Separator::CommaSeparator)); \
+        PROP.multiValue()->append(tmp); \
+    } \
+    if (NEWPROP.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) \
+        PROP.multiValue()->append(NEWPROP.multiValue()->atIndex(0)); \
+    else { \
+        PROP.multiValue()->append(NEWPROP); \
+    }
+
+        std::vector<String*, gc_allocator<String*> > layer;
+        unsigned int cntLayer = 0;
+        for (unsigned int t = 0; t < tokens.size(); t++) {
+            String* val = tokens.at(t);
+            if (val->equals(",")) {
+                if (t == 0 || t == tokens.size() - 1)
+                    return;
+            } else if (t == tokens.size() - 1) {
+                layer.push_back(tokens.at(t));
+            } else {
+                layer.push_back(tokens.at(t));
+                continue;
+            }
+
+            if (layer.size() == 0)
+                return;
+            CSSStyleValuePair layerImage, layerRepeatX, layerRepeatY, layerPosition, layerSize;
+            // NOTE: Color is allowed only for the last background layer (t == tokens->size() - 1)
+            if (!parseBackgroundShorthand(&layer, &color, &layerImage, &layerRepeatX, &layerRepeatY, &layerPosition, &layerSize, t == tokens.size() - 1)) {
+                return;
+            }
+            if (cntLayer == 0) {
+                image = layerImage;
+                repeatX = layerRepeatX;
+                repeatY = layerRepeatY;
+                position = layerPosition;
+                size = layerSize;
+            } else {
+                APPEND_NEW_LAYER(image, layerImage);
+                APPEND_NEW_LAYER(repeatX, layerRepeatX);
+                APPEND_NEW_LAYER(repeatY, layerRepeatY);
+                APPEND_NEW_LAYER(position, layerPosition);
+                APPEND_NEW_LAYER(size, layerSize);
+            }
+            cntLayer++;
+            layer.clear();
+        }
         addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY, position, size);
     }
+#undef APPEND_NEW_LAYER
 }
 
 #define ADD_PAIRS(PRE, ...) \
@@ -1381,6 +1467,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     ValueList* layers = cssValues[k].multiValue();
                     for (unsigned int l = 0; l < layers->size(); l++) {
                         CSSStyleValuePair& layer = layers->atIndex(l);
+                        if (layer.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                            style->setBackgroundPositionValue(LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)), l);
+                            continue;
+                        }
                         STARFISH_ASSERT(layer.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
                         ValueList* list = layer.multiValue();
                         Length xAxis, yAxis;
@@ -1426,7 +1516,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     ValueList* layers = cssValues[k].multiValue();
                     for (unsigned int l = 0; l < layers->size(); l++) {
                         CSSStyleValuePair& layer = layers->atIndex(l);
-                        if (layer.valueKind() == CSSStyleValuePair::ValueKind::Cover) {
+                        if (layer.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                            style->setBackgroundSizeValue(LengthSize(), l);
+                        } else if (layer.valueKind() == CSSStyleValuePair::ValueKind::Cover) {
                             style->setBackgroundSizeType(BackgroundSizeType::Cover, l);
                         } else if (layer.valueKind() == CSSStyleValuePair::ValueKind::Contain) {
                             style->setBackgroundSizeType(BackgroundSizeType::Contain, l);
@@ -1462,8 +1554,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     ValueList* list = cssValues[k].multiValue();
                     for (unsigned int i = 0; i < list->size(); i++) {
                         CSSStyleValuePair& item = list->atIndex(i);
-                        STARFISH_ASSERT(item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind);
-                        style->setBackgroundRepeatX(item.backgroundRepeatValue(), i);
+                        if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
+                            style->setBackgroundRepeatX(BackgroundRepeatValue::RepeatRepeatValue, i);
+                        else if (item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind)
+                            style->setBackgroundRepeatX(item.backgroundRepeatValue(), i);
                     }
                 }
                 break;
@@ -1479,8 +1573,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     ValueList* list = cssValues[k].multiValue();
                     for (unsigned int i = 0; i < list->size(); i++) {
                         CSSStyleValuePair& item = list->atIndex(i);
-                        STARFISH_ASSERT(item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind);
-                        style->setBackgroundRepeatY(item.backgroundRepeatValue(), i);
+                        if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
+                            style->setBackgroundRepeatY(BackgroundRepeatValue::RepeatRepeatValue, i);
+                        else if (item.valueKind() == CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind)
+                            style->setBackgroundRepeatY(item.backgroundRepeatValue(), i);
                     }
                 }
                 break;
