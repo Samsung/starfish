@@ -47,6 +47,13 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishInit(void* window, const ch
     return instance;
 }
 
+extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(void* window, int windowWidth, int windowHeight, const char* locale, const char* timezoneID, float defaultFontSizeMultiplier)
+{
+    StarFishInstance* instance = new(NoGC) StarFishInstance;
+    instance->m_starfish = new StarFish::StarFish((StarFish::StarFishStartUpFlag)0, locale, timezoneID, window, windowWidth, windowHeight, defaultFontSizeMultiplier);
+    return instance;
+}
+
 extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 {
     delete TO_STARFISH(instance);
