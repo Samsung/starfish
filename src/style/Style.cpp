@@ -425,12 +425,6 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
 #undef SET_SINGLE_PROP
 #undef SET_DOUBLE_PROP
 
-    if (hasPosition && _Position->valueKind() != CSSStyleValuePair::ValueKind::ValueListKind) {
-        ValueList* values = new ValueList();
-        values->append(CSSStyleValuePair::ValueKind::SideValueKind, _Position->sideValue());
-        values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
-        *_Position = CSSStyleValuePair(CSSStyleValuePair::ValueKind::ValueListKind, values);
-    }
     return true;
 }
 
@@ -2659,6 +2653,15 @@ bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_al
             if (!x.updateValueUnitBackgroundPosition(tokens->at(i - 2)) || !y.updateValueUnitBackgroundPosition(tokens->at(i - 1))) {
                 return false;
             }
+            // Check Invalid Case
+            bool xSide = x.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind;
+            bool ySide = y.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind;
+            bool xHoriz = xSide && (x.sideValue() == SideValue::LeftSideValue || x.sideValue() == SideValue::RightSideValue);
+            bool yHoriz = ySide && (y.sideValue() == SideValue::LeftSideValue || y.sideValue() == SideValue::RightSideValue);
+            bool xVerti = xSide && (x.sideValue() == SideValue::TopSideValue || x.sideValue() == SideValue::BottomSideValue);
+            bool yVerti = ySide && (y.sideValue() == SideValue::TopSideValue || y.sideValue() == SideValue::BottomSideValue);
+            if ((xHoriz && yHoriz) || (xVerti && yVerti))
+                return false;
         } else {
             return false;
         }
