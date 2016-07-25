@@ -322,7 +322,6 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
     CSSStyleValuePair* _Position,
     CSSStyleValuePair* _Size)
 {
-    // - initial|inherit
     // - SUPPORT__ : bg-color, bg-image, position/bg-size, bg-repeat
     // - UNSUPPORT : bg-origin, bg-clip, bg-attachment
     //
@@ -341,7 +340,8 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
     _Size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
     bool hasColor = false, hasImage = false, hasRepeat = false;
-    bool hasPosition = false, hasSize = false, canBeSize = false;
+    bool hasPosition = false, hasSize = false;
+    bool hasPositionPrev = false, shouldSize = false;
     CSSStyleValuePair temp, tempX, tempY;
     String* tok;
     std::vector<String*, gc_allocator<String*> > toks;
@@ -357,48 +357,51 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
 #define DOUBLE_CONTINUE() i++; continue;
 
     for (size_t i = 0; i < len; i++) {
-        if (tokens->at(i)->equals("/"))
-            continue;
+        if (hasPositionPrev) {
+            hasPositionPrev = false;
+            if (tokens->at(i)->equals("/")) {
+                shouldSize = true;
+                continue;
+            }
+        }
         // 1. Verify 2 tokens (current and next token at once)
         // e.g. background: top center; -> means background-position(x:top, y:center)
         if (i + 1 < len) {
             toks.clear();
             toks.push_back(tokens->at(i));
             toks.push_back(tokens->at(i + 1));
-            // 1-1. BackgroundSize (canBeSize : set true only after backgroundPosition)
-            if (canBeSize) {
+            // 1-1. BackgroundSize
+            // 1-2. BackgroundRepeat, BackgroundPosition
+            if (shouldSize) {
                 STARFISH_ASSERT(!hasSize);
                 if (temp.updateValueBackgroundSize(&toks, false)) {
-                    canBeSize = false;
+                    shouldSize = false;
                     SET_SINGLE_PROP(Size)
                     DOUBLE_CONTINUE()
                 }
-            }
-            // 1-2. BackgroundRepeat, BackgroundPosition
-            if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY, false)) {
+            } else if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY, false)) {
                 SET_DOUBLE_PROP(Repeat)
                 DOUBLE_CONTINUE()
             } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks, false)) {
-                canBeSize = true;
+                hasPositionPrev = true;
                 SET_SINGLE_PROP(Position)
                 DOUBLE_CONTINUE()
             }
         }
         // 2. Verify single token
         tok = tokens->at(i);
-        // 2-1. BackgroundSize (canBeSize : set true only after backgroundPosition)
         toks.clear();
         toks.push_back(tok);
-        if (canBeSize) {
+        // 2-1. BackgroundSize
+        // 2-2. BackgroundColor, BackgroundImage, BackgroundRepeat, BackgroundPosition
+        if (shouldSize) {
             STARFISH_ASSERT(!hasSize);
-            canBeSize = false;
             if (temp.updateValueBackgroundSize(&toks, false)) {
+                shouldSize = false;
                 SET_SINGLE_PROP(Size)
                 SINGLE_CONTINUE()
             }
-        }
-        // 2-2. BackgroundColor, BackgroundImage, BackgroundRepeat, BackgroundPosition
-        if (!hasColor && temp.updateValueUnitColor(tok)) {
+        } else if (!hasColor && temp.updateValueUnitColor(tok)) {
             SET_SINGLE_PROP(Color)
             SINGLE_CONTINUE()
         } else if (!hasImage && temp.updateValueBackgroundImage(&toks, false)) {
@@ -408,12 +411,11 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
             SET_DOUBLE_PROP(Repeat)
             SINGLE_CONTINUE()
         } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks, false)) {
-            canBeSize = true;
+            hasPositionPrev = true;
             SET_SINGLE_PROP(Position)
             SINGLE_CONTINUE()
-        } else {
-            return false;
         }
+        return false;
     }
 #undef SINGLE_CONTINUE
 #undef DOUBLE_CONTINUE
