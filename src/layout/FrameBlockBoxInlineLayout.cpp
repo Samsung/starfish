@@ -1110,7 +1110,14 @@ void LineFormattingContext::registerInlineContent()
 {
     if (m_block.m_lineBoxes.size()) {
         LineBox* lb = m_block.m_lineBoxes.back();
-        if (lb->boxes().size())
+        bool hasNormalFlowContent = false;
+        for (size_t i = 0; i < lb->boxes().size(); i ++) {
+            if (lb->boxes()[i]->isNormalFlow()) {
+                hasNormalFlowContent = true;
+                break;
+            }
+        }
+        if (hasNormalFlowContent)
             m_layoutContext.registerYPositionForVerticalAlignInlineBlock(lb);
     }
 }
