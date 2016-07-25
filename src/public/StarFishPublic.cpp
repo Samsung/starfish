@@ -95,4 +95,3 @@ extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(const char* (*cb)(co
 {
     matchLocation_cb = cb;
 }
-
