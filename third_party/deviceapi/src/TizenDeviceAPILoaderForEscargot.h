@@ -46,12 +46,12 @@ class ESPostListener;
 #define FOR_EACH_LAZY_TIZEN_STRINGS(F) \
     F(utils) \
     F(sa) \
-    F(messageport) \
     F(sensorservice) \
     F(filesystem) \
     F(application) \
     F(systeminfo) \
     F(preference) \
+    F(widgetservice) \
     F(common) \
     F(ApplicationControl) \
     F(ApplicationControlData) \
