@@ -1162,7 +1162,7 @@ public:
 #undef ATTRIBUTE_SETTER
 
 #define ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \
-    String* PRE##__VA_ARGS__() \
+    String* PRE##__VA_ARGS__(bool* isCombined = nullptr) \
     { \
         String* top = PRE##Top##__VA_ARGS__(); \
         if (!top->equals(String::emptyString)) { \
@@ -1172,7 +1172,7 @@ public:
                 if (!bottom->equals(String::emptyString)) { \
                     String* left = PRE##Left##__VA_ARGS__(); \
                     if (!left->equals(String::emptyString)) { \
-                        return combineBoxString(top, right, bottom, left); \
+                        return combineBoxString(top, right, bottom, left, isCombined); \
                     } \
                 } \
             } \
@@ -1186,18 +1186,22 @@ public:
     ATTRIBUTE_GETTER_FOURSIDE(Border, Color);
 #undef ATTRIBUTE_GETTER_FOURSIDE
 
-    static String* combineBoxString(String* t, String* r, String* b, String* l)
+    static String* combineBoxString(String* t, String* r, String* b, String* l, bool* isCombined = nullptr)
     {
+        if (isCombined) {
+            *isCombined = true;
+        }
         // [NOTICE]
         // All initial --> return "initial"
         // Not all, but more than 1 initial --> return ""
-        int initialCount = 0;
+        size_t initialCount = 0;
         initialCount += t->equals(String::initialString) ? 1 : 0;
         initialCount += r->equals(String::initialString) ? 1 : 0;
         initialCount += b->equals(String::initialString) ? 1 : 0;
         initialCount += l->equals(String::initialString) ? 1 : 0;
-        if (initialCount > 0 && initialCount < 4)
+        if (initialCount > 0 && initialCount < 4) {
             return String::emptyString;
+        }
 
         String* space = String::spaceString;
         if (!r->equals(l))
@@ -1206,8 +1210,12 @@ public:
             return t->concat(space)->concat(r)->concat(space)->concat(b);
         else if (!t->equals(r))
             return t->concat(space)->concat(r);
-        else
+        else {
+            if (isCombined) {
+                *isCombined = false;
+            }
             return t;
+        }
     }
 
     unsigned long length() const
