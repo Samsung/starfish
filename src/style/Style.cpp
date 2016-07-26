@@ -228,7 +228,7 @@ bool CSSStyleValuePair::updateValueCommon(std::vector<String*, gc_allocator<Stri
     return true;
 }
 
-static String* BorderString(String* width, String* style, String* color)
+static String* BorderString(String* width, bool isWidthCombined, String* style, bool isStyleCombined, String* color, bool isColorCombined)
 {
     String* space = String::spaceString;
     String* sum = String::emptyString;
@@ -238,17 +238,17 @@ static String* BorderString(String* width, String* style, String* color)
         return width;
     }
 
-    if (!width->equals(String::emptyString) && !width->equals(String::initialString) && !width->contains(String::spaceString)) {
+    if (!width->equals(String::emptyString) && !width->equals(String::initialString) && !isWidthCombined) {
         sum = width;
     }
 
-    if (!style->equals(String::emptyString) && !style->equals(String::initialString) && !style->contains(String::spaceString)) {
+    if (!style->equals(String::emptyString) && !style->equals(String::initialString) && !isStyleCombined) {
         if (sum->length())
             sum = sum->concat(space);
         sum = sum->concat(style);
     }
 
-    if (!color->equals(String::emptyString) && !color->equals(String::initialString) && (color->startsWith("rgb(") || !color->contains(String::spaceString))) {
+    if (!color->equals(String::emptyString) && !color->equals(String::initialString) && !isColorCombined) {
         if (sum->length())
             sum = sum->concat(space);
         sum = sum->concat(color);
@@ -461,10 +461,13 @@ String* CSSStyleDeclaration::generateCSSText()
 
 String* CSSStyleDeclaration::Border()
 {
-    String* width = BorderWidth();
-    String* style = BorderStyle();
-    String* color = BorderColor();
-    return BorderString(width, style, color);
+    bool isWidthCombined;
+    String* width = BorderWidth(&isWidthCombined);
+    bool isStyleCombined;
+    String* style = BorderStyle(&isStyleCombined);
+    bool isColorCombined;
+    String* color = BorderColor(&isColorCombined);
+    return BorderString(width, isWidthCombined, style, isStyleCombined, color, isColorCombined);
 }
 
 String* CSSStyleDeclaration::BorderTop()
@@ -472,7 +475,7 @@ String* CSSStyleDeclaration::BorderTop()
     String* width = BorderTopWidth();
     String* style = BorderTopStyle();
     String* color = BorderTopColor();
-    return BorderString(width, style, color);
+    return BorderString(width, false, style, false, color, false);
 }
 
 String* CSSStyleDeclaration::BorderRight()
@@ -480,7 +483,7 @@ String* CSSStyleDeclaration::BorderRight()
     String* width = BorderRightWidth();
     String* style = BorderRightStyle();
     String* color = BorderRightColor();
-    return BorderString(width, style, color);
+    return BorderString(width, false, style, false, color, false);
 }
 
 String* CSSStyleDeclaration::BorderBottom()
@@ -488,7 +491,7 @@ String* CSSStyleDeclaration::BorderBottom()
     String* width = BorderBottomWidth();
     String* style = BorderBottomStyle();
     String* color = BorderBottomColor();
-    return BorderString(width, style, color);
+    return BorderString(width, false, style, false, color, false);
 }
 
 String* CSSStyleDeclaration::BorderLeft()
@@ -496,7 +499,7 @@ String* CSSStyleDeclaration::BorderLeft()
     String* width = BorderLeftWidth();
     String* style = BorderLeftStyle();
     String* color = BorderLeftColor();
-    return BorderString(width, style, color);
+    return BorderString(width, false, style, false, color, false);
 }
 
 static bool parseBorderShorthand(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* width, CSSStyleValuePair* style, CSSStyleValuePair* color)
