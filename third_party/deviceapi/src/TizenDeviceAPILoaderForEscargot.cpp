@@ -41,10 +41,10 @@ void TizenStrings::initializeLazyStrings()
 
     m_apis.push_back(application);
     m_apis.push_back(filesystem);
-    m_apis.push_back(messageport);
     m_apis.push_back(systeminfo);
     m_apis.push_back(sensorservice);
     m_apis.push_back(preference);
+    m_apis.push_back(widgetservice);
 
     // FIXME: this should be automated
     m_entryPoints[ApplicationControl.string()] = application;
