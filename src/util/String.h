@@ -202,9 +202,7 @@ public:
     static inline bool isASCIISpace(char32_t c) { return c <= ' ' && (c == ' ' || (c <= 0xD && c >= 0x9)); }
     static inline bool isSpaceOrNewline(char32_t c)
     {
-        // Use isASCIISpace() for basic Latin-1.
-        // This will include newlines, which aren't included in Unicode DirWS.
-        return c <= 0x7F ? isASCIISpace(c) : false; /* : u_charDirection(c) == U_WHITE_SPACE_NEUTRAL;*/
+        return c <= 0x7F ? isASCIISpace(c) : u_charDirection(c) == U_WHITE_SPACE_NEUTRAL;
     }
 
     bool containsOnlyWhitespace()

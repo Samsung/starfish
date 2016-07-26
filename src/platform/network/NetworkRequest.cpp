@@ -258,25 +258,18 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
             if (index != std::string::npos) {
                 std::string h = header.substr(0, index);
                 std::string d = header.substr(index + 1);
-
                 if (h == "Content-Type") {
                     std::istringstream is(d);
-                    std::string part;
-                    String* mimeType = String::emptyString;
-                    bool hasBase64 = false;
-                    bool first = true;
-                    // TODO read encoding
-                    while (std::getline(is, part, ';')) {
-                        trim(part);
-                        if (part == "base64") {
-                            hasBase64 = true;
-                        } else if (first) {
-                            first = false;
-                            mimeType = String::createASCIIString(part.data());
-                        }
-                    }
+                    std::string part = d;
+                    trim(part);
+                    String* mimeType = String::fromUTF8(part.data());
                     m_responseMimeType = mimeType;
-                    m_containsBase64Content = hasBase64;
+                } else if (h == "Content-Transfer-Encoding") {
+                    std::string part = d;
+                    trim(part);
+                    std::transform(part.begin(), part.end(), part.begin(), ::tolower);
+                    if (part == "base64")
+                        m_containsBase64Content = true;
                 }
             }
         }
@@ -441,7 +434,7 @@ void NetworkRequest::send(String* body)
         }
     } else if (m_url.isDataURL())  {
         // this area doesn't require lock.
-        // reading file does not require thread
+        // reading url does not require thread
         if (m_isSync) {
             dataURLWorker(this, m_url.urlString());
         } else {
@@ -641,8 +634,16 @@ void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
     size_t idx = url->indexOf(',');
 
     if (idx != SIZE_MAX && idxColon != SIZE_MAX && idxColon < idx) {
-        String* sub = url->substring(idxColon + 1, idx - idxColon - 1);
-        res->m_responseHeaderData = "Content-Type:";
+        String* sub = url->substring(idxColon + 1, idx - idxColon - 1)->toLower();
+        size_t base64 = sub->find(";base64");
+
+        if (base64 == sub->length() - 7) {
+            sub = sub->substring(0, base64);
+            res->m_responseHeaderData = "Content-Transfer-Encoding:base64\r\nContent-Type:";
+        } else {
+            res->m_responseHeaderData = "Content-Type:";
+        }
+
         for (size_t i = 0; i < sub->length(); i ++) {
             res->m_responseHeaderData.push_back((char)sub->charAt(i));
         }
@@ -655,7 +656,8 @@ void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
     String* decodedURL = decodeURL(url, idx + 1);
     const char* utf8Data = decodedURL->utf8Data();
 
-    for (size_t i = 0; i < strlen(utf8Data); i++) {
+    size_t len = strlen(utf8Data);
+    for (size_t i = 0; i < len; i++) {
         res->m_response.push_back(utf8Data[i]);
     }
 

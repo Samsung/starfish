@@ -49,7 +49,14 @@ protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url);
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
-    void setCompatibilityMode(CompatibilityMode m) { m_compatibilityMode = m; }
+    void setCompatibilityMode(CompatibilityMode m)
+    {
+        m_compatibilityMode = m;
+        if (m != NoQuirksMode) {
+            STARFISH_LOG_ERROR("%s is not specified standard mode doctype. currently, StarFish could not support quirks mode.\n", m_documentURI.urlString()->utf8Data());
+            STARFISH_LOG_ERROR("You could got unexpected rendering result. please use standard mode doctype[<!DOCTYPE html>]\n");
+        }
+    }
     CompatibilityMode compatibilityMode() const { return m_compatibilityMode; }
     bool inQuirksMode() const { return m_compatibilityMode == QuirksMode; }
     bool inLimitedQuirksMode() const { return m_compatibilityMode == LimitedQuirksMode; }

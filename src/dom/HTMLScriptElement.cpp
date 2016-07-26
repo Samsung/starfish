@@ -67,7 +67,7 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        if (isJavaScriptType(m_resource->networkRequest()->mimeType()->toLower()->utf8Data())) {
+        if (isJavaScriptType(m_resource->networkRequest()->mimeType()->toLower()->utf8Data()) || m_resource->networkRequest()->mimeType()->toLower()->equals("text/plain")) {
             String* text = m_resource->asTextResource()->text();
             m_element->document()->window()->starFish()->scriptBindingInstance()->evaluate(text);
         }
