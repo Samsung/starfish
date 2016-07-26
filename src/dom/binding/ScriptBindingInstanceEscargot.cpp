@@ -2992,81 +2992,98 @@ escargot::ESFunctionObject* bindingDOMSettableTokenList(ScriptBindingInstance* s
     escargot::ESFunctionObject* domSettableTokenListContainsFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        if (argValue.isESString()) {
-            bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argValue.asESString()));
-            return escargot::ESValue(res);
-        } else {
-            THROW_ILLEGAL_INVOCATION()
+        try {
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            if (argValue.isESString()) {
+                bool res = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->contains(toBrowserString(argValue.asESString()));
+                return escargot::ESValue(res);
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+
     }, escargot::ESString::create("contains"), 1, false);
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("contains"), false, false, false, domSettableTokenListContainsFunction);
 
     escargot::ESFunctionObject* domSettableTokenListAddFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        std::vector<String*, gc_allocator<String*>> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-            if (argValue.isESString()) {
-                String* aa = toBrowserString(argValue.asESString());
-                tokens.push_back(aa);
-            } else {
-                THROW_ILLEGAL_INVOCATION()
+        try {
+            std::vector<String*, gc_allocator<String*>> tokens;
+            int argCount = instance->currentExecutionContext()->argumentCount();
+            for (int i = 0; i < argCount; i++) {
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+                if (argValue.isESString()) {
+                    String* aa = toBrowserString(argValue.asESString());
+                    tokens.push_back(aa);
+                } else {
+                    THROW_ILLEGAL_INVOCATION()
+                }
             }
+            if (argCount > 0)
+                ((DOMTokenList*) thisValue.asESPointer()->asESObject())->add(&tokens);
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        if (argCount > 0)
-            ((DOMTokenList*) thisValue.asESPointer()->asESObject())->add(&tokens);
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("add"), 1, false);
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("add"), false, false, false, domSettableTokenListAddFunction);
 
     escargot::ESFunctionObject* domSettableTokenListRemoveFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        std::vector<String*, gc_allocator<String*>> tokens;
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        for (int i = 0; i < argCount; i++) {
-            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
-            if (argValue.isESString()) {
-                String* aa = toBrowserString(argValue.asESString());
-                tokens.push_back(aa);
-            } else {
-                THROW_ILLEGAL_INVOCATION()
+        try {
+            std::vector<String*, gc_allocator<String*>> tokens;
+            int argCount = instance->currentExecutionContext()->argumentCount();
+            for (int i = 0; i < argCount; i++) {
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(i);
+                if (argValue.isESString()) {
+                    String* aa = toBrowserString(argValue.asESString());
+                    tokens.push_back(aa);
+                } else {
+                    THROW_ILLEGAL_INVOCATION()
+                }
             }
+            if (argCount > 0)
+                ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        if (argCount > 0)
-            ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->remove(&tokens);
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("remove"), 1, false);
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), false, false, false, domSettableTokenListRemoveFunction);
 
     escargot::ESFunctionObject* domSettableTokenListToggleFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMSettableTokenListObject);
-
-        int argCount = instance->currentExecutionContext()->argumentCount();
-        escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
-        escargot::ESValue forceValue;
-        if (argCount >= 2)
-            forceValue = instance->currentExecutionContext()->readArgument(1);
-        if (argCount > 0 && argValue.isESString()) {
-            bool didAdd;
-            if (argCount == 1) {
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), false, false);
+        try {
+            int argCount = instance->currentExecutionContext()->argumentCount();
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue forceValue;
+            if (argCount >= 2)
+                forceValue = instance->currentExecutionContext()->readArgument(1);
+            if (argCount > 0 && argValue.isESString()) {
+                bool didAdd;
+                if (argCount == 1) {
+                    didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), false, false);
+                } else {
+                    ASSERT(forceValue.isBoolean());
+                    didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), true, forceValue.asBoolean());
+                }
+                return escargot::ESValue(didAdd);
             } else {
-                ASSERT(forceValue.isBoolean());
-                didAdd = ((DOMTokenList*) thisValue.asESPointer()->asESObject()->extraPointerData())->toggle(toBrowserString(argValue.asESString()), true, forceValue.asBoolean());
+                THROW_ILLEGAL_INVOCATION()
             }
-            return escargot::ESValue(didAdd);
-        } else {
-            THROW_ILLEGAL_INVOCATION()
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("toggle"), 1, false);
     DOMSettableTokenListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("toggle"), false, false, false, domSettableTokenListToggleFunction);
 
