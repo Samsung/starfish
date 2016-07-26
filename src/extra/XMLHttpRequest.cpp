@@ -42,7 +42,7 @@ void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url, bool a
         throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     if (!async && m_networkRequest->timeout() != 0)
         throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
-    m_networkRequest->open(method, url, async);
+    m_networkRequest->open(method, url, async, userName, password);
 }
 
 void XMLHttpRequest::abort()

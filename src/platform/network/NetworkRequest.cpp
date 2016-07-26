@@ -536,7 +536,7 @@ void NetworkRequest::send(String* body)
                 curl_easy_setopt(curl, CURLOPT_USERNAME, m_userName->utf8Data());
             }
             if (m_password->length()) {
-                curl_easy_setopt(curl, CURLOPT_USERPWD, m_password->utf8Data());
+                curl_easy_setopt(curl, CURLOPT_PASSWORD, m_password->utf8Data());
             }
 
             if (m_method == POST_METHOD) {
