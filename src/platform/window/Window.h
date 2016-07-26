@@ -176,6 +176,7 @@ public:
     HTMLCollection* namedAccess(String* name);
 
 #ifdef STARFISH_ENABLE_TEST
+    void setNetworkState(bool state);
     void screenShot(std::string filePath);
     void forceDisableOnloadCapture();
     void simulateClick(float x, float y);

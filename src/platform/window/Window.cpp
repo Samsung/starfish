@@ -43,6 +43,8 @@
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
+#include <sys/ioctl.h>
+#include <net/if.h>
 bool g_fireOnloadEvent = false;
 #endif
 
@@ -720,6 +722,29 @@ void Window::rendering()
 }
 
 #ifdef STARFISH_ENABLE_TEST
+void Window::setNetworkState(bool state)
+{
+    int sockfd;
+    struct ifreq ifr;
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (sockfd < 0)
+        return;
+
+    memset(&ifr, 0, sizeof ifr);
+    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ);
+
+    if (state) {
+        ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
+    } else {
+        ifr.ifr_flags |= ~IFF_RUNNING;
+        // ifr.ifr_flags |= ~IFF_UP;
+    }
+
+    ioctl(sockfd, SIOCSIFFLAGS, &ifr);
+}
+
+
 void Window::screenShot(std::string filePath)
 {
     bool oldNeedsPainting = m_needsPainting;
