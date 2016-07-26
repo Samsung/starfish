@@ -1385,6 +1385,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
             });
 
         } else if (f->isFrameReplaced()) {
+            lineFormattingContext.m_shouldLineBreakForabsolutePositionedBlock = true;
             FrameReplaced* r = f->asFrameReplaced();
             r->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
         insertReplacedBox:
@@ -1396,6 +1397,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
                 goto insertReplacedBox;
             }
         } else if (f->isFrameBlockBox()) {
+            lineFormattingContext.m_shouldLineBreakForabsolutePositionedBlock = true;
             // inline-block
             FrameBlockBox* r = f->asFrameBlockBox();
             ctx.pushInlineBlockBox(r);

@@ -178,7 +178,8 @@ public:
         m_clients.push_back(client);
     }
 
-    URL& url() {
+    URL& url()
+    {
         return m_url;
     }
 protected:
