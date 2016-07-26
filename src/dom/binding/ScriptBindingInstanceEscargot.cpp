@@ -3415,10 +3415,6 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         try {
             if (instance->currentExecutionContext()->argumentCount() >= 2) {
-                bool async = true;
-                if (instance->currentExecutionContext()->argumentCount() >= 3) {
-                    async = instance->currentExecutionContext()->readArgument(2).toBoolean();
-                }
                 // https://xhr.spec.whatwg.org/#the-open()-method
                 // TOOD If method is not a method, throw a SyntaxError exception.
                 // TODO If method is a forbidden method, throw a SecurityError exception.
@@ -3436,15 +3432,19 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
                     STARFISH_LOG_ERROR("Unsupported method : %s\n", method.c_str());
                 }
 
+                bool async = true;
+                if (instance->currentExecutionContext()->argumentCount() >= 3) {
+                    async = instance->currentExecutionContext()->readArgument(2).toBoolean();
+                }
+
                 String* userName = String::emptyString;
                 String* password = String::emptyString;
-                if (instance->currentExecutionContext()->argumentCount() == 0) {
-                } else if (instance->currentExecutionContext()->argumentCount() >= 1) {
-                } else if (instance->currentExecutionContext()->argumentCount() == 2) {
-                    userName = toBrowserString(instance->currentExecutionContext()->readArgument(1));
-                } else if (instance->currentExecutionContext()->argumentCount() >= 3) {
-                    userName = toBrowserString(instance->currentExecutionContext()->readArgument(1));
-                    password = toBrowserString(instance->currentExecutionContext()->readArgument(2));
+
+                if (instance->currentExecutionContext()->argumentCount() == 4) {
+                    userName = toBrowserString(instance->currentExecutionContext()->readArgument(3));
+                } else if (instance->currentExecutionContext()->argumentCount() >= 5) {
+                    userName = toBrowserString(instance->currentExecutionContext()->readArgument(3));
+                    password = toBrowserString(instance->currentExecutionContext()->readArgument(4));
                 }
                 originalObj->open(mt, toBrowserString(instance->currentExecutionContext()->readArgument(1)), async, userName, password);
             } else {
