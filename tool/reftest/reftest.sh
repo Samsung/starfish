@@ -422,7 +422,8 @@ function doTest {
             elif [ $TESTSUITE -eq 7 ] || [ $TESTSUITE -eq 8 ]; then
                 RESIMG=${filenames[$c]%.*}".png"
                 FAIL=`grep -Eo "FAIL|could not be opened for reading" $TMPFILE | wc -l`
-                if [ $FAIL -eq 0 ]; then
+                PASS=`grep -Eo "PASS" $TMPFILE | wc -l`
+                if [[ $FAIL -eq 0 && $PASS -ne 0 ]]; then
                     PASSTC=`expr $PASSTC + 1`
                     echo -e "${GREEN}[PASS]${RESET}" ${filenames[$c]}
                     #rm $RESIMG
