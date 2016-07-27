@@ -52,7 +52,7 @@ String* const String::spaceString = String::createASCIIStringWithNoGC(" ");
 String* const String::inheritString = String::createASCIIStringWithNoGC("inherit");
 String* const String::initialString = String::createASCIIStringWithNoGC("initial");
 
-size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
+size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
 {
     size_t tRequiredSize = 0;
 
@@ -63,13 +63,13 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
         uc = (char32_t) UTF8[0];
         tRequiredSize = 1;
     } else // Start byte for 2byte
-        if (0xC0 == (UTF8[0] & 0xE0)
+        if (0xC0 == (UTF8[0] & 0xE0) && &UTF8[1] < bufferEnd
             && 0x80 == (UTF8[1] & 0xC0)) {
             uc += (UTF8[0] & 0x1F) << 6;
             uc += (UTF8[1] & 0x3F) << 0;
             tRequiredSize = 2;
         } else // Start byte for 3byte
-            if (0xE0 == (UTF8[0] & 0xF0)
+            if (0xE0 == (UTF8[0] & 0xF0) && &UTF8[2] < bufferEnd
                 && 0x80 == (UTF8[1] & 0xC0)
                 && 0x80 == (UTF8[2] & 0xC0)) {
                 uc += (UTF8[0] & 0x0F) << 12;
@@ -77,7 +77,7 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
                 uc += (UTF8[2] & 0x3F) << 0;
                 tRequiredSize = 3;
             } else // Start byte for 4byte
-                if (0xF0 == (UTF8[0] & 0xF8)
+                if (0xF0 == (UTF8[0] & 0xF8) && &UTF8[3] < bufferEnd
                     && 0x80 == (UTF8[1] & 0xC0)
                     && 0x80 == (UTF8[2] & 0xC0)
                     && 0x80 == (UTF8[3] & 0xC0)) {
@@ -87,7 +87,7 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
                     uc += (UTF8[3] & 0x3F) << 0;
                     tRequiredSize = 4;
                 } else // Start byte for 5byte
-                    if (0xF8 == (UTF8[0] & 0xFC)
+                    if (0xF8 == (UTF8[0] & 0xFC) && &UTF8[4] < bufferEnd
                         && 0x80 == (UTF8[1] & 0xC0)
                         && 0x80 == (UTF8[2] & 0xC0)
                         && 0x80 == (UTF8[3] & 0xC0)
@@ -99,7 +99,7 @@ size_t utf8ToUtf32(const char* UTF8, char32_t& uc)
                         uc += (UTF8[4] & 0x3F) << 0;
                         tRequiredSize = 5;
                     } else // Start byte for 6byte
-                        if (0xFC == (UTF8[0] & 0xFE)
+                        if (0xFC == (UTF8[0] & 0xFE) && &UTF8[5] < bufferEnd
                             && 0x80 == (UTF8[1] & 0xC0)
                             && 0x80 == (UTF8[2] & 0xC0)
                             && 0x80 == (UTF8[3] & 0xC0)
@@ -255,7 +255,7 @@ StringDataUTF32::StringDataUTF32(const char* src, size_t len)
     const char* end = src + len;
     while (end != src) {
         char32_t c;
-        src += utf8ToUtf32(src, c);
+        src += utf8ToUtf32(src, &src[len], c);
         UTF32String::operator+=(c);
     }
     putDebugInfo();
