@@ -14,6 +14,12 @@
  *    limitations under the License.
  */
 
+#ifdef STARFISH_ENABLE_TEST
+#include <unistd.h>
+#include <ios>
+#include <iostream>
+#include <fstream>
+#endif
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "dom/Document.h"
@@ -37,6 +43,41 @@ namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
+
+static double process_mem_usage()
+{
+    double vm_usage     = 0.0;
+    double resident_set = 0.0;
+
+    // 'file' stat seems to give the most reliable results
+
+    std::ifstream stat_stream("/proc/self/stat", std::ios_base::in);
+
+    // dummy vars for leading entries in stat that we don't care about
+    //
+    std::string pid, comm, state, ppid, pgrp, session, tty_nr;
+    std::string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+    std::string utime, stime, cutime, cstime, priority, nice;
+    std::string O, itrealvalue, starttime;
+
+    // the two fields we want
+    //
+    unsigned long vsize;
+    long rss;
+
+    stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+    >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+    >> utime >> stime >> cutime >> cstime >> priority >> nice
+    >> O >> itrealvalue >> starttime >> vsize >> rss; // don't care about the rest
+
+    stat_stream.close();
+
+    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+    vm_usage     = vsize / 1024.0;
+    resident_set = rss * page_size_kb;
+
+    return resident_set;
+}
 #endif
 
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier)
@@ -71,6 +112,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
             STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
+#ifdef STARFISH_ENABLE_TEST
+            STARFISH_LOG_INFO("RSS: %.1f \n", process_mem_usage());
+#endif
         }
     });
     GC_set_free_space_divisor(64);
