@@ -166,6 +166,10 @@ class StyleBackgroundData : public gc {
 public:
     StyleBackgroundData()
         : m_bgColorNeedToUpdate(false)
+        , m_maxLayerImages(0)
+        , m_maxLayerRepeats(0)
+        , m_maxLayerSizes(0)
+        , m_maxLayerPositions(0)
     {
     }
 
@@ -193,42 +197,56 @@ public:
     void setPositionValue(LengthPosition position, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
+        if (m_maxLayerPositions < layer + 1)
+            m_maxLayerPositions = layer + 1;
         m_layers[layer].setPositionValue(position);
     }
 
     void setSizeType(BackgroundSizeType type, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
+        if (m_maxLayerSizes < layer + 1)
+            m_maxLayerSizes = layer + 1;
         m_layers[layer].setSizeType(type);
     }
 
     void setSizeValue(LengthSize size, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
+        if (m_maxLayerSizes < layer + 1)
+            m_maxLayerSizes = layer + 1;
         m_layers[layer].setSizeValue(size);
     }
 
     void setBgImage(String* img, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
+        if (m_maxLayerImages < layer + 1)
+            m_maxLayerImages = layer + 1;
         m_layers[layer].setBgImage(img);
     }
 
     void setBgImageResource(ImageResource* data, unsigned int layer)
     {
         resizeLayerIfNeeded(layer);
+        if (m_maxLayerImages < layer + 1)
+            m_maxLayerImages = layer + 1;
         m_layers[layer].setBgImageResource(data);
     }
 
     void setRepeatX(BackgroundRepeatValue repeat, unsigned int layer = 0)
     {
         resizeLayerIfNeeded(layer);
+        if (m_maxLayerRepeats < layer + 1)
+            m_maxLayerRepeats = layer + 1;
         m_layers[layer].setRepeatX(repeat);
     }
 
     void setRepeatY(BackgroundRepeatValue repeat, unsigned int layer = 0)
     {
         resizeLayerIfNeeded(layer);
+        if (m_maxLayerRepeats < layer + 1)
+            m_maxLayerRepeats = layer + 1;
         m_layers[layer].setRepeatY(repeat);
     }
 
@@ -302,6 +320,37 @@ public:
 
     void checkComputed(Length fontSize, Font* font, Color color)
     {
+        // NOTE: To support background layer
+        if (m_layers.size() > m_maxLayerImages)
+            m_layers.resize(m_maxLayerImages);
+
+        if (m_maxLayerPositions + 1 < m_layers.size()) {
+            unsigned int i = m_maxLayerPositions;
+            while (i < m_layers.size()) {
+                for (unsigned int p = 0; p < m_maxLayerPositions && i < m_layers.size(); p++, i++) {
+                    m_layers[i].setPositionValue(m_layers[p].positionValue());
+                }
+            }
+        }
+        if (m_maxLayerSizes + 1 < m_layers.size()) {
+            unsigned int i = m_maxLayerSizes;
+            while (i < m_layers.size()) {
+                for (unsigned int p = 0; p < m_maxLayerSizes && i < m_layers.size(); p++, i++) {
+                    m_layers[i].setSizeValue(m_layers[p].sizeValue());
+                    m_layers[i].setSizeType(m_layers[p].sizeType());
+                }
+            }
+        }
+        if (m_maxLayerRepeats + 1 < m_layers.size()) {
+            unsigned int i = m_maxLayerRepeats;
+            while (i < m_layers.size()) {
+                for (unsigned int p = 0; p < m_maxLayerRepeats && i < m_layers.size(); p++, i++) {
+                    m_layers[i].setRepeatX(m_layers[p].repeatX());
+                    m_layers[i].setRepeatY(m_layers[p].repeatY());
+                }
+            }
+        }
+
         if (m_layers.size()) {
             for (unsigned int i = 0; i < m_layers.size(); i++)
                 m_layers[i].checkComputed(fontSize, font);
@@ -326,6 +375,10 @@ private:
     Color m_color;
     // background-color type
     bool m_bgColorNeedToUpdate : 1;
+    unsigned int m_maxLayerImages;
+    unsigned int m_maxLayerRepeats;
+    unsigned int m_maxLayerSizes;
+    unsigned int m_maxLayerPositions;
 
     std::vector<BackgroundLayer, gc_allocator<BackgroundLayer> > m_layers;
 
