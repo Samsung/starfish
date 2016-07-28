@@ -570,6 +570,9 @@ internal_test:
 reftest:
 	./tool/reftest/reftest.sh $(tc) $(regression)
 
+tct:
+	./StarFish test/tct/index.html
+
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
 	@echo "[wpt_syntax_checker] Updated tool/pixel_test/css1.res"
