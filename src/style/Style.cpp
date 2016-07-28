@@ -177,6 +177,55 @@ static Color namedColorToColor(NamedColorValue namedColor)
     return Color();
 }
 
+static void setComputedStyleBackgroundPositionX(ComputedStyle* style, CSSStyleValuePair& value, unsigned int layer = 0)
+{
+    if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+        style->setBackgroundPositionX(Length(Length::Percent, 0.0f), layer);
+    } else if (value.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+        SideValue side = value.sideValue();
+        if (side == SideValue::LeftSideValue) {
+            style->setBackgroundPositionX(Length(Length::Percent, 0.0f), layer);
+        } else if (side == SideValue::RightSideValue) {
+            style->setBackgroundPositionX(Length(Length::Percent, 1.0f), layer);
+        } else if (side == SideValue::CenterSideValue) {
+            style->setBackgroundPositionX(Length(Length::Percent, 0.5f), layer);
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (value.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+        ValueList* list = value.multiValue();
+        for (unsigned int i = 0; i < list->size(); i++) {
+            setComputedStyleBackgroundPositionX(style, list->atIndex(i), i);
+        }
+    } else {
+        style->setBackgroundPositionX(convertValueToLength(value.valueKind(), value.value()), layer);
+    }
+}
+
+static void setComputedStyleBackgroundPositionY(ComputedStyle* style, CSSStyleValuePair& value, unsigned int layer = 0)
+{
+    if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+        style->setBackgroundPositionY(Length(Length::Percent, 0.0f), layer);
+    } else if (value.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+        if (value.sideValue() == SideValue::TopSideValue) {
+            style->setBackgroundPositionY(Length(Length::Percent, 0.0f), layer);
+        } else if (value.sideValue() == SideValue::BottomSideValue) {
+            style->setBackgroundPositionY(Length(Length::Percent, 1.0f), layer);
+        } else if (value.sideValue() == SideValue::CenterSideValue) {
+            style->setBackgroundPositionY(Length(Length::Percent, 0.5f), layer);
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (value.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
+        ValueList* list = value.multiValue();
+        for (unsigned int i = 0; i < list->size(); i++) {
+            setComputedStyleBackgroundPositionY(style, list->atIndex(i), i);
+        }
+    } else {
+        style->setBackgroundPositionY(convertValueToLength(value.valueKind(), value.value()), layer);
+    }
+}
+
 String* CSSTransformFunctions::toString()
 {
     String* result = String::emptyString;
@@ -1571,57 +1620,15 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             case CSSStyleValuePair::KeyKind::BackgroundPositionX:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBackgroundPositionX(parentStyle->backgroundPositionX());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setBackgroundPositionX(Length(Length::Percent, 0.0f));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
-                    ValueList* list = cssValues[k].multiValue();
-                    for (unsigned int i = 0; i < list->size(); i++) {
-                        CSSStyleValuePair& item = list->atIndex(i);
-                        if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
-                            style->setBackgroundPositionX(Length(Length::Percent, 0.0f), i);
-                        else if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                            if (item.sideValue() == SideValue::LeftSideValue) {
-                                style->setBackgroundPositionX(Length(Length::Percent, 0.0f), i);
-                            } else if (item.sideValue() == SideValue::RightSideValue) {
-                                style->setBackgroundPositionX(Length(Length::Percent, 1.0f), i);
-                            } else if (item.sideValue() == SideValue::CenterSideValue) {
-                                style->setBackgroundPositionX(Length(Length::Percent, 0.5f), i);
-                            } else {
-                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                            }
-                        } else {
-                            style->setBackgroundPositionX(convertValueToLength(item.valueKind(), item.value()), i);
-                        }
-                    }
+                    setComputedStyleBackgroundPositionX(style, cssValues[k]);
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundPositionY:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBackgroundPositionY(parentStyle->backgroundPositionY());
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setBackgroundPositionY(Length(Length::Percent, 0.0f));
                 } else {
-                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
-                    ValueList* list = cssValues[k].multiValue();
-                    for (unsigned int i = 0; i < list->size(); i++) {
-                        CSSStyleValuePair& item = list->atIndex(i);
-                        if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
-                            style->setBackgroundPositionY(Length(Length::Percent, 0.0f), i);
-                        else if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                            if (item.sideValue() == SideValue::TopSideValue) {
-                                style->setBackgroundPositionY(Length(Length::Percent, 0.0f), i);
-                            } else if (item.sideValue() == SideValue::BottomSideValue) {
-                                style->setBackgroundPositionY(Length(Length::Percent, 1.0f), i);
-                            } else if (item.sideValue() == SideValue::CenterSideValue) {
-                                style->setBackgroundPositionY(Length(Length::Percent, 0.5f), i);
-                            } else {
-                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                            }
-                        } else {
-                            style->setBackgroundPositionY(convertValueToLength(item.valueKind(), item.value()), i);
-                        }
-                    }
+                    setComputedStyleBackgroundPositionY(style, cssValues[k]);
                 }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundSize:
