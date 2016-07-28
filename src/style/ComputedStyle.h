@@ -299,10 +299,16 @@ public:
         m_background->setRepeatY(repeat, layer);
     }
 
-    void setBackgroundPositionValue(LengthPosition position, unsigned int layer = 0)
+    void setBackgroundPositionX(Length value, unsigned int layer = 0)
     {
         setBackgroundIfNeeded();
-        m_background->setPositionValue(position, layer);
+        m_background->setPositionX(value, layer);
+    }
+
+    void setBackgroundPositionY(Length value, unsigned int layer = 0)
+    {
+        setBackgroundIfNeeded();
+        m_background->setPositionY(value, layer);
     }
 
     void setBackgroundSizeType(BackgroundSizeType type, unsigned int layer = 0)
@@ -359,18 +365,18 @@ public:
         return m_background->repeatY(layer);
     }
 
-    bool hasBackgroundPosition(unsigned int layer = 0)
+    Length backgroundPositionX(unsigned int layer = 0)
     {
         if (m_background == NULL)
-            return false;
-        return m_background->hasPositionValue(layer);
+            return Length(Length::Percent, 0.0f);
+        return m_background->positionX(layer);
     }
 
-    LengthPosition backgroundPosition(unsigned int layer = 0)
+    Length backgroundPositionY(unsigned int layer = 0)
     {
         if (m_background == NULL)
-            return LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
-        return m_background->positionValue(layer);
+            return Length(Length::Percent, 0.0f);
+        return m_background->positionY(layer);
     }
 
     BackgroundSizeType bgSizeType(unsigned int layer = 0)

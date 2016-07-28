@@ -249,8 +249,8 @@ public:
                 STARFISH_ASSERT_NOT_REACHED();
             }
 
-            LayoutUnit x = style->backgroundPosition().x().specifiedValue(bw - w);
-            LayoutUnit y = style->backgroundPosition().y().specifiedValue(bh - h);
+            LayoutUnit x = style->backgroundPositionX().specifiedValue(bw - w);
+            LayoutUnit y = style->backgroundPositionY().specifiedValue(bh - h);
 
             if (isRootElement) {
                 x += imageRect.x();

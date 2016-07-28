@@ -3278,7 +3278,20 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
                 escargot::ESValue prop = instance->currentExecutionContext()->readArgument(0);
 
                 if (prop.isESString()) {
-                    String* val = decl->getPropertyValue(toBrowserString(prop));
+                    String* name = toBrowserString(prop);
+                    const char* c = name->utf8Data();
+                    CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
+                    String* val = String::emptyString;
+                    switch (kind) {
+#define MATCH_KEY(Name, ...) \
+                    case CSSStyleKind::Name: \
+                        val = decl->Name(); \
+                        break;
+                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(MATCH_KEY)
+#undef MATCH_KEY
+                    default:
+                        break;
+                    }
                     return toJSString(val);
                 } else {
                     return escargot::ESString::create("");

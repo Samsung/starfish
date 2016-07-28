@@ -383,7 +383,6 @@ class CSSStyleDeclaration;
     F(Direction, direction, "direction")                           \
     F(BackgroundColor, backgroundColor, "background-color")        \
     F(BackgroundImage, backgroundImage, "background-image")        \
-    F(BackgroundPosition, backgroundPosition, "background-position") \
     F(BackgroundSize, backgroundSize, "background-size")           \
     F(LineHeight, lineHeight, "line-height")                       \
     F(PaddingTop, paddingTop, "padding-top")                       \
@@ -429,6 +428,8 @@ class CSSStyleDeclaration;
     F(VerticalAlign, verticalAlign, "vertical-align")              \
     F(BackgroundRepeatX, backgroundRepeatX, "background-repeat-x") \
     F(BackgroundRepeatY, backgroundRepeatY, "background-repeat-y") \
+    F(BackgroundPositionX, backgroundPositionX, "background-position-x") \
+    F(BackgroundPositionY, backgroundPositionY, "background-position-y") \
     F(Opacity, opacity, "opacity")                                 \
     F(FontWeight, fontWeight, "font-weight")                       \
     F(UnicodeBidi, unicodeBidi, "unicode-bidi")
@@ -445,6 +446,7 @@ class CSSStyleDeclaration;
     F(BorderColor, borderColor, "border-color")                    \
     F(Background, background, "background")                        \
     F(BackgroundRepeat, backgroundRepeat, "background-repeat")     \
+    F(BackgroundPosition, backgroundPosition, "background-position") \
     F(Margin, margin, "margin")                                    \
     F(Padding, padding, "padding")
 
@@ -453,7 +455,6 @@ class CSSStyleDeclaration;
     F(Right, right) \
     F(Bottom, bottom) \
     F(Left, left)
-
 
 class CSSTransformFunction {
 public:
@@ -946,7 +947,6 @@ public:
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
 
     bool updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
-    bool updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
     bool updateValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(String* token);
     bool updateValueUnitBackgroundPositionX(String* token);
@@ -1041,17 +1041,6 @@ public:
         m_cssValues.push_back(p);
     }
 
-    String* getPropertyValue(String* key)
-    {
-        for (size_t i = 0; i < m_cssValues.size(); i++) {
-            CSSStyleValuePair v = m_cssValues[i];
-            if (v.keyName()->equals(key)) {
-                return v.toString();
-            }
-        }
-        return String::emptyString;
-    }
-
     void clear()
     {
         m_cssValues.clear();
@@ -1090,6 +1079,7 @@ public:
     String* BorderLeft();
     String* Background();
     String* BackgroundRepeat();
+    String* BackgroundPosition();
 #define ATTRIBUTE_GETTER(name, ...)                                              \
     String* name()                                                               \
     {                                                                            \
@@ -1137,6 +1127,7 @@ public:
     void setBorderLeft(String* value);
     void setBackground(String* value);
     void setBackgroundRepeat(String* value);
+    void setBackgroundPosition(String* value);
     void setMargin(String* value);
     void setPadding(String* value);
     void setBorderWidth(String* value);
