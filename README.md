@@ -17,16 +17,7 @@ Use `./run.sh [html_file_path]` to run StarFish
 
 ## Testing
 
-### Regression Test (compare with pre-version)
-
-To run the regression tests, use:
-
-``` sh
-make regression_test                         // all html file within test/demo/20160115
-make regression_test [tc=unittest.html]      // only one file
-```
-
-### Pixel Test (compare with WebKit)
+### CSSWG Test (compare with node-WebKit/previous version of StarFish)
 
 We use the W3C's CSS conformance test suites.
 (W3C CSS WG Test Suites Repository: https://hg.csswg.org/test)
@@ -36,14 +27,18 @@ You can find these in `test/reftest/csswg-test/*`
 To run the pixel tests, use:
 
 ``` sh
-make pixel_test                         // all html file within test/
-make pixel_test_css*                    // specific test suite
-make pixel_test [tc=unittest.html]      // only one file
+// compare node-webkit
+make pixel_test_css_all                        // all csswg test suite
+make pixel_test_css*                           // specific test suite
+make pixel_test [tc=unittest.html] [screen=pc] // only one file
+
+// compare the prev ver. of StarFish
+make font_dependent_test_css                   // files in tool/reftest/tclist/csswg_manual.res
 ```
 
 After the pixel test, the result image files are saved in `out/x64/exe/debug/reftest/`
 
-- `test_expected.png` - captured file of WebKit
+- `test_expected.png` - captured file of node-WebKit
 - `test_result.png` - captured file of StarFish
 - `test_diff.png` - diff file
 
@@ -51,11 +46,11 @@ If you want to capture the screenshot on the command line, use:
 
 ``` sh
 // StarFish
-ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test
+ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test --width=800 --height=600
 
-// WebKit
-phantomjs capture.js [category=css|dom|xhr]
-phantomjs capture.js -f [filepath=*.html]
+// node-WebKit
+test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -l [filepath=**.res] pc
+test/tool/nwjs-no-AA/nw tool/pixel_test/nw_capture/ -f [filepath=**.html] pc
 ```
 
 ### Web Platform Tests
@@ -67,8 +62,7 @@ You can find these in `test/reftest/web-platform-tests/*`
 To run the Web Platform Tests, use:
 
 ``` sh
-make wpt_test_*[dom | etc.]             // specific test suite
-make wpt_test [tc=xxx]                  // specific directory or file
+make regression_test_wpt_*[dom | etc.]             // specific test suite
 ```
 
 ### Bidi Tests
