@@ -247,10 +247,11 @@ void Document::notifyDomContentLoaded()
 
 void Document::close()
 {
-    if (bodyElement()) {
+    Element* bodyElem = bodyElement();
+    if (bodyElem) {
         String* eventType = window()->starFish()->staticStrings()->m_unload.localName();
         Event* e = new Event(eventType, EventInit(false, false));
-        EventTarget::dispatchEvent(bodyElement(), e);
+        EventTarget::dispatchEvent(bodyElem, e);
     }
     resourceLoader()->cancelAllOfPendingRequests();
 

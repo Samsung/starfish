@@ -119,7 +119,7 @@ static const int fontSizeTableMin = 9;
 
 static Length parseAbsoluteFontSize(int col, float mediumSize)
 {
-    int row = -1;
+    int row = 0;
     if (mediumSize >= fontSizeTableMin && mediumSize <= fontSizeTableMax)
         row = mediumSize - fontSizeTableMin;
 
