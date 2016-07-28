@@ -164,4 +164,11 @@ if cat prepush_test_result |grep 'FAIL'; then
  exit 1
 fi
 
+echo "checking... make tct"
+make tct > prepush_test_result 2>&1
+if cat prepush_test_result |grep 'FAIL'; then
+ echo "$RED[FAIL] make tct$RESET"
+ exit 1
+fi
+
 rm prepush_test_result
