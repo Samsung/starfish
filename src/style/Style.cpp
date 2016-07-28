@@ -316,12 +316,79 @@ static bool parseBackgroundRepeatShorhand(std::vector<String*, gc_allocator<Stri
     return true;
 }
 
+static bool parseBackgroundPositionShorhand(std::vector<String*, gc_allocator<String*> >* tokens, CSSStyleValuePair* retx, CSSStyleValuePair* rety, bool allowComma = true)
+{
+    // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
+    size_t len = 0;
+    retx->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    rety->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+    retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+    rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
+
+    for (unsigned int i = 0; i < tokens->size(); i++) {
+        String* value = tokens->at(i);
+        if (value->equals(",")) {
+            if (!allowComma || i == 0 || i == tokens->size() - 1)
+                return false;
+        } else if (i == tokens->size() - 1) {
+            len++;
+            i++;
+        } else {
+            len++;
+            continue;
+        }
+
+        CSSStyleValuePair ret;
+        CSSStyleValuePair x, y;
+        if (len == 1) {
+            String* tok = tokens->at(i - 1);
+            if (x.updateValueUnitBackgroundPositionX(tok)) {
+                y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+            } else if (y.updateValueUnitBackgroundPositionY(tok)) {
+                x = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+            } else {
+                return false;
+            }
+        } else if (len == 2) {
+            // !!! NOTICE !!!
+            // background-position: right bottom <- (O) [enum-x enum-y]
+            // background-position: bottom right <- (O) [enum-y enum-x] !!!
+            // background-position: 20px 20px    <- (O) [length length]
+            // background-position: right 20px   <- (O) [enum-x length]
+            // background-position: 20px bottom  <- (O) [length enum-y]
+            // background-position: bottom 20px  <- (X) [enum-y length] !!!
+            // background-position: 20px right   <- (X) [length enum-x] !!!
+            bool checker = true;
+            String* tok1 = tokens->at(i - 2);
+            String* tok2 = tokens->at(i - 1);
+            CSSStyleValuePair::ValueKind sideKind = CSSStyleValuePair::ValueKind::SideValueKind;
+            checker &= x.updateValueUnitBackgroundPositionX(tok1);
+            checker &= y.updateValueUnitBackgroundPositionY(tok2);
+
+            if (!checker && x.valueKind() == sideKind && y.valueKind() == sideKind) {
+                checker &= x.updateValueUnitBackgroundPositionX(tok2);
+                checker &= y.updateValueUnitBackgroundPositionY(tok1);
+            }
+            if (!checker) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+        retx->multiValue()->append(x);
+        rety->multiValue()->append(y);
+    }
+
+    return true;
+}
+
 static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> >* tokens,
     CSSStyleValuePair* _Color,
     CSSStyleValuePair* _Image,
     CSSStyleValuePair* _RepeatX,
     CSSStyleValuePair* _RepeatY,
-    CSSStyleValuePair* _Position,
+    CSSStyleValuePair* _PositionX,
+    CSSStyleValuePair* _PositionY,
     CSSStyleValuePair* _Size,
     bool allowColor)
 {
@@ -339,7 +406,8 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
     _Image->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     _RepeatX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     _RepeatY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
-    _Position->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _PositionX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
+    _PositionY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     _Size->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
     bool hasColor = false, hasImage = false, hasRepeat = false;
@@ -385,9 +453,9 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
             } else if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY, false)) {
                 SET_DOUBLE_PROP(Repeat)
                 DOUBLE_CONTINUE()
-            } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks, false)) {
+            } else if (!hasPosition && parseBackgroundPositionShorhand(&toks, &tempX, &tempY, false)) {
                 hasPositionPrev = true;
-                SET_SINGLE_PROP(Position)
+                SET_DOUBLE_PROP(Position)
                 DOUBLE_CONTINUE()
             }
         }
@@ -415,9 +483,9 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
         } else if (!hasRepeat && parseBackgroundRepeatShorhand(&toks, &tempX, &tempY, false)) {
             SET_DOUBLE_PROP(Repeat)
             SINGLE_CONTINUE()
-        } else if (!hasPosition && temp.updateValueBackgroundPosition(&toks, false)) {
+        } else if (!hasPosition && parseBackgroundPositionShorhand(&toks, &tempX, &tempY, false)) {
             hasPositionPrev = true;
-            SET_SINGLE_PROP(Position)
+            SET_DOUBLE_PROP(Position)
             SINGLE_CONTINUE()
         }
         return false;
@@ -929,6 +997,44 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
     }
 }
 
+String* CSSStyleDeclaration::BackgroundPosition()
+{
+    String* positionX = BackgroundPositionX();
+    String* positionY = BackgroundPositionY();
+
+    if (positionX->equals(String::emptyString) || positionY->equals(String::emptyString))
+        return String::emptyString;
+    else if (positionX->equals("initial") && positionY->equals("initial"))
+        return String::initialString;
+    else if (positionX->equals("inherit") && positionY->equals("inherit"))
+        return String::inheritString;
+    else if (positionX->equals("center") && positionY->equals("center"))
+        return String::fromUTF8("center");
+
+    return positionX->concat(String::spaceString)->concat(positionY);
+}
+
+void CSSStyleDeclaration::setBackgroundPosition(String* value)
+{
+    if (value->length() == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+        return;
+    }
+
+    std::vector<String*, gc_allocator<String*> > tokens;
+    tokenizeCSSValue(&tokens, value, String::fromUTF8(","));
+
+    CSSStyleValuePair c, x, y;
+    if (c.updateValueCommon(&tokens)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, c);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, c);
+    } else if (parseBackgroundPositionShorhand(&tokens, &x, &y)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, x);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, y);
+    }
+}
+
 static String* printBackground(String* image, String* repeat, String* color, String* position, String* size)
 {
     String* result = String::emptyString;
@@ -1001,7 +1107,8 @@ static void removeBackgroundCSSValuePairs(CSSStyleDeclaration* target)
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
-    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
+    target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY);
     target->removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize);
 }
 
@@ -1010,14 +1117,16 @@ static void addBackgroundCSSValuePairs(CSSStyleDeclaration* target,
     CSSStyleValuePair images,
     CSSStyleValuePair repeatX,
     CSSStyleValuePair repeatY,
-    CSSStyleValuePair position,
+    CSSStyleValuePair positionX,
+    CSSStyleValuePair positionY,
     CSSStyleValuePair size)
 {
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundColor, color);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundImage, images);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, repeatX);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, repeatY);
-    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPosition, position);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, positionX);
+    target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, positionY);
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, size);
 }
 
@@ -1035,9 +1144,9 @@ void CSSStyleDeclaration::setBackground(String* value)
     }
 
     // TODO: should check comma-seperated input
-    CSSStyleValuePair v, color, image, repeatX, repeatY, position, size;
+    CSSStyleValuePair v, color, image, repeatX, repeatY, positionX, positionY, size;
     if (v.updateValueCommon(&tokens)) {
-        addBackgroundCSSValuePairs(this, v, v, v, v, v, v);
+        addBackgroundCSSValuePairs(this, v, v, v, v, v, v, v);
     } else {
 
 #define APPEND_NEW_LAYER(PROP, NEWPROP) \
@@ -1068,28 +1177,30 @@ void CSSStyleDeclaration::setBackground(String* value)
 
             if (layer.size() == 0)
                 return;
-            CSSStyleValuePair layerImage, layerRepeatX, layerRepeatY, layerPosition, layerSize;
+            CSSStyleValuePair layerImage, layerRepeatX, layerRepeatY, layerPositionX, layerPositionY, layerSize;
             // NOTE: Color is allowed only for the last background layer (t == tokens->size() - 1)
-            if (!parseBackgroundShorthand(&layer, &color, &layerImage, &layerRepeatX, &layerRepeatY, &layerPosition, &layerSize, t == tokens.size() - 1)) {
+            if (!parseBackgroundShorthand(&layer, &color, &layerImage, &layerRepeatX, &layerRepeatY, &layerPositionX, &layerPositionY, &layerSize, t == tokens.size() - 1)) {
                 return;
             }
             if (cntLayer == 0) {
                 image = layerImage;
                 repeatX = layerRepeatX;
                 repeatY = layerRepeatY;
-                position = layerPosition;
+                positionX = layerPositionX;
+                positionY = layerPositionY;
                 size = layerSize;
             } else {
                 APPEND_NEW_LAYER(image, layerImage);
                 APPEND_NEW_LAYER(repeatX, layerRepeatX);
                 APPEND_NEW_LAYER(repeatY, layerRepeatY);
-                APPEND_NEW_LAYER(position, layerPosition);
+                APPEND_NEW_LAYER(positionX, layerPositionX);
+                APPEND_NEW_LAYER(positionY, layerPositionY);
                 APPEND_NEW_LAYER(size, layerSize);
             }
             cntLayer++;
             layer.clear();
         }
-        addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY, position, size);
+        addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY, positionX, positionY, size);
     }
 #undef APPEND_NEW_LAYER
 }
@@ -1457,53 +1568,61 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     }
                 }
                 break;
-            case CSSStyleValuePair::KeyKind::BackgroundPosition:
+            case CSSStyleValuePair::KeyKind::BackgroundPositionX:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
-                    style->setBackgroundPositionValue(parentStyle->backgroundPosition());
+                    style->setBackgroundPositionX(parentStyle->backgroundPositionX());
                 } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                    style->setBackgroundPositionValue(LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)));
-                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
-                    ValueList* layers = cssValues[k].multiValue();
-                    for (unsigned int l = 0; l < layers->size(); l++) {
-                        CSSStyleValuePair& layer = layers->atIndex(l);
-                        if (layer.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
-                            style->setBackgroundPositionValue(LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f)), l);
-                            continue;
-                        }
-                        STARFISH_ASSERT(layer.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
-                        ValueList* list = layer.multiValue();
-                        Length xAxis, yAxis;
-                        xAxis = Length(Length::Percent, 0.5f);
-                        yAxis = Length(Length::Percent, 0.5f);
-
-                        for (unsigned int i = 0; i < list->size(); i++) {
-                            CSSStyleValuePair& item = list->atIndex(i);
-                            if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-                                if (item.sideValue() == SideValue::LeftSideValue) {
-                                    xAxis = Length(Length::Percent, 0.0f);
-                                } else if (item.sideValue() == SideValue::RightSideValue) {
-                                    xAxis = Length(Length::Percent, 1.0f);
-                                } else if (item.sideValue() == SideValue::CenterSideValue) {
-
-                                } else if (item.sideValue() == SideValue::TopSideValue) {
-                                    yAxis = Length(Length::Percent, 0.0f);
-                                } else if (item.sideValue() == SideValue::BottomSideValue) {
-                                    yAxis = Length(Length::Percent, 1.0f);
-                                }
-                            } else {
-                                if (i == 0)
-                                    xAxis = convertValueToLength(item.valueKind(), item.value());
-                                else
-                                    yAxis = convertValueToLength(item.valueKind(), item.value());
-                            }
-                        }
-                        style->setBackgroundPositionValue(LengthPosition(xAxis, yAxis), l);
-                    }
-
+                    style->setBackgroundPositionX(Length(Length::Percent, 0.0f));
                 } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
+                    ValueList* list = cssValues[k].multiValue();
+                    for (unsigned int i = 0; i < list->size(); i++) {
+                        CSSStyleValuePair& item = list->atIndex(i);
+                        if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
+                            style->setBackgroundPositionX(Length(Length::Percent, 0.0f), i);
+                        else if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                            if (item.sideValue() == SideValue::LeftSideValue) {
+                                style->setBackgroundPositionX(Length(Length::Percent, 0.0f), i);
+                            } else if (item.sideValue() == SideValue::RightSideValue) {
+                                style->setBackgroundPositionX(Length(Length::Percent, 1.0f), i);
+                            } else if (item.sideValue() == SideValue::CenterSideValue) {
+                                style->setBackgroundPositionX(Length(Length::Percent, 0.5f), i);
+                            } else {
+                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                            }
+                        } else {
+                            style->setBackgroundPositionX(convertValueToLength(item.valueKind(), item.value()), i);
+                        }
+                    }
                 }
-
+                break;
+            case CSSStyleValuePair::KeyKind::BackgroundPositionY:
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                    style->setBackgroundPositionY(parentStyle->backgroundPositionY());
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->setBackgroundPositionY(Length(Length::Percent, 0.0f));
+                } else {
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
+                    ValueList* list = cssValues[k].multiValue();
+                    for (unsigned int i = 0; i < list->size(); i++) {
+                        CSSStyleValuePair& item = list->atIndex(i);
+                        if (item.valueKind() == CSSStyleValuePair::ValueKind::Initial)
+                            style->setBackgroundPositionY(Length(Length::Percent, 0.0f), i);
+                        else if (item.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
+                            if (item.sideValue() == SideValue::TopSideValue) {
+                                style->setBackgroundPositionY(Length(Length::Percent, 0.0f), i);
+                            } else if (item.sideValue() == SideValue::BottomSideValue) {
+                                style->setBackgroundPositionY(Length(Length::Percent, 1.0f), i);
+                            } else if (item.sideValue() == SideValue::CenterSideValue) {
+                                style->setBackgroundPositionY(Length(Length::Percent, 0.5f), i);
+                            } else {
+                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                            }
+                        } else {
+                            style->setBackgroundPositionY(convertValueToLength(item.valueKind(), item.value()), i);
+                        }
+                    }
+                }
                 break;
             case CSSStyleValuePair::KeyKind::BackgroundSize:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
@@ -2642,76 +2761,18 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(String* value)
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma)
+bool CSSStyleValuePair::updateValueBackgroundPositionX(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    // [ [ <percentage> | <length> | left | center | right ] [ <percentage> | <length> | top | center | bottom ]? ] | [ [ left | center | right ] || [ top | center | bottom ] ] | inherit
-    size_t len = 0;
-    m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
-    setValueList(new ValueList(ValueList::Separator::CommaSeparator));
-
-    for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = tokens->at(i);
-        if (value->equals(",")) {
-            if (!allowComma || i == 0 || i == tokens->size() - 1)
-                return false;
-        } else if (i == tokens->size() - 1) {
-            len++;
-            i++;
-        } else {
-            len++;
-            continue;
-        }
-
-        CSSStyleValuePair ret;
-        CSSStyleValuePair x, y;
-        if (len == 1) {
-            String* tok = tokens->at(i - 1);
-            if (x.updateValueUnitBackgroundPositionX(tok)) {
-                y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
-            } else if (y.updateValueUnitBackgroundPositionY(tok)) {
-                x = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
-            } else {
-                return false;
-            }
-        } else if (len == 2) {
-            // !!! NOTICE !!!
-            // background-position: right bottom <- (O) [enum-x enum-y]
-            // background-position: bottom right <- (O) [enum-y enum-x] !!!
-            // background-position: 20px 20px    <- (O) [length length]
-            // background-position: right 20px   <- (O) [enum-x length]
-            // background-position: 20px bottom  <- (O) [length enum-y]
-            // background-position: bottom 20px  <- (X) [enum-y length] !!!
-            // background-position: 20px right   <- (X) [length enum-x] !!!
-            bool checker = true;
-            String* tok1 = tokens->at(i - 2);
-            String* tok2 = tokens->at(i - 1);
-            CSSStyleValuePair::ValueKind sideKind = CSSStyleValuePair::ValueKind::SideValueKind;
-            checker &= x.updateValueUnitBackgroundPositionX(tok1);
-            checker &= y.updateValueUnitBackgroundPositionY(tok2);
-
-            if (!checker && x.valueKind() == sideKind && y.valueKind() == sideKind) {
-                checker &= x.updateValueUnitBackgroundPositionX(tok2);
-                checker &= y.updateValueUnitBackgroundPositionY(tok1);
-            }
-            if (!checker) {
-                return false;
-            }
-        } else {
-            return false;
-        }
-
-        ret.setValueList(new ValueList());
-        ret.multiValue()->append(x);
-        ret.multiValue()->append(y);
-        multiValue()->append(ret);
-    }
-
-    return true;
+    if (tokens->size() != 1)
+        return false;
+    return updateValueUnitBackgroundPositionX(tokens->at(0));
 }
 
-bool CSSStyleValuePair::updateValueBackgroundPosition(std::vector<String*, gc_allocator<String*> >* tokens)
+bool CSSStyleValuePair::updateValueBackgroundPositionY(std::vector<String*, gc_allocator<String*> >* tokens)
 {
-    return updateValueBackgroundPosition(tokens, true);
+    if (tokens->size() != 1)
+        return false;
+    return updateValueUnitBackgroundPositionY(tokens->at(0));
 }
 
 bool CSSStyleValuePair::updateValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens)

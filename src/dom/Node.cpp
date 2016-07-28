@@ -1160,22 +1160,28 @@ CSSStyleDeclaration* Node::getComputedStyle()
         d->addValuePair(p);
     }
 
-    // backgroundPosition
+    // backgroundPositionX
     {
         CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPosition);
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionX);
         p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
         ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-            item.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-            ValueList* vals = new ValueList();
-            CSSStyleValuePair x = lengthToCSSStyleValue(style->backgroundPosition().x());
-            vals->append(x.valueKind(), x.value());
+            CSSStyleValuePair item = lengthToCSSStyleValue(style->backgroundPositionX(i));
+            values->append(item);
+        }
+        p.setValueList(values);
+        d->addValuePair(p);
+    }
 
-            CSSStyleValuePair y = lengthToCSSStyleValue(style->backgroundPosition().y());
-            vals->append(y.valueKind(), y.value());
-            item.setValueList(vals);
+    // backgroundPositionY
+    {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionY);
+        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
+        ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
+        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
+            CSSStyleValuePair item = lengthToCSSStyleValue(style->backgroundPositionY(i));
             values->append(item);
         }
         p.setValueList(values);
@@ -1441,10 +1447,7 @@ void Node::dumpStyle()
     }
 
     // background-position
-    if (m_style->hasBackgroundPosition()) {
-        printf("background-position: (%s, %s),", m_style->backgroundPosition().x().dumpString()->utf8Data(),
-            m_style->backgroundPosition().y().dumpString()->utf8Data());
-    }
+    printf("background-position: (%s, %s),", m_style->backgroundPositionX().dumpString()->utf8Data(), m_style->backgroundPositionY().dumpString()->utf8Data());
 
     // background-size
     if (m_style->bgSizeType() == BackgroundSizeType::Cover) {

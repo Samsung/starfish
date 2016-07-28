@@ -32,18 +32,14 @@ public:
         , m_repeatX(BackgroundRepeatValue::RepeatRepeatValue)
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
         , m_sizeType(BackgroundSizeType::SizeValue)
-        , m_positionValue(nullptr)
+        , m_positionX(Length(Length::Percent, 0.0f))
+        , m_positionY(Length(Length::Percent, 0.0f))
         , m_sizeValue(nullptr)
     {
     }
 
     ~BackgroundLayer()
     {
-    }
-
-    void setPositionValue(LengthPosition position)
-    {
-        m_positionValue = new LengthPosition(position);
     }
 
     void setSizeType(BackgroundSizeType type)
@@ -82,6 +78,16 @@ public:
         m_repeatY = repeat;
     }
 
+    void setPositionX(Length position)
+    {
+        m_positionX = position;
+    }
+
+    void setPositionY(Length position)
+    {
+        m_positionY = position;
+    }
+
     String* bgImage()
     {
         return m_image;
@@ -114,6 +120,16 @@ public:
         return m_repeatY;
     }
 
+    Length positionX()
+    {
+        return m_positionX;
+    }
+
+    Length positionY()
+    {
+        return m_positionY;
+    }
+
     LengthSize sizeValue() const
     {
         STARFISH_ASSERT(m_sizeType == BackgroundSizeType::SizeValue);
@@ -122,25 +138,13 @@ public:
         return LengthSize();
     }
 
-    bool hasPositionValue()
-    {
-        return m_positionValue;
-    }
-
-    LengthPosition positionValue() const
-    {
-        if (m_positionValue == NULL)
-            return LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
-        return *m_positionValue;
-    }
-
     void checkComputed(Length fontSize, Font* font)
     {
         if (m_sizeValue)
             m_sizeValue->checkComputed(fontSize, font);
 
-        if (m_positionValue)
-            m_positionValue->checkComputed(fontSize, font);
+        m_positionX.changeToFixedIfNeeded(fontSize, font);
+        m_positionY.changeToFixedIfNeeded(fontSize, font);
     }
 
 private:
@@ -157,7 +161,8 @@ private:
     BackgroundSizeType m_sizeType : 2;
 
     // background-position
-    LengthPosition* m_positionValue;
+    Length m_positionX;
+    Length m_positionY;
     // background-size
     LengthSize* m_sizeValue;
 };
@@ -192,14 +197,6 @@ public:
     {
         if (m_layers.size() <= layer)
             m_layers.resize(layer + 1);
-    }
-
-    void setPositionValue(LengthPosition position, unsigned int layer)
-    {
-        resizeLayerIfNeeded(layer);
-        if (m_maxLayerPositions < layer + 1)
-            m_maxLayerPositions = layer + 1;
-        m_layers[layer].setPositionValue(position);
     }
 
     void setSizeType(BackgroundSizeType type, unsigned int layer)
@@ -248,6 +245,22 @@ public:
         if (m_maxLayerRepeats < layer + 1)
             m_maxLayerRepeats = layer + 1;
         m_layers[layer].setRepeatY(repeat);
+    }
+
+    void setPositionX(Length position, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        if (m_maxLayerPositions < layer + 1)
+            m_maxLayerPositions = layer + 1;
+        m_layers[layer].setPositionX(position);
+    }
+
+    void setPositionY(Length position, unsigned int layer)
+    {
+        resizeLayerIfNeeded(layer);
+        if (m_maxLayerPositions < layer + 1)
+            m_maxLayerPositions = layer + 1;
+        m_layers[layer].setPositionY(position);
     }
 
     Color bgColor()
@@ -304,18 +317,18 @@ public:
         return m_layers[layer].sizeValue();
     }
 
-    bool hasPositionValue(unsigned int layer = 0)
+    Length positionX(unsigned int layer = 0)
     {
         if (m_layers.size() <= layer)
-            return false;
-        return m_layers[layer].hasPositionValue();
+            return Length(Length::Percent, 0.0f);
+        return m_layers[layer].positionX();
     }
 
-    LengthPosition positionValue(unsigned int layer = 0) const
+    Length positionY(unsigned int layer = 0)
     {
         if (m_layers.size() <= layer)
-            return LengthPosition(Length(Length::Percent, 0.0f), Length(Length::Percent, 0.0f));
-        return m_layers[layer].positionValue();
+            return Length(Length::Percent, 0.0f);
+        return m_layers[layer].positionY();
     }
 
     void checkComputed(Length fontSize, Font* font, Color color)
@@ -328,7 +341,8 @@ public:
             unsigned int i = m_maxLayerPositions;
             while (i < m_layers.size()) {
                 for (unsigned int p = 0; p < m_maxLayerPositions && i < m_layers.size(); p++, i++) {
-                    m_layers[i].setPositionValue(m_layers[p].positionValue());
+                    m_layers[i].setPositionX(m_layers[p].positionX());
+                    m_layers[i].setPositionY(m_layers[p].positionY());
                 }
             }
         }
@@ -392,9 +406,6 @@ bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
     if (a.m_image != b.m_image)
         return false;
 
-    if (a.positionValue() != b.positionValue())
-        return false;
-
     if (a.m_sizeType != b.m_sizeType)
         return false;
 
@@ -405,6 +416,12 @@ bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
         return false;
 
     if (a.m_repeatY != b.m_repeatY)
+        return false;
+
+    if (a.m_positionX != b.m_positionX)
+        return false;
+
+    if (a.m_positionY != b.m_positionY)
         return false;
 
     return true;
