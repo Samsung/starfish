@@ -530,6 +530,10 @@ public:
                             break;
                         if (!isAtomic)
                             break;
+                        if (p->shouldApplyOverflow())
+                            break;
+                        if (p->needsGraphicsBuffer())
+                            break;
                         if (!p->isPositionedElement())
                             break;
                         if (p->style()->IsSpecifiedZIndex())
@@ -544,6 +548,7 @@ public:
 
         }
     }
+
 
     void clearStackingContextIfNeeds()
     {
