@@ -434,6 +434,20 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             break;
         }
         break;
+    case 21:
+        // background-position-x
+        // background-position-y
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "background-position-x", 21) == 0) {
+                return CSSStyleKind::BackgroundPositionX;
+            }
+            if (memcmp(data, "background-position-y", 21) == 0) {
+                return CSSStyleKind::BackgroundPositionY;
+            }
+            break;
+        }
+        break;
     }
 
     return CSSStyleKind::Unknown;
@@ -775,6 +789,18 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "backgroundPosition", 18) == 0) {
                 return CSSStyleKind::BackgroundPosition;
+            }
+            break;
+        }
+        break;
+    case 19:
+        switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "backgroundPositionX", 19) == 0) {
+                return CSSStyleKind::BackgroundPositionX;
+            }
+            if (memcmp(data, "backgroundPositionY", 19) == 0) {
+                return CSSStyleKind::BackgroundPositionY;
             }
             break;
         }
