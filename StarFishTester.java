@@ -39,6 +39,8 @@ public class StarFishTester {
                 testFile = "tool/reftest/tclist/wpt_css3_color.res";
 			} else if (args[0].equals("css3_transforms")) {
                 testFile = "tool/reftest/tclist/wpt_css3_transforms.res";
+            } else if (args[0].equals("css1_rtl")) {
+				testFile = "tool/reftest/tclist/wpt_rtl_css1.res";
             }
 
 			String fileContent = new String(Files.readAllBytes(Paths.get(testFile)));
@@ -121,9 +123,8 @@ public class StarFishTester {
                             // System.out.println(tempDir);
 
 							String caseName = workItem;
-                            caseName = caseName.replace("test/reftest", "");
-							String folderName = outFolder + caseName;
-							folderName = folderName.substring(0, folderName.lastIndexOf('/'));
+							String outFolderName = outFolder + caseName.replace("test/reftest", "");
+							String folderName = outFolderName.substring(0, outFolderName.lastIndexOf('/'));
 
                             File rDir = new File(folderName);
                             rDir.mkdirs();
@@ -133,15 +134,12 @@ public class StarFishTester {
                             // excute runner
                             try {
 
-                                String resultFolder = reftestFolder + caseName + "/";
-								String resultXML = resultFolder + "/result.xml";
-								File xml = new File(resultXML);
-								String ss = "";
-                                String pngFile = outFolder + caseName + "_result.png";
+                                String ss = "";
+                                String pngFile = outFolderName + "_result.png";
                                 String workingDir = workItem.substring(0, workItem.lastIndexOf('/') + 1);
-                                    File png = new File(pngFile);
-                                    if (png.exists()) { png.delete(); }
-									ss = "./StarFish " + workItem + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + pngFile;
+                                File png = new File(pngFile);
+                                if (png.exists()) { png.delete(); }
+                                ss = "./StarFish " + workItem + " --pixel-test --width=" + 800 + " --height=" + 600 + " --screen-shot=" + pngFile;
 
 								// System.out.println(ss);
                                 Process process = runtime.exec(ss);
@@ -151,10 +149,9 @@ public class StarFishTester {
                             }
 
                             // take webkit screen shot
-                            String expectedPNG = outFolder + caseName + "_expected.png";
-                            if (enableNW)
-                                expectedPNG = "./test/reftest/" + caseName.replace("_converted", "_result/font_independent/") + "_expected.png";
+                            String expectedPNG = caseName.replace("_converted", "_result/font_independent/") + "_expected.png";
 
+                            /* phantomjs regacy code
 							try {
 
 								File sc = new File(expectedPNG);
@@ -171,11 +168,12 @@ public class StarFishTester {
 							} catch (Exception e) {
 
 							}
+                            */
 
 							// image diff
 							String testStatus="";
 							try {
-								String ss = "./tool/imgdiff/imgdiff " + outFolder + caseName + "_result.png" + " " + expectedPNG;
+								String ss = "./tool/imgdiff/imgdiff " + outFolderName + "_result.png" + " " + expectedPNG;
 								// System.out.println(ss);
 								Process process = runtime.exec(ss);
 								process.waitFor();
@@ -196,7 +194,7 @@ public class StarFishTester {
 									testStatus = "diff: 100.0% failed";
 								}
 								if (testStatus.contains("failed") || testStatus.contains("not exactly same")) {
-									ss = "test/tool/image_diff --diff " + outFolder + caseName + "_result.png" + " " + expectedPNG + " " + outFolder + caseName + "_diff.png";
+									ss = "test/tool/image_diff --diff " + outFolderName + "_result.png" + " " + expectedPNG + " " + outFolderName + "_diff.png";
 									process = runtime.exec(ss);
 									process.waitFor();
 								}
