@@ -550,6 +550,21 @@ public:
         return m_inlineBlockAscender[box];
     }
 
+    void addFrameBoxDirection(FrameBox* box, InlineTextBox::CharDirection dir)
+    {
+        m_frameBoxToDir[box] = dir;
+    }
+
+    InlineTextBox::CharDirection getFrameBoxDirection(FrameBox* box)
+    {
+        auto itr = m_frameBoxToDir.find(box);
+        if (itr == m_frameBoxToDir.end()) {
+            return InlineTextBox::CharDirection::Netural;
+        } else {
+            return m_frameBoxToDir[box];
+        }
+    }
+
     LayoutUnit m_lineBoxX;
     LayoutUnit m_lineBoxY;
     LayoutUnit m_currentLineWidth;
@@ -569,6 +584,7 @@ public:
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
     std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;
+    std::unordered_map<FrameBox*, InlineTextBox::CharDirection> m_frameBoxToDir;
 };
 }
 
