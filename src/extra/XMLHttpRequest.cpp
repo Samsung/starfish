@@ -23,7 +23,7 @@ namespace StarFish {
 
 XMLHttpRequest::XMLHttpRequest(Document* document)
     : m_networkRequest(new NetworkRequest(document))
-    , m_resposeText(String::emptyString)
+    , m_responseText(String::emptyString)
 {
     m_networkRequest->addNetworkRequestClient(this);
 }
@@ -48,13 +48,14 @@ void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url, bool a
 void XMLHttpRequest::abort()
 {
     m_networkRequest->abort();
+    m_responseText = String::emptyString;
 }
 
 String* XMLHttpRequest::responseText()
 {
     // if (!(m_responseType == DEFAULT_RESPONSE || m_responseType == TEXT_RESPONSE))
     //     throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
-    return m_resposeText;
+    return m_responseText;
 }
 
 void XMLHttpRequest::setTimeout(uint32_t timeout)
@@ -99,7 +100,7 @@ void XMLHttpRequest::onReadyStateChange(NetworkRequest* request, bool fromExplic
 {
     if (fromExplicit) {
         if (request->readyState() == NetworkRequest::DONE)
-            m_resposeText =  String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+            m_responseText =  String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
 
         String* eventType = request->starFish()->staticStrings()->m_readystatechange.localName();
         Event* e = new Event(eventType, EventInit(true, true));
