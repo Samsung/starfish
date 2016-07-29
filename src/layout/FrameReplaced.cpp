@@ -135,8 +135,13 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
 
-            LayoutLocation l1 = cb->absolutePoint(ctx.frameDocument());
-            LayoutLocation l2 = parent->absolutePoint(ctx.frameDocument());
+            LayoutLocation l1, l2;
+            if (cb->isAncestorOf(parent)) {
+                l2 = parent->absolutePoint(cb);
+            } else {
+                l1 = cb->absolutePoint(ctx.frameDocument());
+                l2 = parent->absolutePoint(ctx.frameDocument());
+            }
             LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
 
             LayoutUnit absX = absLoc.x() - cb->borderLeft();
@@ -232,8 +237,13 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         } else {
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
-            LayoutLocation l1 = cb->absolutePoint(ctx.frameDocument());
-            LayoutLocation l2 = parent->absolutePoint(ctx.frameDocument());
+            LayoutLocation l1, l2;
+            if (cb->isAncestorOf(parent)) {
+                l2 = parent->absolutePoint(cb);
+            } else {
+                l1 = cb->absolutePoint(ctx.frameDocument());
+                l2 = parent->absolutePoint(ctx.frameDocument());
+            }
             LayoutLocation absLoc(l2.x() - l1.x(), l2.y() - l1.y());
 
             LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
