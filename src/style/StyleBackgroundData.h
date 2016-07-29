@@ -337,7 +337,7 @@ public:
         if (m_layers.size() > m_maxLayerImages)
             m_layers.resize(m_maxLayerImages);
 
-        if (m_maxLayerPositions + 1 < m_layers.size()) {
+        if (m_maxLayerPositions > 0 && m_maxLayerPositions + 1 < m_layers.size()) {
             unsigned int i = m_maxLayerPositions;
             while (i < m_layers.size()) {
                 for (unsigned int p = 0; p < m_maxLayerPositions && i < m_layers.size(); p++, i++) {
@@ -346,7 +346,7 @@ public:
                 }
             }
         }
-        if (m_maxLayerSizes + 1 < m_layers.size()) {
+        if (m_maxLayerSizes > 0 && m_maxLayerSizes + 1 < m_layers.size()) {
             unsigned int i = m_maxLayerSizes;
             while (i < m_layers.size()) {
                 for (unsigned int p = 0; p < m_maxLayerSizes && i < m_layers.size(); p++, i++) {
@@ -355,7 +355,7 @@ public:
                 }
             }
         }
-        if (m_maxLayerRepeats + 1 < m_layers.size()) {
+        if (m_maxLayerRepeats > 0 && m_maxLayerRepeats + 1 < m_layers.size()) {
             unsigned int i = m_maxLayerRepeats;
             while (i < m_layers.size()) {
                 for (unsigned int p = 0; p < m_maxLayerRepeats && i < m_layers.size(); p++, i++) {
