@@ -410,6 +410,9 @@ String* String::toLower()
 
 String* String::concat(String* str)
 {
+    if (length() == 0) {
+        return str;
+    }
     if (isASCIIString() && str->isASCIIString()) {
         ASCIIString s = *asASCIIString() + *(str->asASCIIString());
         return new StringDataASCII(std::move(s));

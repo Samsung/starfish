@@ -1554,7 +1554,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isDocument()) {
-            return escargot::ESString::create("UTF-8");
+            return toJSString(nd->asDocument()->charset());
         }
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);

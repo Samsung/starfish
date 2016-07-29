@@ -47,6 +47,8 @@
 #include <unicode/brkiter.h>
 #include <unicode/ubidi.h>
 #include <unicode/uchar.h>
+#include <unicode/ucnv.h>
+#include <unicode/ucsdet.h>
 
 #include <pthread.h>
 #include <semaphore.h>

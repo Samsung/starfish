@@ -35,6 +35,12 @@ ResourceLoader::ResourceLoader(Document& document)
 {
 }
 
+Resource* ResourceLoader::fetch(const URL& url)
+{
+    Resource* res = new Resource(url, this);
+    return res;
+}
+
 TextResource* ResourceLoader::fetchText(const URL& url)
 {
     TextResource* res = new TextResource(url, this);

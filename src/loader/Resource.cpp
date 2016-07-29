@@ -31,6 +31,13 @@ public:
     {
     }
 
+    virtual void onReadyStateChange(NetworkRequest* request, bool isExplicitAction)
+    {
+        if (request->readyState() == NetworkRequest::HEADERS_RECEIVED) {
+            m_resource->didHeaderReceived(String::fromUTF8(request->responseHeaderData().data(), request->responseHeaderData().length()));
+        }
+    }
+
     virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
     {
         if (request->progressState() == NetworkRequest::LOAD) {
@@ -60,6 +67,15 @@ void Resource::cancel()
 {
     STARFISH_ASSERT(m_state == BeforeSend || m_state == Receiving);
     didLoadCanceled();
+}
+
+void Resource::didHeaderReceived(String* header)
+{
+    auto iter = m_resourceClients.begin();
+    while (iter != m_resourceClients.end()) {
+        (*iter)->didHeaderReceived(header);
+        iter++;
+    }
 }
 
 void Resource::didDataReceived(const char* buf, size_t length)
@@ -108,6 +124,7 @@ void Resource::didLoadCanceled()
         iter2++;
     }
     m_requstedIdlers.clear();
+    m_networkRequest->abort(false);
     m_networkRequest = nullptr;
 }
 

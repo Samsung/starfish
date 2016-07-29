@@ -163,7 +163,8 @@ void Element::setTextContent(String* text)
 #ifdef STARFISH_ENABLE_TEST
 String* Element::innerHTML()
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    // STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return String::emptyString;
 }
 
 void Element::setInnerHTML(String* html)

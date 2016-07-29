@@ -22,7 +22,7 @@
 namespace StarFish {
 
 class Window;
-class TextResource;
+class Resource;
 class HTMLParser;
 
 class HTMLDocumentBuilder : public DocumentBuilder {
@@ -31,7 +31,7 @@ public:
     HTMLDocumentBuilder(Document* document)
         : DocumentBuilder(document)
         , m_parser(nullptr)
-        , m_textResource(nullptr)
+        , m_resource(nullptr)
     {
     }
 
@@ -43,7 +43,7 @@ public:
     }
 protected:
     HTMLParser* m_parser;
-    TextResource* m_textResource;
+    Resource* m_resource;
 };
 
 
