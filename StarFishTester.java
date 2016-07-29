@@ -39,8 +39,18 @@ public class StarFishTester {
                 testFile = "tool/reftest/tclist/wpt_css3_color.res";
 			} else if (args[0].equals("css3_transforms")) {
                 testFile = "tool/reftest/tclist/wpt_css3_transforms.res";
+            } else if (args[0].equals("css_rtl")) {
+				testFile = "tool/reftest/tclist/wpt_rtl_css.res";
             } else if (args[0].equals("css1_rtl")) {
 				testFile = "tool/reftest/tclist/wpt_rtl_css1.res";
+            } else if (args[0].equals("css21_rtl")) {
+				testFile = "tool/reftest/tclist/wpt_rtl_css21.res";
+			} else if (args[0].equals("css3_backgrounds_rtl")) {
+                testFile = "tool/reftest/tclist/wpt_rtl_css3_backgrounds.res";
+			} else if (args[0].equals("css3_color_rtl")) {
+                testFile = "tool/reftest/tclist/wpt_rtl_css3_color.res";
+			} else if (args[0].equals("css3_transforms_rtl")) {
+                testFile = "tool/reftest/tclist/wpt_rtl_css3_transforms.res";
             }
 
 			String fileContent = new String(Files.readAllBytes(Paths.get(testFile)));
