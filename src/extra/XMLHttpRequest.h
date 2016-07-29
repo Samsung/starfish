@@ -58,7 +58,7 @@ public:
     virtual void onReadyStateChange(NetworkRequest* request, bool fromExplicit);
 protected:
     NetworkRequest* m_networkRequest;
-    String* m_resposeText;
+    String* m_responseText;
 };
 }
 
