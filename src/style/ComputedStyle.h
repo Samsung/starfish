@@ -173,6 +173,11 @@ public:
         return m_inheritedStyles.m_direction;
     }
 
+    void setDirection(DirectionValue val)
+    {
+        m_inheritedStyles.m_direction = val;
+    }
+
     void setLineHeight(Length length)
     {
         m_inheritedStyles.m_lineHeight = length;
