@@ -415,6 +415,7 @@ static bool parseBackgroundPositionShorhand(std::vector<String*, gc_allocator<St
             checker &= y.updateValueUnitBackgroundPositionY(tok2);
 
             if (!checker && x.valueKind() == sideKind && y.valueKind() == sideKind) {
+                checker = true;
                 checker &= x.updateValueUnitBackgroundPositionX(tok2);
                 checker &= y.updateValueUnitBackgroundPositionY(tok1);
             }
@@ -426,6 +427,7 @@ static bool parseBackgroundPositionShorhand(std::vector<String*, gc_allocator<St
         }
         retx->multiValue()->append(x);
         rety->multiValue()->append(y);
+        len = 0;
     }
 
     return true;
