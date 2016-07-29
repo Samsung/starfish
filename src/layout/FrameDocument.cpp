@@ -31,6 +31,7 @@ void FrameDocument::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         STARFISH_ASSERT(firstChild() == lastChild());
         STARFISH_ASSERT(firstChild()->isRootElement());
 
+        style()->setDirection(firstChild()->style()->direction());
         FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     }
 }

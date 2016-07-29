@@ -542,7 +542,11 @@ pixel_test:
 pixel_test_css:
 	java StarFishTester $(tc) $(engine)
 pixel_test_css_rtl:
-	make pixel_test_css tc=css_rtl engine=nw
+	make pixel_test_css tc=css_rtl engine=nw 2> out/pixel_test_css_rtl.log
+	@cat out/pixel_test_css_rtl.log | grep "% passed" | cut -d' ' -f1 | sort -d > out/wpt_cssrtl_passed.res
+	mv tool/reftest/wpt_cssrtl_passed.res out/wpt_cssrtl_passed.orig
+	cp out/wpt_cssrtl_passed.res tool/reftest/
+	@diff out/wpt_cssrtl_passed.res out/wpt_cssrtl_passed.orig
 pixel_test_css1:
 	make pixel_test_css tc=css1 engine=nw
 pixel_test_css21:
