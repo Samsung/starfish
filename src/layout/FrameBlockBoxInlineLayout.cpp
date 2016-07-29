@@ -444,7 +444,7 @@ static InlineTextBox::CharDirection charDirFromICUDir(UBiDiDirection dir)
     } else if (dir == UBIDI_RTL) {
         return InlineTextBox::CharDirection::Rtl;
     } else if (dir == UBIDI_NEUTRAL) {
-        return InlineTextBox::CharDirection::Netural;
+        return InlineTextBox::CharDirection::Neutral;
     } else {
         STARFISH_ASSERT(dir == UBIDI_MIXED);
         return InlineTextBox::CharDirection::Mixed;
@@ -561,7 +561,7 @@ static std::vector<TextRun, gc_allocator<TextRun> > textBidiResolver(String* txt
 
     for (size_t i = 0; i < result.size(); i ++) {
         if (isNumber(result[i].m_text)) {
-            result[i].m_direction = InlineTextBox::CharDirection::Netural;
+            result[i].m_direction = InlineTextBox::CharDirection::Neutral;
             continue;
         }
 
@@ -717,16 +717,16 @@ static InlineTextBox::CharDirection contentDir(FrameBox* box, LineFormattingCont
                     } else { // netural
                     }
                 }
-                return InlineTextBox::CharDirection::Netural;
+                return InlineTextBox::CharDirection::Neutral;
             }
         } else {
-            return InlineTextBox::CharDirection::Netural;
+            return InlineTextBox::CharDirection::Neutral;
         }
     } else if (box->isFrameReplaced()) {
         FrameReplaced* b = box->asFrameReplaced();
         return ctx.getFrameBoxDirection(b);
     } else {
-        return InlineTextBox::CharDirection::Netural;
+        return InlineTextBox::CharDirection::Neutral;
     }
 }
 
@@ -911,16 +911,16 @@ static void resolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, st
             InlineTextBox::CharDirection currentDirectionBefore = currentDirection;
             FrameBox* box = fetchContentForResolveBidi(oldBoxes[i]);
             InlineTextBox::CharDirection dir = contentDir(box, ctx);
-            if (dir == InlineTextBox::CharDirection::Netural) {
+            if (dir == InlineTextBox::CharDirection::Neutral) {
                 InlineTextBox::CharDirection nextDir = InlineTextBox::CharDirection::Ltr;
                 for (size_t j = i + 1; j < oldBoxes.size(); j ++) {
                     nextDir = contentDir(fetchContentForResolveBidi(oldBoxes[j]), ctx);
-                    if (nextDir != InlineTextBox::CharDirection::Netural) {
+                    if (nextDir != InlineTextBox::CharDirection::Neutral) {
                         break;
                     }
                 }
 
-                if (currentDirection == InlineTextBox::CharDirection::Rtl && nextDir == InlineTextBox::CharDirection::Netural) {
+                if (currentDirection == InlineTextBox::CharDirection::Rtl && nextDir == InlineTextBox::CharDirection::Neutral) {
                     currentDirection = InlineTextBox::CharDirection::Ltr;
                 } else if (currentDirection == InlineTextBox::CharDirection::Rtl && nextDir == InlineTextBox::CharDirection::Ltr) {
                     currentDirection = InlineTextBox::CharDirection::Ltr;
@@ -967,16 +967,16 @@ static void resolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, st
             InlineTextBox::CharDirection currentDirectionBefore = currentDirection;
             FrameBox* box = fetchContentForResolveBidi(oldBoxes[i]);
             InlineTextBox::CharDirection dir = contentDir(box, ctx);
-            if (dir == InlineTextBox::CharDirection::Netural) {
+            if (dir == InlineTextBox::CharDirection::Neutral) {
                 InlineTextBox::CharDirection nextDir = InlineTextBox::CharDirection::Rtl;
                 for (size_t j = i + 1; j < oldBoxes.size(); j ++) {
                     nextDir = contentDir(fetchContentForResolveBidi(oldBoxes[j]), ctx);
-                    if (nextDir != InlineTextBox::CharDirection::Netural) {
+                    if (nextDir != InlineTextBox::CharDirection::Neutral) {
                         break;
                     }
                 }
 
-                if (currentDirection == InlineTextBox::CharDirection::Ltr && nextDir == InlineTextBox::CharDirection::Netural) {
+                if (currentDirection == InlineTextBox::CharDirection::Ltr && nextDir == InlineTextBox::CharDirection::Neutral) {
                     currentDirection = InlineTextBox::CharDirection::Rtl;
                 } else if (currentDirection == InlineTextBox::CharDirection::Ltr && nextDir == InlineTextBox::CharDirection::Rtl) {
                     currentDirection = InlineTextBox::CharDirection::Rtl;

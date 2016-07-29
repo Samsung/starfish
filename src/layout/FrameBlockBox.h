@@ -68,7 +68,7 @@ public:
         Ltr,
         Rtl,
         Mixed,
-        Netural,
+        Neutral,
     };
 
     InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, FrameText* origin, CharDirection charDirection)
@@ -559,7 +559,7 @@ public:
     {
         auto itr = m_frameBoxToDir.find(box);
         if (itr == m_frameBoxToDir.end()) {
-            return InlineTextBox::CharDirection::Netural;
+            return InlineTextBox::CharDirection::Neutral;
         } else {
             return m_frameBoxToDir[box];
         }
