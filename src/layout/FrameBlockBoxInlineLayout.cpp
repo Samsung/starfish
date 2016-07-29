@@ -694,7 +694,7 @@ void splitInlineBoxesAndMarkDirectionForResolveBidi(LineFormattingContext& ctx, 
     }
 }
 
-static InlineTextBox::CharDirection contentDir(FrameBox* box)
+static InlineTextBox::CharDirection contentDir(FrameBox* box, LineFormattingContext& ctx)
 {
     if (box->isInlineBox()) {
         InlineBox* ib = box->asInlineBox();
@@ -709,7 +709,7 @@ static InlineTextBox::CharDirection contentDir(FrameBox* box)
             } else {
                 const std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes = b->boxes();
                 for (size_t i = 0; i < boxes.size(); i ++) {
-                    InlineTextBox::CharDirection dir = contentDir(boxes[i]);
+                    InlineTextBox::CharDirection dir = contentDir(boxes[i], ctx);
                     if (dir == InlineTextBox::CharDirection::Ltr) {
                         return InlineTextBox::CharDirection::Ltr;
                     } else if (dir == InlineTextBox::CharDirection::Rtl) {
@@ -722,6 +722,9 @@ static InlineTextBox::CharDirection contentDir(FrameBox* box)
         } else {
             return InlineTextBox::CharDirection::Netural;
         }
+    } else if (box->isFrameReplaced()) {
+        FrameReplaced* b = box->asFrameReplaced();
+        return ctx.getFrameBoxDirection(b);
     } else {
         return InlineTextBox::CharDirection::Netural;
     }
@@ -907,11 +910,11 @@ static void resolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, st
         for (size_t i = 0; i < oldBoxes.size(); i ++) {
             InlineTextBox::CharDirection currentDirectionBefore = currentDirection;
             FrameBox* box = fetchContentForResolveBidi(oldBoxes[i]);
-            InlineTextBox::CharDirection dir = contentDir(box);
+            InlineTextBox::CharDirection dir = contentDir(box, ctx);
             if (dir == InlineTextBox::CharDirection::Netural) {
                 InlineTextBox::CharDirection nextDir = InlineTextBox::CharDirection::Ltr;
                 for (size_t j = i + 1; j < oldBoxes.size(); j ++) {
-                    nextDir = contentDir(fetchContentForResolveBidi(oldBoxes[j]));
+                    nextDir = contentDir(fetchContentForResolveBidi(oldBoxes[j]), ctx);
                     if (nextDir != InlineTextBox::CharDirection::Netural) {
                         break;
                     }
@@ -963,11 +966,11 @@ static void resolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, st
         for (size_t i = 0; i < oldBoxes.size(); i ++) {
             InlineTextBox::CharDirection currentDirectionBefore = currentDirection;
             FrameBox* box = fetchContentForResolveBidi(oldBoxes[i]);
-            InlineTextBox::CharDirection dir = contentDir(box);
+            InlineTextBox::CharDirection dir = contentDir(box, ctx);
             if (dir == InlineTextBox::CharDirection::Netural) {
                 InlineTextBox::CharDirection nextDir = InlineTextBox::CharDirection::Rtl;
                 for (size_t j = i + 1; j < oldBoxes.size(); j ++) {
-                    nextDir = contentDir(fetchContentForResolveBidi(oldBoxes[j]));
+                    nextDir = contentDir(fetchContentForResolveBidi(oldBoxes[j]), ctx);
                     if (nextDir != InlineTextBox::CharDirection::Netural) {
                         break;
                     }
@@ -1460,6 +1463,182 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     LineFormattingContext lineFormattingContext(*this, ctx, paddingLeft() + borderLeft(), paddingTop() + borderTop(), inlineContentWidth);
     LayoutUnit unused;
 
+    // for RTL, we calculate the direction for replacedBoxes
+    if (style()->direction() == DirectionValue::RtlDirectionValue) {
+        std::vector<FrameBox*, gc_allocator<FrameBox*> > boxes;
+
+        auto createInlineBoxes = [&boxes](Frame* node, DirectionValue parentDir)
+        {
+            String* txt = node->asFrameText()->text();
+            UBiDi* bidi = ubidi_open();
+            UTF16String str = txt->toUTF16String();
+            UErrorCode err = (UErrorCode)0;
+            ubidi_setPara(bidi, (const UChar*)str.data(), str.length(), parentDir == DirectionValue::LtrDirectionValue ? UBIDI_DEFAULT_LTR : UBIDI_DEFAULT_RTL, NULL, &err);
+            STARFISH_ASSERT(U_SUCCESS(err));
+            size_t total = ubidi_countRuns(bidi, &err);
+            STARFISH_ASSERT(U_SUCCESS(err));
+
+            int32_t s = 0;
+            int32_t e;
+            for (size_t i = 0; i < total; i++) {
+                ubidi_getLogicalRun(bidi, s, &e, NULL);
+                String* t = txt->substring(s, e-s);
+                s = e;
+                UTF16String runText = t->toUTF16String();
+                UBiDiDirection dir = ubidi_getBaseDirection((const UChar*)runText.data(), runText.length());
+                InlineBox* ib = new InlineTextBox(node->node(), node->style(), nullptr, t, node->asFrameText(), charDirFromICUDir(dir));
+                boxes.push_back(ib);
+            }
+            ubidi_close(bidi);
+        };
+
+        // 1. split texts to runs and create InlineTextboxes with direction info
+        std::function<void(Frame*p)> splitToInlineBoxes = [&boxes, &createInlineBoxes, &splitToInlineBoxes](Frame* p)
+        {
+            for (Frame* child = p->firstChild(); child; child = child->next()) {
+                if (child->isNormalFlow()) {
+                    if (child->isFrameText()) {
+                        createInlineBoxes(child, DirectionValue::RtlDirectionValue);
+                    } else if (child->isFrameReplaced()) {
+                        FrameReplaced* f = child->asFrameReplaced();
+                        boxes.push_back(f);
+                    } else if (child->isFrameBlockBox()) {
+                        FrameBlockBox* b = child->asFrameBlockBox();
+                        boxes.push_back(b);
+                    } else if (child->isFrameLineBreak()) {
+                        // FrameLineBreak* b = child->asFrameLineBreak();
+                        // boxes.push_back(child);
+                    } else if (child->isFrameInline()) {
+                        splitToInlineBoxes(child);
+                    } else {
+                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    }
+                }
+            }
+        };
+        splitToInlineBoxes(this);
+
+        // 2. Add direction info to FrameReplaced
+        InlineTextBox::CharDirection dir = InlineTextBox::CharDirection::Rtl;
+        // 0: if the first text is a ltr word, set direction to ltr
+        for (size_t i = 0; i < boxes.size(); i++) {
+            if (boxes[i]->isInlineBox() && boxes[i]->asInlineBox()->isInlineTextBox()) {
+                InlineTextBox* ib = boxes[i]->asInlineBox()->asInlineTextBox();
+                dir = ib->charDirection();
+                if (dir == InlineTextBox::Ltr) {
+                    dir = InlineTextBox::CharDirection::Ltr;
+                }
+                break;
+            }
+        }
+
+        auto scanBackward = [&boxes](size_t s, InlineTextBox::CharDirection defaultDir)
+        {
+            for (size_t i = s; i < boxes.size(); i--) {
+                if (boxes[i]->isInlineBox() && boxes[i]->asInlineBox()->isInlineTextBox()) {
+                    InlineTextBox* textBox = boxes[i]->asInlineBox()->asInlineTextBox();
+                    if (!textBox->text()->containsOnlyWhitespace()) {
+                        return textBox->charDirection();
+                    }
+                }
+            }
+            return defaultDir;
+        };
+
+        auto scanForward = [&boxes](size_t s, InlineTextBox::CharDirection defaultDir)
+        {
+            for (size_t i = s; i < boxes.size(); i++) {
+                if (boxes[i]->isInlineBox() && boxes[i]->asInlineBox()->isInlineTextBox()) {
+                    InlineTextBox* textBox = boxes[i]->asInlineBox()->asInlineTextBox();
+                    if (!textBox->text()->containsOnlyWhitespace()) {
+                        return textBox->charDirection();
+                    }
+                }
+            }
+            return defaultDir;
+        };
+
+        auto setDir = [&boxes, &lineFormattingContext](size_t s, size_t e, InlineTextBox::CharDirection dir)
+        {
+            for (size_t i = s; i < boxes.size() && i <= e; i++) {
+                if (boxes[i]->isFrameReplaced() || boxes[i]->isFrameBlockBox()) {
+                    FrameBox* box = boxes[i]->asFrameBox();
+                    lineFormattingContext.addFrameBoxDirection(box, dir);
+                }
+            }
+        };
+
+        size_t i = 0;
+        while (i < boxes.size()) {
+            // 1. Skip frameText to find the next framebox
+            while (i < boxes.size() && !boxes[i]->isFrameReplaced()) {
+                i++;
+            }
+
+            // 2. find the last consecutive framebox
+            size_t s = i;
+            size_t e = s;
+            while (i < boxes.size()) {
+                if (boxes[i]->isFrameReplaced()) {
+                    e = i;
+                } else {
+                    // stop if we reach a non-whitespace frameText
+                    if (boxes[i]->asInlineBox()->isInlineTextBox()) {
+                        InlineTextBox* textBox = boxes[i]->asInlineBox()->asInlineTextBox();
+                        String* txt = textBox->text();
+                        if (!txt->containsOnlyWhitespace()) { // found a text
+                            break;
+                        }
+                    }
+                }
+                i++;
+            }
+
+            // 3. get the dir of nearby text
+            InlineTextBox::CharDirection leftDir = scanBackward(s-1, dir);
+            InlineTextBox::CharDirection rightDir = scanForward(e+1, dir);
+            InlineTextBox::CharDirection replacedBoxDir = InlineTextBox::CharDirection::Rtl;
+            if (leftDir == InlineTextBox::CharDirection::Ltr && rightDir == InlineTextBox::CharDirection::Ltr) {
+                replacedBoxDir = InlineTextBox::CharDirection::Ltr;
+            }
+            setDir(s, e, replacedBoxDir);
+
+            if (i >= boxes.size()) {
+                break;
+            }
+        }
+
+#ifndef NDEBUG
+        auto printNodes = [&boxes, &lineFormattingContext]()
+        {
+            printf("=========================\n");
+            for (size_t i = 0; i < boxes.size(); i++) {
+                if (boxes[i]->isInlineBox() && boxes[i]->asInlineBox()->isInlineTextBox()) {
+                    InlineTextBox* ib = boxes[i]->asInlineBox()->asInlineTextBox();
+                    InlineTextBox::CharDirection dir = ib->charDirection();
+                    if (dir == InlineTextBox::Ltr) {
+                        printf("/%s/: ltr\n", ib->text()->utf8Data());
+                    } else if (dir == InlineTextBox::Rtl) {
+                        printf("/%s/: rtl\n", ib->text()->utf8Data());
+                    } else if (dir == InlineTextBox::Mixed) {
+                        printf("/%s/: mixed\n", ib->text()->utf8Data());
+                    } else {
+                        printf("/ /: \n");
+                    }
+                } else if (boxes[i]->isFrameReplaced()) {
+                    FrameReplaced* b = boxes[i]->asFrameReplaced();
+                    InlineTextBox::CharDirection d = lineFormattingContext.getFrameBoxDirection(b);
+                    printf("/img/: %s\n", d == InlineTextBox::CharDirection::Ltr? "ltr": "rtl");
+                } else if (boxes[i]->isFrameBlockBox()) {
+                    printf("/block/: ");
+                } else {
+                    printf("/other/\n");
+                }
+            }
+        };
+#endif
+    }
+
     inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, unused, [&](FrameBox* ib) {
         lineFormattingContext.currentLine()->boxes().push_back(ib);
         ib->setLayoutParent(lineFormattingContext.currentLine());
@@ -1485,6 +1664,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             lineFormattingContext.currentLine()->boxes().push_back(box);
         }
     });
+
 
     LineBox* back = m_lineBoxes.back();
     LayoutUnit ascender;
