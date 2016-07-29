@@ -46,16 +46,12 @@ class Document : public Node {
 #endif
     friend class ActiveNetworkRequestTracker;
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url);
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url, String* charSet);
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
     void setCompatibilityMode(CompatibilityMode m)
     {
         m_compatibilityMode = m;
-        if (m != NoQuirksMode) {
-            STARFISH_LOG_ERROR("%s is not specified standard mode doctype. currently, StarFish could not support quirks mode.\n", m_documentURI.urlString()->utf8Data());
-            STARFISH_LOG_ERROR("You could got unexpected rendering result. please use standard mode doctype[<!DOCTYPE html>]\n");
-        }
     }
     CompatibilityMode compatibilityMode() const { return m_compatibilityMode; }
     bool inQuirksMode() const { return m_compatibilityMode == QuirksMode; }
@@ -187,14 +183,24 @@ public:
     }
 
     Element* elementFromPoint(float x, float y);
-
     ImageData* brokenImage();
+    String* charset()
+    {
+        return m_charset;
+    }
 protected:
+    // only used in html document builder
+    friend class HTMLResourceClient;
+    void setCharset(String* s)
+    {
+        m_charset = s;
+    }
     bool m_inParsing : 1;
     bool m_didLoadBrokenImage : 1;
     CompatibilityMode m_compatibilityMode;
     Window* m_window;
     URL m_documentURI;
+    String* m_charset;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;
     DocumentBuilder* m_documentBuilder;

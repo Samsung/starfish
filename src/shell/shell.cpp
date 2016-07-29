@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
-    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "en-us", "Asia/Seoul", nullptr, width, height, 1);
+    StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr, width, height, 1);
     sf->loadHTMLDocument(String::createASCIIString(argv[1]));
 
     pthread_t t;

@@ -37,6 +37,15 @@ public:
         Canceled,
     };
 
+    Resource(const URL& url, ResourceLoader* loader)
+        : m_state(BeforeSend)
+        , m_isIncludedInComputingWindowOnLoadEvent(true)
+        , m_url(url)
+        , m_loader(loader)
+        , m_networkRequest(nullptr)
+    {
+    }
+
     virtual ~Resource()
     {
 
@@ -91,7 +100,7 @@ public:
 
     virtual void request(bool needsSyncRequest = false);
     virtual void cancel();
-
+    virtual void didHeaderReceived(String* header);
     virtual void didDataReceived(const char*, size_t length);
     virtual void didLoadFinished();
     virtual void didLoadFailed();
@@ -124,14 +133,6 @@ public:
         return m_isIncludedInComputingWindowOnLoadEvent;
     }
 protected:
-    Resource(const URL& url, ResourceLoader* loader)
-        : m_state(BeforeSend)
-        , m_isIncludedInComputingWindowOnLoadEvent(true)
-        , m_url(url)
-        , m_loader(loader)
-        , m_networkRequest(nullptr)
-    {
-    }
     State m_state;
     bool m_isIncludedInComputingWindowOnLoadEvent;
     URL m_url;

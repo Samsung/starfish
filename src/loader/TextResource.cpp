@@ -14,39 +14,19 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishHTMLDocumentBuilderElement__
-#define __StarFishHTMLDocumentBuilderElement__
+#include "StarFishConfig.h"
+#include "TextResource.h"
 
-#include "dom/builder/DocumentBuilder.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 
-class Window;
-class Resource;
-class HTMLParser;
-
-class HTMLDocumentBuilder : public DocumentBuilder {
-    friend class HTMLResourceClient;
-public:
-    HTMLDocumentBuilder(Document* document)
-        : DocumentBuilder(document)
-        , m_parser(nullptr)
-        , m_resource(nullptr)
-    {
-    }
-
-    virtual void build(const URL& url);
-    virtual void resume();
-    HTMLParser* parser()
-    {
-        return m_parser;
-    }
-protected:
-    HTMLParser* m_parser;
-    Resource* m_resource;
-};
-
-
+void TextResource::didDataReceived(const char* buffer, size_t length)
+{
+    Resource::didDataReceived(buffer, length);
+    if (!m_converter)
+        m_converter = new TextConverter(m_networkRequest->mimeType(), m_networkRequest->starFish()->window()->document()->charset(), buffer, length);
+    m_text = m_text->concat(m_converter->convert(buffer, length, true));
 }
 
-#endif
+}

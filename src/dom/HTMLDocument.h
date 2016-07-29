@@ -26,8 +26,8 @@ class Window;
 
 class HTMLDocument : public Document {
 public:
-    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url)
-        : Document(window, scriptBindingInstance, url)
+    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url, String* charSet)
+        : Document(window, scriptBindingInstance, url, charSet)
     {
     }
 

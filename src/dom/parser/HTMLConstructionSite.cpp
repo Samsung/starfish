@@ -469,7 +469,7 @@ void HTMLConstructionSite::setCompatibilityModeFromDoctype(String* name, String*
     // No Quirks - no quirks apply. Web pages will obey the specifications to the letter.
 
     // Check for Quirks Mode.
-    if (name->equals("html")
+    if (!name->equals("html")
         || publicId->startsWith("+//Silmaril//dtd html Pro v0r11 19970101//", false)
         || publicId->startsWith("-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//", false)
         || publicId->startsWith("-//AS//DTD HTML 3.0 asWedit + extensions//", false)

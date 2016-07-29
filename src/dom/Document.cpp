@@ -30,13 +30,14 @@
 
 namespace StarFish {
 
-Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& uri)
+Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& uri, String* charSet)
     : Node(this, scriptBindingInstance)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_window(window)
     , m_documentURI(uri)
+    , m_charset(charSet)
     , m_resourceLoader(*this)
     , m_styleResolver(*this)
     , m_documentBuilder(nullptr)
@@ -243,6 +244,10 @@ void Document::notifyDomContentLoaded()
     m_documentBuilder = nullptr;
 
     STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
+    if (m_compatibilityMode != NoQuirksMode) {
+        STARFISH_LOG_ERROR("%s is not specified standard mode doctype. currently, StarFish could not support quirks mode.\n", m_documentURI.urlString()->utf8Data());
+        STARFISH_LOG_ERROR("You could got unexpected rendering result. please use standard mode doctype[<!DOCTYPE html>]\n");
+    }
 }
 
 void Document::close()

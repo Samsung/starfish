@@ -56,6 +56,11 @@ public:
 
     }
 
+    virtual void didHeaderReceived(String* header)
+    {
+
+    }
+
     Resource* resource()
     {
         return m_resource;

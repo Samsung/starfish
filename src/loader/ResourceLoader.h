@@ -31,6 +31,7 @@ class ResourceLoader : public gc {
 public:
     ResourceLoader(Document& doc);
 
+    Resource* fetch(const URL& url);
     TextResource* fetchText(const URL& url);
     ImageResource* fetchImage(const URL& url);
 

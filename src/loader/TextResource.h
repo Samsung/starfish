@@ -18,6 +18,8 @@
 #define __StarFishTextResource__
 
 #include "loader/Resource.h"
+#include "util/TextConverter.h"
+#include "platform/network/NetworkRequest.h"
 
 namespace StarFish {
 
@@ -25,6 +27,7 @@ class TextResource : public Resource {
     friend class ResourceLoader;
     TextResource(const URL& url, ResourceLoader* loader)
         : Resource(url, loader)
+        , m_converter(nullptr)
         , m_text(String::emptyString)
     {
     }
@@ -34,19 +37,20 @@ public:
         return true;
     }
 
-    virtual void didDataReceived(const char* buffer, size_t length)
-    {
-        Resource::didDataReceived(buffer, length);
-        m_text = m_text->concat(String::fromUTF8(buffer, length));
-    }
+    virtual void didDataReceived(const char* buffer, size_t length);
 
     String* text()
     {
         return m_text;
     }
 
+    String* characterEncoding()
+    {
+        return m_converter ? m_converter->encoding() : String::createASCIIString("UTF-8");
+    }
+
 protected:
-    // TextEncoding m_textEncoding;
+    TextConverter* m_converter;
     String* m_text;
 };
 }

@@ -394,7 +394,7 @@ Window::Window(StarFish* starFish, const URL& url)
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
 
-    m_document = new HTMLDocument(this, starFish->scriptBindingInstance(), url);
+    m_document = new HTMLDocument(this, starFish->scriptBindingInstance(), url, String::createASCIIString("UTF-8"));
 }
 
 // #define STARFISH_ENABLE_TIMER

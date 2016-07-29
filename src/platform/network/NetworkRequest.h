@@ -163,6 +163,11 @@ public:
         return m_starFish;
     }
 
+    const NetworkRequestResponseHeader& responseHeaderData()
+    {
+        return m_responseHeaderData;
+    }
+
     const NetworkRequestResponse& responseData()
     {
         return m_response;
