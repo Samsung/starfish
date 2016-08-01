@@ -2055,6 +2055,8 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                             return;
                         } else if (nextOffset == srcTxt->length() && f == f->parent()->lastChild()) {
                             return;
+                        } else if (offset == 0 && currentLineWidth == 0) {
+                            return;
                         }
                     }
 
