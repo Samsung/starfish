@@ -23,9 +23,18 @@ namespace StarFish {
 
 XMLHttpRequest::XMLHttpRequest(Document* document)
     : m_networkRequest(new NetworkRequest(document))
-    , m_responseText(String::emptyString)
 {
+    m_responseType = ResponseType::Unspecified;
+    initResponseData();
     m_networkRequest->addNetworkRequestClient(this);
+}
+
+void XMLHttpRequest::initResponseData()
+{
+    m_textConverter = nullptr;
+    m_responseText = String::emptyString;
+
+    m_responseJsonObject = ScriptValueNull;
 }
 
 void XMLHttpRequest::send(String* body)
@@ -43,6 +52,7 @@ void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url, bool a
     if (!async && m_networkRequest->timeout() != 0)
         throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::INVALID_ACCESS_ERR, "InvalidAccessError");
     m_networkRequest->open(method, url, async, userName, password);
+    initResponseData();
 }
 
 void XMLHttpRequest::abort()
@@ -51,10 +61,48 @@ void XMLHttpRequest::abort()
     m_responseText = String::emptyString;
 }
 
+void XMLHttpRequest::setResponseType(ResponseType type)
+{
+    // If the state is LOADING or DONE, throw an "InvalidStateError" exception.
+    if (m_networkRequest->readyState() == NetworkRequest::LOADING || m_networkRequest->readyState() == NetworkRequest::DONE) {
+        throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "The response type cannot be set if the object's state is LOADING or DONE.");
+    }
+    // If the JavaScript global environment is a document environment and the synchronous flag is set, throw an "InvalidAccessError" exception.
+    if (/*isMainThread() &&*/m_networkRequest->isSync()) {
+        throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::INVALID_ACCESS_ERR, "Failed to set the 'responseType' property on 'XMLHttpRequest': The response type cannot be changed for synchronous requests made from a document.");
+    }
+    // TODO If the JavaScript global environment is a worker environment and the given value is "document", terminate these steps.
+    // Set the responseType attribute's value to the given value.
+    m_responseType = type;
+}
+
+XMLHttpRequest::ResponseType XMLHttpRequest::responseType()
+{
+    return m_responseType;
+}
+
+ScriptValue XMLHttpRequest::response()
+{
+    if (m_responseType == ResponseType::Unspecified || m_responseType == ResponseType::Text) {
+        return createScriptString(responseText());
+    } else if (m_responseType == ResponseType::Json) {
+        return m_responseJsonObject;
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
 String* XMLHttpRequest::responseText()
 {
-    // if (!(m_responseType == DEFAULT_RESPONSE || m_responseType == TEXT_RESPONSE))
-    //     throw new DOMException(m_bindingInstance, DOMException::INVALID_STATE_ERR, "InvalidStateError");
+    if (!(m_responseType == ResponseType::Unspecified || m_responseType == ResponseType::Text))
+        throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "Failed to read the 'responseText' property from 'XMLHttpRequest': The value is only accessible if the object's 'responseType' is '' or 'text'");
+
+    if (m_textConverter == nullptr) {
+        m_textConverter = new TextConverter(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+    }
+    m_responseText = m_responseText->concat(m_textConverter->convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), false));
+    m_networkRequest->responseData().clear();
+
     return m_responseText;
 }
 
@@ -69,9 +117,9 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
 {
     String* eventName = String::emptyString;
     NetworkRequest::ProgressState progState = request->progressState();
-    if (progState == NetworkRequest::PROGRESS)
+    if (progState == NetworkRequest::PROGRESS) {
         eventName = request->starFish()->staticStrings()->m_progress.localName();
-    else if (progState == NetworkRequest::ERROR) {
+    } else if (progState == NetworkRequest::ERROR) {
         eventName = request->starFish()->staticStrings()->m_error.localName();
         if (!m_networkRequest->url().isFileURL() && !m_networkRequest->url().isDataURL() && request->isSync()) {
             throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::NETWORK_ERR, "NetworkError");
@@ -84,6 +132,17 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
     } else if (progState == NetworkRequest::TIMEOUT)
         eventName = request->starFish()->staticStrings()->m_timeout.localName();
     else if (progState == NetworkRequest::LOAD) {
+        // process response
+        if (m_responseType == ResponseType::Unspecified || m_responseType == ResponseType::Text) {
+            // fill response text before release response data
+            responseText();
+        } else if (m_responseType == ResponseType::Json) {
+            TextConverter cvt(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+            String* text = cvt.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
+            m_responseJsonObject = parseJSON(text);
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
         eventName = request->starFish()->staticStrings()->m_load.localName();
     } else if (progState == NetworkRequest::LOADEND)
         eventName = request->starFish()->staticStrings()->m_loadend.localName();
@@ -99,9 +158,6 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
 void XMLHttpRequest::onReadyStateChange(NetworkRequest* request, bool fromExplicit)
 {
     if (fromExplicit) {
-        if (request->readyState() == NetworkRequest::DONE)
-            m_responseText =  String::fromUTF8(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
-
         String* eventType = request->starFish()->staticStrings()->m_readystatechange.localName();
         Event* e = new Event(eventType, EventInit(true, true));
         EventTarget::dispatchEvent(this, e);

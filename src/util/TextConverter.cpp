@@ -48,14 +48,13 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
     err = U_ZERO_ERROR;
     det = ucsdet_open(&err);
     STARFISH_ASSERT(!U_FAILURE(err));
-    ucsdet_setText(det, bytes, len, &err);
+    ucsdet_setText(det, bytes, 1024 * 16 < len ? 1024 * 16 : len, &err);
     STARFISH_ASSERT(!U_FAILURE(err));
 
     int confidence, num;
 
     match = ucsdet_detectAll(det, &num, &err);
     if (U_FAILURE(err)) {
-        STARFISH_LOG_ERROR("TextConverter: ucsdet_detectAll failed\n");
         return;
     }
 
@@ -64,7 +63,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
     const char* bestCharset = ucsdet_getName(m1, &err);
     STARFISH_ASSERT(!U_FAILURE(err));
 
-    /*
+/*
 #ifndef NDEBUG
     STARFISH_LOG_INFO("encoding detector verbose info start\n");
     for (int i = 0; i < num; i++) {
@@ -75,8 +74,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
     }
     STARFISH_LOG_INFO("encoding detector verbose info end\n");
 #endif
-    */
-
+*/
     for (int i = 0; i < num; i++) {
         const char* charset = nullptr;
         confidence = ucsdet_getConfidence(match[i], &err);
@@ -88,6 +86,11 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
             bestCharset = charset;
             break;
         }
+
+        if (confidence < 10) {
+            continue;
+        }
+
         if (ucnv_compareNames(charset, preferredEncoding->utf8Data()) == 0) {
             bestCharset = charset;
             break;
@@ -95,6 +98,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
         STARFISH_ASSERT(!U_FAILURE(err));
     }
 
+    ucsdet_close(det);
 
     m_converter = ucnv_open(bestCharset, &err);
     if (U_FAILURE(err)) {

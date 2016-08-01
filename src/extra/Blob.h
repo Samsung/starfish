@@ -23,13 +23,12 @@ namespace StarFish {
 
 class Blob : public ScriptWrappable {
 public:
-    Blob(uint32_t size, String* type, void* data)
+    Blob(size_t size, String* type, void* data)
         : ScriptWrappable(this)
     {
         m_size = size;
         m_type = type;
         m_data = data;
-        // init
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -42,13 +41,13 @@ public:
         return m_data;
     }
 
-    uint32_t size()
+    size_t size()
     {
         return m_size;
     }
 
 protected:
-    uint32_t m_size;
+    size_t m_size;
     String* m_type;
     void* m_data;
 };

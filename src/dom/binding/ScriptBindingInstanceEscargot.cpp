@@ -3421,13 +3421,81 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
         xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseText"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
-        String* c = originalObj->responseText();
+        try {
+            String* c = originalObj->responseText();
 
 #ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("&&&responseText\n");
+            STARFISH_LOG_INFO("&&&responseText\n");
 #endif
-        return toJSString(c);
+            return toJSString(c);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        return escargot::ESValue();
     }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("response"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        try {
+            escargot::ESValue c = originalObj->response();
+#ifdef STARFISH_TC_COVERAGE
+            STARFISH_LOG_INFO("&&&response\n");
+#endif
+            return c;
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        return escargot::ESValue();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        xhrElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("responseType"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        XMLHttpRequest::ResponseType type = originalObj->responseType();
+        if (type == XMLHttpRequest::ResponseType::Unspecified) {
+            return escargot::ESString::create("");
+        } else if (type == XMLHttpRequest::ResponseType::ArrayBuffer) {
+            return escargot::ESString::create("arraybuffer");
+        } else if (type == XMLHttpRequest::ResponseType::Blob) {
+            return escargot::ESString::create("blob");
+        } else if (type == XMLHttpRequest::ResponseType::DocumentType) {
+            return escargot::ESString::create("document");
+        } else if (type == XMLHttpRequest::ResponseType::Json) {
+            return escargot::ESString::create("json");
+        } else if (type == XMLHttpRequest::ResponseType::Text) {
+            return escargot::ESString::create("text");
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        try {
+            escargot::ESString* str = instance->currentExecutionContext()->readArgument(0).toString();
+            if (*str == "") {
+                originalObj->setResponseType(XMLHttpRequest::ResponseType::Unspecified);
+                return escargot::ESValue();
+            } else if (*str == "arraybuffer") {
+            } else if (*str == "blob") {
+            } else if (*str == "document") {
+            } else if (*str == "json") {
+                originalObj->setResponseType(XMLHttpRequest::ResponseType::Json);
+                return escargot::ESValue();
+            } else if (*str == "text") {
+                originalObj->setResponseType(XMLHttpRequest::ResponseType::Text);
+                return escargot::ESValue();
+            }
+            STARFISH_LOG_ERROR("The provided value '%s' is not a valid enum value of type XMLHttpRequestResponseType.", str->utf8Data());
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+        return escargot::ESValue();
+    });
 
     xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("UNSENT"), false, true, false, escargot::ESValue(0));
     xhrElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("OPENED"), false, true, false, escargot::ESValue(1));

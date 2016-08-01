@@ -168,7 +168,7 @@ public:
         return m_responseHeaderData;
     }
 
-    const NetworkRequestResponse& responseData()
+    NetworkRequestResponse& responseData()
     {
         return m_response;
     }
