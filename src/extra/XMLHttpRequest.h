@@ -20,6 +20,7 @@
 #include "dom/binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
 #include "platform/network/NetworkRequest.h"
+#include "util/TextConverter.h"
 
 namespace StarFish {
 
@@ -36,6 +37,15 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget, public NetworkRequestCl
 public:
     XMLHttpRequest(Document* document);
 
+    enum ResponseType {
+        Unspecified,
+        Text,
+        ArrayBuffer, // TODO
+        DocumentType, // TODO
+        Blob,
+        Json
+    };
+
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
@@ -46,6 +56,11 @@ public:
         return *m_networkRequest;
     }
 
+    // https://www.w3.org/TR/XMLHttpRequest/#the-responsetype-attribute
+    void setResponseType(ResponseType type);
+    ResponseType responseType();
+
+    ScriptValue response();
     String* responseText();
 
     void open(NetworkRequest::MethodType method, String* url, bool async, String* userName = String::emptyString, String* password = String::emptyString);
@@ -57,8 +72,18 @@ public:
     virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction);
     virtual void onReadyStateChange(NetworkRequest* request, bool fromExplicit);
 protected:
+    void initResponseData();
     NetworkRequest* m_networkRequest;
+    ResponseType m_responseType;
+
+    // for responseType = "text"
     String* m_responseText;
+    TextConverter* m_textConverter;
+
+    // for responseType = "json"
+    ScriptValue m_responseJsonObject;
+
+    // TODO implement blob
 };
 }
 
