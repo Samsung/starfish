@@ -1174,6 +1174,7 @@ test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-pad
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-parent-child-001.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-propagation-002.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-propagation-003.htm
+test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-propagation-005.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-propagation-007.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-relative-001.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-space-001.htm
