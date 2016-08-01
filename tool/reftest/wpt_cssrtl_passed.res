@@ -1423,6 +1423,7 @@ test/internal-test/direction/csswg-test/css-transforms-1_converted/css3-transfor
 test/internal-test/direction/csswg-test/css-transforms-1_converted/css3-transform-scale.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/css3-transform-scale-ref-002.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/css-transform-property-existence.html
+test/internal-test/direction/csswg-test/css-transforms-1_converted/css-transform-scale-002.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/css-transform-style-evaluation-validation.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/scalex.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/scaley.html
@@ -1450,8 +1451,10 @@ test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-tra
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatex-003.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatex-004.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatex-005.html
+test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatex-006.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatey-001.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatey-002.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatey-003.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatey-004.html
 test/internal-test/direction/csswg-test/css-transforms-1_converted/transform-translatey-005.html
+test/internal-test/direction/csswg-test/css-transforms-1_converted/ttwf-css-3d-polygon-cycle-mismatch.html
