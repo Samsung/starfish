@@ -73,13 +73,7 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleResponseEOF();
-
-        requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
-
-        GC_FREE(requestData);
     } else if (requestData->res == CURLE_ABORTED_BY_CALLBACK) {
-        requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
-        GC_FREE(requestData);
     } else if (requestData->res == CURLE_OPERATION_TIMEDOUT) {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
@@ -89,7 +83,6 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_LOG_INFO("got timeout %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)requestData->responseCode);
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::TIMEOUT);
-
     } else {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
@@ -99,11 +92,10 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url.urlString()->utf8Data());
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::ERROR);
-
-        requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
-
-        GC_FREE(requestData);
     }
+
+    requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+    GC_FREE(requestData);
 }
 
 void SyncNetworkWorkHelper::responseHandlerWrapper(int res, NetworkWorkerData *requestData)
@@ -358,30 +350,39 @@ int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl
 
     if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX && !request->m_isReceivedHeader) {
         request->m_isReceivedHeader = true;
-        request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-            NetworkRequest* request = (NetworkRequest*)data;
-            {
-                Locker<Mutex> locker(*request->m_mutex);
-                STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
-                request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
-            }
+        if (request->isSync()) {
             request->changeReadyState(HEADERS_RECEIVED, true);
-        }, request);
+        } else {
+            request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+                NetworkRequest* request = (NetworkRequest*)data;
+                {
+                    Locker<Mutex> locker(*request->m_mutex);
+                    STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
+                    request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
+                }
+                request->changeReadyState(HEADERS_RECEIVED, true);
+            }, request);
+        }
     }
 
     request->m_loaded = static_cast<uint32_t>(dlnow);
     request->m_total = static_cast<uint32_t>(dltotal);
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
-        request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-            NetworkRequest* request = (NetworkRequest*)data;
-            {
-                Locker<Mutex> locker(*request->m_mutex);
-                STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
-                request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
-            }
+        if (request->isSync()) {
             request->changeReadyState(LOADING, true);
             request->changeProgress(PROGRESS, true);
-        }, request);
+        } else {
+            request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+                NetworkRequest* request = (NetworkRequest*)data;
+                {
+                    Locker<Mutex> locker(*request->m_mutex);
+                    STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
+                    request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
+                }
+                request->changeReadyState(LOADING, true);
+                request->changeProgress(PROGRESS, true);
+            }, request);
+        }
     }
     return 0;
 }
@@ -447,6 +448,12 @@ void NetworkRequest::send(String* body)
         }
 
     } else {
+        /*
+        m_starFish->threadPool()->addWork([](void*) -> void* {
+            return nullptr;
+        }, nullptr);
+        */
+
         NetworkWorkerData* data = new(NoGC) NetworkWorkerData;
         {
             CURL* curl = curl_easy_init();

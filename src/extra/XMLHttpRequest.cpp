@@ -24,6 +24,12 @@ namespace StarFish {
 XMLHttpRequest::XMLHttpRequest(Document* document)
     : m_networkRequest(new NetworkRequest(document))
 {
+    /*
+    GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+        STARFISH_LOG_INFO("XMLHttpRequest::~XMLHttpRequest\n");
+    }, NULL, NULL, NULL);
+    */
+
     m_responseType = ResponseType::Unspecified;
     initResponseData();
     m_networkRequest->addNetworkRequestClient(this);

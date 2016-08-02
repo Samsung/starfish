@@ -21,12 +21,14 @@ namespace StarFish {
 
 typedef void* (*ThreadWorker)(void*);
 
+bool isMainThread();
+
 class Thread : public gc {
 public:
     Thread();
     ~Thread() { }
 
-    void run(ThreadWorker fn, void* data);
+    void run(MessageLoop* msgLoop, ThreadWorker fn, void* data);
     bool isAlive()
     {
         return m_alive;
