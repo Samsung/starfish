@@ -1010,6 +1010,9 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
             CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
 
             if (kind == CSSStyleKind::Unknown) {
+                kind = lookupCSSStyle(str, strlen(str));
+            }
+            if (kind == CSSStyleKind::Unknown) {
                 return escargot::ESValue(escargot::ESValue::ESDeletedValue);
             } else {
                 if (false) {
@@ -1030,6 +1033,7 @@ void ScriptWrappable::initScriptWrappable(CSSStyleDeclaration* ptr)
         CSSStyleDeclaration* self = (CSSStyleDeclaration*)obj->extraPointerData();
         const char* str = toBrowserString(key)->utf8Data();
         CSSStyleKind kind = lookupCSSStyleCamelCase(str, strlen(str));
+
         if (kind == CSSStyleKind::Unknown) {
             kind = lookupCSSStyle(str, strlen(str));
         }
