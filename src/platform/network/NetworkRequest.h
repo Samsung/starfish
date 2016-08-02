@@ -43,6 +43,7 @@ struct NetworkWorkerData {
     CURL* curl;
     curl_slist* headerList;
     bool isSync;
+    bool isAborted;
     long responseCode;
     int res;
 };
@@ -204,7 +205,6 @@ protected:
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
     void handleError(ProgressState error);
-    bool m_isAborted;
     bool m_isSync;
     bool m_didSend;
     bool m_isReceivedHeader;
@@ -221,6 +221,7 @@ protected:
     ResponseType m_responseType;
     int m_status;
     uint32_t m_timeout;
+    NetworkWorkerData* m_activeNetworkWorkerData;
     Mutex* m_mutex;
     String* m_responseMimeType;
     NetworkRequestResponse m_response;

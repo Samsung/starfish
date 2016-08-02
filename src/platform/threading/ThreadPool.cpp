@@ -50,7 +50,7 @@ void ThreadPool::addWork(ThreadWorker fn, void* data)
             rooter->pool = this;
             ThreadWorker worker = [](void* data) -> void* {
                 Rooter* rooter = (Rooter*)data;
-                STARFISH_LOG_INFO("threadPool worker start\n");
+                // STARFISH_LOG_INFO("threadPool worker start\n");
                 while (true) {
                     rooter->pool->m_workerQueueMutex->lock();
                     if (!rooter->pool->m_workerQueue.size()) {
@@ -67,7 +67,7 @@ void ThreadPool::addWork(ThreadWorker fn, void* data)
                         GC_FREE(data);
                     }, r);
                 }
-                STARFISH_LOG_INFO("threadPool worker end\n");
+                // STARFISH_LOG_INFO("threadPool worker end\n");
                 rooter->pool->m_messageLoop->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
                     GC_FREE(data);
                 }, rooter);

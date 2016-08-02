@@ -55,7 +55,17 @@ void* NetworkWorkerHelper::networkWorker(void* data)
     requestData->responseCode = code;
     requestData->res = res;
 
-    responseHandlerWrapper(res, requestData);
+    if (requestData->res != CURLE_ABORTED_BY_CALLBACK)
+        responseHandlerWrapper(res, requestData);
+    else {
+        requestData->request->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            NetworkWorkerData* requestData = (NetworkWorkerData*)data;
+            requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+            if (requestData == requestData->request->m_activeNetworkWorkerData)
+                requestData->request->m_activeNetworkWorkerData = nullptr;
+            GC_FREE(requestData);
+        }, requestData);
+    }
 
     curl_slist_free_all(list);
     curl_easy_cleanup(curl);
@@ -65,7 +75,10 @@ void* NetworkWorkerHelper::networkWorker(void* data)
 void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
 {
     NetworkWorkerData* requestData = (NetworkWorkerData*) data;
-    if (requestData->res == 0) {
+    STARFISH_ASSERT(isMainThread());
+    STARFISH_ASSERT(requestData->res != CURLE_ABORTED_BY_CALLBACK);
+    if (requestData->isAborted) {
+    } else if (requestData->res == 0) {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
@@ -73,13 +86,12 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleResponseEOF();
-    } else if (requestData->res == CURLE_ABORTED_BY_CALLBACK) {
     } else if (requestData->res == CURLE_OPERATION_TIMEDOUT) {
         if (!requestData->isSync) {
             Locker<Mutex> locker(*requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
         }
-        STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle);
+        STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
         STARFISH_LOG_INFO("got timeout %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)requestData->responseCode);
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::TIMEOUT);
@@ -88,13 +100,14 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
             Locker<Mutex> locker(*requestData->request->m_mutex);
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
         }
-        STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle);
+        STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
         STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url.urlString()->utf8Data());
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::ERROR);
     }
 
     requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
+    requestData->request->m_activeNetworkWorkerData = nullptr;
     GC_FREE(requestData);
 }
 
@@ -119,6 +132,7 @@ NetworkRequest::NetworkRequest(Document* document)
     , m_responseType(DEFAULT_RESPONSE)
     , m_status(0)
     , m_timeout(0)
+    , m_activeNetworkWorkerData(nullptr)
     , m_mutex(new Mutex())
     , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
     , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
@@ -148,7 +162,6 @@ void NetworkRequest::initVariables()
     m_responseMimeType = String::emptyString;
     m_response.clear();
     m_responseHeaderData.clear();
-    m_isAborted = false;
     m_isSync = false;
     m_isReceivedHeader = false;
     m_containsBase64Content = false;
@@ -180,6 +193,11 @@ void NetworkRequest::clearIdlers()
     if (m_pendingNetworkWorkerEndIdlerHandle != SIZE_MAX) {
         m_starFish->messageLoop()->removeIdlerWithNoGCRooting(m_pendingNetworkWorkerEndIdlerHandle);
         m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
+    }
+
+    if (m_activeNetworkWorkerData) {
+        m_activeNetworkWorkerData->isAborted = true;
+        m_activeNetworkWorkerData = nullptr;
     }
 }
 
@@ -321,7 +339,6 @@ void NetworkRequest::abort(bool isExplicitAction)
 {
     clearIdlers();
 
-    m_isAborted = true;
     if (m_readyState >= UNSENT) {
         auto theStatusWas = m_progressState;
         if (m_readyState == OPENED && m_didSend) {
@@ -342,10 +359,11 @@ void NetworkRequest::abort(bool isExplicitAction)
 
 int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow)
 {
-    NetworkRequest* request = (NetworkRequest*)clientp;
+    NetworkWorkerData* workerData = (NetworkWorkerData*)clientp;
+    NetworkRequest* request = workerData->request;
     Locker<Mutex> locker(*request->m_mutex);
     // check abort
-    if (request->m_isAborted)
+    if (workerData->isAborted)
         return 1;
 
     if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX && !request->m_isReceivedHeader) {
@@ -455,6 +473,7 @@ void NetworkRequest::send(String* body)
         */
 
         NetworkWorkerData* data = new(NoGC) NetworkWorkerData;
+        m_activeNetworkWorkerData = data;
         {
             CURL* curl = curl_easy_init();
             STARFISH_ASSERT(curl);
@@ -462,6 +481,7 @@ void NetworkRequest::send(String* body)
             data->request = this;
             data->curl = curl;
             data->isSync = m_isSync;
+            data->isAborted = false;
 
 #ifdef STARFISH_TIZEN_WEARABLE
             connection_h connection;
@@ -523,7 +543,7 @@ void NetworkRequest::send(String* body)
             curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 128);
 
             curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curlProgressCallback);
-            curl_easy_setopt(curl, CURLOPT_XFERINFODATA, this);
+            curl_easy_setopt(curl, CURLOPT_XFERINFODATA, data);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, this);
