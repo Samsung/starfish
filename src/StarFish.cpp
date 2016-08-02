@@ -130,7 +130,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     m_messageLoop = new MessageLoop(this);
-    m_threadPool = new ThreadPool(2);
+    m_threadPool = new ThreadPool(2, m_messageLoop);
 }
 
 StarFish::~StarFish()

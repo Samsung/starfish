@@ -16,37 +16,59 @@
 
 #include "StarFishConfig.h"
 #include "Thread.h"
+#include "platform/message_loop/MessageLoop.h"
+
+#include <unistd.h>
+#include <sys/syscall.h>
 
 namespace StarFish {
+
+bool isMainThread()
+{
+#ifdef SYS_gettid
+    pid_t tid = syscall(SYS_gettid);
+#else
+#error "SYS_gettid unavailable on this system"
+#endif
+    return getpid() == tid;
+}
 
 Thread::Thread()
 {
     m_alive = false;
 }
 
-void Thread::run(ThreadWorker fn, void* data)
+void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
 {
+    STARFISH_ASSERT(isMainThread());
     STARFISH_ASSERT(!m_alive);
     m_alive = true;
 
     struct ThreadData {
         Thread* thread;
+        MessageLoop* messageLoop;
         ThreadWorker fn;
         void* data;
+        pthread_t tid;
     };
 
     ThreadData* d = new(NoGC) ThreadData;
     d->thread = this;
+    d->messageLoop = msgLoop;
     d->fn = fn;
     d->data = data;
 
-    pthread_t thread;
-    pthread_create(&thread, NULL, [](void* data) -> void* {
+    pthread_create(&d->tid, NULL, [](void* data) -> void* {
         ThreadData* d = (ThreadData*)data;
         auto ret = d->fn(d->data);
         d->thread->m_alive = false;
-        GC_FREE(d);
-        return ret;
+        d->messageLoop->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+            ThreadData* d = (ThreadData*)data;
+            void* ret;
+            pthread_join(d->tid, &ret);
+            GC_FREE(data);
+        }, d);
+        pthread_exit(ret);
     }, d);
 }
 

@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "MessageLoop.h"
 #include "dom/binding/ScriptBindingInstance.h"
+#include "platform/threading/Thread.h"
 
 #include <Elementary.h>
 
@@ -41,11 +42,12 @@ struct IdlerData {
 
 size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
 {
+    STARFISH_ASSERT(isMainThread());
     IdlerData* id = new(NoGC) IdlerData;
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
-    id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
+    id->m_idler = ecore_idler_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->scriptBindingInstance());
         id->m_fn((size_t)id, id->m_data);
@@ -59,6 +61,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
 
 size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data, void* data1)
 {
+    STARFISH_ASSERT(isMainThread());
     IdlerData* id = new(NoGC) IdlerData;
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
@@ -78,6 +81,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data, void*
 
 size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*), void* data, void* data1, void* data2)
 {
+    STARFISH_ASSERT(isMainThread());
     IdlerData* id = new(NoGC) IdlerData;
     id->m_fn = (void (*)(size_t, void*))fn;
     id->m_data = data;
@@ -119,6 +123,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t, void
 
 void MessageLoop::removeIdler(size_t handle)
 {
+    STARFISH_ASSERT(isMainThread());
     IdlerData* id = (IdlerData*)handle;
     ecore_idler_del(id->m_idler);
     GC_FREE(id);
