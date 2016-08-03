@@ -150,16 +150,11 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 setX(x - absX);
             };
 
+            // 10.3.8 Absolutely positioned, replaced elements
+            // 'left' + 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' + 'right' = width of containing block
+
             Length marginLeft = style()->marginLeft();
             Length marginRight = style()->marginRight();
-
-            if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                if (style()->direction() == LtrDirectionValue) {
-                    setMarginRight(0);
-                } else {
-                    setMarginLeft(0);
-                }
-            }
 
             if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
                 setContentWidth(0);
@@ -191,6 +186,7 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             }
 
             LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
+            bool needOppositeMargin = false;
 
             // If 'margin-left' or 'margin-right' is specified as 'auto' its used value is determined by the rules below.
             // If both 'left' and 'right' have the value 'auto'
@@ -199,30 +195,43 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             if (style()->left().isAuto() && style()->right().isAuto()) {
                 // static location computed in normal flow processing
             } else if (!style()->left().isAuto() && style()->right().isAuto()) {
+                if (style()->direction() == RtlDirectionValue)
+                    needOppositeMargin = true;
                 setAbsX(style()->left().specifiedValue(containgBlockContentWidth));
             } else if (style()->left().isAuto() && !style()->right().isAuto()) {
+                if (style()->direction() == LtrDirectionValue)
+                    needOppositeMargin = true;
                 LayoutUnit r = style()->right().specifiedValue(containgBlockContentWidth);
                 setAbsX(containgBlockContentWidth - r - width());
             } else {
-                if (style()->direction() == LtrDirectionValue) {
-                    setAbsX(style()->left().specifiedValue(containgBlockContentWidth));
+                LayoutUnit computedLeft = style()->left().specifiedValue(containgBlockContentWidth);
+                LayoutUnit computedRight = style()->right().specifiedValue(containgBlockContentWidth);
+                if (marginLeft.isAuto() && marginRight.isAuto()) {
+                    LayoutUnit remain = containgBlockContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    remain -= computedLeft + computedRight;
+                    setMarginLeft(remain / 2);
+                    setMarginRight(remain / 2);
+                } else if (marginRight.isAuto() && style()->direction() == RtlDirectionValue) {
+                    needOppositeMargin = true;
+                } else if (marginLeft.isAuto() && style()->direction() == LtrDirectionValue) {
+                    needOppositeMargin = true;
+                }
+                if ((style()->direction() == LtrDirectionValue && !needOppositeMargin)
+                    || (style()->direction() == RtlDirectionValue && needOppositeMargin)) {
+                    setAbsX(computedLeft);
                 } else {
-                    LayoutUnit computedRight = style()->right().specifiedValue(containgBlockContentWidth);
                     setAbsX(containgBlockContentWidth - FrameBox::width() - computedRight);
                 }
             }
 
-            if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                if (style()->direction() == LtrDirectionValue) {
-                    moveX(FrameBox::marginLeft());
-                } else {
-                    moveX(-FrameBox::marginRight());
-                }
-            } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-                moveX(FrameBox::marginLeft());
-            } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-                moveX(-FrameBox::marginRight());
+            if ((style()->direction() == LtrDirectionValue && !needOppositeMargin)
+                || (style()->direction() == RtlDirectionValue && needOppositeMargin)) {
+                moveX(asFrameBox()->marginLeft());
             } else {
+                moveX(-asFrameBox()->marginRight());
             }
 
             if (style()->left().isAuto() && style()->right().isAuto() && direction == DirectionValue::RtlDirectionValue) {
