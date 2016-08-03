@@ -36,7 +36,7 @@ class Window : public EventTarget {
     friend class HTMLBodyElement;
     friend class Node;
 public:
-    static Window* create(StarFish* sf, void* win, int width, int height, const URL& url);
+    static Window* create(StarFish* sf, void* win, int width, int height, URL* url);
     virtual bool isWindow()
     {
         return true;
@@ -194,7 +194,7 @@ protected:
     }
 
     void setNeedsRenderingSlowCase();
-    Window(StarFish* starFish, const URL& url);
+    Window(StarFish* starFish, URL* url);
     void rendering();
     void paintWindowBackground(Canvas* canvas);
 

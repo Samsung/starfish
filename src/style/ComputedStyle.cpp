@@ -109,7 +109,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
 
     if (!backgroundImage()->equals(String::emptyString)) {
 
-        URL u(consumer->document()->documentURI().baseURI(), backgroundImage());
+        URL* u = URL::createURL(consumer->document()->documentURI()->baseURI(), backgroundImage());
 
         if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->background()
             && prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()
@@ -130,7 +130,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
     }
 
     if (!borderImageSource()->equals(String::emptyString)) {
-        URL u(consumer->document()->documentURI().baseURI(), borderImageSource());
+        URL* u = URL::createURL(consumer->document()->documentURI()->baseURI(), borderImageSource());
 
         if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->hasBorderImageData()
             && prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource()

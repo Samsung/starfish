@@ -549,12 +549,13 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator<String*> 
     return true;
 }
 
-URL CSSStyleSheet::url()
+URL* CSSStyleSheet::url()
 {
     if (m_origin->isElement() && m_origin->asElement()->isHTMLElement() && m_origin->asElement()->asHTMLElement()->isHTMLLinkElement()) {
+        STARFISH_ASSERT(m_origin->asElement()->asHTMLElement()->asHTMLLinkElement()->href());
         return m_origin->asElement()->asHTMLElement()->asHTMLLinkElement()->href();
     }
-    return URL(m_origin->document()->documentURI());
+    return m_origin->document()->documentURI();
 }
 
 void CSSStyleSheet::parseSheetIfneeds()
@@ -1387,7 +1388,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 {
     ComputedStyle* ret = new ComputedStyle(parent);
 
-    auto apply = [](StyleResolver& resolver, const URL& origin, std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
+    auto apply = [](StyleResolver& resolver, URL* origin, std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
     {
         for (unsigned k = 0; k < cssValues.size(); k++) {
             switch (cssValues[k].keyKind()) {
@@ -1768,7 +1769,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     unit.setValue(convertValueToLength(CSSStyleValuePair::ValueKind::Length, cssValues[k].value()));
                     style->setBorderImageWidths(BorderImageLengthBox(unit, unit, unit, unit));
                 } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    STARFISH_LOG_ERROR("ValueList in border-image-width Not allow with current spec")
                     /* NOTE: Not allow ValueList in current spec
                     STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::ValueListKind);
                     BorderImageLength top, right, bottom, left;

@@ -63,7 +63,7 @@ public:
     {
         ResourceClient::didLoadFailed();
         m_htmlSource = String::createASCIIString("<div style='text-align:center;margin-top:50px;'>Cannot open page ");
-        m_htmlSource = m_htmlSource->concat(m_resource->url().urlString());
+        m_htmlSource = m_htmlSource->concat(m_resource->url()->urlString());
         m_htmlSource = m_htmlSource->concat(String::createASCIIString("</div>"));
         load();
     }
@@ -181,14 +181,14 @@ protected:
     String* m_htmlSource;
 };
 
-void HTMLDocumentBuilder::build(const URL& url)
+void HTMLDocumentBuilder::build(URL* url)
 {
     m_resource = m_document->resourceLoader()->fetch(url);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
 #ifndef STARFISH_TIZEN_WEARABLE
     m_resource->request();
 #else
-    if (url.isFileURL())
+    if (url->isFileURL())
         m_resource->request(true);
     else
         m_resource->request();

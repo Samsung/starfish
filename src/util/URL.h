@@ -21,10 +21,15 @@
 
 namespace StarFish {
 
-class URL {
-    STARFISH_MAKE_STACK_ALLOCATED();
-public:
+class URL : public gc {
     URL(String* baseURL, String* url);
+public:
+    static String* parseURLString(String* baseURL, String* url);
+    static URL* createURL(String* baseURL, String* url)
+    {
+        return new URL(baseURL, url);
+    }
+
     String* baseURI() const;
     bool isFileURL() const
     {

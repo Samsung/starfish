@@ -111,13 +111,15 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 #endif
     GC_set_on_collection_event([](GC_EventType evtType) {
         if (GC_EVENT_PRE_START_WORLD == evtType) {
-            STARFISH_LOG_INFO("did GC. GC heapSize...%f MB , %f MB\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #ifdef STARFISH_ENABLE_TEST
-            STARFISH_LOG_INFO("RSS: %.1f \n", process_mem_usage());
+            STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage());
+#else
+            STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
         }
     });
     GC_set_free_space_divisor(64);
+    GC_set_force_unmap_on_gcollect(1);
     // STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
@@ -185,7 +187,7 @@ void StarFish::loadHTMLDocument(String* filePath)
     int width;
     int height;
     evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width, &height);
-    m_window = Window::create(this, m_nativeWindow, width, height, URL(String::emptyString, String::fromUTF8(path.c_str())));
+    m_window = Window::create(this, m_nativeWindow, width, height, URL::createURL(String::emptyString, String::fromUTF8(path.c_str())));
 
     m_window->document()->open();
 }
@@ -200,6 +202,9 @@ void StarFish::pause()
 {
     ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->pause();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
 }
 

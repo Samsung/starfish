@@ -37,7 +37,7 @@ public:
         Canceled,
     };
 
-    Resource(const URL& url, ResourceLoader* loader)
+    Resource(URL* url, ResourceLoader* loader)
         : m_state(BeforeSend)
         , m_isIncludedInComputingWindowOnLoadEvent(true)
         , m_url(url)
@@ -93,7 +93,7 @@ public:
         return m_networkRequest;
     }
 
-    const URL& url()
+    URL* url()
     {
         return m_url;
     }
@@ -135,7 +135,7 @@ public:
 protected:
     State m_state;
     bool m_isIncludedInComputingWindowOnLoadEvent;
-    URL m_url;
+    URL* m_url;
     ResourceLoader* m_loader;
     NetworkRequest* m_networkRequest;
     ResourceClientVector m_resourceClients;

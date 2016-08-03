@@ -171,8 +171,6 @@ void TextConverter::registerFinalizer()
         if (nr->m_converter) {
             ucnv_close(nr->m_converter);
         }
-        nr->m_bufferToConvert.clear();
-        nr->m_bufferToConvert.shrink_to_fit();
     }, NULL, NULL, NULL);
 }
 

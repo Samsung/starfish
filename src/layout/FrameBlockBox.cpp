@@ -569,7 +569,6 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
     auto applyRelativePositionInlineCase = [&](Frame* ref_f, FrameBox* f, LayoutUnit parentWidth)
     {
-
         LayoutUnit mX = 0;
         LayoutUnit mY = 0;
 
@@ -619,7 +618,6 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         if (f->style()->top().isAuto() && f->style()->bottom().isAuto()) {
             f->moveY(mY);
         }
-
     };
 
     // layout relative positioned blocks

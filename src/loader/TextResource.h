@@ -25,7 +25,7 @@ namespace StarFish {
 
 class TextResource : public Resource {
     friend class ResourceLoader;
-    TextResource(const URL& url, ResourceLoader* loader)
+    TextResource(URL* url, ResourceLoader* loader)
         : Resource(url, loader)
         , m_converter(nullptr)
         , m_text(String::emptyString)

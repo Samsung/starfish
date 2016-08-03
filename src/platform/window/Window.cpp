@@ -71,7 +71,7 @@ struct IdlerData {
 
 class WindowImplEFL : public Window {
 public:
-    WindowImplEFL(StarFish* sf, const URL& url)
+    WindowImplEFL(StarFish* sf, URL* url)
         : Window(sf, url)
     {
         m_mainBox = nullptr;
@@ -249,7 +249,7 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
 }
 
 
-Window* Window::create(StarFish* sf, void* win, int width, int height, const URL& url)
+Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
 {
     auto wnd = new WindowImplEFL(sf, url);
     wnd->m_starFish = sf;
@@ -370,7 +370,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, const URL
     return wnd;
 }
 
-Window::Window(StarFish* starFish, const URL& url)
+Window::Window(StarFish* starFish, URL* url)
     : m_starFish(starFish)
     , m_document(nullptr)
     , m_touchDownPoint(0, 0)

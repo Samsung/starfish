@@ -27,14 +27,14 @@ namespace StarFish {
 
 bool isCSSType(const char* type);
 
-URL HTMLLinkElement::href()
+URL* HTMLLinkElement::href()
 {
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
     if (href != SIZE_MAX) {
         String* url = getAttribute(href);
-        return URL(document()->documentURI().baseURI(), url);
+        return URL::createURL(document()->documentURI()->baseURI(), url);
     }
-    return URL(String::emptyString, String::emptyString);
+    return nullptr;
 }
 
 void HTMLLinkElement::didNodeInsertedToDocumenTree()
@@ -108,12 +108,12 @@ void HTMLLinkElement::loadStyleSheet()
     size_t href = hasAttribute(document()->window()->starFish()->staticStrings()->m_href);
 
     String* urlString = getAttribute(href);
-    URL url = URL(document()->documentURI().baseURI(), urlString);
+    URL* url = URL::createURL(document()->documentURI()->baseURI(), urlString);
 
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();
     }
-    if (url) {
+    if (*url) {
         m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
         m_styleSheetTextResource->addResourceClient(new StyleSheetDownloadClient(this, m_styleSheetTextResource));
         m_styleSheetTextResource->addResourceClient(new ElementResourceClient(this, m_styleSheetTextResource));

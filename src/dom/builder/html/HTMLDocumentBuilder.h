@@ -35,7 +35,7 @@ public:
     {
     }
 
-    virtual void build(const URL& url);
+    virtual void build(URL* url);
     virtual void resume();
     HTMLParser* parser()
     {

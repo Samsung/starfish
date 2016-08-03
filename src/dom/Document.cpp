@@ -30,7 +30,7 @@
 
 namespace StarFish {
 
-Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& uri, String* charSet)
+Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* uri, String* charSet)
     : Node(this, scriptBindingInstance)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
@@ -245,7 +245,7 @@ void Document::notifyDomContentLoaded()
 
     STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
     if (m_compatibilityMode != NoQuirksMode) {
-        STARFISH_LOG_ERROR("%s is not specified standard mode doctype. currently, StarFish could not support quirks mode.\n", m_documentURI.urlString()->utf8Data());
+        STARFISH_LOG_ERROR("%s is not specified standard mode doctype. currently, StarFish could not support quirks mode.\n", m_documentURI->urlString()->utf8Data());
         STARFISH_LOG_ERROR("You could got unexpected rendering result. please use standard mode doctype[<!DOCTYPE html>]\n");
     }
 }
@@ -543,7 +543,7 @@ ImageData* Document::brokenImage()
         return m_brokenImage;
     } else {
         String* brokenImg = String::fromUTF8("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AYQCBEZPGjJdQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAVSURBVDjLY2AYBaNgFIyCUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
-        ImageResource* res = resourceLoader()->fetchImage(URL(String::emptyString, brokenImg));
+        ImageResource* res = resourceLoader()->fetchImage(URL::createURL(String::emptyString, brokenImg));
         res->request(true);
         m_brokenImage = res->imageData();
         m_didLoadBrokenImage = true;
