@@ -142,21 +142,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
             auto applyMargin = [&](LayoutUnit parentWidth, bool isOpposite = false)
             {
-                Length marginLeft = style()->marginLeft();
-                Length marginRight = style()->marginRight();
-
-                if (!marginLeft.isAuto() && !marginRight.isAuto()) {
-                    if ((style()->direction() == LtrDirectionValue && !isOpposite)
-                        || (style()->direction() == RtlDirectionValue && isOpposite)) {
-                        moveX(marginLeft.specifiedValue(parentWidth));
-                    } else {
-                        moveX(-marginRight.specifiedValue(parentWidth));
-                    }
-                } else if (!marginLeft.isAuto() && marginRight.isAuto()) {
-                    moveX(marginLeft.specifiedValue(parentWidth));
-                } else if (marginLeft.isAuto() && !marginRight.isAuto()) {
-                    moveX(-marginRight.specifiedValue(parentWidth));
+                if ((style()->direction() == LtrDirectionValue && !isOpposite)
+                    || (style()->direction() == RtlDirectionValue && isOpposite)) {
+                    moveX(marginLeft());
                 } else {
+                    moveX(-marginRight());
                 }
             };
 
@@ -202,20 +192,14 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 // If all three of 'left', 'width', and 'right' are 'auto':
                 // First set any 'auto' values for 'margin-left' and 'margin-right' to 0
                 if (marginLeft.isAuto()) {
-                    style()->setMarginLeft(Length(Length::Fixed, 0));
-                }
-                if (marginRight.isAuto()) {
-                    style()->setMarginRight(Length(Length::Fixed, 0));
-                }
-
-                if (style()->direction() == LtrDirectionValue) {
-                    setMarginRight(0);
-                } else {
                     setMarginLeft(0);
                 }
+                if (marginRight.isAuto()) {
+                    setMarginRight(0);
+                }
 
-                applyMargin(containgBlockContentWidth);
                 computeContentWidth();
+                applyMargin(containgBlockContentWidth);
             } else if (!left.isAuto() && !width.isAuto() && !right.isAuto()) {
                 // If none of the three is 'auto':
                 // If both 'margin-left' and 'margin-right' are 'auto',
@@ -239,11 +223,9 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             } else {
                 // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
                 if (marginLeft.isAuto()) {
-                    style()->setMarginLeft(Length(Length::Fixed, 0));
                     setMarginLeft(0);
                 }
                 if (marginRight.isAuto()) {
-                    style()->setMarginRight(Length(Length::Fixed, 0));
                     setMarginRight(0);
                 }
                 if (left.isAuto() && width.isAuto() && !right.isAuto()) {
@@ -259,20 +241,14 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     // 'left' and 'right' are 'auto' and 'width' is not 'auto',
                     // then if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position,
                     // otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
-                    if (style()->direction() == LtrDirectionValue) {
-                        setMarginRight(0);
-                    } else {
-                        setMarginLeft(0);
-                    }
-
                     applyMargin(containgBlockContentWidth);
                     computeContentWidth();
                 } else if (width.isAuto() && right.isAuto() && !left.isAuto()) {
                     // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
                     if (direction == LtrDirectionValue) {
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
-                        applyMargin(containgBlockContentWidth);
                         computeContentWidth();
+                        applyMargin(containgBlockContentWidth);
                     } else {
                         computeContentWidth(true, containgBlockContentWidth - left.specifiedValue(containgBlockContentWidth));
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
@@ -292,7 +268,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                         w = 0;
                     width = Length(Length::Fixed, w);
                     setAbsX(l);
-                    applyMargin(containgBlockContentWidth);
+                    applyMargin(containgBlockContentWidth, true);
                     computeContentWidth();
                 } else {
                     // 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
