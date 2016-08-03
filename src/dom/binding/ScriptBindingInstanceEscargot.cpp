@@ -2162,8 +2162,7 @@ escargot::ESFunctionObject* bindingHTMLScriptElement(ScriptBindingInstance* scri
         if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLScriptElement()) {
             size_t idx = nd->asElement()->hasAttribute(nd->document()->window()->starFish()->staticStrings()->m_src);
             if (idx != SIZE_MAX) {
-                URL u(nd->document()->documentURI().urlString(), nd->asElement()->getAttribute(idx));
-                return toJSString(u.urlString());
+                return toJSString(URL::parseURLString(nd->document()->documentURI()->urlString(), nd->asElement()->getAttribute(idx)));
             }
             return toJSString(String::emptyString);
         }
@@ -2280,8 +2279,7 @@ escargot::ESFunctionObject* bindingHTMLLinkElement(ScriptBindingInstance* script
         if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLLinkElement()) {
             size_t idx = nd->asElement()->hasAttribute(nd->document()->window()->starFish()->staticStrings()->m_href);
             if (idx != SIZE_MAX) {
-                URL u(nd->document()->documentURI().urlString(), nd->asElement()->getAttribute(idx));
-                return toJSString(u.urlString());
+                return toJSString(URL::parseURLString(nd->document()->documentURI()->urlString(), nd->asElement()->getAttribute(idx)));
             }
             return toJSString(String::emptyString);
         }

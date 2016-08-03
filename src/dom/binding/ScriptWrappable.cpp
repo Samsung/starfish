@@ -98,7 +98,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
             Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
-            std::string path = wnd->document()->documentURI().baseURI()->utf8Data();
+            std::string path = wnd->document()->documentURI()->baseURI()->utf8Data();
             path = path.substr(strlen("file://"));
             path += escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toString()->utf8Data();
             wnd->screenShot(path);
@@ -197,6 +197,11 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     escargot::ESFunctionObject* testEndFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         puts("[PASS]");
         STARFISH_LOG_ERROR("%s\n", "[PASS]");
+        GC_gcollect_and_unmap();
+        GC_gcollect_and_unmap();
+        GC_gcollect_and_unmap();
+        GC_gcollect_and_unmap();
+        GC_gcollect_and_unmap();
         exit(0);
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("testEnd"), 0, false);
@@ -208,7 +213,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         std::string cmd = "./tool/imgdiff/imgdiff ";
 
         Window* wnd = (Window*)instance->globalObject()->extraPointerData();
-        std::string path = wnd->document()->documentURI().baseURI()->utf8Data();
+        std::string path = wnd->document()->documentURI()->baseURI()->utf8Data();
         path = path.substr(strlen("file://"));
 
         cmd += path;

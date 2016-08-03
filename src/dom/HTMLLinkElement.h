@@ -56,7 +56,7 @@ public:
         return true;
     }
 
-    URL href();
+    URL* href();
 
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
     virtual void didNodeInsertedToDocumenTree();

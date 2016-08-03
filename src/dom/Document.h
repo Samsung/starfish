@@ -46,7 +46,7 @@ class Document : public Node {
 #endif
     friend class ActiveNetworkRequestTracker;
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, const URL& url, String* charSet);
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet);
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
     void setCompatibilityMode(CompatibilityMode m)
@@ -155,7 +155,7 @@ public:
         m_inParsing = b;
     }
 
-    const URL& documentURI()
+    URL* documentURI()
     {
         return m_documentURI;
     }
@@ -199,7 +199,7 @@ protected:
     bool m_didLoadBrokenImage : 1;
     CompatibilityMode m_compatibilityMode;
     Window* m_window;
-    URL m_documentURI;
+    URL* m_documentURI;
     String* m_charset;
     ResourceLoader m_resourceLoader;
     StyleResolver m_styleResolver;

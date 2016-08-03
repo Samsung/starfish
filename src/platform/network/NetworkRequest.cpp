@@ -92,7 +92,7 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
         }
         STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
-        STARFISH_LOG_INFO("got timeout %s[%d]\n", requestData->request->m_url.urlString()->utf8Data(), (int)requestData->responseCode);
+        STARFISH_LOG_INFO("got timeout %s[%d]\n", requestData->request->m_url->urlString()->utf8Data(), (int)requestData->responseCode);
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::TIMEOUT);
     } else {
@@ -101,7 +101,7 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
             requestData->request->m_pendingNetworkWorkerEndIdlerHandle = SIZE_MAX;
         }
         STARFISH_ASSERT(requestData->request->m_pendingNetworkWorkerEndIdlerHandle == SIZE_MAX);
-        STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url.urlString()->utf8Data());
+        STARFISH_LOG_INFO("failed to open %s\n", requestData->request->m_url->urlString()->utf8Data());
         requestData->request->m_status = requestData->responseCode;
         requestData->request->handleError(NetworkRequest::ERROR);
     }
@@ -125,7 +125,7 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(int res, NetworkWorkerData *
 NetworkRequest::NetworkRequest(Document* document)
     : m_starFish(document->window()->starFish())
     , m_document(document)
-    , m_url(document->documentURI()) // FIXME implement empty url
+    , m_url(nullptr)
     , m_readyState(UNSENT)
     , m_progressState(NONE)
     , m_method(UNKNOWN_METHOD)
@@ -327,7 +327,7 @@ void NetworkRequest::open(MethodType method, String* url, bool async, String* us
     {
         initVariables();
         m_method = method;
-        m_url = URL(m_starFish->window()->document()->documentURI().urlString(), url);
+        m_url = URL::createURL(m_starFish->window()->document()->documentURI()->baseURI(), url);
         m_userName = userName;
         m_password = password;
         m_isSync = !async;
@@ -435,10 +435,10 @@ void NetworkRequest::send(String* body)
 {
     m_didSend = true;
     changeProgress(LOADSTART, true);
-    if (m_url.isFileURL()) {
+    if (m_url->isFileURL()) {
         // this area doesn't require lock.
         // reading file does not require thread
-        String* path = m_url.urlStringWithoutSearchPart();
+        String* path = m_url->urlStringWithoutSearchPart();
         String* filePath = path->substring(7, path->length() - 7);
 
         if (m_isSync) {
@@ -451,17 +451,17 @@ void NetworkRequest::send(String* body)
             }, this, filePath);
             pushIdlerHandle(handle);
         }
-    } else if (m_url.isDataURL())  {
+    } else if (m_url->isDataURL())  {
         // this area doesn't require lock.
         // reading url does not require thread
         if (m_isSync) {
-            dataURLWorker(this, m_url.urlString());
+            dataURLWorker(this, m_url->urlString());
         } else {
             size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
                 NetworkRequest* request = (NetworkRequest*)data;
                 request->removeIdlerHandle(handle);
                 NetworkRequestDataURLWorker((NetworkRequest*)data, (String*)data1);
-            }, this, m_url.urlString());
+            }, this, m_url->urlString());
             pushIdlerHandle(handle);
         }
 
@@ -500,7 +500,7 @@ void NetworkRequest::send(String* body)
             }
 #endif
 
-            const char* url = m_url.urlString()->utf8Data();
+            const char* url = m_url->urlString()->utf8Data();
             curl_easy_setopt(curl, CURLOPT_URL, url);
             STARFISH_LOG_INFO("sending network request to %s\n", url);
             curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, static_cast<unsigned long>(m_timeout));
@@ -516,10 +516,10 @@ void NetworkRequest::send(String* body)
             list = curl_slist_append(list, "Connection:keep-alive");
             list = curl_slist_append(list, "User-Agent: " USER_AGENT(APP_CODE_NAME, VERSION));
 
-            if (m_document->documentURI().isFileURL() || m_document->documentURI().isDataURL()) {
+            if (m_document->documentURI()->isFileURL() || m_document->documentURI()->isDataURL()) {
                 list = curl_slist_append(list, "Origin:null");
             } else {
-                std::string hostString = m_url.urlString()->utf8Data();
+                std::string hostString = m_url->urlString()->utf8Data();
                 size_t pos = hostString.find("://");
                 hostString = hostString.substr(pos + 3);
                 auto pos2 = hostString.find('/');
@@ -530,7 +530,7 @@ void NetworkRequest::send(String* body)
                 headerText += hostString;
                 list = curl_slist_append(list, headerText.data());
                 headerText = "Referer:";
-                headerText += m_document->documentURI().urlString()->utf8Data();
+                headerText += m_document->documentURI()->urlString()->utf8Data();
                 list = curl_slist_append(list, headerText.data());
             }
 
@@ -594,7 +594,7 @@ void NetworkRequest::fileWorker(NetworkRequest* res, String* filePath)
         fio->close();
         res->handleResponseEOF();
     } else {
-        STARFISH_LOG_INFO("failed to open %s\n", res->m_url.urlString()->utf8Data());
+        STARFISH_LOG_INFO("failed to open %s\n", res->m_url->urlString()->utf8Data());
         res->m_status = 0;
         res->handleError(ERROR);
     }

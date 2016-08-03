@@ -24,7 +24,7 @@ namespace StarFish {
 class ImageData;
 class ImageResource : public Resource {
     friend class ResourceLoader;
-    ImageResource(const URL& url, ResourceLoader* loader)
+    ImageResource(URL* url, ResourceLoader* loader)
         : Resource(url, loader)
     {
         m_imageData = nullptr;

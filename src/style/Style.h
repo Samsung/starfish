@@ -769,10 +769,10 @@ public:
         return m_value.m_stringValue;
     }
 
-    String* urlValue(const URL& urlOfStyleSheet)
+    String* urlValue(URL* urlOfStyleSheet)
     {
         STARFISH_ASSERT(m_valueKind == UrlValueKind);
-        return URL(urlOfStyleSheet.baseURI(), m_value.m_stringValue).urlString();
+        return URL::parseURLString(urlOfStyleSheet->baseURI(), m_value.m_stringValue);
     }
 
     String* urlStringValue()
@@ -1309,7 +1309,7 @@ public:
         m_rules.push_back(rule);
     }
 
-    URL url();
+    URL* url();
     Node* origin()
     {
         return m_origin;

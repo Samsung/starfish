@@ -31,9 +31,9 @@ class ResourceLoader : public gc {
 public:
     ResourceLoader(Document& doc);
 
-    Resource* fetch(const URL& url);
-    TextResource* fetchText(const URL& url);
-    ImageResource* fetchImage(const URL& url);
+    Resource* fetch(URL* url);
+    TextResource* fetchText(URL* url);
+    ImageResource* fetchImage(URL* url);
 
     void markDocumentOpenState()
     {
@@ -59,7 +59,7 @@ private:
     bool m_inDocumentOpenState;
     size_t m_pendingResourceCountWhileDocumentOpening;
     Document* m_document;
-    URL m_baseURL;
+    URL* m_baseURL;
     std::unordered_map<std::string, ImageData*, std::hash<std::string>, std::equal_to<std::string>,
         gc_allocator<std::pair<std::string, ImageData*>>> m_offlineImageCache;
     std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;

@@ -19,12 +19,10 @@
 
 namespace StarFish {
 
-URL::URL(String* baseURL, String* url)
-    : m_string(url)
+String* URL::parseURLString(String* baseURL, String* url)
 {
     if (url->startsWith("data:")) {
-        m_urlString = m_string = url;
-        return;
+        return url;
     }
 
     bool isAbsolute = url->contains("://");
@@ -58,7 +56,7 @@ URL::URL(String* baseURL, String* url)
     }
 
     if (isAbsolute) {
-        m_urlString = url;
+        return url;
     } else {
         STARFISH_ASSERT(baseURL->contains("://"));
         bool baseEndsWithSlash = baseURL->charAt(baseURL->length() - 1) == '/';
@@ -68,7 +66,7 @@ URL::URL(String* baseURL, String* url)
         }
 
         if (baseEndsWithSlash) {
-            m_urlString = baseURL->concat(url);
+            return baseURL->concat(url);
         } else {
             size_t f = baseURL->find("://");
             STARFISH_ASSERT(f != SIZE_MAX);
@@ -77,9 +75,17 @@ URL::URL(String* baseURL, String* url)
             if (f2 != SIZE_MAX) {
                 baseURL = baseURL->substring(0, baseURL->lastIndexOf('/'));
             }
-            m_urlString = baseURL->concat(String::createASCIIString("/"))->concat(url);
+            return baseURL->concat(String::createASCIIString("/"))->concat(url);
         }
     }
+
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+URL::URL(String* baseURL, String* url)
+    : m_string(url)
+{
+    m_urlString = URL::parseURLString(baseURL, url);
 }
 
 String* URL::baseURI() const

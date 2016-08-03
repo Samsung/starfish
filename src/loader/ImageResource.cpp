@@ -29,13 +29,13 @@ void ImageResource::doLoadFile(void* data)
 {
     Resource* res = (Resource*)data;
     // special path for image resource
-    if (res->url().isFileURL()) {
+    if (res->url()->isFileURL()) {
         FileIO* fio = FileIO::create();
         // NOTE
         // we should special logic to load file url for image
         // we can pass src of image to platform layer
         // TODO handle decoding failed
-        String* path = res->url().urlStringWithoutSearchPart();
+        String* path = res->url()->urlStringWithoutSearchPart();
         String* filePath = path->substring(7, path->length() - 7);
         bool canLoad = fio->open(filePath);
         delete fio;
@@ -65,7 +65,7 @@ void ImageResource::doLoadFile(void* data)
 
 void ImageResource::request(bool needsSyncRequest)
 {
-    if (m_url.isFileURL()) {
+    if (m_url->isFileURL()) {
         loader()->fetchResourcePreprocess(this);
         if (needsSyncRequest) {
             doLoadFile(this);
@@ -83,7 +83,7 @@ void ImageResource::request(bool needsSyncRequest)
 
 void ImageResource::didLoadFinished()
 {
-    if (!m_url.isFileURL()) {
+    if (!m_url->isFileURL()) {
         m_imageData = ImageData::create(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
         if (!m_imageData) {
             Resource::didLoadFailed();

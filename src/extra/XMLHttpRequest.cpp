@@ -127,7 +127,7 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
         eventName = request->starFish()->staticStrings()->m_progress.localName();
     } else if (progState == NetworkRequest::ERROR) {
         eventName = request->starFish()->staticStrings()->m_error.localName();
-        if (!m_networkRequest->url().isFileURL() && !m_networkRequest->url().isDataURL() && request->isSync()) {
+        if (!m_networkRequest->url()->isFileURL() && !m_networkRequest->url()->isDataURL() && request->isSync()) {
             throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::NETWORK_ERR, "NetworkError");
         }
     } else if (progState == NetworkRequest::ABORT) {

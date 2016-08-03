@@ -31,23 +31,23 @@ ResourceLoader::ResourceLoader(Document& document)
     : m_inDocumentOpenState(false)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_document(&document)
-    , m_baseURL(String::emptyString, document.documentURI().baseURI())
+    , m_baseURL(URL::createURL(String::emptyString, document.documentURI()->baseURI()))
 {
 }
 
-Resource* ResourceLoader::fetch(const URL& url)
+Resource* ResourceLoader::fetch(URL* url)
 {
     Resource* res = new Resource(url, this);
     return res;
 }
 
-TextResource* ResourceLoader::fetchText(const URL& url)
+TextResource* ResourceLoader::fetchText(URL* url)
 {
     TextResource* res = new TextResource(url, this);
     return res;
 }
 
-ImageResource* ResourceLoader::fetchImage(const URL& url)
+ImageResource* ResourceLoader::fetchImage(URL* url)
 {
     ImageResource* res = new ImageResource(url, this);
     return res;

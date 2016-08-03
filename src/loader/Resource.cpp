@@ -59,7 +59,7 @@ void Resource::request(bool needsSyncRequest)
     loader()->fetchResourcePreprocess(this);
     m_networkRequest = new NetworkRequest(m_loader->document());
     m_networkRequest->addNetworkRequestClient(new ResourceNetworkRequestClient(this));
-    m_networkRequest->open(NetworkRequest::GET_METHOD, m_url.urlString(), !needsSyncRequest);
+    m_networkRequest->open(NetworkRequest::GET_METHOD, m_url->urlString(), !needsSyncRequest);
     m_networkRequest->send();
 }
 

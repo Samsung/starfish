@@ -184,7 +184,7 @@ public:
         m_clients.push_back(client);
     }
 
-    URL& url()
+    URL* url()
     {
         return m_url;
     }
@@ -211,7 +211,7 @@ protected:
     bool m_containsBase64Content;
     StarFish* m_starFish;
     Document* m_document;
-    URL m_url;
+    URL* m_url;
     // FIXME should we store userName, password in m_url?
     String* m_userName;
     String* m_password;
