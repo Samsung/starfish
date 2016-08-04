@@ -268,7 +268,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                         w = 0;
                     width = Length(Length::Fixed, w);
                     setAbsX(l);
-                    applyMargin(containgBlockContentWidth, true);
+                    if (direction == LtrDirectionValue) {
+                        applyMargin(containgBlockContentWidth);
+                    } else {
+                        applyMargin(containgBlockContentWidth, true);
+                    }
                     computeContentWidth();
                 } else {
                     // 'right' is 'auto', 'left' and 'width' are not 'auto', then solve for 'right'
