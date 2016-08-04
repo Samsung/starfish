@@ -212,8 +212,10 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     remain -= borderWidth();
                     remain -= paddingWidth();
                     remain -= computedLeft + computedRight;
-                    setMarginLeft(remain / 2);
-                    setMarginRight(remain / 2);
+                    if (remain > 0) {
+                        setMarginLeft(remain / 2);
+                        setMarginRight(remain / 2);
+                    }
                 } else if (marginRight.isAuto() && style()->direction() == RtlDirectionValue) {
                     needOppositeMargin = true;
                 } else if (marginLeft.isAuto() && style()->direction() == LtrDirectionValue) {
