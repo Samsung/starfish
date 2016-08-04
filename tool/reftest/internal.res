@@ -76,3 +76,9 @@ test/internal-test/css/visibility/visibility-001.html
 test/internal-test/css/left_right_top_bottom/LRTB_display.html
 test/internal-test/xhr/xhr_sync_with_async.html
 test/internal-test/xhr/responseText_after_abort.html
+test/internal-test/css/width/rtl-image-element-width-absolute.html
+test/internal-test/css/width/rtl-image-element-width-static.html
+test/internal-test/css/width/rtl-image-element-width-absolute-inline.html
+test/internal-test/css/width/ltr-image-element-width-absolute.html
+test/internal-test/css/width/ltr-image-element-width-static.html
+test/internal-test/css/width/ltr-image-element-width-absolute-inline.html
