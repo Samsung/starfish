@@ -74,3 +74,6 @@ test/internal-test/css/short-hand/margin_shorthand.html
 test/internal-test/css/short-hand/padding_shorthand.html
 test/internal-test/css/visibility/visibility-001.html
 test/internal-test/css/left_right_top_bottom/LRTB_display.html
+test/internal-test/xhr/xhr_stress_basic1000.html
+test/internal-test/xhr/xhr_sync_with_async.html
+test/internal-test/xhr/responseText_after_abort.html

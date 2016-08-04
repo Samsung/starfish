@@ -2572,7 +2572,7 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
         EventTarget* currentTarget = originalObj->currentTarget();
-        if (currentTarget && (currentTarget->isNode() || currentTarget->isWindow())) {
+        if (currentTarget) {
             return currentTarget->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
