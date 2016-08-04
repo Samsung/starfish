@@ -11,3 +11,4 @@ Demo.regression
 *.pyc
 *.png_
 result.csv
+*.class
