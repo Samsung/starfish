@@ -140,7 +140,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
 
-            auto applyMargin = [&](LayoutUnit parentWidth, bool isOpposite = false)
+            auto applyMargin = [&](bool isOpposite = false)
             {
                 if ((style()->direction() == LtrDirectionValue && !isOpposite)
                     || (style()->direction() == RtlDirectionValue && isOpposite)) {
@@ -199,7 +199,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 }
 
                 computeContentWidth();
-                applyMargin(containgBlockContentWidth);
+                applyMargin();
             } else if (!left.isAuto() && !width.isAuto() && !right.isAuto()) {
                 // If none of the three is 'auto':
                 // If both 'margin-left' and 'margin-right' are 'auto',
@@ -218,7 +218,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     setAbsX(containgBlockContentWidth - width.specifiedValue(containgBlockContentWidth) - computedRight);
                 }
 
-                applyMargin(containgBlockContentWidth);
+                applyMargin();
                 computeContentWidth();
             } else {
                 // Otherwise, set 'auto' values for 'margin-left' and 'margin-right' to 0, and pick the one of the following six rules that applies.
@@ -233,30 +233,30 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     computeContentWidth(true, containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth));
                     setAbsX(containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth) - this->width());
                     if (direction == LtrDirectionValue) {
-                        applyMargin(containgBlockContentWidth, true);
+                        applyMargin(true);
                     } else {
-                        applyMargin(containgBlockContentWidth);
+                        applyMargin();
                     }
                 } else if (left.isAuto() && right.isAuto() && !width.isAuto()) {
                     // 'left' and 'right' are 'auto' and 'width' is not 'auto',
                     // then if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position,
                     // otherwise set 'right' to the static position. Then solve for 'left' (if 'direction is 'rtl') or 'right' (if 'direction' is 'ltr').
-                    applyMargin(containgBlockContentWidth);
+                    applyMargin();
                     computeContentWidth();
                 } else if (width.isAuto() && right.isAuto() && !left.isAuto()) {
                     // 'width' and 'right' are 'auto' and 'left' is not 'auto', then the width is shrink-to-fit . Then solve for 'right'
                     if (direction == LtrDirectionValue) {
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
                         computeContentWidth();
-                        applyMargin(containgBlockContentWidth);
+                        applyMargin();
                     } else {
                         computeContentWidth(true, containgBlockContentWidth - left.specifiedValue(containgBlockContentWidth));
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
-                        applyMargin(containgBlockContentWidth, true);
+                        applyMargin(true);
                     }
                 } else if (left.isAuto() && !width.isAuto() && !right.isAuto()) {
                     // 'left' is 'auto', 'width' and 'right' are not 'auto', then solve for 'left'
-                    applyMargin(containgBlockContentWidth);
+                    applyMargin();
                     computeContentWidth();
                     setAbsX(containgBlockContentWidth - right.specifiedValue(containgBlockContentWidth) - this->width());
                 } else if (width.isAuto() && !left.isAuto() && !right.isAuto()) {
@@ -269,9 +269,9 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     width = Length(Length::Fixed, w);
                     setAbsX(l);
                     if (direction == LtrDirectionValue) {
-                        applyMargin(containgBlockContentWidth);
+                        applyMargin();
                     } else {
-                        applyMargin(containgBlockContentWidth, true);
+                        applyMargin(true);
                     }
                     computeContentWidth();
                 } else {
@@ -279,10 +279,10 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     STARFISH_ASSERT(right.isAuto() && !left.isAuto() && !width.isAuto());
                     if (direction == LtrDirectionValue) {
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
-                        applyMargin(containgBlockContentWidth);
+                        applyMargin();
                         computeContentWidth();
                     } else {
-                        applyMargin(containgBlockContentWidth);
+                        applyMargin();
                         computeContentWidth(true, containgBlockContentWidth - left.specifiedValue(containgBlockContentWidth));
                         setAbsX(left.specifiedValue(containgBlockContentWidth));
                     }

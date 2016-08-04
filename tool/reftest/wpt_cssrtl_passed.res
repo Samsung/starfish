@@ -891,6 +891,7 @@ test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/mar
 test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/margin-collapse-016.htm
 test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/margin-collapse-017.htm
 test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/margin-collapse-019.htm
+test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/margin-collapse-020.htm
 test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/margin-collapse-021.htm
 test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/margin-collapse-022.htm
 test/internal-test/direction/csswg-test/css21_converted/margin-padding-clear/margin-collapse-028.htm

@@ -67,6 +67,14 @@ window.onload = function() {
             win.height = parseInt(el.getAttribute("data"))
         }
         iframe.contentWindow.document.head.appendChild(style);
+        iframe.contentWindow.simulateClickElement = function(elem) {
+            elem.click();
+        }
+        iframe.contentWindow.simulateClick = function(x, y) {
+            var elem = iframe.contentWindow.document.elementFromPoint(x, y);
+            console.log("Log[simulateClick]: found element.. " + elem);
+            iframe.contentWindow.simulateClickElement(elem);
+        }
         iframe.contentWindow.screenShot = function(filename, cb) {
             console.log("screenShot : " + filename);
             try {
