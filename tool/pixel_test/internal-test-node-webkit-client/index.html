@@ -67,6 +67,10 @@ window.onload = function() {
             win.height = parseInt(el.getAttribute("data"))
         }
         iframe.contentWindow.document.head.appendChild(style);
+        iframe.contentWindow.getXYWH = function(elem) {
+            var r = elem.getBoundingClientRect();
+            return {x:r.top, y:r.left, width: r.width, height: r.height};
+        }
         iframe.contentWindow.simulateClickElement = function(elem) {
             elem.click();
         }
