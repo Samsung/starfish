@@ -2,115 +2,97 @@
 
 ## W3C DOM Conformance Test Suites
 cp tool/reftest/dom_conformance_test.res test/regression/tool/dom-conformance-test/test_dom_conformance
-rm test/regression/reftest/dom-conformance-test/html -rf
-cp test/reftest/dom-conformance-test/html test/regression/reftest/dom-conformance-test/ -rf
+rm -rf test/regression/reftest/dom-conformance-test/html
+cp -rf test/reftest/dom-conformance-test/html test/regression/reftest/dom-conformance-test/
 
 ## Web Platform Tests
 # DOM
-rm test/regression/reftest/web-platform-tests/resources -rf
-cp test/reftest/web-platform-tests/resources test/regression/reftest/web-platform-tests/ -rf
+rm -rf test/regression/reftest/web-platform-tests/resources
+cp -rf test/reftest/web-platform-tests/resources test/regression/reftest/web-platform-tests/
 cp tool/reftest/wpt_dom.res test/regression/tool/web-platform-tests/test_wpt_dom
-rm test/regression/reftest/web-platform-tests/dom -rf
-cp test/reftest/web-platform-tests/dom test/regression/reftest/web-platform-tests/ -rf
+rm -rf test/regression/reftest/web-platform-tests/dom
+cp -rf test/reftest/web-platform-tests/dom test/regression/reftest/web-platform-tests/
 
 # DOM Events
 cp tool/reftest/wpt_dom_events.res test/regression/tool/web-platform-tests/test_wpt_dom_events
-rm test/regression/reftest/web-platform-tests/DOMEvents -rf
-cp test/reftest/web-platform-tests/DOMEvents test/regression/reftest/web-platform-tests/ -rf
+rm -rf test/regression/reftest/web-platform-tests/DOMEvents
+cp -rf test/reftest/web-platform-tests/DOMEvents test/regression/reftest/web-platform-tests/
 
 # HTML
 cp tool/reftest/wpt_html.res test/regression/tool/web-platform-tests/test_wpt_html
-rm test/regression/reftest/web-platform-tests/html -rf
-cp test/reftest/web-platform-tests/html test/regression/reftest/web-platform-tests/ -rf
+rm -rf test/regression/reftest/web-platform-tests/html
+cp -rf test/reftest/web-platform-tests/html test/regression/reftest/web-platform-tests/
 
 # Page Visibility
 cp tool/reftest/wpt_page_visibility.res test/regression/tool/web-platform-tests/test_wpt_page_visibility
-rm test/regression/reftest/web-platform-tests/page-visibility -rf
-cp test/reftest/web-platform-tests/page-visibility test/regression/reftest/web-platform-tests/ -rf
+rm -rf test/regression/reftest/web-platform-tests/page-visibility
+cp -rf test/reftest/web-platform-tests/page-visibility test/regression/reftest/web-platform-tests/
 
 # Progress Events
 cp tool/reftest/wpt_progress_events.res test/regression/tool/web-platform-tests/test_wpt_progress_events
-rm test/regression/reftest/web-platform-tests/progress-events -rf
-cp test/reftest/web-platform-tests/progress-events test/regression/reftest/web-platform-tests/ -rf
+rm -rf test/regression/reftest/web-platform-tests/progress-events
+cp -rf test/reftest/web-platform-tests/progress-events test/regression/reftest/web-platform-tests/
 
 # XMLHttpRequest
 cp tool/reftest/wpt_xhr.res test/regression/tool/web-platform-tests/test_wpt_xhr
-rm test/regression/reftest/web-platform-tests/XMLHttpRequest -rf
-cp test/reftest/web-platform-tests/XMLHttpRequest test/regression/reftest/web-platform-tests/ -rf
+rm -rf test/regression/reftest/web-platform-tests/XMLHttpRequest
+cp -rf test/reftest/web-platform-tests/XMLHttpRequest test/regression/reftest/web-platform-tests/
 
-## Blink
-# W3C DOM Conformance Test Suites
+## Blink - W3C DOM Conformance Test Suites, fast/css, fast/dom, fast/html, fast/etc
 cp tool/reftest/blink_dom_conformance_test.res test/regression/tool/vendor/blink/test_blink_dom_conformance
-rm test/regression/reftest/vendor/blink/dom/html -rf
-cp test/reftest/vendor/blink/dom/html test/regression/reftest/vendor/blink/dom/ -rf
-
-# fast/dom
-rm test/regression/reftest/vendor/blink/resources -rf
-cp test/reftest/vendor/blink/resources test/regression/reftest/vendor/blink -rf
+cp tool/reftest/blink_fast_css.res test/regression/tool/vendor/blink/test_blink_fast_css
+cp tool/reftest/blink_fast_css_manual.res test/regression/tool/vendor/blink/test_blink_fast_css_manual
 cp tool/reftest/blink_fast_dom.res test/regression/tool/vendor/blink/test_blink_fast_dom
-rm test/regression/reftest/vendor/blink/fast/dom -rf
-mkdir -p test/regression/reftest/vendor/blink/fast/dom
-cp test/reftest/vendor/blink/fast/dom test/regression/reftest/vendor/blink/fast -rf
-
-# fast/html
 cp tool/reftest/blink_fast_html.res test/regression/tool/vendor/blink/test_blink_fast_html
-rm test/regression/reftest/vendor/blink/fast/html -rf
-mkdir -p test/regression/reftest/vendor/blink/fast/html
-cp test/reftest/vendor/blink/fast/html test/regression/reftest/vendor/blink/fast -rf
+cp tool/reftest/blink_fast_etc.res test/regression/tool/vendor/blink/test_blink_fast_etc
+cp tool/reftest/blink_fast_etc_manual.res test/regression/tool/vendor/blink/test_blink_fast_etc_manual
+rm -rf test/regression/reftest/vendor/blink
+cp -rf test/reftest/vendor/blink test/regression/reftest/vendor/
 
-## Gecko
-# Mochitest - W3C DOM Conformance Test Suites
+## Gecko - Mochitest: W3C DOM Conformance Test Suites
 cp tool/reftest/gecko_dom_conformance_test.res test/regression/tool/vendor/gecko/test_gecko_dom_conformance
-rm test/regression/reftest/vendor/gecko/dom_tests_mochitest -rf
-cp test/reftest/vendor/gecko/dom_tests_mochitest test/regression/reftest/vendor/gecko/ -rf
+rm -rf test/regression/reftest/vendor/gecko/dom_tests_mochitest
+cp -rf test/reftest/vendor/gecko/dom_tests_mochitest test/regression/reftest/vendor/gecko/
 
-## WebKit
-# W3C DOM Conformance Test Suites
+## WebKit - W3C DOM Conformance Test Suites, fast/css, fast/dom, fast/html, fast/etc
 cp tool/reftest/webkit_dom_conformance_test.res test/regression/tool/vendor/webkit/test_webkit_dom_conformance
-rm test/regression/reftest/vendor/webkit/dom/html -rf
-cp test/reftest/vendor/webkit/dom/html test/regression/reftest/vendor/webkit/dom/ -rf
-
-# fast/dom
-rm test/regression/reftest/vendor/webkit/resources -rf
-cp test/reftest/vendor/webkit/resources test/regression/reftest/vendor/webkit -rf
+cp tool/reftest/webkit_fast_css.res test/regression/tool/vendor/webkit/test_webkit_fast_css
+cp tool/reftest/webkit_fast_css_manual.res test/regression/tool/vendor/webkit/test_webkit_fast_css_manual
 cp tool/reftest/webkit_fast_dom.res test/regression/tool/vendor/webkit/test_webkit_fast_dom
-rm test/regression/reftest/vendor/webkit/fast/dom -rf
-mkdir -p test/regression/reftest/vendor/webkit/fast/dom
-cp test/reftest/vendor/webkit/fast/dom test/regression/reftest/vendor/webkit/fast -rf
-
-# fast/html
 cp tool/reftest/webkit_fast_html.res test/regression/tool/vendor/webkit/test_webkit_fast_html
-rm test/regression/reftest/vendor/webkit/fast/html -rf
-mkdir -p test/regression/reftest/vendor/webkit/fast/html
-cp test/reftest/vendor/webkit/fast/html test/regression/reftest/vendor/webkit/fast -rf
-
-## TODO: W3C Internationalization Tests
+cp tool/reftest/webkit_fast_etc.res test/regression/tool/vendor/webkit/test_webkit_fast_etc
+cp tool/reftest/webkit_fast_etc_manual.res test/regression/tool/vendor/webkit/test_webkit_fast_etc_manual
+rm -rf test/regression/reftest/vendor/webkit
+cp -rf test/reftest/vendor/webkit test/regression/reftest/vendor/
 
 ## TODO: W3C CSS Tests
-# TC lists are modified manually (regression/tool/csswg-test/*)
-# Expected images should be updated manually
+# css1
 rm -rf test/regression/reftest/csswg-test/css1
-cp -rf test/reftest/csswg-test/css1 test/regression/reftest/csswg-test
+cp -rf test/reftest/csswg-test/css1_converted test/regression/reftest/csswg-test/css1
 rm -rf test/regression/reftest/csswg-test/css1_result/font_independent
-cp -rf test/reftest/csswg-test/css1_result/font_independent test/regression/reftest/csswg-test/css1_result/
+cp -rf test/reftest/csswg-test/css1_result/font_independent test/regression/reftest/csswg-test/css1_result
 
+# css21
 rm -rf test/regression/reftest/csswg-test/css21
-cp -rf test/reftest/csswg-test/css21 test/regression/reftest/csswg-test
+cp -rf test/reftest/csswg-test/css21_converted test/regression/reftest/csswg-test/css21
 rm -rf test/regression/reftest/csswg-test/css21_result/font_independent
-cp -rf test/reftest/csswg-test/css21_result/font_independent test/regression/reftest/csswg-test/css21_result/
+cp -rf test/reftest/csswg-test/css21_result/font_independent test/regression/reftest/csswg-test/css21_result
 
+# css-backgrounds-3
 rm -rf test/regression/reftest/csswg-test/css-backgrounds-3
-cp -rf test/reftest/csswg-test/css-backgrounds-3 test/regression/reftest/csswg-test
+cp -rf test/reftest/csswg-test/css-backgrounds-3_converted test/regression/reftest/csswg-test/css-backgrounds-3
 rm -rf test/regression/reftest/csswg-test/css-backgrounds-3_result/font_independent
-cp -rf test/reftest/csswg-test/css-backgrounds-3_result/font_independent test/regression/reftest/csswg-test/css-backgrounds-3_result/
+cp -rf test/reftest/csswg-test/css-backgrounds-3_result/font_independent test/regression/reftest/csswg-test/css-backgrounds-3_result
 
+# css-color-3
 rm -rf test/regression/reftest/csswg-test/css-color-3
-cp -rf test/reftest/csswg-test/css-color-3 test/regression/reftest/csswg-test
+cp -rf test/reftest/csswg-test/css-color-3_converted test/regression/reftest/csswg-test/css-color-3
 rm -rf test/regression/reftest/csswg-test/css-color-3_result/font_independent
-cp -rf test/reftest/csswg-test/css-color-3_result/font_independent test/regression/reftest/csswg-test/css-color-3_result/
+cp -rf test/reftest/csswg-test/css-color-3_result/font_independent test/regression/reftest/csswg-test/css-color-3_result
 
+# css-transforms-1
 rm -rf test/regression/reftest/csswg-test/css-transforms-1
-cp -rf test/reftest/csswg-test/css-transforms-1 test/regression/reftest/csswg-test
+cp -rf test/reftest/csswg-test/css-transforms-1_converted test/regression/reftest/csswg-test/css-transforms-1
 rm -rf test/regression/reftest/csswg-test/css-transforms-1_result/font_independent
-cp -rf test/reftest/csswg-test/css-transforms-1_result/font_independent test/regression/reftest/csswg-test/css-transforms-1_result/
+cp -rf test/reftest/csswg-test/css-transforms-1_result/font_independent test/regression/reftest/csswg-test/css-transforms-1_result
 
