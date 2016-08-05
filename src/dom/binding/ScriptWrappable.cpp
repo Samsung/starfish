@@ -24,8 +24,12 @@
 
 #include "dom/binding/ScriptBindingInstance.h"
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
+#include "dom/Document.h"
 
 #include "style/CSSStyleLookupTrie.h"
+
+#include "layout/Frame.h"
+#include "layout/FrameBox.h"
 
 namespace StarFish {
 
@@ -131,6 +135,31 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("forceDisableOnloadCapture"), 0, false);
     ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("forceDisableOnloadCapture"), true, true, true, forceDisableOnloadCaptureFunction);
+
+    escargot::ESFunctionObject* getXYWHFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            wnd->renderingIfNeeds();
+            Node* node = (Node*)instance->currentExecutionContext()->readArgument(0).asESPointer()->asESObject()->extraPointerData();
+            Frame* fr = (Frame*)node->frame();
+            if (!fr) {
+                return escargot::ESValue(escargot::ESValue::ESNull);
+            } else if (fr->isFrameBox()) {
+                LayoutRect rect = fr->asFrameBox()->absoluteRect(node->document()->frame()->asFrameBox());
+                escargot::ESObject* result = escargot::ESObject::create();
+                result->set(escargot::ESString::create("x"), escargot::ESValue(rect.x().toFloat()));
+                result->set(escargot::ESString::create("y"), escargot::ESValue(rect.y().toFloat()));
+                result->set(escargot::ESString::create("width"), escargot::ESValue(rect.width().toFloat()));
+                result->set(escargot::ESString::create("height"), escargot::ESValue(rect.height().toFloat()));
+                return escargot::ESValue(result);
+            } else {
+                // TODO
+            }
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("getXYWH"), 2, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("getXYWH"), true, true, true, getXYWHFunction);
 
     escargot::ESFunctionObject* simulateClickFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
