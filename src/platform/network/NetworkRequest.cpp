@@ -421,13 +421,21 @@ size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb, v
 size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb, void* data)
 {
     size_t realsize = size * nmemb;
-    NetworkRequest* request = (NetworkRequest*)data;
-    Locker<Mutex> locker(*request->m_mutex);
+    NetworkWorkerData* request = (NetworkWorkerData*)data;
+    Locker<Mutex> locker(*request->request->m_mutex);
 
     size_t realSize = size * nmemb;
     const char* memPtr = (const char*)ptr;
 
-    request->m_responseHeaderData.insert(request->m_responseHeaderData.end(), memPtr, memPtr + realSize);
+    long code;
+    curl_easy_getinfo(request->curl, CURLINFO_RESPONSE_CODE, &code);
+
+    if (request->res != (int)code) {
+        request->res = (int)code;
+        request->request->m_responseHeaderData.clear();
+    }
+
+    request->request->m_responseHeaderData.insert(request->request->m_responseHeaderData.end(), memPtr, memPtr + realSize);
     return realsize;
 }
 
@@ -477,6 +485,7 @@ void NetworkRequest::send(String* body)
             data->curl = curl;
             data->isSync = m_isSync;
             data->isAborted = false;
+            data->res = -1;
 
 #ifdef STARFISH_TIZEN_WEARABLE
             connection_h connection;
@@ -541,7 +550,7 @@ void NetworkRequest::send(String* body)
             curl_easy_setopt(curl, CURLOPT_XFERINFODATA, data);
             curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
-            curl_easy_setopt(curl, CURLOPT_HEADERDATA, this);
+            curl_easy_setopt(curl, CURLOPT_HEADERDATA, data);
             curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, curlWriteHeaderCallback);
 
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
