@@ -519,16 +519,10 @@ public:
         if (isEstablishesStackingContext()) {
             STARFISH_ASSERT(isRootElement() || m_stackingContext == nullptr);
             if (!isRootElement()) {
-                bool isAtomic = true;
-                if (isPositionedElement() && !style()->IsSpecifiedZIndex()) {
-                    isAtomic = false;
-                }
                 FrameBox* p = layoutParent()->asFrameBox();
                 while (true) {
                     if (p->isEstablishesStackingContext()) {
                         if (p->isRootElement())
-                            break;
-                        if (!isAtomic)
                             break;
                         if (p->shouldApplyOverflow())
                             break;
