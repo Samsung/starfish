@@ -233,7 +233,8 @@ enum StarFishDeviceKind {
     deviceKindUseTouchScreen = 1 << 0,
 };
 
-// must call delete
+// you must call delete
+// StarFish::StarFish function is NOT THREAD-SAFE
 class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;

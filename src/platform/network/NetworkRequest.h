@@ -207,7 +207,7 @@ protected:
     void handleError(ProgressState error);
     bool m_isSync;
     bool m_didSend;
-    bool m_isReceivedHeader;
+    bool m_gotError;
     bool m_containsBase64Content;
     StarFish* m_starFish;
     Document* m_document;

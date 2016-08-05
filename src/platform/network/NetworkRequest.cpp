@@ -60,7 +60,6 @@ void* NetworkWorkerHelper::networkWorker(void* data)
     else {
         requestData->request->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             NetworkWorkerData* requestData = (NetworkWorkerData*)data;
-            requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
             if (requestData == requestData->request->m_activeNetworkWorkerData)
                 requestData->request->m_activeNetworkWorkerData = nullptr;
             GC_FREE(requestData);
@@ -106,7 +105,6 @@ void NetworkWorkerHelper::responseHandler(size_t handle, void* data)
         requestData->request->handleError(NetworkRequest::ERROR);
     }
 
-    requestData->request->m_starFish->removePointerFromRootSet(requestData->request);
     requestData->request->m_activeNetworkWorkerData = nullptr;
     GC_FREE(requestData);
 }
@@ -142,12 +140,10 @@ NetworkRequest::NetworkRequest(Document* document)
 {
 
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        // STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest\n");
+        // STARFISH_LOG_INFO("NetworkRequest::~NetworkRequest %p\n", obj);
         NetworkRequest* nr = (NetworkRequest*)obj;
-        nr->m_response.clear();
-        nr->m_response.shrink_to_fit();
-        nr->m_responseHeaderData.clear();
-        nr->m_responseHeaderData.shrink_to_fit();
+        NetworkRequestResponse().swap(nr->m_response);
+        NetworkRequestResponseHeader().swap(nr->m_responseHeaderData);
     }, NULL, NULL, NULL);
 
     initVariables();
@@ -163,7 +159,7 @@ void NetworkRequest::initVariables()
     m_response.clear();
     m_responseHeaderData.clear();
     m_isSync = false;
-    m_isReceivedHeader = false;
+    m_gotError = false;
     m_containsBase64Content = false;
     m_didSend = false;
     m_total = 0;
@@ -211,6 +207,7 @@ void NetworkRequest::handleResponseEOF()
 
 void NetworkRequest::handleError(ProgressState error)
 {
+    m_gotError = true;
     changeReadyState(DONE, true);
     changeProgress(PROGRESS, true);
     changeProgress(error, true);
@@ -259,6 +256,18 @@ static inline std::string trimmed(std::string s)
 
 void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitAction)
 {
+    STARFISH_ASSERT(isMainThread());
+    if (!m_gotError && readyState == LOADING && m_readyState == OPENED) {
+        changeReadyState(HEADERS_RECEIVED, true);
+    }
+
+    if (!m_gotError && readyState == DONE && m_readyState == HEADERS_RECEIVED) {
+        changeReadyState(LOADING, true);
+    } else if (!m_gotError && readyState == DONE && m_readyState == OPENED) {
+        changeReadyState(HEADERS_RECEIVED, true);
+        changeReadyState(LOADING, true);
+    }
+
     if (readyState == HEADERS_RECEIVED) {
         std::istringstream resp(m_responseHeaderData);
         std::string header;
@@ -295,23 +304,29 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
             m_clients[i]->onReadyStateChange(this, isExplicitAction);
         }
     }
+
+    if (m_readyState == ReadyState::DONE) {
+        m_starFish->messageLoop()->addIdler([](size_t, void* data, void* data2) {
+            ((StarFish*)data)->removePointerFromRootSet(data2);
+        }, m_starFish, this);
+    }
 }
 
 void NetworkRequest::changeProgress(ProgressState progress, bool isExplicitAction)
 {
-    if (m_progressState != progress || (progress == PROGRESS)) {
+    STARFISH_ASSERT(isMainThread());
+    if (m_progressState != progress || (progress == ProgressState::PROGRESS)) {
         m_progressState = progress;
         for (size_t i = 0; i < m_clients.size(); i ++) {
             m_clients[i]->onProgressEvent(this, isExplicitAction);
         }
     }
 
-    if (m_progressState == LOADEND) {
-        m_response.clear();
-        m_response.shrink_to_fit();
-        m_responseHeaderData.clear();
-        m_responseHeaderData.shrink_to_fit();
+    if (m_progressState == ProgressState::LOADEND) {
+        NetworkRequestResponse().swap(m_response);
+        NetworkRequestResponseHeader().swap(m_responseHeaderData);
     }
+
 }
 
 void NetworkRequest::open(MethodType method, String* url, bool async, String* userName, String* password)
@@ -340,6 +355,7 @@ void NetworkRequest::abort(bool isExplicitAction)
     clearIdlers();
 
     if (m_readyState >= UNSENT) {
+        m_gotError = true;
         auto theStatusWas = m_progressState;
         if (m_readyState == OPENED && m_didSend) {
             changeProgress(ABORT, false);
@@ -366,42 +382,8 @@ int NetworkRequest::curlProgressCallback(void* clientp, curl_off_t dltotal, curl
     if (workerData->isAborted)
         return 1;
 
-    if (request->m_pendingOnHeaderReceivedEventIdlerHandle == SIZE_MAX && !request->m_isReceivedHeader) {
-        request->m_isReceivedHeader = true;
-        if (request->isSync()) {
-            request->changeReadyState(HEADERS_RECEIVED, true);
-        } else {
-            request->m_pendingOnHeaderReceivedEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-                NetworkRequest* request = (NetworkRequest*)data;
-                {
-                    Locker<Mutex> locker(*request->m_mutex);
-                    STARFISH_ASSERT(handle == request->m_pendingOnHeaderReceivedEventIdlerHandle);
-                    request->m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
-                }
-                request->changeReadyState(HEADERS_RECEIVED, true);
-            }, request);
-        }
-    }
-
     request->m_loaded = static_cast<uint32_t>(dlnow);
     request->m_total = static_cast<uint32_t>(dltotal);
-    if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
-        if (request->isSync()) {
-            request->changeReadyState(LOADING, true);
-            request->changeProgress(PROGRESS, true);
-        } else {
-            request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
-                NetworkRequest* request = (NetworkRequest*)data;
-                {
-                    Locker<Mutex> locker(*request->m_mutex);
-                    STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
-                    request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
-                }
-                request->changeReadyState(LOADING, true);
-                request->changeProgress(PROGRESS, true);
-            }, request);
-        }
-    }
     return 0;
 }
 
@@ -414,6 +396,24 @@ size_t NetworkRequest::curlWriteCallback(void* ptr, size_t size, size_t nmemb, v
     const char* memPtr = (const char*)ptr;
 
     request->m_response.insert(request->m_response.end(), memPtr, memPtr + realSize);
+
+    if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
+        if (request->isSync()) {
+            request->changeReadyState(LOADING, true);
+            request->changeProgress(PROGRESS, true);
+        } else {
+            request->m_pendingOnProgressEventIdlerHandle = request->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t handle, void* data) {
+                NetworkRequest* request = (NetworkRequest*)data;
+                Locker<Mutex> locker(*request->m_mutex);
+                {
+                    STARFISH_ASSERT(handle == request->m_pendingOnProgressEventIdlerHandle);
+                    request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
+                }
+                request->changeReadyState(LOADING, true);
+                request->changeProgress(PROGRESS, true);
+            }, request);
+        }
+    }
 
     return realSize;
 }
@@ -433,6 +433,7 @@ size_t NetworkRequest::curlWriteHeaderCallback(void* ptr, size_t size, size_t nm
 
 void NetworkRequest::send(String* body)
 {
+    m_starFish->addPointerInRootSet(this);
     m_didSend = true;
     changeProgress(LOADSTART, true);
     if (m_url->isFileURL()) {
@@ -466,12 +467,6 @@ void NetworkRequest::send(String* body)
         }
 
     } else {
-        /*
-        m_starFish->threadPool()->addWork([](void*) -> void* {
-            return nullptr;
-        }, nullptr);
-        */
-
         NetworkWorkerData* data = new(NoGC) NetworkWorkerData;
         m_activeNetworkWorkerData = data;
         {
@@ -564,8 +559,6 @@ void NetworkRequest::send(String* body)
             } else {
                 STARFISH_ASSERT(m_method == GET_METHOD);
             }
-
-            m_starFish->addPointerInRootSet(this);
         }
 
         if (m_isSync) {

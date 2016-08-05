@@ -28,7 +28,7 @@
 #include "platform/window/Window.h"
 #include "platform/canvas/image/ImageData.h"
 #include "dom/binding/ScriptBindingInstance.h"
-
+#include <malloc.h>
 #include <Elementary.h>
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>
@@ -80,16 +80,42 @@ static double process_mem_usage()
 }
 #endif
 
+static bool g_starFishGlobalInit = false;
+
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier)
     : m_locale(icu::Locale::createFromName(locale))
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
 {
-    GC_set_abort_func([](const char* msg) {
-        STARFISH_LOG_ERROR("gc abort called\n");
-        STARFISH_LOG_ERROR("%s\n", msg);
-    });
+    if (!g_starFishGlobalInit) {
+        g_starFishGlobalInit = true;
+
+        GC_set_abort_func([](const char* msg) {
+            STARFISH_LOG_ERROR("gc abort called\n");
+            STARFISH_LOG_ERROR("%s\n", msg);
+        });
+
+#ifdef STARFISH_TIZEN_WEARABLE
+        GC_set_warn_proc([](char *msg, GC_word arg)
+        {
+            dlog_print(DLOG_ERROR, "StarFish", msg, arg);
+        });
+#endif
+        GC_set_on_collection_event([](GC_EventType evtType) {
+            if (GC_EVENT_PRE_START_WORLD == evtType) {
+#ifdef STARFISH_ENABLE_TEST
+                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage());
+#else
+                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
+#endif
+                // malloc_stats();
+            }
+        });
+        GC_set_free_space_divisor(64);
+        GC_set_force_unmap_on_gcollect(1);
+
+    }
 
     if (!win) {
         Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
@@ -103,24 +129,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 
     m_nativeWindow = win;
 
-#ifdef STARFISH_TIZEN_WEARABLE
-    GC_set_warn_proc([](char *msg, GC_word arg)
-    {
-        dlog_print(DLOG_ERROR, "StarFish", msg, arg);
-    });
-#endif
-    GC_set_on_collection_event([](GC_EventType evtType) {
-        if (GC_EVENT_PRE_START_WORLD == evtType) {
-#ifdef STARFISH_ENABLE_TEST
-            STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage());
-#else
-            STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
-#endif
-        }
-    });
-    GC_set_free_space_divisor(64);
-    GC_set_force_unmap_on_gcollect(1);
-    // STARFISH_LOG_INFO("GC_get_free_space_divisor is %d\n", (int)GC_get_free_space_divisor());
     m_deviceKind = deviceKindUseTouchScreen;
     m_startUpFlag = flag;
 
@@ -233,10 +241,12 @@ void StarFish::addPointerInRootSet(void *ptr)
 void StarFish::removePointerFromRootSet(void *ptr)
 {
     auto iter = m_rootMap.find(ptr);
-    if (iter->second == 1) {
-        m_rootMap.erase(iter);
-    } else {
-        iter->second--;
+    if (iter != m_rootMap.end()) {
+        if (iter->second == 1) {
+            m_rootMap.erase(iter);
+        } else {
+            iter->second--;
+        }
     }
 }
 

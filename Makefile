@@ -320,9 +320,9 @@ SRC += third_party/skia_matrix/SkDebug.cpp
 # clipper
 SRC += third_party/clipper/cpp/clipper.cpp
 
-
 # OBJS
 OBJS := $(SRC:%.cpp= $(OUTDIR)/%.o)
+OBJS += $(SRC_C:%.c= $(OUTDIR)/%.o)
 THIRD_PARTY_OBJS := $(JSLIBS) $(GCLIBS)
 
 ################################################################################

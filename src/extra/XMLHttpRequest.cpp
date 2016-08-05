@@ -37,7 +37,6 @@ XMLHttpRequest::XMLHttpRequest(Document* document)
 
 void XMLHttpRequest::initResponseData()
 {
-    m_textConverter = nullptr;
     m_responseText = String::emptyString;
 
     m_responseJsonObject = ScriptValueNull;
@@ -64,7 +63,7 @@ void XMLHttpRequest::open(NetworkRequest::MethodType method, String* url, bool a
 void XMLHttpRequest::abort()
 {
     m_networkRequest->abort();
-    m_responseText = String::emptyString;
+    initResponseData();
 }
 
 void XMLHttpRequest::setResponseType(ResponseType type)
@@ -103,12 +102,6 @@ String* XMLHttpRequest::responseText()
     if (!(m_responseType == ResponseType::Unspecified || m_responseType == ResponseType::Text))
         throw new DOMException(m_networkRequest->starFish()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "Failed to read the 'responseText' property from 'XMLHttpRequest': The value is only accessible if the object's 'responseType' is '' or 'text'");
 
-    if (m_textConverter == nullptr) {
-        m_textConverter = new TextConverter(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
-    }
-    m_responseText = m_responseText->concat(m_textConverter->convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), false));
-    m_networkRequest->responseData().clear();
-
     return m_responseText;
 }
 
@@ -141,7 +134,9 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
         // process response
         if (m_responseType == ResponseType::Unspecified || m_responseType == ResponseType::Text) {
             // fill response text before release response data
-            responseText();
+            TextConverter textConverter(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+            m_responseText = textConverter.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
+            m_networkRequest->responseData().clear();
         } else if (m_responseType == ResponseType::Json) {
             TextConverter cvt(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
             String* text = cvt.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
