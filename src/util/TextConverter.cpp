@@ -87,13 +87,13 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
             break;
         }
 
-        if (confidence < 10) {
-            continue;
-        }
-
         if (ucnv_compareNames(charset, preferredEncoding->utf8Data()) == 0) {
             bestCharset = charset;
             break;
+        }
+
+        if (confidence < 10) {
+            continue;
         }
         STARFISH_ASSERT(!U_FAILURE(err));
     }
