@@ -21,6 +21,25 @@ namespace StarFish {
 
 String* URL::parseURLString(String* baseURL, String* url)
 {
+    unsigned numLeadingSpaces = 0;
+    unsigned numTrailingSpaces = 0;
+
+    size_t urlLength = url->length();
+    for (; numLeadingSpaces < urlLength; ++numLeadingSpaces) {
+        if (!String::isSpaceOrNewline(url->charAt(numLeadingSpaces)))
+            break;
+    }
+    for (; numTrailingSpaces < urlLength; ++numTrailingSpaces) {
+        if (!String::isSpaceOrNewline(url->charAt(urlLength - 1 - numTrailingSpaces)))
+            break;
+    }
+    STARFISH_ASSERT(numLeadingSpaces + numTrailingSpaces < urlLength);
+
+    if (numLeadingSpaces || numTrailingSpaces) {
+        url = url->substring(numLeadingSpaces, urlLength - (numLeadingSpaces + numTrailingSpaces));
+    }
+
+
     if (url->startsWith("data:")) {
         return url;
     }
