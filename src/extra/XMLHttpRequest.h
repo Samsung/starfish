@@ -78,7 +78,6 @@ protected:
 
     // for responseType = "text"
     String* m_responseText;
-    TextConverter* m_textConverter;
 
     // for responseType = "json"
     ScriptValue m_responseJsonObject;
