@@ -489,6 +489,11 @@ public:
             } else {
                 setBorderBottom(0);
             }
+        } else {
+            setBorderLeft(0);
+            setBorderTop(0);
+            setBorderRight(0);
+            setBorderBottom(0);
         }
 
         // margin
