@@ -19,7 +19,7 @@ height: 100%;
 ::-webkit-scrollbar-track {background-color:rgba(208,204,204,1);}
 ::-webkit-scrollbar-track-piece {background-color:rgba(100,96,96,1);}
 ::-webkit-scrollbar-thumb {height:0px; background-color:rgba(124,122,122,1); border-radius:0px;}
-::-webkit-scrollbar-corner {background-color:rgba(238,238,238,1);} 
+::-webkit-scrollbar-corner {background-color:rgba(238,238,238,1);}
 
 </style>
 <script>
@@ -69,7 +69,7 @@ window.onload = function() {
         iframe.contentWindow.document.head.appendChild(style);
         iframe.contentWindow.getXYWH = function(elem) {
             var r = elem.getBoundingClientRect();
-            return {x:r.top, y:r.left, width: r.width, height: r.height};
+            return {x:r.left, y:r.top, width: r.width, height: r.height};
         }
         iframe.contentWindow.simulateClickElement = function(elem) {
             elem.click();
@@ -89,7 +89,7 @@ window.onload = function() {
                 iframe.contentWindow.body.offsetWidth;
             } catch(e) { }
 
-            window.setTimeout(function() { 
+            window.setTimeout(function() {
                 win.capturePage(function(img) {
                     // console.log(img)
                     var s = path.parse(pageSrc)
@@ -105,7 +105,7 @@ window.onload = function() {
         iframe.contentWindow.testEnd = function() {
            setInterval(function() {
                if (scCount == 0) {
-                   nw.App.closeAllWindows() 
+                   nw.App.closeAllWindows()
                }
            }, 100);
         }
