@@ -29,14 +29,16 @@ String* URL::parseURLString(String* baseURL, String* url)
         if (!String::isSpaceOrNewline(url->charAt(numLeadingSpaces)))
             break;
     }
-    for (; numTrailingSpaces < urlLength; ++numTrailingSpaces) {
-        if (!String::isSpaceOrNewline(url->charAt(urlLength - 1 - numTrailingSpaces)))
-            break;
-    }
-    STARFISH_ASSERT(numLeadingSpaces + numTrailingSpaces < urlLength);
+    if (numLeadingSpaces != urlLength) {
+        for (; numTrailingSpaces < urlLength; ++numTrailingSpaces) {
+            if (!String::isSpaceOrNewline(url->charAt(urlLength - 1 - numTrailingSpaces)))
+                break;
+        }
+        STARFISH_ASSERT(numLeadingSpaces + numTrailingSpaces < urlLength);
 
-    if (numLeadingSpaces || numTrailingSpaces) {
-        url = url->substring(numLeadingSpaces, urlLength - (numLeadingSpaces + numTrailingSpaces));
+        if (numLeadingSpaces || numTrailingSpaces) {
+            url = url->substring(numLeadingSpaces, urlLength - (numLeadingSpaces + numTrailingSpaces));
+        }
     }
 
 
