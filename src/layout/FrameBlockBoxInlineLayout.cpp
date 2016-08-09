@@ -2190,10 +2190,12 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 }
             }
 
-            Frame* c = f->firstChild();
-            while (c) {
-                computeInlineLayout(c);
-                c = c->next();
+            if (!f->isFrameBlockBox()) {
+                Frame* c = f->firstChild();
+                while (c) {
+                    computeInlineLayout(c);
+                    c = c->next();
+                }
             }
 
         };
