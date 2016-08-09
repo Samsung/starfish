@@ -37,6 +37,10 @@
 #include "TizenDeviceAPILoaderForEscargot.h"
 #endif
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#include "dom/VTTCue.h"
+#endif
+
 namespace StarFish {
 
 #ifdef USE_ES6_FEATURE
@@ -433,7 +437,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
             fetchData(wnd->document()->scriptBindingInstance())->m_value##codeName = value; \
         }, true, false, true);
     STARFISH_ENUM_LAZY_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
-
 
     /* 4.5.1 Interface DOMImplementation */
 #ifdef STARFISH_EXP
@@ -1374,6 +1377,116 @@ escargot::ESFunctionObject* bindingComment(ScriptBindingInstance* scriptBindingI
 
     return CommentFunction;
 }
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+escargot::ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(TextTrack, fetchData(scriptBindingInstance)->m_eventTarget);
+
+    TextTrackFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addCue"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::TextTrackObject);
+            CHECK_TYPEOF(firstArg, ScriptWrappable::Type::TextTrackCueObject);
+
+            TextTrack* textTrack = (TextTrack*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            TextTrackCue* cue = (TextTrackCue*)firstArg.asESPointer()->asESObject()->extraPointerData();
+            textTrack->addCue(cue);
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("addCue"), 1, false)
+    );
+
+    return TextTrackFunction;
+}
+
+escargot::ESFunctionObject* bindingTextTrackCue(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(TextTrackCue, fetchData(scriptBindingInstance)->m_eventTarget);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackCueFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("startTime"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
+        return escargot::ESValue(originalObj->startTime());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        double startTime = firstArg.toNumber();
+        if (std::isnan(startTime)) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        originalObj->setStartTime(startTime);
+        return firstArg;
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackCueFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("endTime"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
+        return escargot::ESValue(originalObj->endTime());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        double endTime = firstArg.toNumber();
+        if (std::isnan(endTime)) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        originalObj->setEndTime(endTime);
+        return firstArg;
+    });
+
+    return TextTrackCueFunction;
+}
+
+escargot::ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingInstance)
+{
+    auto VTTCueFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount < 3) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+        escargot::ESValue thirdArg = instance->currentExecutionContext()->readArgument(2);
+        double startTime = firstArg.toNumber();
+        double endTime = secondArg.toNumber();
+        if (std::isnan(startTime) || std::isnan(endTime) || !thirdArg.isESString()) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        VTTCue* cue = new VTTCue(startTime, endTime, String::fromUTF8(thirdArg.toString()->utf8Data()));
+        return cue->scriptValue();
+
+    }, escargot::ESString::create("VTTCue"), 3, true, true);
+    VTTCueFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
+    VTTCueFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    VTTCueFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->characterData()->protoType());
+    VTTCueFunction->set__proto__(fetchData(scriptBindingInstance)->textTrackCue());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        VTTCueFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("text"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
+        if (originalObj->isVTTCue()) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        VTTCue* cue = (VTTCue*)originalObj;
+        return escargot::ESValue(cue->text());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        if (originalObj->isVTTCue() || !firstArg.isESString()) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        VTTCue* cue = (VTTCue*)originalObj;
+        cue->setText(String::fromUTF8(firstArg.toString()->utf8Data()));
+        return firstArg;
+    });
+
+    return VTTCueFunction;
+}
+#endif
 
 escargot::ESFunctionObject* bindingDocumentFragment(ScriptBindingInstance* scriptBindingInstance)
 {
