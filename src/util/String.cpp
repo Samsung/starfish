@@ -515,6 +515,10 @@ String* String::trim()
         } while (last--);
     }
 
+    if (first == 0 && ((last + 1) == length())) {
+        return this;
+    }
+
     return substring(first, (last - first + 1));
 }
 
