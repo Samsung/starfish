@@ -1016,6 +1016,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
                 Event* e = new Event(eventType, EventInit(true, true));
                 EventTarget::dispatchEvent(t->asNode(), e);
                 shouldDispatchEvent = false;
+                break;
             }
             t = t->parentNode();
         }
