@@ -332,11 +332,14 @@ Element* Document::createElement(QualifiedName localName, bool shouldCheckName)
         return new HTMLBRElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_imgTagName) {
         return new HTMLImageElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_audioTagName) {
-#ifdef STARFISH_ENABLE_AUDIO
-        return new HTMLAudioElement(this);
-#endif
     }
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    else if (localName == window()->starFish()->staticStrings()->m_videoTagName) {
+        return new HTMLVideoElement(this);
+    } else if (localName == window()->starFish()->staticStrings()->m_audioTagName) {
+        return new HTMLAudioElement(this);
+    }
+#endif
 
     STARFISH_LOG_INFO("got unknown element - %s\n", localName.localName()->utf8Data());
     return new HTMLUnknownElement(this, localName);

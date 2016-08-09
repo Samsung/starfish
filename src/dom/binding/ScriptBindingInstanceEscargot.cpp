@@ -411,63 +411,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     escargot::ESString::create("createHTMLDocument"), 2, false));
 #endif
 
-#ifdef STARFISH_ENABLE_AUDIO
-    // TODO convert into defineNativeAccessorPropertyButNeedToGenerateJSFunction way
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLAudioElement, fetchData(scriptBindingInstance)->htmlElement());
-    fetchData(this)->m_htmlAudioElement = HTMLAudioElementFunction;
-
-    escargot::ESFunctionObject* audioPlayFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
-    {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        if (nd->isElement()) {
-            if (nd->asElement()->isHTMLElement()) {
-                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
-                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->play();
-                    return escargot::ESValue(escargot::ESValue::ESNull);
-                }
-            }
-        }
-        THROW_ILLEGAL_INVOCATION()
-    }, escargot::ESString::create("play"), 1, false);
-    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("play"), false, false, false, audioPlayFunction);
-
-    escargot::ESFunctionObject* audioPauseFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
-    {
-        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
-        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
-        Node* nd = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
-        if (nd->isElement()) {
-            if (nd->asElement()->isHTMLElement()) {
-                if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
-                    nd->asElement()->asHTMLElement()->asHTMLAudioElement()->pause();
-                    return escargot::ESValue(escargot::ESValue::ESNull);
-                }
-            }
-        }
-        THROW_ILLEGAL_INVOCATION()
-    }, escargot::ESString::create("pause"), 1, false);
-    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pause"), false, false, false, audioPauseFunction);
-
-    HTMLAudioElementFunction->protoType().asESPointer()->asESObject()->defineAccessorProperty(escargot::ESString::create("paused"),
-        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue
-        {
-            CHECK_TYPEOF(originalObj, ScriptWrappable::Type::NodeObject);
-            Node* nd = ((Node *)((Node *)originalObj->extraPointerData()));
-            if (nd->isElement()) {
-                if (nd->asElement()->isHTMLElement()) {
-                    if (nd->asElement()->asHTMLElement()->isHTMLAudioElement()) {
-                        return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLAudioElement()->paused());
-                    }
-                }
-            }
-            THROW_ILLEGAL_INVOCATION();
-            RELEASE_ASSERT_NOT_REACHED();
-        },
-        NULL, true, true, false);
-#endif
-
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::initialize(fetchData(this)->m_instance);
 #endif
@@ -2438,6 +2381,29 @@ escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scrip
     });
     return HTMLImageElementFunction;
 }
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLMediaElement, fetchData(scriptBindingInstance)->htmlElement());
+    // TODO
+    return HTMLMediaElementFunction;
+}
+
+escargot::ESFunctionObject* bindingHTMLVideoElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLVideoElement, fetchData(scriptBindingInstance)->htmlMediaElement());
+    // TODO
+    return HTMLVideoElementFunction;
+}
+
+escargot::ESFunctionObject* bindingHTMLAudioElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLAudioElement, fetchData(scriptBindingInstance)->htmlMediaElement());
+    // TODO
+    return HTMLAudioElementFunction;
+}
+#endif
 
 escargot::ESFunctionObject* bindingHTMLCollection(ScriptBindingInstance* scriptBindingInstance)
 {

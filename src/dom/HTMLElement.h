@@ -21,8 +21,7 @@
 
 namespace StarFish {
 
-#ifdef STARFISH_ENABLE_AUDIO
-#define FOR_EACH_HTML_ELEMENT_OP(F) \
+#define __FOR_EACH_HTML_ELEMENT_OP(F) \
         F(Html) \
         F(Head) \
         F(Script) \
@@ -35,23 +34,17 @@ namespace StarFish {
         F(Image) \
         F(Span) \
         F(BR) \
-        F(Unknown) \
+        F(Unknown)
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#define FOR_EACH_HTML_ELEMENT_OP(F) \
+        __FOR_EACH_HTML_ELEMENT_OP(F) \
+        F(Media) \
+        F(Video) \
         F(Audio)
 #else
 #define FOR_EACH_HTML_ELEMENT_OP(F) \
-        F(Html) \
-        F(Head) \
-        F(Script) \
-        F(Style) \
-        F(Link) \
-        F(Meta) \
-        F(Body) \
-        F(Div) \
-        F(Paragraph) \
-        F(Image) \
-        F(Span) \
-        F(Unknown) \
-        F(BR)
+        __FOR_EACH_HTML_ELEMENT_OP(F)
 #endif
 
 #define FORWRAD_DECLARE_NAME(kind) class HTML##kind##Element;

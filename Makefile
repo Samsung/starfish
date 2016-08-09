@@ -150,6 +150,8 @@ LDFLAGS += -lpthread -lcurl
 ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2
   LDFLAGS += -m32
+else ifeq ($(ARCH), x64)
+  CXXFLAGS += -DSTARFISH_ENABLE_MULTIMEDIA
 else ifeq ($(ARCH), arm)
   CXXFLAGS += -march=armv7-a -mthumb
 endif

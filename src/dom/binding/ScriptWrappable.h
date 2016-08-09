@@ -45,7 +45,9 @@ class HTMLBRElement;
 class HTMLMetaElement;
 class HTMLParagraphElement;
 class HTMLSpanElement;
-#ifdef STARFISH_ENABLE_AUDIO
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+class HTMLMediaElement;
+class HTMLVideoElement;
 class HTMLAudioElement;
 #endif
 class HTMLUnknownElement;
@@ -148,10 +150,11 @@ public:
     void initScriptWrappable(HTMLParagraphElement* ptr);
     void initScriptWrappable(HTMLSpanElement* ptr);
     void initScriptWrappable(HTMLUnknownElement* ptr);
-#ifdef STARFISH_ENABLE_AUDIO
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    void initScriptWrappable(HTMLMediaElement* ptr);
+    void initScriptWrappable(HTMLVideoElement* ptr);
     void initScriptWrappable(HTMLAudioElement* ptr);
 #endif
-
     void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr, ScriptBindingInstance*);
     void initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance*);

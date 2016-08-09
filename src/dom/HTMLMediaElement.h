@@ -14,38 +14,23 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishHTMLAudioElement__)
-#define __StarFishHTMLAudioElement__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishHTMLMediaElement__)
+#define __StarFishHTMLMediaElement__
 
-#include "dom/HTMLMediaElement.h"
+#include "dom/HTMLElement.h"
 
 namespace StarFish {
 
-class HTMLAudioElement : public HTMLMediaElement {
+class HTMLMediaElement : public HTMLElement {
 public:
-    HTMLAudioElement(Document* document)
-        : HTMLMediaElement(document)
+    HTMLMediaElement(Document* document)
+        : HTMLElement(document)
     {
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
-    }
-
-    virtual String* localName()
-    {
-        return document()->window()->starFish()->staticStrings()->m_audioTagName.localName();
-    }
-
-    virtual QualifiedName name()
-    {
-        return document()->window()->starFish()->staticStrings()->m_audioTagName;
-    }
-
-    virtual bool isHTMLAudioElement() const
-    {
-        return true;
     }
 };
 }
