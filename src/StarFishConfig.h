@@ -19,6 +19,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <cstdint>
 #include <vector>
 #include <deque>
 #include <list>
@@ -145,6 +146,14 @@
 
 #if !COMPILER(GCC)
 #include <codecvt>
+#endif
+
+#if INTPTR_MAX == INT32_MAX
+#define STARFISH_32
+#elif INTPTR_MAX == INT64_MAX
+#define STARFISH_64
+#else
+#error "Environment not 32 or 64-bit."
 #endif
 
 #define STARFISH_LOG_INFO(...) fprintf(stdout, __VA_ARGS__);

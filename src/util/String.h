@@ -73,6 +73,16 @@ template<typename CharType> inline CharType toASCIILower(CharType c)
 #endif
 }
 
+struct NullableUTF8String {
+    NullableUTF8String(const char* buffer, const size_t& bufferSize)
+    {
+        m_buffer = buffer;
+        m_bufferSize = bufferSize;
+    }
+    const char* m_buffer;
+    size_t m_bufferSize;
+};
+
 class String {
 public:
     static const unsigned defaultLengthLimit = 1 << 16;
@@ -113,6 +123,10 @@ public:
     }
 
     UTF16String toUTF16String() const;
+
+    // 1. this method always creates new buffer
+    // 2. this method does NOT return NULL-TERMINATED char buffer!
+    NullableUTF8String toNullableUTF8String();
 
     const char* utf8Data();
     const char* utf8DataIgnoreZeroWidthChar();

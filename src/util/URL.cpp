@@ -16,6 +16,9 @@
 
 #include "StarFishConfig.h"
 #include "URL.h"
+#include "extra/Blob.h"
+#include "platform/window/Window.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 
@@ -43,6 +46,10 @@ String* URL::parseURLString(String* baseURL, String* url)
 
 
     if (url->startsWith("data:")) {
+        return url;
+    }
+
+    if (url->startsWith("blob:")) {
         return url;
     }
 
@@ -133,6 +140,103 @@ String* URL::urlStringWithoutSearchPart() const
     } else {
         return m_urlString;
     }
+}
+
+String* URL::createObjectURL(Blob* blob)
+{
+    BlobURLStore store;
+    if (blob->starFish()->isValidBlobURL(blob)) {
+        store = blob->starFish()->findBlobURL(blob);
+    } else {
+        store = blob->starFish()->addBlobInBlobURLStore(blob);
+    }
+
+    std::string url = "blob:";
+    url += blob->starFish()->window()->document()->documentURI()->urlString()->utf8Data();
+    url += "/";
+
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+        } small;
+        uint32_t big;
+    } spliter;
+
+#ifdef STARFISH_64
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+            uint16_t c;
+            uint16_t d;
+        } small;
+        uint64_t big;
+    } spliter64;
+#endif
+
+    char buf[32];
+#ifdef STARFISH_64
+    spliter.big = store.m_a;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter.big = store.m_b;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    url += "-";
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter64.big = (uint64_t)blob;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.a);
+    url += buf;
+    url += "-";
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.b);
+    url += buf;
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.c);
+    url += buf;
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.d);
+    url += buf;
+#else
+    spliter.big = store.m_a;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter.big = store.m_b;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    url += "-";
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter.big = store.m_c;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    url += "-";
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+
+    spliter.big = (uint32_t)blob;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+#endif
+    return String::createASCIIString(url.data());
 }
 
 }

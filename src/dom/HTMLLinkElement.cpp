@@ -113,12 +113,10 @@ void HTMLLinkElement::loadStyleSheet()
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();
     }
-    if (*url) {
-        m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
-        m_styleSheetTextResource->addResourceClient(new StyleSheetDownloadClient(this, m_styleSheetTextResource));
-        m_styleSheetTextResource->addResourceClient(new ElementResourceClient(this, m_styleSheetTextResource));
-        m_styleSheetTextResource->request();
-    }
+    m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
+    m_styleSheetTextResource->addResourceClient(new StyleSheetDownloadClient(this, m_styleSheetTextResource));
+    m_styleSheetTextResource->addResourceClient(new ElementResourceClient(this, m_styleSheetTextResource));
+    m_styleSheetTextResource->request();
 }
 
 void HTMLLinkElement::unloadStyleSheetIfExists()

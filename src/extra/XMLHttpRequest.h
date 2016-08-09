@@ -21,8 +21,11 @@
 #include "dom/EventTarget.h"
 #include "platform/network/NetworkRequest.h"
 #include "util/TextConverter.h"
+#include "extra/Blob.h"
 
 namespace StarFish {
+
+class Blob;
 
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
@@ -42,7 +45,7 @@ public:
         Text,
         ArrayBuffer, // TODO
         DocumentType, // TODO
-        Blob,
+        BlobType,
         Json
     };
 
@@ -82,8 +85,10 @@ protected:
     // for responseType = "json"
     ScriptValue m_responseJsonObject;
 
-    // TODO implement blob
+    // for responseType = "blob
+    Blob* m_responseBlob;
 };
+
 }
 
 #endif

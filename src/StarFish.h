@@ -28,6 +28,7 @@ class Window;
 class ScriptBindingInstance;
 class ImageData;
 class ThreadPool;
+class Blob;
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
 F(abbr) \
@@ -233,6 +234,38 @@ enum StarFishDeviceKind {
     deviceKindUseTouchScreen = 1 << 0,
 };
 
+struct BlobURLStore {
+#ifdef STARFISH_32
+    Blob* m_blob;
+    uint32_t m_a;
+    uint32_t m_b;
+    uint32_t m_c;
+#else
+    Blob* m_blob;
+    uint32_t m_a;
+    uint32_t m_b;
+#endif
+};
+
+}
+
+namespace std {
+template<> struct hash<StarFish::BlobURLStore> {
+    size_t operator()(StarFish::BlobURLStore const &x) const
+    {
+        return (size_t)x.m_blob;
+    }
+};
+
+template<> struct equal_to<StarFish::BlobURLStore> {
+    bool operator()(StarFish::BlobURLStore const &a, StarFish::BlobURLStore const &b) const
+    {
+        return a.m_blob == b.m_blob;
+    }
+};
+}
+
+namespace StarFish {
 // you must call delete
 // StarFish::StarFish function is NOT THREAD-SAFE
 class StarFish : public gc {
@@ -312,9 +345,14 @@ public:
         return m_defaultFontSizeMultiplier;
     }
 
-    void addPointerInRootSet(void *ptr);
-    void removePointerFromRootSet(void *ptr);
+    void addPointerInRootSet(void* ptr);
+    void removePointerFromRootSet(void* ptr);
 
+    BlobURLStore addBlobInBlobURLStore(Blob* ptr);
+    void removeBlobFromBlobURLStore(Blob* ptr);
+    bool isValidBlobURL(BlobURLStore ptr);
+    bool isValidBlobURL(Blob* ptr);
+    BlobURLStore findBlobURL(Blob* ptr);
 protected:
     size_t posPrefix(std::string str, std::string prefix)
     {
@@ -336,6 +374,8 @@ protected:
     ThreadPool* m_threadPool;
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
         gc_allocator<std::pair<void*, size_t>>> m_rootMap;
+    std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
+        gc_allocator<BlobURLStore>> m_urlBlobStore;
     std::unordered_map<std::string, AtomicString,
         std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString>>> m_atomicStringMap;
 };
@@ -343,6 +383,7 @@ protected:
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_enablePixelTest;
 #endif
-
 }
+
+
 #endif
