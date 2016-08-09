@@ -69,6 +69,13 @@ else ifneq (,$(findstring tizen_wearable_emulator,$(MAKECMDGOALS)))
   TIZEN_VERSION=2.3.1
   TIZEN_PROFILE=wearable
   TIZEN_DEVICE=emulator
+else ifneq (,$(findstring tizen24_mobile_emulator,$(MAKECMDGOALS)))
+  HOST=tizen24_mobile_emulator
+  ARCH=x86
+  TIZEN_ARCH=i386
+  TIZEN_VERSION=2.4
+  TIZEN_PROFILE=mobile
+  TIZEN_DEVICE=emulator
 else ifneq (,$(findstring tizen3_wearable_emulator,$(MAKECMDGOALS)))
   HOST=tizen3_wearable_emulator
   ARCH=x86
@@ -156,7 +163,7 @@ endif
 # flags for debug/release
 CXXFLAGS_DEBUG = -O0 -D_GLIBCXX_DEBUG -Wall -Wextra -Werror
 CXXFLAGS_DEBUG += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
-CXXFLAGS_DEBUG += -Wno-unused-variable
+CXXFLAGS_DEBUG += -Wno-unused-variable -Wno-unused-function
 CXXFLAGS_RELEASE = -O2 -DNDEBUG -funswitch-loops -Wno-deprecated-declarations
 
 # flags for shared library
@@ -367,7 +374,7 @@ else ifneq (,$(findstring tizen,$(HOST)))
   TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
                   efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 dbus-1.0 freetype2 media cairo network
-  ifeq ($(TIZEN_VERSION), 3.0)
+  ifneq ($(TIZEN_VERSION), 2.3.1)
     TIZEN_INCLUDE += emile-1 ethumb-client-1
   endif
   TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo capi-network-connection dlog icui18n icuuc icudata
@@ -449,6 +456,11 @@ tizen_obs_arm.lib.release: $(OUTDIR)/$(LIB)
 tizen_obs_emulator.lib.release: $(OUTDIR)/$(LIB)
 tizen_obs_arm.exe.debug: $(OUTDIR)/$(BIN)
 tizen_obs_emulator.exe.debug: $(OUTDIR)/$(BIN)
+
+tizen24_mobile_emulator.exe.debug: $(OUTDIR)/$(BIN)
+	cp -f $< .
+tizen24_mobile_emulator.exe.release: $(OUTDIR)/$(BIN)
+	cp -f $<.strip ./$(BIN)
 
 tizen3_mobile_arm.exe.debug: $(OUTDIR)/$(BIN)
 	cp -f $< .
