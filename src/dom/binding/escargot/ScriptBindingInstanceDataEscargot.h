@@ -65,7 +65,10 @@ namespace StarFish {
     __STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
     F(htmlMediaElement, HTMLMediaElement) \
     F(htmlVideoElement, HTMLVideoElement) \
-    F(htmlAudioElement, HTMLAudioElement)
+    F(htmlAudioElement, HTMLAudioElement) \
+    F(textTrack, TextTrack) \
+    F(textTrackCue, TextTrackCue) \
+    F(VTTCue, VTTCue)
 #else
 #define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
     __STARFISH_ENUM_LAZY_BINDING_NAMES(F)
@@ -131,6 +134,9 @@ private:
     escargot::ESFunctionObject* m_text;
     escargot::ESFunctionObject* m_comment;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+    escargot::ESFunctionObject* m_textTrack;
+    escargot::ESFunctionObject* m_textTrackCue;
+    escargot::ESFunctionObject* m_VTTCue;
     escargot::ESFunctionObject* m_htmlMediaElement;
     escargot::ESFunctionObject* m_htmlVideoElement;
     escargot::ESFunctionObject* m_htmlAudioElement;
@@ -171,6 +177,7 @@ public:
     escargot::ESValue m_value##codeName;
 
     STARFISH_ENUM_LAZY_BINDING_NAMES(FOR_EACH_SCRIPTVALUE_FN)
+
 };
 
 String* toBrowserString(const escargot::ESValue& v);

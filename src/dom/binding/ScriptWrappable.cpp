@@ -722,6 +722,33 @@ void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
     scriptObject()->set__proto__(data->htmlAudioElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
+
+void ScriptWrappable::initScriptWrappable(TextTrack* ptr)
+{
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->textTrack()->protoType());
+    scriptObject()->setExtraData(TextTrackObject);
+}
+
+void ScriptWrappable::initScriptWrappable(TextTrackCue* ptr)
+{
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->textTrackCue()->protoType());
+    scriptObject()->setExtraData(TextTrackCueObject);
+}
+
+void ScriptWrappable::initScriptWrappable(VTTCue* ptr)
+{
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->VTTCue()->protoType());
+    scriptObject()->setExtraData(TextTrackCueObject);
+}
 #endif
 
 void ScriptWrappable::initScriptWrappable(HTMLElement* ptr)
