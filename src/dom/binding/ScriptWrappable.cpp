@@ -1272,6 +1272,17 @@ ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, S
     return result;
 }
 
+ScriptValue createArrayBuffer(void* bufferSrc, size_t len)
+{
+#ifdef USE_ES6_FEATURE
+    escargot::ESArrayBufferObject* obj = escargot::ESArrayBufferObject::create();
+    obj->attachArrayBuffer(bufferSrc, len);
+    return obj;
+#else
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#endif
+}
+
 ScriptValue parseJSON(String* jsonData)
 {
     ScriptValue ret;

@@ -3478,6 +3478,10 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
                 originalObj->setResponseType(XMLHttpRequest::ResponseType::Unspecified);
                 return escargot::ESValue();
             } else if (*str == "arraybuffer") {
+#ifdef USE_ES6_FEATURE
+                originalObj->setResponseType(XMLHttpRequest::ResponseType::ArrayBuffer);
+                return escargot::ESValue();
+#endif
             } else if (*str == "blob") {
                 originalObj->setResponseType(XMLHttpRequest::ResponseType::BlobType);
                 return escargot::ESValue();

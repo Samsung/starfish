@@ -179,7 +179,9 @@ ScriptValue createScriptString(String* str);
 ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody, bool& error);
 ScriptValue createAttributeStringEventFunction(Element* target, String* functionBody, bool& result);
 ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue);
+ScriptValue createArrayBuffer(void* bufferSrc, size_t len);
 ScriptValue parseJSON(String* jsonData);
+
 bool isCallableScriptValue(ScriptValue v);
 
 }
