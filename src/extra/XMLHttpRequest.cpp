@@ -40,6 +40,9 @@ void XMLHttpRequest::initResponseData()
     m_responseText = String::emptyString;
     m_responseJsonObject = ScriptValueNull;
     m_responseBlob = nullptr;
+#ifdef USE_ES6_FEATURE
+    m_responseArrayBuffer = ScriptValueNull;
+#endif
 }
 
 void XMLHttpRequest::send(String* body)
@@ -97,6 +100,12 @@ ScriptValue XMLHttpRequest::response()
             return m_responseBlob->scriptValue();
         }
         return ScriptValueNull;
+    } else if (m_responseType == ResponseType::ArrayBuffer) {
+#ifdef USE_ES6_FEATURE
+        return m_responseArrayBuffer;
+#else
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#endif
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -152,6 +161,16 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
             m_responseBlob = new Blob(m_networkRequest->starFish(), m_networkRequest->responseData().size(), m_networkRequest->mimeType(), buffer, false, false);
             m_networkRequest->responseData().clear();
             m_networkRequest->responseData().shrink_to_fit();
+        } else if (m_responseType == ResponseType::ArrayBuffer) {
+#ifdef USE_ES6_FEATURE
+            void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
+            memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+            m_responseArrayBuffer = createArrayBuffer(buffer, m_networkRequest->responseData().size());
+            m_networkRequest->responseData().clear();
+            m_networkRequest->responseData().shrink_to_fit();
+#else
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#endif
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

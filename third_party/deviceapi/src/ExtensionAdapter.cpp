@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "StarFishConfig.h"
+#include "TizenDeviceAPILoaderForEscargot.h"
+
 #include "ExtensionAdapter.h"
 
 #include <dlog.h>
-
-#include "StarFishConfig.h"
-#include "TizenDeviceAPILoaderForEscargot.h"
 
 namespace wrt {
 namespace xwalk {

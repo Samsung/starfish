@@ -43,7 +43,7 @@ public:
     enum ResponseType {
         Unspecified,
         Text,
-        ArrayBuffer, // TODO
+        ArrayBuffer,
         DocumentType, // TODO
         BlobType,
         Json
@@ -87,6 +87,11 @@ protected:
 
     // for responseType = "blob
     Blob* m_responseBlob;
+
+#ifdef USE_ES6_FEATURE
+    // for responseType = "arraybuffer"
+    ScriptValue m_responseArrayBuffer;
+#endif
 };
 
 }
