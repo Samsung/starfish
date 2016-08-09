@@ -91,3 +91,9 @@ test/internal-test/css/zindex/zindex-internal-test-4.html
 test/internal-test/css/zindex/zindex-internal-test-5.html
 test/internal-test/css/zindex/zindex-internal-test-6.html
 test/internal-test/css/zindex/zindex-internal-test-7.html
+test/internal-test/click/click-internal-test-1.html
+test/internal-test/click/click-internal-test-2.html
+test/internal-test/click/click-internal-test-3.html
+test/internal-test/click/click-internal-test-4.html
+test/internal-test/click/click-internal-test-5.html
+test/internal-test/click/click-internal-test-6.html
