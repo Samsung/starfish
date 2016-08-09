@@ -39,7 +39,7 @@ ScriptValue EventListener::call(Event* event)
     ScriptValue listenerFunc = scriptValue();
     if (isCallableScriptValue(listenerFunc)) {
         ScriptValue argv[1] = { ScriptValue(event->scriptObject()) };
-        callScriptFunction(listenerFunc, argv, 1, event->target()->scriptValue());
+        callScriptFunction(listenerFunc, argv, 1, event->currentTarget()->scriptValue());
     }
     return listenerFunc;
 }
@@ -172,7 +172,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 STARFISH_ASSERT(listener);
                 if (event->stopImmediatePropagation())
                     break;
-                if (std::find(originals->begin(), originals->end(), listener) != originals->end() && listener->capture()) {
+                if (listener->capture() && std::find(originals->begin(), originals->end(), listener) != originals->end()) {
                     // STARFISH_LOG_INFO("[CAPTURING_PHASE] node: %s\n", node->localName()->utf8Data());
                     event->setCurrentTarget(eventTarget);
                     listener->call(event);
@@ -220,7 +220,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                     STARFISH_ASSERT(listener);
                     if (event->stopImmediatePropagation())
                         break;
-                    if (std::find(originals->begin(), originals->end(), listener) != originals->end() && !listener->capture()) {
+                    if (!listener->capture() && std::find(originals->begin(), originals->end(), listener) != originals->end()) {
                         // STARFISH_LOG_INFO("[BUBBLING_PHASE] node: %s\n", node->localName()->utf8Data());
                         event->setCurrentTarget(eventTarget);
                         listener->call(event);
