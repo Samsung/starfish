@@ -338,6 +338,8 @@ Element* Document::createElement(QualifiedName localName, bool shouldCheckName)
         return new HTMLVideoElement(this);
     } else if (localName == window()->starFish()->staticStrings()->m_audioTagName) {
         return new HTMLAudioElement(this);
+    } else if (localName == window()->starFish()->staticStrings()->m_trackTagName) {
+        return new HTMLTrackElement(this);
     }
 #endif
 

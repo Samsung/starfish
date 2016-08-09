@@ -54,6 +54,7 @@ class HTMLSpanElement;
 class HTMLMediaElement;
 class HTMLVideoElement;
 class HTMLAudioElement;
+class HTMLTrackElement;
 #endif
 class HTMLUnknownElement;
 class Event;
@@ -163,6 +164,7 @@ public:
     void initScriptWrappable(HTMLMediaElement* ptr);
     void initScriptWrappable(HTMLVideoElement* ptr);
     void initScriptWrappable(HTMLAudioElement* ptr);
+    void initScriptWrappable(HTMLTrackElement* ptr);
     void initScriptWrappable(TextTrack* ptr);
     void initScriptWrappable(TextTrackCue* ptr);
     void initScriptWrappable(VTTCue* ptr);

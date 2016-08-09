@@ -66,6 +66,7 @@ namespace StarFish {
     F(htmlMediaElement, HTMLMediaElement) \
     F(htmlVideoElement, HTMLVideoElement) \
     F(htmlAudioElement, HTMLAudioElement) \
+    F(htmlTrackElement, HTMLTrackElement) \
     F(textTrack, TextTrack) \
     F(textTrackCue, TextTrackCue) \
     F(VTTCue, VTTCue)
@@ -140,6 +141,7 @@ private:
     escargot::ESFunctionObject* m_htmlMediaElement;
     escargot::ESFunctionObject* m_htmlVideoElement;
     escargot::ESFunctionObject* m_htmlAudioElement;
+    escargot::ESFunctionObject* m_htmlTrackElement;
 #endif
     escargot::ESFunctionObject* m_htmlElement;
     escargot::ESFunctionObject* m_htmlHtmlElement;

@@ -45,6 +45,7 @@
 #include "dom/HTMLMediaElement.h"
 #include "dom/HTMLVideoElement.h"
 #include "dom/HTMLAudioElement.h"
+#include "dom/HTMLTrackElement.h"
 #endif
 #include "dom/HTMLCollection.h"
 #include "dom/HTMLUnknownElement.h"

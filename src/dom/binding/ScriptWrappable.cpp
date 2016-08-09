@@ -723,6 +723,14 @@ void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
     scriptObject()->setExtraData(NodeObject);
 }
 
+void ScriptWrappable::initScriptWrappable(HTMLTrackElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->htmlTrackElement()->protoType());
+    scriptObject()->setExtraData(NodeObject);
+}
+
 void ScriptWrappable::initScriptWrappable(TextTrack* ptr)
 {
     Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
