@@ -39,7 +39,9 @@
 #include "HTMLParagraphElement.h"
 #include "HTMLSpanElement.h"
 #include "HTMLUnknownElement.h"
-#ifdef STARFISH_ENABLE_AUDIO
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#include "HTMLMediaElement.h"
+#include "HTMLVideoElement.h"
 #include "HTMLAudioElement.h"
 #endif
 #include "dom/Attr.h"

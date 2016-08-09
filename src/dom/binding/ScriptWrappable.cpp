@@ -697,6 +697,32 @@ void ScriptWrappable::initScriptWrappable(Comment* ptr)
     scriptObject()->setExtraData(NodeObject);
 }
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+void ScriptWrappable::initScriptWrappable(HTMLMediaElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->htmlMediaElement()->protoType());
+    scriptObject()->setExtraData(NodeObject);
+}
+
+void ScriptWrappable::initScriptWrappable(HTMLVideoElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->htmlVideoElement()->protoType());
+    scriptObject()->setExtraData(NodeObject);
+}
+
+void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->htmlAudioElement()->protoType());
+    scriptObject()->setExtraData(NodeObject);
+}
+#endif
+
 void ScriptWrappable::initScriptWrappable(HTMLElement* ptr)
 {
     Node* node = (Node*)this;
@@ -800,16 +826,6 @@ void ScriptWrappable::initScriptWrappable(HTMLSpanElement* ptr)
     scriptObject()->set__proto__(data->htmlSpanElement()->protoType());
     scriptObject()->setExtraData(NodeObject);
 }
-
-#ifdef STARFISH_ENABLE_AUDIO
-void ScriptWrappable::initScriptWrappable(HTMLAudioElement* ptr)
-{
-    Node* node = (Node*)this;
-    auto data = fetchData(node->document()->scriptBindingInstance());
-    scriptObject()->set__proto__(data->htmlAudioElement()->protoType());
-    scriptObject()->setExtraData(NodeObject);
-}
-#endif
 
 void ScriptWrappable::initScriptWrappable(HTMLUnknownElement* ptr)
 {
