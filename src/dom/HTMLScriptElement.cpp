@@ -112,7 +112,8 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             if (!url->length())
                 return false;
 
-            TextResource* res = document()->resourceLoader()->fetchText(URL::createURL(document()->documentURI()->baseURI(), url));
+            String* charset = getAttribute(document()->window()->starFish()->staticStrings()->m_charset)->trim();
+            TextResource* res = document()->resourceLoader()->fetchText(URL::createURL(document()->documentURI()->baseURI(), url), charset);
             res->addResourceClient(new ScriptDownloadClient(this, res, forceSync, inParser));
             res->addResourceClient(new ElementResourceClient(this, res, true));
             res->request(forceSync);

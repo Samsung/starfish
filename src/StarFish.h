@@ -200,6 +200,7 @@ public:
     QualifiedName m_color;
     QualifiedName m_face;
     QualifiedName m_size;
+    QualifiedName m_charset;
 
     // Event Names
     QualifiedName m_click;

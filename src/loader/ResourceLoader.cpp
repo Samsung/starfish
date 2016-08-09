@@ -41,9 +41,9 @@ Resource* ResourceLoader::fetch(URL* url)
     return res;
 }
 
-TextResource* ResourceLoader::fetchText(URL* url)
+TextResource* ResourceLoader::fetchText(URL* url, String* preferredEncoding)
 {
-    TextResource* res = new TextResource(url, this);
+    TextResource* res = new TextResource(url, this, preferredEncoding);
     return res;
 }
 

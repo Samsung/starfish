@@ -32,7 +32,7 @@ public:
     ResourceLoader(Document& doc);
 
     Resource* fetch(URL* url);
-    TextResource* fetchText(URL* url);
+    TextResource* fetchText(URL* url, String* preferredEncoding = String::emptyString);
     ImageResource* fetchImage(URL* url);
 
     void markDocumentOpenState()

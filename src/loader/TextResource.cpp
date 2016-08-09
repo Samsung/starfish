@@ -24,8 +24,13 @@ namespace StarFish {
 void TextResource::didDataReceived(const char* buffer, size_t length)
 {
     Resource::didDataReceived(buffer, length);
-    if (!m_converter)
-        m_converter = new TextConverter(m_networkRequest->mimeType(), m_networkRequest->starFish()->window()->document()->charset(), buffer, length);
+    if (!m_converter) {
+        if (m_preferredEncoding->equals(String::emptyString)) {
+            m_converter = new TextConverter(m_networkRequest->mimeType(), m_networkRequest->starFish()->window()->document()->charset(), buffer, length);
+        } else {
+            m_converter = new TextConverter(m_preferredEncoding);
+        }
+    }
     m_text = m_text->concat(m_converter->convert(buffer, length, true));
 }
 
