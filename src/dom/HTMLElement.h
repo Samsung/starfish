@@ -41,7 +41,8 @@ namespace StarFish {
         __FOR_EACH_HTML_ELEMENT_OP(F) \
         F(Media) \
         F(Video) \
-        F(Audio)
+        F(Audio) \
+        F(Track)
 #else
 #define FOR_EACH_HTML_ELEMENT_OP(F) \
         __FOR_EACH_HTML_ELEMENT_OP(F)

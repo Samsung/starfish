@@ -2580,6 +2580,33 @@ escargot::ESFunctionObject* bindingHTMLAudioElement(ScriptBindingInstance* scrip
     // TODO
     return HTMLAudioElementFunction;
 }
+
+escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLTrackElement, fetchData(scriptBindingInstance)->htmlElement());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+            return toJSString(nd->asElement()->asHTMLElement()->asHTMLTrackElement()->src());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESString* srcText = firstArg.toString();
+            nd->asElement()->asHTMLElement()->asHTMLTrackElement()->setSrc(toBrowserString(srcText));
+            return firstArg;
+        }
+        return escargot::ESValue();
+    });
+    return HTMLTrackElementFunction;
+}
 #endif
 
 escargot::ESFunctionObject* bindingHTMLCollection(ScriptBindingInstance* scriptBindingInstance)

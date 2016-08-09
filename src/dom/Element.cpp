@@ -43,6 +43,7 @@
 #include "HTMLMediaElement.h"
 #include "HTMLVideoElement.h"
 #include "HTMLAudioElement.h"
+#include "HTMLTrackElement.h"
 #endif
 #include "dom/Attr.h"
 
