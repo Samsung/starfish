@@ -97,3 +97,5 @@ test/internal-test/click/click-internal-test-3.html
 test/internal-test/click/click-internal-test-4.html
 test/internal-test/click/click-internal-test-5.html
 test/internal-test/click/click-internal-test-6.html
+test/internal-test/click/click-propagation-internal-test.html
+test/internal-test/click/click-propagation-with-stop-internal-test.html
