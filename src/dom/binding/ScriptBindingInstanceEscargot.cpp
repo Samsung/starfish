@@ -3459,7 +3459,7 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
             return escargot::ESString::create("");
         } else if (type == XMLHttpRequest::ResponseType::ArrayBuffer) {
             return escargot::ESString::create("arraybuffer");
-        } else if (type == XMLHttpRequest::ResponseType::Blob) {
+        } else if (type == XMLHttpRequest::ResponseType::BlobType) {
             return escargot::ESString::create("blob");
         } else if (type == XMLHttpRequest::ResponseType::DocumentType) {
             return escargot::ESString::create("document");
@@ -3479,6 +3479,8 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
                 return escargot::ESValue();
             } else if (*str == "arraybuffer") {
             } else if (*str == "blob") {
+                originalObj->setResponseType(XMLHttpRequest::ResponseType::BlobType);
+                return escargot::ESValue();
             } else if (*str == "document") {
             } else if (*str == "json") {
                 originalObj->setResponseType(XMLHttpRequest::ResponseType::Json);
@@ -3589,8 +3591,151 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
 escargot::ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInstance)
 {
     /* Blob */
-    DEFINE_FUNCTION(Blob, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    auto BlobFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        // https://www.w3.org/TR/FileAPI/#blob-constructor-steps
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount == 0) {
+            Window* w = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData());
+            Blob* b = new Blob(w->starFish(), 0, String::emptyString, nullptr, false, false);
+            return b->scriptValue();
+        }
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+
+        void* bytes = 0;
+        escargot::ESValue lengthString = escargot::currentInstance->strings().length.string();
+        escargot::ESObject* obj = nullptr;
+        escargot::ESValue lengthValue;
+
+        if (!firstArg.isObject() || (lengthValue = (obj = firstArg.toObject())->get(lengthString)).isUndefinedOrNull()) {
+            auto msg = escargot::ESString::create("Failed to construct 'Blob': The 1st argument is neither an array, nor does it have indexed properties.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+        }
+
+        size_t length = (size_t)lengthValue.toNumber();
+
+        std::vector<std::pair<void* , size_t>, gc_allocator<std::pair<void*, size_t>>> bufferInfo;
+        size_t totalByteLength = 0;
+        for (size_t i = 0; i < length; i ++) {
+            escargot::ESValue element = obj->get(escargot::ESValue(i));
+
+#ifdef USE_ES6_FEATURE
+            // ESArrayBufferView
+            if (element.isESPointer() && element.asESPointer()->isESArrayBufferView()) {
+                escargot::ESArrayBufferView* v = element.asESPointer()->asESArrayBufferView();
+                const char* p = (const char*)v->buffer()->data();
+                p += v->byteoffset();
+                bufferInfo.push_back(std::make_pair((void*)p, v->bytelength()));
+                totalByteLength += v->bytelength();
+            }
+
+            // ESArrayBufferObject
+            if (element.isESPointer() && element.asESPointer()->isESArrayBufferObject()) {
+                escargot::ESArrayBufferObject* v = element.asESPointer()->asESArrayBufferObject();
+                bufferInfo.push_back(std::make_pair(v->data(), v->bytelength()));
+                totalByteLength += v->bytelength();
+            }
+#endif
+            // Blob
+            if (element.isObject()) {
+                escargot::ESObject* o = element.toObject();
+                if (o->extraData() & ScriptWrappable::Type::BlobObject) {
+                    Blob* bb = (Blob*)o->extraPointerData();
+                    bufferInfo.push_back(std::make_pair(bb->data(), bb->size()));
+                    totalByteLength += bb->size();
+                    continue;
+                }
+            }
+
+            // otherwise, toString()
+            NullableUTF8String s = toBrowserString(element.toString())->toNullableUTF8String();
+            bufferInfo.push_back(std::make_pair((void*)s.m_buffer, s.m_bufferSize));
+            totalByteLength += s.m_bufferSize;
+        }
+
+        size_t offset = 0;
+        char* buffer = (char*)GC_MALLOC_ATOMIC(totalByteLength);
+        for (size_t i = 0; i < bufferInfo.size(); i ++) {
+            memcpy(buffer + offset, bufferInfo[i].first, bufferInfo[i].second);
+            offset += bufferInfo[i].second;
+        }
+
+        STARFISH_ASSERT(offset == totalByteLength);
+
+        escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+        String* type = String::emptyString;
+        if (!secondArg.isUndefinedOrNull()) {
+            type = toBrowserString(secondArg.toString())->toLower();
+        }
+
+        Window* w = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData());
+        Blob* newBlob = new Blob(w->starFish(), totalByteLength, type, buffer, false, false);
+        return newBlob->scriptValue();
+    }, escargot::ESString::create("Blob"), 0, true, true);
+    BlobFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
+    BlobFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    BlobFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    BlobFunction->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        BlobFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("size"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::BlobObject, Blob);
+        return escargot::ESValue(originalObj->size());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        BlobFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::BlobObject, Blob);
+        return escargot::ESValue(toJSString(originalObj->type()));
+    }, nullptr);
+
+
+    escargot::ESFunctionObject* BlobSliceFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::BlobObject, Blob);
+        escargot::ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+        escargot::ESValue arg2 = instance->currentExecutionContext()->readArgument(2);
+
+        // FIXME range of size_t and int64_t is not match!
+        int64_t start = 0;
+        int64_t end = (int64_t)originalObj->size();
+        if (!arg0.isUndefinedOrNull()) {
+            start = arg0.toNumber();
+        }
+        if (!arg1.isUndefinedOrNull()) {
+            end = arg1.toNumber();
+        }
+        String* type = String::emptyString;
+        if (!arg2.isUndefinedOrNull()) {
+            type = toBrowserString(arg2.toString());
+        }
+        Blob* b = originalObj->slice(start, end, type);
+        return b->scriptValue();
+    }, escargot::ESString::create("slice"), 0, false);
+    BlobFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("slice"), false, false, false, BlobSliceFunction);
+
     return BlobFunction;
+}
+
+escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(URL, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    escargot::ESFunctionObject* URLCreateObjectURLFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+        if (arg0.isObject() && (arg0.toObject()->extraData() & ScriptWrappable::Type::BlobObject)) {
+            Blob* b = (Blob*)arg0.toObject()->extraPointerData();
+            String* url = URL::createObjectURL(b);
+            return toJSString(url);
+        } else {
+            escargot::ESString* msg = escargot::ESString::create("Failed to execute 'createObjectURL' on 'URL': No function was found that matched the signature provided.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("createObjectURL"), 1, false);
+    URLFunction->defineDataProperty(escargot::ESString::create("createObjectURL"), false, false, false, URLCreateObjectURLFunction);
+    return URLFunction;
 }
 
 escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBindingInstance)

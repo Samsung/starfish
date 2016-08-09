@@ -347,6 +347,19 @@ String* String::createASCIIStringFromUTF32SourceIfPossible(const UTF32String& sr
     return new StringDataASCII(std::move(ascii));
 }
 
+NullableUTF8String String::toNullableUTF8String()
+{
+    if (m_isASCIIString) {
+        void* ptr = GC_MALLOC_ATOMIC(asASCIIString()->size());
+        memcpy(ptr, asASCIIString()->data(), asASCIIString()->size());
+        return NullableUTF8String((const char*)ptr, asASCIIString()->size());
+    } else {
+        size_t len;
+        const char* ptr = utf32ToUtf8(asUTF32String()->data(), asUTF32String()->length(), &len);
+        return NullableUTF8String(ptr, len - 1);
+    }
+}
+
 const char* String::utf8Data()
 {
     if (m_isASCIIString) {

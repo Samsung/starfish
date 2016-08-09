@@ -250,6 +250,72 @@ void StarFish::removePointerFromRootSet(void *ptr)
     }
 }
 
+BlobURLStore StarFish::addBlobInBlobURLStore(Blob* ptr)
+{
+#ifndef NDEBUG
+    {
+        BlobURLStore s;
+        s.m_blob = ptr;
+        STARFISH_ASSERT(m_urlBlobStore.find(s) == m_urlBlobStore.end());
+    }
+#endif
+    BlobURLStore a;
+    a.m_blob = ptr;
+
+#ifdef STARFISH_32
+    a.m_a = rand();
+    a.m_b = rand();
+    a.m_c = rand();
+#else
+    a.m_a = rand();
+    a.m_b = rand();
+#endif
+
+    m_urlBlobStore.insert(a);
+
+    return a;
+}
+
+void StarFish::removeBlobFromBlobURLStore(Blob* ptr)
+{
+#ifndef NDEBUG
+    {
+        BlobURLStore s;
+        s.m_blob = ptr;
+        STARFISH_ASSERT(m_urlBlobStore.find(s) != m_urlBlobStore.end());
+    }
+#endif
+    BlobURLStore s;
+    s.m_blob = ptr;
+    m_urlBlobStore.erase(s);
+}
+
+bool StarFish::isValidBlobURL(BlobURLStore ptr)
+{
+    auto iter = m_urlBlobStore.find(ptr);
+#ifdef STARFISH_32
+    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
+#else
+    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b;
+#endif
+}
+
+bool StarFish::isValidBlobURL(Blob* ptr)
+{
+    BlobURLStore s;
+    s.m_blob = ptr;
+    auto iter = m_urlBlobStore.find(s);
+    return iter != m_urlBlobStore.end();
+}
+
+BlobURLStore StarFish::findBlobURL(Blob* ptr)
+{
+    BlobURLStore s;
+    s.m_blob = ptr;
+    auto iter = m_urlBlobStore.find(s);
+    return *iter;
+}
+
 StaticStrings::StaticStrings(StarFish* sf)
     : m_starFish(sf)
     , m_xhtmlNamespaceURI(AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))

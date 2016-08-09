@@ -38,8 +38,8 @@ XMLHttpRequest::XMLHttpRequest(Document* document)
 void XMLHttpRequest::initResponseData()
 {
     m_responseText = String::emptyString;
-
     m_responseJsonObject = ScriptValueNull;
+    m_responseBlob = nullptr;
 }
 
 void XMLHttpRequest::send(String* body)
@@ -92,6 +92,11 @@ ScriptValue XMLHttpRequest::response()
         return createScriptString(responseText());
     } else if (m_responseType == ResponseType::Json) {
         return m_responseJsonObject;
+    } else if (m_responseType == ResponseType::BlobType) {
+        if (m_responseBlob) {
+            return m_responseBlob->scriptValue();
+        }
+        return ScriptValueNull;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -141,6 +146,12 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
             TextConverter cvt(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
             String* text = cvt.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
             m_responseJsonObject = parseJSON(text);
+        } else if (m_responseType == ResponseType::BlobType) {
+            void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
+            memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+            m_responseBlob = new Blob(m_networkRequest->starFish(), m_networkRequest->responseData().size(), m_networkRequest->mimeType(), buffer, false, false);
+            m_networkRequest->responseData().clear();
+            m_networkRequest->responseData().shrink_to_fit();
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

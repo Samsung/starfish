@@ -22,6 +22,7 @@
 #include "platform/threading/ThreadPool.h"
 #include "dom/Document.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "extra/Blob.h"
 
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <net_connection.h>
@@ -473,7 +474,19 @@ void NetworkRequest::send(String* body)
             }, this, m_url->urlString());
             pushIdlerHandle(handle);
         }
-
+    } else if (m_url->isBlobURL()) {
+        // this area doesn't require lock.
+        // reading url does not require thread
+        if (m_isSync) {
+            blobURLWorker(this, m_url->urlString());
+        } else {
+            size_t handle = m_starFish->messageLoop()->addIdler([](size_t handle, void* data, void* data1) {
+                NetworkRequest* request = (NetworkRequest*)data;
+                request->removeIdlerHandle(handle);
+                NetworkRequestBlobURLWorker((NetworkRequest*)data, (String*)data1);
+            }, this, m_url->urlString());
+            pushIdlerHandle(handle);
+        }
     } else {
         NetworkWorkerData* data = new(NoGC) NetworkWorkerData;
         m_activeNetworkWorkerData = data;
@@ -689,6 +702,101 @@ void NetworkRequest::dataURLWorker(NetworkRequest* res, String* url)
     for (size_t i = 0; i < len; i++) {
         res->m_response.push_back(utf8Data[i]);
     }
+
+    res->handleResponseEOF();
+}
+
+void NetworkRequest::blobURLWorker(NetworkRequest* res, String* url)
+{
+    res->m_status = 200;
+
+    // TODO read origin
+    size_t idx = url->lastIndexOf('/');
+    if (idx == SIZE_MAX) {
+        res->handleError(ERROR);
+        return;
+    }
+
+    idx++;
+    if (idx >= url->length()) {
+        res->handleError(ERROR);
+        return;
+    }
+    String* uuid = url->substring(idx, url->length() - idx);
+
+    const char* str = uuid->utf8Data();
+    if (strlen(str) != 36) {
+        res->handleError(ERROR);
+        return;
+    }
+    BlobURLStore store;
+    unsigned int a0, a1, a2, a3, a4, a5, a6, a7;
+    sscanf(str, "%04X%04X-%04X-%04X-%04X-%04X%04X%04X", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7);
+
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+        } small;
+        uint32_t big;
+    } spliter;
+
+#ifdef STARFISH_64
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+            uint16_t c;
+            uint16_t d;
+        } small;
+        uint64_t big;
+    } spliter64;
+#endif
+
+#ifdef STARFISH_64
+    spliter.small.a = a0;
+    spliter.small.b = a1;
+    store.m_a = spliter.big;
+
+    spliter.small.a = a2;
+    spliter.small.b = a3;
+    store.m_b = spliter.big;
+
+
+    spliter64.small.a = a4;
+    spliter64.small.b = a5;
+    spliter64.small.c = a6;
+    spliter64.small.d = a7;
+    store.m_blob = (Blob*)spliter64.big;
+#else
+    spliter.small.a = a0;
+    spliter.small.b = a1;
+    store.m_a = spliter.big;
+
+    spliter.small.a = a2;
+    spliter.small.b = a3;
+    store.m_b = spliter.big;
+
+    spliter.small.a = a4;
+    spliter.small.b = a5;
+    store.m_c = spliter.big;
+
+    spliter.small.a = a6;
+    spliter.small.b = a7;
+    store.m_blob = (Blob*)spliter.big;
+#endif
+
+    if (!res->m_starFish->isValidBlobURL(store)) {
+        res->handleError(ERROR);
+        return;
+    }
+
+    res->m_responseMimeType = store.m_blob->type();
+    res->changeReadyState(HEADERS_RECEIVED, true);
+
+    res->changeReadyState(LOADING, true);
+    char* buf = (char*)store.m_blob->data();
+    res->m_response.assign(buf, &buf[store.m_blob->size()]);
 
     res->handleResponseEOF();
 }

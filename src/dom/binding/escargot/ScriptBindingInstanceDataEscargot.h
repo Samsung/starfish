@@ -58,6 +58,7 @@ namespace StarFish {
     F(cssStyleRule, CSSStyleRule) \
     F(xhrElement, XMLHttpRequest) \
     F(blobElement, Blob) \
+    F(url, URL) \
     F(domException, DOMException)
 
 
@@ -151,6 +152,7 @@ private:
     escargot::ESFunctionObject* m_cssStyleRule;
     escargot::ESFunctionObject* m_xhrElement;
     escargot::ESFunctionObject* m_blobElement;
+    escargot::ESFunctionObject* m_url;
     escargot::ESFunctionObject* m_domException;
 
 public:

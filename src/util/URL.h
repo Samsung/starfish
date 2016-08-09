@@ -21,10 +21,13 @@
 
 namespace StarFish {
 
+class Blob;
+
 class URL : public gc {
     URL(String* baseURL, String* url);
 public:
     static String* parseURLString(String* baseURL, String* url);
+    static String* createObjectURL(Blob* blob);
     static URL* createURL(String* baseURL, String* url)
     {
         return new URL(baseURL, url);
@@ -41,6 +44,11 @@ public:
         return m_urlString->startsWith("data:");
     }
 
+    bool isBlobURL() const
+    {
+        return m_urlString->startsWith("blob:");
+    }
+
     String* string() const
     {
         return m_string;
@@ -53,12 +61,6 @@ public:
 
     // http://foo.com/asdf?asdf=1 -> http://foo.com/asdf
     String* urlStringWithoutSearchPart() const;
-
-    operator bool()
-    {
-        return m_urlString->length();
-    }
-
     bool operator==(const URL& other) const
     {
         return other.urlString()->equals(m_urlString);

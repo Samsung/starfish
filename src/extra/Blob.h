@@ -21,19 +21,31 @@
 
 namespace StarFish {
 
+class StarFish;
+
 class Blob : public ScriptWrappable {
 public:
-    Blob(size_t size, String* type, void* data)
+    Blob(StarFish* starFish, size_t size, String* type, void* data, bool isClosed, bool isEntryOfBlobURLStore)
         : ScriptWrappable(this)
     {
+        m_starFish = starFish;
         m_size = size;
         m_type = type;
         m_data = data;
+        m_isClosed = isClosed;
+        if (isEntryOfBlobURLStore) {
+            addBlobToBlobURLStore();
+        }
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    StarFish* starFish()
+    {
+        return m_starFish;
     }
 
     void* data()
@@ -46,10 +58,41 @@ public:
         return m_size;
     }
 
+    String* type()
+    {
+        return m_type;
+    }
+
+    bool isClosed()
+    {
+        return m_isClosed;
+    }
+
+    void close()
+    {
+        if (m_isClosed) {
+            return;
+        } else {
+            m_isClosed = true;
+        }
+        if (m_isEntryOfBlobURLStore) {
+            removeBlobFromBlobURLStore();
+            m_isEntryOfBlobURLStore = false;
+        }
+    }
+
+    Blob* slice(int64_t start, int64_t end, String* contentType);
+
 protected:
-    size_t m_size;
+    void addBlobToBlobURLStore();
+    void removeBlobFromBlobURLStore();
+
+    bool m_isEntryOfBlobURLStore;
+    bool m_isClosed;
+    StarFish* m_starFish;
     String* m_type;
     void* m_data;
+    size_t m_size;
 };
 }
 
