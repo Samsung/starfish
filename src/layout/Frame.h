@@ -319,11 +319,22 @@ public:
         return minWidth;
     }
 
+    void setIsWhiteSpaceAtLast(bool isWhiteSpaceAtLast)
+    {
+        m_isWhiteSpaceAtLast = isWhiteSpaceAtLast;
+    }
+
+    bool isWhiteSpaceAtLast()
+    {
+        return m_isWhiteSpaceAtLast;
+    }
+
 private:
     LayoutContext& m_layoutContext;
     LayoutUnit m_result;
     LayoutUnit m_lastKnownWidth;
     LayoutUnit m_minimumWidth;
+    bool m_isWhiteSpaceAtLast;
 };
 
 class Frame : public gc {
