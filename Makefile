@@ -268,6 +268,10 @@ CXXFLAGS += -Ithird_party/skia_matrix/
 #clipper
 CXXFLAGS += -Ithird_party/clipper/cpp/
 
+#webm
+ifeq ($(MEDIA_SUPPORT), true)
+  CXXFLAGS += -Ithird_party/webm/
+endif
 ################################################################################
 ################################################################################
 # SRCS & OBJS
@@ -275,6 +279,7 @@ CXXFLAGS += -Ithird_party/clipper/cpp/
 ################################################################################
 
 SRC=
+SRC_CC=
 SRC += $(foreach dir, src , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/extra , $(wildcard $(dir)/*.cpp))
@@ -335,9 +340,15 @@ SRC += third_party/skia_matrix/SkDebug.cpp
 # clipper
 SRC += third_party/clipper/cpp/clipper.cpp
 
+#webm
+ifeq ($(MEDIA_SUPPORT), true)
+  SRC_CC += third_party/webm/webvttparser.cc
+endif
+
 # OBJS
 OBJS := $(SRC:%.cpp= $(OUTDIR)/%.o)
 OBJS += $(SRC_C:%.c= $(OUTDIR)/%.o)
+OBJS += $(SRC_CC:%.cc= $(OUTDIR)/%.o)
 THIRD_PARTY_OBJS := $(JSLIBS) $(GCLIBS)
 
 ################################################################################

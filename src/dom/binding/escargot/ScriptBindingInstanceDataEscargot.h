@@ -68,7 +68,9 @@ namespace StarFish {
     F(htmlAudioElement, HTMLAudioElement) \
     F(htmlTrackElement, HTMLTrackElement) \
     F(textTrack, TextTrack) \
+    F(textTrackList, TextTrackList) \
     F(textTrackCue, TextTrackCue) \
+    F(textTrackCueList, TextTrackCueList) \
     F(VTTCue, VTTCue)
 #else
 #define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
@@ -136,7 +138,9 @@ private:
     escargot::ESFunctionObject* m_comment;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     escargot::ESFunctionObject* m_textTrack;
+    escargot::ESFunctionObject* m_textTrackList;
     escargot::ESFunctionObject* m_textTrackCue;
+    escargot::ESFunctionObject* m_textTrackCueList;
     escargot::ESFunctionObject* m_VTTCue;
     escargot::ESFunctionObject* m_htmlMediaElement;
     escargot::ESFunctionObject* m_htmlVideoElement;

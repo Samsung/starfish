@@ -18,15 +18,17 @@
 #define __StarFishHTMLTrackElement__
 
 #include "dom/HTMLElement.h"
+#include "loader/Resource.h"
 
 namespace StarFish {
 
+class TextTrack;
+
 class HTMLTrackElement : public HTMLElement {
+    friend class VTTFileDownloadClient;
+    friend class VttResourceReader;
 public:
-    HTMLTrackElement(Document* document)
-        : HTMLElement(document)
-    {
-    }
+    HTMLTrackElement(Document* document);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -48,6 +50,13 @@ public:
         return true;
     }
 
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didNodeInsertedToDocumenTree();
+    virtual void didNodeRemovedFromDocumenTree();
+
+    void loadSrc();
+    void loadSrc(String* srcURL);
+
     void setSrc(String* src)
     {
         setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
@@ -57,6 +66,20 @@ public:
     {
         return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
     }
+
+    void generateCues();
+    TextTrack* track()
+    {
+        return m_track;
+    }
+
+protected:
+    TextTrack* m_track;
+    Resource* m_VTTFileResource;
+
+    bool m_hasPendingRequest;
+    bool m_live;
+    bool m_default; // TODO
 };
 }
 

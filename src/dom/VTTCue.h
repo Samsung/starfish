@@ -44,13 +44,23 @@ public:
 
     String* text()
     {
-        return m_payload;
+        return getPayload();
     }
 
     void setText(String* text)
     {
-        m_payload = text;
+        setPayload(text);
     }
+
+#ifndef NDEBUG
+    virtual void dump()
+    {
+        printf("[VTTCue]\n");
+        printf("    StartTime : %lf\n", m_startTime);
+        printf("    EndTime : %lf\n", m_endTime);
+        printf("    text : \n\"%s\"\n", m_payload->utf8Data());
+    }
+#endif
 };
 
 }

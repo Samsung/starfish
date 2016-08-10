@@ -1398,7 +1398,21 @@ escargot::ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindin
         }, escargot::ESString::create("addCue"), 1, false)
     );
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("cues"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject, TextTrack);
+        STARFISH_ASSERT(originalObj->cues());
+        return originalObj->cues()->scriptValue();
+    }, nullptr);
+
     return TextTrackFunction;
+}
+
+escargot::ESFunctionObject* bindingTextTrackList(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(TextTrackList, fetchData(scriptBindingInstance)->m_eventTarget);
+    return TextTrackListFunction;
 }
 
 escargot::ESFunctionObject* bindingTextTrackCue(ScriptBindingInstance* scriptBindingInstance)
@@ -1438,6 +1452,12 @@ escargot::ESFunctionObject* bindingTextTrackCue(ScriptBindingInstance* scriptBin
     });
 
     return TextTrackCueFunction;
+}
+
+escargot::ESFunctionObject* bindingTextTrackCueList(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(TextTrackCueList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    return TextTrackCueListFunction;
 }
 
 escargot::ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingInstance)
@@ -2593,7 +2613,7 @@ escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scrip
         if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
             return toJSString(nd->asElement()->asHTMLElement()->asHTMLTrackElement()->src());
         }
-        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
@@ -2605,6 +2625,20 @@ escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scrip
         }
         return escargot::ESValue();
     });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("track"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+            TextTrack* track = nd->asElement()->asHTMLElement()->asHTMLTrackElement()->track();
+            if (track)
+                return track->scriptValue();
+        }
+        return escargot::ESValue();
+    }, nullptr);
+
     return HTMLTrackElementFunction;
 }
 #endif
