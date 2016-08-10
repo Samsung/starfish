@@ -2089,13 +2089,19 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 String* s = f->asFrameText()->text();
                 textDividerForLayout(ctx.layoutContext().starFish(), s, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak) {
                     if (isWhiteSpace) {
-                        if (offset == 0 && f == f->parent()->firstChild()) {
-                            return;
-                        } else if (nextOffset == srcTxt->length() && f == f->parent()->lastChild()) {
-                            return;
-                        } else if (offset == 0 && currentLineWidth == 0) {
-                            return;
+                        if (offset == 0) {
+                            if (f == f->parent()->firstChild()) {
+                                return;
+                            } else if (currentLineWidth == 0) {
+                                return;
+                            } else if (ctx.isWhiteSpaceAtLast()) {
+                                return;
+                            }
+
                         }
+
+                        if (nextOffset == srcTxt->length() && f == f->parent()->lastChild())
+                            return;
                     }
 
                     LayoutUnit w = 0;
@@ -2120,6 +2126,8 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                         ctx.setResult(remainWidth);
                         currentLineWidth = 0;
                     }
+
+                    ctx.setIsWhiteSpaceAtLast(isWhiteSpace);
                 });
             } else if (f->isFrameBlockBox()) {
                 LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
@@ -2140,10 +2148,14 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     ctx.setResult(remainWidth);
                     currentLineWidth = 0;
                 }
+
+                ctx.setIsWhiteSpaceAtLast(false);
             } else if (f->isFrameLineBreak()) {
                 // linebreaks
                 ctx.setResult(currentLineWidth);
                 currentLineWidth = 0;
+
+                ctx.setIsWhiteSpaceAtLast(false);
             } else if (f->isFrameInline()) {
                 auto checkMBP = [&](Length l)
                 {
@@ -2166,6 +2178,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 checkMBP(f->style()->borderRightWidth());
                 checkMBP(f->style()->marginRight());
 
+                ctx.setIsWhiteSpaceAtLast(false);
             } else {
                 STARFISH_ASSERT(f->isFrameReplaced());
 
@@ -2187,8 +2200,9 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     ctx.setResult(remainWidth);
                     currentLineWidth = 0;
                 }
-            }
 
+                ctx.setIsWhiteSpaceAtLast(false);
+            }
             if (!f->isFrameBlockBox()) {
                 Frame* c = f->firstChild();
                 while (c) {
