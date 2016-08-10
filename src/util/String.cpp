@@ -292,6 +292,28 @@ String* String::fromUTF8(const char* str)
     return new StringDataASCII(str);
 }
 
+String* String::fromUTF16(const char16_t* src, size_t len)
+{
+    for (unsigned i = 0; i < len; i ++) {
+        if (src[i] > 127) {
+            UTF32String utf32;
+            for (size_t i = 0; i < len; /* U16_NEXT post-increments */) {
+                char32_t c;
+                U16_NEXT(src, i, len, c);
+                utf32 += c;
+            }
+            return new StringDataUTF32(std::move(utf32));
+        }
+    }
+
+    ASCIIString ascii;
+    for (unsigned i = 0; i < len; i ++) {
+        ascii.push_back((char)src[i]);
+    }
+
+    return new StringDataASCII(std::move(ascii));
+}
+
 String* String::createASCIIString(const char* str)
 {
     return new StringDataASCII(str);

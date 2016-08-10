@@ -62,21 +62,28 @@ public:
     }
 };
 
+struct TextRun {
+    FrameText* m_frameText;
+    size_t m_startPosition;
+    size_t m_endPosition;
+    CharDirection m_direction;
+
+    TextRun(FrameText* frameText, size_t startPosition, size_t endPosition, CharDirection dir)
+    {
+        m_frameText= frameText;
+        m_startPosition = startPosition;
+        m_endPosition = endPosition;
+        m_direction = dir;
+    }
+};
+
 class InlineTextBox : public InlineBox {
 public:
-    enum CharDirection {
-        Ltr,
-        Rtl,
-        Mixed,
-        Neutral,
-    };
-
-    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, FrameText* origin, CharDirection charDirection)
+    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, const TextRun& run)
         : InlineBox(node, style, parent)
+        , m_text(str)
+        , m_textRun(run)
     {
-        m_charDirection = charDirection;
-        m_text = str;
-        m_origin = origin;
     }
 
     virtual bool isInlineTextBox() const { return true; }
@@ -86,7 +93,7 @@ public:
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
-        printf(" [(%s), dir: %d] ", m_text->utf8Data(), (int)m_charDirection);
+        printf(" [(%s), dir: %d] ", m_text->utf8Data(), (int)charDirection());
     }
 #endif
     virtual const char* name()
@@ -106,23 +113,27 @@ public:
 
     CharDirection charDirection()
     {
-        return m_charDirection;
+        return m_textRun.m_direction;
     }
 
     void setCharDirection(CharDirection dir)
     {
-        m_charDirection = dir;
+        m_textRun.m_direction = dir;
     }
 
     FrameText* origin()
     {
-        return m_origin;
+        return m_textRun.m_frameText;
+    }
+
+    const TextRun& textRun()
+    {
+        return m_textRun;
     }
 
 protected:
-    CharDirection m_charDirection;
     String* m_text;
-    FrameText* m_origin;
+    TextRun m_textRun;
 };
 
 class InlineNonReplacedBox : public InlineBox {
@@ -550,21 +561,6 @@ public:
         return m_inlineBlockAscender[box];
     }
 
-    void addFrameBoxDirection(FrameBox* box, InlineTextBox::CharDirection dir)
-    {
-        m_frameBoxToDir[box] = dir;
-    }
-
-    InlineTextBox::CharDirection getFrameBoxDirection(FrameBox* box)
-    {
-        auto itr = m_frameBoxToDir.find(box);
-        if (itr == m_frameBoxToDir.end()) {
-            return InlineTextBox::CharDirection::Neutral;
-        } else {
-            return m_frameBoxToDir[box];
-        }
-    }
-
     LayoutUnit m_lineBoxX;
     LayoutUnit m_lineBoxY;
     LayoutUnit m_currentLineWidth;
@@ -584,7 +580,8 @@ public:
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
     std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;
-    std::unordered_map<FrameBox*, InlineTextBox::CharDirection> m_frameBoxToDir;
+    std::unordered_map<FrameBox*, DirectionValue> m_computedDirectonValuePerFrameBox;
+    std::unordered_map<FrameText* , std::vector<TextRun>> m_textRunsPerFrameText;
 };
 }
 

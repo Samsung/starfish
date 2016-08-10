@@ -83,6 +83,13 @@ struct NullableUTF8String {
     size_t m_bufferSize;
 };
 
+enum CharDirection {
+    Ltr,
+    Rtl,
+    Mixed,
+    Neutral,
+};
+
 class String {
 public:
     static const unsigned defaultLengthLimit = 1 << 16;
@@ -95,6 +102,7 @@ public:
 
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);
+    static String* fromUTF16(const char16_t* src, size_t len);
     static String* createASCIIString(const char* src);
     static String* createASCIIStringWithNoGC(const char* src);
     static String* createUTF32String(const UTF32String& src);
