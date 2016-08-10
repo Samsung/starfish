@@ -22,6 +22,15 @@
 
 namespace StarFish {
 
+URL::URL(String* baseURL, String* url)
+    : ScriptWrappable(this), m_string(url)
+{
+    m_urlString = URL::parseURLString(baseURL, url);
+    m_username = NULL;
+    m_password = NULL;
+    m_port = NULL;
+}
+
 String* URL::parseURLString(String* baseURL, String* url)
 {
     unsigned numLeadingSpaces = 0;
@@ -108,12 +117,6 @@ String* URL::parseURLString(String* baseURL, String* url)
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-}
-
-URL::URL(String* baseURL, String* url)
-    : m_string(url)
-{
-    m_urlString = URL::parseURLString(baseURL, url);
 }
 
 String* URL::baseURI() const
@@ -238,5 +241,100 @@ String* URL::createObjectURL(Blob* blob)
 #endif
     return String::createASCIIString(url.data());
 }
+
+String* URL::origin()
+{
+    if (m_urlString) {
+        // FIXME needs unicode serialization
+        return m_urlString;
+    } else
+        return String::emptyString;
+}
+
+String* URL::getProtocol()
+{
+    if (m_urlString) {
+        size_t pos = m_urlString->find(":");
+        STARFISH_ASSERT(pos != SIZE_MAX);
+        return m_urlString->substring(0, pos + 1);
+    } else
+        return String::emptyString;
+}
+
+String* URL::getUsername()
+{
+    if (m_username)
+        return m_username;
+    else
+        return String::emptyString;
+}
+
+String* URL::getPassword()
+{
+    if (m_password)
+        return m_password;
+    else
+        return String::emptyString;
+}
+
+String* URL::getHost()
+{
+    return m_urlString;
+}
+
+String* URL::getHostname()
+{
+    return m_urlString;
+}
+
+String* URL::getPort()
+{
+    if (m_port)
+        return m_port;
+    else
+        return String::emptyString;
+}
+
+String* URL::getPathname()
+{
+    size_t pos = m_urlString->find("://");
+    STARFISH_ASSERT(pos != SIZE_MAX);
+    size_t pos2 = m_urlString->find("/", pos + 3);
+    if (pos2 != SIZE_MAX) {
+        return m_urlString->substring(pos2, m_urlString->length() - pos2);
+    } else {
+        return String::createASCIIString("/");
+    }
+}
+
+String* URL::getSearch()
+{
+    size_t idx = m_urlString->find("?");
+    size_t idx2 = m_urlString->find("#", idx + 1);
+    if (idx != SIZE_MAX) {
+        if (idx2 != SIZE_MAX) {
+            return m_urlString->substring(idx, idx2 - idx);
+        } else {
+            return m_urlString->substring(idx, m_urlString->length() - idx);
+        }
+    } else {
+        return String::emptyString;
+    }
+}
+
+String* URL::getHash()
+{
+    size_t idx = m_urlString->find("#");
+    if (idx != SIZE_MAX) {
+        return m_urlString->substring(idx, m_urlString->length() - idx);
+    } else {
+        return String::emptyString;
+    }
+
+}
+
+
+
+
 
 }

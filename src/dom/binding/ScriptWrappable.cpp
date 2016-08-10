@@ -854,9 +854,9 @@ void ScriptWrappable::initScriptWrappable(Blob* blob)
 
 void ScriptWrappable::initScriptWrappable(URL* url, ScriptBindingInstance* instance)
 {
-    // auto data = fetchData(instance);
-    // scriptObject()->set__proto__(data->urlElement()->protoType());
-    // scriptObject()->setExtraData(URLObject);
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->url()->protoType());
+    scriptObject()->setExtraData(URLObject);
 }
 
 void ScriptWrappable::initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance)
