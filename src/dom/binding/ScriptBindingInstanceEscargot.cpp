@@ -3710,7 +3710,30 @@ escargot::ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInst
 
 escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR(URL, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    escargot::ESFunctionObject* URLFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount < 1) {
+        // throw error
+        } else if (argCount == 1) {
+            escargot::ESValue urlString = instance->currentExecutionContext()->readArgument(0);
+            auto url = URL::createURL(String::emptyString, String::fromUTF8(urlString.asESString()->utf8Data()));
+            return url->scriptValue();
+        } else { // ignore redundant arguments
+            escargot::ESValue urlString = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue baseURLString = instance->currentExecutionContext()->readArgument(1);
+            // FIXME second argument can be not only string but also object
+            STARFISH_ASSERT(baseURLString.isESString());
+
+            auto url = URL::createURL(String::fromUTF8(baseURLString.asESString()->utf8Data()), String::fromUTF8(urlString.asESString()->utf8Data()));
+            return url->scriptValue();
+        }
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }, escargot::ESString::create("URL"), 2, true, true);
+
+    URLFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
+    URLFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    URLFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    URLFunction->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
 
     escargot::ESFunctionObject* URLCreateObjectURLFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
@@ -3725,6 +3748,87 @@ escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInsta
         }
     }, escargot::ESString::create("createObjectURL"), 1, false);
     URLFunction->defineDataProperty(escargot::ESString::create("createObjectURL"), false, false, false, URLCreateObjectURLFunction);
+
+    // FIXME setters below should not be null
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("href"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return escargot::ESValue(escargot::ESString::create("URL.href should be here"));
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("origin"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->urlString());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("protocol"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getProtocol());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("username"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getUsername());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("password"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getPassword());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("host"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getHost());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("hostname"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getHostname());
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("port"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getPort());
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("pathname"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getPathname());
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("search"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getSearch());
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("hash"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        return toJSString(originalObj->getHash());
+    }, nullptr);
+/*
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("searchParams"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+    }, nullptr);
+*/
     return URLFunction;
 }
 
