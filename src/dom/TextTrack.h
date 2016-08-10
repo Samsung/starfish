@@ -18,6 +18,7 @@
 #define __StarFishTextTrack__
 
 #include "dom/EventTarget.h"
+// #include "dom/DocumentFragment.h"
 
 namespace StarFish {
 
@@ -30,11 +31,13 @@ public:
     TextTrackCue(double start, double end, String* payload)
         : EventTarget()
         , m_textTrack(nullptr)
+        , m_id(String::emptyString)
         , m_startTime(start)
         , m_endTime(end)
-        , m_payload(payload)
+        , m_payload(String::emptyString)
+        , m_payloadAsHTML(nullptr)
     {
-
+        setPayload(payload);
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -47,9 +50,9 @@ public:
         return false;
     }
 
-    void setTrack(TextTrack* textTrack)
+    String* id()
     {
-        m_textTrack = textTrack;
+        return m_id;
     }
 
     double startTime()
@@ -62,6 +65,16 @@ public:
         return m_endTime;
     }
 
+    void setTrack(TextTrack* textTrack)
+    {
+        m_textTrack = textTrack;
+    }
+
+    void setId(String* id)
+    {
+        m_id = id;
+    }
+
     void setStartTime(double startTime)
     {
         m_startTime = startTime;
@@ -72,15 +85,34 @@ public:
         m_endTime = endTime;
     }
 
+#ifndef NDEBUG
+    virtual void dump()
+    {
+        printf("[TextTrackCue]\n");
+        printf("    StartTime : %lf\n", m_startTime);
+        printf("    EndTime : %lf\n", m_endTime);
+        printf("    text : \"%s\"\n", m_payload->utf8Data());
+    }
+#endif
+
+protected:
+    String* getPayload()
+    {
+        return m_payload;
+    }
+
+    void setPayload(String* payload);
+
 protected:
     TextTrack* m_textTrack;
-    // String* m_id;
+    String* m_id;
     double m_startTime;
     double m_endTime;
     String* m_payload;
+    DocumentFragment* m_payloadAsHTML;
 };
 
-class TextTrackCueList : public gc {
+class TextTrackCueList : public ScriptWrappable {
 // TODO:
 // interface TextTrackCueList {
 //   readonly attribute unsigned long length;
@@ -89,8 +121,13 @@ class TextTrackCueList : public gc {
 // };
 public:
     TextTrackCueList()
+        : ScriptWrappable(this)
     {
+    }
 
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
     }
 
     unsigned long length() const
@@ -101,6 +138,24 @@ public:
     void add(TextTrackCue* cue)
     {
         m_list.push_back(cue);
+    }
+
+    void clearAll()
+    {
+        m_list.clear();
+    }
+
+    TextTrackCue* at(unsigned int index)    
+    {
+        if (index >= m_list.size())
+            return nullptr;
+        return m_list[index];
+    }
+
+    TextTrackCue* getCueById(String* id)
+    {
+        // TODO
+        return nullptr;
     }
 
 protected:
@@ -128,6 +183,7 @@ public:
         , m_kind(Kind::Captions)
         , m_label(String::emptyString)
         , m_language(String::emptyString)
+        , m_cues(new TextTrackCueList())
     {
 
     }
@@ -140,18 +196,51 @@ public:
     void addCue(TextTrackCue* cue)
     {
         cue->setTrack(this);
-        m_cues.add(cue);
+        m_cues->add(cue);
     }
 
     void removeCue(TextTrackCue* cue)
     {
         // TODO
     }
+
+    TextTrackCueList* cues()
+    {
+        STARFISH_ASSERT(m_cues);
+        return m_cues;
+    }
+
 protected:
     Kind m_kind;
     String* m_label;
     String* m_language;
-    TextTrackCueList m_cues;
+    TextTrackCueList* m_cues;
+};
+
+class TextTrackList : public EventTarget {
+public:
+    TextTrackList()
+        : EventTarget()
+    {
+    }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
+    unsigned long length() const
+    {
+        return m_list.size();
+    }
+
+    void add(TextTrack* track)
+    {
+        m_list.push_back(track);
+    }
+
+protected:
+    std::vector<TextTrack*, gc_allocator<TextTrack*>> m_list;
 };
 
 }

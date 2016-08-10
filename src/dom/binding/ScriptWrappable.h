@@ -34,7 +34,9 @@ class Text;
 class Comment;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 class TextTrack;
+class TextTrackList;
 class TextTrackCue;
+class TextTrackCueList;
 class VTTCue;
 #endif
 class HTMLElement;
@@ -108,8 +110,10 @@ public:
         DOMImplementationObject = 1 << 16,
 #endif
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-        TextTrackObject = 1 << 17,
-        TextTrackCueObject = 1 << 18 | EventTargetObject,
+        TextTrackObject = 1 << 17 | EventTargetObject,
+        TextTrackListObject = 1 << 18 | EventTargetObject,
+        TextTrackCueObject = 1 << 19 | EventTargetObject,
+        TextTrackCueListObject = 1 << 20,
 #endif
     };
     ScriptWrappable(void* extraPointerData);
@@ -166,7 +170,9 @@ public:
     void initScriptWrappable(HTMLAudioElement* ptr);
     void initScriptWrappable(HTMLTrackElement* ptr);
     void initScriptWrappable(TextTrack* ptr);
+    void initScriptWrappable(TextTrackList* ptr);
     void initScriptWrappable(TextTrackCue* ptr);
+    void initScriptWrappable(TextTrackCueList* ptr);
     void initScriptWrappable(VTTCue* ptr);
 #endif
     void initScriptWrappable(Event* event);
