@@ -26,9 +26,95 @@ URL::URL(String* baseURL, String* url)
     : ScriptWrappable(this), m_string(url)
 {
     m_urlString = URL::parseURLString(baseURL, url);
-    m_username = NULL;
-    m_password = NULL;
-    m_port = NULL;
+    
+    // protocol
+    size_t pos = m_urlString->find(":");
+    STARFISH_ASSERT(pos != SIZE_MAX);
+    m_protocolEnd = ++pos;
+
+    // username & password
+
+    while (m_urlString->charAt(pos) == '/')
+        pos++;
+    if (pos - m_protocolEnd > 2)
+        pos = m_protocolEnd + 2;
+    m_userStart = m_userEnd = m_passwordEnd = pos;
+
+
+    // host
+    // TODO port
+    pos = m_urlString->find("/", pos);
+    if (pos != SIZE_MAX) {
+        m_hostEnd = m_portEnd = pos;
+
+        size_t pos2 = m_urlString->find("?", pos);
+        if (pos2 != SIZE_MAX) {
+            m_pathEnd = pos2;
+            size_t pos3 = m_urlString->find("#", pos2);
+            if (pos3 != SIZE_MAX) {
+                m_queryEnd = pos3;
+                m_fragmentEnd = m_urlString->length();
+            } else {
+                m_queryEnd = m_fragmentEnd = m_urlString->length();
+            }
+        } else {
+            size_t pos3 = m_urlString->find("#", pos);
+            if (pos3 != SIZE_MAX) {
+                m_pathEnd = m_queryEnd = pos3;
+                m_fragmentEnd = m_urlString->length();
+            } else {
+                m_pathEnd = m_queryEnd = m_fragmentEnd = m_urlString->length();
+            }
+        }
+
+    } else {
+        size_t pos2 = m_urlString->find("?");
+        if (pos2 != SIZE_MAX) {
+            m_hostEnd = m_portEnd = m_pathEnd = pos2;
+        } else {
+            size_t pos3 = m_urlString->find("#");
+            if (pos3 != SIZE_MAX) {
+                m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = pos3;
+                m_fragmentEnd = m_urlString->length();
+            } else {
+                m_hostEnd = m_portEnd = m_pathEnd = m_queryEnd = m_fragmentEnd = m_urlString->length();
+            }
+        }
+    }
+
+    // pathname
+
+
+
+
+
+    // search
+
+    // hash
+    STARFISH_ASSERT(m_protocolEnd);
+    STARFISH_ASSERT(m_userStart);
+    STARFISH_ASSERT(m_userEnd);
+    STARFISH_ASSERT(m_passwordEnd);
+    STARFISH_ASSERT(m_hostEnd);
+    STARFISH_ASSERT(m_portEnd);
+    STARFISH_ASSERT(m_pathEnd);
+    STARFISH_ASSERT(m_queryEnd);
+    STARFISH_ASSERT(m_fragmentEnd);
+
+
+
+/*
+    m_protocolEnd = 0;
+    m_userStart = 0;
+    m_userEnd = 0;
+    m_passwordEnd = 0;
+    m_hostEnd = 0;
+    m_portEnd = 0;
+    m_pathAfterLastSlash = 0;
+    m_pathEnd = 0;
+    m_queryEnd = 0;
+    m_fragmentEnd = 0;*/
+
 }
 
 String* URL::parseURLString(String* baseURL, String* url)
@@ -53,16 +139,16 @@ String* URL::parseURLString(String* baseURL, String* url)
         }
     }
 
+    bool isAbsolute = url->contains("://");
 
     if (url->startsWith("data:")) {
-        return url;
+        isAbsolute = true;
     }
 
     if (url->startsWith("blob:")) {
-        return url;
+        isAbsolute = true;
     }
 
-    bool isAbsolute = url->contains("://");
 
     if (url->startsWith("//")) {
         isAbsolute = true;
@@ -92,9 +178,7 @@ String* URL::parseURLString(String* baseURL, String* url)
         STARFISH_ASSERT(isAbsolute);
     }
 
-    if (isAbsolute) {
-        return url;
-    } else {
+    if (!isAbsolute) {
         STARFISH_ASSERT(baseURL->contains("://"));
         bool baseEndsWithSlash = baseURL->charAt(baseURL->length() - 1) == '/';
 
@@ -103,18 +187,22 @@ String* URL::parseURLString(String* baseURL, String* url)
         }
 
         if (baseEndsWithSlash) {
-            return baseURL->concat(url);
+            url = baseURL->concat(url);
         } else {
             size_t f = baseURL->find("://");
             STARFISH_ASSERT(f != SIZE_MAX);
             f += 3;
             size_t f2 = baseURL->find("/", f);
+            // FIXME
             if (f2 != SIZE_MAX) {
                 baseURL = baseURL->substring(0, baseURL->lastIndexOf('/'));
             }
-            return baseURL->concat(String::createASCIIString("/"))->concat(url);
+            url = baseURL->concat(String::createASCIIString("/"))->concat(url);
+            // url = baseURL->concat(url);
         }
     }
+
+    return url;
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
@@ -244,97 +332,76 @@ String* URL::createObjectURL(Blob* blob)
 
 String* URL::origin()
 {
-    if (m_urlString) {
-        // FIXME needs unicode serialization
-        return m_urlString;
-    } else
-        return String::emptyString;
+    size_t start = (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
+    return m_urlString->substring(start, m_hostEnd - start);
+}
+
+String* URL::getHref()
+{
+    return m_urlString;
 }
 
 String* URL::getProtocol()
 {
-    if (m_urlString) {
-        size_t pos = m_urlString->find(":");
-        STARFISH_ASSERT(pos != SIZE_MAX);
-        return m_urlString->substring(0, pos + 1);
-    } else
-        return String::emptyString;
+    return m_urlString->substring(0, m_protocolEnd);
 }
 
 String* URL::getUsername()
 {
-    if (m_username)
-        return m_username;
-    else
-        return String::emptyString;
+    return m_urlString->substring(m_userStart, m_userEnd - m_userStart);
 }
 
 String* URL::getPassword()
 {
-    if (m_password)
-        return m_password;
+    if (m_passwordEnd != m_userEnd)
+        return m_urlString->substring(m_userEnd + 1, m_passwordEnd - m_userEnd - 1);
     else
         return String::emptyString;
 }
 
 String* URL::getHost()
 {
-    return m_urlString;
+    size_t start = (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
+    return m_urlString->substring(start, m_hostEnd - start);
 }
 
 String* URL::getHostname()
 {
-    return m_urlString;
+    size_t start = (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
+    return m_urlString->substring(start, m_hostEnd - start);
 }
 
 String* URL::getPort()
 {
-    if (m_port)
-        return m_port;
+    if (m_hostEnd != m_hostEnd)
+        return m_urlString->substring(m_hostEnd + 1, m_portEnd - m_hostEnd - 1);
     else
         return String::emptyString;
 }
 
 String* URL::getPathname()
 {
-    size_t pos = m_urlString->find("://");
-    STARFISH_ASSERT(pos != SIZE_MAX);
-    size_t pos2 = m_urlString->find("/", pos + 3);
-    if (pos2 != SIZE_MAX) {
-        return m_urlString->substring(pos2, m_urlString->length() - pos2);
-    } else {
+    if (m_portEnd != m_pathEnd)
+        return m_urlString->substring(m_portEnd, m_pathEnd - m_portEnd);
+    else
         return String::createASCIIString("/");
-    }
 }
 
 String* URL::getSearch()
 {
-    size_t idx = m_urlString->find("?");
-    size_t idx2 = m_urlString->find("#", idx + 1);
-    if (idx != SIZE_MAX) {
-        if (idx2 != SIZE_MAX) {
-            return m_urlString->substring(idx, idx2 - idx);
-        } else {
-            return m_urlString->substring(idx, m_urlString->length() - idx);
-        }
-    } else {
+    if (m_pathEnd != m_queryEnd)
+        return m_urlString->substring(m_pathEnd, m_queryEnd - m_pathEnd);
+    else
         return String::emptyString;
-    }
 }
 
 String* URL::getHash()
 {
-    size_t idx = m_urlString->find("#");
-    if (idx != SIZE_MAX) {
-        return m_urlString->substring(idx, m_urlString->length() - idx);
-    } else {
+    if (m_queryEnd != m_fragmentEnd)
+        return m_urlString->substring(m_queryEnd, m_fragmentEnd - m_queryEnd);
+    else
         return String::emptyString;
-    }
-
 }
-
-
-
 
 
 }
