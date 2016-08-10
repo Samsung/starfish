@@ -28,6 +28,10 @@ ifeq ($(OS),Darwin)
   SHELL:=/opt/local/bin/bash
 endif
 
+# Set media flag (only works on x64)
+MEDIA_SUPPORT=true
+MEDIA_SUPPORT_KEY=STARFISH_ENABLE_MULTIMEDIA
+
 $(info goal... $(MAKECMDGOALS))
 
 ifneq (,$(findstring x86,$(MAKECMDGOALS)))
@@ -151,7 +155,9 @@ ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2
   LDFLAGS += -m32
 else ifeq ($(ARCH), x64)
-  CXXFLAGS += -DSTARFISH_ENABLE_MULTIMEDIA
+  ifeq ($(MEDIA_SUPPORT), true)
+    CXXFLAGS += -D$(MEDIA_SUPPORT_KEY)
+  endif
 else ifeq ($(ARCH), arm)
   CXXFLAGS += -march=armv7-a -mthumb
 endif
