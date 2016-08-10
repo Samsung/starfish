@@ -1699,6 +1699,23 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                 inlineBox->setWidth(inlineBox->width() + inlineBox->borderRight() + inlineBox->paddingRight());
             }
         }
+
+        if (lineFormattingContext.currentLine()->boxes().size() == 1) {
+            FrameBox* box = lineFormattingContext.currentLine()->boxes().back();
+            if (box->isInlineBox() && box->asInlineBox()->isInlineNonReplacedBox()) {
+                InlineNonReplacedBox* lastInlineBox = box->asInlineBox()->asInlineNonReplacedBox();
+                if (lastInlineBox->m_boxes.size() == 1) {
+                    FrameBox* box = lastInlineBox->m_boxes.back();
+                    if (box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+                        String* text = box->asInlineBox()->asInlineTextBox()->text();
+                        if (text->containsOnlyWhitespace()) {
+                            lineFormattingContext.currentLine()->boxes().erase(lineFormattingContext.currentLine()->boxes().end() - 1);
+                            lineFormattingContext.m_currentLineWidth = 0;
+                        }
+                    }
+                }
+            }
+        }
     }, [&](FrameBox* box)
     {
         if (box->style()->originalDisplay() != BlockDisplayValue) {
@@ -2097,7 +2114,6 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                             } else if (ctx.isWhiteSpaceAtLast()) {
                                 return;
                             }
-
                         }
 
                         if (nextOffset == srcTxt->length() && f == f->parent()->lastChild())
