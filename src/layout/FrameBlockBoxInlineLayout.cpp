@@ -1308,7 +1308,7 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
     }
 }
 
-void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit inlineContentWidth, LayoutUnit& unprocessedStartingWidth, LayoutUnit& unprocessedEndingWidth,
+void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit inlineContentWidth, LayoutUnit& unprocessedStartingWidth, LayoutUnit& unprocessedEndingWidth,
     std::function<void(FrameBox*)> gotInlineBoxCallback, std::function<void(bool)> lineBreakCallback, std::function<void(FrameInline*)> frameInlineCallback, std::function<void(FrameBox*)> absBoxCallback)
 {
     Frame* f = origin->lastChild();
@@ -1446,6 +1446,7 @@ void inlineBoxGenerator(Frame* origin, LayoutContext& ctx, LineFormattingContext
 
             ctx.pushInlineBlockBox(r);
             STARFISH_ASSERT(f->style()->display() == DisplayValue::InlineBlockDisplayValue);
+            f->setLayoutParent(layoutParent);
             f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
             LayoutUnit ascender;
@@ -1680,7 +1681,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 #endif
     }
 
-    inlineBoxGenerator(this, ctx, lineFormattingContext, inlineContentWidth, unused, unused, [&](FrameBox* ib) {
+    inlineBoxGenerator(this, this, ctx, lineFormattingContext, inlineContentWidth, unused, unused, [&](FrameBox* ib) {
         lineFormattingContext.currentLine()->boxes().push_back(ib);
         ib->setLayoutParent(lineFormattingContext.currentLine());
     }, [&](bool dueToBr)
@@ -1728,8 +1729,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             m_lineBoxes.erase(m_lineBoxes.begin() + p);
         }
     }
-
-    lineFormattingContext.registerInlineContent();
 
     LayoutUnit contentHeight = 0;
     for (size_t i = 0; i < m_lineBoxes.size(); i++) {
@@ -1973,7 +1972,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             unprocessedEndingWidth = self->marginLeft() + self->borderLeft() + self->paddingLeft();
         }
     }
-    inlineBoxGenerator(self->m_origin, ctx, lineFormattingContext, inlineContentWidth, unprocessedStartingWidth, unprocessedEndingWidth, [&](FrameBox* ib)
+    inlineBoxGenerator(self, self->m_origin, ctx, lineFormattingContext, inlineContentWidth, unprocessedStartingWidth, unprocessedEndingWidth, [&](FrameBox* ib)
     {
         self->boxes().push_back(ib);
         if (self->style()->direction() == LtrDirectionValue) {
