@@ -80,6 +80,32 @@ public:
             }
         } else {
             result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
+            String* widthString = img->width();
+            String* heightString = img->height();
+            bool widthIsEmpty = widthString->equals(String::emptyString);
+            bool heightIsEmpty = heightString->equals(String::emptyString);
+            if (widthIsEmpty && heightIsEmpty) {
+            } else if (widthIsEmpty) {
+                float h = String::parseFloat(heightString);
+                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+                if (!heightIsPercent)
+                    result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), height);
+            } else if (heightIsEmpty) {
+                float w = String::parseFloat(widthString);
+                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+                if (!widthIsPercent)
+                    result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length(Length::Fixed, 0));
+            } else {
+                float w = String::parseFloat(widthString);
+                float h = String::parseFloat(heightString);
+                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+                Length width = widthIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, w);
+                Length height = heightIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, h);
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
+            }
         }
 
         if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isSpecified()) {
