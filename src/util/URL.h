@@ -73,6 +73,7 @@ public:
     }
 
     String* origin();
+    String* getHref();
     String* getProtocol();
     String* getUsername();
     String* getPassword();
@@ -86,17 +87,16 @@ public:
 protected:
     String* m_string;
     String* m_urlString;
-    String* m_href;
-    String* m_origin;
-    String* m_protocol;
-    String* m_username;
-    String* m_password;
-    String* m_host;
-    String* m_hostname;
-    String* m_port;
-    String* m_pathname;
-    String* m_search;
-    String* m_hash;
+
+    int m_protocolEnd;
+    int m_userStart;
+    int m_userEnd;
+    int m_passwordEnd;
+    int m_hostEnd;
+    int m_portEnd;
+    int m_pathEnd;
+    int m_queryEnd;
+    int m_fragmentEnd;
 };
 }
 
