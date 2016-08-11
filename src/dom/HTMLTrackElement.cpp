@@ -114,16 +114,36 @@ HTMLTrackElement::HTMLTrackElement(Document* document)
     , m_VTTFileResource(nullptr)
     , m_hasPendingRequest(false)
     , m_live(false)
-    , m_default(true)
 {
 
+}
+
+bool HTMLTrackElement::defaultValue()
+{
+    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_default);
+    if (siz == SIZE_MAX)
+        return false;
+    return true;
+}
+
+void HTMLTrackElement::setDefaultValue(bool value)
+{
+    QualifiedName name = document()->window()->starFish()->staticStrings()->m_default;
+    if (value) {
+        size_t siz = hasAttribute(name);
+        if (siz == SIZE_MAX) {
+            setAttribute(name, String::fromUTF8(""));
+        }
+    } else {
+        removeAttribute(name);
+    }
 }
 
 void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        m_track->cues()->clearAll();
+        m_track->clearCues();
         if (!value->equals(String::emptyString)) {
             loadSrc(value); 
         }
@@ -136,6 +156,12 @@ void HTMLTrackElement::didNodeInsertedToDocumenTree()
     m_live = true;
     if (m_hasPendingRequest) {
         loadSrc();
+    }
+    // Set Track Mode
+    // FIXME
+    STARFISH_ASSERT(m_track);
+    if (defaultValue()) {
+        m_track->setMode(TextTrack::Mode::Showing);
     }
 }
 
@@ -156,12 +182,11 @@ void HTMLTrackElement::loadSrc()
 
 void HTMLTrackElement::loadSrc(String* srcURL)
 {
-    if (!m_live || !m_default) {
+    if (!m_live) {
         m_hasPendingRequest = true;
         return;
     }
     if (srcURL->equals(String::emptyString)) {
-        STARFISH_ASSERT(m_track->cues()->length() == 0);
         return;
     }
 

@@ -201,6 +201,7 @@ public:
     QualifiedName m_face;
     QualifiedName m_size;
     QualifiedName m_charset;
+    QualifiedName m_default;
 
     // Event Names
     QualifiedName m_click;

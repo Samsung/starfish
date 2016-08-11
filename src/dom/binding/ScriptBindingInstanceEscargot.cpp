@@ -1404,9 +1404,46 @@ escargot::ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindin
         TextTrackFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("cues"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject, TextTrack);
-        STARFISH_ASSERT(originalObj->cues());
-        return originalObj->cues()->scriptValue();
+        TextTrackCueList* list = originalObj->cues();
+        if (list)
+            return originalObj->cues()->scriptValue();
+        return escargot::ESValue(escargot::ESValue::ESNull);
     }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("kind"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject, TextTrack);
+        return toJSString(TextTrack::kindToString(originalObj->kind()));
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("label"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject, TextTrack);
+        return toJSString(originalObj->label());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("language"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject, TextTrack);
+        return toJSString(originalObj->language());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("mode"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject, TextTrack);
+        return toJSString(TextTrack::modeToString(originalObj->mode()));
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackObject, TextTrack);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        if (firstArg.isESString()) {
+            originalObj->setMode(toBrowserString(firstArg.toString()));
+        }
+        return firstArg;
+    });
 
     return TextTrackFunction;
 }
@@ -1520,7 +1557,7 @@ escargot::ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingIn
             THROW_ILLEGAL_INVOCATION();
         }
         VTTCue* cue = (VTTCue*)originalObj;
-        cue->setText(String::fromUTF8(firstArg.toString()->utf8Data()));
+        cue->setText(toBrowserString(firstArg.toString()));
         return firstArg;
     });
 
@@ -2726,6 +2763,28 @@ escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scrip
         }
         return escargot::ESValue();
     }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("default"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+            return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLTrackElement()->defaultValue());
+        }
+        return escargot::ESValue();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            if (!firstArg.isBoolean())
+                return escargot::ESValue();
+            nd->asElement()->asHTMLElement()->asHTMLTrackElement()->setDefaultValue(firstArg.asBoolean());
+            return firstArg;
+        }
+        return escargot::ESValue();
+    });
 
     return HTMLTrackElementFunction;
 }
