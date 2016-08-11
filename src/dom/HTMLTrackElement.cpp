@@ -41,11 +41,6 @@ public:
         m_resource = resource;
     }
 
-    void resetPointer()
-    {
-        m_pointer = -1;
-    }
-
     unsigned int nextPointer()
     {
         return ++m_pointer;
@@ -60,8 +55,7 @@ public:
 
         unsigned int size = m_resource->networkRequest()->responseData().size();
         unsigned int pointer = nextPointer();
-        if (pointer == size) {
-            resetPointer();
+        if (pointer >= size) {
             return 1;
         }
 
@@ -107,7 +101,6 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        // String* text = m_resource->asTextResource()->text();
         m_element->generateCues();
     }
 
