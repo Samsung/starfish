@@ -22,9 +22,6 @@
 #include "TextTrack.h"
 
 #include "loader/ElementResourceClient.h"
-// #include "platform/message_loop/MessageLoop.h"
-// #include "style/CSSParser.h"
-// #include "platform/file_io/FileIO.h"
 #include "webvttparser.h"
 
 namespace StarFish {
@@ -224,7 +221,7 @@ void HTMLTrackElement::generateCues()
             payload = payload->concat(String::fromUTF8((*i++).c_str()))->concat(newline);
         }
 
-        TextTrackCue* newcue = new TextTrackCue(startTime, endTime, payload);
+        VTTCue* newcue = new VTTCue(startTime, endTime, payload);
         newcue->setId(id);
         newcue->setTrack(m_track);
 

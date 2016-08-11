@@ -17,7 +17,7 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishVTTCue__)
 #define __StarFishVTTCue__
 
-#include "dom/TextTrack.h"
+#include "dom/TextTrackCue.h"
 
 namespace StarFish {
 
