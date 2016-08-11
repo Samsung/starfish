@@ -178,14 +178,14 @@ public:
         return m_marginCollapseResult;
     }
 
-    virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage)
+    virtual void paintChildrenWith(PaintingContext &ctx)
     {
         Frame* child = firstChild();
         while (child) {
-            canvas->save();
-            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-            child->paint(canvas, stage);
-            canvas->restore();
+            ctx.m_canvas->save();
+            ctx.m_canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
+            child->paint(ctx);
+            ctx.m_canvas->restore();
             child = child->next();
         }
     }

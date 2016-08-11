@@ -31,9 +31,9 @@ test/internal-test/page-visibilty/visibilitychange_test.html
 test/internal-test/css/background/background_properties.html
 test/internal-test/css/background/background_shorthand.html
 test/internal-test/css/background/background_shorthand_invalid.html
-test/internal-test/css/display/display-internal-test-1.html
-test/internal-test/css/display/display-internal-test-2.html
-test/internal-test/css/display/display-internal-test-3.html
+test/internal-test/css/display/ltr-display-internal-test-1.html
+test/internal-test/css/display/ltr-display-internal-test-2.html
+test/internal-test/css/display/ltr-display-internal-test-3.html
 test/internal-test/css/display/display-internal-test-with-image-element-1.html
 test/internal-test/css/display/display-internal-test-with-image-element-2.html
 test/internal-test/css/display/display-internal-test-with-image-element-3.html

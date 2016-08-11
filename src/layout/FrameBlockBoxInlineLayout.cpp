@@ -2238,47 +2238,56 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
     }
 }
 
-void FrameBlockBox::paintChildrenWith(Canvas* canvas, PaintingStage stage)
+void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
 {
     if (hasBlockFlow()) {
-        FrameBox::paintChildrenWith(canvas, stage);
+        FrameBox::paintChildrenWith(ctx);
     } else {
+        PaintingInlineStage last = ctx.m_paintingInlineStage;
+
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            canvas->save();
-            LineBox& b = *m_lineBoxes[i];
-            canvas->translate(b.frameRect().x(), b.frameRect().y());
-            for (size_t k = 0; k < b.m_boxes.size(); k++) {
-                FrameBox* childBox = b.m_boxes[k];
-                canvas->save();
-                canvas->translate(childBox->x(), childBox->y());
-                childBox->paint(canvas, stage);
-                canvas->restore();
+            PaintingInlineStage s = PaintingInlineLevelElements;
+            while (s != PaintingInlineStageEnd) {
+                ctx.m_paintingInlineStage = s;
+                ctx.m_canvas->save();
+                LineBox& b = *m_lineBoxes[i];
+                ctx.m_canvas->translate(b.frameRect().x(), b.frameRect().y());
+                for (size_t k = 0; k < b.m_boxes.size(); k++) {
+                    FrameBox* childBox = b.m_boxes[k];
+                    ctx.m_canvas->save();
+                    ctx.m_canvas->translate(childBox->x(), childBox->y());
+                    childBox->paint(ctx);
+                    ctx.m_canvas->restore();
+                }
+                ctx.m_canvas->restore();
+                s = (PaintingInlineStage)(s + 1);
             }
-            canvas->restore();
         }
+
+        ctx.m_paintingInlineStage = last;
     }
 }
 
-void InlineTextBox::paint(Canvas* canvas, PaintingStage stage)
+void InlineTextBox::paint(PaintingContext& ctx)
 {
-    if (stage == PaintingNormalFlowInline) {
+    if (ctx.m_paintingStage == PaintingNormalFlowInline && ctx.m_paintingInlineStage == PaintingInlineLevelElements) {
         if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
-            canvas->setVisible(false);
+            ctx.m_canvas->setVisible(false);
         } else {
-            canvas->setVisible(true);
+            ctx.m_canvas->setVisible(true);
         }
 
         if (m_origin->textDecorationData()) {
             auto data = m_origin->textDecorationData();
-            canvas->setNeedsLineThrough(data->m_hasLineThrough);
-            canvas->setNeedsUnderline(data->m_hasUnderLine);
-            canvas->setLineThroughColor(data->m_lineThroughColor);
-            canvas->setUnderlineColor(data->m_underLineColor);
+            ctx.m_canvas->setNeedsLineThrough(data->m_hasLineThrough);
+            ctx.m_canvas->setNeedsUnderline(data->m_hasUnderLine);
+            ctx.m_canvas->setLineThroughColor(data->m_lineThroughColor);
+            ctx.m_canvas->setUnderlineColor(data->m_underLineColor);
         }
 
-        canvas->setFont(style()->font());
-        canvas->setColor(style()->color());
-        canvas->drawText(0, 0, m_text);
+        ctx.m_canvas->setFont(style()->font());
+        ctx.m_canvas->setColor(style()->color());
+        ctx.m_canvas->drawText(0, 0, m_text);
     }
 }
 
@@ -2306,26 +2315,29 @@ void InlineNonReplacedBox::paintBackgroundAndBorders(Canvas* canvas)
     }
 }
 
-void InlineNonReplacedBox::paint(Canvas* canvas, PaintingStage stage)
+void InlineNonReplacedBox::paint(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
         return;
     }
     // CHECK THIS at https://www.w3.org/TR/CSS2/zindex.html#stacking-defs
     if (isPositionedElement()) {
-        if (stage == PaintingPositionedElements) {
-            paintBackgroundAndBorders(canvas);
+        if (ctx.m_paintingStage == PaintingPositionedElements) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+            PaintingStage last = ctx.m_paintingStage;
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
-                paintChildrenWith(canvas, s);
+                ctx.m_paintingStage = s;
+                paintChildrenWith(ctx);
                 s = (PaintingStage)(s + 1);
             }
+            ctx.m_paintingStage = last;
         }
-    } else if (stage == PaintingNormalFlowInline) {
-        paintBackgroundAndBorders(canvas);
-        paintChildrenWith(canvas, stage);
+    } else if (ctx.m_paintingStage == PaintingNormalFlowInline && ctx.m_paintingInlineStage == PaintingInlineLevelElements) {
+        paintBackgroundAndBorders(ctx.m_canvas);
+        paintChildrenWith(ctx);
     } else {
-        paintChildrenWith(canvas, stage);
+        paintChildrenWith(ctx);
     }
 }
 

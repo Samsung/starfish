@@ -23,17 +23,22 @@ namespace StarFish {
 
 void FrameBox::paintStackingContextContent(Canvas* canvas)
 {
+    PaintingContext ctx(canvas);
     // the in-flow, non-inline-level, non-positioned descendants.
-    paintChildrenWith(canvas, PaintingNormalFlowBlock);
+    ctx.m_paintingStage = PaintingNormalFlowBlock;
+    ctx.m_paintingInlineStage = PaintingInlineLevelElements;
+    paintChildrenWith(ctx);
 
     // TODO the non-positioned floats.
     // paintChildrenWith(canvas, ctx, PaintingNonPositionedFloats);
 
     // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-    paintChildrenWith(canvas, PaintingNormalFlowInline);
+    ctx.m_paintingStage = PaintingNormalFlowInline;
+    paintChildrenWith(ctx);
 
     // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-    paintChildrenWith(canvas, PaintingPositionedElements);
+    ctx.m_paintingStage = PaintingPositionedElements;
+    paintChildrenWith(ctx);
 }
 
 }

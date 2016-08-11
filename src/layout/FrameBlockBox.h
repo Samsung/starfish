@@ -81,7 +81,7 @@ public:
 
     virtual bool isInlineTextBox() const { return true; }
 
-    virtual void paint(Canvas* canvas, PaintingStage stage);
+    virtual void paint(PaintingContext& ctx);
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
@@ -155,16 +155,16 @@ public:
     }
     static InlineNonReplacedBox* layoutInline(InlineNonReplacedBox* self, LayoutContext& ctx, FrameBlockBox* blockBox,
         LineFormattingContext* lineFormattingContext, InlineNonReplacedBox* layoutParentBox, bool freshStart);
-    virtual void paint(Canvas* canvas, PaintingStage stage);
-    virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage)
+    virtual void paint(PaintingContext& ctx);
+    virtual void paintChildrenWith(PaintingContext& ctx)
     {
         auto iter = boxes().begin();
         while (iter != boxes().end()) {
             FrameBox* child = *iter;
-            canvas->save();
-            canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
-            child->paint(canvas, stage);
-            canvas->restore();
+            ctx.m_canvas->save();
+            ctx.m_canvas->translate(child->asFrameBox()->x(), child->asFrameBox()->y());
+            child->paint(ctx);
+            ctx.m_canvas->restore();
             iter++;
         }
     }
@@ -415,8 +415,8 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
 #endif
-    virtual void paint(Canvas* canvas, PaintingStage stage);
-    virtual void paintChildrenWith(Canvas* canvas, PaintingStage stage);
+    virtual void paint(PaintingContext& ctx);
+    virtual void paintChildrenWith(PaintingContext& ctx);
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y, HitTestStage stage);
 

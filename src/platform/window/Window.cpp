@@ -660,7 +660,11 @@ void Window::rendering()
         Canvas* canvas = preparePainting(eflWindow);
 
         paintWindowBackground(canvas);
-        m_document->frame()->paint(canvas, PaintingStageEnd);
+        {
+            PaintingContext ctx(canvas);
+            ctx.m_paintingStage = PaintingStageEnd;
+            m_document->frame()->paint(ctx);
+        }
         m_needsPainting = false;
         if (m_document->frame()->firstChild())
             m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();

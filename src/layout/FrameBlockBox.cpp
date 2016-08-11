@@ -740,57 +740,63 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     return nullptr;
 }
 
-void FrameBlockBox::paint(Canvas* canvas, PaintingStage stage)
+void FrameBlockBox::paint(PaintingContext& ctx)
 {
     if (isEstablishesStackingContext()) {
         return;
     }
 
-    canvas->save();
+    ctx.m_canvas->save();
     bool hiddenApplied = shouldApplyOverflow();
     if (hiddenApplied) {
-        if (PaintingStage::PaintingNormalFlowBlock == stage) {
-            canvas->clip(Rect(0, 0, width(), height()));
+        if (PaintingStage::PaintingNormalFlowBlock == ctx.m_paintingStage) {
+            ctx.m_canvas->clip(Rect(0, 0, width(), height()));
         } else {
-            canvas->clip(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
+            ctx.m_canvas->clip(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
         }
 
     }
 
     if (style()->visibility() == VisibilityValue::HiddenVisibilityValue) {
-        canvas->setVisible(false);
+        ctx.m_canvas->setVisible(false);
     } else {
-        canvas->setVisible(true);
+        ctx.m_canvas->setVisible(true);
     }
 
     if (isPositionedElement()) {
-        if (stage == PaintingPositionedElements) {
-            paintBackgroundAndBorders(canvas);
+        if (ctx.m_paintingStage == PaintingPositionedElements) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+            PaintingStage last = ctx.m_paintingStage;
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
-                paintChildrenWith(canvas, s);
+                ctx.m_paintingStage = s;
+                paintChildrenWith(ctx);
                 s = (PaintingStage)(s + 1);
             }
+            ctx.m_paintingStage = last;
         }
     } else if (style()->display() == InlineBlockDisplayValue) {
-        if (stage == PaintingNormalFlowInline) {
-            paintBackgroundAndBorders(canvas);
+        if (ctx.m_paintingStage == PaintingNormalFlowInline && ctx.m_paintingInlineStage == PaintingInlineBlock) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+            PaintingStage last = ctx.m_paintingStage;
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
-                paintChildrenWith(canvas, s);
+                ctx.m_paintingStage = s;
+                paintChildrenWith(ctx);
                 s = (PaintingStage)(s + 1);
             }
+            ctx.m_paintingStage = last;
         }
     } else {
-        if (stage == PaintingNormalFlowBlock) {
-            paintBackgroundAndBorders(canvas);
-            paintChildrenWith(canvas, stage);
+        if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+            paintChildrenWith(ctx);
         } else {
-            paintChildrenWith(canvas, stage);
+            paintChildrenWith(ctx);
         }
     }
 
-    canvas->restore();
+    ctx.m_canvas->restore();
 }
 #ifdef STARFISH_ENABLE_TEST
 void FrameBlockBox::dump(int depth)

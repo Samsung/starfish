@@ -38,7 +38,6 @@ class LineBox;
 
 enum PaintingStage {
     PaintingNormalFlowBlock, // the in-flow, non-inline-level, non-positioned descendants.
-    PaintingNonPositionedFloats, // the non-positioned floats.
     PaintingNormalFlowInline, // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     PaintingPositionedElements, // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     PaintingStageEnd
@@ -50,6 +49,12 @@ enum HitTestStage {
     HitTestNonPositionedFloats,
     HitTestNormalFlowBlock,
     HitTestStageEnd,
+};
+
+enum PaintingInlineStage {
+    PaintingInlineLevelElements,
+    PaintingInlineBlock,
+    PaintingInlineStageEnd
 };
 
 class LineBox;
@@ -335,6 +340,20 @@ private:
     LayoutUnit m_lastKnownWidth;
     LayoutUnit m_minimumWidth;
     bool m_isWhiteSpaceAtLast;
+};
+
+
+
+class PaintingContext {
+public:
+    PaintingContext(Canvas* canvas)
+        : m_canvas(canvas)
+    {
+    }
+
+    Canvas* m_canvas;
+    PaintingStage m_paintingStage;
+    PaintingInlineStage m_paintingInlineStage;
 };
 
 class Frame : public gc {
@@ -629,7 +648,7 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    virtual void paint(Canvas* canvas, PaintingStage)
+    virtual void paint(PaintingContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
