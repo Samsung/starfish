@@ -43,9 +43,6 @@ public:
     virtual void setTextContent(String* val);
     virtual String* textContent()
     {
-        if ((nodeType() == TEXT_NODE) || (nodeType() == DOCUMENT_FRAGMENT_NODE)) {
-            return textContent();
-        }
         String* str = String::createASCIIString("");
         for (Node* child = firstChild(); child != nullptr; child = child->nextSibling()) {
             if (child->nodeType() == TEXT_NODE || child->nodeType() == ELEMENT_NODE) {
