@@ -18,8 +18,8 @@
 
 #include "StarFishConfig.h"
 #include "dom/Document.h"
-#include "HTMLTrackElement.h"
-#include "TextTrack.h"
+#include "dom/HTMLTrackElement.h"
+#include "dom/TextTrack.h"
 
 #include "loader/ElementResourceClient.h"
 #include "webvttparser.h"
@@ -102,6 +102,7 @@ public:
     {
         ResourceClient::didLoadFinished();
         m_element->generateCues();
+        m_element->m_VTTFileResource = nullptr;
     }
 
 protected:

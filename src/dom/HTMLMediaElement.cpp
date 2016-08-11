@@ -18,6 +18,7 @@
 
 #include "StarFishConfig.h"
 #include "dom/HTMLMediaElement.h"
+#include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
 
 namespace StarFish {
@@ -26,6 +27,20 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     : HTMLElement(document)
     , m_textTracks(new TextTrackList())
 {
+}
+
+void HTMLMediaElement::addTextTrack(TextTrack* track)
+{
+    if (track) {
+        m_textTracks->add(track);
+    }
+}
+
+void HTMLMediaElement::removeTextTrack(TextTrack* track)
+{
+    if (track) {
+        m_textTracks->remove(track);
+    }
 }
 
 TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label, String* language)
@@ -37,6 +52,26 @@ TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label, String* l
     TextTrack* textTrack = new TextTrack(kindEnum, label, language);
     m_textTracks->add(textTrack);
     return textTrack;
+}
+
+void HTMLMediaElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    HTMLElement::didNodeInserted(parent, newChild);
+    if (parent == this && newChild->isElement() && newChild->asElement()->isHTMLElement() && newChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+        HTMLTrackElement* trackElement = newChild->asElement()->asHTMLElement()->asHTMLTrackElement();
+        STARFISH_ASSERT(trackElement->track());
+        addTextTrack(trackElement->track());
+    }
+}
+
+void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    HTMLElement::didNodeRemoved(parent, oldChild);
+    if (parent == this && oldChild->isElement() && oldChild->asElement()->isHTMLElement() && oldChild->asElement()->asHTMLElement()->isHTMLTrackElement()) {
+        HTMLTrackElement* trackElement = oldChild->asElement()->asHTMLElement()->asHTMLTrackElement();
+        STARFISH_ASSERT(trackElement->track());
+        removeTextTrack(trackElement->track());
+    }
 }
 
 }

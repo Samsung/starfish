@@ -241,7 +241,25 @@ public:
         m_list.push_back(track);
     }
 
-    TextTrack* at(unsigned int index)
+    void remove(unsigned long index)
+    {
+        m_list.erase(m_list.begin() + index);
+    }
+
+    void remove(TextTrack* track)
+    {
+        unsigned long size = m_list.size();
+        unsigned long targetIdx = 0;
+        for (targetIdx = 0; targetIdx < size; targetIdx++) {
+            if (m_list[targetIdx] == track)
+                break;
+        }
+        if (targetIdx < size) {
+            remove(targetIdx);
+        }
+    }
+
+    TextTrack* at(unsigned long index)
     {
         if (index >= m_list.size())
             return nullptr;
