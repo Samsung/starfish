@@ -1488,21 +1488,38 @@ escargot::ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingIn
         VTTCueFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("text"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
-        if (originalObj->isVTTCue()) {
+        if (!originalObj->isVTTCue()) {
             THROW_ILLEGAL_INVOCATION();
         }
         VTTCue* cue = (VTTCue*)originalObj;
-        return escargot::ESValue(cue->text());
+        return toJSString(cue->text());
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-        if (originalObj->isVTTCue() || !firstArg.isESString()) {
+        if (!originalObj->isVTTCue() || !firstArg.isESString()) {
             THROW_ILLEGAL_INVOCATION();
         }
         VTTCue* cue = (VTTCue*)originalObj;
         cue->setText(String::fromUTF8(firstArg.toString()->utf8Data()));
         return firstArg;
     });
+
+    VTTCueFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getCueAsHTML"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueObject, TextTrackCue);
+            if (!originalObj->isVTTCue()) {
+                THROW_ILLEGAL_INVOCATION();
+            }
+            VTTCue* cue = (VTTCue*)originalObj;
+            Document* document = (((Window*)instance->globalObject()->extraPointerData()))->document();
+            DocumentFragment* df = cue->getCueAsHTML(document);
+            if (df) {
+                return df->scriptValue();
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("getCueAsHTML"), 0, false)
+    );
 
     return VTTCueFunction;
 }

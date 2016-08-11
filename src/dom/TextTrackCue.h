@@ -93,13 +93,13 @@ public:
     }
 #endif
 
-protected:
     String* getPayload()
     {
         return m_payload;
     }
 
     void setPayload(String* payload);
+    DocumentFragment* getCueAsHTML(Document* document);
 
 protected:
     TextTrack* m_textTrack;
