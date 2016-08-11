@@ -171,9 +171,11 @@ void ScriptBindingInstance::close()
     functionName##Function->set__proto__(parentFunction);
 
 // TypeError: Illegal invocation
-#define THROW_ILLEGAL_INVOCATION()                                                                                                                           \
-    escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal invocation")))); \
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#define THROW_ILLEGAL_INVOCATION() \
+    { \
+        escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Illegal invocation")))); \
+        STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+    }
 
 #define THROW_DOM_EXCEPTION(instance, errcode) \
     { \
@@ -1412,6 +1414,15 @@ escargot::ESFunctionObject* bindingTextTrack(ScriptBindingInstance* scriptBindin
 escargot::ESFunctionObject* bindingTextTrackList(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(TextTrackList, fetchData(scriptBindingInstance)->m_eventTarget);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackListObject, TextTrackList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
     return TextTrackListFunction;
 }
 
@@ -1457,6 +1468,15 @@ escargot::ESFunctionObject* bindingTextTrackCue(ScriptBindingInstance* scriptBin
 escargot::ESFunctionObject* bindingTextTrackCueList(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(TextTrackCueList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TextTrackCueListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TextTrackCueListObject, TextTrackCueList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
     return TextTrackCueListFunction;
 }
 
@@ -2600,7 +2620,58 @@ escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scrip
 escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLMediaElement, fetchData(scriptBindingInstance)->htmlElement());
-    // TODO
+
+    HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addTextTrack"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+            Node* nd = originalObj;
+            if (!(nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()))
+                THROW_ILLEGAL_INVOCATION();
+
+            escargot::ESValue arg1 = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue arg2 = instance->currentExecutionContext()->readArgument(1);
+            escargot::ESValue arg3 = instance->currentExecutionContext()->readArgument(2);
+            String* kind = String::emptyString;
+            String* label = String::emptyString;
+            String* language = String::emptyString;
+
+            // First Arg : kind
+            if (arg1.isUndefinedOrNull() || !arg1.isESString())
+                THROW_ILLEGAL_INVOCATION();
+            kind = toBrowserString(arg1.toString());
+            // Second Arg : label (can be omitted)
+            if (!arg2.isUndefinedOrNull() && !arg2.isESString())
+                THROW_ILLEGAL_INVOCATION();
+            if (!arg2.isUndefinedOrNull())
+                label = toBrowserString(arg2.toString());
+            // Third Arg : language (can be omitted)
+            if (!arg3.isUndefinedOrNull() && !arg3.isESString())
+                THROW_ILLEGAL_INVOCATION();
+            if (!arg3.isUndefinedOrNull())
+                language = toBrowserString(arg3.toString());
+
+            HTMLMediaElement* element = originalObj->asElement()->asHTMLElement()->asHTMLMediaElement();
+            TextTrack* track = element->addTextTrack(kind, label, language);
+            if (!track)
+                THROW_ILLEGAL_INVOCATION();
+            return track->scriptValue();
+        }, escargot::ESString::create("addTextTrack"), 3, false)
+    );
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textTracks"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()) {
+            TextTrackList* trackList = nd->asElement()->asHTMLElement()->asHTMLMediaElement()->textTracks();
+            if (trackList)
+                return trackList->scriptValue();
+        }
+        return escargot::ESValue();
+    }, nullptr);
+
     return HTMLMediaElementFunction;
 }
 

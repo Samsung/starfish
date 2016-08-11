@@ -17,21 +17,37 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishHTMLMediaElement__)
 #define __StarFishHTMLMediaElement__
 
+#include "dom/Document.h"
 #include "dom/HTMLElement.h"
 
 namespace StarFish {
 
+class TextTrack;
+class TextTrackList;
+
 class HTMLMediaElement : public HTMLElement {
 public:
-    HTMLMediaElement(Document* document)
-        : HTMLElement(document)
-    {
-    }
+    HTMLMediaElement(Document* document);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
     }
+
+    virtual bool isHTMLMediaElement() const
+    {
+        return true;
+    }
+
+    TextTrackList* textTracks()
+    {
+        return m_textTracks;
+    }
+
+    TextTrack* addTextTrack(String* kind, String* label, String* language);
+
+protected:
+    TextTrackList* m_textTracks;
 };
 }
 

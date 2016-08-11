@@ -30,6 +30,7 @@ public:
     };
 
     enum Kind {
+        Invalid,
         Subtitles,
         Captions,
         Descriptions,
@@ -42,6 +43,15 @@ public:
         , m_kind(Kind::Captions)
         , m_label(String::emptyString)
         , m_language(String::emptyString)
+        , m_cues(new TextTrackCueList())
+    {
+    }
+
+    TextTrack(Kind kind, String* label, String* language)
+        : EventTarget()
+        , m_kind(kind)
+        , m_label(label)
+        , m_language(language)
         , m_cues(new TextTrackCueList())
     {
 
@@ -67,6 +77,86 @@ public:
     {
         STARFISH_ASSERT(m_cues);
         return m_cues;
+    }
+
+    Kind kind()
+    {
+        return m_kind;
+    }
+
+    String* label()
+    {
+        return m_label;
+    }
+
+    String* language()
+    {
+        return m_language;
+    }
+
+    void setKind(Kind kind)
+    {
+        m_kind = kind;
+    }
+
+    void setLabel(String* label)
+    {
+        m_label = label;
+    }
+
+    void setLanguage(String* language)
+    {
+        m_language = language;
+    }
+
+    static Kind stringToKind(String* kindStr)
+    {
+        if (kindStr && kindStr->length() > 7) {
+            switch (kindStr->charAt(2)) {
+            case 'a':
+            case 'A':
+                if (kindStr->equalsWithoutCase(String::fromUTF8("chapters")))
+                    return Kind::Chapters;
+            case 'b':
+            case 'B':
+                if (kindStr->equalsWithoutCase(String::fromUTF8("subtitles")))
+                    return Kind::Subtitles;
+            case 'p':
+            case 'P':
+                if (kindStr->equalsWithoutCase(String::fromUTF8("captions")))
+                    return Kind::Captions;
+            case 's':
+            case 'S':
+                if (kindStr->equalsWithoutCase(String::fromUTF8("descriptions")))
+                    return Kind::Descriptions;
+            case 't':
+            case 'T':
+                if (kindStr->equalsWithoutCase(String::fromUTF8("metadata")))
+                    return Kind::Metadata;
+            default:
+                return Kind::Invalid;
+            }
+        }
+        return Kind::Invalid;
+    }
+
+    static String* kindToString(Kind kindEnum)
+    {
+        switch (kindEnum) {
+        case Kind::Subtitles:
+            return String::fromUTF8("subtitles");
+        case Kind::Captions:
+            return String::fromUTF8("captions");
+        case Kind::Descriptions:
+            return String::fromUTF8("descriptions");
+        case Kind::Chapters:
+            return String::fromUTF8("chapters");
+        case Kind::Metadata:
+            return String::fromUTF8("metadata");
+        default:
+            return String::emptyString;
+        }
+        return String::emptyString;
     }
 
 protected:
@@ -96,6 +186,13 @@ public:
     void add(TextTrack* track)
     {
         m_list.push_back(track);
+    }
+
+    TextTrack* at(unsigned int index)
+    {
+        if (index >= m_list.size())
+            return nullptr;
+        return m_list[index];
     }
 
 protected:

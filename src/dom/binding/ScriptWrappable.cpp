@@ -751,6 +751,30 @@ void ScriptWrappable::initScriptWrappable(TextTrackList* ptr)
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->textTrackList()->protoType());
     scriptObject()->setExtraData(TextTrackListObject);
+
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::TextTrackListObject);
+        TextTrackList* self = (TextTrackList*)obj->extraPointerData();
+        uint32_t idx = key.toIndex();
+        if (idx != escargot::ESValue::ESInvalidIndexValue && idx < self->length()) {
+            TextTrack* e = self->at(idx);
+            if (e != nullptr)
+                return e->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::TextTrackListObject);
+        return false;
+    }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
+        STARFISH_ASSERT(obj->extraData() == ScriptWrappable::Type::TextTrackListObject);
+        TextTrackList* self = (TextTrackList*)obj->extraPointerData();
+        size_t len = self->length();
+        escargot::ESValueVector v(len);
+        for (size_t i = 0; i < len; i ++) {
+            v[i] = escargot::ESValue(i);
+        }
+        return v;
+    }, true);
 }
 
 void ScriptWrappable::initScriptWrappable(TextTrackCue* ptr)
