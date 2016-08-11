@@ -17,9 +17,23 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFishConfig.h"
-#include "TextTrack.h"
+#include "TextTrackCue.h"
 
 namespace StarFish {
+
+void TextTrackCue::setPayload(String* payload)
+{
+    m_payload = payload;
+    // TODO : parse HTML text -> DocumentFragment
+    // if (document) {
+    //     m_payload = payload;
+    //     m_payloadAsHTML = document->createDocumentFragment();
+    //     HTMLParser parser(document->window()->starFish(), df, this, payload);
+    //     parser.startParse();
+    //     parser.parseStep();
+    //     appendChild(df);
+    // }
+}
 
 }
 

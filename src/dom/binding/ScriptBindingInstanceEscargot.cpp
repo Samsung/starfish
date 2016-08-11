@@ -38,7 +38,7 @@
 #endif
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "dom/VTTCue.h"
+#include "dom/TextTrack.h"
 #endif
 
 namespace StarFish {
