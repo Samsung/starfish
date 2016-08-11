@@ -39,12 +39,17 @@ public:
         return true;
     }
 
+    virtual void didNodeInserted(Node* parent, Node* newChild);
+    virtual void didNodeRemoved(Node* parent, Node* oldChild);
+
     TextTrackList* textTracks()
     {
         return m_textTracks;
     }
 
+    void addTextTrack(TextTrack* track);
     TextTrack* addTextTrack(String* kind, String* label, String* language);
+    void removeTextTrack(TextTrack* track);
 
 protected:
     TextTrackList* m_textTracks;
