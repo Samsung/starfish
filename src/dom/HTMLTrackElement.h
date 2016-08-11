@@ -73,13 +73,15 @@ public:
         return m_track;
     }
 
+    bool defaultValue();
+    void setDefaultValue(bool value);
+
 protected:
     TextTrack* m_track;
     Resource* m_VTTFileResource;
 
     bool m_hasPendingRequest;
     bool m_live;
-    bool m_default; // TODO
 };
 }
 

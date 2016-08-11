@@ -24,13 +24,14 @@ namespace StarFish {
 class TextTrack : public EventTarget {
 public:
     enum Mode {
+        InvalidMode,
         Off,
         Hidden,
         Showing
     };
 
     enum Kind {
-        Invalid,
+        InvalidKind,
         Subtitles,
         Captions,
         Descriptions,
@@ -40,6 +41,7 @@ public:
 
     TextTrack()
         : EventTarget()
+        , m_mode(Mode::Off)
         , m_kind(Kind::Captions)
         , m_label(String::emptyString)
         , m_language(String::emptyString)
@@ -49,6 +51,7 @@ public:
 
     TextTrack(Kind kind, String* label, String* language)
         : EventTarget()
+        , m_mode(Mode::Off)
         , m_kind(kind)
         , m_label(label)
         , m_language(language)
@@ -76,6 +79,8 @@ public:
     TextTrackCueList* cues()
     {
         STARFISH_ASSERT(m_cues);
+        if (m_mode == Mode::Off)
+            return nullptr;
         return m_cues;
     }
 
@@ -94,6 +99,12 @@ public:
         return m_language;
     }
 
+    Mode mode()
+    {
+        return m_mode;
+    }
+
+    void setKind(String* kind);
     void setKind(Kind kind)
     {
         m_kind = kind;
@@ -107,6 +118,18 @@ public:
     void setLanguage(String* language)
     {
         m_language = language;
+    }
+
+    void setMode(String* mode);
+    void setMode(Mode mode)
+    {
+        m_mode = mode;
+    }
+
+    void clearCues()
+    {
+        STARFISH_ASSERT(m_cues);
+        m_cues->clearAll();
     }
 
     static Kind stringToKind(String* kindStr)
@@ -134,10 +157,10 @@ public:
                 if (kindStr->equalsWithoutCase(String::fromUTF8("metadata")))
                     return Kind::Metadata;
             default:
-                return Kind::Invalid;
+                return Kind::InvalidKind;
             }
         }
-        return Kind::Invalid;
+        return Kind::InvalidKind;
     }
 
     static String* kindToString(Kind kindEnum)
@@ -159,7 +182,37 @@ public:
         return String::emptyString;
     }
 
+    static Mode stringToMode(String* modeStr)
+    {
+        if (modeStr && modeStr->length() > 0) {
+            if (modeStr->equals("disabled")) {
+                return Mode::Off;
+            } else if (modeStr->equals("hidden")) {
+                return Mode::Hidden;
+            } else if (modeStr->equals("showing")) {
+                return Mode::Showing;
+            }
+        }
+        return Mode::InvalidMode;
+    }
+
+    static String* modeToString(Mode modeEnum)
+    {
+        switch (modeEnum) {
+        case Mode::Off:
+            return String::fromUTF8("disabled");
+        case Mode::Hidden:
+            return String::fromUTF8("hidden");
+        case Mode::Showing:
+            return String::fromUTF8("showing");
+        default:
+            return String::emptyString;
+        }
+        return String::emptyString;
+    }
+
 protected:
+    Mode m_mode;
     Kind m_kind;
     String* m_label;
     String* m_language;

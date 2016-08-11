@@ -21,6 +21,22 @@
 
 namespace StarFish {
 
+void TextTrack::setKind(String* kind)
+{
+    TextTrack::Kind kindEnum = TextTrack::stringToKind(kind);
+    if (!kindEnum == TextTrack::Kind::InvalidKind) {
+        m_kind = kindEnum;
+    }
+}
+
+void TextTrack::setMode(String* mode)
+{
+    TextTrack::Mode modeEnum = TextTrack::stringToMode(mode);
+    if (!modeEnum == TextTrack::Mode::InvalidMode) {
+        m_mode = modeEnum;
+    }
+}
+
 }
 
 #endif

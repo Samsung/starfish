@@ -31,7 +31,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
 TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label, String* language)
 {
     TextTrack::Kind kindEnum = TextTrack::stringToKind(kind);
-    if (kindEnum == TextTrack::Kind::Invalid) {
+    if (kindEnum == TextTrack::Kind::InvalidKind) {
         return nullptr;
     }
     TextTrack* textTrack = new TextTrack(kindEnum, label, language);
