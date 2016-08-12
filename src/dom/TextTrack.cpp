@@ -18,8 +18,23 @@
 
 #include "StarFishConfig.h"
 #include "TextTrack.h"
+#include "Event.h"
+#include "Document.h"
+#include "HTMLTrackElement.h"
 
 namespace StarFish {
+
+void TextTrack::dispatchCueChangeEvent()
+{
+    String* eventType = String::emptyString;
+    if (m_trackElement) {
+        eventType = m_trackElement->document()->window()->starFish()->staticStrings()->m_cuechange.localName();
+    } else {
+        eventType = String::fromUTF8("cuechange");
+    }
+    Event* e = new Event(eventType, EventInit(false, false));
+    dispatchEvent(e);
+}
 
 void TextTrack::setKind(String* kind)
 {
@@ -35,6 +50,13 @@ void TextTrack::setMode(String* mode)
     if (!modeEnum == TextTrack::Mode::InvalidMode) {
         m_mode = modeEnum;
     }
+}
+
+String* TextTrack::id()
+{
+    if (m_trackElement)
+        return m_trackElement->id();
+    return String::emptyString;
 }
 
 }

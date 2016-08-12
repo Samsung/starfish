@@ -39,23 +39,15 @@ public:
         Metadata,
     };
 
-    TextTrack()
-        : EventTarget()
-        , m_mode(Mode::Off)
-        , m_kind(Kind::Captions)
-        , m_label(String::emptyString)
-        , m_language(String::emptyString)
-        , m_cues(new TextTrackCueList())
-    {
-    }
-
-    TextTrack(Kind kind, String* label, String* language)
+    TextTrack(Kind kind = Kind::Captions, String* label = String::emptyString, String* language = String::emptyString)
         : EventTarget()
         , m_mode(Mode::Off)
         , m_kind(kind)
         , m_label(label)
         , m_language(language)
         , m_cues(new TextTrackCueList())
+        , m_activeCues(new TextTrackCueList())
+        , m_trackElement(nullptr)
     {
 
     }
@@ -65,6 +57,8 @@ public:
         initScriptWrappable(this);
     }
 
+    void dispatchCueChangeEvent();
+
     void addCue(TextTrackCue* cue)
     {
         cue->setTrack(this);
@@ -73,7 +67,24 @@ public:
 
     void removeCue(TextTrackCue* cue)
     {
-        // TODO
+        cue->unsetTrack();
+        m_cues->remove(cue);
+    }
+
+    void addActiveCue(TextTrackCue* cue)
+    {
+        STARFISH_ASSERT(cue);
+        m_activeCues->add(cue);
+        cue->dispatchEnterEvent();
+        dispatchCueChangeEvent();
+    }
+
+    void removeActiveCue(TextTrackCue* cue)
+    {
+        STARFISH_ASSERT(cue);
+        m_activeCues->remove(cue);
+        cue->dispatchExitEvent();
+        dispatchCueChangeEvent();
     }
 
     TextTrackCueList* cues()
@@ -82,6 +93,14 @@ public:
         if (m_mode == Mode::Off)
             return nullptr;
         return m_cues;
+    }
+
+    TextTrackCueList* activeCues()
+    {
+        STARFISH_ASSERT(m_activeCues);
+        if (m_mode == Mode::Off)
+            return nullptr;
+        return m_activeCues;
     }
 
     Kind kind()
@@ -103,6 +122,13 @@ public:
     {
         return m_mode;
     }
+
+    HTMLTrackElement* trackElement()
+    {
+        return m_trackElement;
+    }
+
+    String* id();
 
     void setKind(String* kind);
     void setKind(Kind kind)
@@ -126,10 +152,21 @@ public:
         m_mode = mode;
     }
 
+    void setTrackElement(HTMLTrackElement* element)
+    {
+        m_trackElement = element;
+    }
+
+    bool hasTrackElement()
+    {
+        return m_trackElement != nullptr;
+    }
+
     void clearCues()
     {
         STARFISH_ASSERT(m_cues);
         m_cues->clearAll();
+        m_activeCues->clearAll();
     }
 
     static Kind stringToKind(String* kindStr)
@@ -184,7 +221,7 @@ public:
 
     static Mode stringToMode(String* modeStr)
     {
-        if (modeStr && modeStr->length() > 0) {
+        if (modeStr && modeStr->length() > 5) {
             if (modeStr->equals("disabled")) {
                 return Mode::Off;
             } else if (modeStr->equals("hidden")) {
@@ -217,6 +254,8 @@ protected:
     String* m_label;
     String* m_language;
     TextTrackCueList* m_cues;
+    TextTrackCueList* m_activeCues;
+    HTMLTrackElement* m_trackElement;
 };
 
 class TextTrackList : public EventTarget {
@@ -264,6 +303,20 @@ public:
         if (index >= m_list.size())
             return nullptr;
         return m_list[index];
+    }
+
+    TextTrack* getTrackById(String* id)
+    {
+        unsigned long size = m_list.size();
+        unsigned long targetIdx = 0;
+        for (targetIdx = 0; targetIdx < size; targetIdx++) {
+            if (m_list[targetIdx]->id()->equals(id))
+                break;
+        }
+        if (targetIdx < size) {
+            return m_list[targetIdx];
+        }
+        return nullptr;
     }
 
 protected:

@@ -48,6 +48,11 @@ public:
         return false;
     }
 
+    TextTrack* track()
+    {
+        return m_textTrack;
+    }
+
     String* id()
     {
         return m_id;
@@ -66,6 +71,11 @@ public:
     void setTrack(TextTrack* textTrack)
     {
         m_textTrack = textTrack;
+    }
+
+    void unsetTrack()
+    {
+        m_textTrack = nullptr;
     }
 
     void setId(String* id)
@@ -101,6 +111,9 @@ public:
     void setPayload(String* payload);
     DocumentFragment* getCueAsHTML(Document* document);
 
+    void dispatchEnterEvent();
+    void dispatchExitEvent();
+
 protected:
     TextTrack* m_textTrack;
     String* m_id;
@@ -111,12 +124,6 @@ protected:
 };
 
 class TextTrackCueList : public ScriptWrappable {
-// TODO:
-// interface TextTrackCueList {
-//   readonly attribute unsigned long length;
-//   getter TextTrackCue (in unsigned long index);
-//   TextTrackCue getCueById(in DOMString id);
-// };
 public:
     TextTrackCueList()
         : ScriptWrappable(this)
@@ -136,6 +143,24 @@ public:
     void add(TextTrackCue* cue)
     {
         m_list.push_back(cue);
+    }
+
+    void remove(unsigned long index)
+    {
+        m_list.erase(m_list.begin() + index);
+    }
+
+    void remove(TextTrackCue* cue)
+    {
+        unsigned long size = m_list.size();
+        unsigned long targetIdx = 0;
+        for (targetIdx = 0; targetIdx < size; targetIdx++) {
+            if (m_list[targetIdx] == cue)
+                break;
+        }
+        if (targetIdx < size) {
+            remove(targetIdx);
+        }
     }
 
     void clearAll()

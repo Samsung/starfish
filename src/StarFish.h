@@ -219,6 +219,9 @@ public:
     QualifiedName m_timeout;
     QualifiedName m_loadend;
     QualifiedName m_loadstart;
+    QualifiedName m_cuechange;
+    QualifiedName m_enter;
+    QualifiedName m_exit;
 protected:
 };
 
