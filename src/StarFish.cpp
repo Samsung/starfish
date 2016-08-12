@@ -374,6 +374,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_timeout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "timeout"));
     m_loadend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadend"));
     m_loadstart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadstart"));
+    m_cuechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "cuechange"));
+    m_enter = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "enter"));
+    m_exit = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "exit"));
 }
 
 }

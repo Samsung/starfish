@@ -61,20 +61,6 @@ public:
 
         *c = m_resource->networkRequest()->responseData().at(pointer);
         return 0;
-
-        // const int result = fgetc(file_);VttResourceReader
-        // if (result != EOF) {
-        // *c = static_cast<char>(result);
-        // return 0;  // success
-        // }
-
-        // if (ferror(file_))
-        // return -1;  // error
-
-        // if (feof(file_))
-        // return 1;  // EOF
-
-        // return -1;  // weird
     }
 
 private:
@@ -91,16 +77,27 @@ public:
         : ResourceClient(res)
         , m_element(element)
     {
+        STARFISH_ASSERT(m_element);
+        m_element->setReadyState(HTMLTrackElement::LOADING);
     }
 
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
+        m_element->clearResource();
+        m_element->setReadyState(HTMLTrackElement::ERROR);
+    }
+
+    virtual void didLoadCanceled()
+    {
+        ResourceClient::didLoadCanceled();
+        m_element->setReadyState(HTMLTrackElement::NONE);
     }
 
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
+        m_element->setReadyState(HTMLTrackElement::LOADED);
         m_element->generateCues();
         m_element->m_VTTFileResource = nullptr;
     }
@@ -115,8 +112,9 @@ HTMLTrackElement::HTMLTrackElement(Document* document)
     , m_VTTFileResource(nullptr)
     , m_hasPendingRequest(false)
     , m_live(false)
+    , m_readyState(HTMLTrackElement::NONE)
 {
-
+    m_track->setTrackElement(this);
 }
 
 bool HTMLTrackElement::defaultValue()
@@ -170,10 +168,16 @@ void HTMLTrackElement::didNodeRemovedFromDocumenTree()
 {
     HTMLElement::didNodeRemovedFromDocumenTree();
     m_live = false;
-    if (m_VTTFileResource) {
+    clearResource();
+}
+
+void HTMLTrackElement::clearResource()
+{
+    if (isReadyState(HTMLTrackElement::LOADING)) {
+        STARFISH_ASSERT(m_VTTFileResource);
         m_VTTFileResource->cancel();
-        m_VTTFileResource = nullptr;
     }
+    m_VTTFileResource = nullptr;
 }
 
 void HTMLTrackElement::loadSrc()
@@ -192,10 +196,8 @@ void HTMLTrackElement::loadSrc(String* srcURL)
     }
 
     URL* url = URL::createURL(document()->documentURI()->baseURI(), srcURL);
+    clearResource();
 
-    if (m_VTTFileResource) {
-        m_VTTFileResource->cancel();
-    }
     m_VTTFileResource = document()->resourceLoader()->fetch(url);
     m_VTTFileResource->addResourceClient(new VTTFileDownloadClient(this, m_VTTFileResource));
     m_VTTFileResource->addResourceClient(new ElementResourceClient(this, m_VTTFileResource));

@@ -20,9 +20,35 @@
 #include "dom/TextTrackCue.h"
 #include "dom/Document.h"
 #include "dom/HTMLDivElement.h"
+#include "dom/HTMLTrackElement.h"
 #include "dom/parser/HTMLParser.h"
+#include "dom/TextTrack.h"
 
 namespace StarFish {
+
+void TextTrackCue::dispatchEnterEvent()
+{
+    String* eventType = String::emptyString;
+    if (m_textTrack && m_textTrack->hasTrackElement()) {
+        eventType = m_textTrack->trackElement()->document()->window()->starFish()->staticStrings()->m_enter.localName();
+    } else {
+        eventType = String::fromUTF8("enter");
+    }
+    Event* e = new Event(eventType, EventInit(false, false));
+    dispatchEvent(e);
+}
+
+void TextTrackCue::dispatchExitEvent()
+{
+    String* eventType = String::emptyString;
+    if (m_textTrack && m_textTrack->hasTrackElement()) {
+        eventType = m_textTrack->trackElement()->document()->window()->starFish()->staticStrings()->m_exit.localName();
+    } else {
+        eventType = String::fromUTF8("exit");
+    }
+    Event* e = new Event(eventType, EventInit(false, false));
+    dispatchEvent(e);
+}
 
 void TextTrackCue::setPayload(String* payload)
 {

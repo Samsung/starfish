@@ -28,6 +28,13 @@ class HTMLTrackElement : public HTMLElement {
     friend class VTTFileDownloadClient;
     friend class VttResourceReader;
 public:
+    enum ReadyState {
+        NONE,
+        LOADING,
+        LOADED,
+        ERROR
+    };
+
     HTMLTrackElement(Document* document);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -73,8 +80,26 @@ public:
         return m_track;
     }
 
+    ReadyState readyState()
+    {
+        return m_readyState;
+    }
+
+    bool isReadyState(ReadyState state)
+    {
+        return m_readyState == state;
+    }
+
+    void setReadyState(ReadyState readyState)
+    {
+        m_readyState = readyState;
+    }
+
     bool defaultValue();
     void setDefaultValue(bool value);
+
+protected:
+    void clearResource();
 
 protected:
     TextTrack* m_track;
@@ -82,6 +107,7 @@ protected:
 
     bool m_hasPendingRequest;
     bool m_live;
+    ReadyState m_readyState;
 };
 }
 
