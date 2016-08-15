@@ -43,7 +43,8 @@ namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
-
+bool g_memLogDump = false;
+FILE* fp_mem = NULL;
 static double process_mem_usage()
 {
     double vm_usage     = 0.0;
@@ -105,6 +106,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
         GC_set_on_collection_event([](GC_EventType evtType) {
             if (GC_EVENT_PRE_START_WORLD == evtType) {
 #ifdef STARFISH_ENABLE_TEST
+                if (fp_mem&&g_memLogDump)
+                    fprintf(fp_mem, "%f %f\n", GC_get_memory_use() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage());
 #else
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
@@ -146,6 +149,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 StarFish::~StarFish()
 {
     STARFISH_LOG_INFO("StarFish::~StarFish\n");
+#ifdef STARFISH_ENABLE_TEST
+    if (fp_mem)
+        fclose(fp_mem);
+#endif
     close();
     delete m_lineBreaker;
     delete m_scriptBindingInstance;
@@ -185,8 +192,14 @@ void StarFish::loadHTMLDocument(String* filePath)
             path += "/";
 
             path = std::string("file://") + path + fileName;
+#ifdef STARFISH_ENABLE_TEST
+            std::string mem_log =  fileName.substr(0, fileName.length()-5)+"_mem.txt";
+            if (g_memLogDump)
+                fp_mem = fopen(mem_log.c_str(), "w");
+#endif
         }
     }
+
 
     STARFISH_LOG_INFO("loadHTMLDocument %s\n", path.data());
     m_scriptBindingInstance = new ScriptBindingInstance();
