@@ -93,6 +93,10 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "--hide-window") == 0) {
             // regression test, pixel test only
             setenv("HIDE_WINDOW", "1", 1);
+        } else if (strcmp(argv[i], "--mem-log-dump") == 0) {
+#ifdef STARFISH_ENABLE_TEST
+            g_memLogDump = true;
+#endif
         }
     }
 
