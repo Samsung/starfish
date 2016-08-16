@@ -1537,7 +1537,7 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
 
             for (size_t i = start; i < (size_t)end; /* U16_NEXT post-increments */) {
                 char32_t c;
-                U16_NEXT((const UChar*)str.data(), i, end, c);
+                U16_NEXT((const UChar*)str.data(), i, (size_t)end, c);
                 utf32Len++;
             }
 
