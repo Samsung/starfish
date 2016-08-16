@@ -52,6 +52,16 @@ public:
         return true;
     }
 
+    unsigned long width();
+    unsigned long height();
+    unsigned long videoWidth();
+    unsigned long videoHeight();
+    String* poster();
+
+    void setWidth(unsigned long width);
+    void setHeight(unsigned long height);
+    void setPoster(String* poster);
+
     CanvasSurface* videoSurface()
     {
         return m_videoSurface;

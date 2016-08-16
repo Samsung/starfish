@@ -33,6 +33,7 @@ class CharacterData;
 class Text;
 class Comment;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+class TimeRanges;
 class TextTrack;
 class TextTrackList;
 class TextTrackCue;
@@ -114,6 +115,7 @@ public:
         TextTrackListObject = 1 << 18 | EventTargetObject,
         TextTrackCueObject = 1 << 19 | EventTargetObject,
         TextTrackCueListObject = 1 << 20,
+        TimeRangesObject = 1 << 21,
 #endif
     };
     ScriptWrappable(void* extraPointerData);
@@ -174,6 +176,7 @@ public:
     void initScriptWrappable(TextTrackCue* ptr);
     void initScriptWrappable(TextTrackCueList* ptr);
     void initScriptWrappable(VTTCue* ptr);
+    void initScriptWrappable(TimeRanges* ptr);
 #endif
     void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr, ScriptBindingInstance*);

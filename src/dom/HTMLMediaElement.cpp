@@ -74,6 +74,180 @@ void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
+HTMLMediaElement::NetState HTMLMediaElement::networkState()
+{
+    // TODO
+    return HTMLMediaElement::NETWORK_EMPTY;
+}
+
+String* HTMLMediaElement::preload()
+{
+    // TODO
+    return String::emptyString;
+}
+
+TimeRanges* HTMLMediaElement::buffered()
+{
+    // TODO
+    return nullptr;
+}
+
+void HTMLMediaElement::load()
+{
+    // TODO
+}
+
+String* HTMLMediaElement::canPlayType(String* type)
+{
+    // TODO
+    return String::emptyString;
+}
+
+HTMLMediaElement::ReadyState HTMLMediaElement::readyState()
+{
+    // TODO
+    return HTMLMediaElement::HAVE_NOTHING;
+}
+
+bool HTMLMediaElement::seeking()
+{
+    // TODO
+    return false;
+}
+
+double HTMLMediaElement::currentTime()
+{
+    // TODO
+    return 0;
+}
+
+double HTMLMediaElement::duration()
+{
+    // TODO
+    return 0;
+}
+
+bool HTMLMediaElement::paused()
+{
+    // TODO
+    return 0;
+}
+
+void HTMLMediaElement::pause()
+{
+    // TODO
+}
+
+double HTMLMediaElement::defaultPlaybackRate()
+{
+    // TODO
+    return 0;
+}
+
+double HTMLMediaElement::playbackRate()
+{
+    // TODO
+    return 0;
+}
+
+TimeRanges* HTMLMediaElement::played()
+{
+    // TODO
+    return nullptr;
+}
+
+TimeRanges* HTMLMediaElement::seekable()
+{
+    // TODO
+    return nullptr;
+}
+
+bool HTMLMediaElement::ended()
+{
+    // TODO
+    return false;
+}
+
+bool HTMLMediaElement::autoplay()
+{
+    // TODO
+    return false;
+}
+
+bool HTMLMediaElement::loop()
+{
+    // TODO
+    return false;
+}
+
+bool HTMLMediaElement::controls()
+{
+    // TODO
+    return false;
+}
+
+bool HTMLMediaElement::volume()
+{
+    // TODO
+    return false;
+}
+
+bool HTMLMediaElement::muted()
+{
+    // TODO
+    return false;
+}
+
+void HTMLMediaElement::setPreload(String* preload)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setSeeking(bool seeking)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setCurrentTime(double currentTime)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setDefaultPlaybackRate(double defaultPlaybackRate)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setPlaybackRate(double playbackRate)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setAutoplay(bool autoplay)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setLoop(bool loop)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setControls(bool controls)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setVolume(bool volume)
+{
+    // TODO
+}
+
+void HTMLMediaElement::setMuted(bool muted)
+{
+    // TODO
+}
+
 }
 
 #endif

@@ -827,6 +827,15 @@ void ScriptWrappable::initScriptWrappable(VTTCue* ptr)
     scriptObject()->set__proto__(data->VTTCue()->protoType());
     scriptObject()->setExtraData(TextTrackCueObject);
 }
+
+void ScriptWrappable::initScriptWrappable(TimeRanges* ptr)
+{
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->starFish()->scriptBindingInstance();
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->timeRanges()->protoType());
+    scriptObject()->setExtraData(TimeRangesObject);
+}
 #endif
 
 void ScriptWrappable::initScriptWrappable(HTMLElement* ptr)
