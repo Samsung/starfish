@@ -1698,6 +1698,39 @@ escargot::ESFunctionObject* bindingVTTCue(ScriptBindingInstance* scriptBindingIn
 
     return VTTCueFunction;
 }
+
+escargot::ESFunctionObject* bindingTimeRanges(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(TimeRanges, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    TimeRangesFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("start"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TimeRangesObject, TimeRanges);
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            TO_INDEX_UINT32(firstArg, idx);
+            if (idx != INVALID_INDEX && idx < originalObj->length()) {
+                return escargot::ESValue(originalObj->start(idx));
+            }
+            THROW_ILLEGAL_INVOCATION();
+        }, escargot::ESString::create("start"), 0, false)
+    );
+
+    TimeRangesFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("end"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TimeRangesObject, TimeRanges);
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            TO_INDEX_UINT32(firstArg, idx);
+            if (idx != INVALID_INDEX && idx < originalObj->length()) {
+                return escargot::ESValue(originalObj->end(idx));
+            }
+            THROW_ILLEGAL_INVOCATION();
+        }, escargot::ESString::create("end"), 0, false)
+    );
+
+    return TimeRangesFunction;
+}
 #endif
 
 escargot::ESFunctionObject* bindingDocumentFragment(ScriptBindingInstance* scriptBindingInstance)
@@ -2772,9 +2805,100 @@ escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scrip
 }
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+
+#define DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node); \
+        Node* nd = originalObj; \
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTML##ElementName##Element()) { \
+            HTML##ElementName##Element* __element = nd->asElement()->asHTMLElement()->asHTML##ElementName##Element(); \
+            RETURN_##TYPE_F(getter) \
+        } \
+        return escargot::ESValue(); \
+    }
+#define DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, setter, TYPE_F) \
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node); \
+        Node* nd = originalObj; \
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()) { \
+            HTML##ElementName##Element* __element = nd->asElement()->asHTMLElement()->asHTML##ElementName##Element(); \
+            ARG_##TYPE_F(setter) \
+            return v; \
+        } \
+        return escargot::ESValue(); \
+    }
+#define DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(ElementName, getter, setter, TYPE_F) \
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction( \
+        HTML##ElementName##ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create(#getter), \
+        DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
+    , \
+        DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, setter, TYPE_F) \
+    );
+#define DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(ElementName, getter, TYPE_F) \
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction( \
+        HTML##ElementName##ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create(#getter), \
+        DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
+    , nullptr);
+#define RETURN_TYPE_STRING(getter) \
+    return toJSString(__element->getter());
+#define RETURN_TYPE_PRIMITIVE(getter) \
+    return escargot::ESValue(__element->getter());
+#define RETURN_TYPE_NUMBER(getter) \
+    RETURN_TYPE_PRIMITIVE(getter)
+#define RETURN_TYPE_BOOLEAN(getter) \
+    RETURN_TYPE_PRIMITIVE(getter)
+#define RETURN_TYPE_SCRIPTVALUE(getter) \
+    auto __result = __element->getter(); \
+    if (__result) { \
+        return __result->scriptValue(); \
+    }
+#define ARG_TYPE_STRING(setter) \
+    __element->setter(toBrowserString(v.toString()));
+#define ARG_TYPE_NUMBER(setter) \
+    double __doubleValue = v.toNumber(); \
+    if (std::isnan(__doubleValue)) { \
+        THROW_ILLEGAL_INVOCATION(); \
+    } \
+    __element->setter(__doubleValue);
+#define ARG_TYPE_BOOLEAN(setter) \
+    if (v.isBoolean()) { \
+        __element->setter(v.asBoolean()); \
+    }
+
 escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLMediaElement, fetchData(scriptBindingInstance)->htmlElement());
+
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("NETWORK_EMPTY"), false, true, false, escargot::ESValue(HTMLMediaElement::NETWORK_EMPTY));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("NETWORK_IDLE"), false, true, false, escargot::ESValue(HTMLMediaElement::NETWORK_IDLE));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("NETWORK_LOADING"), false, true, false, escargot::ESValue(HTMLMediaElement::NETWORK_LOADING));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("NETWORK_NO_SOURCE"), false, true, false, escargot::ESValue(HTMLMediaElement::NETWORK_NO_SOURCE));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HAVE_NOTHING"), false, true, false, escargot::ESValue(HTMLMediaElement::HAVE_NOTHING));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HAVE_METADATA"), false, true, false, escargot::ESValue(HTMLMediaElement::HAVE_METADATA));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HAVE_CURRENT_DATA"), false, true, false, escargot::ESValue(HTMLMediaElement::HAVE_CURRENT_DATA));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HAVE_FUTURE_DATA"), false, true, false, escargot::ESValue(HTMLMediaElement::HAVE_FUTURE_DATA));
+    HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HAVE_ENOUGH_DATA"), false, true, false, escargot::ESValue(HTMLMediaElement::HAVE_ENOUGH_DATA));
+
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, src, setSrc, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, networkState, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, preload, setPreload, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, buffered, TYPE_SCRIPTVALUE);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, readyState, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, seeking, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, currentTime, setCurrentTime, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, duration, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, paused, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, defaultPlaybackRate, setDefaultPlaybackRate, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, playbackRate, setPlaybackRate, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, played, TYPE_SCRIPTVALUE);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, seekable, TYPE_SCRIPTVALUE);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, ended, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, autoplay, setAutoplay, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, loop, setLoop, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, controls, setControls, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, volume, setVolume, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, muted, setMuted, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, textTracks, TYPE_SCRIPTVALUE);
 
     HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addTextTrack"), true, true, true,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
@@ -2814,18 +2938,43 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
         }, escargot::ESString::create("addTextTrack"), 3, false)
     );
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLMediaElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textTracks"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()) {
-            TextTrackList* trackList = nd->asElement()->asHTMLElement()->asHTMLMediaElement()->textTracks();
-            if (trackList)
-                return trackList->scriptValue();
-        }
-        return escargot::ESValue();
-    }, nullptr);
+    HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("load"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+            Node* nd = originalObj;
+            if (!(nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()))
+                THROW_ILLEGAL_INVOCATION();
+            originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->load();
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("addTextTrack"), 0, false)
+    );
+
+    HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("canPlayType"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+            Node* nd = originalObj;
+            if (!(nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()))
+                THROW_ILLEGAL_INVOCATION();
+            String* result = originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->canPlayType(toBrowserString(v.toString()));
+            if (!result)
+                THROW_ILLEGAL_INVOCATION();
+            return toJSString(result);
+        }, escargot::ESString::create("addTextTrack"), 1, false)
+    );
+
+    HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pause"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+            Node* nd = originalObj;
+            if (!(nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()))
+                THROW_ILLEGAL_INVOCATION();
+            originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->pause();
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("addTextTrack"), 0, false)
+    );
 
     return HTMLMediaElementFunction;
 }
@@ -2833,7 +2982,13 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
 escargot::ESFunctionObject* bindingHTMLVideoElement(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLVideoElement, fetchData(scriptBindingInstance)->htmlMediaElement());
-    // TODO
+
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Video, width, setWidth, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Video, height, setHeight, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Video, videoWidth, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Video, videoHeight, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Video, poster, setPoster, TYPE_STRING);
+
     return HTMLVideoElementFunction;
 }
 
@@ -2853,50 +3008,9 @@ escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scrip
     HTMLTrackElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("LOADED"), false, true, false, escargot::ESValue(HTMLTrackElement::LOADED));
     HTMLTrackElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("ERROR"), false, true, false, escargot::ESValue(HTMLTrackElement::ERROR));
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("readyState"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-            return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLTrackElement()->readyState());
-        }
-        return escargot::ESValue();
-    }, nullptr);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("src"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-            return toJSString(nd->asElement()->asHTMLElement()->asHTMLTrackElement()->src());
-        }
-        return escargot::ESValue();
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-            escargot::ESString* srcText = firstArg.toString();
-            nd->asElement()->asHTMLElement()->asHTMLTrackElement()->setSrc(toBrowserString(srcText));
-            return firstArg;
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("track"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-            TextTrack* track = nd->asElement()->asHTMLElement()->asHTMLTrackElement()->track();
-            if (track)
-                return track->scriptValue();
-        }
-        return escargot::ESValue();
-    }, nullptr);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Track, readyState, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Track, src, setSrc, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Track, track, TYPE_SCRIPTVALUE);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("default"),
@@ -2922,6 +3036,20 @@ escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scrip
 
     return HTMLTrackElementFunction;
 }
+
+#undef DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY
+#undef DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY
+#undef DEFINE_HTMLELEMENT_PROPERTY_GETTER
+#undef DEFINE_HTMLELEMENT_PROPERTY_SETTER
+#undef RETURN_TYPE_STRING
+#undef RETURN_TYPE_PRIMITIVE
+#undef RETURN_TYPE_NUMBER
+#undef RETURN_TYPE_BOOLEAN
+#undef RETURN_TYPE_SCRIPTVALUE
+#undef ARG_TYPE_STRING
+#undef ARG_TYPE_NUMBER
+#undef ARG_TYPE_BOOLEAN
+
 #endif
 
 escargot::ESFunctionObject* bindingHTMLCollection(ScriptBindingInstance* scriptBindingInstance)
