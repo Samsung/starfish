@@ -560,6 +560,15 @@ public:
 
     virtual void paintStackingContextContent(Canvas* canvas);
 
+    virtual bool hasStackingContextContentBuffer()
+    {
+        return false;
+    }
+    virtual CanvasSurface* gainStackingContextContentBuffer()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
     // first return value of callback means should continue iterate its child
     virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {

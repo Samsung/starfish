@@ -22,6 +22,12 @@
 namespace StarFish {
 
 class FrameReplacedImage;
+class FrameReplacedVideo;
+
+struct IntrinsicSize {
+    bool m_isContentExists;
+    LayoutSize m_intrinsicContentSize;
+};
 
 struct IntrinsicSizeUsedInLayout {
     LayoutSize m_intrinsicContentSize;
@@ -51,10 +57,21 @@ public:
         return false;
     }
 
+    virtual bool isFrameReplacedVideo()
+    {
+        return false;
+    }
+
     FrameReplacedImage* asFrameReplacedImage()
     {
         STARFISH_ASSERT(isFrameReplacedImage());
         return (FrameReplacedImage*)this;
+    }
+
+    FrameReplacedVideo* asFrameReplacedVideo()
+    {
+        STARFISH_ASSERT(isFrameReplacedVideo());
+        return (FrameReplacedVideo*)this;
     }
 
     virtual const char* name()
@@ -66,7 +83,8 @@ public:
     virtual void computePreferredWidth(ComputePreferredWidthContext& ctx);
     virtual void computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit& intrinsicHeight, LayoutUnit parentContentWidth, Length parentContentHeight);
 
-    virtual IntrinsicSizeUsedInLayout intrinsicSize() = 0;
+    virtual IntrinsicSize intrinsicSize() = 0;
+    IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();
 
     virtual void paintReplaced(Canvas* canvas)
     {
@@ -108,7 +126,6 @@ public:
     {
         paintReplaced(canvas);
     }
-
 protected:
 };
 }

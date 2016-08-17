@@ -14,51 +14,53 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishFrameReplacedImage__
-#define __StarFishFrameReplacedImage__
+#ifndef __StarFishFrameReplacedVideo__
+#define __StarFishFrameReplacedVideo__
 
 #include "layout/FrameReplaced.h"
-#include "platform/canvas/image/ImageData.h"
 
 namespace StarFish {
 
-class FrameReplacedImage : public FrameReplaced {
+class FrameReplacedVideo : public FrameReplaced {
 public:
-    FrameReplacedImage(Node* node)
+    FrameReplacedVideo(Node* node)
         : FrameReplaced(node, nullptr)
     {
     }
 
-    virtual bool isFrameReplacedImage()
+    virtual bool isFrameReplacedVideo()
     {
         return true;
     }
 
     virtual const char* name()
     {
-        return "FrameReplacedImage";
+        return "FrameReplacedVideo";
     }
 
     virtual void paintReplaced(Canvas* canvas)
     {
-        ImageData* id = node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData();
-        if (id)
-            canvas->drawImage(id, Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-            width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
     }
 
     virtual IntrinsicSize intrinsicSize()
     {
         IntrinsicSize result;
-        ImageData* id = node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData();
-        if (id) {
-            result.m_isContentExists = true;
-            result.m_intrinsicContentSize = LayoutSize(id->width(), id->height());
-        } else {
-            result.m_isContentExists = false;
-        }
+        result.m_isContentExists = true;
+        auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
+        result.m_intrinsicContentSize = LayoutSize(v->videoSurface()->width(), v->videoSurface()->height());
         return result;
     }
+
+    virtual bool hasStackingContextContentBuffer()
+    {
+        return true;
+    }
+
+    virtual CanvasSurface* gainStackingContextContentBuffer()
+    {
+        return node()->asElement()->asHTMLElement()->asHTMLVideoElement()->videoSurface();
+    }
+
 protected:
 };
 }

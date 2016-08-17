@@ -1664,6 +1664,9 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
             STARFISH_ASSERT(f->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue);
             everMeetNonNeutralThing = true;
             flushNeurtal(f->style()->direction());
+        } else if (f->isFrameLineBreak()) {
+            everMeetNonNeutralThing = true;
+            flushNeurtal(directionValue);
         }
     }
 
@@ -1680,7 +1683,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     LayoutUnit inlineContentWidth = contentWidth();
     LineFormattingContext lineFormattingContext(*this, ctx, paddingLeft() + borderLeft(), paddingTop() + borderTop(), inlineContentWidth);
     LayoutUnit unused;
-
 
     // compute directions
     computeDirection(lineFormattingContext, this, style()->direction());
@@ -1727,7 +1729,6 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             lineFormattingContext.currentLine()->boxes().push_back(box);
         }
     });
-
 
     LineBox* back = m_lineBoxes.back();
     LayoutUnit ascender;
@@ -2096,7 +2097,6 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 child = child->next();
             }
         }
-
     } else {
         LayoutUnit currentLineWidth = 0;
         std::function<void(Frame*)> computeInlineLayout = [&](Frame* f)

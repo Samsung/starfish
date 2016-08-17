@@ -26,6 +26,9 @@
 #include "FrameDocument.h"
 #include "FrameReplaced.h"
 #include "FrameReplacedImage.h"
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+#include "FrameReplacedVideo.h"
+#endif
 #include "FrameLineBreak.h"
 
 namespace StarFish {
@@ -205,6 +208,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 {
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
+    bool shouldSkipChildren = false;
     FrameBlockBox* originalFrameBlockBox = nullptr;
     std::vector<FrameInline*, gc_allocator<FrameInline*>> stackedFrameInline;
     FrameTextTextDecorationData* curDeco = ctx.currentDecorationData();
@@ -220,42 +224,40 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         force = true;
 
         Frame* currentFrame;
-        {
-            DisplayValue display = current->style()->display();
-            if (display == DisplayValue::BlockDisplayValue) {
-                if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-                    currentFrame = new FrameReplacedImage(current, element->src());
-                } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
-                    currentFrame = new FrameLineBreak(current);
-                } else {
-                    currentFrame = new FrameBlockBox(current, nullptr);
-                }
+        DisplayValue display = current->style()->display();
+        bool isVisible = display != DisplayValue::NoneDisplayValue;
+        if (!isVisible) {
+            FrameTreeBuilder::clearTree(current);
+            return;
+        }
+        bool isHTMLElement = current->isElement() && current->asElement()->asHTMLElement();
+        if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
+            auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
+            currentFrame = new FrameReplacedImage(current);
+            shouldSkipChildren = true;
+        }
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+        else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLVideoElement()) {
+            currentFrame = new FrameReplacedVideo(current);
+            shouldSkipChildren = true;
+        }
+#endif
+        else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
+            currentFrame = new FrameLineBreak(current);
+            shouldSkipChildren = true;
+        } else {
+            if (display == DisplayValue::BlockDisplayValue || display == DisplayValue::InlineBlockDisplayValue) {
+                currentFrame = new FrameBlockBox(current, nullptr);
             } else if (display == DisplayValue::InlineDisplayValue) {
                 if (current->isCharacterData() && current->asCharacterData()->isText()) {
                     currentFrame = new FrameText(current, current->style(), ctx.currentDecorationData());
                 } else if (current->isComment()) {
                     FrameTreeBuilder::clearTree(current);
                     return;
-                } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-                    currentFrame = new FrameReplacedImage(current, element->src());
-                } else if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
-                    currentFrame = new FrameLineBreak(current);
                 } else {
                     currentFrame = new FrameInline(current);
                     ctx.setIsInFrameInlineFlow(true);
                     ctx.frameInlineItem().insert(std::make_pair(current, currentFrame->asFrameInline()));
-                }
-            } else if (display == DisplayValue::NoneDisplayValue) {
-                FrameTreeBuilder::clearTree(current);
-                return;
-            } else if (display == DisplayValue::InlineBlockDisplayValue) {
-                if (current->isElement() && current->asElement()->isHTMLElement() && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
-                    auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
-                    currentFrame = new FrameReplacedImage(current, element->src());
-                } else {
-                    currentFrame = new FrameBlockBox(current, nullptr);
                 }
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -335,7 +337,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         ctx.mergeTextDecorationData(currentFrame->style());
     }
 
-    if (current->childNeedsFrameTreeBuild() || force) {
+    if (!shouldSkipChildren && (current->childNeedsFrameTreeBuild() || force)) {
         Frame* currentFrame = current->frame();
         FrameBlockBox* back = ctx.currentBlockContainer();
 

@@ -20,9 +20,83 @@
 
 namespace StarFish {
 
+IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
+{
+    IntrinsicSize siz = intrinsicSize();
+    IntrinsicSizeUsedInLayout result;
+    String* widthString = node()->asElement()->getAttribute(node()->document()->window()->starFish()->staticStrings()->m_width);
+    String* heightString = node()->asElement()->getAttribute(node()->document()->window()->starFish()->staticStrings()->m_height);
+    if (siz.m_isContentExists) {
+        result.m_intrinsicContentSize = LayoutSize(siz.m_intrinsicContentSize.width(), siz.m_intrinsicContentSize.height());
+        bool widthIsEmpty = widthString->equals(String::emptyString);
+        bool heightIsEmpty = heightString->equals(String::emptyString);
+        if (widthIsEmpty && heightIsEmpty) {
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), Length());
+        } else if (widthIsEmpty) {
+            float h = String::parseFloat(heightString);
+            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+            Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), height);
+        } else if (heightIsEmpty) {
+            float w = String::parseFloat(widthString);
+            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length());
+        } else {
+            float w = String::parseFloat(widthString);
+            float h = String::parseFloat(heightString);
+            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+            Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
+        }
+    } else {
+        result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
+        bool widthIsEmpty = widthString->equals(String::emptyString);
+        bool heightIsEmpty = heightString->equals(String::emptyString);
+        if (widthIsEmpty && heightIsEmpty) {
+        } else if (widthIsEmpty) {
+            float h = String::parseFloat(heightString);
+            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+            Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
+            if (!heightIsPercent)
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), height);
+        } else if (heightIsEmpty) {
+            float w = String::parseFloat(widthString);
+            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
+            if (!widthIsPercent)
+                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length(Length::Fixed, 0));
+        } else {
+            float w = String::parseFloat(widthString);
+            float h = String::parseFloat(heightString);
+            bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
+            bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
+            Length width = widthIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, w);
+            Length height = heightIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, h);
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
+        }
+    }
+
+    if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isSpecified()) {
+        if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isPositiveOrZero()) {
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first = Length();
+        }
+    }
+
+    if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isSpecified()) {
+        if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isPositiveOrZero()) {
+            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second = Length();
+        }
+    }
+
+    return result;
+}
+
 void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    IntrinsicSizeUsedInLayout s = intrinsicSize();
+    IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         LayoutUnit parentContentWidth = ctx.containingFrameBlockBox(this)->asFrameBox()->contentWidth();
@@ -330,7 +404,7 @@ void FrameReplaced::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
 void FrameReplaced::computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit& intrinsicHeight, LayoutUnit parentContentWidth, Length parentContentHeight)
 {
-    IntrinsicSizeUsedInLayout s = intrinsicSize();
+    IntrinsicSizeUsedInLayout s = computeIntrinsicSizeForLayout();
     auto a = s.m_intrinsicSizeIsSpecifiedByAttributeOfElement;
     auto b = s.m_intrinsicContentSize;
     if (a.first.isAuto() && a.second.isAuto()) {
