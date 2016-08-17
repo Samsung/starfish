@@ -21,6 +21,8 @@
 
 namespace StarFish {
 
+#define TEXTTRACK_INVALID_TIMEVALUE -1
+
 class TextTrack : public EventTarget {
 public:
     enum Mode {
@@ -48,6 +50,8 @@ public:
         , m_cues(new TextTrackCueList())
         , m_activeCues(new TextTrackCueList())
         , m_trackElement(nullptr)
+        , m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE)
+        , m_cachedIdx(0)
     {
 
     }
@@ -71,21 +75,21 @@ public:
         m_cues->remove(cue);
     }
 
-    void addActiveCue(TextTrackCue* cue)
-    {
-        STARFISH_ASSERT(cue);
-        m_activeCues->add(cue);
-        cue->dispatchEnterEvent();
-        dispatchCueChangeEvent();
-    }
+    // void addActiveCue(TextTrackCue* cue)
+    // {
+    //     STARFISH_ASSERT(cue);
+    //     m_activeCues->add(cue);
+    //     cue->dispatchEnterEvent();
+    //     dispatchCueChangeEvent();
+    // }
 
-    void removeActiveCue(TextTrackCue* cue)
-    {
-        STARFISH_ASSERT(cue);
-        m_activeCues->remove(cue);
-        cue->dispatchExitEvent();
-        dispatchCueChangeEvent();
-    }
+    // void removeActiveCue(TextTrackCue* cue)
+    // {
+    //     STARFISH_ASSERT(cue);
+    //     m_activeCues->remove(cue);
+    //     cue->dispatchExitEvent();
+    //     dispatchCueChangeEvent();
+    // }
 
     TextTrackCueList* cues()
     {
@@ -162,11 +166,13 @@ public:
         return m_trackElement != nullptr;
     }
 
-    void clearCues()
+    void clear()
     {
         STARFISH_ASSERT(m_cues);
         m_cues->clearAll();
         m_activeCues->clearAll();
+        m_cachedTime = TEXTTRACK_INVALID_TIMEVALUE;
+        m_cachedIdx = 0;
     }
 
     static Kind stringToKind(String* kindStr)
@@ -248,6 +254,8 @@ public:
         return String::emptyString;
     }
 
+    TextTrackCueList* updateActiveCues(double time);
+
 protected:
     Mode m_mode;
     Kind m_kind;
@@ -256,6 +264,8 @@ protected:
     TextTrackCueList* m_cues;
     TextTrackCueList* m_activeCues;
     HTMLTrackElement* m_trackElement;
+    double m_cachedTime;
+    unsigned long m_cachedIdx;
 };
 
 class TextTrackList : public EventTarget {

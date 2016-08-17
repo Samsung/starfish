@@ -24,14 +24,101 @@ namespace StarFish {
 
 class TextTrack;
 
+class TimeRange {
+    friend TimeRanges;
+public:
+    TimeRange(double start = 0, double end = 0)
+        : m_start(start)
+        , m_end(end)
+    { }
+
+    bool operator==(const TimeRange& c) const
+    {
+        return m_start == c.m_start && m_end == c.m_end;
+    }
+
+    bool operator!=(const TimeRange& c) const
+    {
+        return !this->operator==(c);
+    }
+
+    double start()
+    {
+        return m_start;
+    }
+
+    double end()
+    {
+        return m_end;
+    }
+
+    void setStart(double start)
+    {
+        m_start = start;
+    }
+
+    void setEnd(double end)
+    {
+        m_end = end;
+    }
+
+    void set(double start, double end)
+    {
+        setStart(start);
+        setEnd(end);
+    }
+
+    bool isInRange(double pivot)
+    {
+        return (m_start <= pivot && m_end >= pivot);
+    }
+
+private:
+    double m_start;
+    double m_end;
+};
+
+class TimeRanges : public ScriptWrappable {
+public:
+    TimeRanges()
+        : ScriptWrappable(this)
+    { }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
+    double start(unsigned long idx)
+    {
+        if (idx < m_list.size())
+            return m_list[idx].m_start;
+        return DBL_MAX;
+    }
+
+    double end(unsigned long idx)
+    {
+        if (idx < m_list.size())
+            return m_list[idx].m_end;
+        return DBL_MAX;
+    }
+
+    unsigned long length()
+    {
+        return m_list.size();
+    }
+
+private:
+    std::vector<TimeRange> m_list;
+};
+
 class TextTrackCue : public EventTarget {
 public:
     TextTrackCue(double start, double end, String* payload)
         : EventTarget()
         , m_textTrack(nullptr)
         , m_id(String::emptyString)
-        , m_startTime(start)
-        , m_endTime(end)
+        , m_timeRange(TimeRange(start, end))
         , m_payload(String::emptyString)
         , m_payloadAsHTML(nullptr)
     {
@@ -60,12 +147,12 @@ public:
 
     double startTime()
     {
-        return m_startTime;
+        return m_timeRange.start();
     }
 
     double endTime()
     {
-        return m_endTime;
+        return m_timeRange.end();
     }
 
     void setTrack(TextTrack* textTrack)
@@ -85,20 +172,25 @@ public:
 
     void setStartTime(double startTime)
     {
-        m_startTime = startTime;
+        m_timeRange.setStart(startTime);
     }
 
     void setEndTime(double endTime)
     {
-        m_endTime = endTime;
+        m_timeRange.setEnd(endTime);
+    }
+
+    bool isActiveWhen(double time)
+    {
+        return m_timeRange.isInRange(time);
     }
 
 #ifndef NDEBUG
     virtual void dump()
     {
         printf("[TextTrackCue]\n");
-        printf("    StartTime : %lf\n", m_startTime);
-        printf("    EndTime : %lf\n", m_endTime);
+        printf("    StartTime : %lf\n", m_timeRange.start());
+        printf("    EndTime : %lf\n", m_timeRange.end());
         printf("    text : \"%s\"\n", m_payload->utf8Data());
     }
 #endif
@@ -117,8 +209,7 @@ public:
 protected:
     TextTrack* m_textTrack;
     String* m_id;
-    double m_startTime;
-    double m_endTime;
+    TimeRange m_timeRange;
     String* m_payload;
     DocumentFragment* m_payloadAsHTML;
 };
@@ -150,6 +241,13 @@ public:
         m_list.erase(m_list.begin() + index);
     }
 
+    void remove(unsigned long startIdx, unsigned long endIdx)
+    {
+        if (startIdx > endIdx || startIdx >= m_list.size() || endIdx >= m_list.size())
+            return;
+        m_list.erase(m_list.begin() + startIdx, m_list.begin() + endIdx + 1);
+    }
+
     void remove(TextTrackCue* cue)
     {
         unsigned long size = m_list.size();
@@ -168,11 +266,16 @@ public:
         m_list.clear();
     }
 
-    TextTrackCue* at(unsigned int index)    
+    TextTrackCue* at(unsigned int index) const
     {
         if (index >= m_list.size())
             return nullptr;
         return m_list[index];
+    }
+
+    TextTrackCue* operator[](unsigned int index) const
+    {
+        return at(index);
     }
 
     TextTrackCue* getCueById(String* id)
