@@ -437,6 +437,7 @@ protected:
 
 #ifdef STARFISH_ENABLE_TEST
 static Evas_Object* g_imgBufferForScreehShot;
+static CanvasSurface* g_surfaceForScreehShot;
 #endif
 
 Canvas* preparePainting(WindowImplEFL* eflWindow)
@@ -445,9 +446,9 @@ Canvas* preparePainting(WindowImplEFL* eflWindow)
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
-            auto s = CanvasSurface::create(eflWindow, eflWindow->width(), eflWindow->height());
-            g_imgBufferForScreehShot = (Evas_Object*)s->unwrap();
-            return Canvas::create(s);
+            g_surfaceForScreehShot = CanvasSurface::create(eflWindow, eflWindow->width(), eflWindow->height());
+            g_imgBufferForScreehShot = (Evas_Object*)g_surfaceForScreehShot->unwrap();
+            return Canvas::create(g_surfaceForScreehShot);
         }
     }
 #endif
@@ -692,21 +693,6 @@ void Window::rendering()
         m_needsComposite = false;
     }
 
-#ifdef STARFISH_TIZEN_WEARABLE
-/*
-    canvas->save();
-    canvas->setColor(Color(255, 0, 0, 255));
-    canvas->drawRect(Rect(180-20, 320, 40, 20));
-    canvas->setColor(Color(255, 255, 255, 255));
-    String* txt = String::createASCIIString("SWC");
-    Font* fnt = FontSelector::loadFont(String::createASCIIString(""), 12);
-    Size siz = fnt->measureText(txt);
-    canvas->setFont(fnt);
-    canvas->drawText(180 - siz.width()/2, 324, txt);
-    canvas->restore();
-    */
-#endif
-
     m_needsRendering = false;
     m_inRendering = false;
 
@@ -719,6 +705,9 @@ void Window::rendering()
             // writeImage(path, width(), height(), evas_object_image_data_get(g_imgBufferForScreehShot, EINA_FALSE));
             if (getenv("EXIT_AFTER_SCREEN_SHOT") && strlen(getenv("EXIT_AFTER_SCREEN_SHOT")))
                 exit(0);
+
+            delete g_surfaceForScreehShot;
+            g_surfaceForScreehShot = nullptr;
         }
     }
 
