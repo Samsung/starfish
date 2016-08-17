@@ -1,3 +1,5 @@
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import sys
 import StringIO
@@ -50,6 +52,7 @@ if __name__ == '__main__':
     <html>
     <body>
     '''
+
     if len(sys.argv) == 1:
         print 'Plz, insert data file path'
         exit()
