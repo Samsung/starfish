@@ -18,6 +18,7 @@
 #include "StackingContext.h"
 
 #include "FrameBox.h"
+#include "FrameReplaced.h"
 
 namespace StarFish {
 
@@ -35,6 +36,7 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
         iter->second->push_back(this);
     }
     m_needsOwnBuffer = false;
+    m_ownerHasBuffer = false;
     m_buffer = nullptr;
 }
 
@@ -59,6 +61,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 
     m_matrix.reset();
     m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->needsGraphicsBuffer();
+    m_ownerHasBuffer = owner()->hasStackingContextContentBuffer();
 
     if (m_needsOwnBuffer) {
         LayoutLocation l(-m_owner->frameRect().location().x(), -m_owner->frameRect().location().y());
@@ -205,7 +208,6 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
     canvas->save();
 
     if (m_needsOwnBuffer) {
-
         LayoutUnit minX = visibleRect.x();
         LayoutUnit maxX = visibleRect.maxX();
         LayoutUnit minY = visibleRect.y();
@@ -249,6 +251,11 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         // draw debug rect
         // canvas->setColor(Color(255, 0, 0, 128));
         // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
+
+        if (m_ownerHasBuffer) {
+            CanvasSurface* surface = owner()->gainStackingContextContentBuffer();
+            canvas->drawImage(surface, Rect(owner()->borderLeft() + owner()->paddingLeft(), owner()->borderTop() + owner()->paddingTop(), owner()->contentWidth(), owner()->contentHeight()));
+        }
     } else {
         if (owner()->shouldApplyOverflow()) {
             canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));

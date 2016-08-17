@@ -438,6 +438,13 @@ public:
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (shouldApplyOverflow());
 
             m_flags.m_needsGraphicsBuffer = style->opacity() != 1 || style->hasTransforms(this);
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+            if (node() && node()->isElement() && node()->asElement()->isHTMLElement() && node()->asElement()->asHTMLElement()->isHTMLVideoElement()) {
+                m_flags.m_needsGraphicsBuffer = true;
+                m_flags.m_isEstablishesStackingContext = true;
+            }
+#endif
         }
 
         if (style && style->width().isAuto()) {

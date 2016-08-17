@@ -19,6 +19,9 @@
 
 #include "dom/HTMLMediaElement.h"
 
+#define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
+#define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
+
 namespace StarFish {
 
 class HTMLVideoElement : public HTMLMediaElement {
@@ -26,6 +29,7 @@ public:
     HTMLVideoElement(Document* document)
         : HTMLMediaElement(document)
     {
+        m_videoSurface = CanvasSurface::create(document->window(), STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS, STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS);
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -47,6 +51,14 @@ public:
     {
         return true;
     }
+
+    CanvasSurface* videoSurface()
+    {
+        return m_videoSurface;
+    }
+
+private:
+    CanvasSurface* m_videoSurface;
 };
 }
 

@@ -72,7 +72,8 @@ public:
     void compositeStackingContext(Canvas* canvas);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y);
 protected:
-    bool m_needsOwnBuffer : 1;
+    bool m_needsOwnBuffer: 1;
+    bool m_ownerHasBuffer: 1;
 
     FrameBox* m_owner;
     LayoutRect m_visibleRect;

@@ -24,7 +24,7 @@ namespace StarFish {
 
 class FrameReplacedImage : public FrameReplaced {
 public:
-    FrameReplacedImage(Node* node, String* src)
+    FrameReplacedImage(Node* node)
         : FrameReplaced(node, nullptr)
     {
     }
@@ -41,92 +41,23 @@ public:
 
     virtual void paintReplaced(Canvas* canvas)
     {
-        if (node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData())
-            canvas->drawImage(node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData(), Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
+        ImageData* id = node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData();
+        if (id)
+            canvas->drawImage(id, Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
             width() - borderWidth() - paddingWidth(), height() - borderHeight() - paddingHeight()));
     }
 
-    virtual IntrinsicSizeUsedInLayout intrinsicSize()
+    virtual IntrinsicSize intrinsicSize()
     {
-        IntrinsicSizeUsedInLayout result;
-        HTMLImageElement* img = node()->asElement()->asHTMLElement()->asHTMLImageElement();
-        ImageData* id = img->imageData();
+        IntrinsicSize result;
+        ImageData* id = node()->asElement()->asHTMLElement()->asHTMLImageElement()->imageData();
         if (id) {
+            result.m_isContentExists = true;
             result.m_intrinsicContentSize = LayoutSize(id->width(), id->height());
-            String* widthString = img->width();
-            String* heightString = img->height();
-            bool widthIsEmpty = widthString->equals(String::emptyString);
-            bool heightIsEmpty = heightString->equals(String::emptyString);
-            if (widthIsEmpty && heightIsEmpty) {
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), Length());
-            } else if (widthIsEmpty) {
-                float h = String::parseFloat(heightString);
-                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(), height);
-            } else if (heightIsEmpty) {
-                float w = String::parseFloat(widthString);
-                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length());
-            } else {
-                float w = String::parseFloat(widthString);
-                float h = String::parseFloat(heightString);
-                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
-                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
-            }
         } else {
-            result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), Length(Length::Fixed, 0));
-            String* widthString = img->width();
-            String* heightString = img->height();
-            bool widthIsEmpty = widthString->equals(String::emptyString);
-            bool heightIsEmpty = heightString->equals(String::emptyString);
-            if (widthIsEmpty && heightIsEmpty) {
-            } else if (widthIsEmpty) {
-                float h = String::parseFloat(heightString);
-                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-                Length height = heightIsPercent? Length(Length::Percent, (float)h / 100) : Length(Length::Fixed, h);
-                if (!heightIsPercent)
-                    result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(Length(Length::Fixed, 0), height);
-            } else if (heightIsEmpty) {
-                float w = String::parseFloat(widthString);
-                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-                Length width = widthIsPercent? Length(Length::Percent, (float)w / 100) : Length(Length::Fixed, w);
-                if (!widthIsPercent)
-                    result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, Length(Length::Fixed, 0));
-            } else {
-                float w = String::parseFloat(widthString);
-                float h = String::parseFloat(heightString);
-                bool heightIsPercent = heightString->lastIndexOf('%') == heightString->length() - 1;
-                bool widthIsPercent = widthString->lastIndexOf('%') == widthString->length() - 1;
-                Length width = widthIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, w);
-                Length height = heightIsPercent? Length(Length::Fixed, 0) : Length(Length::Fixed, h);
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement = std::make_pair(width, height);
-            }
+            result.m_isContentExists = false;
         }
-
-        if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isSpecified()) {
-            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first.isPositiveOrZero()) {
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.first = Length();
-            }
-        }
-
-        if (result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isSpecified()) {
-            if (!result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second.isPositiveOrZero()) {
-                result.m_intrinsicSizeIsSpecifiedByAttributeOfElement.second = Length();
-            }
-        }
-
-
         return result;
-    }
-
-    ImageData* imageData()
-    {
-        return nullptr;
     }
 protected:
 };

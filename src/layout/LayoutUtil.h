@@ -896,7 +896,7 @@ inline bool isIntegerValue(const LayoutUnit value)
 
 class LayoutSize {
 public:
-    LayoutSize(LayoutUnit w, LayoutUnit h)
+    LayoutSize(LayoutUnit w = 0, LayoutUnit h = 0)
     {
         m_width = w;
         m_height = h;
