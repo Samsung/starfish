@@ -26,8 +26,16 @@ class Blob;
 
 class URL : public ScriptWrappable {
     URL(String* baseURL, String* url);
+    enum protocol {
+        HTTP_PROTOCOL,
+        HTTPS_PROTOCOL,
+        FILE_PROTOCOL,
+        BLOB_PROTOCOL,
+        DATA_PROTOCOL,
+        UNKNOWN,
+    };
 public:
-    static String* parseURLString(String* baseURL, String* url);
+    static String* getURLString(String* baseURL, String* url);
     static String* createObjectURL(Blob* blob);
     static URL* createURL(String* baseURL, String* url)
     {
@@ -85,18 +93,22 @@ public:
     String* getHash();
 
 protected:
+    void parseURLString(String* baseURL, String* url);
+
     String* m_string;
     String* m_urlString;
 
-    int m_protocolEnd;
-    int m_userStart;
-    int m_userEnd;
-    int m_passwordEnd;
-    int m_hostEnd;
-    int m_portEnd;
-    int m_pathEnd;
-    int m_queryEnd;
-    int m_fragmentEnd;
+    unsigned int m_protocolEnd;
+    unsigned int m_userStart;
+    unsigned int m_userEnd;
+    unsigned int m_passwordEnd;
+    unsigned int m_hostEnd;
+    unsigned int m_portEnd;
+    unsigned int m_pathEnd;
+    unsigned int m_queryEnd;
+    unsigned int m_fragmentEnd;
+
+    enum protocol m_protocol;
 };
 }
 
