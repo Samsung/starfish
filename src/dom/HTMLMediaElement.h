@@ -24,53 +24,7 @@ namespace StarFish {
 
 class TextTrack;
 class TextTrackList;
-
-class TimeRange {
-    friend TimeRanges;
-public:
-    TimeRange(double start = 0, double end = 0)
-        : m_start(start)
-        , m_end(end)
-    { }
-
-private:
-    double m_start;
-    double m_end;
-};
-
-class TimeRanges : public ScriptWrappable {
-public:
-    TimeRanges()
-        : ScriptWrappable(this)
-    { }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    unsigned long length()
-    {
-        return m_list.size();
-    }
-
-    double start(unsigned long idx)
-    {
-        if (idx < m_list.size())
-            return m_list[idx].m_start;
-        return DBL_MAX;
-    }
-
-    double end(unsigned long idx)
-    {
-        if (idx < m_list.size())
-            return m_list[idx].m_end;
-        return DBL_MAX;
-    }
-
-private:
-    std::vector<TimeRange> m_list;
-};
+class TimeRanges;
 
 class HTMLMediaElement : public HTMLElement {
 public:

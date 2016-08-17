@@ -56,8 +56,8 @@ public:
     virtual void dump()
     {
         printf("[VTTCue]\n");
-        printf("    StartTime : %lf\n", m_startTime);
-        printf("    EndTime : %lf\n", m_endTime);
+        printf("    StartTime : %lf\n", m_timeRange.start());
+        printf("    EndTime : %lf\n", m_timeRange.end());
         printf("    text : \n\"%s\"\n", m_payload->utf8Data());
     }
 #endif
