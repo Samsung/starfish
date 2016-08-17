@@ -772,7 +772,7 @@ public:
     String* urlValue(URL* urlOfStyleSheet)
     {
         STARFISH_ASSERT(m_valueKind == UrlValueKind);
-        return URL::parseURLString(urlOfStyleSheet->baseURI(), m_value.m_stringValue);
+        return URL::getURLString(urlOfStyleSheet->baseURI(), m_value.m_stringValue);
     }
 
     String* urlStringValue()
