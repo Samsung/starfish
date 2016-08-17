@@ -143,6 +143,8 @@ CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof -fvisibility=hidden
 CXXFLAGS += -fno-omit-frame-pointer -fstack-protector
 CXXFLAGS += -DSTARFISH_ENABLE_TEST
+CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
+CXXFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations
 
 LDFLAGS += -lpthread -lcurl
 
@@ -170,9 +172,7 @@ endif
 
 # flags for debug/release
 CXXFLAGS_DEBUG = -O0 -D_GLIBCXX_DEBUG -Wall -Wextra -Werror
-CXXFLAGS_DEBUG += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
-CXXFLAGS_DEBUG += -Wno-unused-variable -Wno-unused-function
-CXXFLAGS_RELEASE = -O2 -DNDEBUG -funswitch-loops -Wno-deprecated-declarations
+CXXFLAGS_RELEASE = -O2 -DNDEBUG -funswitch-loops
 
 # flags for shared library
 ifeq ($(TYPE), lib)
