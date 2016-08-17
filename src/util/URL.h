@@ -89,10 +89,12 @@ public:
     String* getHostname();
     String* getPort();
     String* getPathname();
+    void setPathname(String* newPath, bool needRemovingDots = true);
     String* getSearch();
     String* getHash();
 
 protected:
+    void resolvePositions();
     void parseURLString(String* baseURL, String* url);
 
     String* m_string;
