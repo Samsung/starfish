@@ -63,6 +63,7 @@ test/internal-test/css/position/ltr-position-internal-test-with-image-element-9.
 test/internal-test/css/position/ltr-position-internal-test-with-image-element-10.html
 test/internal-test/css/position/ltr-position-internal-test-with-image-element-11.html
 test/internal-test/css/position/ltr-position-internal-test-with-image-element-12.html
+test/internal-test/css/position/rtl-position-internal-test.html
 test/internal-test/css/short-hand/background_shorthand.html
 test/internal-test/css/short-hand/border_bottom_shorthand.html
 test/internal-test/css/short-hand/border_color_shorthand.html
