@@ -189,21 +189,39 @@ public:
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         m_width = w;
         m_height = h;
-        // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p\n", m_image);
+        STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
 
         STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
+        /*
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            CanvasSurfaceEFL* s = (CanvasSurfaceEFL*)obj;
+            STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", s);
+            s->detachNative((Evas_Object*)cd);
+        }, m_image, NULL, NULL);
+        */
     }
 
-    ~CanvasSurfaceEFL()
+    void detachNative(Evas_Object* image)
     {
-        // STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", m_image);
-        evas_object_hide(m_image);
-        STARFISH_RELEASE_ASSERT(evas_object_ref_get(m_image) == 0);
-        evas_object_del(m_image);
+        if (!image)
+            return;
+        CanvasSurfaceEFL* s = (CanvasSurfaceEFL*)this;
+        STARFISH_LOG_INFO("detach CanvasSurfaceEFL NativeBuffer %p\n", image);
+        // evas_object_image_size_set(image, 0, 0);
+        evas_object_hide(image);
+        STARFISH_RELEASE_ASSERT(evas_object_ref_get(image) == 0);
+        evas_object_del(image);
+/*
+        auto iter = std::find(s->m_window->m_surfaceList.begin(), s->m_window->m_surfaceList.end(), s->m_image);
+        if (s->m_window->m_surfaceList.end() != iter)
+            s->m_window->m_surfaceList.erase(iter);
+*/
+    }
 
-        auto iter = std::find(m_window->m_surfaceList.begin(), m_window->m_surfaceList.end(), m_image);
-        if (m_window->m_surfaceList.end() != iter)
-            m_window->m_surfaceList.erase(iter);
+    virtual void detachNativeBuffer()
+    {
+        detachNative(m_image);
+        m_image = nullptr;
     }
 
     virtual void* unwrap()
@@ -557,10 +575,7 @@ void Window::rendering()
     if (m_needsFrameTreeBuild) {
 
         if (m_document->frame()) {
-            m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool {
-                box->clearStackingContextIfNeeds();
-                return true;
-            });
+            clearStackingContext();
 
             // create frame tree
             Timer t("create frame tree");
@@ -573,10 +588,7 @@ void Window::rendering()
         // lay out frame tree
         Timer t("lay out frame tree");
 
-        m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool {
-            box->clearStackingContextIfNeeds();
-            return true;
-        });
+        clearStackingContext();
 
         LayoutContext ctx(starFish(), m_document->frame()->asFrameBox()->asFrameBlockBox()->asFrameDocument());
         m_document->frame()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
@@ -602,7 +614,33 @@ void Window::rendering()
         if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableFrameTreeDump) {
             FrameTreeBuilder::dumpFrameTree(m_document);
         }
+#endif
+    }
 
+    if (m_needsPainting) {
+        Timer t("painting");
+
+        // painting
+        Canvas* canvas = preparePainting(eflWindow);
+
+        paintWindowBackground(canvas);
+        {
+            PaintingContext ctx(canvas);
+            ctx.m_paintingStage = PaintingStageEnd;
+            m_document->frame()->paint(ctx);
+        }
+        m_needsPainting = false;
+        if (m_document->frame()->firstChild())
+            m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
+        else
+            m_needsComposite = false;
+
+        delete canvas;
+#ifdef STARFISH_TIZEN_WEARABLE
+        evas_object_raise(eflWindow->m_dummyBox);
+#endif
+
+#ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() & StarFishStartUpFlag::enableStackingContextDump) {
             if (m_document->frame()->firstChild()) {
                 STARFISH_ASSERT(m_document->frame()->firstChild()->asFrameBox()->isRootElement());
@@ -623,8 +661,8 @@ void Window::rendering()
                         className += " ";
                     }
 
-                    printf("StackingContext[%p, node %p %s id:%s className:%s , frame %p, buf %d, %d %d %d %d]\n",
-                        ctx, ctx->owner()->node(), ctx->owner()->node()->localName()->utf8Data(), ctx->owner()->node()->asElement()->asHTMLElement()->id()->utf8Data(), className.data(), ctx->owner(), (int)ctx->needsOwnBuffer()
+                    printf("StackingContext[%p, node %p %s id:%s className:%s , frame %p, buf %p %d %d %d %d]\n",
+                        ctx, ctx->owner()->node(), ctx->owner()->node()->localName()->utf8Data(), ctx->owner()->node()->asElement()->asHTMLElement()->id()->utf8Data(), className.data(), ctx->owner(), ctx->buffer()
                         , (int)fr.x(), (int)fr.y(), (int)fr.width(), (int)fr.height());
 
                     auto iter = ctx->childContexts().begin();
@@ -651,30 +689,6 @@ void Window::rendering()
                 dumpSC(ctx, 0);
             }
         }
-#endif
-    }
-
-    if (m_needsPainting) {
-        Timer t("painting");
-
-        // painting
-        Canvas* canvas = preparePainting(eflWindow);
-
-        paintWindowBackground(canvas);
-        {
-            PaintingContext ctx(canvas);
-            ctx.m_paintingStage = PaintingStageEnd;
-            m_document->frame()->paint(ctx);
-        }
-        m_needsPainting = false;
-        if (m_document->frame()->firstChild())
-            m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
-        else
-            m_needsComposite = false;
-
-        delete canvas;
-#ifdef STARFISH_TIZEN_WEARABLE
-        evas_object_raise(eflWindow->m_dummyBox);
 #endif
     }
 
@@ -712,6 +726,40 @@ void Window::rendering()
     }
 
 #endif
+}
+
+void Window::clearStackingContext()
+{
+    if (m_document->frame()) {
+        StackingContext* root = nullptr;
+        HTMLHtmlElement* rootElement = document()->rootElement();
+        m_document->frame()->asFrameBox()->iterateChildBoxes([&](FrameBox* box) -> bool {
+            root = box->stackingContext();
+            if (box->node() == rootElement) {
+                return false;
+            }
+            return root == nullptr;
+        });
+
+        if (root) {
+            std::function<void(StackingContext*, int)> clearSC = [&clearSC](StackingContext* ctx, int depth)
+            {
+                auto iter = ctx->childContexts().begin();
+                while (iter != ctx->childContexts().end()) {
+                    int32_t num = iter->first;
+                    auto iter2 = iter->second->begin();
+                    while (iter2 != iter->second->end()) {
+                        clearSC(*iter2, depth + 2);
+                        iter2++;
+                    }
+                    iter++;
+                }
+                ctx->owner()->clearStackingContextIfNeeds();
+            };
+
+            clearSC(root, 0);
+        }
+    }
 }
 
 #ifdef STARFISH_ENABLE_TEST

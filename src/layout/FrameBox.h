@@ -552,7 +552,7 @@ public:
     void clearStackingContextIfNeeds()
     {
         if (m_stackingContext) {
-            delete m_stackingContext;
+            m_stackingContext->clearOwnBuffer();
             m_stackingContext = nullptr;
         }
     }
