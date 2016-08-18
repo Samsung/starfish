@@ -91,6 +91,10 @@ test/internal-test/css/short-hand/border_shorthand.html
 test/internal-test/css/short-hand/border_top_shorthand.html
 test/internal-test/css/short-hand/margin_shorthand.html
 test/internal-test/css/short-hand/padding_shorthand.html
+test/internal-test/css/border/border_bottom_color.html
+test/internal-test/css/border/border_left_color.html
+test/internal-test/css/border/border_right_color.html
+test/internal-test/css/border/border_top_color.html
 test/internal-test/css/visibility/visibility-001.html
 test/internal-test/css/left_right_top_bottom/LRTB_display.html
 test/internal-test/xhr/xhr_sync_with_async.html
