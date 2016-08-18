@@ -76,6 +76,12 @@ test/internal-test/css/position2/ltr-position-internal-test-2-3.html
 test/internal-test/css/position2/ltr-position-internal-test-2-4.html
 test/internal-test/css/position2/ltr-position-internal-test-2-5.html
 test/internal-test/css/position2/ltr-position-internal-test-2-6.html
+test/internal-test/css/position2/ltr-position-internal-test-3-1.html
+test/internal-test/css/position2/ltr-position-internal-test-3-2.html
+test/internal-test/css/position2/ltr-position-internal-test-3-3.html
+test/internal-test/css/position2/ltr-position-internal-test-3-4.html
+test/internal-test/css/position2/ltr-position-internal-test-3-5.html
+test/internal-test/css/position2/ltr-position-internal-test-3-6.html
 test/internal-test/css/short-hand/background_shorthand.html
 test/internal-test/css/short-hand/border_bottom_shorthand.html
 test/internal-test/css/short-hand/border_color_shorthand.html
