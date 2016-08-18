@@ -40,12 +40,6 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     m_buffer = nullptr;
 }
 
-StackingContext::~StackingContext()
-{
-    clearChildContexts();
-    delete m_buffer;
-}
-
 bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 {
     bool childNeedsBuffer = false;
@@ -116,8 +110,8 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     if (m_needsOwnBuffer) {
         // TODO treat when buffer is too large
         if (!m_buffer || ((m_buffer->width() != bufferWidth) && (m_buffer->height() != bufferHeight))) {
-            if (!m_buffer) {
-                delete m_buffer;
+            if (m_buffer) {
+                m_buffer->detachNativeBuffer();
             }
             m_buffer = CanvasSurface::create(m_owner->node()->document()->window(), bufferWidth, bufferHeight);
         }
@@ -128,9 +122,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         canvas->translate(-minX, -minY);
     } else {
         if (m_buffer) {
-            m_buffer->clear();
+            m_buffer->detachNativeBuffer();
+            m_buffer = nullptr;
         }
-        m_buffer = nullptr;
     }
 
     {
@@ -395,7 +389,7 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
     if (result)
         return result;
 
-    // TODO the child stacking contexts with negative stack levels (most negative first).
+    // the child stacking contexts with negative stack levels (most negative first).
     {
         auto iter = childContexts().rbegin();
         while (iter != childContexts().rend()) {

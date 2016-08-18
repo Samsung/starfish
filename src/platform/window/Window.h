@@ -196,6 +196,7 @@ protected:
     void setNeedsRenderingSlowCase();
     Window(StarFish* starFish, URL* url);
     void rendering();
+    void clearStackingContext();
     void paintWindowBackground(Canvas* canvas);
 
     bool m_inRendering;

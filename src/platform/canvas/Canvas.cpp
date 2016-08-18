@@ -1365,10 +1365,9 @@ public:
         evas_object_clip_set(eo, clip);
         applyEvasMapIfNeeded(eo, dst, true);
 
-        STARFISH_ASSERT(evas_object_visible_get(eo) == EINA_FALSE);
         evas_object_show(eo);
-        if (m_surfaceList)
-            m_surfaceList->push_back(eo);
+        // if (m_surfaceList)
+        //     m_surfaceList->push_back(eo);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

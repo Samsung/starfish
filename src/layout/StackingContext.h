@@ -20,6 +20,7 @@
 #include "platform/canvas/Canvas.h"
 
 namespace StarFish {
+
 class Node;
 class FrameBox;
 class StackingContext;
@@ -33,12 +34,6 @@ class StackingContextChild : public std::vector<StackingContext*, gc_allocator<S
 class StackingContext : public gc {
 public:
     StackingContext(FrameBox* owner, StackingContext* parent);
-    ~StackingContext();
-
-    void clearChildContexts()
-    {
-        m_childContexts.clear();
-    }
 
     const std::map<int32_t, StackingContextChild*, std::less<int32_t>, gc_allocator<std::pair<uint32_t, StackingContextChild*> > >& childContexts()
     {
@@ -57,8 +52,15 @@ public:
 
     void clearOwnBuffer()
     {
-        delete m_buffer;
-        m_buffer = nullptr;
+        if (m_buffer) {
+            m_buffer->detachNativeBuffer();
+            m_buffer = nullptr;
+        }
+    }
+
+    CanvasSurface* buffer()
+    {
+        return m_buffer;
     }
 
     const LayoutRect& visibleRect()
