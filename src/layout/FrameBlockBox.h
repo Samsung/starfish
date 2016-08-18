@@ -281,6 +281,11 @@ public:
         return m_boxes;
     }
 
+    virtual const char* name()
+    {
+        return "LineBox";
+    }
+
     virtual void iterateChildBoxes(const std::function<bool(FrameBox*)>& fn, const std::function<void(FrameBox*)>& beforeIterateChild = nullptr, const std::function<void(FrameBox*)>& afterIterateChild = nullptr)
     {
         if (!fn(this))

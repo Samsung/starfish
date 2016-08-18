@@ -627,6 +627,7 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
+        printf("%s [%p]", name(), this);
     }
 #endif
 

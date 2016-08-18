@@ -65,6 +65,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 
     if (m_needsOwnBuffer) {
         LayoutLocation l(-m_owner->frameRect().location().x(), -m_owner->frameRect().location().y());
+
         m_owner->iterateChildBoxes([&](FrameBox* box) -> bool
         {
             if (box != m_owner && box->stackingContext() && box->stackingContext()->needsOwnBuffer())
@@ -86,6 +87,10 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
             l.setX(l.x() - box->x());
             l.setY(l.y() - box->y());
         });
+
+        if (!m_ownerHasBuffer && m_visibleRect.isEmpty()) {
+            m_needsOwnBuffer = false;
+        }
     }
 
     return m_needsOwnBuffer;
@@ -121,6 +126,11 @@ void StackingContext::paintStackingContext(Canvas* canvas)
         oldCanvas = canvas;
         canvas = Canvas::create(m_buffer);
         canvas->translate(-minX, -minY);
+    } else {
+        if (m_buffer) {
+            m_buffer->clear();
+        }
+        m_buffer = nullptr;
     }
 
     {

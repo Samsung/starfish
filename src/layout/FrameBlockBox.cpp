@@ -808,14 +808,13 @@ void FrameBlockBox::dump(int depth)
                 puts("");
                 for (int k = 0; k < depth + 1; k++)
                     printf("  ");
-                printf("LineBox(%g,%g,%g,%g)\n", (float)m_lineBoxes[i]->m_frameRect.x(), (float)m_lineBoxes[i]->m_frameRect.y(), (float)m_lineBoxes[i]->m_frameRect.width(), (float)m_lineBoxes[i]->m_frameRect.height());
+                printf("LineBox (%g,%g,%g,%g)\n", (float)m_lineBoxes[i]->m_frameRect.x(), (float)m_lineBoxes[i]->m_frameRect.y(), (float)m_lineBoxes[i]->m_frameRect.width(), (float)m_lineBoxes[i]->m_frameRect.height());
 
                 LineBox& lb = *m_lineBoxes[i];
                 for (size_t k = 0; k < lb.m_boxes.size(); k++) {
                     FrameBox* childBox = lb.m_boxes[k];
                     for (int j = 0; j < depth + 2; j++)
                         printf("  ");
-                    printf("%s", childBox->name());
                     childBox->dump(depth + 3);
                     if (k != lb.m_boxes.size() - 1)
                         puts("");
