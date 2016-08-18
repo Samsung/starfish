@@ -712,6 +712,15 @@ regression_test:
 	make regression_test_css3_transforms
 	make internal_test
 
+reftest_emulator_2.3:
+	./tool/reftest/reftest_runner.sh emulator 2.3 all
+reftest_emulator_3.0:
+	./tool/reftest/reftest_runner.sh emulator 3.0 all
+reftest_target_2.3:
+	./tool/reftest/reftest_runner.sh target 2.3 all
+reftest_target_3.0:
+	./tool/reftest/reftest_runner.sh target 3.0 all
+
 tidy:
 	./test/tool/tidy/check-webkit-style `find src/ -name "*.cpp" -o -name "*.h"`> error_report 2>& 1
 
