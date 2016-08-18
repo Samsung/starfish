@@ -482,8 +482,9 @@ static bool isNumber(String* text, size_t start, size_t end)
 
 static bool hasIsolateBidiContent(InlineNonReplacedBox* box)
 {
-    // TODO add isolate
-    if (box->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue) {
+    if (box->style()->unicodeBidi() == UnicodeBidiValue::IsolateUnicodeBidiValue) {
+        return true;
+    } else if (box->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue) {
         return true;
     }
     return false;
@@ -602,9 +603,8 @@ static CharDirection contentDir(FrameBox* box, LineFormattingContext& ctx)
         } else if (ib->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* b = ib->asInlineNonReplacedBox();
             if (hasIsolateBidiContent(b)) {
-                // TODO
-                // when unicode-bidi property is isolate, we should return netural direction
-                return b->style()->direction() == DirectionValue::LtrDirectionValue ? CharDirection::Ltr : CharDirection::Rtl;
+                // when unicode-bidi property is isolate, we should return neutral direction
+                return CharDirection::Neutral;
             } else {
                 const std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes = b->boxes();
                 for (size_t i = 0; i < boxes.size(); i ++) {
@@ -613,7 +613,7 @@ static CharDirection contentDir(FrameBox* box, LineFormattingContext& ctx)
                         return CharDirection::Ltr;
                     } else if (dir == CharDirection::Rtl) {
                         return CharDirection::Rtl;
-                    } else { // netural
+                    } else { // neutral
                     }
                 }
                 return CharDirection::Neutral;
@@ -622,8 +622,8 @@ static CharDirection contentDir(FrameBox* box, LineFormattingContext& ctx)
             return CharDirection::Neutral;
         }
     } else if (box->isFrameBox()) {
-        auto iter = ctx.m_computedDirectonValuePerFrameBox.find(box);
-        if (iter != ctx.m_computedDirectonValuePerFrameBox.end()) {
+        auto iter = ctx.m_computedDirectionValuePerFrame.find(box);
+        if (iter != ctx.m_computedDirectionValuePerFrame.end()) {
             return (iter->second == DirectionValue::LtrDirectionValue) ? CharDirection::Ltr : CharDirection::Rtl;
         } else {
             return CharDirection::Neutral;
@@ -1173,6 +1173,8 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox)
     m_shouldLineBreakForabsolutePositionedBlock = false;
 }
 
+
+// Tokenize a text using the ICU divider
 template <typename fn>
 void textDividerForLayout(StarFish* sf, String* txt, fn f)
 {
@@ -1245,6 +1247,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
 
         if (f->isFrameText()) {
             String* txt = f->asFrameText()->text();
+            // split the text into tokens using the ICU divider, and for each token, execute the following function
             textDividerForLayout(ctx.starFish(), txt, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak) {
                 textAppendRetry:
                 if (isWhiteSpace) {
@@ -1484,8 +1487,8 @@ static void collectComputeDirectionsCandidate(LineFormattingContext& ctx, Frame*
             continue;
         }
         if (f->isFrameInline()) {
-            // TODO add isolate
-            if (f->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue) {
+            if (f->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue
+                || f->style()->unicodeBidi() == UnicodeBidiValue::IsolateUnicodeBidiValue) {
                 frames.push_back(f);
                 computeDirection(ctx, f, f->style()->direction());
             } else {
@@ -1616,7 +1619,7 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
         }
 
         for (size_t i = 0; i < putOffNeutralFrames.size(); i ++) {
-            ctx.m_computedDirectonValuePerFrameBox[putOffNeutralFrames[i]->asFrameBox()] = result;
+            ctx.m_computedDirectionValuePerFrame[putOffNeutralFrames[i]] = result;
         }
 
         CharDirection ch = (result == DirectionValue::LtrDirectionValue ? CharDirection::Ltr : CharDirection::Rtl);
@@ -1658,12 +1661,21 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
             if (everMeetNonNeutralThing) {
                 putOffNeutral(f);
             } else {
-                ctx.m_computedDirectonValuePerFrameBox[f->asFrameBox()] = directionValue;
+                ctx.m_computedDirectionValuePerFrame[f] = directionValue;
             }
         } else if (f->isFrameInline()) {
-            STARFISH_ASSERT(f->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue);
-            everMeetNonNeutralThing = true;
-            flushNeurtal(f->style()->direction());
+            if (f->style()->unicodeBidi() == UnicodeBidiValue::EmbedUnicodeBidiValue) {
+                everMeetNonNeutralThing = true;
+                flushNeurtal(f->style()->direction());
+            } else if (f->style()->unicodeBidi() == UnicodeBidiValue::IsolateUnicodeBidiValue) {
+                if (everMeetNonNeutralThing) {
+                    putOffNeutral(f);
+                } else {
+                    ctx.m_computedDirectionValuePerFrame[f] = directionValue;
+                }
+            } else {
+                STARFISH_ASSERT(false);
+            }
         } else if (f->isFrameLineBreak()) {
             everMeetNonNeutralThing = true;
             flushNeurtal(directionValue);

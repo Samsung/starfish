@@ -585,7 +585,7 @@ public:
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
     std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;
-    std::unordered_map<FrameBox*, DirectionValue> m_computedDirectonValuePerFrameBox;
+    std::unordered_map<Frame*, DirectionValue> m_computedDirectionValuePerFrame;
     std::unordered_map<FrameText* , std::vector<TextRun>> m_textRunsPerFrameText;
 };
 }

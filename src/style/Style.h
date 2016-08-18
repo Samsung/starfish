@@ -362,6 +362,7 @@ enum VisibilityValue {
 enum UnicodeBidiValue {
     NormalUnicodeBidiValue,
     EmbedUnicodeBidiValue,
+    IsolateUnicodeBidiValue,
 };
 
 class ValueList;
