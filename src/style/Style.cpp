@@ -2127,10 +2127,10 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             str = str->toLower();
             if (str->equals("ltr")) {
                 ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
-                ret->setUnicodeBidi(UnicodeBidiValue::EmbedUnicodeBidiValue);
+                ret->setUnicodeBidi(UnicodeBidiValue::IsolateUnicodeBidiValue);
             } else if (str->equals("rtl")) {
                 ret->m_inheritedStyles.m_direction = DirectionValue::RtlDirectionValue;
-                ret->setUnicodeBidi(UnicodeBidiValue::EmbedUnicodeBidiValue);
+                ret->setUnicodeBidi(UnicodeBidiValue::IsolateUnicodeBidiValue);
             } else {
                 ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
             }
