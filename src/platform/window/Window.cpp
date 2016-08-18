@@ -897,7 +897,7 @@ uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* da
 
     TimeoutData* td = new(NoGC) TimeoutData;
     td->m_window = this;
-    uint32_t id = m_requestAnimationFrameCounter;
+    uint32_t id = ++m_requestAnimationFrameCounter;
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
@@ -1078,7 +1078,6 @@ void Window::close()
     m_document->close();
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-
     eflWindow->m_isActive = false;
 
     auto timerIter = m_timeoutHandler.begin();
