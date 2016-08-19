@@ -48,6 +48,10 @@
 bool g_fireOnloadEvent = false;
 #endif
 
+#ifndef STARFISH_TIZEN_WEARABLE_LIB
+extern "C" Ecore_Evas* ecore_evas_ecore_evas_get(const Evas* e);
+extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
+#endif
 
 namespace StarFish {
 
@@ -243,7 +247,7 @@ public:
     {
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);
         size_t end = m_width * m_height * sizeof(uint32_t);
-        memset(address, 0, end);
+        memset(address, 0xff, end);
         evas_object_image_data_set(m_image, address);
     }
 
@@ -265,7 +269,6 @@ void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* use
     if (!wnd->inRendering())
         wnd->setNeedsLayout();
 }
-
 
 Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
 {
