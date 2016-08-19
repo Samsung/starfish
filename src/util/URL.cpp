@@ -153,7 +153,7 @@ void URL::resolvePositions()
             m_userEnd = pos;
         }
         // ':' for port
-        pos = m_urlString->find(":", pos + 1);
+        pos = m_urlString->find(":", m_userEnd + 1);
         if (pos != SIZE_MAX && m_passwordEnd < pos && pos < m_hostEnd) {
             m_hostEnd = pos;
         }
@@ -446,12 +446,40 @@ String* URL::getUsername()
     return m_urlString->substring(m_userStart, m_userEnd - m_userStart);
 }
 
+void URL::setUsername(String* newUser)
+{
+    if (m_protocol >= HTTP_PROTOCOL) {
+        if (m_passwordEnd != m_userEnd || m_userStart != m_userEnd) // user or password exists
+            m_urlString = m_urlString->substring(0, m_userStart)->concat(newUser)->concat(m_urlString->substring(m_userEnd, m_urlString->length() - m_userEnd));
+        else
+            m_urlString = m_urlString->substring(0, m_userStart)->concat(newUser)->concat(String::createASCIIString("@"))->concat(m_urlString->substring(m_userEnd, m_urlString->length() - m_userEnd));
+
+        resolvePositions();
+    }
+}
+
 String* URL::getPassword()
 {
     if (m_passwordEnd != m_userEnd)
         return m_urlString->substring(m_userEnd + 1, m_passwordEnd - m_userEnd - 1);
     else
         return String::emptyString;
+}
+
+void URL::setPassword(String* newPass)
+{
+    if (m_protocol >= HTTP_PROTOCOL) {
+        if (m_passwordEnd != m_userEnd) // password exists
+            m_urlString = m_urlString->substring(0, m_userEnd + 1)->concat(newPass)->concat(m_urlString->substring(m_passwordEnd, m_urlString->length() - m_passwordEnd));
+        else {
+            if (m_userStart != m_userEnd) // user exists
+                m_urlString = m_urlString->substring(0, m_userEnd)->concat(String::createASCIIString(":"))->concat(newPass)->concat(m_urlString->substring(m_passwordEnd, m_urlString->length() - m_passwordEnd));
+            else
+                m_urlString = m_urlString->substring(0, m_userEnd)->concat(String::createASCIIString(":"))->concat(newPass)->concat(String::createASCIIString("@"))->concat(m_urlString->substring(m_passwordEnd, m_urlString->length() - m_passwordEnd));
+
+        }
+    }
+    resolvePositions();
 }
 
 String* URL::getHost()
