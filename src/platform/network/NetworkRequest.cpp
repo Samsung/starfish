@@ -154,8 +154,6 @@ NetworkRequest::NetworkRequest(Document* document)
 
 void NetworkRequest::initVariables()
 {
-    m_userName = String::emptyString;
-    m_password = String::emptyString;
     m_responseMimeType = String::emptyString;
     m_response.clear();
     m_responseHeaderData.clear();
@@ -344,8 +342,10 @@ void NetworkRequest::open(MethodType method, String* url, bool async, String* us
         initVariables();
         m_method = method;
         m_url = URL::createURL(m_starFish->window()->document()->documentURI()->baseURI(), url);
-        m_userName = userName;
-        m_password = password;
+        if (userName->length())
+            m_url->setUsername(userName);
+        if (password->length())
+            m_url->setPassword(password);
         m_isSync = !async;
     }
     changeReadyState(OPENED, true);
@@ -533,18 +533,11 @@ void NetworkRequest::send(String* body)
             list = curl_slist_append(list, "Connection:keep-alive");
             list = curl_slist_append(list, "User-Agent: " USER_AGENT(APP_CODE_NAME, VERSION));
 
-            if (m_document->documentURI()->isFileURL() || m_document->documentURI()->isDataURL()) {
+            if (!m_document->documentURI()->isNetworkURL()) {
                 list = curl_slist_append(list, "Origin:null");
             } else {
-                std::string hostString = m_url->urlString()->utf8Data();
-                size_t pos = hostString.find("://");
-                hostString = hostString.substr(pos + 3);
-                auto pos2 = hostString.find('/');
-                if (pos2 != std::string::npos) {
-                    hostString = hostString.substr(0, pos2);
-                }
                 headerText = "Host:";
-                headerText += hostString;
+                headerText += m_url->getHostname()->utf8Data();
                 list = curl_slist_append(list, headerText.data());
                 headerText = "Referer:";
                 headerText += m_document->documentURI()->urlString()->utf8Data();
@@ -568,13 +561,6 @@ void NetworkRequest::send(String* body)
 
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriteCallback);
-
-            if (m_userName->length()) {
-                curl_easy_setopt(curl, CURLOPT_USERNAME, m_userName->utf8Data());
-            }
-            if (m_password->length()) {
-                curl_easy_setopt(curl, CURLOPT_PASSWORD, m_password->utf8Data());
-            }
 
             if (m_method == POST_METHOD) {
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body->utf8Data());

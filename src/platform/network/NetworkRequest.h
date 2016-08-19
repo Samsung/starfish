@@ -214,9 +214,6 @@ protected:
     StarFish* m_starFish;
     Document* m_document;
     URL* m_url;
-    // FIXME should we store userName, password in m_url?
-    String* m_userName;
-    String* m_password;
     ReadyState m_readyState;
     ProgressState m_progressState;
     MethodType m_method;

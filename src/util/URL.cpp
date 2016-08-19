@@ -80,7 +80,6 @@ void URL::resolvePositions()
     bool hasSecondSlash = hierarchical && m_urlString->charAt(m_protocolEnd + 1) == '/';
 
     // username & password
-
     m_userStart = m_protocolEnd;
     if (hierarchical) {
         m_userStart++;
@@ -208,7 +207,7 @@ void URL::parseURLString(String* baseURL, String* url)
 
     bool isAbsolute = false;
 
-    if (url->startsWith("data:") || url->startsWith("blob:") || url->contains("://")) {
+    if (url->startsWith("data:", false) || url->startsWith("blob:", false) || url->contains("://")) {
         isAbsolute = true;
     }
 
@@ -225,7 +224,7 @@ void URL::parseURLString(String* baseURL, String* url)
 
     if (url->startsWith("/")) {
         isAbsolute = true;
-        if (baseURL->startsWith("file://")) {
+        if (baseURL->startsWith("file://", false)) {
             url = String::createASCIIString("file://")->concat(url);
         } else {
             size_t pos = baseURL->find("://");
@@ -427,8 +426,7 @@ String* URL::origin()
     if (m_protocol == FILE_PROTOCOL) {
         return m_urlString->substring(0, 7)->toLower(); // "file://"
     }
-    size_t start = (m_passwordEnd == m_userStart) ? m_passwordEnd : m_passwordEnd + 1;
-    return m_urlString->substring(start, m_hostEnd - start);
+    return m_urlString->substring(0, m_hostEnd);
 }
 
 String* URL::getHref()

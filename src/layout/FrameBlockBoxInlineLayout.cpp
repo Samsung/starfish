@@ -1674,7 +1674,7 @@ static void computeDirection(LineFormattingContext& ctx, Frame* parent, Directio
                     ctx.m_computedDirectionValuePerFrame[f] = directionValue;
                 }
             } else {
-                STARFISH_ASSERT(false);
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
         } else if (f->isFrameLineBreak()) {
             everMeetNonNeutralThing = true;

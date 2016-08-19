@@ -979,6 +979,8 @@ String* CSSStyleValuePair::toString()
             return String::fromUTF8("normal");
         case EmbedUnicodeBidiValue:
             return String::fromUTF8("embed");
+        case IsolateUnicodeBidiValue:
+            return String::fromUTF8("isolate");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -3299,6 +3301,9 @@ bool CSSStyleValuePair::updateValueUnicodeBidi(std::vector<String*, gc_allocator
         m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
     } else if (STRING_VALUE_IS_STRING("embed")) {
         m_value.m_unicodeBidi = UnicodeBidiValue::EmbedUnicodeBidiValue;
+        m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
+    } else if (STRING_VALUE_IS_STRING("isolate")) {
+        m_value.m_unicodeBidi = UnicodeBidiValue::IsolateUnicodeBidiValue;
         m_valueKind = CSSStyleValuePair::ValueKind::UnicodeBidiValueKind;
     } else {
         return false;

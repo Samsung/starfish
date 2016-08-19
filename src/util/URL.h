@@ -26,7 +26,7 @@ class Blob;
 
 class URL : public ScriptWrappable {
     URL(String* baseURL, String* url);
-    enum protocol {
+    enum Protocol {
         FILE_PROTOCOL,
         BLOB_PROTOCOL,
         DATA_PROTOCOL,
@@ -49,19 +49,25 @@ public:
     }
 
     String* baseURI() const;
+
+    bool isNetworkURL()
+    {
+        return m_protocol == HTTP_PROTOCOL || m_protocol == HTTPS_PROTOCOL;
+    }
+
     bool isFileURL() const
     {
-        return m_urlString->startsWith("file://");
+        return m_protocol == FILE_PROTOCOL;
     }
 
     bool isDataURL() const
     {
-        return m_urlString->startsWith("data:");
+        return m_protocol == DATA_PROTOCOL;
     }
 
     bool isBlobURL() const
     {
-        return m_urlString->startsWith("blob:");
+        return m_protocol == BLOB_PROTOCOL;
     }
 
     String* string() const
@@ -113,7 +119,7 @@ protected:
     unsigned int m_queryEnd;
     unsigned int m_fragmentEnd;
 
-    enum protocol m_protocol;
+    enum Protocol m_protocol;
 };
 }
 
