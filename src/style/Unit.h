@@ -235,7 +235,11 @@ public:
         if (m_a == 255) {
             asprintf(&buf, "rgb(%d, %d, %d)", m_r, m_g, m_b);
         } else {
-            asprintf(&buf, "rgba(%d, %d, %d, %g)", m_r, m_g, m_b, (float)m_a);
+            float a = (float)m_a / 255;
+            if (a > 0.05)
+                asprintf(&buf, "rgba(%d, %d, %d, %.1f)", m_r, m_g, m_b, a);
+            else
+                asprintf(&buf, "rgba(%d, %d, %d, 0)", m_r, m_g, m_b);
         }
 
         String* toStr = String::createASCIIString(buf);
