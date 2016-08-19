@@ -288,7 +288,6 @@ void URL::parseURLString(String* baseURL, String* url)
         String* newPath = removingDots(origPath);
         if (newPath != origPath) {
             setPathname(newPath, false);
-            resolvePositions();
         }
     }
 }
@@ -485,15 +484,16 @@ String* URL::getPathname()
 
 void URL::setPathname(String* newPath, bool needRemovingDots)
 {
+    if (!newPath->length() || newPath->charAt(0) != '/') {
+        newPath = String::createASCIIString("/")->concat(newPath);
+    }
     if (needRemovingDots) {
         String* tmp = removingDots(newPath);
         if (tmp != newPath)
             newPath = tmp;
     }
-    if (!newPath->length() || newPath->charAt(0) != '/') {
-        newPath = String::createASCIIString("/")->concat(newPath);
-    }
     m_urlString = m_urlString->substring(0, m_portEnd)->concat(newPath)->concat(m_urlString->substring(m_pathEnd, m_urlString->length() - m_pathEnd));
+    resolvePositions();
 }
 
 String* URL::getSearch()
