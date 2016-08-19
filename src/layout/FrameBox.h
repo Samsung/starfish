@@ -564,9 +564,15 @@ public:
     {
         return false;
     }
+
     virtual CanvasSurface* gainStackingContextContentBuffer()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    virtual void willCompsiteStackingContextContentBuffer(Canvas* c)
+    {
+
     }
 
     // first return value of callback means should continue iterate its child

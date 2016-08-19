@@ -61,6 +61,15 @@ public:
         return node()->asElement()->asHTMLElement()->asHTMLVideoElement()->videoSurface();
     }
 
+    virtual void willCompsiteStackingContextContentBuffer(Canvas* canvas)
+    {
+        // TODO do this(painting black rect) when video is in playing state
+        canvas->save();
+        canvas->setColor(Color(0, 0, 0, 255));
+        canvas->drawRect(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
+        canvas->restore();
+    }
+
 protected:
 };
 }
