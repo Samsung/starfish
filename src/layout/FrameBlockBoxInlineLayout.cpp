@@ -932,7 +932,7 @@ static void resolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, st
         0, 93, 0, 91, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 123, 0, 125, 0, 0
+        0, 0, 0, 125, 0, 123, 0, 0
     };
 
     for (size_t i = 0; i < boxes.size(); i ++) {
@@ -1558,7 +1558,7 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
             continue;
         }
 
-        // check it has leading netural chars
+        // check it has leading neutral chars
         char32_t first = result[i].m_frameText->text()->charAt(result[i].m_startPosition);
         if ((result[i].m_endPosition - result[i].m_startPosition) > 1 && charDirection(first) == 2 && !isNumberChar(first)) {
             breakTextRun(result, i, result[i].m_startPosition);
