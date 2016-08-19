@@ -3780,14 +3780,36 @@ escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInsta
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
         return toJSString(originalObj->getUsername());
-    }, nullptr);
+    },  [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+            if (argCount < 1) {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            } else {
+                escargot::ESValue arg = instance->currentExecutionContext()->readArgument(0);
+                escargot::ESString* argString = arg.toString();
+                originalObj->setUsername(String::fromUTF8(argString->utf8Data()));
+            }
+            return escargot::ESValue();
+    });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("password"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
         return toJSString(originalObj->getPassword());
-    }, nullptr);
+    },  [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::URLObject, URL);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+            if (argCount < 1) {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            } else {
+                escargot::ESValue arg = instance->currentExecutionContext()->readArgument(0);
+                escargot::ESString* argString = arg.toString();
+                originalObj->setPassword(String::fromUTF8(argString->utf8Data()));
+            }
+            return escargot::ESValue();
+    });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         URLFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("host"),

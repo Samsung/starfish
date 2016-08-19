@@ -27,11 +27,12 @@ class Blob;
 class URL : public ScriptWrappable {
     URL(String* baseURL, String* url);
     enum protocol {
-        HTTP_PROTOCOL,
-        HTTPS_PROTOCOL,
         FILE_PROTOCOL,
         BLOB_PROTOCOL,
         DATA_PROTOCOL,
+        // FILE, BLOB, DATA should be smaller than HTTP (there's code which assumes this)
+        HTTP_PROTOCOL,
+        HTTPS_PROTOCOL,
         UNKNOWN,
     };
 public:
@@ -84,7 +85,9 @@ public:
     String* getHref();
     String* getProtocol();
     String* getUsername();
+    void setUsername(String* newPath);
     String* getPassword();
+    void setPassword(String* newPath);
     String* getHost();
     String* getHostname();
     String* getPort();
