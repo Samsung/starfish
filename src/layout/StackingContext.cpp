@@ -258,6 +258,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
 
         if (m_ownerHasBuffer) {
             CanvasSurface* surface = owner()->gainStackingContextContentBuffer();
+            owner()->willCompsiteStackingContextContentBuffer(canvas);
             canvas->drawImage(surface, Rect(owner()->borderLeft() + owner()->paddingLeft(), owner()->borderTop() + owner()->paddingTop(), owner()->contentWidth(), owner()->contentHeight()));
         }
     } else {
