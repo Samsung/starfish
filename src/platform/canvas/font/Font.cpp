@@ -24,6 +24,9 @@
 
 #include "style/UnitHelper.h"
 
+extern "C" Evas_Coord evas_object_text_max_ascent_get(const Evas_Text *obj);
+extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text *obj);
+
 namespace StarFish {
 
 extern int g_screenDpi;
