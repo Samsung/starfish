@@ -20,12 +20,16 @@
 #include "ScriptWrappable.h"
 
 #include "platform/window/Window.h"
+#include "platform/message_loop/MessageLoop.h"
 #include "dom/DOM.h"
 #include "dom/NodeList.h"
 #include "style/CSSStyleLookupTrie.h"
 
-#include "Escargot.h"
-#include "vm/ESVMInstance.h"
+#include <Escargot.h>
+#include <vm/ESVMInstance.h>
+#ifdef USE_ES6_FEATURE
+#include <runtime/JobQueue.h>
+#endif
 
 #include "dom/binding/escargot/ScriptBindingInstanceDataEscargot.h"
 
@@ -34,6 +38,40 @@
 #endif
 
 namespace StarFish {
+
+#ifdef USE_ES6_FEATURE
+class PromiseJobQueue : public escargot::JobQueue {
+private:
+    PromiseJobQueue() { }
+public:
+    static escargot::JobQueue* create()
+    {
+        return new PromiseJobQueue();
+    }
+
+    virtual size_t enqueueJob(escargot::Job* job)
+    {
+        StarFish* sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
+        m_pendingJobs.push_back(sf->messageLoop()->addIdler([](size_t id, void* data, void* data2) {
+            escargot::Job* j = (escargot::Job*)data;
+            PromiseJobQueue* q = (PromiseJobQueue*)data2;
+            j->run(escargot::ESVMInstance::currentInstance());
+            q->m_pendingJobs.erase(std::find(q->m_pendingJobs.begin(), q->m_pendingJobs.end(), id));
+        }, job, this));
+        return 0;
+    }
+
+    void clearPendingJobs()
+    {
+        StarFish* sf = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish();
+        for (size_t i = 0; i < m_pendingJobs.size(); i++) {
+            sf->messageLoop()->removeIdler(m_pendingJobs[i]);
+        }
+    }
+private:
+    std::vector<size_t, gc_allocator<size_t>> m_pendingJobs;
+};
+#endif
 
 
 static ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
@@ -46,10 +84,16 @@ ScriptBindingInstance::ScriptBindingInstance()
     m_enterCount = 0;
     m_data = new ScriptBindingInstanceDataEscargot(this);
     fetchData(this)->m_instance = new escargot::ESVMInstance();
+#ifdef USE_ES6_FEATURE
+    m_promiseJobQueue = fetchData(this)->m_instance->jobQueue();
+#endif
 }
 
 ScriptBindingInstance::~ScriptBindingInstance()
 {
+#ifdef USE_ES6_FEATURE
+    ((PromiseJobQueue*)m_promiseJobQueue)->clearPendingJobs();
+#endif
     delete fetchData(this)->m_instance;
 }
 
@@ -3949,12 +3993,19 @@ void ScriptBindingInstance::evaluate(String* str)
     ScriptBindingInstanceEnterer enter(*this);
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) == 0) {
-        escargot::ESValue ret = fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
-        fetchData(this)->m_instance->printValue(ret);
+        fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
+        fetchData(this)->m_instance->unregisterCheckedObjectAll();
     } else {
         escargot::ESValue err = fetchData(this)->m_instance->getCatchedError();
         STARFISH_LOG_ERROR("Uncaught %s\n", err.toString()->utf8Data());
     }
 }
+
 }
+#ifdef USE_ES6_FEATURE
+escargot::JobQueue* escargot::JobQueue::create()
+{
+    return StarFish::PromiseJobQueue::create();
+}
+#endif

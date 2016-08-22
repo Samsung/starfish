@@ -17,7 +17,6 @@
 #ifndef __StarFishScriptBindingInstanceDataEscargot__
 #define __StarFishScriptBindingInstanceDataEscargot__
 
-
 namespace StarFish {
 
 #define __STARFISH_ENUM_LAZY_BINDING_NAMES(F) \

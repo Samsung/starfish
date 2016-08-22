@@ -17,7 +17,6 @@
 #ifndef __StarFishScriptBindingInstance__
 #define __StarFishScriptBindingInstance__
 
-
 namespace StarFish {
 
 class ScriptBindingInstance : public gc {
@@ -35,6 +34,9 @@ public:
     void evaluate(String* str);
 protected:
     void* m_data;
+#ifdef USE_ES6_FEATURE
+    void* m_promiseJobQueue;
+#endif
     size_t m_enterCount;
 };
 

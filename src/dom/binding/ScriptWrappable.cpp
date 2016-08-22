@@ -187,6 +187,7 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             if (setjmp(escargot::ESVMInstance::currentInstance()->registerTryPos(&tryPosition)) == 0) {
                 escargot::ESValue result = instance->evaluate(instance->currentExecutionContext()->readArgument(0).asESString());
                 escargot::ESVMInstance::currentInstance()->unregisterTryPos(&tryPosition);
+                escargot::ESVMInstance::currentInstance()->unregisterCheckedObjectAll();
                 if (result.toBoolean()) {
 
                 } else {
