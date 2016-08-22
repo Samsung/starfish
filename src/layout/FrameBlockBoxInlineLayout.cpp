@@ -1344,7 +1344,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
 
                     if (splitPosition.size()) {
                         size_t start = offset;
-                        size_t end;
+                        size_t end = SIZE_MAX;
                         auto iter = splitPosition.begin();
                         while (iter != splitPosition.end()) {
                             end = *iter;
@@ -1365,6 +1365,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                             start = end;
                             iter++;
                         }
+                        STARFISH_ASSERT(end != SIZE_MAX);
                         if (end != nextOffset) {
                             CharDirection dir = CharDirection::Ltr;
                             for (size_t i = 0; i < runs.size(); i ++) {
