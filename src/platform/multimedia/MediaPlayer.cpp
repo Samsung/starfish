@@ -20,20 +20,18 @@
 #include <stdlib.h>
 
 #include "StarFishConfig.h"
-#include "extra/MediaPlayer.h"
+#include "MediaPlayer.h"
 #include "util/URL.h"
 #include "dom/Document.h"
 
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN
+#include <player.h>
 #include <efl_extension.h>
-#include <dlog.h>
-
-#define STARFISH_TAG "StarfishD"
 #endif
 
 namespace StarFish {
 
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN
 bool MediaPlayer::isReady()
 {
     if (!m_player)
@@ -66,33 +64,33 @@ void MediaPlayer::prepare(Document* document, CanvasSurface* surface, String* pa
     if (!m_player) {
         int error_code = player_create(&m_player);
         if (PLAYER_ERROR_NONE != error_code) {
-            dlog_print(DLOG_ERROR, STARFISH_TAG, "ERROR(%d) : player_create()", error_code);
+            STARFISH_LOG_ERROR("ERROR(%d) : player_create()", error_code);
             return;
         }
     }
 
     // Get the path to the file which will be used for playback.
     m_url = URL::createURL(document->documentURI()->urlString(), path);
-    dlog_print(DLOG_ERROR, STARFISH_TAG, "url : %s", m_url->urlString()->utf8Data());
+    STARFISH_LOG_ERROR("url : %s", m_url->urlString()->utf8Data());
 
     if (m_url->isFileURL() || m_url->isNetworkURL()) {
         // Set the obtained file path as a source for the Player.
         int error_code = player_set_uri(m_player, m_url->urlString()->utf8Data());
         if (PLAYER_ERROR_NONE != error_code) {
-            dlog_print(DLOG_ERROR, STARFISH_TAG, "ERROR(%d) : player_set_uri()", error_code);
+            STARFISH_LOG_ERROR("ERROR(%d) : player_set_uri()", error_code);
             return;
         }
 
         // Set the display for the video.
         error_code = player_set_display(m_player, PLAYER_DISPLAY_TYPE_EVAS, GET_DISPLAY(player_display));
         if (PLAYER_ERROR_NONE != error_code) {
-            dlog_print(DLOG_ERROR, STARFISH_TAG, "ERROR(%d) : player_set_display()", error_code);
+            STARFISH_LOG_ERROR("ERROR(%d) : player_set_display()", error_code);
             return;
         }
 
         error_code = player_prepare_async(m_player, __player_prepare, this);
         if (PLAYER_ERROR_NONE != error_code) {
-            dlog_print(DLOG_ERROR, STARFISH_TAG, "ERROR(%d) : player_prepare_async()", error_code);
+            STARFISH_LOG_ERROR("ERROR(%d) : player_prepare_async()", error_code);
             onPrepared(true);
         }
     }
@@ -121,10 +119,10 @@ void MediaPlayer::play()
         return;
 
     if (isReady()) {
-        dlog_print(DLOG_ERROR, STARFISH_TAG, "player_start()");
+        STARFISH_LOG_ERROR("player_start()");
         int error_code = player_start(m_player);
         if (PLAYER_ERROR_NONE != error_code) {
-            dlog_print(DLOG_ERROR, STARFISH_TAG, "ERROR(%d) : player_start()", error_code);
+            STARFISH_LOG_ERROR("ERROR(%d) : player_start()", error_code);
             return;
         }
     }
@@ -132,7 +130,7 @@ void MediaPlayer::play()
     player_state_e state;
     int error_code = player_get_state(m_player, &state);
     if (PLAYER_ERROR_NONE != error_code) {
-        dlog_print(DLOG_ERROR, STARFISH_TAG, "ERROR(%d) : player_get_state()", error_code);
+        STARFISH_LOG_ERROR("ERROR(%d) : player_get_state()", error_code);
         return;
     }
 }
@@ -157,7 +155,7 @@ void MediaPlayer::stop()
     if (state == PLAYER_STATE_PLAYING || state == PLAYER_STATE_PAUSED) {
         int error_code = player_stop(m_player);
         if (PLAYER_ERROR_NONE != error_code) {
-            dlog_print(DLOG_ERROR, STARFISH_TAG, "ERROR(%d) : player_stop()", error_code);
+            STARFISH_LOG_ERROR("ERROR(%d) : player_stop()", error_code);
             return;
         }
     }

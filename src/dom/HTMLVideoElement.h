@@ -18,7 +18,7 @@
 #define __StarFishHTMLVideoElement__
 
 #include "dom/HTMLMediaElement.h"
-#include "extra/MediaPlayer.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 #define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
 #define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150

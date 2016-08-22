@@ -87,6 +87,12 @@ else ifneq (,$(findstring tizen3_wearable_emulator,$(MAKECMDGOALS)))
   TIZEN_VERSION=3.0
   TIZEN_PROFILE=wearable
   TIZEN_DEVICE=emulator
+else ifneq (,$(findstring tizen24_mobile_arm,$(MAKECMDGOALS)))
+  HOST=tizen24_mobile_arm
+  TIZEN_ARCH=arm
+  TIZEN_VERSION=2.4
+  TIZEN_PROFILE=mobile
+  TIZEN_DEVICE=device
 else ifneq (,$(findstring tizen_obs_arm,$(MAKECMDGOALS)))
   HOST=tizen_obs
 else ifneq (,$(findstring tizen_obs_emulator,$(MAKECMDGOALS)))
@@ -184,7 +190,7 @@ endif
 # flags for tizen
 ifneq (,$(findstring tizen,$(HOST)))
   CXXFLAGS += -Os -finline-limit=64
-  CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+  CXXFLAGS += -DSTARFISH_TIZEN
 
   #CXXFLAGS_DEBUG += -Wno-literal-suffix
   CXXFLAGS_RELEASE += -USTARFISH_ENABLE_TEST
@@ -200,6 +206,12 @@ ifneq (,$(findstring tizen,$(HOST)))
   ifeq ($(HOST),tizen_obs)
     CXXFLAGS_DEBUG += -O1 # _FORTIFY_SOURCE requires compiling with optimization
     CXXFLAGS += -DSTARFISH_TIZEN_OBS
+  endif
+  ifneq (,$(findstring tizen_wearable,$(HOST)))
+    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+  endif
+  ifneq (,$(findstring tizen3_wearable,$(HOST)))
+    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
   endif
 endif
 
@@ -295,6 +307,7 @@ SRC += $(foreach dir, src/util , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/threading , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/message_loop , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/network , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/platform/multimedia , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/window , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/image , $(wildcard $(dir)/*.cpp))
@@ -477,9 +490,22 @@ tizen_obs_emulator.lib.release: $(OUTDIR)/$(LIB)
 tizen_obs_arm.exe.debug: $(OUTDIR)/$(BIN)
 tizen_obs_emulator.exe.debug: $(OUTDIR)/$(BIN)
 
+tizen24_mobile_emulator.lib.debug: $(OUTDIR)/$(LIB)
+	cp -f $< .
+tizen24_mobile_emulator.lib.release: $(OUTDIR)/$(LIB)
+	cp -f $<.strip ./$(LIB)
 tizen24_mobile_emulator.exe.debug: $(OUTDIR)/$(BIN)
 	cp -f $< .
 tizen24_mobile_emulator.exe.release: $(OUTDIR)/$(BIN)
+	cp -f $<.strip ./$(BIN)
+
+tizen24_wearable_arm.lib.debug: $(OUTDIR)/$(LIB)
+	cp -f $< .
+tizen24_wearable_arm.lib.release: $(OUTDIR)/$(LIB)
+	cp -f $<.strip ./$(LIB)
+tizen24_mobile_arm.exe.debug: $(OUTDIR)/$(BIN)
+	cp -f $< .
+tizen24_mobile_arm.exe.release: $(OUTDIR)/$(BIN)
 	cp -f $<.strip ./$(BIN)
 
 tizen3_mobile_arm.exe.debug: $(OUTDIR)/$(BIN)
