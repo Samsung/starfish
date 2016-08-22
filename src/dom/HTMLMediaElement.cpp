@@ -170,8 +170,11 @@ bool HTMLMediaElement::ended()
 
 bool HTMLMediaElement::autoplay()
 {
-    // TODO
-    return false;
+    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "autoplay"));
+    size_t siz = hasAttribute(name);
+    if (siz == SIZE_MAX)
+        return false;
+    return true;
 }
 
 bool HTMLMediaElement::loop()
@@ -182,8 +185,11 @@ bool HTMLMediaElement::loop()
 
 bool HTMLMediaElement::controls()
 {
-    // TODO
-    return false;
+    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "controls"));
+    size_t siz = hasAttribute(name);
+    if (siz == SIZE_MAX)
+        return false;
+    return true;
 }
 
 bool HTMLMediaElement::volume()
@@ -225,7 +231,15 @@ void HTMLMediaElement::setPlaybackRate(double playbackRate)
 
 void HTMLMediaElement::setAutoplay(bool autoplay)
 {
-    // TODO
+    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "autoplay"));
+    if (autoplay) {
+        size_t siz = hasAttribute(name);
+        if (siz == SIZE_MAX) {
+            setAttribute(name, String::fromUTF8(""));
+        }
+    } else {
+        removeAttribute(name);
+    }
 }
 
 void HTMLMediaElement::setLoop(bool loop)
@@ -235,7 +249,15 @@ void HTMLMediaElement::setLoop(bool loop)
 
 void HTMLMediaElement::setControls(bool controls)
 {
-    // TODO
+    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "controls"));
+    if (controls) {
+        size_t siz = hasAttribute(name);
+        if (siz == SIZE_MAX) {
+            setAttribute(name, String::fromUTF8(""));
+        }
+    } else {
+        removeAttribute(name);
+    }
 }
 
 void HTMLMediaElement::setVolume(bool volume)

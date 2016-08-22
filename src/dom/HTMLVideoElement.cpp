@@ -20,6 +20,7 @@
 #include "dom/HTMLVideoElement.h"
 
 namespace StarFish {
+
 unsigned long HTMLVideoElement::width()
 {
     // TODO
@@ -63,6 +64,66 @@ void HTMLVideoElement::setHeight(unsigned long height)
 void HTMLVideoElement::setPoster(String* poster)
 {
     // TODO
+}
+
+void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    if (name == document()->window()->starFish()->staticStrings()->m_src) {
+        if (!value->equals(String::emptyString)) {
+            loadSrc(value);
+        }
+    }
+}
+
+void HTMLVideoElement::didNodeInsertedToDocumenTree()
+{
+    HTMLElement::didNodeInsertedToDocumenTree();
+    m_live = true;
+    if (m_hasPendingRequest) {
+        loadSrc();
+    } else if (autoplay() && m_player->isReady()) {
+        m_player->play();
+    }
+}
+
+void HTMLVideoElement::didNodeRemovedFromDocumenTree()
+{
+    HTMLElement::didNodeRemovedFromDocumenTree();
+    m_live = false;
+    m_player->destroy();
+}
+
+void HTMLVideoElement::loadSrc()
+{
+    loadSrc(src());
+}
+
+void HTMLVideoElement::loadSrc(String* src)
+{
+    if (!m_live) {
+        m_hasPendingRequest = true;
+        return;
+    }
+    if (src->equals(String::emptyString)) {
+        return;
+    }
+
+    STARFISH_ASSERT(m_player);
+    STARFISH_ASSERT(m_videoSurface);
+
+    m_player->prepare(document(), m_videoSurface, src);
+    m_hasPendingRequest = false;
+}
+
+void VideoPlayer::onPrepared(bool hasError)
+{
+    if (hasError) {
+        // TODO
+        return;
+    }
+    if (m_videoElement->autoplay() && isReady())
+        play();
 }
 
 }
