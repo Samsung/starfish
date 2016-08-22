@@ -9,10 +9,17 @@ test/internal-test/direction/csswg-test/css1_converted/c43-rpl-bbx-001.htm
 test/internal-test/direction/csswg-test/css1_converted/c45-bg-canvas-000.htm
 test/internal-test/direction/csswg-test/css1_converted/c526-font-sz-001.htm
 test/internal-test/direction/csswg-test/css1_converted/c526-font-sz-002.htm
+test/internal-test/direction/csswg-test/css1_converted/c527-font-000.htm
 test/internal-test/direction/csswg-test/css1_converted/c527-font-001.htm
 test/internal-test/direction/csswg-test/css1_converted/c527-font-002.htm
+test/internal-test/direction/csswg-test/css1_converted/c527-font-003.htm
+test/internal-test/direction/csswg-test/css1_converted/c527-font-004.htm
+test/internal-test/direction/csswg-test/css1_converted/c527-font-005.htm
+test/internal-test/direction/csswg-test/css1_converted/c527-font-006.htm
 test/internal-test/direction/csswg-test/css1_converted/c527-font-007.htm
 test/internal-test/direction/csswg-test/css1_converted/c527-font-008.htm
+test/internal-test/direction/csswg-test/css1_converted/c527-font-009.htm
+test/internal-test/direction/csswg-test/css1_converted/c527-font-10.htm
 test/internal-test/direction/csswg-test/css1_converted/c531-color-000.htm
 test/internal-test/direction/csswg-test/css1_converted/c532-bgcolor-000.htm
 test/internal-test/direction/csswg-test/css1_converted/c532-bgcolor-001.htm
@@ -44,6 +51,9 @@ test/internal-test/direction/csswg-test/css1_converted/c5514-brdr-lw-003.htm
 test/internal-test/direction/csswg-test/css1_converted/c5514-ibrdr-lw-000.htm
 test/internal-test/direction/csswg-test/css1_converted/c5515-brdr-w-000.htm
 test/internal-test/direction/csswg-test/css1_converted/c5515-ibrdr-000.htm
+test/internal-test/direction/csswg-test/css1_converted/c5516-brdr-c-000.htm
+test/internal-test/direction/csswg-test/css1_converted/c5516-ibrdr-c-000.htm
+test/internal-test/direction/csswg-test/css1_converted/c63-color-000.htm
 test/internal-test/direction/csswg-test/css1_converted/c71-fwd-parsing-001.htm
 test/internal-test/direction/csswg-test/css1_converted/c71-fwd-parsing-003.htm
 test/internal-test/direction/csswg-test/css21_converted/abspos/abspos-containing-block-initial-001.htm
@@ -260,6 +270,7 @@ test/internal-test/direction/csswg-test/css21_converted/borders/border-color-007
 test/internal-test/direction/csswg-test/css21_converted/borders/border-color-008.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-color-009.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-color-010.htm
+test/internal-test/direction/csswg-test/css21_converted/borders/border-color-011.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-color-012.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-color-applies-to-008.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-color-applies-to-009.htm
@@ -773,10 +784,14 @@ test/internal-test/direction/csswg-test/css21_converted/borders/border-top-width
 test/internal-test/direction/csswg-test/css21_converted/borders/border-top-width-applies-to-012.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-width-011.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-width-014.htm
+test/internal-test/direction/csswg-test/css21_converted/borders/border-width-applies-to-008.htm
+test/internal-test/direction/csswg-test/css21_converted/borders/border-width-applies-to-009.htm
+test/internal-test/direction/csswg-test/css21_converted/borders/border-width-applies-to-012.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-width-comparison-001.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-width-shorthand-001.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-width-shorthand-002.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/border-width-shorthand-003.htm
+test/internal-test/direction/csswg-test/css21_converted/borders/border-width-shorthand-004.htm
 test/internal-test/direction/csswg-test/css21_converted/borders/ltr-borders-001.htm
 test/internal-test/direction/csswg-test/css21_converted/box-display/block-in-inline-005.htm
 test/internal-test/direction/csswg-test/css21_converted/box-display/block-in-inline-006.htm
@@ -811,6 +826,7 @@ test/internal-test/direction/csswg-test/css21_converted/colors/color-applies-to-
 test/internal-test/direction/csswg-test/css21_converted/colors/color-applies-to-012.htm
 test/internal-test/direction/csswg-test/css21_converted/colors/colors-007.htm
 test/internal-test/direction/csswg-test/css21_converted/floats/floats-placement-vertical-004-ref2.htm
+test/internal-test/direction/csswg-test/css21_converted/fonts/font-003.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-033.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-034.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-035.htm
@@ -818,6 +834,9 @@ test/internal-test/direction/csswg-test/css21_converted/fonts/font-036.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-037.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-038.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-051.htm
+test/internal-test/direction/csswg-test/css21_converted/fonts/font-applies-to-001.htm
+test/internal-test/direction/csswg-test/css21_converted/fonts/font-applies-to-002.htm
+test/internal-test/direction/csswg-test/css21_converted/fonts/font-applies-to-005.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-family-rule-005.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/fonts-012.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/fonts-013.htm
@@ -829,6 +848,7 @@ test/internal-test/direction/csswg-test/css21_converted/fonts/font-size-092.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-size-093.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-size-094.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-size-095.htm
+test/internal-test/direction/csswg-test/css21_converted/fonts/font-size-117.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-style-applies-to-001.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-style-applies-to-002.htm
 test/internal-test/direction/csswg-test/css21_converted/fonts/font-style-applies-to-005.htm
@@ -856,6 +876,7 @@ test/internal-test/direction/csswg-test/css21_converted/linebox/inline-formattin
 test/internal-test/direction/csswg-test/css21_converted/linebox/inline-formatting-context-010c.htm
 test/internal-test/direction/csswg-test/css21_converted/linebox/inline-formatting-context-010d.htm
 test/internal-test/direction/csswg-test/css21_converted/linebox/inline-formatting-context-011.htm
+test/internal-test/direction/csswg-test/css21_converted/linebox/inline-formatting-context-020.htm
 test/internal-test/direction/csswg-test/css21_converted/linebox/line-height-bleed-003.htm
 test/internal-test/direction/csswg-test/css21_converted/linebox/line-height-largest-001.htm
 test/internal-test/direction/csswg-test/css21_converted/linebox/vertical-align-112.htm
@@ -982,6 +1003,8 @@ test/internal-test/direction/csswg-test/css21_converted/normal-flow/height-perce
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/height-percentage-005.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-block-000.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-block-001.htm
+test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-block-002.htm
+test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-block-003.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-block-replaced-height-001.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inline-replaced-height-001.htm
 test/internal-test/direction/csswg-test/css21_converted/normal-flow/inlines-003.htm
@@ -992,6 +1015,10 @@ test/internal-test/direction/csswg-test/css21_converted/normal-flow/width-undefi
 test/internal-test/direction/csswg-test/css21_converted/page-box/page-container-002.htm
 test/internal-test/direction/csswg-test/css21_converted/page-box/page-container-006.htm
 test/internal-test/direction/csswg-test/css21_converted/page-box/page-container-009.htm
+test/internal-test/direction/csswg-test/css21_converted/pagination/orphans-001.htm
+test/internal-test/direction/csswg-test/css21_converted/pagination/page-breaks-100.htm
+test/internal-test/direction/csswg-test/css21_converted/pagination/widows-001.htm
+test/internal-test/direction/csswg-test/css21_converted/positioning/abspos-003.htm
 test/internal-test/direction/csswg-test/css21_converted/positioning/abspos-011.htm
 test/internal-test/direction/csswg-test/css21_converted/positioning/abspos-012.htm
 test/internal-test/direction/csswg-test/css21_converted/positioning/left-applies-to-008.htm
@@ -1003,6 +1030,8 @@ test/internal-test/direction/csswg-test/css21_converted/positioning/position-rel
 test/internal-test/direction/csswg-test/css21_converted/positioning/position-relative-029.htm
 test/internal-test/direction/csswg-test/css21_converted/positioning/position-relative-030.htm
 test/internal-test/direction/csswg-test/css21_converted/positioning/position-relative-031.htm
+test/internal-test/direction/csswg-test/css21_converted/positioning/position-relative-032.htm
+test/internal-test/direction/csswg-test/css21_converted/positioning/position-relative-033.htm
 test/internal-test/direction/csswg-test/css21_converted/selectors/active-selector-001.htm
 test/internal-test/direction/csswg-test/css21_converted/selectors/class-selector-001.htm
 test/internal-test/direction/csswg-test/css21_converted/selectors/class-selector-002.htm
@@ -1158,6 +1187,7 @@ test/internal-test/direction/csswg-test/css21_converted/text/text-align-bidi-004
 test/internal-test/direction/csswg-test/css21_converted/text/text-align-inherit-001.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-001.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-003.htm
+test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-004.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-065.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-082.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-083.htm
@@ -1168,6 +1198,7 @@ test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-app
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-border-001.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-border-003.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-color-001.htm
+test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-color-002.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-image-001.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-margin-001.htm
 test/internal-test/direction/csswg-test/css21_converted/text/text-decoration-margin-003.htm
@@ -1185,8 +1216,10 @@ test/internal-test/direction/csswg-test/css21_converted/text/text-indent-113-ref
 test/internal-test/direction/csswg-test/css21_converted/ui/cursor-021.htm
 test/internal-test/direction/csswg-test/css21_converted/ui/cursor-022.htm
 test/internal-test/direction/csswg-test/css21_converted/ui/overflow-html-body-001.htm
+test/internal-test/direction/csswg-test/css21_converted/ui/overflow-parent-001.htm
 test/internal-test/direction/csswg-test/css21_converted/ui/overflow-root-001.htm
 test/internal-test/direction/csswg-test/css21_converted/values/color-000.htm
+test/internal-test/direction/csswg-test/css21_converted/visufx/clip-shape-001.htm
 test/internal-test/direction/csswg-test/css21_converted/visufx/visibility-descendants-001.htm
 test/internal-test/direction/csswg-test/css21_converted/visuren/box-offsets-abs-pos-001.htm
 test/internal-test/direction/csswg-test/css21_converted/visuren/box-offsets-rel-pos-001.htm
@@ -1197,6 +1230,7 @@ test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-i
 test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-paint-order-001.html
 test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-repeat/background-repeat-no-repeat.htm
 test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-repeat/background-repeat-repeat-x.htm
+test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-repeat/background-repeat-repeat-y.htm
 test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-size/vector/background-size-vector-001.html
 test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-size/vector/background-size-vector-002.html
 test/internal-test/direction/csswg-test/css-backgrounds-3_converted/background-size/vector/background-size-vector-003.html
@@ -1418,6 +1452,7 @@ test/internal-test/direction/csswg-test/css-color-3_converted/t31-color-text-a.h
 test/internal-test/direction/csswg-test/css-color-3_converted/t32-opacity-basic-0.0-a.htm
 test/internal-test/direction/csswg-test/css-color-3_converted/t32-opacity-basic-1.0-a.htm
 test/internal-test/direction/csswg-test/css-color-3_converted/t32-opacity-clamping-0.0-b.htm
+test/internal-test/direction/csswg-test/css-color-3_converted/t32-opacity-clamping-1.0-b.htm
 test/internal-test/direction/csswg-test/css-color-3_converted/t421-rgb-func-no-mixed-f.htm
 test/internal-test/direction/csswg-test/css-color-3_converted/t421-rgb-hex-parsing-f.htm
 test/internal-test/direction/csswg-test/css-color-3_converted/t422-rgba-func-no-mixed-f.htm
