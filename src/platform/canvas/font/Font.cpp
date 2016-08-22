@@ -24,8 +24,10 @@
 
 #include "style/UnitHelper.h"
 
+#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
 extern "C" Evas_Coord evas_object_text_max_ascent_get(const Evas_Text *obj);
 extern "C" Evas_Coord evas_object_text_max_descent_get(const Evas_Text *obj);
+#endif
 
 namespace StarFish {
 

@@ -258,7 +258,8 @@ void Document::close()
         Event* e = new Event(eventType, EventInit(false, false));
         EventTarget::dispatchEvent(bodyElem, e);
     }
-    resourceLoader()->cancelAllOfPendingRequests();
+
+    resourceLoader()->clear();
 
     while (m_activeNetworkRequests.size()) {
         m_activeNetworkRequests.back()->abort();

@@ -48,12 +48,19 @@ public:
         fireDocumentOnLoadEventIfNeeded();
     }
 
-    void cancelAllOfPendingRequests();
     Document* document()
     {
         return m_document;
     }
+
+    void clear()
+    {
+        cancelAllOfPendingRequests();
+        m_imageCache.clear();
+    }
 private:
+    void cancelAllOfPendingRequests();
+
     void fetchResourcePreprocess(Resource* res);
     void fireDocumentOnLoadEventIfNeeded();
     bool m_inDocumentOpenState;
@@ -61,7 +68,7 @@ private:
     Document* m_document;
     URL* m_baseURL;
     std::unordered_map<std::string, ImageData*, std::hash<std::string>, std::equal_to<std::string>,
-        gc_allocator<std::pair<std::string, ImageData*>>> m_offlineImageCache;
+        gc_allocator<std::pair<std::string, ImageData*>>> m_imageCache;
     std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;
 };
 }
