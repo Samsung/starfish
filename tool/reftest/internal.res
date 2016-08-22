@@ -27,6 +27,7 @@ test/internal-test/css/style/style-tag-add.html
 test/internal-test/css/style/style-tag-modify.html
 test/internal-test/css/style/style-tag-remove.html
 test/internal-test/page-visibilty/visibilitychange_test.html
+test/internal-test/css/invalid_value/color-invalid.html
 
 test/internal-test/css/background/background_properties.html
 test/internal-test/css/background/background_shorthand.html
