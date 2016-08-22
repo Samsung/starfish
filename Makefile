@@ -156,10 +156,6 @@ LDFLAGS += -lpthread -lcurl
 ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2
   LDFLAGS += -m32
-else ifeq ($(ARCH), x64)
-  ifeq ($(MEDIA_SUPPORT), true)
-    CXXFLAGS += -D$(MEDIA_SUPPORT_KEY)
-  endif
 else ifeq ($(ARCH), arm)
   CXXFLAGS += -march=armv7-a -mthumb
 endif
@@ -210,6 +206,11 @@ endif
 # for printing TC coverage log
 ifeq ($(TC), 1)
   CXXFLAGS += -DSTARFISH_TC_COVERAGE
+endif
+
+# for media support
+ifeq ($(MEDIA_SUPPORT), true)
+  CXXFLAGS += -D$(MEDIA_SUPPORT_KEY)
 endif
 
 ################################################################################
