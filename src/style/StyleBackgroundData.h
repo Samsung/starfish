@@ -403,7 +403,7 @@ bool operator==(const BackgroundLayer& a, const BackgroundLayer& b)
     if (a.m_sizeType != b.m_sizeType)
         return false;
 
-    if (a.m_image != b.m_image)
+    if (!a.m_image->equals(b.m_image))
         return false;
 
     if (a.m_sizeType != b.m_sizeType)
