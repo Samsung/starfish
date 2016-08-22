@@ -120,6 +120,11 @@ public:
         evas_object_resize(m_window, w, h);
     }
 
+    virtual void* unwrap()
+    {
+        return (void*) m_window;
+    }
+
     void clearEFLResources()
     {
         if (m_document && m_document->frame() && m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()) {
