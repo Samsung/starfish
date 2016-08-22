@@ -63,12 +63,29 @@ void ImageResource::doLoadFile(void* data)
     }
 }
 
-void ImageResource::request(bool needsSyncRequest)
+void ImageResource::request(ResourceRequestSyncLevel syncLevel)
 {
     if (m_url->isFileURL()) {
         loader()->fetchResourcePreprocess(this);
-        if (needsSyncRequest) {
+        if (ResourceRequestSyncLevel::AlwaysSync == syncLevel) {
             doLoadFile(this);
+        } else if (ResourceRequestSyncLevel::SyncIfAlreadyLoaded == syncLevel) {
+            FileIO* fio = FileIO::create();
+            String* path = url()->urlStringWithoutSearchPart();
+            String* filePath = path->substring(7, path->length() - 7);
+            bool canLoad = fio->open(filePath);
+            delete fio;
+            if (!canLoad) {
+                request(ResourceRequestSyncLevel::NeverSync);
+                return;
+            }
+            std::string utf8 = filePath->utf8Data();
+            auto iter = loader()->m_offlineImageCache.find(utf8);
+            if (iter != loader()->m_offlineImageCache.end()) {
+                request(ResourceRequestSyncLevel::AlwaysSync);
+            } else {
+                request(ResourceRequestSyncLevel::NeverSync);
+            }
         } else {
             pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
                 Resource* res = (Resource*)data;
@@ -77,7 +94,7 @@ void ImageResource::request(bool needsSyncRequest)
             }, this));
         }
     } else {
-        Resource::request(needsSyncRequest);
+        Resource::request(syncLevel);
     }
 }
 

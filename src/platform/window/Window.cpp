@@ -461,7 +461,7 @@ static Evas_Object* g_imgBufferForScreehShot;
 static CanvasSurface* g_surfaceForScreehShot;
 #endif
 
-Canvas* preparePainting(WindowImplEFL* eflWindow)
+Canvas* preparePainting(WindowImplEFL* eflWindow, bool forPainting)
 {
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -487,6 +487,9 @@ Canvas* preparePainting(WindowImplEFL* eflWindow)
     dummy* d = new dummy;
     d->a = evas;
     d->b = &eflWindow->m_drawnImageList;
+    if (!forPainting) {
+        d->b = nullptr;
+    }
     d->w = width;
     d->h = height;
     d->objList = &eflWindow->m_objectList;
@@ -624,7 +627,7 @@ void Window::rendering()
         Timer t("painting");
 
         // painting
-        Canvas* canvas = preparePainting(eflWindow);
+        Canvas* canvas = preparePainting(eflWindow, true);
 
         paintWindowBackground(canvas);
         {
@@ -698,7 +701,7 @@ void Window::rendering()
     if (m_needsComposite) {
         Timer t("composite");
         if (m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer()) {
-            Canvas* canvas = preparePainting(eflWindow);
+            Canvas* canvas = preparePainting(eflWindow, false);
             paintWindowBackground(canvas);
             m_document->frame()->firstChild()->asFrameBox()->stackingContext()->compositeStackingContext(canvas);
 

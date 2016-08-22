@@ -549,7 +549,7 @@ ImageData* Document::brokenImage()
     } else {
         String* brokenImg = String::fromUTF8("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4AYQCBEZPGjJdQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAVSURBVDjLY2AYBaNgFIyCUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
         ImageResource* res = resourceLoader()->fetchImage(URL::createURL(String::emptyString, brokenImg));
-        res->request(true);
+        res->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
         m_brokenImage = res->imageData();
         m_didLoadBrokenImage = true;
         return m_brokenImage;

@@ -40,7 +40,7 @@ public:
         return m_imageData;
     }
 
-    virtual void request(bool needsSyncRequest = false);
+    virtual void request(ResourceRequestSyncLevel syncLevel = NeverSync);
     virtual void didLoadFinished();
 
     static void doLoadFile(void*);
