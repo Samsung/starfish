@@ -19,7 +19,7 @@
 
 #include "platform/canvas/Canvas.h"
 
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN
 #include <player.h>
 #endif
 
@@ -45,10 +45,10 @@ public:
     bool isReady();
 
 protected:
-    URL* m_url;
-#ifdef STARFISH_TIZEN_WEARABLE
+#ifdef STARFISH_TIZEN
     player_h m_player;
 #endif
+    URL* m_url;
 };
 
 }

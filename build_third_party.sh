@@ -66,4 +66,10 @@ make tizen3_wearable_arm.interpreter.release.static -j8
 make tizen3_wearable_emulator.interpreter.debug.static -j8
 make tizen3_wearable_emulator.interpreter.release.static -j8
 fi
+if [ -n "$TIZEN_SDK_HOME" ]; then
+make tizen24_mobile_arm.interpreter.release.static  -j8
+make tizen24_mobile_emulator.interpreter.release.static -j8
+make tizen24_mobile_arm.interpreter.debug.static  -j8
+make tizen24_mobile_emulator.interpreter.debug.static -j8
+fi
 
