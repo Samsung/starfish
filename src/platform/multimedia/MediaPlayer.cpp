@@ -83,6 +83,8 @@ void MediaPlayer::prepare(Document* document, CanvasSurface* surface, String* pa
 
         // Set the display for the video.
         error_code = player_set_display(m_player, PLAYER_DISPLAY_TYPE_EVAS, GET_DISPLAY(player_display));
+        // TODO: test for OVERLAY type
+//        error_code = player_set_display(m_player, PLAYER_DISPLAY_TYPE_OVERLAY, GET_DISPLAY((Evas_Object*) document->window()->unwrap()));
         if (PLAYER_ERROR_NONE != error_code) {
             STARFISH_LOG_ERROR("ERROR(%d) : player_set_display()", error_code);
             return;
