@@ -210,13 +210,15 @@ public:
         m_canvas = (Evas*)d->a;
         m_prevDrawnImageMap = (std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > >*)d->b;
 
-        auto iter = m_prevDrawnImageMap->begin();
-        while (iter != m_prevDrawnImageMap->end()) {
-            std::vector<std::pair<Evas_Object*, bool> >& vec = iter->second;
-            for (unsigned i = 0; i < vec.size(); i++) {
-                vec[i].second = false;
+        if (m_prevDrawnImageMap) {
+            auto iter = m_prevDrawnImageMap->begin();
+            while (iter != m_prevDrawnImageMap->end()) {
+                std::vector<std::pair<Evas_Object*, bool> >& vec = iter->second;
+                for (unsigned i = 0; i < vec.size(); i++) {
+                    vec[i].second = false;
+                }
+                ++iter;
             }
-            ++iter;
         }
         m_width = d->w;
         m_height = d->h;

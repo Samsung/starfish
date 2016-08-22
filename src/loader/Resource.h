@@ -98,7 +98,12 @@ public:
         return m_url;
     }
 
-    virtual void request(bool needsSyncRequest = false);
+    enum ResourceRequestSyncLevel {
+        NeverSync,
+        SyncIfAlreadyLoaded,
+        AlwaysSync
+    };
+    virtual void request(ResourceRequestSyncLevel syncLevel = NeverSync);
     virtual void cancel();
     virtual void didHeaderReceived(String* header);
     virtual void didDataReceived(const char*, size_t length);

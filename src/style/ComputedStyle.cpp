@@ -122,9 +122,9 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
             res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
 #ifdef STARFISH_ENABLE_TEST
             bool enableRegressionTest = sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
-            res->request(g_enablePixelTest || enableRegressionTest);
+            res->request((g_enablePixelTest || enableRegressionTest) ? Resource::ResourceRequestSyncLevel::AlwaysSync : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 #else
-            res->request();
+            res->request(Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 #endif
         }
     }
@@ -143,9 +143,9 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
             res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
 #ifdef STARFISH_ENABLE_TEST
             bool enableRegressionTest = sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
-            res->request(g_enablePixelTest || enableRegressionTest);
+            res->request((g_enablePixelTest || enableRegressionTest) ? Resource::ResourceRequestSyncLevel::AlwaysSync : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 #else
-            res->request();
+            res->request(Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 #endif
             setBorderImageResource(res);
         }

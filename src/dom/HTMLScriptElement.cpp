@@ -116,7 +116,7 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             TextResource* res = document()->resourceLoader()->fetchText(URL::createURL(document()->documentURI()->baseURI(), url), charset);
             res->addResourceClient(new ScriptDownloadClient(this, res, forceSync, inParser));
             res->addResourceClient(new ElementResourceClient(this, res, true));
-            res->request(forceSync);
+            res->request(forceSync ? Resource::ResourceRequestSyncLevel::AlwaysSync : Resource::ResourceRequestSyncLevel::NeverSync);
             return true;
         }
     }

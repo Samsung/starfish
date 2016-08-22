@@ -54,12 +54,13 @@ protected:
     Resource* m_resource;
 };
 
-void Resource::request(bool needsSyncRequest)
+void Resource::request(ResourceRequestSyncLevel syncLevel)
 {
     loader()->fetchResourcePreprocess(this);
     m_networkRequest = new NetworkRequest(m_loader->document());
     m_networkRequest->addNetworkRequestClient(new ResourceNetworkRequestClient(this));
-    m_networkRequest->open(NetworkRequest::GET_METHOD, m_url->urlString(), !needsSyncRequest);
+    // TODO syncLevel == ResourceSyncLevel::SyncIfAlreadyLoaded
+    m_networkRequest->open(NetworkRequest::GET_METHOD, m_url->urlString(), !(syncLevel == ResourceRequestSyncLevel::AlwaysSync));
     m_networkRequest->send();
 }
 
