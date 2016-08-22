@@ -31,7 +31,7 @@
 
 namespace StarFish {
 
-#ifdef STARFISH_TIZEN
+#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
 bool MediaPlayer::isReady()
 {
     if (!m_player)

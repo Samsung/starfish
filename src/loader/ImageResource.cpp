@@ -44,15 +44,15 @@ void ImageResource::doLoadFile(void* data)
             return;
         }
         std::string utf8 = filePath->utf8Data();
-        auto iter = res->loader()->m_offlineImageCache.find(utf8);
+        auto iter = res->loader()->m_imageCache.find(utf8);
         ImageData* id;
-        if (iter == res->loader()->m_offlineImageCache.end()) {
+        if (iter == res->loader()->m_imageCache.end()) {
             id = ImageData::create(filePath);
             if (!id) {
                 res->didLoadFailed();
                 return;
             }
-            res->loader()->m_offlineImageCache.insert(std::make_pair(utf8, id));
+            res->loader()->m_imageCache.insert(std::make_pair(utf8, id));
         } else {
             id = iter->second;
         }
@@ -80,8 +80,8 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
                 return;
             }
             std::string utf8 = filePath->utf8Data();
-            auto iter = loader()->m_offlineImageCache.find(utf8);
-            if (iter != loader()->m_offlineImageCache.end()) {
+            auto iter = loader()->m_imageCache.find(utf8);
+            if (iter != loader()->m_imageCache.end()) {
                 request(ResourceRequestSyncLevel::AlwaysSync);
             } else {
                 request(ResourceRequestSyncLevel::NeverSync);

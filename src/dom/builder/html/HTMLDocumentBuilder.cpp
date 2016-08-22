@@ -189,7 +189,7 @@ void HTMLDocumentBuilder::build(URL* url)
     m_resource->request();
 #else
     if (url->isFileURL())
-        m_resource->request(true);
+        m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
     else
         m_resource->request();
 #endif
