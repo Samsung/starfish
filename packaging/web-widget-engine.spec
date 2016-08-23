@@ -11,7 +11,7 @@ License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT 
 ExcludeArch: %{arm} %ix86 x86_64
 %endif
 %if "%{?tizen_profile_name}" == "tv"
-ExcludeArch: %{arm} %ix86 x86_64
+#ExcludeArch: %{arm} %ix86 x86_64
 %endif
 
 # build requirements

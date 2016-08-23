@@ -163,7 +163,11 @@ ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2
   LDFLAGS += -m32
 else ifeq ($(ARCH), arm)
-  CXXFLAGS += -march=armv7-a -mthumb
+  ifeq ($(HOST), tizen_obs)
+    CXXFLAGS += -mthumb
+  else
+    CXXFLAGS += -march=armv7-a -mthumb
+  endif
 endif
 
 ifeq ($(MODE), debug)
