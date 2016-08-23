@@ -161,7 +161,7 @@ public:
     virtual int width() = 0;
     virtual int height() = 0;
     virtual void resizeTo(int w, int h) = 0;
-    virtual void* unwrap() = 0 ;
+    virtual void* unwrap() = 0;
 
     // The viewport width and height are same as the window size for wearable widget.
     double innerWidth()
