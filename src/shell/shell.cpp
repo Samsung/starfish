@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
                     exit(-1);
                 }
 
-                ScriptBindingInstanceEnterer enter(p->sf->scriptBindingInstance());
+                ScriptBindingInstanceEnterer enter(p->sf->window()->scriptBindingInstance());
                 p->sf->evaluate(String::fromUTF8(p->buf));
 
                 delete [] p->buf;
@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
     // sf->messageLoop()->addIdler(test, sf);
 
     sf->run();
+    // delete sf;
 /*
     Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
     elm_win_title_set(wndObj, "StarFish");

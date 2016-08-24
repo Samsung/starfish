@@ -25,6 +25,7 @@ namespace StarFish {
 class StarFish;
 class Document;
 class Window;
+class ScriptBindingInstance;
 class URL;
 class Canvas;
 class HTMLCollection;
@@ -36,7 +37,10 @@ class Window : public EventTarget {
     friend class HTMLBodyElement;
     friend class Node;
 public:
-    static Window* create(StarFish* sf, void* win, int width, int height, URL* url);
+    static Window* create(StarFish* sf, void* win, int width, int height);
+    ~Window();
+    void navigate(URL* url);
+
     virtual bool isWindow()
     {
         return true;
@@ -112,6 +116,11 @@ public:
     StarFish* starFish()
     {
         return m_starFish;
+    }
+
+    ScriptBindingInstance* scriptBindingInstance()
+    {
+        return m_scriptBindingInstance;
     }
 
     uint32_t setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, void* data);
@@ -193,9 +202,9 @@ protected:
         }
         setNeedsRenderingSlowCase();
     }
-
+    void initFlags();
     void setNeedsRenderingSlowCase();
-    Window(StarFish* starFish, URL* url);
+    Window(StarFish* starFish);
     void rendering();
     void clearStackingContext();
     void paintWindowBackground(Canvas* canvas);
@@ -213,6 +222,7 @@ protected:
     bool m_isRunning;
 
     StarFish* m_starFish;
+    ScriptBindingInstance* m_scriptBindingInstance;
     Document* m_document;
     Node* m_activeNodeWithTouchDown;
     Location m_touchDownPoint;

@@ -236,7 +236,7 @@ void ESPostMessageListener::PostMessageToJS(const std::string& msg)
         return;
 
     StarFish::Window* wnd = (StarFish::Window*)instance_->globalObject()->extraPointerData();
-    StarFish::ScriptBindingInstanceEnterer enter(wnd->starFish()->scriptBindingInstance());
+    StarFish::ScriptBindingInstanceEnterer enter(wnd->scriptBindingInstance());
 
     std::jmp_buf tryPosition;
     if (setjmp(instance_->registerTryPos(&tryPosition)) == 0) {
@@ -258,7 +258,7 @@ void ESPostDataListener::PostDataToJS(const std::string& msg, uint8_t* buffer, s
         return;
 
     StarFish::Window* wnd = (StarFish::Window*)instance_->globalObject()->extraPointerData();
-    StarFish::ScriptBindingInstanceEnterer enter(wnd->starFish()->scriptBindingInstance());
+    StarFish::ScriptBindingInstanceEnterer enter(wnd->scriptBindingInstance());
 
     std::jmp_buf tryPosition;
     if (setjmp(instance_->registerTryPos(&tryPosition)) == 0) {

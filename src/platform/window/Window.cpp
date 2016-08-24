@@ -75,12 +75,11 @@ struct IdlerData {
 
 class WindowImplEFL : public Window {
 public:
-    WindowImplEFL(StarFish* sf, URL* url)
-        : Window(sf, url)
+    WindowImplEFL(StarFish* sf)
+        : Window(sf)
     {
         m_mainBox = nullptr;
         m_dummyBox = nullptr;
-        m_isActive = true;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
 
@@ -270,14 +269,16 @@ CanvasSurface* CanvasSurface::create(Window* wnd, size_t w, size_t h)
 
 void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
 {
-    WindowImplEFL* wnd = (WindowImplEFL*)user_data;
-    if (!wnd->inRendering())
+    ecore_idler_add([](void* user_data) -> Eina_Bool {
+        WindowImplEFL* wnd = (WindowImplEFL*)user_data;
         wnd->setNeedsLayout();
+        return ECORE_CALLBACK_CANCEL;
+    }, user_data);
 }
 
-Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
+Window* Window::create(StarFish* sf, void* win, int width, int height)
 {
-    auto wnd = new WindowImplEFL(sf, url);
+    auto wnd = new WindowImplEFL(sf);
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
 
@@ -312,7 +313,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_desktopMouseDownEventHandler = ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventDown);
         return EINA_TRUE;
     }, wnd);
@@ -320,7 +321,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_desktopMouseUpEventHandler = ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_UP, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventUp);
         return EINA_TRUE;
     }, wnd);
@@ -328,7 +329,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_desktopMouseMoveEventHandler = ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventMove);
         return EINA_TRUE;
     }, wnd);
@@ -336,7 +337,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_desktopKeyDownEventHandler = ecore_event_handler_add(ECORE_EVENT_KEY_DOWN, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchKeyEvent(String::createASCIIString(d->keyname), Window::KeyEventDown);
         return EINA_TRUE;
     }, wnd);
@@ -344,7 +345,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_desktopKeyUpEventHandler = ecore_event_handler_add(ECORE_EVENT_KEY_UP, [](void* data, int type, void* event) -> Eina_Bool {
         Window* sf = (Window*)data;
         Ecore_Event_Key* d = (Ecore_Event_Key*)event;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchKeyEvent(String::createASCIIString(d->keyname), Window::KeyEventUp);
         return EINA_TRUE;
     }, wnd);
@@ -369,7 +370,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_mobileMouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
         Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*) event_info;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventDown);
         return;
     };
@@ -378,7 +379,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_mobileMouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
         Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*) event_info;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchTouchEvent(ev->cur.canvas.x, ev->cur.canvas.y, Window::TouchEventMove);
         return;
     };
@@ -387,7 +388,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     wnd->m_mobileMouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         Window* sf = (Window*)data;
         Evas_Event_Mouse_Up* ev = (Evas_Event_Mouse_Up*) event_info;
-        ScriptBindingInstanceEnterer enter(sf->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(sf->scriptBindingInstance());
         sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventUp);
         return;
     };
@@ -396,13 +397,17 @@ Window* Window::create(StarFish* sf, void* win, int width, int height, URL* url)
     return wnd;
 }
 
-Window::Window(StarFish* starFish, URL* url)
+Window::Window(StarFish* starFish)
     : m_starFish(starFish)
+    , m_scriptBindingInstance(nullptr)
     , m_document(nullptr)
     , m_touchDownPoint(0, 0)
 {
-    initScriptWrappable(this);
-    STARFISH_ASSERT(m_starFish->scriptBindingInstance());
+    initFlags();
+}
+
+void Window::initFlags()
+{
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
 
@@ -419,8 +424,55 @@ Window::Window(StarFish* starFish, URL* url)
     m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_activeNodeWithTouchDown = nullptr;
+}
 
-    m_document = new HTMLDocument(this, starFish->scriptBindingInstance(), url, String::createASCIIString("UTF-8"));
+Window::~Window()
+{
+    STARFISH_LOG_INFO("Window::~Window\n");
+
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    if (eflWindow->m_dummyBox) {
+        evas_object_del(eflWindow->m_dummyBox);
+        eflWindow->m_dummyBox = nullptr;
+    }
+
+    if (eflWindow->m_mainBox) {
+        elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
+        evas_object_del(eflWindow->m_mainBox);
+        eflWindow->m_mainBox = nullptr;
+    }
+
+#ifndef STARFISH_TIZEN_WEARABLE
+    ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopMouseUpEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopMouseMoveEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopKeyDownEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopKeyUpEventHandler);
+#endif
+
+#ifdef STARFISH_TIZEN_WEARABLE
+    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, eflWindow->m_mobileMouseDownEventHandler);
+    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, eflWindow->m_mobileMouseMoveEventHandler);
+    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseMoveEventHandler);
+#endif
+}
+
+void Window::navigate(URL* url)
+{
+    close();
+    initFlags();
+    STARFISH_LOG_INFO("Window::navigate %s\n", url->urlString()->utf8Data());
+
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    eflWindow->m_isActive = true;
+
+    m_scriptBindingInstance = new ScriptBindingInstance();
+    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
+    m_scriptBindingInstance->initBinding(m_starFish);
+    initScriptWrappable(this);
+
+    m_document = new HTMLDocument(this, scriptBindingInstance(), url, String::createASCIIString("UTF-8"));
+    m_document->open();
 }
 
 // #define STARFISH_ENABLE_TIMER
@@ -846,7 +898,7 @@ void Window::setNeedsRenderingSlowCase()
     ((WindowImplEFL*)this)->m_renderingAnimator = ecore_animator_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         Window* wnd = (Window*)id->m_data;
-        ScriptBindingInstanceEnterer enter(wnd->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(wnd->scriptBindingInstance());
         id->m_fn(id->m_data);
         ((WindowImplEFL*)wnd)->m_renderingAnimator = nullptr;
         ((WindowImplEFL*)wnd)->m_renderingIdlerData = nullptr;
@@ -882,7 +934,7 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, uint32_t delay, voi
     td->m_handler = handler;
     td->m_timerID = ecore_timer_add(delay / 1000.0, [](void* data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
-        ScriptBindingInstanceEnterer enter(td->m_window->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(td->m_window->scriptBindingInstance());
         Window* wnd = td->m_window;
         uint32_t id = td->m_id;
         td->m_handler(td->m_window, td->m_data);
@@ -926,7 +978,7 @@ uint32_t Window::setInterval(WindowSetTimeoutHandler handler, uint32_t delay, vo
     td->m_handler = handler;
     td->m_timerID = ecore_timer_add(delay / 1000.0, [](void* data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
-        ScriptBindingInstanceEnterer enter(td->m_window->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(td->m_window->scriptBindingInstance());
         auto a = td->m_window->m_timeoutHandler.find(td->m_id);
         td->m_handler(td->m_window, td->m_data);
         return ECORE_CALLBACK_RENEW;
@@ -963,7 +1015,7 @@ uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler, void* da
     td->m_handler = handler;
     td->m_timerID = (Ecore_Timer*)ecore_animator_add([](void* data) -> Eina_Bool {
         TimeoutData* td = (TimeoutData*)data;
-        ScriptBindingInstanceEnterer enter(td->m_window->starFish()->scriptBindingInstance());
+        ScriptBindingInstanceEnterer enter(td->m_window->scriptBindingInstance());
         auto a = td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
         td->m_handler(td->m_window, td->m_data);
         a = td->m_window->m_requestAnimationFrameHandler.find(td->m_id);
@@ -1108,7 +1160,7 @@ HTMLCollection* Window::namedAccess(String* name)
 
 void Window::pause()
 {
-    STARFISH_LOG_INFO("onPause\n");
+    STARFISH_LOG_INFO("Window::pause\n");
     m_isRunning = false;
 
     document()->setVisibleState(PageVisibilityState::PageVisibilityStateHidden);
@@ -1117,9 +1169,10 @@ void Window::pause()
 
 void Window::resume()
 {
+    STARFISH_LOG_INFO("Window::resume\n");
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     eflWindow->clearEFLResources();
-    STARFISH_LOG_INFO("onResume\n");
+
     m_isRunning = true;
     m_needsRendering = true;
     m_needsPainting = true;
@@ -1133,9 +1186,25 @@ void Window::resume()
 
 void Window::close()
 {
-    STARFISH_LOG_INFO("window::onClose\n");
+    STARFISH_LOG_INFO("Window::close\n");
+    clearEventListeners();
 
-    m_document->close();
+    if (m_document) {
+        ScriptBindingInstanceEnterer enter(scriptBindingInstance());
+        m_document->close();
+        delete m_document;
+        m_document = nullptr;
+    }
+
+    if (m_scriptBindingInstance) {
+        if (true) {
+            ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
+            m_scriptBindingInstance->close();
+        }
+        delete m_scriptBindingInstance;
+        m_scriptBindingInstance = nullptr;
+    }
+
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     eflWindow->m_isActive = false;
@@ -1165,36 +1234,13 @@ void Window::close()
 
     eflWindow->clearEFLResources();
 
-    if (eflWindow->m_dummyBox) {
-        evas_object_del(eflWindow->m_dummyBox);
-        eflWindow->m_dummyBox = nullptr;
-    }
-
-    if (eflWindow->m_mainBox) {
-        elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
-        evas_object_del(eflWindow->m_mainBox);
-        eflWindow->m_mainBox = nullptr;
-    }
-
     eflWindow->m_objectList.clear();
     eflWindow->m_objectList.shrink_to_fit();
     eflWindow->m_surfaceList.clear();
     eflWindow->m_surfaceList.shrink_to_fit();
     eflWindow->m_drawnImageList.clear();
 
-#ifndef STARFISH_TIZEN_WEARABLE
-    ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseUpEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseMoveEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopKeyDownEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopKeyUpEventHandler);
-#endif
-
-#ifdef STARFISH_TIZEN_WEARABLE
-    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, eflWindow->m_mobileMouseDownEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, eflWindow->m_mobileMouseMoveEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseMoveEventHandler);
-#endif
+    m_starFish->messageLoop()->clearPendingIdlers();
 }
 
 }

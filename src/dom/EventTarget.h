@@ -174,6 +174,11 @@ public:
         return l->scriptValue();
     }
 
+    void clearEventListeners()
+    {
+        m_eventListeners.clear();
+    }
+
 protected:
     std::unordered_map<String*, EventListenerVector*, std::hash<String*>, std::equal_to<String*>,
         gc_allocator<std::pair<String*, EventListenerVector*>>> m_eventListeners;
