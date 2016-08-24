@@ -188,10 +188,7 @@ void HTMLDocumentBuilder::build(URL* url)
 #ifndef STARFISH_TIZEN_WEARABLE
     m_resource->request();
 #else
-    if (url->isFileURL())
-        m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
-    else
-        m_resource->request();
+    m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync);
 #endif
 }
 

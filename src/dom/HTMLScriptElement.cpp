@@ -69,7 +69,7 @@ public:
         ResourceClient::didLoadFinished();
         if (isJavaScriptType(m_resource->networkRequest()->mimeType()->toLower()->utf8Data()) || m_resource->networkRequest()->mimeType()->toLower()->equals("text/plain")) {
             String* text = m_resource->asTextResource()->text();
-            m_element->document()->window()->starFish()->scriptBindingInstance()->evaluate(text);
+            m_element->document()->window()->scriptBindingInstance()->evaluate(text);
         }
         didScriptLoaded();
     }
@@ -102,7 +102,7 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
             }
             String* script = text();
             m_isAlreadyStarted = true;
-            document()->window()->starFish()->scriptBindingInstance()->evaluate(script);
+            document()->window()->scriptBindingInstance()->evaluate(script);
             m_didScriptExecuted = true;
             return false;
         } else {

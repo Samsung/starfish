@@ -17,6 +17,7 @@
 #ifndef __StarFishMessageLoop__
 #define __StarFishMessageLoop__
 
+#include "platform/threading/Mutex.h"
 
 namespace StarFish {
 
@@ -26,19 +27,25 @@ class MessageLoop : public gc {
 public:
     MessageLoop(StarFish* sf)
         : m_starFish(sf)
+        , m_idlersFromOtherThreadMutex(new Mutex())
     {
-
     }
 
     size_t addIdler(void (*fn)(size_t handle, void*), void* data);
     size_t addIdler(void (*fn)(size_t handle, void*, void*), void* data, void* data1);
     size_t addIdler(void (*fn)(size_t handle, void*, void*, void*), void* data, void* data1, void* data2);
     size_t addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t handle, void*), void* data);
+    size_t addIdlerWithNoScriptInstanceEntering(void (*fn)(size_t handle, void*, void*), void* data, void* data1);
 
     void removeIdler(size_t handle);
     void removeIdlerWithNoGCRooting(size_t handle);
+
+    void clearPendingIdlers();
 protected:
     StarFish* m_starFish;
+    std::unordered_set<size_t> m_idlers;
+    Mutex* m_idlersFromOtherThreadMutex;
+    std::unordered_set<size_t> m_idlersFromOtherThread;
     void run();
 };
 

@@ -286,11 +286,6 @@ public:
         return m_window;
     }
 
-    ScriptBindingInstance* scriptBindingInstance()
-    {
-        return m_scriptBindingInstance;
-    }
-
     void loadHTMLDocument(String* filePath);
 
     void resume();
@@ -372,7 +367,6 @@ protected:
     float m_defaultFontSizeMultiplier;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
-    ScriptBindingInstance* m_scriptBindingInstance;
     void* m_nativeWindow;
     Window* m_window;
     FontSelector m_fontSelector;

@@ -19,7 +19,7 @@
 
 namespace StarFish {
 
-#define __STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     F(node, Node) \
     F(element, Element) \
     F(document, Document) \
@@ -61,8 +61,7 @@ namespace StarFish {
     F(domException, DOMException)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
-    __STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
     F(htmlMediaElement, HTMLMediaElement) \
     F(htmlVideoElement, HTMLVideoElement) \
     F(htmlAudioElement, HTMLAudioElement) \
@@ -74,9 +73,19 @@ namespace StarFish {
     F(VTTCue, VTTCue) \
     F(timeRanges, TimeRanges)
 #else
-#define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
-    __STARFISH_ENUM_LAZY_BINDING_NAMES(F)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)
 #endif
+
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
+#else
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
+#endif
+
+#define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
 
 #define FOR_EACH_DECLARE_FN(codeName, exportName) \
     escargot::ESFunctionObject* binding##exportName(ScriptBindingInstance* scriptBindingInstance);
@@ -148,6 +157,8 @@ private:
     escargot::ESFunctionObject* m_htmlVideoElement;
     escargot::ESFunctionObject* m_htmlAudioElement;
     escargot::ESFunctionObject* m_htmlTrackElement;
+#endif
+#ifdef STARFISH_ENABLE_MULTI_PAGE
 #endif
     escargot::ESFunctionObject* m_htmlElement;
     escargot::ESFunctionObject* m_htmlHtmlElement;

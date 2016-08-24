@@ -155,7 +155,6 @@ StarFish::~StarFish()
 #endif
     close();
     delete m_lineBreaker;
-    delete m_scriptBindingInstance;
     delete m_window;
 }
 
@@ -201,27 +200,22 @@ void StarFish::loadHTMLDocument(String* filePath)
     }
 
 
-    STARFISH_LOG_INFO("loadHTMLDocument %s\n", path.data());
-    m_scriptBindingInstance = new ScriptBindingInstance();
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
-    m_scriptBindingInstance->initBinding(this);
     int width;
     int height;
     evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width, &height);
-    m_window = Window::create(this, m_nativeWindow, width, height, URL::createURL(String::emptyString, String::fromUTF8(path.c_str())));
-
-    m_window->document()->open();
+    m_window = Window::create(this, m_nativeWindow, width, height);
+    m_window->navigate(URL::createURL(String::emptyString, String::fromUTF8(path.c_str())));
 }
 
 void StarFish::resume()
 {
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
+    ScriptBindingInstanceEnterer enter(window()->scriptBindingInstance());
     m_window->resume();
 }
 
 void StarFish::pause()
 {
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
+    ScriptBindingInstanceEnterer enter(window()->scriptBindingInstance());
     m_window->pause();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
@@ -231,14 +225,12 @@ void StarFish::pause()
 
 void StarFish::close()
 {
-    ScriptBindingInstanceEnterer enter(m_scriptBindingInstance);
     m_window->close();
-    m_scriptBindingInstance->close();
 }
 
 void StarFish::evaluate(String* s)
 {
-    m_scriptBindingInstance->evaluate(s);
+    m_window->scriptBindingInstance()->evaluate(s);
 }
 
 void StarFish::addPointerInRootSet(void *ptr)

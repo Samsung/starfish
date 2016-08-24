@@ -148,7 +148,6 @@ CXXFLAGS += -fdata-sections -ffunction-sections
 CXXFLAGS += -frounding-math -fsignaling-nans
 CXXFLAGS += -Wno-invalid-offsetof -fvisibility=hidden
 CXXFLAGS += -fno-omit-frame-pointer -fstack-protector
-CXXFLAGS += -DSTARFISH_ENABLE_TEST
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
 CXXFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations
 
@@ -159,7 +158,10 @@ LDFLAGS += -lpthread -lcurl
 # /home/ksh8281/tizen-sdk-2.4.r2/tools/arm-linux-gnueabi-gcc-4.9/bin/../lib/gcc/arm-linux-gnueabi/4.9.2/../../../../arm-linux-gnueabi/bin/ld: BFD (GNU Binutils) 2.22 assertion fail ../../bfd/elf32-arm.c:12049
 # LDFLAGS += -Wl,--gc-sections
 
-ifeq ($(ARCH), x86)
+ifeq ($(ARCH), x64)
+  CXXFLAGS += -DSTARFISH_ENABLE_TEST
+  CXXFLAGS += -DSTARFISH_ENABLE_MULTI_PAGE
+else ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2
   LDFLAGS += -m32
 else ifeq ($(ARCH), arm)
@@ -167,6 +169,9 @@ else ifeq ($(ARCH), arm)
     CXXFLAGS += -mthumb
   else
     CXXFLAGS += -march=armv7-a -mthumb
+  endif
+  ifeq ($(MODE), debug)
+    CXXFLAGS += -DSTARFISH_ENABLE_TEST
   endif
 endif
 
@@ -197,7 +202,6 @@ ifneq (,$(findstring tizen,$(HOST)))
   CXXFLAGS += -DSTARFISH_TIZEN
 
   #CXXFLAGS_DEBUG += -Wno-literal-suffix
-  CXXFLAGS_RELEASE += -USTARFISH_ENABLE_TEST
 
   ifeq ($(TYPE), lib)
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE_LIB

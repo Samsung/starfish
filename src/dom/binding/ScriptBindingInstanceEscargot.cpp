@@ -95,9 +95,6 @@ ScriptBindingInstance::ScriptBindingInstance()
 
 ScriptBindingInstance::~ScriptBindingInstance()
 {
-#ifdef USE_ES6_FEATURE
-    ((PromiseJobQueue*)m_promiseJobQueue)->clearPendingJobs();
-#endif
     delete fetchData(this)->m_instance;
 }
 
@@ -124,6 +121,9 @@ void ScriptBindingInstance::close()
 {
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::close(fetchData(this)->m_instance);
+#endif
+#ifdef USE_ES6_FEATURE
+    ((PromiseJobQueue*)m_promiseJobQueue)->clearPendingJobs();
 #endif
 }
 
@@ -179,7 +179,7 @@ void ScriptBindingInstance::close()
 
 #define THROW_DOM_EXCEPTION(instance, errcode) \
     { \
-        auto __sf = ((Window*)instance->globalObject()->extraPointerData())->starFish(); \
+        auto __sf = ((Window*)instance->globalObject()->extraPointerData()); \
         auto __err = new DOMException(__sf->scriptBindingInstance(), errcode, nullptr); \
         escargot::ESVMInstance::currentInstance()->throwError(__err->scriptValue()); \
     }
@@ -283,6 +283,33 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     navigator->defineDataProperty(escargot::ESString::create("vendor"), true, true, true, escargot::ESString::create(VENDOR_NAME));
     navigator->defineDataProperty(escargot::ESString::create("userAgent"), true, true, true, escargot::ESString::create(USER_AGENT(APP_CODE_NAME, VERSION)));
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("navigator"), true, true, true, navigator);
+
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+    // Location
+    escargot::ESFunctionObject* locationFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESString* msg = escargot::ESString::create("Illegal constructor");
+        instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }, escargot::ESString::create("location"), 0, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        locationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("href"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        return toJSString(wnd->document()->documentURI()->urlString());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        wnd->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering([](size_t a, void* data, void* data2) {
+            ((Window*)data2)->navigate((URL*)data);
+        }, URL::createURL(wnd->document()->documentURI()->urlString(), toBrowserString(instance->currentExecutionContext()->readArgument(0).toString())), wnd);
+        return escargot::ESValue();
+    });
+#endif
+
+    escargot::ESObject* location = escargot::ESObject::create();
+    location->set__proto__(locationFunction->protoType());
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("location"), true, true, true, location);
+    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Location"), true, true, true, locationFunction);
 
     escargot::ESFunctionObject* toStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -1085,7 +1112,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                     // Validate key string
                     QualifiedName attrKey = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(sf, key.asESString()->utf8Data()));
                     if (!QualifiedName::checkNameProductionRule(attrKey.localName(), attrKey.localName()->length()))
-                        throw new DOMException(sf->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+                        throw new DOMException(sf->window()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
                     String* attrVal = toBrowserString(val);
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
@@ -2037,7 +2064,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
                     escargot::ESString* argStr = argValue.asESString();
                     auto bStr = toBrowserString(argStr);
                     if (!QualifiedName::checkNameProductionRule(bStr, bStr->length()))
-                        throw new DOMException(doc->window()->starFish()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
+                        throw new DOMException(doc->window()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
                     QualifiedName name = QualifiedName(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), argStr->utf8Data()));
                     Element* elem = doc->createElement(name, true);
                     if (elem != nullptr)
