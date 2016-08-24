@@ -741,6 +741,7 @@ void Window::rendering()
 
 void Window::clearStackingContext()
 {
+    STARFISH_ASSERT(m_document);
     if (m_document->frame()) {
         StackingContext* root = nullptr;
         HTMLHtmlElement* rootElement = document()->rootElement();
