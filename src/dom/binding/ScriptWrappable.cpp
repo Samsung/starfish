@@ -704,6 +704,16 @@ void ScriptWrappable::initScriptWrappable(Comment* ptr)
     scriptObject()->setExtraData(NodeObject);
 }
 
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+void ScriptWrappable::initScriptWrappable(HTMLAnchorElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->htmlAnchorElement()->protoType());
+    scriptObject()->setExtraData(NodeObject);
+}
+#endif
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 void ScriptWrappable::initScriptWrappable(HTMLMediaElement* ptr)
 {
@@ -999,15 +1009,19 @@ void ScriptWrappable::initScriptWrappable(Event* event)
     scriptObject()->setExtraData(EventObject);
 }
 
-void ScriptWrappable::initScriptWrappable(UIEvent* ptr, ScriptBindingInstance* instance)
+void ScriptWrappable::initScriptWrappable(UIEvent* ptr)
 {
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->scriptBindingInstance();
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->uiEvent()->protoType());
     scriptObject()->setExtraData(EventObject);
 }
 
-void ScriptWrappable::initScriptWrappable(MouseEvent* ptr, ScriptBindingInstance* instance)
+void ScriptWrappable::initScriptWrappable(MouseEvent* ptr)
 {
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->scriptBindingInstance();
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->mouseEvent()->protoType());
     scriptObject()->setExtraData(EventObject);

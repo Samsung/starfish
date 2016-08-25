@@ -475,6 +475,13 @@ void Window::navigate(URL* url)
     m_document->open();
 }
 
+void Window::navigateAsync(URL* url)
+{
+    starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering([](size_t a, void* data, void* data2) {
+        ((Window*)data2)->navigate((URL*)data);
+    }, url, this);
+}
+
 // #define STARFISH_ENABLE_TIMER
 
 #ifdef STARFISH_ENABLE_TIMER
@@ -1118,7 +1125,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         while (t) {
             if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
                 String* eventType = starFish()->staticStrings()->m_click.localName();
-                Event* e = new Event(eventType, EventInit(true, true));
+                Event* e = new MouseEvent(eventType, EventInit(true, true));
                 EventTarget::dispatchEvent(t->asNode(), e);
                 shouldDispatchEvent = false;
                 break;
@@ -1131,7 +1138,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
                 t = m_document;
             }
             String* eventType = starFish()->staticStrings()->m_click.localName();
-            Event* e = new Event(eventType, EventInit(true, true));
+            Event* e = new MouseEvent(eventType, EventInit(true, true));
             EventTarget::dispatchEvent(t->asDocument(), e);
         }
 

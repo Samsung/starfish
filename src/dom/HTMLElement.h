@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-#define __FOR_EACH_HTML_ELEMENT_OP(F) \
+#define FOR_EACH_HTML_ELEMENT_OP_DEFAULT(F) \
         F(Html) \
         F(Head) \
         F(Script) \
@@ -37,16 +37,26 @@ namespace StarFish {
         F(Unknown)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#define FOR_EACH_HTML_ELEMENT_OP(F) \
-        __FOR_EACH_HTML_ELEMENT_OP(F) \
+#define FOR_EACH_HTML_ELEMENT_OP_MEDIA(F) \
         F(Media) \
         F(Video) \
         F(Audio) \
         F(Track)
 #else
-#define FOR_EACH_HTML_ELEMENT_OP(F) \
-        __FOR_EACH_HTML_ELEMENT_OP(F)
+#define FOR_EACH_HTML_ELEMENT_OP_MEDIA(F)
 #endif
+
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+#define FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F) \
+        F(Anchor)
+#else
+#define FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F)
+#endif
+
+#define FOR_EACH_HTML_ELEMENT_OP(F) \
+        FOR_EACH_HTML_ELEMENT_OP_DEFAULT(F) \
+        FOR_EACH_HTML_ELEMENT_OP_MEDIA(F) \
+        FOR_EACH_HTML_ELEMENT_OP_MULTI_PAGE(F)
 
 #define FORWRAD_DECLARE_NAME(kind) class HTML##kind##Element;
 

@@ -916,11 +916,6 @@ void Node::setNeedsFrameTreeBuild()
     m_document->window()->setNeedsFrameTreeBuild();
 }
 
-bool Node::dispatchEvent(Event* event)
-{
-    return EventTarget::dispatchEvent(this, event);
-}
-
 void Node::didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
 {
     if (frame()) {

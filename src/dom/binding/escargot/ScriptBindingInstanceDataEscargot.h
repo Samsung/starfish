@@ -77,7 +77,8 @@ namespace StarFish {
 #endif
 
 #ifdef STARFISH_ENABLE_MULTI_PAGE
-#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
+    F(htmlAnchorElement, HTMLAnchorElement)
 #else
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
 #endif
@@ -159,6 +160,7 @@ private:
     escargot::ESFunctionObject* m_htmlTrackElement;
 #endif
 #ifdef STARFISH_ENABLE_MULTI_PAGE
+    escargot::ESFunctionObject* m_htmlAnchorElement;
 #endif
     escargot::ESFunctionObject* m_htmlElement;
     escargot::ESFunctionObject* m_htmlHtmlElement;

@@ -53,7 +53,18 @@ public:
         initScriptWrappable(this);
     }
 
-    const String* type() const { return m_type; }
+    virtual bool isUIEvent()
+    {
+        return false;
+    }
+
+    UIEvent* asUIEvent()
+    {
+        STARFISH_ASSERT(isUIEvent());
+        return (UIEvent*)this;
+    }
+
+    String* type() const { return m_type; }
     EventTarget* target() const { return m_target; }
     void setTarget(EventTarget* target) { m_target = target; }
 
@@ -118,13 +129,39 @@ private:
 
 class UIEvent : public Event {
 protected:
-    UIEvent(ScriptBindingInstance* instance);
+    UIEvent(String* eventType, const EventInit& init = EventInit(false, false))
+        : Event(eventType, init)
+    {
+    }
 public:
+    virtual bool isUIEvent()
+    {
+        return true;
+    }
+
+    virtual bool isMouseEvent()
+    {
+        return false;
+    }
+
+    MouseEvent* asMouseEvent()
+    {
+        STARFISH_ASSERT(isMouseEvent());
+        return (MouseEvent*)this;
+    }
 };
 
 class MouseEvent : public UIEvent {
 public:
-    MouseEvent(ScriptBindingInstance* instance);
+    MouseEvent(String* eventType, const EventInit& init = EventInit(false, false))
+        : UIEvent(eventType, init)
+    {
+    }
+
+    virtual bool isMouseEvent()
+    {
+        return true;
+    }
 };
 
 struct ProgressEventInit : public EventInit {
