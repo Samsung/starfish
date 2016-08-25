@@ -36,6 +36,8 @@
 #include <Ecore_X.h>
 #endif
 
+extern Evas* g_internalCanvas;
+
 #ifdef STARFISH_TIZEN_WEARABLE
 #include <tizen.h>
 #endif
@@ -88,6 +90,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
+    , m_enterCount(0)
 {
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
@@ -163,6 +166,24 @@ void StarFish::run()
     m_messageLoop->run();
 }
 
+void StarFish::enter()
+{
+    if (m_enterCount == 0) {
+        g_internalCanvas = evas_object_evas_get((Evas_Object*)m_window->unwrap());
+        m_window->scriptBindingInstance()->enter();
+    }
+    m_enterCount++;
+}
+
+void StarFish::exit()
+{
+    if (m_enterCount == 1) {
+        g_internalCanvas = nullptr;
+        m_window->scriptBindingInstance()->exit();
+    }
+    m_enterCount--;
+}
+
 void StarFish::loadHTMLDocument(String* filePath)
 {
     std::string path;
@@ -209,13 +230,13 @@ void StarFish::loadHTMLDocument(String* filePath)
 
 void StarFish::resume()
 {
-    ScriptBindingInstanceEnterer enter(window()->scriptBindingInstance());
+    StarFishEnterer enter(this);
     m_window->resume();
 }
 
 void StarFish::pause()
 {
-    ScriptBindingInstanceEnterer enter(window()->scriptBindingInstance());
+    StarFishEnterer enter(this);
     m_window->pause();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();

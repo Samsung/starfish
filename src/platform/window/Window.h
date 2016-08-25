@@ -206,6 +206,7 @@ protected:
     void initFlags();
     void setNeedsRenderingSlowCase();
     Window(StarFish* starFish);
+
     void rendering();
     void clearStackingContext();
     void paintWindowBackground(Canvas* canvas);

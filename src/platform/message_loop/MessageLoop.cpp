@@ -55,7 +55,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
     id->m_idler = ecore_idler_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->window()->scriptBindingInstance());
+        StarFishEnterer enter(id->m_ml->m_starFish);
         id->m_fn((size_t)id, id->m_data);
 
         GC_FREE(id);
@@ -78,7 +78,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data, void*
     id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->window()->scriptBindingInstance());
+        StarFishEnterer enter(id->m_ml->m_starFish);
         ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data, id->m_data1);
 
         GC_FREE(id);
@@ -102,7 +102,8 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*), void* data
     id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->window()->scriptBindingInstance());
+
+        StarFishEnterer enter(id->m_ml->m_starFish);
         ((void (*)(size_t, void*, void*, void*))id->m_fn)((size_t)id, id->m_data, id->m_data1, id->m_data2);
 
         GC_FREE(id);
@@ -134,7 +135,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t, void
                 id->m_ml->m_idlersFromOtherThread.erase(id->m_ml->m_idlersFromOtherThread.find((size_t)id));
             }
             if (id->m_shouldExecute) {
-                ScriptBindingInstanceEnterer enter(id->m_ml->m_starFish->window()->scriptBindingInstance());
+                StarFishEnterer enter(id->m_ml->m_starFish);
                 id->m_fn((size_t)id, id->m_data);
             }
             delete id;

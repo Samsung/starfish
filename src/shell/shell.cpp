@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
                     exit(-1);
                 }
 
-                ScriptBindingInstanceEnterer enter(p->sf->window()->scriptBindingInstance());
+                StarFishEnterer enter(p->sf);
                 p->sf->evaluate(String::fromUTF8(p->buf));
 
                 delete [] p->buf;
