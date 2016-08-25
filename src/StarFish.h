@@ -271,11 +271,13 @@ template<> struct equal_to<StarFish::BlobURLStore> {
 }
 
 namespace StarFish {
+
 // you must call delete
 // StarFish::StarFish function is NOT THREAD-SAFE
 class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
+    friend class StarFishEnterer;
 public:
     StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier);
     ~StarFish();
@@ -353,7 +355,11 @@ public:
     bool isValidBlobURL(BlobURLStore ptr);
     bool isValidBlobURL(Blob* ptr);
     BlobURLStore findBlobURL(Blob* ptr);
+
 protected:
+    void enter();
+    void exit();
+
     size_t posPrefix(std::string str, std::string prefix)
     {
         std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -371,12 +377,29 @@ protected:
     Window* m_window;
     FontSelector m_fontSelector;
     ThreadPool* m_threadPool;
+    size_t m_enterCount;
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
         gc_allocator<std::pair<void*, size_t>>> m_rootMap;
     std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
         gc_allocator<BlobURLStore>> m_urlBlobStore;
     std::unordered_map<std::string, AtomicString,
         std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString>>> m_atomicStringMap;
+};
+
+class StarFishEnterer {
+public:
+    StarFishEnterer(StarFish* instance)
+        : m_instance(instance)
+    {
+        m_instance->enter();
+    }
+
+    ~StarFishEnterer()
+    {
+        m_instance->exit();
+    }
+protected:
+    StarFish* m_instance;
 };
 
 #ifdef STARFISH_ENABLE_TEST

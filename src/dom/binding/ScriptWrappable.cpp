@@ -1259,7 +1259,6 @@ void ScriptWrappable::initScriptWrappable(CSSStyleRule* ptr)
 #ifdef STARFISH_ENABLE_TEST
 void Window::testStart()
 {
-    ScriptBindingInstanceEnterer enter(scriptBindingInstance());
     escargot::ESValue v = escargot::ESVMInstance::currentInstance()->globalObject()->get(escargot::ESString::create("testStart"));
     if (!v.isUndefined()) {
         callScriptFunction(v, { }, 0, escargot::ESVMInstance::currentInstance()->globalObject());
