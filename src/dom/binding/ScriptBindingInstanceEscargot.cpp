@@ -299,9 +299,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return toJSString(wnd->document()->documentURI()->urlString());
     }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         Window* wnd = (Window*)instance->globalObject()->extraPointerData();
-        wnd->starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering([](size_t a, void* data, void* data2) {
-            ((Window*)data2)->navigate((URL*)data);
-        }, URL::createURL(wnd->document()->documentURI()->urlString(), toBrowserString(instance->currentExecutionContext()->readArgument(0).toString())), wnd);
+        wnd->navigateAsync(URL::createURL(wnd->document()->documentURI()->urlString(), toBrowserString(instance->currentExecutionContext()->readArgument(0).toString())));
         return escargot::ESValue();
     });
 #endif
@@ -2831,6 +2829,14 @@ escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scrip
     return HTMLImageElementFunction;
 }
 
+#ifdef STARFISH_ENABLE_MULTI_PAGE
+escargot::ESFunctionObject* bindingHTMLAnchorElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLAnchorElement, fetchData(scriptBindingInstance)->htmlElement());
+    return HTMLAnchorElementFunction;
+}
+#endif
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #define DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
@@ -4603,7 +4609,8 @@ void ScriptBindingInstance::evaluate(String* str)
     ScriptBindingInstanceEnterer enter(*this);
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) == 0) {
-        fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
+        auto result = fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
+        STARFISH_LOG_ERROR("%s\n", result.toString()->utf8Data());
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
         fetchData(this)->m_instance->unregisterCheckedObjectAll();
     } else {

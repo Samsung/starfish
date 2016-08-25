@@ -558,8 +558,6 @@ public:
     virtual void didNodeInsertedToDocumenTree() { }
     virtual void didNodeRemovedFromDocumenTree() { }
 
-    virtual bool dispatchEvent(Event* event);
-
     bool hasRareMembers()
     {
         return m_rareNodeMembers != nullptr;

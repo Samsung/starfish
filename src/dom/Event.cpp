@@ -70,18 +70,6 @@ Event::Event(String* eventType, const EventInit& init)
     m_timeStamp = (unsigned long long)(BILLION * time.tv_sec + time.tv_nsec) / MILLION;
 }
 
-UIEvent::UIEvent(ScriptBindingInstance* instance)
-    : Event()
-{
-    initScriptWrappable(this, instance);
-}
-
-MouseEvent::MouseEvent(ScriptBindingInstance* instance)
-    : UIEvent(instance)
-{
-    initScriptWrappable(this, instance);
-}
-
 ProgressEventInit::ProgressEventInit()
     : lengthComputable(false)
     , loaded(0)

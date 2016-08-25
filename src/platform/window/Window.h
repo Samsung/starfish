@@ -40,6 +40,7 @@ public:
     static Window* create(StarFish* sf, void* win, int width, int height);
     ~Window();
     void navigate(URL* url);
+    void navigateAsync(URL* url);
 
     virtual bool isWindow()
     {

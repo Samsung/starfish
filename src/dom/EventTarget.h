@@ -137,7 +137,11 @@ public:
 
     bool addEventListener(const String* eventType, EventListener* listener, bool useCapture = false);
     bool removeEventListener(const String* eventType, EventListener* listener, bool useCapture = false);
-    virtual bool dispatchEvent(Event* event);
+    bool dispatchEvent(Event* event);
+    virtual void handleDefaultEvent(Event* event)
+    {
+
+    }
     bool dispatchEvent(EventTarget* origin, Event* event);
 
     void setAttributeEventListener(const QualifiedName& eventTypeName, ScriptValue f)
