@@ -197,7 +197,7 @@ public:
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         m_width = w;
         m_height = h;
-        STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
+        // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
 
         STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
         /*
@@ -214,7 +214,7 @@ public:
         if (!image)
             return;
         CanvasSurfaceEFL* s = (CanvasSurfaceEFL*)this;
-        STARFISH_LOG_INFO("detach CanvasSurfaceEFL NativeBuffer %p\n", image);
+        // STARFISH_LOG_INFO("detach CanvasSurfaceEFL NativeBuffer %p\n", image);
         // evas_object_image_size_set(image, 0, 0);
         evas_object_hide(image);
         STARFISH_RELEASE_ASSERT(evas_object_ref_get(image) == 0);
