@@ -302,12 +302,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         wnd->navigateAsync(URL::createURL(wnd->document()->documentURI()->urlString(), toBrowserString(instance->currentExecutionContext()->readArgument(0).toString())));
         return escargot::ESValue();
     });
-#endif
 
     escargot::ESObject* location = escargot::ESObject::create();
     location->set__proto__(locationFunction->protoType());
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("location"), true, true, true, location);
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Location"), true, true, true, locationFunction);
+#endif
 
     escargot::ESFunctionObject* toStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
