@@ -79,6 +79,7 @@ public:
         : Window(sf)
     {
         m_mainBox = nullptr;
+        m_background = nullptr;
         m_dummyBox = nullptr;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
@@ -282,6 +283,12 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
 
+    wnd->m_background = elm_bg_add(wnd->m_window);
+    evas_object_size_hint_weight_set(wnd->m_background, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(wnd->m_window, wnd->m_background);
+    elm_bg_color_set(wnd->m_background, 0x00, 0x00, 0x00);
+    evas_object_show(wnd->m_background);
+
 #ifndef STARFISH_TIZEN_WEARABLE_LIB
     Evas* e = evas_object_evas_get(wnd->m_window);
     Ecore_Evas* ee = ecore_evas_ecore_evas_get(e);
@@ -440,6 +447,12 @@ Window::~Window()
         elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
         evas_object_del(eflWindow->m_mainBox);
         eflWindow->m_mainBox = nullptr;
+    }
+
+    if (eflWindow->m_background) {
+        elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_background);
+        evas_object_del(eflWindow->m_background);
+        eflWindow->m_background = nullptr;
     }
 
 #ifndef STARFISH_TIZEN_WEARABLE
@@ -697,17 +710,20 @@ void Window::rendering()
         // painting
         Canvas* canvas = preparePainting(eflWindow, true);
 
-        paintWindowBackground(canvas);
+        if (m_document->frame()->firstChild())
+            m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
+        else
+            m_needsComposite = false;
+
+        if (!m_needsComposite)
+            paintWindowBackground(canvas);
+
         {
             PaintingContext ctx(canvas);
             ctx.m_paintingStage = PaintingStageEnd;
             m_document->frame()->paint(ctx);
         }
         m_needsPainting = false;
-        if (m_document->frame()->firstChild())
-            m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
-        else
-            m_needsComposite = false;
 
         delete canvas;
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -765,6 +781,7 @@ void Window::rendering()
         }
 #endif
     }
+
 
     if (m_needsComposite) {
         Timer t("composite");

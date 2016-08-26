@@ -558,19 +558,12 @@ public:
     }
 
 
-    virtual void paintStackingContextContent(Canvas* canvas);
-
-    virtual bool hasStackingContextContentBuffer()
+    void paintStackingContextContent(Canvas* canvas);
+    virtual void willCompsiteStackingContext(Canvas* c)
     {
-        return false;
-    }
 
-    virtual CanvasSurface* gainStackingContextContentBuffer()
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-
-    virtual void willCompsiteStackingContextContentBuffer(Canvas* c)
+    virtual void didCompsiteStackingContext(Canvas* c)
     {
 
     }

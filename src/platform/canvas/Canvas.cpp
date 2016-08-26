@@ -631,7 +631,7 @@ public:
         lastState().m_lineThroughColor = clr;
     }
 
-    void drawEvasRect(int xx, int yy, int ww, int hh, const Rect& rt)
+    void drawEvasRect(int xx, int yy, int ww, int hh, const Rect& rt, bool isHole = false)
     {
         Evas_Object* eo = evas_object_rectangle_add(m_canvas);
         if (m_objList)
@@ -642,6 +642,11 @@ public:
         applyClippers(eo);
         applyEvasMapIfNeeded(eo, rt);
         evas_object_show(eo);
+
+        if (isHole) {
+            evas_object_color_set(eo, 0, 0, 0, 0);
+            evas_object_render_op_set(eo, EVAS_RENDER_COPY);
+        }
     }
 
     virtual void drawRect(const Rect& rt)
@@ -675,6 +680,39 @@ public:
             hh = rt.height();
         }
         drawEvasRect(xx, yy, ww, hh, rt);
+    }
+
+    virtual void punchHole(const Rect& rt)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(
+                SkFloatToScalar((float)rt.x()),
+                SkFloatToScalar((float)rt.y()),
+                SkFloatToScalar((float)rt.width()),
+                SkFloatToScalar((float)rt.height()));
+            if (!shouldApplyEvasMap())
+                lastState().m_matrix.mapRect(&sss);
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            if (!shouldApplyEvasMap()) {
+                xx = lastState().m_baseX + rt.x();
+                yy = lastState().m_baseY + rt.y();
+            } else {
+                xx = rt.x();
+                yy = rt.y();
+            }
+
+            ww = rt.width();
+            hh = rt.height();
+        }
+        drawEvasRect(xx, yy, ww, hh, rt, true);
     }
 
     virtual void drawRect(const LayoutRect& rt)

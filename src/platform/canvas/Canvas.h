@@ -81,15 +81,19 @@ public:
     virtual void setNeedsLineThrough(bool b) = 0;
     virtual void setUnderlineColor(Color clr) = 0;
     virtual void setLineThroughColor(Color clr) = 0;
+
     virtual void drawRect(const Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2, LayoutLocation p3, LayoutLocation p4) = 0; // left, top, right, bottom
+
+    virtual void punchHole(const Rect& rt) = 0;
+
     virtual void drawText(LayoutUnit x, LayoutUnit y, String* text) = 0;
+
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
     virtual void drawImage(CanvasSurface* data, const Rect& dst) = 0;
     virtual void drawBorderImage(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b, double scale, bool fill) = 0;
     virtual void drawRepeatImage(ImageData* data, const Rect& dst, float imageWidth, float imageHeight, bool xRepeat, bool yRepeat, bool isRootElement) = 0;
-
 
     virtual void applyMatrixTo(LayoutLocation lp) = 0;
     virtual void applyMatrixTo(LayoutRect lp) = 0;
