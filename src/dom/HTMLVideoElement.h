@@ -34,7 +34,7 @@ public:
         , m_videoElement(videoElement) { }
 
     virtual void onPrepared(bool hasError);
-    virtual void onPlayFinished() { }
+    virtual void onPlayFinished();
 protected:
     HTMLVideoElement* m_videoElement;
 };
@@ -91,6 +91,8 @@ public:
 
     void loadSrc();
     void loadSrc(String* src);
+
+    virtual void play();
 
 private:
     CanvasSurface* m_videoSurface;

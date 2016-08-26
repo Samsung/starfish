@@ -116,14 +116,26 @@ void HTMLVideoElement::loadSrc(String* src)
     m_hasPendingRequest = false;
 }
 
+void HTMLVideoElement::play()
+{
+    if (m_player)
+        m_player->play();
+}
+
 void VideoPlayer::onPrepared(bool hasError)
 {
     if (hasError) {
         // TODO
         return;
     }
+    STARFISH_LOG_ERROR("VideoPlayer::onPrepared()\n");
     if (m_videoElement->autoplay() && isReady())
         play();
+}
+
+void VideoPlayer::onPlayFinished()
+{
+    STARFISH_LOG_ERROR("VideoPlayer::onPlayFinished()\n");
 }
 
 }

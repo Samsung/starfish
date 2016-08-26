@@ -209,6 +209,8 @@ ifneq (,$(findstring tizen,$(HOST)))
 
   ifeq ($(TIZEN_VERSION), 3.0)
     CXXFLAGS += -DSTARFISH_TIZEN_3_0
+  else ifeq ($(TIZEN_VERSION), 2.4)
+    CXXFLAGS += -DSTARFISH_TIZEN_2_4
   endif
 
   ifeq ($(HOST),tizen_obs)
@@ -220,6 +222,12 @@ ifneq (,$(findstring tizen,$(HOST)))
   endif
   ifneq (,$(findstring tizen3_wearable,$(HOST)))
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+  endif
+  ifeq ($(TIZEN_PROFILE),tv)
+    CXXFLAGS += -DSTARFISH_TIZEN_TV
+  endif
+  ifeq ($(TIZEN_PROFILE),mobile)
+    CXXFLAGS += -DSTARFISH_TIZEN_MOBILE
   endif
 endif
 
