@@ -84,8 +84,8 @@ public:
     virtual void didLoadFailed()
     {
         ResourceClient::didLoadFailed();
-        m_element->clearResource();
         m_element->setReadyState(HTMLTrackElement::ERROR);
+        m_element->clearResource();
     }
 
     virtual void didLoadCanceled()

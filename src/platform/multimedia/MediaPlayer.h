@@ -27,10 +27,13 @@ namespace StarFish {
 
 class Document;
 class URL;
+class PlayerWindowData;
 
 class MediaPlayer : public gc {
 public:
     MediaPlayer();
+
+    void create();
 
     void prepare(Document* document, CanvasSurface* surface, String* path);
     void destroy();
