@@ -171,6 +171,12 @@ public:
 
     NamedNodeMap* attributes();
 
+    // https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface
+    uint32_t clientLeft();
+    uint32_t clientTop();
+    uint32_t clientWidth();
+    uint32_t clientHeight();
+
     RareNodeMembers* ensureRareMembers();
     RareElementMembers* ensureRareElementMembers();
 
@@ -218,6 +224,10 @@ public:
     }
 
 protected:
+    // clientRect is differ with clientBoundingRect.
+    // this function is only for client{Left, Top, Width, Top}
+    LayoutRect clientRect();
+
     // DO NOT MODIFY ATTRIBUTES.
     const AttributeVector* getAttributes() { return (AttributeVector*)&m_attributes; }
     virtual Node* clone();

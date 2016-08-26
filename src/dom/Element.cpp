@@ -23,6 +23,8 @@
 
 #include "dom/parser/HTMLParser.h"
 
+#include "layout/FrameBox.h"
+
 #include "style/Style.h"
 #include "style/CSSParser.h"
 
@@ -149,6 +151,38 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
         // only few html elements are affected by name attribute changing
         document()->invalidNamedAccessCacheIfNeeded();
     }
+}
+
+LayoutRect Element::clientRect()
+{
+    document()->window()->layoutIfNeeded();
+    if (frame()) {
+        if (frame()->isFrameBox()) {
+            FrameBox* box = frame()->asFrameBox();
+            return LayoutRect(box->borderLeft(), box->borderTop(), box->contentWidth() + box->paddingWidth(), box->contentHeight() + box->paddingHeight());
+        }
+    }
+    return LayoutRect(0, 0, 0, 0);
+}
+
+uint32_t Element::clientLeft()
+{
+    return (float)clientRect().x() + .5f;
+}
+
+uint32_t Element::clientTop()
+{
+    return (float)clientRect().y() + .5f;
+}
+
+uint32_t Element::clientWidth()
+{
+    return (float)clientRect().width() + .5f;
+}
+
+uint32_t Element::clientHeight()
+{
+    return (float)clientRect().height() + .5f;
 }
 
 void Element::setTextContent(String* text)

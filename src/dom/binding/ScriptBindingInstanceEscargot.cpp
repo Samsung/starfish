@@ -929,6 +929,46 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("clientLeft"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isElement()) {
+            return escargot::ESValue(originalObj->asElement()->clientLeft());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("clientTop"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isElement()) {
+            return escargot::ESValue(originalObj->asElement()->clientTop());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("clientWidth"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isElement()) {
+            return escargot::ESValue(originalObj->asElement()->clientWidth());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("clientHeight"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isElement()) {
+            return escargot::ESValue(originalObj->asElement()->clientHeight());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("localName"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
@@ -4608,7 +4648,7 @@ void ScriptBindingInstance::evaluate(String* str)
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) == 0) {
         auto result = fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
-        STARFISH_LOG_ERROR("%s\n", result.toString()->utf8Data());
+        STARFISH_LOG_INFO("ScriptBindingInstance::evaluate -> %s\n", result.toString()->utf8Data());
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
         fetchData(this)->m_instance->unregisterCheckedObjectAll();
     } else {
