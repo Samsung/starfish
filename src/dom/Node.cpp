@@ -1381,6 +1381,11 @@ void Node::dumpStyle()
     else
         printf("direction: rtl, ");
 
+    if (m_style->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue)
+        printf("white-space: normal, ");
+    else
+        printf("white-space: nowrap, ");
+
     // unicode-bidi
     if (m_style->unicodeBidi() == UnicodeBidiValue::NormalUnicodeBidiValue)
         printf("unicode-bidi: normal, ");

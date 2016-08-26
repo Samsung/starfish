@@ -194,6 +194,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Border-Left
         // Font-Weight
         // Line-Height
+        // White-Space
         // Padding-Top
         // Margin-Left
         switch (data[0]) {
@@ -210,6 +211,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'l':
             if (memcmp(data, "line-height", 11) == 0) {
                 return CSSStyleKind::LineHeight;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "white-space", 11) == 0) {
+                return CSSStyleKind::WhiteSpace;
             }
             break;
         case 'p':
@@ -609,6 +615,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         case 'l':
             if (memcmp(data, "lineHeight", 10) == 0) {
                 return CSSStyleKind::LineHeight;
+            }
+            break;
+        case 'w':
+            if (memcmp(data, "whiteSpace", 10) == 0) {
+                return CSSStyleKind::WhiteSpace;
             }
             break;
         case 'p':

@@ -293,6 +293,11 @@ enum FontSizeValue {
     SmallerFontSizeValue,
 };
 
+enum WhiteSpaceValue {
+    NormalWhiteSpaceValue,
+    NoWrapWhiteSpaceValue
+};
+
 // Widget Engine will support only visible and hidden values.
 enum OverflowValue {
     VisibleOverflow,
@@ -386,6 +391,7 @@ class CSSStyleDeclaration;
     F(BackgroundImage, backgroundImage, "background-image")        \
     F(BackgroundSize, backgroundSize, "background-size")           \
     F(LineHeight, lineHeight, "line-height")                       \
+    F(WhiteSpace, whiteSpace, "white-space")                       \
     F(PaddingTop, paddingTop, "padding-top")                       \
     F(PaddingRight, paddingRight, "padding-right")                 \
     F(PaddingBottom, paddingBottom, "padding-bottom")              \
@@ -597,6 +603,7 @@ public:
         VerticalAlignValueKind,
         SideValueKind,
         DirectionValueKind,
+        WhiteSpaceValueKind,
 
         ValueListKind,
 
@@ -707,6 +714,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == DirectionValueKind);
         return m_value.m_direction;
+    }
+
+    WhiteSpaceValue whiteSpaceValue()
+    {
+        STARFISH_ASSERT(m_valueKind == WhiteSpaceValueKind);
+        return m_value.m_whiteSpace;
     }
 
     UnicodeBidiValue unicodeBidiValue()
@@ -840,6 +853,7 @@ public:
         FontWeightValue m_fontWeight;
         SideValue m_side;
         DirectionValue m_direction;
+        WhiteSpaceValue m_whiteSpace;
         CSSLength m_length;
         CSSAngle m_angle;
         String* m_stringValue;
@@ -864,6 +878,7 @@ public:
         ValueData(FontWeightValue v) { m_fontWeight = v; }
         ValueData(SideValue v) { m_side = v; }
         ValueData(DirectionValue v) { m_direction = v; }
+        ValueData(WhiteSpaceValue v) { m_whiteSpace = v; }
         ValueData(CSSLength v) { m_length = v; }
         ValueData(CSSAngle v) { m_angle = v; }
         ValueData(String* v) { m_stringValue = v; }

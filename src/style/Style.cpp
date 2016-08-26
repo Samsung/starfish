@@ -842,6 +842,15 @@ String* CSSStyleValuePair::toString()
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::WhiteSpaceValueKind:
+        switch (whiteSpaceValue()) {
+        case NormalWhiteSpaceValue:
+            return String::fromUTF8("normal");
+        case NoWrapWhiteSpaceValue:
+            return String::fromUTF8("nowrap");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     case CSSStyleValuePair::ValueKind::Cover:
         return String::fromUTF8("cover");
     case CSSStyleValuePair::ValueKind::Contain:
@@ -1382,6 +1391,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     ret->m_inheritedStyles.m_color = Color(0, 0, 0, 255);
     ret->m_inheritedStyles.m_textAlign = SideValue::NoneSideValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
+    ret->m_inheritedStyles.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
     ret->loadResources(doc);
     return ret;
 }
@@ -1580,6 +1590,17 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     style->m_inheritedStyles.m_direction = cssValues[k].directionValue();
                 }
                 break;
+            case CSSStyleValuePair::KeyKind::WhiteSpace:
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                    style->m_inheritedStyles.m_whiteSpace = parentStyle->m_inheritedStyles.m_whiteSpace;
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->m_inheritedStyles.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
+                } else {
+                    STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::WhiteSpaceValueKind);
+                    style->m_inheritedStyles.m_whiteSpace = cssValues[k].whiteSpaceValue();
+                }
+                break;
+
             case CSSStyleValuePair::KeyKind::BackgroundColor:
                 if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                     style->setBackgroundColor(parentStyle->backgroundColor());
@@ -2538,6 +2559,23 @@ bool CSSStyleValuePair::updateValueDirection(std::vector<String*, gc_allocator<S
         m_value.m_direction = DirectionValue::LtrDirectionValue;
     } else if (STRING_VALUE_IS_STRING("rtl")) {
         m_value.m_direction = DirectionValue::RtlDirectionValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueWhiteSpace(std::vector<String*, gc_allocator<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::WhiteSpaceValueKind;
+    if (STRING_VALUE_IS_STRING("normal")) {
+        m_value.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
+    } else if (STRING_VALUE_IS_STRING("nowrap")) {
+        m_value.m_whiteSpace = WhiteSpaceValue::NoWrapWhiteSpaceValue;
     } else {
         return false;
     }
