@@ -26,6 +26,8 @@ public:
     FrameReplacedVideo(Node* node)
         : FrameReplaced(node, nullptr)
     {
+        m_flags.m_isEstablishesStackingContext = true;
+        m_flags.m_needsGraphicsBuffer = true;
     }
 
     virtual bool isFrameReplacedVideo()
@@ -51,23 +53,14 @@ public:
         return result;
     }
 
-    virtual bool hasStackingContextContentBuffer()
+    virtual void willCompsiteStackingContext(Canvas* c)
     {
-        return true;
     }
-
-    virtual CanvasSurface* gainStackingContextContentBuffer()
+    virtual void didCompsiteStackingContext(Canvas* c)
     {
-        return node()->asElement()->asHTMLElement()->asHTMLVideoElement()->videoSurface();
-    }
-
-    virtual void willCompsiteStackingContextContentBuffer(Canvas* canvas)
-    {
-        // TODO do this(painting black rect) when video is in playing state
-        canvas->save();
-        canvas->setColor(Color(0, 0, 0, 255));
-        canvas->drawRect(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
-        canvas->restore();
+#ifdef STARFISH_TIZEN_TV
+        c->punchHole(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
+#endif
     }
 
 protected:

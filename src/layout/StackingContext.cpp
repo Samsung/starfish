@@ -36,7 +36,6 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
         iter->second->push_back(this);
     }
     m_needsOwnBuffer = false;
-    m_ownerHasBuffer = false;
     m_buffer = nullptr;
 }
 
@@ -55,7 +54,6 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
 
     m_matrix.reset();
     m_needsOwnBuffer = forceNeedsBuffer || childNeedsBuffer || m_owner->needsGraphicsBuffer();
-    m_ownerHasBuffer = owner()->hasStackingContextContentBuffer();
 
     if (m_needsOwnBuffer) {
         LayoutLocation l(-m_owner->frameRect().location().x(), -m_owner->frameRect().location().y());
@@ -82,7 +80,7 @@ bool StackingContext::computeStackingContextProperties(bool forceNeedsBuffer)
             l.setY(l.y() - box->y());
         });
 
-        if (!m_ownerHasBuffer && m_visibleRect.isEmpty()) {
+        if (m_visibleRect.isEmpty()) {
             m_needsOwnBuffer = false;
         }
     }
@@ -107,7 +105,9 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
 
-    if (m_needsOwnBuffer) {
+    bool hasStackingBuffer = m_needsOwnBuffer;
+
+    if (hasStackingBuffer) {
         // TODO treat when buffer is too large
         if (!m_buffer || ((m_buffer->width() != bufferWidth) && (m_buffer->height() != bufferHeight))) {
             if (m_buffer) {
@@ -147,7 +147,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     // the background and borders of the element forming the stacking context.
     m_owner->paintBackgroundAndBorders(canvas);
 
-    if (!m_needsOwnBuffer && owner()->shouldApplyOverflow()) {
+    if (!hasStackingBuffer && owner()->shouldApplyOverflow()) {
         canvas->clip(Rect(owner()->borderLeft(), owner()->borderTop(), owner()->width() - owner()->borderWidth(), owner()->height() - owner()->borderHeight()));
     }
 
@@ -200,7 +200,7 @@ void StackingContext::paintStackingContext(Canvas* canvas)
     }
 
     canvas->restore();
-    if (m_needsOwnBuffer) {
+    if (hasStackingBuffer) {
         delete canvas;
     }
 }
@@ -250,17 +250,14 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         if (owner()->shouldApplyOverflow()) {
             canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
         }
+
+        owner()->willCompsiteStackingContext(canvas);
         canvas->drawImage(m_buffer, Rect(minX, minY, bufferWidth, bufferHeight));
+        owner()->didCompsiteStackingContext(canvas);
 
         // draw debug rect
         // canvas->setColor(Color(255, 0, 0, 128));
         // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
-
-        if (m_ownerHasBuffer) {
-            CanvasSurface* surface = owner()->gainStackingContextContentBuffer();
-            owner()->willCompsiteStackingContextContentBuffer(canvas);
-            canvas->drawImage(surface, Rect(owner()->borderLeft() + owner()->paddingLeft(), owner()->borderTop() + owner()->paddingTop(), owner()->contentWidth(), owner()->contentHeight()));
-        }
     } else {
         if (owner()->shouldApplyOverflow()) {
             canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));

@@ -48,6 +48,46 @@ void test(size_t, void* data)
 }
 int main(int argc, char *argv[])
 {
+    /*
+    // elm_config_accel_preference_set("opengl");
+    elm_init(0, 0);
+    elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+    Evas_Object* wnd = elm_win_add(NULL, "", ELM_WIN_BASIC);
+
+    elm_win_autodel_set(wnd, EINA_TRUE);
+    Evas_Object* box = elm_box_add(wnd);
+    evas_object_size_hint_weight_set (box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(wnd, box);
+    evas_object_show(box);
+
+    evas_object_resize(wnd, 600, 600);
+    evas_object_show(wnd);
+
+    Evas_Object* background = elm_bg_add(wnd);
+    evas_object_size_hint_weight_set(background, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    elm_win_resize_object_add(wnd, background);
+    elm_bg_color_set(background, 0x00, 0xff, 0x00);
+    evas_object_show(background);
+
+    Evas_Object* eo = evas_object_rectangle_add(evas_object_evas_get(wnd));
+    evas_object_resize(eo, 200, 200);
+    evas_object_color_set(eo, 200, 0, 200, 200);
+    evas_object_show(eo);
+
+    eo = evas_object_rectangle_add(evas_object_evas_get(wnd));
+    evas_object_resize(eo, 100, 100);
+    evas_object_move(eo, 50, 50);
+    int a=0,r=0,g=0,b=0;
+    evas_color_argb_premul(a, &r, &g, &b);
+    printf("%d %d %d %d",a,r,g,b);
+    evas_object_color_set(eo, r, g, b, a);
+    // evas_object_render_op_set(eo, Evas_Render_Op::EVAS_RENDER_);
+    evas_object_render_op_set(eo, EVAS_RENDER_COPY);
+    evas_object_show(eo);
+
+    elm_run();
+    return 0;
+*/
 #ifndef NDEBUG
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
@@ -160,19 +200,7 @@ int main(int argc, char *argv[])
 
     sf->run();
     // delete sf;
-/*
-    Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
-    elm_win_title_set(wndObj, "StarFish");
-    elm_win_autodel_set(wndObj, EINA_TRUE);
-    evas_object_resize(wndObj, 360, 360);
-    auto sf = starfishInit(wndObj, 360, 360, "ko-KR", "Asia/Seoul", 1);
-    starfishLoadHTMLDocument(sf, argv[1]);
-    starfishNotifyResume(sf);
 
-    elm_run();
-
-    starfishRemove(sf);
-    */
     return 0;
 }
 
