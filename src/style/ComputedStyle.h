@@ -51,6 +51,7 @@ public:
         m_inheritedStyles.m_fontSize = Length(Length::Fixed, mediumFontSize);
         m_inheritedStyles.m_fontWeight = FontWeightValue::NormalFontWeightValue;
         m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
+        m_inheritedStyles.m_whiteSpace = WhiteSpaceValue::NormalWhiteSpaceValue;
         m_inheritedStyles.m_visibility = VisibilityValue::VisibleVisibilityValue;
         m_inheritedStyles.m_letterSpacing = Length(Length::Fixed, 0);
         // -100 is used to represent 'normal' value.
@@ -176,6 +177,11 @@ public:
     void setDirection(DirectionValue val)
     {
         m_inheritedStyles.m_direction = val;
+    }
+
+    WhiteSpaceValue whiteSpace()
+    {
+        return m_inheritedStyles.m_whiteSpace;
     }
 
     void setLineHeight(Length length)
@@ -788,6 +794,7 @@ protected:
         FontWeightValue m_fontWeight : 4;
         SideValue m_textAlign : 3;
         DirectionValue m_direction : 2;
+        WhiteSpaceValue m_whiteSpace : 1;
         VisibilityValue m_visibility : 1;
     } m_inheritedStyles;
 

@@ -1213,6 +1213,11 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
     }
 }
 
+static bool hasBreakableWhiteSpaceProperty(Frame* f)
+{
+    return f->style()->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue;
+}
+
 void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit inlineContentWidth, LayoutUnit& unprocessedStartingWidth, LayoutUnit& unprocessedEndingWidth,
     std::function<void(FrameBox*)> gotInlineBoxCallback, std::function<void(bool)> lineBreakCallback, std::function<void(FrameInline*)> frameInlineCallback, std::function<void(FrameBox*)> absBoxCallback)
 {
@@ -1283,19 +1288,6 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                     textWidth = f->style()->font()->measureText(ss);
                 }
 
-                /*
-                bool couldNotBreak = false;
-                if (!isWhiteSpace && !canBreak) {
-                    FrameBox* last = findLastInlineBox(lineFormattingContext.currentLine());
-                    if (last && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
-                        String* str = last->asInlineBox()->asInlineTextBox()->text();
-                        if (!str->containsOnlyWhitespace()) {
-                            couldNotBreak = true;
-                        }
-                    }
-                }
-                */
-
                 LayoutUnit unprocessedWidth;
 
                 if (lastContent == f && srcTxt->substring(nextOffset, srcTxt->length() - nextOffset)->containsOnlyWhitespace()) {
@@ -1304,7 +1296,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                     unprocessedWidth = unprocessedStartingWidth;
                 }
 
-                if (/*couldNotBreak || */(lineFormattingContext.m_currentLineWidth == 0) || textWidth <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - unprocessedWidth)) {
+                if ((lineFormattingContext.m_currentLineWidth == 0) || textWidth <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - unprocessedWidth) || !hasBreakableWhiteSpaceProperty(f)) {
 
                 } else {
                     // try this at nextline
@@ -1410,7 +1402,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
 
             r->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
         insertReplacedBox:
-            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - unprocessedWidth) || lineFormattingContext.m_currentLineWidth == 0) {
+            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - unprocessedWidth) || lineFormattingContext.m_currentLineWidth == 0 || !hasBreakableWhiteSpaceProperty(f)) {
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                 gotInlineBoxCallback(r);
             } else {
@@ -1446,7 +1438,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
             lineFormattingContext.registerInlineBlockAscender(ascender, r);
 
         insertBlockBox:
-            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - unprocessedWidth) || lineFormattingContext.m_currentLineWidth == 0) {
+            if ((r->width() + r->marginWidth()) <= (inlineContentWidth - lineFormattingContext.m_currentLineWidth - unprocessedWidth) || lineFormattingContext.m_currentLineWidth == 0 || !hasBreakableWhiteSpaceProperty(f)) {
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                 gotInlineBoxCallback(r);
             } else {
@@ -1949,7 +1941,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             LayoutUnit end = lineFormattingContext.m_currentLineWidth;
 
             if (selfForFinishLayout->style()->direction() == DirectionValue::LtrDirectionValue) {
-                if (end + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight() > inlineContentWidth) {
+                if (hasBreakableWhiteSpaceProperty(selfForFinishLayout) && end + selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight() > inlineContentWidth) {
                     selfForFinishLayout->m_margin.setRight(0);
                     selfForFinishLayout->m_border.setRight(0);
                     selfForFinishLayout->m_padding.setRight(0);
@@ -1961,7 +1953,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
                 }
                 lineFormattingContext.m_currentLineWidth += selfForFinishLayout->paddingRight() + selfForFinishLayout->borderRight() + selfForFinishLayout->marginRight();
             } else {
-                if (end + selfForFinishLayout->paddingLeft() + selfForFinishLayout->borderLeft() + selfForFinishLayout->marginLeft() > inlineContentWidth) {
+                if (hasBreakableWhiteSpaceProperty(selfForFinishLayout) && end + selfForFinishLayout->paddingLeft() + selfForFinishLayout->borderLeft() + selfForFinishLayout->marginLeft() > inlineContentWidth) {
                     selfForFinishLayout->m_margin.setLeft(0);
                     selfForFinishLayout->m_border.setLeft(0);
                     selfForFinishLayout->m_padding.setLeft(0);
@@ -2119,6 +2111,8 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 return;
             }
 
+            bool whiteSpaceCanBreak = f->style()->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue;
+
             if (f->isFrameText()) {
                 String* s = f->asFrameText()->text();
                 textDividerForLayout(ctx.layoutContext().starFish(), s, [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak) {
@@ -2146,18 +2140,20 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
 
                     ctx.setMinimumWidth(w);
 
-                    if (currentLineWidth + w < remainWidth) {
-                        currentLineWidth += w;
-                    } else {
-                        // CHECK THIS
-                        // ctx.setResult(currentLineWidth);
-                        ctx.setResult(remainWidth);
-                        currentLineWidth = 0;
-                    }
+                    if (whiteSpaceCanBreak) {
+                        if (currentLineWidth + w < remainWidth) {
+                            currentLineWidth += w;
+                        } else {
+                            ctx.setResult(remainWidth);
+                            currentLineWidth = 0;
+                        }
 
-                    if (w > remainWidth) {
-                        ctx.setResult(remainWidth);
-                        currentLineWidth = 0;
+                        if (w > remainWidth) {
+                            ctx.setResult(remainWidth);
+                            currentLineWidth = 0;
+                        }
+                    } else {
+                        currentLineWidth += w;
                     }
 
                     ctx.setIsWhiteSpaceAtLast(isWhiteSpace);
@@ -2169,17 +2165,21 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 LayoutUnit w = newCtx.result() + mbp;
                 ctx.setResult(w);
 
-                if (currentLineWidth + w < remainWidth) {
-                    currentLineWidth += w;
-                } else {
-                    ctx.setResult(currentLineWidth);
-                    currentLineWidth = w;
-                }
+                if (whiteSpaceCanBreak) {
+                    if (currentLineWidth + w < remainWidth) {
+                        currentLineWidth += w;
+                    } else {
+                        ctx.setResult(currentLineWidth);
+                        currentLineWidth = w;
+                    }
 
-                if (currentLineWidth > remainWidth) {
-                    // linebreaks
-                    ctx.setResult(remainWidth);
-                    currentLineWidth = 0;
+                    if (currentLineWidth > remainWidth) {
+                        // linebreaks
+                        ctx.setResult(remainWidth);
+                        currentLineWidth = 0;
+                    }
+                } else {
+                    currentLineWidth += w;
                 }
 
                 ctx.setIsWhiteSpaceAtLast(false);
@@ -2193,13 +2193,15 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 auto checkMBP = [&](Length l)
                 {
                     if (l.isFixed()) {
-                        if (currentLineWidth + l.fixed() < remainWidth) {
-                            currentLineWidth += l.fixed();
+                        if (whiteSpaceCanBreak) {
+                            if (currentLineWidth + l.fixed() < remainWidth) {
+                                currentLineWidth += l.fixed();
+                            } else {
+                                ctx.setResult(remainWidth);
+                                currentLineWidth = l.fixed();
+                            }
                         } else {
-                            // CHECK THIS
-                            // ctx.setResult(currentLineWidth);
-                            ctx.setResult(remainWidth);
-                            currentLineWidth = l.fixed();
+                            currentLineWidth += l.fixed();
                         }
                     }
                 };
@@ -2221,17 +2223,21 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 LayoutUnit w = newCtx.result() + mbp;
                 ctx.setResult(w);
 
-                if (currentLineWidth + w < remainWidth) {
-                    currentLineWidth += w;
-                } else {
-                    ctx.setResult(currentLineWidth);
-                    currentLineWidth = w;
-                }
+                if (whiteSpaceCanBreak) {
+                    if (currentLineWidth + w < remainWidth) {
+                        currentLineWidth += w;
+                    } else {
+                        ctx.setResult(currentLineWidth);
+                        currentLineWidth = w;
+                    }
 
-                if (currentLineWidth > remainWidth) {
-                    // linebreaks
-                    ctx.setResult(remainWidth);
-                    currentLineWidth = 0;
+                    if (currentLineWidth > remainWidth) {
+                        // linebreaks
+                        ctx.setResult(remainWidth);
+                        currentLineWidth = 0;
+                    }
+                } else {
+                    currentLineWidth += w;
                 }
 
                 ctx.setIsWhiteSpaceAtLast(false);
