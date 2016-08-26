@@ -80,7 +80,7 @@ export TIZEN_ARCH=i586
 
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_datadir}/license
-cp LICENSE %{buildroot}%{_datadir}/license/%{name}
+cat LICENSE* > %{buildroot}%{_datadir}/license/%{name}
 
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
