@@ -558,7 +558,7 @@ public:
     }
 
 
-    void paintStackingContextContent(Canvas* canvas);
+    virtual void paintStackingContextContent(Canvas* canvas);
     virtual void willCompsiteStackingContext(Canvas* c)
     {
 
