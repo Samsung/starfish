@@ -30,6 +30,7 @@ public:
     {
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_file_set(m_image, PathResolver::matchLocation(imageSrc)->utf8Data(), NULL);
+        evas_object_data_set(m_image, "local", "1");
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         int w, h, err;
         err = evas_object_image_load_error_get(m_image);
@@ -50,6 +51,7 @@ public:
     ImageDataEFL(const char* buf, size_t len)
     {
         m_image = evas_object_image_add(internalCanvas());
+        evas_object_data_set(m_image, "local", "0");
         char format[4] = "";
         evas_object_image_memfile_set(m_image, (void*)buf, (int)len, format, NULL);
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
@@ -67,20 +69,6 @@ public:
         }
         evas_object_del(m_image);
         m_image = NULL;
-    }
-
-    ImageDataEFL(size_t w, size_t h)
-    {
-        m_image = evas_object_image_add(internalCanvas());
-        m_width = w;
-        m_height = h;
-
-        evas_object_image_size_set(m_image, w, h);
-        evas_object_image_filled_set(m_image, EINA_TRUE);
-        evas_object_image_colorspace_set(m_image, Evas_Colorspace::EVAS_COLORSPACE_ARGB8888);
-        evas_object_image_alpha_set(m_image, EINA_TRUE);
-
-        reigsterFinalizer();
     }
 
     void reigsterFinalizer()
@@ -108,14 +96,6 @@ public:
         return m_height;
     }
 
-    virtual void clear()
-    {
-        void* address = evas_object_image_data_get(m_image, EINA_TRUE);
-        size_t end = m_width * m_height * sizeof(uint32_t);
-        memset(address, 0, end);
-        evas_object_image_data_set(m_image, address);
-    }
-
 protected:
     Evas_Object* m_image;
     size_t m_width;
@@ -136,11 +116,6 @@ ImageData* ImageData::create(const char* buf, size_t len)
     if (imageData->unwrap() == NULL)
         return NULL;
     return imageData;
-}
-
-ImageData* ImageData::create(size_t w, size_t h)
-{
-    return new ImageDataEFL(w, h);
 }
 
 }

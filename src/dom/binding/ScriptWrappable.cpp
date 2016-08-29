@@ -36,6 +36,9 @@
 #include "dom/TextTrack.h"
 #endif
 
+#include "StarFish.h"
+#include <Elementary.h>
+
 namespace StarFish {
 
 static ScriptBindingInstanceDataEscargot* fetchData(ScriptBindingInstance* instance)
@@ -71,6 +74,35 @@ void ScriptWrappable::initScriptWrappable(Window* window)
     scriptObject()->setExtraPointerData(window);
 
 #ifdef STARFISH_ENABLE_TEST
+    escargot::ESFunctionObject* debugPauseFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            ecore_idler_add([](void* user_data) -> Eina_Bool {
+                StarFish* sf = (StarFish*)user_data;
+                sf->pause();
+                return ECORE_CALLBACK_CANCEL;
+            }, wnd->starFish());
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("debugPause"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("debugPause"), true, true, true, debugPauseFunction);
+
+    escargot::ESFunctionObject* debugResumeFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            ecore_idler_add([](void* user_data) -> Eina_Bool {
+                StarFish* sf = (StarFish*)user_data;
+                sf->resume();
+                return ECORE_CALLBACK_CANCEL;
+            }, wnd->starFish());
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("debugResume"), 0, false);
+    ((escargot::ESObject*)this->m_object)->defineDataProperty(escargot::ESString::create("debugResume"), true, true, true, debugResumeFunction);
+
+
     escargot::ESFunctionObject* networkEnableFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue v = instance->currentExecutionContext()->resolveThisBinding();
         if (v.isUndefinedOrNull() || v.asESPointer()->asESObject()->extraData() == ScriptWrappable::WindowObject) {

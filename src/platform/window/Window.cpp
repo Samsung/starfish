@@ -1202,11 +1202,11 @@ void Window::resume()
 {
     STARFISH_LOG_INFO("Window::resume\n");
     if (m_isRunning) {
+        m_needsRendering = true;
+        m_needsPainting = true;
+        rendering();
         return;
     }
-
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-    eflWindow->clearEFLResources();
 
     m_isRunning = true;
     m_needsRendering = true;
