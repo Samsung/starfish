@@ -25,8 +25,82 @@ namespace StarFish {
 
 HTMLMediaElement::HTMLMediaElement(Document* document)
     : HTMLElement(document)
+    , m_mediaPlayer(nullptr)
     , m_textTracks(new TextTrackList())
+    , m_readyState(HTMLMediaElement::HAVE_NOTHING)
 {
+}
+
+void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+{
+    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+    if (name == document()->window()->starFish()->staticStrings()->m_src) {
+        if (value->equals(String::emptyString)) {
+            unload();
+        } else if (preloadEnum() != HTMLMediaElement::PRELOAD_NONE || autoplay()) {
+            load(value);
+        }
+    }
+}
+
+void HTMLMediaElement::didNodeInsertedToDocumenTree()
+{
+    HTMLElement::didNodeInsertedToDocumenTree();
+    if (!m_mediaPlayer) {
+        return;
+    }
+    if (autoplay()) {
+        m_mediaPlayer->play();
+    }
+}
+
+void HTMLMediaElement::didNodeRemovedFromDocumenTree()
+{
+    HTMLElement::didNodeRemovedFromDocumenTree();
+    if (!m_mediaPlayer) {
+        return;
+    }
+    m_mediaPlayer->stop();
+}
+
+void HTMLMediaElement::load()
+{
+    load(src());
+}
+
+void HTMLMediaElement::load(String* src)
+{
+    if (src->equals(String::emptyString)) {
+        return;
+    }
+    if (!m_mediaPlayer) {
+        return;
+    }
+    m_mediaPlayer->prepareAsync(document(), src);
+}
+
+void HTMLMediaElement::unload()
+{
+    if (!m_mediaPlayer) {
+        return;
+    }
+    m_mediaPlayer->destroy();
+}
+
+void HTMLMediaElement::play()
+{
+    if (!m_mediaPlayer) {
+        return;
+    }
+    m_mediaPlayer->play();
+}
+
+void HTMLMediaElement::stop()
+{
+    if (!m_mediaPlayer) {
+        return;
+    }
+    m_mediaPlayer->stop();
 }
 
 void HTMLMediaElement::addTextTrack(TextTrack* track)
@@ -80,21 +154,34 @@ HTMLMediaElement::NetState HTMLMediaElement::networkState()
     return HTMLMediaElement::NETWORK_EMPTY;
 }
 
+HTMLMediaElement::PreloadState HTMLMediaElement::preloadEnum()
+{
+    QualifiedName preload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "preload"));
+    size_t siz = hasAttribute(preload);
+    if (siz != SIZE_MAX) {
+        String* value = getAttribute(preload);
+        if (value->length() == 0 || (value->length() == 4 && value->equalsWithoutCase(AtomicString::createAtomicString(document()->window()->starFish(), "auto").string()))) {
+            // The empty string is also a valid keyword, and maps to the Automatic state
+            return HTMLMediaElement::PRELOAD_AUTOMATIC;
+        } else if (value->length() == 8 && value->equalsWithoutCase(AtomicString::createAtomicString(document()->window()->starFish(), "metadata").string())) {
+            return HTMLMediaElement::PRELOAD_METADATA;
+        } else if (value->length() == 4 && value->equalsWithoutCase(AtomicString::createAtomicString(document()->window()->starFish(), "none").string())) {
+            return HTMLMediaElement::PRELOAD_NONE;
+        }
+    }
+    // Default : Automatic
+    return HTMLMediaElement::PRELOAD_AUTOMATIC;
+}
+
 String* HTMLMediaElement::preload()
 {
-    // TODO
-    return String::emptyString;
+    return HTMLMediaElement::preloadToString(document()->window()->starFish(), preloadEnum());
 }
 
 TimeRanges* HTMLMediaElement::buffered()
 {
     // TODO
     return nullptr;
-}
-
-void HTMLMediaElement::load()
-{
-    // TODO
 }
 
 String* HTMLMediaElement::canPlayType(String* type)
@@ -129,13 +216,16 @@ double HTMLMediaElement::duration()
 
 bool HTMLMediaElement::paused()
 {
-    // TODO
-    return 0;
+    if (!m_mediaPlayer)
+        return false;
+    return m_mediaPlayer->isPaused();
 }
 
 void HTMLMediaElement::pause()
 {
-    // TODO
+    if (!m_mediaPlayer)
+        return;
+    m_mediaPlayer->pause();
 }
 
 double HTMLMediaElement::defaultPlaybackRate()
@@ -179,8 +269,11 @@ bool HTMLMediaElement::autoplay()
 
 bool HTMLMediaElement::loop()
 {
-    // TODO
-    return false;
+    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "loop"));
+    size_t siz = hasAttribute(name);
+    if (siz == SIZE_MAX)
+        return false;
+    return true;
 }
 
 bool HTMLMediaElement::controls()
@@ -206,7 +299,8 @@ bool HTMLMediaElement::muted()
 
 void HTMLMediaElement::setPreload(String* preload)
 {
-    // TODO
+    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "preload"));
+    setAttribute(name, preload);
 }
 
 void HTMLMediaElement::setSeeking(bool seeking)
@@ -244,7 +338,18 @@ void HTMLMediaElement::setAutoplay(bool autoplay)
 
 void HTMLMediaElement::setLoop(bool loop)
 {
-    // TODO
+    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "loop"));
+    if (loop) {
+        size_t siz = hasAttribute(name);
+        if (siz == SIZE_MAX) {
+            setAttribute(name, String::fromUTF8(""));
+        }
+    } else {
+        removeAttribute(name);
+    }
+    // Note: MediaPlayer::setLoop() does not work well,
+    // if (m_mediaPlayer)
+    //     m_mediaPlayer->setLoop(loop);
 }
 
 void HTMLMediaElement::setControls(bool controls)

@@ -18,26 +18,11 @@
 #define __StarFishHTMLVideoElement__
 
 #include "dom/HTMLMediaElement.h"
-#include "platform/multimedia/MediaPlayer.h"
 
 #define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
 #define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
 
 namespace StarFish {
-
-class HTMLVideoElement;
-
-class VideoPlayer : public MediaPlayer {
-public:
-    VideoPlayer(HTMLVideoElement* videoElement)
-        : MediaPlayer()
-        , m_videoElement(videoElement) { }
-
-    virtual void onPrepared(bool hasError);
-    virtual void onPlayFinished();
-protected:
-    HTMLVideoElement* m_videoElement;
-};
 
 class HTMLVideoElement : public HTMLMediaElement {
 public:
@@ -45,9 +30,11 @@ public:
         : HTMLMediaElement(document)
     {
         m_videoSurface = CanvasSurface::create(document->window(), STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS, STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS);
-        m_player = new VideoPlayer(this);
-        m_hasPendingRequest = false;
-        m_live = false;
+        VideoPlayer* player = new VideoPlayer(this);
+#ifdef STARFISH_TIZEN_MOBILE
+        player->setVideoSurface(m_videoSurface);
+#endif
+        m_mediaPlayer = player;
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -70,10 +57,6 @@ public:
         return true;
     }
 
-    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
-    virtual void didNodeInsertedToDocumenTree();
-    virtual void didNodeRemovedFromDocumenTree();
-
     unsigned long width();
     unsigned long height();
     unsigned long videoWidth();
@@ -89,16 +72,23 @@ public:
         return m_videoSurface;
     }
 
-    void loadSrc();
-    void loadSrc(String* src);
+#ifdef STARFISH_TIZEN_TV
+    void setPlayerDisplayArea(int x, int y, int width, int height)
+    {
+        videoPlayer()->setDisplayArea(x, y, width, height);
+    }
+#endif
 
-    virtual void play();
+protected:
+    VideoPlayer* videoPlayer()
+    {
+        STARFISH_ASSERT(m_mediaPlayer && m_mediaPlayer->isVideoPlayer());
+        return (VideoPlayer*)m_mediaPlayer;
+    }
 
-private:
+protected:
     CanvasSurface* m_videoSurface;
-    VideoPlayer* m_player;
-    bool m_hasPendingRequest;
-    bool m_live;
+    bool m_hasPendingSrc;
 };
 }
 

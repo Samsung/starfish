@@ -19,6 +19,7 @@
 
 #include "dom/Document.h"
 #include "dom/HTMLElement.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 
@@ -43,7 +44,18 @@ public:
         HAVE_ENOUGH_DATA,
     };
 
+    enum PreloadState {
+        PRELOAD_NONE,
+        PRELOAD_METADATA,
+        PRELOAD_AUTOMATIC,
+    };
+
     HTMLMediaElement(Document* document);
+    ~HTMLMediaElement()
+    {
+        if (m_mediaPlayer)
+            m_mediaPlayer->destroy();
+    }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -57,6 +69,9 @@ public:
 
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didNodeRemoved(Node* parent, Node* oldChild);
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didNodeInsertedToDocumenTree();
+    virtual void didNodeRemovedFromDocumenTree();
 
     TextTrackList* textTracks()
     {
@@ -78,20 +93,25 @@ public:
     }
 
     NetState networkState();
+    PreloadState preloadEnum();
     String* preload();
     TimeRanges* buffered();
-    void load();
     String* canPlayType(String* type);
     ReadyState readyState();
     bool seeking();
     double currentTime();
     double duration();
     bool paused();
-    void pause();
     double defaultPlaybackRate();
     double playbackRate();
     TimeRanges* played();
     TimeRanges* seekable();
+    void load();
+    void load(String* src);
+    void unload();
+    void play();
+    void pause();
+    void stop();
     bool ended();
     bool autoplay();
     bool loop();
@@ -110,8 +130,28 @@ public:
     void setVolume(bool volume);
     void setMuted(bool muted);
 
+    void setReadyState(ReadyState state)
+    {
+        m_readyState = state;
+    }
+
+    static String* preloadToString(StarFish* starfish, PreloadState state)
+    {
+        switch (state) {
+        case PRELOAD_NONE:
+            return AtomicString::createAtomicString(starfish, "none").string();
+        case PRELOAD_METADATA:
+            return AtomicString::createAtomicString(starfish, "metadata").string();
+        case PRELOAD_AUTOMATIC:
+            return AtomicString::createAtomicString(starfish, "auto").string();
+        }
+        return String::emptyString;
+    }
+
 protected:
+    MediaPlayer* m_mediaPlayer;
     TextTrackList* m_textTracks;
+    ReadyState m_readyState;
 };
 }
 
