@@ -442,14 +442,12 @@ String* Document::visibilityState()
 
 void Document::setVisibleState(PageVisibilityState visibilityState)
 {
-    m_pageVisibilityState = visibilityState;
-}
-
-void Document::visibilityStateChanged()
-{
-    String* eventType = window()->starFish()->staticStrings()->m_visibilitychange.localName();
-    Event* e = new Event(eventType, EventInit(true, false));
-    EventTarget::dispatchEvent(this->asNode(), e);
+    if (m_pageVisibilityState != visibilityState) {
+        m_pageVisibilityState = visibilityState;
+        String* eventType = window()->starFish()->staticStrings()->m_visibilitychange.localName();
+        Event* e = new Event(eventType, EventInit(true, false));
+        EventTarget::dispatchEvent(this->asNode(), e);
+    }
 }
 
 void Document::didNodeInserted(Node* parent, Node* newChild)

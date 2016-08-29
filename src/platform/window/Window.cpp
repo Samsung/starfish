@@ -1189,15 +1189,21 @@ HTMLCollection* Window::namedAccess(String* name)
 void Window::pause()
 {
     STARFISH_LOG_INFO("Window::pause\n");
+    if (!m_isRunning) {
+        return;
+    }
+
     m_isRunning = false;
 
     document()->setVisibleState(PageVisibilityState::PageVisibilityStateHidden);
-    document()->visibilityStateChanged();
 }
 
 void Window::resume()
 {
     STARFISH_LOG_INFO("Window::resume\n");
+    if (m_isRunning) {
+        return;
+    }
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     eflWindow->clearEFLResources();
@@ -1208,7 +1214,6 @@ void Window::resume()
     rendering();
 
     document()->setVisibleState(PageVisibilityState::PageVisibilityStateVisible);
-    document()->visibilityStateChanged();
 }
 
 void Window::close()

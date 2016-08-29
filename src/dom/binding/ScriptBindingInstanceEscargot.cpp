@@ -2312,17 +2312,6 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         THROW_ILLEGAL_INVOCATION()
     }, nullptr);
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("visibilitychange"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        if (originalObj->isDocument()) {
-            originalObj->asDocument()->visibilityStateChanged();
-            return escargot::ESValue();
-        }
-        THROW_ILLEGAL_INVOCATION()
-    }, nullptr);
-
     escargot::ESFunctionObject* elementFromPointFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
