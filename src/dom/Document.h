@@ -138,7 +138,6 @@ public:
     bool hidden() const;
     String* visibilityState();
     void setVisibleState(PageVisibilityState visibilityState);
-    void visibilityStateChanged();
 
     void updateDOMVersion()
     {
