@@ -3008,7 +3008,7 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
                 THROW_ILLEGAL_INVOCATION();
             originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->load();
             return escargot::ESValue(escargot::ESValue::ESUndefined);
-        }, escargot::ESString::create("addTextTrack"), 0, false)
+        }, escargot::ESString::create("load"), 0, false)
     );
 
     HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("canPlayType"), true, true, true,
@@ -3022,7 +3022,7 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
             if (!result)
                 THROW_ILLEGAL_INVOCATION();
             return toJSString(result);
-        }, escargot::ESString::create("addTextTrack"), 1, false)
+        }, escargot::ESString::create("canPlayType"), 1, false)
     );
 
     HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pause"), true, true, true,
@@ -3034,7 +3034,7 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
                 THROW_ILLEGAL_INVOCATION();
             originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->pause();
             return escargot::ESValue(escargot::ESValue::ESUndefined);
-        }, escargot::ESString::create("addTextTrack"), 0, false)
+        }, escargot::ESString::create("pause"), 0, false)
     );
 
     return HTMLMediaElementFunction;

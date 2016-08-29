@@ -1425,7 +1425,7 @@ public:
         lastState().m_matrix.preConcat(matrix);
     }
 
-    virtual void applyMatrixTo(LayoutLocation lp)
+    virtual void applyMatrixTo(LayoutLocation& lp)
     {
         if (lastState().m_mapMode) {
             STARFISH_ASSERT(!hasValidMatrixValue());
@@ -1439,7 +1439,7 @@ public:
         }
     }
 
-    virtual void applyMatrixTo(LayoutRect lp)
+    virtual void applyMatrixTo(LayoutRect& lp)
     {
         if (lastState().m_mapMode) {
             STARFISH_ASSERT(!hasValidMatrixValue());

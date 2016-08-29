@@ -35,13 +35,17 @@ unsigned long HTMLVideoElement::height()
 
 unsigned long HTMLVideoElement::videoWidth()
 {
-    // TODO
+    if (m_readyState > HTMLMediaElement::HAVE_NOTHING) {
+        return videoPlayer()->width();
+    }
     return 0;
 }
 
 unsigned long HTMLVideoElement::videoHeight()
 {
-    // TODO
+    if (m_readyState > HTMLMediaElement::HAVE_NOTHING) {
+        return videoPlayer()->height();
+    }
     return 0;
 }
 
@@ -66,76 +70,19 @@ void HTMLVideoElement::setPoster(String* poster)
     // TODO
 }
 
-void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
-{
-    HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
-    if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        if (!value->equals(String::emptyString)) {
-            loadSrc(value);
-        }
-    }
-}
-
-void HTMLVideoElement::didNodeInsertedToDocumenTree()
-{
-    HTMLElement::didNodeInsertedToDocumenTree();
-    m_live = true;
-    if (m_hasPendingRequest) {
-        loadSrc();
-    } else if (autoplay() && m_player->isReady()) {
-        m_player->play();
-    }
-}
-
-void HTMLVideoElement::didNodeRemovedFromDocumenTree()
-{
-    HTMLElement::didNodeRemovedFromDocumenTree();
-    m_live = false;
-    m_player->destroy();
-}
-
-void HTMLVideoElement::loadSrc()
-{
-    loadSrc(src());
-}
-
-void HTMLVideoElement::loadSrc(String* src)
-{
-    if (!m_live) {
-        m_hasPendingRequest = true;
-        return;
-    }
-    if (src->equals(String::emptyString)) {
-        return;
-    }
-
-    STARFISH_ASSERT(m_player);
-    STARFISH_ASSERT(m_videoSurface);
-
-    m_player->prepare(document(), m_videoSurface, src);
-    m_hasPendingRequest = false;
-}
-
-void HTMLVideoElement::play()
-{
-    if (m_player)
-        m_player->play();
-}
-
 void VideoPlayer::onPrepared(bool hasError)
 {
     if (hasError) {
         // TODO
         return;
     }
-    STARFISH_LOG_ERROR("VideoPlayer::onPrepared()\n");
-    if (m_videoElement->autoplay() && isReady())
-        play();
+    if (m_videoElement)
+        m_videoElement->setReadyState(HTMLMediaElement::HAVE_METADATA);
 }
 
 void VideoPlayer::onPlayFinished()
 {
-    STARFISH_LOG_ERROR("VideoPlayer::onPlayFinished()\n");
+
 }
 
 }
