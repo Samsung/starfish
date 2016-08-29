@@ -29,6 +29,7 @@ class ScriptBindingInstance;
 class URL;
 class Canvas;
 class HTMLCollection;
+class StackingContext;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -228,6 +229,7 @@ protected:
     StarFish* m_starFish;
     ScriptBindingInstance* m_scriptBindingInstance;
     Document* m_document;
+    StackingContext* m_rootStackingContext;
     Node* m_activeNodeWithTouchDown;
     Location m_touchDownPoint;
 
