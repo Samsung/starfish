@@ -127,23 +127,7 @@ public:
 
     void clearEFLResources()
     {
-        if (m_document && m_document->frame() && m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()) {
-            StackingContext* ctx = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
-            std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
-            {
-                ctx->clearOwnBuffer();
-                auto iter = ctx->childContexts().begin();
-                while (iter != ctx->childContexts().end()) {
-                    auto iter2 = iter->second->begin();
-                    while (iter2 != iter->second->end()) {
-                        clearSC(*iter2);
-                        iter2++;
-                    }
-                    iter++;
-                }
-            };
-            clearSC(ctx);
-        }
+        clearStackingContext();
 
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         auto a = eflWindow->m_drawnImageList.begin();
@@ -408,6 +392,7 @@ Window::Window(StarFish* starFish)
     : m_starFish(starFish)
     , m_scriptBindingInstance(nullptr)
     , m_document(nullptr)
+    , m_rootStackingContext(nullptr)
     , m_touchDownPoint(0, 0)
 {
     initFlags();
@@ -676,6 +661,10 @@ void Window::layoutIfNeeded()
             m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool
             {
                 box->establishesStackingContextIfNeeds();
+                if (box->node() && box->isRootElement()) {
+                    box->node()->document()->window()->m_rootStackingContext = box->stackingContext();
+                    STARFISH_ASSERT(box->node()->document()->window()->m_rootStackingContext);
+                }
                 return true;
             }, nullptr, nullptr);
             if (m_document->frame()->firstChild())
@@ -821,36 +810,23 @@ void Window::rendering()
 
 void Window::clearStackingContext()
 {
-    STARFISH_ASSERT(m_document);
-    if (m_document->frame()) {
-        StackingContext* root = nullptr;
-        HTMLHtmlElement* rootElement = document()->rootElement();
-        m_document->frame()->asFrameBox()->iterateChildBoxes([&](FrameBox* box) -> bool {
-            root = box->stackingContext();
-            if (box->node() == rootElement) {
-                return false;
-            }
-            return root == nullptr;
-        });
-
-        if (root) {
-            std::function<void(StackingContext*, int)> clearSC = [&clearSC](StackingContext* ctx, int depth)
-            {
-                auto iter = ctx->childContexts().begin();
-                while (iter != ctx->childContexts().end()) {
-                    int32_t num = iter->first;
-                    auto iter2 = iter->second->begin();
-                    while (iter2 != iter->second->end()) {
-                        clearSC(*iter2, depth + 2);
-                        iter2++;
-                    }
-                    iter++;
+    if (m_rootStackingContext) {
+        StackingContext* ctx = m_rootStackingContext;
+        std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
+        {
+            ctx->owner()->clearStackingContextIfNeeds();
+            auto iter = ctx->childContexts().begin();
+            while (iter != ctx->childContexts().end()) {
+                auto iter2 = iter->second->begin();
+                while (iter2 != iter->second->end()) {
+                    clearSC(*iter2);
+                    iter2++;
                 }
-                ctx->owner()->clearStackingContextIfNeeds();
-            };
-
-            clearSC(root, 0);
-        }
+                iter++;
+            }
+        };
+        clearSC(ctx);
+        m_rootStackingContext = nullptr;
     }
 }
 
