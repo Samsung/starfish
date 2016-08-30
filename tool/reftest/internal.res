@@ -1,3 +1,6 @@
+test/internal-test/css/invalid_value/color-invalid.html
+test/internal-test/css/invalid_value/length-invalid.html
+test/internal-test/css/invalid_value/manual-invalid.html
 test/internal-test/css/url/url.html
 test/internal-test/click/click.html
 test/internal-test/css/background/current-color.html
