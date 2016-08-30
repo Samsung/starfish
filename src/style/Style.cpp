@@ -240,7 +240,7 @@ String* CSSTransformFunctions::toString()
             if (j != values->size() - 1)
                 itemStr = itemStr->concat(String::fromUTF8(", "));
             else
-                itemStr = itemStr->concat(String::fromUTF8(") "));
+                itemStr = itemStr->concat(String::fromUTF8(")"));
         }
         result = result->concat(itemStr);
     }
@@ -3043,31 +3043,63 @@ bool CSSStyleValuePair::updateValueTransformOrigin(std::vector<String*, gc_alloc
         return false;
     }
 
+    if (tokens->size() == 2) {
+        String* f = tokens->at(0);
+        String* s = tokens->at(1);
+        if ((f->equals("left") && s->equals("right"))
+            || (f->equals("right") && s->equals("left"))
+            || (f->equals("top") && s->equals("bottom"))
+            || (f->equals("bottom") && s->equals("top")))
+            return false;
+    }
+
     m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
     ValueList* values = new ValueList();
+
+    CSSStyleValuePair xPair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
+    CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
 
     for (unsigned int i = 0; i < tokens->size(); i++) {
         String* value = tokens->at(i);
         if (STRING_VALUE_IS_STRING("left")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::LeftSideValue);
+            xPair.setValue(SideValue::LeftSideValue);
         } else if (STRING_VALUE_IS_STRING("right")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::RightSideValue);
+            xPair.setValue(SideValue::RightSideValue);
         } else if (STRING_VALUE_IS_STRING("center")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
         } else if (STRING_VALUE_IS_STRING("top")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::TopSideValue);
+            yPair.setValue(SideValue::TopSideValue);
         } else if (STRING_VALUE_IS_STRING("bottom")) {
-            values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::BottomSideValue);
+            yPair.setValue(SideValue::BottomSideValue);
         } else {
+
+            if (i == 0)
+                xPair.setValueKind(CSSStyleValuePair::ValueKind::None);
+            else
+                yPair.setValueKind(CSSStyleValuePair::ValueKind::None);
+
+            if (tokens->size() == 2) {
+                if (i == 0) {
+                    if (tokens->at(1)->equals("left") || tokens->at(1)->equals("right"))
+                        return false;
+                } else {
+                    if (tokens->at(0)->equals("top") || tokens->at(0)->equals("bottom"))
+                        return false;
+                }
+            }
+
             CSSStyleValuePair ret;
             if (!ret.updateValueLengthOrPercent(value, true))
                 return false;
             values->append(ret);
+
         }
     }
-    if (tokens->size() == 1) {
-        values->append(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
-    }
+
+    if (xPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind)
+        values->append(xPair);
+    if (yPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind)
+        values->append(yPair);
+
     m_value.m_multiValue = values;
     return true;
 }
