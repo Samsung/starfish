@@ -137,7 +137,8 @@ public:
     enum TouchEventKind {
         TouchEventDown,
         TouchEventMove,
-        TouchEventUp
+        TouchEventUp,
+        TouchEventCancel,
     };
     void dispatchTouchEvent(float x, float y, TouchEventKind kind);
 
