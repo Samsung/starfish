@@ -392,12 +392,14 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, wnd->m_mobileMouseMoveEventHandler, wnd);
 
-    wnd->m_mobileMouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
+    wnd->m_mobileMouseUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(0, 0, Window::TouchEventCancel);
+        sf->starFish()->messageLoop()->addIdler([](size_t a, void* data) {
+            ((Window*)data)->dispatchTouchEvent(0, 0, Window::TouchEventCancel);
+        }, sf);
         return;
     };
+    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, wnd->m_mobileMouseUpEventHandler, wnd);
 
     wnd->m_mobileClickEventHandler = [](void* data, Evas_Object* obj, void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
@@ -478,8 +480,7 @@ Window::~Window()
 #ifdef STARFISH_TIZEN_WEARABLE
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, eflWindow->m_mobileMouseDownEventHandler);
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, eflWindow->m_mobileMouseMoveEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseMoveEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseMoveEventHandler);
+    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseUpEventHandler);
     evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked", eflWindow->m_mobileClickEventHandler);
 #endif
 
