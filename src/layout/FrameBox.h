@@ -549,10 +549,10 @@ public:
     }
 
 
-    void clearStackingContextIfNeeds()
+    void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true)
     {
         if (m_stackingContext) {
-            m_stackingContext->clearOwnBuffer();
+            m_stackingContext->clearOwnBuffer(shouldDetachNativeBuffer);
             m_stackingContext = nullptr;
         }
     }

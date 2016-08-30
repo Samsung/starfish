@@ -127,7 +127,7 @@ public:
 
     void clearEFLResources()
     {
-        clearStackingContext();
+        clearStackingContext(false);
 
         WindowImplEFL* eflWindow = (WindowImplEFL*)this;
         auto a = eflWindow->m_drawnImageList.begin();
@@ -606,7 +606,7 @@ void Window::paintWindowBackground(Canvas* canvas)
     }
 }
 
-void Window::layoutIfNeeded()
+void Window::layoutIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
@@ -632,7 +632,8 @@ void Window::layoutIfNeeded()
     if (m_needsFrameTreeBuild) {
 
         if (m_document->frame()) {
-            clearStackingContext();
+
+            clearStackingContext(true);
 
             // create frame tree
             Timer t("create frame tree");
@@ -645,7 +646,7 @@ void Window::layoutIfNeeded()
         // lay out frame tree
         Timer t("lay out frame tree");
 
-        clearStackingContext();
+        clearStackingContext(true);
 
         LayoutContext ctx(starFish(), m_document->frame()->asFrameBox()->asFrameBlockBox()->asFrameDocument());
         m_document->frame()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
@@ -691,7 +692,15 @@ void Window::rendering()
 
     Timer renderingTimer("Window::rendering");
 
-    layoutIfNeeded();
+    layoutIfNeeds();
+
+    {
+        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
+        for (size_t i = 0; i < bufSiz; i ++) {
+            m_backStackingContextBufferUpWhileReCompsite[i]->detachNativeBuffer();
+        }
+        m_backStackingContextBufferUpWhileReCompsite.clear();
+    }
 
     if (m_needsPainting) {
         Timer t("painting");
@@ -700,7 +709,7 @@ void Window::rendering()
         Canvas* canvas = preparePainting(eflWindow, true);
 
         if (m_document->frame()->firstChild())
-            m_needsComposite = m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer();
+            m_needsComposite = m_rootStackingContext->needsOwnBuffer();
         else
             m_needsComposite = false;
 
@@ -808,13 +817,20 @@ void Window::rendering()
 #endif
 }
 
-void Window::clearStackingContext()
+void Window::clearStackingContext(bool backupBuffer)
 {
     if (m_rootStackingContext) {
         StackingContext* ctx = m_rootStackingContext;
-        std::function<void(StackingContext*)> clearSC = [&clearSC](StackingContext* ctx)
+        std::function<void(StackingContext*)> clearSC = [&](StackingContext* ctx)
         {
-            ctx->owner()->clearStackingContextIfNeeds();
+            if (backupBuffer) {
+                if (ctx->needsOwnBuffer() && ctx->buffer()) {
+                    m_backStackingContextBufferUpWhileReCompsite.push_back(ctx->buffer());
+                }
+                ctx->owner()->clearStackingContextIfNeeds(false);
+            } else {
+                ctx->owner()->clearStackingContextIfNeeds();
+            }
             auto iter = ctx->childContexts().begin();
             while (iter != ctx->childContexts().end()) {
                 auto iter2 = iter->second->begin();
@@ -1049,7 +1065,7 @@ void Window::cancelAnimationFrame(uint32_t reqID)
 
 Node* Window::hitTest(float x, float y)
 {
-    renderingIfNeeds();
+    layoutIfNeeds();
 
     if (document() && document()->frame()) {
         Frame* frame = document()->frame()->hitTest(x, y, HitTestStageEnd);

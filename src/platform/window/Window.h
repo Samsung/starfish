@@ -30,6 +30,7 @@ class URL;
 class Canvas;
 class HTMLCollection;
 class StackingContext;
+class CanvasSurface;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -187,7 +188,7 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
     HTMLCollection* namedAccess(String* name);
 
-    void layoutIfNeeded();
+    void layoutIfNeeds();
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
@@ -211,7 +212,7 @@ protected:
     Window(StarFish* starFish);
 
     void rendering();
-    void clearStackingContext();
+    void clearStackingContext(bool backupBuffer);
     void paintWindowBackground(Canvas* canvas);
 
     bool m_inRendering;
@@ -230,6 +231,7 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     Document* m_document;
     StackingContext* m_rootStackingContext;
+    std::vector<CanvasSurface*, gc_allocator<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;
     Node* m_activeNodeWithTouchDown;
     Location m_touchDownPoint;
 

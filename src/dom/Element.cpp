@@ -155,7 +155,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
 
 LayoutRect Element::clientRect()
 {
-    document()->window()->layoutIfNeeded();
+    document()->window()->layoutIfNeeds();
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();

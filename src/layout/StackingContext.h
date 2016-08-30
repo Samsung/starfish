@@ -50,10 +50,11 @@ public:
         return m_needsOwnBuffer;
     }
 
-    void clearOwnBuffer()
+    void clearOwnBuffer(bool needsDetachNative = true)
     {
         if (m_buffer) {
-            m_buffer->detachNativeBuffer();
+            if (needsDetachNative)
+                m_buffer->detachNativeBuffer();
             m_buffer = nullptr;
         }
     }
