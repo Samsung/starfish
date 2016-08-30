@@ -26,7 +26,6 @@ public:
     FrameDocument(Node* node)
         : FrameBlockBox(node, nullptr)
     {
-
     }
 
     virtual const char* name()
