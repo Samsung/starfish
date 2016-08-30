@@ -81,6 +81,7 @@ public:
         m_mainBox = nullptr;
         m_background = nullptr;
         m_dummyBox = nullptr;
+        m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
         m_renderingIdlerData = nullptr;
 
@@ -153,6 +154,7 @@ public:
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > > m_drawnImageList;
     Evas_Object* m_mainBox;
     Evas_Object* m_dummyBox;
+    Evas_Object* m_dummyBoxClipper;
 
     Ecore_Event_Handler* m_desktopMouseDownEventHandler;
     Ecore_Event_Handler* m_desktopMouseMoveEventHandler;
@@ -163,9 +165,12 @@ public:
     void (*m_mobileMouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseMoveEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseUpEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
+    void (*m_mobileClickEventHandler)(void* data, Evas_Object* obj, void* event_info);
 
     Ecore_Animator* m_renderingAnimator;
     IdlerData* m_renderingIdlerData;
+
+    float m_lastMouseX, m_lastMouseY;
 };
 
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -349,18 +354,27 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     elm_box_layout_set(wnd->m_mainBox, mainRenderingFunction, wnd, NULL);
     evas_object_show(wnd->m_mainBox);
 
-    wnd->m_dummyBox = evas_object_rectangle_add(e);
-    evas_object_color_set(wnd->m_dummyBox, 0, 0, 0, 0); // opaque background
+    wnd->m_dummyBox = elm_button_add(wnd->m_window);
     int w, h;
     evas_object_geometry_get(wnd->m_window, &w, &h, NULL, NULL);
     evas_object_resize(wnd->m_dummyBox, width, height);
     evas_object_move(wnd->m_dummyBox, 0, 0);
     evas_object_show(wnd->m_dummyBox);
+
+    wnd->m_dummyBoxClipper = evas_object_rectangle_add(e);
+    evas_object_move(wnd->m_dummyBoxClipper, 0, 0);
+    evas_object_resize(wnd->m_dummyBoxClipper, width, height);
+    evas_object_clip_set(wnd->m_dummyBox, wnd->m_dummyBoxClipper);
+    evas_object_color_set(wnd->m_dummyBoxClipper, 0, 0, 0, 0);
+    evas_object_show(wnd->m_dummyBoxClipper);
+
     evas_object_show(wnd->m_window);
 
     wnd->m_mobileMouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        Window* sf = (Window*)data;
+        WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*) event_info;
+        sf->m_lastMouseX = ev->canvas.x;
+        sf->m_lastMouseY = ev->canvas.y;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventDown);
         return;
@@ -368,8 +382,10 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, wnd->m_mobileMouseDownEventHandler, wnd);
 
     wnd->m_mobileMouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        Window* sf = (Window*)data;
+        WindowImplEFL* sf = (WindowImplEFL*)data;
         Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*) event_info;
+        sf->m_lastMouseX = ev->cur.canvas.x;
+        sf->m_lastMouseY = ev->cur.canvas.y;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchTouchEvent(ev->cur.canvas.x, ev->cur.canvas.y, Window::TouchEventMove);
         return;
@@ -377,13 +393,18 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, wnd->m_mobileMouseMoveEventHandler, wnd);
 
     wnd->m_mobileMouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        Window* sf = (Window*)data;
-        Evas_Event_Mouse_Up* ev = (Evas_Event_Mouse_Up*) event_info;
+        WindowImplEFL* sf = (WindowImplEFL*)data;
         StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(ev->canvas.x, ev->canvas.y, Window::TouchEventUp);
+        sf->dispatchTouchEvent(0, 0, Window::TouchEventCancel);
         return;
     };
-    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, wnd->m_mobileMouseMoveEventHandler, wnd);
+
+    wnd->m_mobileClickEventHandler = [](void* data, Evas_Object* obj, void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        StarFishEnterer enter(sf->m_starFish);
+        sf->dispatchTouchEvent(sf->m_lastMouseX, sf->m_lastMouseY, Window::TouchEventUp);
+    };
+    evas_object_smart_callback_add(wnd->m_dummyBox, "clicked", wnd->m_mobileClickEventHandler, wnd);
 #endif
     return wnd;
 }
@@ -423,6 +444,12 @@ Window::~Window()
     STARFISH_LOG_INFO("Window::~Window\n");
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+
+    if (eflWindow->m_dummyBoxClipper) {
+        evas_object_del(eflWindow->m_dummyBoxClipper);
+        eflWindow->m_dummyBoxClipper = nullptr;
+    }
+
     if (eflWindow->m_dummyBox) {
         evas_object_del(eflWindow->m_dummyBox);
         eflWindow->m_dummyBox = nullptr;
@@ -452,7 +479,10 @@ Window::~Window()
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN, eflWindow->m_mobileMouseDownEventHandler);
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, eflWindow->m_mobileMouseMoveEventHandler);
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseMoveEventHandler);
+    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseMoveEventHandler);
+    evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked", eflWindow->m_mobileClickEventHandler);
 #endif
+
 }
 
 void Window::navigate(URL* url)
@@ -1121,6 +1151,11 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         setActiveNode(node);
     } else if (kind == TouchEventMove) {
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
+            releaseActiveNode();
+            m_activeNodeWithTouchDown = nullptr;
+        }
+    } else if (kind == TouchEventCancel) {
+        if (m_activeNodeWithTouchDown) {
             releaseActiveNode();
             m_activeNodeWithTouchDown = nullptr;
         }
