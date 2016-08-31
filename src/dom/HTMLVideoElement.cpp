@@ -76,8 +76,11 @@ void VideoPlayer::onPrepared(bool hasError)
         // TODO
         return;
     }
-    if (m_videoElement)
+    if (m_videoElement) {
         m_videoElement->setReadyState(HTMLMediaElement::HAVE_METADATA);
+        m_videoElement->setNeedsLayout();
+    }
+
 }
 
 void VideoPlayer::onPlayFinished()
