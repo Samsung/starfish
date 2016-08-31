@@ -51,11 +51,6 @@ public:
     };
 
     HTMLMediaElement(Document* document);
-    ~HTMLMediaElement()
-    {
-        if (m_mediaPlayer)
-            m_mediaPlayer->destroy();
-    }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -107,11 +102,8 @@ public:
     TimeRanges* played();
     TimeRanges* seekable();
     void load();
-    void load(String* src);
-    void unload();
     void play();
     void pause();
-    void stop();
     bool ended();
     bool autoplay();
     bool loop();

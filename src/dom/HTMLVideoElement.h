@@ -32,7 +32,7 @@ public:
         m_videoSurface = CanvasSurface::create(document->window(), STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS, STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS);
         VideoPlayer* player = new VideoPlayer(this);
 #ifdef STARFISH_TIZEN_MOBILE
-        player->setVideoSurface(m_videoSurface);
+        player->setDisplayArea(m_videoSurface);
 #endif
         m_mediaPlayer = player;
     }

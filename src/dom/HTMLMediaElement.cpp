@@ -20,6 +20,7 @@
 #include "dom/HTMLMediaElement.h"
 #include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
+#include "util/URL.h"
 
 namespace StarFish {
 
@@ -35,10 +36,16 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        if (value->equals(String::emptyString)) {
-            unload();
-        } else if (preloadEnum() != HTMLMediaElement::PRELOAD_NONE || autoplay()) {
-            load(value);
+        if (!m_mediaPlayer) {
+            return;
+        }
+        URL* url = nullptr;
+        if (value->length() != 0) {
+            url = URL::createURL(document()->documentURI()->urlString(), value);
+        }
+        m_mediaPlayer->setURL(url);
+        if (preloadEnum() != HTMLMediaElement::PRELOAD_NONE || autoplay()) {
+            load();
         }
     }
 }
@@ -60,31 +67,15 @@ void HTMLMediaElement::didNodeRemovedFromDocumenTree()
     if (!m_mediaPlayer) {
         return;
     }
-    m_mediaPlayer->stop();
+    m_mediaPlayer->pause();
 }
 
 void HTMLMediaElement::load()
 {
-    load(src());
-}
-
-void HTMLMediaElement::load(String* src)
-{
-    if (src->equals(String::emptyString)) {
-        return;
-    }
     if (!m_mediaPlayer) {
         return;
     }
-    m_mediaPlayer->prepareAsync(document(), src);
-}
-
-void HTMLMediaElement::unload()
-{
-    if (!m_mediaPlayer) {
-        return;
-    }
-    m_mediaPlayer->destroy();
+    m_mediaPlayer->prepare();
 }
 
 void HTMLMediaElement::play()
@@ -93,14 +84,6 @@ void HTMLMediaElement::play()
         return;
     }
     m_mediaPlayer->play();
-}
-
-void HTMLMediaElement::stop()
-{
-    if (!m_mediaPlayer) {
-        return;
-    }
-    m_mediaPlayer->stop();
 }
 
 void HTMLMediaElement::addTextTrack(TextTrack* track)
@@ -218,7 +201,7 @@ bool HTMLMediaElement::paused()
 {
     if (!m_mediaPlayer)
         return false;
-    return m_mediaPlayer->isPaused();
+    return m_mediaPlayer->isPublicState(MediaPlayer::STATE_PAUSED);
 }
 
 void HTMLMediaElement::pause()
@@ -347,9 +330,7 @@ void HTMLMediaElement::setLoop(bool loop)
     } else {
         removeAttribute(name);
     }
-    // Note: MediaPlayer::setLoop() does not work well,
-    // if (m_mediaPlayer)
-    //     m_mediaPlayer->setLoop(loop);
+    m_mediaPlayer->setLoop(loop);
 }
 
 void HTMLMediaElement::setControls(bool controls)
