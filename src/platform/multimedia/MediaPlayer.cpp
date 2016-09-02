@@ -277,6 +277,8 @@ void VideoPlayer::destroyCPlayer()
     player_stop(m_cplayer);
     player_unprepare(m_cplayer);
     onUnprepared();
+
+    player_destroy(m_cplayer);
     m_currentUrl = nullptr;
     m_cplayer = NULL;
 
