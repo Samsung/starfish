@@ -27,7 +27,7 @@ extern bool g_fireOnloadEvent;
 #endif
 
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
-#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 8
+#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 2
 #endif
 
 namespace StarFish {
@@ -36,7 +36,6 @@ ResourceLoader::ResourceLoader(Document& document)
     : m_inDocumentOpenState(false)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_document(&document)
-    , m_baseURL(URL::createURL(String::emptyString, document.documentURI()->baseURI()))
     , m_resourceCacheSize(0)
 {
 }
@@ -150,7 +149,7 @@ public:
     {
         ResourceClient::didLoadFinished();
         m_resource->loader()->m_resourceCacheSize += m_resource->contentSize();
-        // STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n", (int)m_resource->loader()->m_resourceCacheSize / 1024);
+        m_resource->loader()->cachePruning();
     }
 
     virtual void didLoadCanceled()
@@ -188,6 +187,11 @@ public:
 
     Resource* m_watcher;
 };
+
+void ResourceLoader::cachePruning()
+{
+    STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n", (int)m_resourceCacheSize / 1024);
+}
 
 bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel)
 {

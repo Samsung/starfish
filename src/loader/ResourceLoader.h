@@ -66,6 +66,7 @@ public:
         m_resourceCache.clear();
     }
 private:
+    void cachePruning();
     void cancelAllOfPendingRequests();
     void cacheHit(Resource* org, Resource* now, Resource::ResourceRequestSyncLevel syncLevel);
     // return value means cache hit
@@ -74,7 +75,6 @@ private:
     bool m_inDocumentOpenState;
     size_t m_pendingResourceCountWhileDocumentOpening;
     Document* m_document;
-    URL* m_baseURL;
     std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;
     std::unordered_map<std::string, ResourceCacheData*, std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, ResourceCacheData*>>> m_resourceCache;
     size_t m_resourceCacheSize;
