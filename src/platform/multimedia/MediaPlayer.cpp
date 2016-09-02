@@ -30,6 +30,9 @@
 #include <efl_extension.h>
 #include <Elementary.h>
 #include <Ecore_X.h>
+#ifdef STARFISH_TIZEN_TV
+#include <player_product.h>
+#endif
 #endif
 
 #define PLAYER_LOGI(...) \
@@ -79,7 +82,7 @@ static void __videoPlayerPrepareCB(void *user_data)
     PLAYER_LOGI("__videoPlayerPrepareCB()\n");
     VideoPlayer* player = (VideoPlayer*)user_data;
     player->videoElement()->document()->window()->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        ((VideoPlayer*)data)->postLoaded();
+        ((VideoPlayer*)data)->prepareCBShouldBeExecutedInMainThread();
     }, player);
 }
 
@@ -88,8 +91,13 @@ static void __videoPlayerCompleteCB(void *user_data)
     PLAYER_LOGI("__videoPlayerCompleteCB()\n");
     VideoPlayer* player = (VideoPlayer*)user_data;
     player->videoElement()->document()->window()->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        ((VideoPlayer*)data)->postPlayFinished();
+        ((VideoPlayer*)data)->playFinishedCBShouldBeExecutedInMainThread();
     }, player);
+}
+
+static void __videoPlayerBufferingCB(int percent, void *user_data)
+{
+    PLAYER_LOGI("__videoPlayerCompleteCB() %d percent\n", percent);
 }
 
 static void __videoPlayerErrorCB(int errorCode, void *user_data)
@@ -156,6 +164,7 @@ bool VideoPlayer::assureCPlayer()
         // Set callbacks
         player_set_completed_cb(m_cplayer, __videoPlayerCompleteCB, (void*)this);
         player_set_error_cb(m_cplayer, __videoPlayerErrorCB, (void*)this);
+        player_set_buffering_cb(m_cplayer, __videoPlayerBufferingCB, (void*)this);
     }
     return true;
 }
@@ -197,8 +206,9 @@ void VideoPlayer::popPendingUrl()
     m_currentUrl = m_inputUrl;
 }
 
-void VideoPlayer::postLoaded()
+void VideoPlayer::prepareCBShouldBeExecutedInMainThread()
 {
+    PLAYER_LOGI("prepareCBShouldBeExecutedInMainThread()\n");
     unlockElementPointer();
     // If public state changed during PREPARING, exit.
     if (!isPublicState(MediaPlayer::STATE_PREPARING) || !m_cplayer) {
@@ -245,8 +255,9 @@ void VideoPlayer::postLoaded()
 #endif
 }
 
-void VideoPlayer::postPlayFinished()
+void VideoPlayer::playFinishedCBShouldBeExecutedInMainThread()
 {
+    PLAYER_LOGI("playFinishedCBShouldBeExecutedInMainThread()\n");
     unlockElementPointer();
     // If public state changed during PREPARING, exit.
     if (!isPublicState(MediaPlayer::STATE_PLAYING) || !m_cplayer) {
@@ -293,8 +304,12 @@ void VideoPlayer::prepareCPlayer()
         PLAYER_LOGI("url : %s\n", m_currentUrl->urlString()->utf8Data());
         player_set_uri(m_cplayer, const_cast<char*>(m_currentUrl->urlString()->utf8Data()));
 
-        // Set display options (should reset after unprepare)
 #ifdef STARFISH_TIZEN_TV
+        // FIXME
+        if (m_currentUrl->isNetworkURL())
+            player_set_streaming_type(m_cplayer, const_cast<char*>("FFMPEG_HTTP"));
+
+        // Set display options (should reset after unprepare)
         Evas_Object* win = (Evas_Object*) m_videoElement->document()->window()->unwrap();
         player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get(win));
         player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
@@ -304,6 +319,7 @@ void VideoPlayer::prepareCPlayer()
         player_set_display(m_cplayer, (player_display_type_e) display_type, display_handle);
         player_set_display_mode(m_cplayer, display_mode);
         player_set_x11_display_roi_mode(m_cplayer, roi_mode);
+        player_display_video_at_paused_state(m_cplayer, TRUE);
 #elif STARFISH_TIZEN_MOBILE
         player_display_h display_handle = GET_DISPLAY((Evas_Object*) m_surface->unwrap());
         player_display_type_e display_type = PLAYER_DISPLAY_TYPE_EVAS;

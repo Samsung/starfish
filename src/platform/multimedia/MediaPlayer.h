@@ -96,8 +96,9 @@ public:
 
     int width();
     int height();
-    void postLoaded();
-    void postPlayFinished();
+
+    void prepareCBShouldBeExecutedInMainThread();
+    void playFinishedCBShouldBeExecutedInMainThread();
 
     bool assureCPlayer();
     void destroyCPlayer();
