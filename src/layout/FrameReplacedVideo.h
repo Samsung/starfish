@@ -49,7 +49,11 @@ public:
         IntrinsicSize result;
         result.m_isContentExists = true;
         auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
-        result.m_intrinsicContentSize = LayoutSize(v->videoSurface()->width(), v->videoSurface()->height());
+        unsigned long videoWidth = v->videoWidth();
+        unsigned long videoHeight = v->videoHeight();
+        videoWidth = videoWidth == 0 ? STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS : videoWidth;
+        videoHeight = videoHeight == 0 ? STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS : videoHeight;
+        result.m_intrinsicContentSize = LayoutSize(videoWidth, videoHeight);
         return result;
     }
 

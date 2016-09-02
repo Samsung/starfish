@@ -47,6 +47,14 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
         if (preloadEnum() != HTMLMediaElement::PRELOAD_NONE || autoplay()) {
             load();
         }
+    } else if (name == document()->window()->starFish()->staticStrings()->m_loop) {
+        // loop
+        if (!m_mediaPlayer)
+            return;
+        if (attributeRemoved)
+            m_mediaPlayer->setLoop(false);
+        else
+            m_mediaPlayer->setLoop(true);
     }
 }
 
@@ -139,7 +147,7 @@ HTMLMediaElement::NetState HTMLMediaElement::networkState()
 
 HTMLMediaElement::PreloadState HTMLMediaElement::preloadEnum()
 {
-    QualifiedName preload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "preload"));
+    QualifiedName preload = document()->window()->starFish()->staticStrings()->m_preload;
     size_t siz = hasAttribute(preload);
     if (siz != SIZE_MAX) {
         String* value = getAttribute(preload);
@@ -243,8 +251,7 @@ bool HTMLMediaElement::ended()
 
 bool HTMLMediaElement::autoplay()
 {
-    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "autoplay"));
-    size_t siz = hasAttribute(name);
+    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_autoplay);
     if (siz == SIZE_MAX)
         return false;
     return true;
@@ -252,8 +259,7 @@ bool HTMLMediaElement::autoplay()
 
 bool HTMLMediaElement::loop()
 {
-    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "loop"));
-    size_t siz = hasAttribute(name);
+    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_loop);
     if (siz == SIZE_MAX)
         return false;
     return true;
@@ -261,8 +267,7 @@ bool HTMLMediaElement::loop()
 
 bool HTMLMediaElement::controls()
 {
-    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "controls"));
-    size_t siz = hasAttribute(name);
+    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_controls);
     if (siz == SIZE_MAX)
         return false;
     return true;
@@ -282,8 +287,7 @@ bool HTMLMediaElement::muted()
 
 void HTMLMediaElement::setPreload(String* preload)
 {
-    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "preload"));
-    setAttribute(name, preload);
+    setAttribute(document()->window()->starFish()->staticStrings()->m_preload, preload);
 }
 
 void HTMLMediaElement::setSeeking(bool seeking)
@@ -308,7 +312,7 @@ void HTMLMediaElement::setPlaybackRate(double playbackRate)
 
 void HTMLMediaElement::setAutoplay(bool autoplay)
 {
-    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "autoplay"));
+    QualifiedName name = document()->window()->starFish()->staticStrings()->m_autoplay;
     if (autoplay) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -321,7 +325,7 @@ void HTMLMediaElement::setAutoplay(bool autoplay)
 
 void HTMLMediaElement::setLoop(bool loop)
 {
-    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "loop"));
+    QualifiedName name = document()->window()->starFish()->staticStrings()->m_loop;
     if (loop) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -330,12 +334,11 @@ void HTMLMediaElement::setLoop(bool loop)
     } else {
         removeAttribute(name);
     }
-    m_mediaPlayer->setLoop(loop);
 }
 
 void HTMLMediaElement::setControls(bool controls)
 {
-    QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(document()->window()->starFish(), "controls"));
+    QualifiedName name = document()->window()->starFish()->staticStrings()->m_controls;
     if (controls) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {

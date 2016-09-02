@@ -70,10 +70,9 @@ void HTMLVideoElement::setPoster(String* poster)
     // TODO
 }
 
-void VideoPlayer::onPrepared(bool hasError)
+void VideoPlayer::onPrepared(URL* url)
 {
-    if (hasError) {
-        // TODO
+    if (!url) {
         return;
     }
     if (m_videoElement) {
@@ -83,7 +82,14 @@ void VideoPlayer::onPrepared(bool hasError)
 
 }
 
-void VideoPlayer::onPlayFinished()
+void VideoPlayer::onUnprepared()
+{
+    if (m_videoElement) {
+        m_videoElement->setReadyState(HTMLMediaElement::HAVE_NOTHING);
+    }
+}
+
+void VideoPlayer::onPlayFinished(URL* url)
 {
 
 }

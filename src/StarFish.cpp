@@ -370,7 +370,13 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_face = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "face"));
     m_size = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "size"));
     m_charset = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "charset"));
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "default"));
+    m_loop = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loop"));
+    m_autoplay = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "autoplay"));
+    m_preload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "preload"));
+    m_controls = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "controls"));
+#endif
 
     m_click = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "click"));
     m_onclick = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onclick"));
@@ -387,9 +393,11 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_timeout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "timeout"));
     m_loadend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadend"));
     m_loadstart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadstart"));
-    m_cuechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "cuechange"));
     m_enter = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "enter"));
     m_exit = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "exit"));
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    m_cuechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "cuechange"));
+#endif
 }
 
 }

@@ -71,7 +71,6 @@ VideoPlayer::VideoPlayer(HTMLVideoElement* videoElement)
     }, NULL, NULL, NULL);
 
     STARFISH_ASSERT(videoElement);
-    // assureCPlayer();
 }
 
 static void __videoPlayerPrepareCB(void *user_data)
@@ -95,7 +94,44 @@ static void __videoPlayerCompleteCB(void *user_data)
 
 static void __videoPlayerErrorCB(int errorCode, void *user_data)
 {
-    PLAYER_LOGI("__videoPlayerErrorCB()\n");
+    switch (errorCode) {
+#define GEN_ERROR_PRINTS(errorenum) \
+    case errorenum: \
+        PLAYER_LOGI("__videoPlayerErrorCB() : %s\n", #errorenum); \
+        return;
+        GEN_ERROR_PRINTS(PLAYER_ERROR_OUT_OF_MEMORY)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_PARAMETER)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NO_SUCH_FILE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_OPERATION)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_FILE_NO_SPACE_ON_DEVICE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_FEATURE_NOT_SUPPORTED_ON_DEVICE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SEEK_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_STATE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NOT_SUPPORTED_FILE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_URI)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SOUND_POLICY)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_CONNECTION_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_VIDEO_CAPTURE_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_EXPIRED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_NO_LICENSE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_FUTURE_USE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_NOT_PERMITTED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_RESOURCE_LIMIT)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_STREAMING_PLAYER)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_AUDIO_CODEC_NOT_SUPPORTED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_VIDEO_CODEC_NOT_SUPPORTED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NO_AUTH)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_GENEREIC)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_INFO)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SYNC_PLAY_NETWORK_EXCEPTION)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SYNC_PLAY_SERVER_DOWN)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NOT_SUPPORTED_FORMAT)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_PERMISSION_DENIED)
+#undef GEN_ERROR_PRINTS
+    default:
+        PLAYER_LOGI("__videoPlayerErrorCB() : Unknown error\n");
+        return;
+    }
 }
 
 bool VideoPlayer::assureCPlayer()
@@ -120,26 +156,6 @@ bool VideoPlayer::assureCPlayer()
         // Set callbacks
         player_set_completed_cb(m_cplayer, __videoPlayerCompleteCB, (void*)this);
         player_set_error_cb(m_cplayer, __videoPlayerErrorCB, (void*)this);
-
-        // Set display options
-#ifdef STARFISH_TIZEN_TV
-        Evas_Object* win = (Evas_Object*) m_videoElement->document()->window()->unwrap();
-        player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get(win));
-        player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
-        player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
-        player_display_roi_mode_e roi_mode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
-
-        player_set_display(m_cplayer, (player_display_type_e) display_type, display_handle);
-        player_set_display_mode(m_cplayer, display_mode);
-        player_set_x11_display_roi_mode(m_cplayer, roi_mode);
-#elif STARFISH_TIZEN_MOBILE
-        player_display_h display_handle = GET_DISPLAY((Evas_Object*) m_surface->unwrap());
-        player_display_type_e display_type = PLAYER_DISPLAY_TYPE_EVAS;
-        player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER;
-
-        player_set_display(m_cplayer, display_type, display_handle);
-        player_set_display_mode(m_cplayer, display_mode);
-#endif
     }
     return true;
 }
@@ -192,7 +208,7 @@ void VideoPlayer::postLoaded()
     player_state_e state;
     if (player_get_state(m_cplayer, &state) != PLAYER_ERROR_NONE || state != PLAYER_STATE_READY) {
         setPublicState(MediaPlayer::STATE_UNKNOWN_ERROR);
-        onPrepared(true);
+        onPrepared(nullptr);
         return;
     }
 
@@ -205,7 +221,7 @@ void VideoPlayer::postLoaded()
         prepareCPlayer();
         return;
     }
-    onPrepared(false);
+    onPrepared(m_currentUrl);
 
     // If there was a play() request during PREPARING, start playing
     if (lastRequestIs(VideoPlayer::REQUEST_PLAY)) {
@@ -237,7 +253,7 @@ void VideoPlayer::postPlayFinished()
         return;
     }
     // Normal case,
-    onPlayFinished();
+    onPlayFinished(m_currentUrl);
 }
 
 void VideoPlayer::destroyCPlayer()
@@ -246,8 +262,10 @@ void VideoPlayer::destroyCPlayer()
         STARFISH_ASSERT(isPublicState(MediaPlayer::STATE_NONE));
         return;
     }
+    PLAYER_LOGI("destroyCPlayer()\n");
     player_stop(m_cplayer);
     player_unprepare(m_cplayer);
+    onUnprepared();
     m_currentUrl = nullptr;
     m_cplayer = NULL;
 
@@ -270,9 +288,30 @@ void VideoPlayer::prepareCPlayer()
         return;
     }
 #endif
+    PLAYER_LOGI("prepareCPlayer()\n");
     if (m_currentUrl->isFileURL() || m_currentUrl->isNetworkURL()) {
-        PLAYER_LOGI("prepare() - url : %s\n", m_currentUrl->urlString()->utf8Data());
+        PLAYER_LOGI("url : %s\n", m_currentUrl->urlString()->utf8Data());
         player_set_uri(m_cplayer, const_cast<char*>(m_currentUrl->urlString()->utf8Data()));
+
+        // Set display options (should reset after unprepare)
+#ifdef STARFISH_TIZEN_TV
+        Evas_Object* win = (Evas_Object*) m_videoElement->document()->window()->unwrap();
+        player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get(win));
+        player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
+        player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
+        player_display_roi_mode_e roi_mode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
+
+        player_set_display(m_cplayer, (player_display_type_e) display_type, display_handle);
+        player_set_display_mode(m_cplayer, display_mode);
+        player_set_x11_display_roi_mode(m_cplayer, roi_mode);
+#elif STARFISH_TIZEN_MOBILE
+        player_display_h display_handle = GET_DISPLAY((Evas_Object*) m_surface->unwrap());
+        player_display_type_e display_type = PLAYER_DISPLAY_TYPE_EVAS;
+        player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER;
+
+        player_set_display(m_cplayer, display_type, display_handle);
+        player_set_display_mode(m_cplayer, display_mode);
+#endif
 
         setPublicState(MediaPlayer::STATE_PREPARING);
         lockElementPointer();
@@ -292,6 +331,7 @@ void VideoPlayer::unprepareCPlayer()
         STARFISH_ASSERT(isPublicState(MediaPlayer::STATE_NONE));
         return;
     }
+    PLAYER_LOGI("unprepareCPlayer()\n");
     player_unprepare(m_cplayer);
     // If cplayer's state is not [IDLE] -> something wrong
     player_state_e state;
@@ -302,6 +342,7 @@ void VideoPlayer::unprepareCPlayer()
     // Set public state
     setPublicState(MediaPlayer::STATE_NONE);
     unlockElementPointer();
+    onUnprepared();
     m_currentUrl = nullptr;
 }
 
@@ -311,7 +352,7 @@ void VideoPlayer::playCPlayer()
         STARFISH_ASSERT(isPublicState(MediaPlayer::STATE_NONE));
         return;
     }
-
+    PLAYER_LOGI("playCPlayer()\n");
 #ifdef STARFISH_TIZEN_TV
     player_set_x11_display_dst_roi(m_cplayer, m_displayArea.x(), m_displayArea.y(), m_displayArea.width(), m_displayArea.height());
     PLAYER_LOGI("video display area : %f %f %f %f\n", m_displayArea.x(), m_displayArea.y(), m_displayArea.width(), m_displayArea.height());
@@ -331,12 +372,13 @@ void VideoPlayer::playCPlayer()
     }
     // Set public state
     if (state == PLAYER_STATE_IDLE) {
+        PLAYER_LOGI("nothing to play\n");
         setPublicState(MediaPlayer::STATE_NONE);
     } else {
+        PLAYER_LOGI("play start!!!\n");
         STARFISH_ASSERT(state == PLAYER_STATE_PLAYING);
         setPublicState(MediaPlayer::STATE_PLAYING);
         lockElementPointer();
-        PLAYER_LOGI("play!!!\n");
     }
 }
 
@@ -346,6 +388,7 @@ void VideoPlayer::pauseCPlayer()
         STARFISH_ASSERT(isPublicState(MediaPlayer::STATE_NONE));
         return;
     }
+    PLAYER_LOGI("pauseCPlayer()\n");
     player_pause(m_cplayer);
     // TODO : confirm state
     // If cplayer's state is not [IDLE|PAUSED] -> something wrong
@@ -371,6 +414,7 @@ void VideoPlayer::stopCPlayer()
         STARFISH_ASSERT(isPublicState(MediaPlayer::STATE_NONE));
         return;
     }
+    PLAYER_LOGI("stopCPlayer()\n");
     player_stop(m_cplayer);
     // If cplayer's state is not [IDLE|READY] -> something wrong
     player_state_e state;
@@ -391,11 +435,14 @@ void VideoPlayer::stopCPlayer()
 
 void VideoPlayer::prepare()
 {
+    PLAYER_LOGI("prepare()---------------------------------------\n");
+    m_lastRequest = VideoPlayer::REQUEST_NONE;
     if (!assureCPlayer()) {
-        PLAYER_LOGI("prepare() fail : could not create player\n");
+        PLAYER_LOGI("prepare() FAIL : could not create player\n");
         return;
     }
     if (isPublicState(MediaPlayer::STATE_PREPARING)) {
+        PLAYER_LOGI("prepare() WAIT : player is processing prevous prepare() request.\n");
         pushPendingUrl();
         return;
     }
@@ -406,7 +453,7 @@ void VideoPlayer::prepare()
         unprepareCPlayer();
     }
     if (isPublicState(MediaPlayer::STATE_UNKNOWN_ERROR)) {
-        PLAYER_LOGI("prepare() fail : unlown error\n");
+        PLAYER_LOGI("prepare() FAIL : unknown error\n");
         return;
     }
     m_currentUrl = m_inputUrl;
@@ -430,16 +477,18 @@ void VideoPlayer::setDisplayArea(CanvasSurface* surface)
 
 void VideoPlayer::play()
 {
+    PLAYER_LOGI("play()------------------------------------------\n");
     m_lastRequest = VideoPlayer::REQUEST_PLAY;
     if (!assureCPlayer()) {
-        PLAYER_LOGI("play() fail : could not create player\n");
+        PLAYER_LOGI("play() FAIL : could not create player\n");
         return;
     }
     if (isPublicState(MediaPlayer::STATE_PREPARING | MediaPlayer::STATE_PLAYING)) {
+        PLAYER_LOGI("play() IGNORED (already playing) or WAIT (preparing) \n");
         return;
     }
     if (isPublicState(MediaPlayer::STATE_UNKNOWN_ERROR)) {
-        PLAYER_LOGI("play() fail : unknown error\n");
+        PLAYER_LOGI("play() FAIL : unknown error\n");
         return;
     }
     if (isPublicState(MediaPlayer::STATE_NONE)) {
@@ -447,7 +496,7 @@ void VideoPlayer::play()
             m_currentUrl = m_inputUrl;
             prepareCPlayer();
         } else {
-            PLAYER_LOGI("play() fail : setURL() first\n");
+            PLAYER_LOGI("play() FAIL : setURL() first\n");
         }
         return;
     }
@@ -456,16 +505,18 @@ void VideoPlayer::play()
 
 void VideoPlayer::pause()
 {
+    PLAYER_LOGI("pause()-----------------------------------------\n");
     m_lastRequest = REQUEST_PAUSE;
     if (!assureCPlayer()) {
-        PLAYER_LOGI("pause() fail : could not create player\n");
-        return;
-    }
-    if (isPublicState(MediaPlayer::STATE_NONE | MediaPlayer::STATE_PREPARING | MediaPlayer::STATE_PAUSED)) {
+        PLAYER_LOGI("pause() FAIL : could not create player\n");
         return;
     }
     if (isPublicState(MediaPlayer::STATE_UNKNOWN_ERROR)) {
-        PLAYER_LOGI("pause() fail : unknown error\n");
+        PLAYER_LOGI("pause() FAIL : unknown error\n");
+        return;
+    }
+    if (!isPublicState(MediaPlayer::STATE_PLAYING)) {
+        PLAYER_LOGI("pause() IGNORE : nothing to pause\n");
         return;
     }
     pauseCPlayer();
