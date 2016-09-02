@@ -26,10 +26,10 @@ Evas* internalCanvas();
 
 class ImageDataEFL : public ImageData {
 public:
-    ImageDataEFL(String* imageSrc)
+    ImageDataEFL(String* localImageSrc)
     {
         m_image = evas_object_image_add(internalCanvas());
-        evas_object_image_file_set(m_image, PathResolver::matchLocation(imageSrc)->utf8Data(), NULL);
+        evas_object_image_file_set(m_image, PathResolver::matchLocation(localImageSrc)->utf8Data(), NULL);
         evas_object_data_set(m_image, "local", "1");
         STARFISH_RELEASE_ASSERT(evas_object_image_colorspace_get(m_image) == EVAS_COLORSPACE_ARGB8888);
         int w, h, err;
@@ -71,6 +71,15 @@ public:
         m_image = NULL;
     }
 
+    virtual size_t bufferSize()
+    {
+        if (m_image) {
+            return m_width * m_height * 4;
+        } else {
+            return 0;
+        }
+    }
+
     void reigsterFinalizer()
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
@@ -102,9 +111,9 @@ protected:
     size_t m_height;
 };
 
-ImageData* ImageData::create(String* imageSrc)
+ImageData* ImageData::create(String* localImageSrc)
 {
-    ImageData* imageData = new ImageDataEFL(imageSrc);
+    ImageData* imageData = new ImageDataEFL(localImageSrc);
     if (imageData->unwrap() == NULL)
         return NULL;
     return imageData;

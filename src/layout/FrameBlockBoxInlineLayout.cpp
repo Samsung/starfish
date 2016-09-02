@@ -1829,7 +1829,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
 
     auto breakLine = [&]()
     {
-        std::vector<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore> > stack;
+        std::vector<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>, gc_allocator<std::pair<InlineNonReplacedBox*, InlineNonReplacedBoxMBPStore>>> stack;
 
         FrameBox* addingUpWidth = nullptr;
         Frame* currentSelf = self;

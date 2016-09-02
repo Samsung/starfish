@@ -23,11 +23,18 @@
 
 namespace StarFish {
 
+class ResourceCacheData : public gc {
+    friend class ResourceLoader;
+    std::vector<std::pair<Resource*, Resource::Type>, gc_allocator<std::pair<Resource*, Resource::Type>>> m_data;
+    uint64_t m_lastUsedTime; // stores tick count
+};
+
 class ResourceLoader : public gc {
     friend class Resource;
     friend class ImageResource;
     friend class DocumentOnLoadChecker;
     friend class ResourceAliveChecker;
+    friend class ResourceSizeTracer;
 public:
     ResourceLoader(Document& doc);
 
@@ -56,21 +63,23 @@ public:
     void clear()
     {
         cancelAllOfPendingRequests();
-        m_imageCache.clear();
+        m_resourceCache.clear();
     }
 private:
     void cancelAllOfPendingRequests();
-
-    void fetchResourcePreprocess(Resource* res);
+    void cacheHit(Resource* org, Resource* now, Resource::ResourceRequestSyncLevel syncLevel);
+    // return value means cache hit
+    bool requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel);
     void fireDocumentOnLoadEventIfNeeded();
     bool m_inDocumentOpenState;
     size_t m_pendingResourceCountWhileDocumentOpening;
     Document* m_document;
     URL* m_baseURL;
-    std::unordered_map<std::string, ImageData*, std::hash<std::string>, std::equal_to<std::string>,
-        gc_allocator<std::pair<std::string, ImageData*>>> m_imageCache;
     std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;
+    std::unordered_map<std::string, ResourceCacheData*, std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, ResourceCacheData*>>> m_resourceCache;
+    size_t m_resourceCacheSize;
 };
+
 }
 
 #endif

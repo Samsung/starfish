@@ -100,18 +100,16 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
             STARFISH_LOG_ERROR("%s\n", msg);
         });
 
-#ifdef STARFISH_TIZEN_WEARABLE
         GC_set_warn_proc([](char *msg, GC_word arg)
         {
-            dlog_print(DLOG_ERROR, "StarFish", msg, arg);
+            STARFISH_LOG_ERROR(msg, arg);
         });
-#endif
         GC_set_on_collection_event([](GC_EventType evtType) {
             if (GC_EVENT_PRE_START_WORLD == evtType) {
 #ifdef STARFISH_ENABLE_TEST
                 if (fp_mem&&g_memLogDump)
                     fprintf(fp_mem, "%f %f\n", GC_get_memory_use() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
-                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage());
+                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
 #else
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif

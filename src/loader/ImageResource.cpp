@@ -25,6 +25,7 @@
 
 namespace StarFish {
 
+#ifdef STARFISH_EFL
 void ImageResource::doLoadFile(void* data)
 {
     Resource* res = (Resource*)data;
@@ -33,8 +34,7 @@ void ImageResource::doLoadFile(void* data)
         FileIO* fio = FileIO::create();
         // NOTE
         // we should special logic to load file url for image
-        // we can pass src of image to platform layer
-        // TODO handle decoding failed
+        // we can pass src of image to platform layer in efl
         String* path = res->url()->urlStringWithoutSearchPart();
         String* filePath = path->substring(7, path->length() - 7);
         bool canLoad = fio->open(filePath);
@@ -43,18 +43,10 @@ void ImageResource::doLoadFile(void* data)
             res->didLoadFailed();
             return;
         }
-        std::string utf8 = filePath->utf8Data();
-        auto iter = res->loader()->m_imageCache.find(utf8);
-        ImageData* id;
-        if (iter == res->loader()->m_imageCache.end()) {
-            id = ImageData::create(filePath);
-            if (!id) {
-                res->didLoadFailed();
-                return;
-            }
-            res->loader()->m_imageCache.insert(std::make_pair(utf8, id));
-        } else {
-            id = iter->second;
+        ImageData* id = ImageData::create(filePath);
+        if (!id) {
+            res->didLoadFailed();
+            return;
         }
         res->asImageResource()->m_imageData = id;
         res->didLoadFinished();
@@ -62,44 +54,35 @@ void ImageResource::doLoadFile(void* data)
         res->didLoadFailed();
     }
 }
+#endif
 
 void ImageResource::request(ResourceRequestSyncLevel syncLevel)
 {
+#ifdef STARFISH_EFL
     if (m_url->isFileURL()) {
-        loader()->fetchResourcePreprocess(this);
-        if (ResourceRequestSyncLevel::AlwaysSync == syncLevel) {
-            doLoadFile(this);
-        } else if (ResourceRequestSyncLevel::SyncIfAlreadyLoaded == syncLevel) {
-            FileIO* fio = FileIO::create();
-            String* path = url()->urlStringWithoutSearchPart();
-            String* filePath = path->substring(7, path->length() - 7);
-            bool canLoad = fio->open(filePath);
-            delete fio;
-            if (!canLoad) {
-                request(ResourceRequestSyncLevel::NeverSync);
-                return;
-            }
-            std::string utf8 = filePath->utf8Data();
-            auto iter = loader()->m_imageCache.find(utf8);
-            if (iter != loader()->m_imageCache.end()) {
-                request(ResourceRequestSyncLevel::AlwaysSync);
+        if (!loader()->requestResourcePreprocess(this, syncLevel)) {
+            // cache miss
+            if (ResourceRequestSyncLevel::AlwaysSync == syncLevel) {
+                doLoadFile(this);
             } else {
-                request(ResourceRequestSyncLevel::NeverSync);
+                pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
+                    Resource* res = (Resource*)data;
+                    res->removeIdlerHandle(handle);
+                    res->asImageResource()->doLoadFile(data);
+                }, this));
             }
-        } else {
-            pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-                Resource* res = (Resource*)data;
-                res->removeIdlerHandle(handle);
-                ImageResourceDoLoadFile(data);
-            }, this));
         }
     } else {
         Resource::request(syncLevel);
     }
+#else
+    Resource::request(syncLevel);
+#endif
 }
 
 void ImageResource::didLoadFinished()
 {
+#ifdef STARFISH_EFL
     if (!m_url->isFileURL()) {
         m_imageData = ImageData::create(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
         if (!m_imageData) {
@@ -107,6 +90,13 @@ void ImageResource::didLoadFinished()
             return;
         }
     }
+#else
+    m_imageData = ImageData::create(m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+    if (!m_imageData) {
+        Resource::didLoadFailed();
+        return;
+    }
+#endif
     Resource::didLoadFinished();
 }
 

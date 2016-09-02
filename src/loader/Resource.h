@@ -19,6 +19,7 @@
 
 #include "loader/Resource.h"
 #include "loader/ResourceClient.h"
+#include "platform/network/NetworkRequest.h"
 
 namespace StarFish {
 
@@ -28,6 +29,8 @@ class ResourceLoader;
 class NetworkRequest;
 
 class Resource : public gc {
+    friend class ResourceLoader;
+    friend class ResourceWatcher;
 public:
     enum State {
         BeforeSend,
@@ -37,9 +40,17 @@ public:
         Canceled,
     };
 
+    enum Type {
+        ResourceType,
+        ImageResourceType,
+        TextResourceType,
+    };
+
     Resource(URL* url, ResourceLoader* loader)
-        : m_state(BeforeSend)
-        , m_isIncludedInComputingWindowOnLoadEvent(true)
+        : m_isIncludedInComputingWindowOnLoadEvent(true)
+        , m_isCached(false)
+        , m_isCanceledButContinueLoadingDueToCache(false)
+        , m_state(BeforeSend)
         , m_url(url)
         , m_loader(loader)
         , m_networkRequest(nullptr)
@@ -110,6 +121,20 @@ public:
     virtual void didLoadFinished();
     virtual void didLoadFailed();
     virtual void didLoadCanceled();
+    virtual void didCacheHit(Resource* cache)
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    virtual size_t contentSize()
+    {
+        return 0;
+    }
+
+    virtual Type type()
+    {
+        return Type::ResourceType;
+    }
 
     ResourceLoader* loader()
     {
@@ -137,15 +162,54 @@ public:
     {
         return m_isIncludedInComputingWindowOnLoadEvent;
     }
+
 protected:
+    State state()
+    {
+        return m_state;
+    }
+
+    bool m_isIncludedInComputingWindowOnLoadEvent : 1;
+    bool m_isCached : 1;
+    bool m_isCanceledButContinueLoadingDueToCache : 1;
     State m_state;
-    bool m_isIncludedInComputingWindowOnLoadEvent;
     URL* m_url;
     ResourceLoader* m_loader;
     NetworkRequest* m_networkRequest;
     ResourceClientVector m_resourceClients;
     std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;
 };
+
+class ResourceNetworkRequestClient : public NetworkRequestClient {
+public:
+    ResourceNetworkRequestClient(Resource* resource)
+        : m_resource(resource)
+    {
+    }
+
+    virtual void onReadyStateChange(NetworkRequest* request, bool isExplicitAction)
+    {
+        if (request->readyState() == NetworkRequest::HEADERS_RECEIVED) {
+            m_resource->didHeaderReceived(String::fromUTF8(request->responseHeaderData().data(), request->responseHeaderData().length()));
+        }
+    }
+
+    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
+    {
+        if (request->progressState() == NetworkRequest::LOAD) {
+            m_resource->didDataReceived(request->responseData().data(), request->responseData().size());
+            m_resource->didLoadFinished();
+        } else if (request->progressState() == NetworkRequest::ERROR) {
+            m_resource->didLoadFailed();
+        } else if (request->progressState() == NetworkRequest::TIMEOUT) {
+            m_resource->didLoadFailed();
+        }
+    }
+
+protected:
+    Resource* m_resource;
+};
+
 }
 
 #endif

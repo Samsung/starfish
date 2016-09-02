@@ -185,6 +185,11 @@ public:
         m_clients.push_back(client);
     }
 
+    void clearNetworkRequestClient()
+    {
+        m_clients.clear();
+    }
+
     URL* url()
     {
         return m_url;

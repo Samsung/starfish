@@ -17,6 +17,10 @@
 #include "StarFishConfig.h"
 #include "FileIO.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
+
 namespace StarFish {
 
 class FileIOPosix : public FileIO {
@@ -31,6 +35,14 @@ public:
     bool open(const char* filePath)
     {
         close();
+
+        struct stat s;
+        stat(filePath, &s);
+
+        if ((s.st_mode & S_IFMT) == S_IFDIR) {
+            return false;
+        }
+
         m_fp = fopen(filePath, "r");
         if (m_fp)
             return true;
@@ -102,8 +114,9 @@ public:
 
         if (open_cb)
             m_fp = open_cb(newName->utf8Data());
-        else
+        else {
             m_fp = fopen(newName->utf8Data(), "r");
+        }
         if (m_fp)
             return true;
         return false;

@@ -18,6 +18,7 @@
 #define __StarFishImageResource__
 
 #include "loader/Resource.h"
+#include "platform/canvas/image/ImageData.h"
 
 namespace StarFish {
 
@@ -40,18 +41,29 @@ public:
         return m_imageData;
     }
 
+    virtual size_t contentSize()
+    {
+        return m_imageData ? m_imageData->bufferSize() : 0;
+    }
+
+    virtual Type type()
+    {
+        return Type::ImageResourceType;
+    }
+
     virtual void request(ResourceRequestSyncLevel syncLevel = NeverSync);
     virtual void didLoadFinished();
-
+    virtual void didCacheHit(Resource* cache)
+    {
+        m_imageData = cache->asImageResource()->m_imageData;
+        Resource::didLoadFinished();
+    }
+#ifdef STARFISH_EFL
     static void doLoadFile(void*);
+#endif
 protected:
     ImageData* m_imageData;
 };
-
-inline void ImageResourceDoLoadFile(void* data)
-{
-    ImageResource::doLoadFile(data);
-}
 
 }
 
