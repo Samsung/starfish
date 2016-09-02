@@ -18,11 +18,16 @@
 #include "dom/Document.h"
 #include "ResourceLoader.h"
 
+#include "platform/network/NetworkRequest.h"
 #include "platform/message_loop/MessageLoop.h"
-#include "platform/file_io/FileIO.h"
+#include "platform/profiling/Profiling.h"
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
+#endif
+
+#ifndef STARFISH_RESOURCE_CACHE_SIZE
+#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 8
 #endif
 
 namespace StarFish {
@@ -32,6 +37,7 @@ ResourceLoader::ResourceLoader(Document& document)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_document(&document)
     , m_baseURL(URL::createURL(String::emptyString, document.documentURI()->baseURI()))
+    , m_resourceCacheSize(0)
 {
 }
 
@@ -129,12 +135,130 @@ public:
     }
 };
 
-void ResourceLoader::fetchResourcePreprocess(Resource* res)
+class ResourceSizeTracer : public ResourceClient {
+public:
+    ResourceSizeTracer(Resource* res)
+        : ResourceClient(res)
+    {
+    }
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        m_resource->loader()->m_resourceCacheSize += m_resource->contentSize();
+        // STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n", (int)m_resource->loader()->m_resourceCacheSize / 1024);
+    }
+
+    virtual void didLoadCanceled()
+    {
+        ResourceClient::didLoadCanceled();
+    }
+};
+
+class ResourceWatcher : public ResourceClient {
+public:
+    ResourceWatcher(Resource* res, Resource* watcher)
+        : ResourceClient(res)
+        , m_watcher(watcher)
+    {
+    }
+    virtual void didLoadFailed()
+    {
+        ResourceClient::didLoadFailed();
+        m_watcher->didLoadFailed();
+    }
+
+    virtual void didLoadFinished()
+    {
+        ResourceClient::didLoadFinished();
+        m_watcher->didCacheHit(m_resource);
+    }
+
+    virtual void didLoadCanceled()
+    {
+        ResourceClient::didLoadCanceled();
+        STARFISH_ASSERT(m_resource->m_isCanceledButContinueLoadingDueToCache);
+        m_resource->addResourceClient(this);
+        m_resource->addResourceClient(new ResourceSizeTracer(m_resource));
+    }
+
+    Resource* m_watcher;
+};
+
+bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel)
 {
     if (m_inDocumentOpenState && res->isThisResourceDoesAffectWindowOnLoad()) {
         m_pendingResourceCountWhileDocumentOpening++;
         res->addResourceClient(new DocumentOnLoadChecker(res));
         res->addResourceClient(new ResourceAliveChecker(res));
+    }
+
+    // TODO cache every resource
+    if (res->isImageResource() && syncLevel != Resource::ResourceRequestSyncLevel::AlwaysSync) {
+        std::string url = res->url()->urlString()->utf8Data();
+        auto iter = m_resourceCache.find(url);
+        if (iter == m_resourceCache.end()) {
+            ResourceCacheData* data = new ResourceCacheData;
+            data->m_lastUsedTime = 0;
+            data->m_data.push_back(std::make_pair(res, res->type()));
+            m_resourceCache.insert(std::make_pair(std::move(url), data));
+        } else {
+            ResourceCacheData* data = iter->second;
+            Resource* resourceInCache = nullptr;
+            size_t dataSize = data->m_data.size();
+            Resource::Type resourceType = res->type();
+
+            for (size_t i = 0; i < dataSize; i ++) {
+                if (data->m_data[i].second == resourceType) {
+                    resourceInCache = data->m_data[i].first;
+                    break;
+                }
+            }
+
+            if (resourceInCache == nullptr) {
+                data->m_data.push_back(std::make_pair(res, resourceType));
+            } else {
+                data->m_lastUsedTime = tickCount();
+                cacheHit(resourceInCache, res, syncLevel);
+                return true;
+            }
+        }
+
+        STARFISH_ASSERT(res->state() == Resource::BeforeSend);
+        res->addResourceClient(new ResourceSizeTracer(res));
+    }
+
+    return false;
+}
+
+
+void ResourceLoader::cacheHit(Resource* org, Resource* now, Resource::ResourceRequestSyncLevel syncLevel)
+{
+    Resource::State s = org->state();
+    org->m_isCached = true;
+    // STARFISH_LOG_INFO("cache hit! %s\n", org->url()->urlString()->utf8Data());
+    if (s == Resource::State::Finished) {
+        if (syncLevel == Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded) {
+            now->didCacheHit(org);
+        } else {
+            STARFISH_ASSERT(syncLevel == Resource::ResourceRequestSyncLevel::NeverSync);
+            document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data, void* data2) {
+                Resource* org = (Resource*)data;
+                Resource* now = (Resource*)data2;
+                now->didCacheHit(org);
+            }, org, now);
+        }
+    } else if (s == Resource::State::Failed) {
+        document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data) {
+            Resource* now = (Resource*)data;
+            now->didLoadFailed();
+        }, now);
+    } else {
+        org->addResourceClient(new ResourceWatcher(org, now));
     }
 }
 

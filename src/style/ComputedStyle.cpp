@@ -113,7 +113,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
 
         if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->background()
             && prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()
-            && prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()->url() == u) {
+            && *(prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()->url()) == *u) {
             setBackgroundImageResource(prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource());
         } else {
             ImageResource* res = consumer->document()->resourceLoader()->fetchImage(u);
@@ -134,7 +134,7 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
 
         if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->hasBorderImageData()
             && prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource()
-            && prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource()->url() == u) {
+            && *(prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource()->url()) == *u) {
             ImageResource* res = prevComputedStyleValueForReferenceLoadedResources->surround()->border.image().imageResource();
             setBorderImageResource(res);
         } else {

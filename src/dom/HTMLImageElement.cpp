@@ -83,6 +83,7 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
             m_imageResource->cancel();
             m_imageResource = nullptr;
         }
+
         if (value->length()) {
             m_imageResource = document()->resourceLoader()->fetchImage(URL::createURL(document()->documentURI()->baseURI(), value));
             m_imageResource->addResourceClient(new ImageDownloadClient(this, m_imageResource));

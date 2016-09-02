@@ -151,6 +151,8 @@ CXXFLAGS += -fno-omit-frame-pointer -fstack-protector
 CXXFLAGS += -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-unused-result
 CXXFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations
 
+CXXFLAGS += -DSTARFISH_EFL
+
 LDFLAGS += -lpthread -lcurl
 
 # fixme
@@ -329,6 +331,7 @@ SRC += $(foreach dir, src/platform/canvas , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/image , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/font , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/file_io , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/platform/profiling , $(wildcard $(dir)/*.cpp))
 
 SRC += $(foreach dir, src/public , $(wildcard $(dir)/*.cpp))
 ifeq ($(TYPE), lib)

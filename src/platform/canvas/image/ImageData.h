@@ -26,8 +26,9 @@ protected:
 
     }
 public:
-    static ImageData* create(String* imageSrc);
+    static ImageData* create(String* localImageSrc);
     static ImageData* create(const char* buf, size_t len);
+    virtual size_t bufferSize() = 0;
     virtual void* unwrap() = 0;
     virtual size_t width() = 0;
     virtual size_t height() = 0;

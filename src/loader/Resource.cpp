@@ -24,44 +24,15 @@
 
 namespace StarFish {
 
-class ResourceNetworkRequestClient : public NetworkRequestClient {
-public:
-    ResourceNetworkRequestClient(Resource* resource)
-        : m_resource(resource)
-    {
-    }
-
-    virtual void onReadyStateChange(NetworkRequest* request, bool isExplicitAction)
-    {
-        if (request->readyState() == NetworkRequest::HEADERS_RECEIVED) {
-            m_resource->didHeaderReceived(String::fromUTF8(request->responseHeaderData().data(), request->responseHeaderData().length()));
-        }
-    }
-
-    virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction)
-    {
-        if (request->progressState() == NetworkRequest::LOAD) {
-            m_resource->didDataReceived(request->responseData().data(), request->responseData().size());
-            m_resource->didLoadFinished();
-        } else if (request->progressState() == NetworkRequest::ERROR) {
-            m_resource->didLoadFailed();
-        } else if (request->progressState() == NetworkRequest::TIMEOUT) {
-            m_resource->didLoadFailed();
-        }
-    }
-
-protected:
-    Resource* m_resource;
-};
-
 void Resource::request(ResourceRequestSyncLevel syncLevel)
 {
-    loader()->fetchResourcePreprocess(this);
-    m_networkRequest = new NetworkRequest(m_loader->document());
-    m_networkRequest->addNetworkRequestClient(new ResourceNetworkRequestClient(this));
-    // TODO syncLevel == ResourceSyncLevel::SyncIfAlreadyLoaded
-    m_networkRequest->open(NetworkRequest::GET_METHOD, m_url->urlString(), !(syncLevel == ResourceRequestSyncLevel::AlwaysSync));
-    m_networkRequest->send();
+    if (!loader()->requestResourcePreprocess(this, syncLevel)) {
+        // cache miss
+        m_networkRequest = new NetworkRequest(loader()->document());
+        m_networkRequest->addNetworkRequestClient(new ResourceNetworkRequestClient(this));
+        m_networkRequest->open(NetworkRequest::GET_METHOD, url()->urlString(), !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
+        m_networkRequest->send();
+    }
 }
 
 void Resource::cancel()
@@ -98,6 +69,7 @@ void Resource::didLoadFinished()
         iter++;
     }
     m_networkRequest = nullptr;
+    m_resourceClients.clear();
 }
 
 void Resource::didLoadFailed()
@@ -109,13 +81,19 @@ void Resource::didLoadFailed()
         iter++;
     }
     m_networkRequest = nullptr;
+    m_resourceClients.clear();
 }
 
 void Resource::didLoadCanceled()
 {
+    if (m_isCached) {
+        m_isCanceledButContinueLoadingDueToCache = true;
+    }
+
     m_state = Canceled;
-    auto iter = m_resourceClients.begin();
-    while (iter != m_resourceClients.end()) {
+    auto b = std::move(m_resourceClients);
+    auto iter = b.begin();
+    while (iter != b.end()) {
         (*iter)->didLoadCanceled();
         iter++;
     }
@@ -125,8 +103,11 @@ void Resource::didLoadCanceled()
         iter2++;
     }
     m_requstedIdlers.clear();
-    m_networkRequest->abort(false);
-    m_networkRequest = nullptr;
+
+    if (!m_isCached && m_networkRequest) {
+        m_networkRequest->abort(false);
+        m_networkRequest = nullptr;
+    }
 }
 
 }

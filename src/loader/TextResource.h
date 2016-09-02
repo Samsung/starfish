@@ -40,6 +40,16 @@ public:
 
     virtual void didDataReceived(const char* buffer, size_t length);
 
+    virtual size_t contentSize()
+    {
+        return m_text->isASCIIString() ? m_text->length() : 4 * m_text->length();
+    }
+
+    virtual Type type()
+    {
+        return Type::TextResourceType;
+    }
+
     String* text()
     {
         return m_text;

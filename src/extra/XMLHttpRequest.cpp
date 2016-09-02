@@ -146,35 +146,6 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
     } else if (progState == NetworkRequest::TIMEOUT)
         eventName = request->starFish()->staticStrings()->m_timeout.localName();
     else if (progState == NetworkRequest::LOAD) {
-        // process response
-        if (m_responseType == ResponseType::Unspecified || m_responseType == ResponseType::Text) {
-            // fill response text before release response data
-            TextConverter textConverter(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
-            m_responseText = textConverter.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
-            m_networkRequest->responseData().clear();
-        } else if (m_responseType == ResponseType::Json) {
-            TextConverter cvt(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
-            String* text = cvt.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
-            m_responseJsonObject = parseJSON(text);
-        } else if (m_responseType == ResponseType::BlobType) {
-            void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
-            memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
-            m_responseBlob = new Blob(m_networkRequest->starFish(), m_networkRequest->responseData().size(), m_networkRequest->mimeType(), buffer, false, false);
-            m_networkRequest->responseData().clear();
-            m_networkRequest->responseData().shrink_to_fit();
-        } else if (m_responseType == ResponseType::ArrayBuffer) {
-#ifdef USE_ES6_FEATURE
-            void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
-            memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
-            m_responseArrayBuffer = createArrayBuffer(buffer, m_networkRequest->responseData().size());
-            m_networkRequest->responseData().clear();
-            m_networkRequest->responseData().shrink_to_fit();
-#else
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-#endif
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
         eventName = request->starFish()->staticStrings()->m_load.localName();
     } else if (progState == NetworkRequest::LOADEND)
         eventName = request->starFish()->staticStrings()->m_loadend.localName();
@@ -190,6 +161,37 @@ void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAct
 void XMLHttpRequest::onReadyStateChange(NetworkRequest* request, bool fromExplicit)
 {
     if (fromExplicit) {
+
+        if (request->readyState() == NetworkRequest::ReadyState::DONE) {
+            if (m_responseType == ResponseType::Unspecified || m_responseType == ResponseType::Text) {
+                TextConverter textConverter(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+                m_responseText = textConverter.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
+                m_networkRequest->responseData().clear();
+            } else if (m_responseType == ResponseType::Json) {
+                TextConverter cvt(m_networkRequest->mimeType(), String::fromUTF8("UTF-8"), m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+                String* text = cvt.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
+                m_responseJsonObject = parseJSON(text);
+            } else if (m_responseType == ResponseType::BlobType) {
+                void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
+                memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+                m_responseBlob = new Blob(m_networkRequest->starFish(), m_networkRequest->responseData().size(), m_networkRequest->mimeType(), buffer, false, false);
+                m_networkRequest->responseData().clear();
+                m_networkRequest->responseData().shrink_to_fit();
+            } else if (m_responseType == ResponseType::ArrayBuffer) {
+#ifdef USE_ES6_FEATURE
+                void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
+                memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
+                m_responseArrayBuffer = createArrayBuffer(buffer, m_networkRequest->responseData().size());
+                m_networkRequest->responseData().clear();
+                m_networkRequest->responseData().shrink_to_fit();
+#else
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#endif
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }
+
         String* eventType = request->starFish()->staticStrings()->m_readystatechange.localName();
         Event* e = new Event(eventType, EventInit(true, true));
         EventTarget::dispatchEvent(this, e);
