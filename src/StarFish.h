@@ -201,7 +201,13 @@ public:
     QualifiedName m_face;
     QualifiedName m_size;
     QualifiedName m_charset;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
+    QualifiedName m_loop;
+    QualifiedName m_autoplay;
+    QualifiedName m_preload;
+    QualifiedName m_controls;
+#endif
 
     // Event Names
     QualifiedName m_click;
@@ -219,9 +225,11 @@ public:
     QualifiedName m_timeout;
     QualifiedName m_loadend;
     QualifiedName m_loadstart;
-    QualifiedName m_cuechange;
     QualifiedName m_enter;
     QualifiedName m_exit;
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+    QualifiedName m_cuechange;
+#endif
 protected:
 };
 

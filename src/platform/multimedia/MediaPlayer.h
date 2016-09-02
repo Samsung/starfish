@@ -41,6 +41,10 @@ public:
         STATE_UNKNOWN_ERROR = 1 << 5,
     };
 
+    enum Error {
+        PLAYER_ERROR_UNKNOWN,
+    };
+
     MediaPlayer();
     virtual bool isVideoPlayer() { return false; }
 
@@ -51,8 +55,9 @@ public:
     virtual void setLoop(bool loop) = 0;
     virtual void setURL(URL* url) { m_inputUrl = url; }
 
-    virtual void onPrepared(bool hasError) { }
-    virtual void onPlayFinished() { }
+    virtual void onUnprepared() { }
+    virtual void onPrepared(URL* url) { }
+    virtual void onPlayFinished(URL* url) { }
 
     bool isPublicState(unsigned state) { return ((m_state & state) > 0); }
     void setPublicState(PublicState state) { m_state = state; }
@@ -130,8 +135,9 @@ public:
 #endif /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
 
 public:
-    virtual void onPrepared(bool hasError);
-    virtual void onPlayFinished();
+    virtual void onUnprepared();
+    virtual void onPrepared(URL* url);
+    virtual void onPlayFinished(URL* url);
     HTMLVideoElement* videoElement() { return m_videoElement; }
 
 protected:

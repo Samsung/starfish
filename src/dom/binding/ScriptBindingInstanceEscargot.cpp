@@ -3037,6 +3037,19 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
         }, escargot::ESString::create("pause"), 0, false)
     );
 
+    HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("play"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+            Node* nd = originalObj;
+            if (!(nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()))
+                THROW_ILLEGAL_INVOCATION();
+            originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->play();
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("play"), 0, false)
+    );
+
+
     return HTMLMediaElementFunction;
 }
 
