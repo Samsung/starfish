@@ -37,7 +37,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
 
 void Resource::cancel()
 {
-    if(m_state == BeforeSend || m_state == Receiving)
+    if (m_state == BeforeSend || m_state == Receiving)
         didLoadCanceled();
 }
 

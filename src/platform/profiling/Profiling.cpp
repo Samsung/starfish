@@ -26,7 +26,7 @@ uint64_t tickCount()
     int ret;
     gettimeofday(&gettick, NULL);
 
-    tick = gettick.tv_sec*1000 + gettick.tv_usec/1000;
+    tick = gettick.tv_sec * 1000 + gettick.tv_usec / 1000;
     return tick;
 
 }
