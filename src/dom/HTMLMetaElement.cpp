@@ -28,15 +28,53 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old, Strin
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_name) {
+        m_name = value;
+        checkPlatformFlags();
+    } else if (name == document()->window()->starFish()->staticStrings()->m_content) {
+        m_content = value;
+        checkPlatformFlags();
+    }
+}
+
+void HTMLMetaElement::didNodeInsertedToDocumenTree()
+{
+    checkPlatformFlags();
+}
+
+void HTMLMetaElement::didNodeRemovedFromDocumenTree()
+{
+    checkPlatformFlags();
+}
+
+void HTMLMetaElement::checkPlatformFlags()
+{
+    if (isInDocumentScope()) {
 #ifdef STARFISH_ENABLE_TEST
-        if (value->equals("pixel-test")) {
+        if (m_name->equalsWithoutCase("pixel-test")) {
             g_enablePixelTest = true;
             document()->setStyle(document()->styleResolver()->resolveDocumentStyle(document()));
             document()->window()->setWholeDocumentNeedsStyleRecalc();
         }
 #endif
-    }
+#ifdef STARFISH_TIZEN
+        if (m_name->equalsWithoutCase("tizen-widget-transparent-background") && m_content->equalsWithoutCase("yes")) {
+            if (!m_tizenWidgetTransparentBackground) {
+                document()->m_tizenWidgetTransparentBackground++;
+                setNeedsPainting();
+            }
+            m_tizenWidgetTransparentBackground = true;
+        } else {
+            if (m_tizenWidgetTransparentBackground) {
+                document()->m_tizenWidgetTransparentBackground--;
+                setNeedsPainting();
+            }
+            m_tizenWidgetTransparentBackground = false;
+        }
+#endif
 
+    } else {
+
+    }
 }
 
 }

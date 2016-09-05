@@ -201,6 +201,7 @@ public:
     QualifiedName m_face;
     QualifiedName m_size;
     QualifiedName m_charset;
+    QualifiedName m_content;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

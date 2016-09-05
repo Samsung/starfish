@@ -43,6 +43,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_documentBuilder(nullptr)
     , m_pageVisibilityState(PageVisibilityStateVisible)
     , m_domVersion(0)
+#ifdef STARFISH_TIZEN
+    , m_tizenWidgetTransparentBackground(0)
+#endif
 {
     m_scriptBindingInstance = scriptBindingInstance;
     setStyle(m_styleResolver.resolveDocumentStyle(this));

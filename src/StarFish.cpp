@@ -368,6 +368,7 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_face = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "face"));
     m_size = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "size"));
     m_charset = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "charset"));
+    m_content = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "content"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "default"));
     m_loop = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loop"));

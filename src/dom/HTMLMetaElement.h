@@ -25,6 +25,11 @@ class HTMLMetaElement : public HTMLElement {
 public:
     HTMLMetaElement(Document* document)
         : HTMLElement(document)
+        , m_name(nullptr)
+        , m_content(nullptr)
+#ifdef STARFISH_TIZEN
+        , m_tizenWidgetTransparentBackground(false)
+#endif
     {
     }
 
@@ -52,9 +57,17 @@ public:
         return true;
     }
 
-    void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
-
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didNodeInsertedToDocumenTree();
+    virtual void didNodeRemovedFromDocumenTree();
+    void checkPlatformFlags();
 protected:
+    String* m_name;
+    String* m_content;
+
+#ifdef STARFISH_TIZEN
+    bool m_tizenWidgetTransparentBackground;
+#endif
 };
 
 }

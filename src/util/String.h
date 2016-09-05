@@ -163,6 +163,28 @@ public:
         return true;
     }
 
+    bool equalsWithoutCase(const char* str)
+    {
+#ifndef NDEBUG
+        {
+            const char* c = str;
+            while (*c) {
+                STARFISH_ASSERT(!(*c & 0x80));
+                c++;
+            }
+        }
+#endif
+        size_t srcLen = strlen(str);
+        if (srcLen != length())
+            return false;
+        for (size_t i = 0; i < length() ; i ++) {
+            if (tolower(charAt(i)) != tolower((char32_t)str[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     bool equals(const char32_t* str)
     {
         size_t srcLen = 0;
