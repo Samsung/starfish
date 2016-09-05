@@ -143,7 +143,10 @@ void ScriptWrappable::initScriptWrappable(Window* window)
             path = path.substr(strlen("file://"));
             path += escargot::ESVMInstance::currentInstance()->currentExecutionContext()->readArgument(0).toString()->utf8Data();
             wnd->screenShot(path);
-            callScriptFunction(instance->currentExecutionContext()->readArgument(1), { }, 0, instance->globalObject());
+            wnd->setTimeout([](Window*, void* data) {
+                escargot::ESFunctionObject* p = (escargot::ESFunctionObject*)data;
+                callScriptFunction(p, { }, 0, escargot::ESVMInstance::currentInstance()->globalObject());
+            }, 100, instance->currentExecutionContext()->readArgument(1).asESPointer());
         }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("screenShot"), 0, false);
