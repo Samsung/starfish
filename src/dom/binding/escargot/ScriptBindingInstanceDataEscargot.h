@@ -71,7 +71,10 @@ namespace StarFish {
     F(textTrackCue, TextTrackCue) \
     F(textTrackCueList, TextTrackCueList) \
     F(VTTCue, VTTCue) \
-    F(timeRanges, TimeRanges)
+    F(timeRanges, TimeRanges) \
+    F(mediaSource, MediaSource) \
+    F(sourceBuffer, SourceBuffer) \
+    F(sourceBufferList, SourceBufferList)
 #else
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F)
 #endif
@@ -158,6 +161,9 @@ private:
     escargot::ESFunctionObject* m_htmlVideoElement;
     escargot::ESFunctionObject* m_htmlAudioElement;
     escargot::ESFunctionObject* m_htmlTrackElement;
+    escargot::ESFunctionObject* m_mediaSource;
+    escargot::ESFunctionObject* m_sourceBuffer;
+    escargot::ESFunctionObject* m_sourceBufferList;
 #endif
 #ifdef STARFISH_ENABLE_MULTI_PAGE
     escargot::ESFunctionObject* m_htmlAnchorElement;
