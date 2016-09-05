@@ -25,8 +25,8 @@ class HTMLMetaElement : public HTMLElement {
 public:
     HTMLMetaElement(Document* document)
         : HTMLElement(document)
-        , m_name(nullptr)
-        , m_content(nullptr)
+        , m_name(String::emptyString)
+        , m_content(String::emptyString)
 #ifdef STARFISH_TIZEN
         , m_tizenWidgetTransparentBackground(false)
 #endif
