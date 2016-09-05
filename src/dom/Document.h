@@ -44,7 +44,9 @@ class Document : public Node {
 #ifdef STARFISH_EXP
     friend class DOMImplementation;
 #endif
+    friend class Window;
     friend class ActiveNetworkRequestTracker;
+    friend class HTMLMetaElement;
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet);
 public:
@@ -210,6 +212,9 @@ protected:
     std::vector<NetworkRequest*, gc_allocator<NetworkRequest*>> m_activeNetworkRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
     std::vector<Element*, gc_allocator<Element*>> m_elementExecutionStackForAttributeStringEventFunctionObject;
+#ifdef STARFISH_TIZEN
+    size_t m_tizenWidgetTransparentBackground;
+#endif
 #ifdef STARFISH_EXP
 private:
     DOMImplementation* m_domImplementation;
