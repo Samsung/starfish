@@ -37,8 +37,8 @@ void Resource::request(ResourceRequestSyncLevel syncLevel)
 
 void Resource::cancel()
 {
-    STARFISH_ASSERT(m_state == BeforeSend || m_state == Receiving);
-    didLoadCanceled();
+    if(m_state == BeforeSend || m_state == Receiving)
+        didLoadCanceled();
 }
 
 void Resource::didHeaderReceived(String* header)
@@ -86,7 +86,7 @@ void Resource::didLoadFailed()
 
 void Resource::didLoadCanceled()
 {
-    if (m_isCached) {
+    if (m_isReferencedByAnoterResource) {
         m_isCanceledButContinueLoadingDueToCache = true;
     }
 
@@ -104,7 +104,7 @@ void Resource::didLoadCanceled()
     }
     m_requstedIdlers.clear();
 
-    if (!m_isCached && m_networkRequest) {
+    if (!m_isReferencedByAnoterResource && m_networkRequest) {
         m_networkRequest->abort(false);
         m_networkRequest = nullptr;
     }

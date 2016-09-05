@@ -57,6 +57,7 @@ public:
         }
 
         m_element->m_imageData = imageData;
+        m_element->m_imageResource = nullptr;
 
         if (m_element->frame()) {
             if (sizeBefore == sizeNow) {
@@ -68,8 +69,6 @@ public:
         } else {
             m_element->setNeedsFrameTreeBuild();
         }
-
-        m_element->m_imageResource = nullptr;
     }
 protected:
     HTMLImageElement* m_element;

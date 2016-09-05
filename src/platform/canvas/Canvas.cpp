@@ -169,18 +169,6 @@ public:
         };
         dummy* d = (dummy*)data;
         m_canvas = (Evas*)d->a;
-        m_prevDrawnImageMap = (std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > >*)d->b;
-
-        if (m_prevDrawnImageMap) {
-            auto iter = m_prevDrawnImageMap->begin();
-            while (iter != m_prevDrawnImageMap->end()) {
-                std::vector<std::pair<Evas_Object*, bool> >& vec = iter->second;
-                for (unsigned i = 0; i < vec.size(); i++) {
-                    vec[i].second = false;
-                }
-                ++iter;
-            }
-        }
         m_width = d->w;
         m_height = d->h;
         m_objList = d->objList;
@@ -197,7 +185,6 @@ public:
         m_image = (Evas_Object*)data->unwrap();
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
         m_buffer = buffer;
-        m_prevDrawnImageMap = NULL;
         initFromBuffer(buffer, data->width(), data->height(), evas_object_image_stride_get(m_image));
     }
 
@@ -215,31 +202,6 @@ public:
         } else {
             evas_render(m_canvas);
             evas_free(m_canvas);
-        }
-
-        if (m_prevDrawnImageMap) {
-            auto iter = m_prevDrawnImageMap->begin();
-
-            while (iter != m_prevDrawnImageMap->end()) {
-                std::vector<std::pair<Evas_Object*, bool> >& vec = iter->second;
-                for (unsigned i = 0; i < vec.size();) {
-                    if (!vec[i].second) {
-                        evas_object_hide(vec[i].first);
-                        // evas_object_resize(vec[i].first, 0, 0);
-                    }
-                    i++;
-                    /*
-                    if (!vec[i].second) {
-                        evas_object_hide(vec[i].first);
-                        evas_object_del(vec[i].first);
-                        vec.erase(vec.begin() + i);
-                    } else {
-                        i++;
-                    }*/
-                }
-
-                ++iter;
-            }
         }
     }
 
@@ -1034,34 +996,6 @@ public:
         }
     }
 
-    Evas_Object* findPrevDrawnData(ImageData* data)
-    {
-        if (m_prevDrawnImageMap) {
-            Evas_Object* eo = NULL;
-            std::vector<std::pair<Evas_Object*, bool> >& vec = (*m_prevDrawnImageMap)[data];
-            for (unsigned i = 0; i < vec.size(); i++) {
-                if (!vec[i].second) {
-                    eo = vec[i].first;
-                    evas_object_raise(eo);
-                    evas_object_map_enable_set(eo, EINA_FALSE);
-                    vec[i].second = true;
-                    break;
-                }
-            }
-            return eo;
-        } else {
-            return NULL;
-        }
-    }
-
-    void pushPrevDrawnData(ImageData* data, Evas_Object* eo)
-    {
-        if (m_prevDrawnImageMap) {
-            std::vector<std::pair<Evas_Object*, bool> >& vec = (*m_prevDrawnImageMap)[data];
-            vec.push_back(std::pair<Evas_Object*, bool>(eo, true));
-        }
-    }
-
     void drawImageInner(ImageData* data, const Rect& dst, size_t l, size_t t, size_t r, size_t b, double scale, bool fill)
     {
         if (!lastState().m_visible) {
@@ -1092,71 +1026,31 @@ public:
             hh = dst.height();
         }
         Evas_Object* eo = nullptr;
-        bool shouldUseRecycleImageObject = false;
-        if (data->width() >= 64 && data->height() >= 64) {
-            shouldUseRecycleImageObject = true;
-        }
-        if (shouldUseRecycleImageObject) {
-            eo = findPrevDrawnData(data);
-            if (!eo) {
-                eo = evas_object_image_add(m_canvas);
-                if (!m_prevDrawnImageMap) {
-                    if (m_objList)
-                        m_objList->push_back(eo);
-                }
+        eo = evas_object_image_add(m_canvas);
+        if (m_objList)
+            m_objList->push_back(eo);
 
-                Evas_Object* imgData = (Evas_Object*)data->unwrap();
-                if (evas_object_evas_get(imgData) == evas_object_evas_get(eo)) {
-                    evas_object_image_source_set(eo, imgData);
-                } else {
-                    if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {
-                        void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
-                        evas_object_image_size_set(eo, data->width(), data->height());
-                        evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
-                        evas_object_image_data_set(eo, imgBuf);
-                    } else {
-                        const char* path;
-                        evas_object_image_file_get(imgData, &path, NULL);
-                        evas_object_image_file_set(eo, path, NULL);
-                    }
-                    evas_object_image_size_set(eo, data->width(), data->height());
-                    evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
-                }
-
-                evas_object_image_filled_set(eo, EINA_TRUE);
-                evas_object_image_alpha_set(eo, EINA_TRUE);
-                // evas_object_anti_alias_set(eo, EINA_TRUE);
-
-                pushPrevDrawnData(data, eo);
-            }
+        Evas_Object* imgData = (Evas_Object*)data->unwrap();
+        if (evas_object_evas_get(imgData) == evas_object_evas_get(eo)) {
+            evas_object_image_source_set(eo, imgData);
         } else {
-            eo = evas_object_image_add(m_canvas);
-            if (m_objList)
-                m_objList->push_back(eo);
-
-            Evas_Object* imgData = (Evas_Object*)data->unwrap();
-            if (evas_object_evas_get(imgData) == evas_object_evas_get(eo)) {
-                evas_object_image_source_set(eo, imgData);
-            } else {
-                if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {
-                    void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
-                    evas_object_image_size_set(eo, data->width(), data->height());
-                    evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
-                    evas_object_image_data_set(eo, imgBuf);
-                } else {
-                    const char* path;
-                    evas_object_image_file_get(imgData, &path, NULL);
-                    evas_object_image_file_set(eo, path, NULL);
-                }
+            if (((char*)evas_object_data_get(imgData, "local"))[0] == '0') {
+                void* imgBuf = evas_object_image_data_get(imgData, EINA_FALSE);
                 evas_object_image_size_set(eo, data->width(), data->height());
                 evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
+                evas_object_image_data_set(eo, imgBuf);
+            } else {
+                const char* path;
+                evas_object_image_file_get(imgData, &path, NULL);
+                evas_object_image_file_set(eo, path, NULL);
             }
-
-            evas_object_image_filled_set(eo, EINA_TRUE);
-            evas_object_image_alpha_set(eo, EINA_TRUE);
-            // evas_object_anti_alias_set(eo, EINA_TRUE);
+            evas_object_image_size_set(eo, data->width(), data->height());
+            evas_object_image_colorspace_set(eo, evas_object_image_colorspace_get(imgData));
         }
 
+        evas_object_image_filled_set(eo, EINA_TRUE);
+        evas_object_image_alpha_set(eo, EINA_TRUE);
+            // evas_object_anti_alias_set(eo, EINA_TRUE);
         evas_object_image_border_set(eo, l, r, t, b);
         evas_object_image_border_scale_set(eo, scale);
 
@@ -1577,7 +1471,8 @@ protected:
     size_t m_imageCount;
     std::vector<Evas_Object*>* m_objList;
     std::vector<Evas_Object*>* m_surfaceList;
-    std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > >* m_prevDrawnImageMap;
+    std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool>>,
+        std::hash<ImageData*>, std::equal_to<ImageData*>, gc_allocator<std::pair<ImageData*, std::vector<std::pair<Evas_Object*, bool>>>>>* m_prevDrawnImageMap;
 };
 
 Canvas* Canvas::createDirect(void* data)

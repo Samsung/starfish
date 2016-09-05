@@ -48,7 +48,7 @@ public:
 
     Resource(URL* url, ResourceLoader* loader)
         : m_isIncludedInComputingWindowOnLoadEvent(true)
-        , m_isCached(false)
+        , m_isReferencedByAnoterResource(false)
         , m_isCanceledButContinueLoadingDueToCache(false)
         , m_state(BeforeSend)
         , m_url(url)
@@ -170,7 +170,7 @@ protected:
     }
 
     bool m_isIncludedInComputingWindowOnLoadEvent : 1;
-    bool m_isCached : 1;
+    bool m_isReferencedByAnoterResource : 1;
     bool m_isCanceledButContinueLoadingDueToCache : 1;
     State m_state;
     URL* m_url;

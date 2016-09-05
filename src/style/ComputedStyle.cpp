@@ -107,26 +107,29 @@ void ComputedStyle::loadResources(Node* consumer, ComputedStyle* prevComputedSty
     m_font = sf->fetchFont(String::emptyString, fontSize, style, fontWeight);
 #endif
 
-    if (!backgroundImage()->equals(String::emptyString)) {
+    size_t bgIndex = 0;
+    while (bgIndex < backgroundLayerSize()) {
+        if (!backgroundImage(bgIndex)->equals(String::emptyString)) {
+            URL* u = URL::createURL(consumer->document()->documentURI()->baseURI(), backgroundImage(bgIndex));
 
-        URL* u = URL::createURL(consumer->document()->documentURI()->baseURI(), backgroundImage());
-
-        if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->background()
-            && prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()
-            && *(prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource()->url()) == *u) {
-            setBackgroundImageResource(prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource());
-        } else {
-            ImageResource* res = consumer->document()->resourceLoader()->fetchImage(u);
-            res->markThisResourceIsDoesNotAffectWindowOnLoad();
-            setBackgroundImageResource(res);
-            res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
+            if (prevComputedStyleValueForReferenceLoadedResources && prevComputedStyleValueForReferenceLoadedResources->background()
+                && prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource(bgIndex)
+                && *(prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource(bgIndex)->url()) == *u) {
+                setBackgroundImageResource(prevComputedStyleValueForReferenceLoadedResources->background()->bgImageResource(), bgIndex);
+            } else {
+                ImageResource* res = consumer->document()->resourceLoader()->fetchImage(u);
+                setBackgroundImageResource(res, bgIndex);
+                res->markThisResourceIsDoesNotAffectWindowOnLoad();
+                res->addResourceClient(new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(res, consumer->document()));
 #ifdef STARFISH_ENABLE_TEST
-            bool enableRegressionTest = sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
-            res->request((g_enablePixelTest || enableRegressionTest) ? Resource::ResourceRequestSyncLevel::AlwaysSync : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
+                bool enableRegressionTest = sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+                res->request((g_enablePixelTest || enableRegressionTest) ? Resource::ResourceRequestSyncLevel::AlwaysSync : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 #else
-            res->request(Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
+                res->request(Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 #endif
+            }
         }
+        bgIndex++;
     }
 
     if (!borderImageSource()->equals(String::emptyString)) {

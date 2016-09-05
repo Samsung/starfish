@@ -19,7 +19,7 @@
 
 namespace StarFish {
 
-uint64_t tickCount();
+uint64_t tickCount(); // increase 1000 by 1 second
 
 }
 

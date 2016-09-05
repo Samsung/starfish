@@ -28,6 +28,7 @@ class ImageDataEFL : public ImageData {
 public:
     ImageDataEFL(String* localImageSrc)
     {
+        // STARFISH_LOG_INFO("ImageDataEFL::ImageDataEFL %s\n", localImageSrc->utf8Data());
         m_image = evas_object_image_add(internalCanvas());
         evas_object_image_file_set(m_image, PathResolver::matchLocation(localImageSrc)->utf8Data(), NULL);
         evas_object_data_set(m_image, "local", "1");
