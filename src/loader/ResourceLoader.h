@@ -25,7 +25,7 @@ namespace StarFish {
 
 class ResourceCacheData : public gc {
     friend class ResourceLoader;
-    std::vector<std::pair<Resource*, Resource::Type>, gc_allocator<std::pair<Resource*, Resource::Type>>> m_data;
+    Resource* m_resource;
     uint64_t m_lastUsedTime; // stores tick count
 };
 
@@ -63,7 +63,8 @@ public:
     void clear()
     {
         cancelAllOfPendingRequests();
-        m_resourceCache.clear();
+        m_imageResourceCache.clear();
+        m_imageResourceCacheLRUList.clear();
     }
 private:
     void cachePruning();
@@ -76,8 +77,10 @@ private:
     size_t m_pendingResourceCountWhileDocumentOpening;
     Document* m_document;
     std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;
-    std::unordered_map<std::string, ResourceCacheData*, std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, ResourceCacheData*>>> m_resourceCache;
+    std::unordered_map<std::string, ResourceCacheData, std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, ResourceCacheData>>> m_imageResourceCache;
+    std::list<Resource*, gc_allocator<Resource*>> m_imageResourceCacheLRUList;
     size_t m_resourceCacheSize;
+    uint64_t m_lastCachePruneTime;
 };
 
 }

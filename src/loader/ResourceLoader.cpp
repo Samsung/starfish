@@ -27,7 +27,11 @@ extern bool g_fireOnloadEvent;
 #endif
 
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
-#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 2
+#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024
+#endif
+
+#ifndef STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL
+#define STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL 2
 #endif
 
 namespace StarFish {
@@ -37,6 +41,7 @@ ResourceLoader::ResourceLoader(Document& document)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_document(&document)
     , m_resourceCacheSize(0)
+    , m_lastCachePruneTime(0)
 {
 }
 
@@ -149,7 +154,6 @@ public:
     {
         ResourceClient::didLoadFinished();
         m_resource->loader()->m_resourceCacheSize += m_resource->contentSize();
-        m_resource->loader()->cachePruning();
     }
 
     virtual void didLoadCanceled()
@@ -190,11 +194,50 @@ public:
 
 void ResourceLoader::cachePruning()
 {
-    STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n", (int)m_resourceCacheSize / 1024);
+    // STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n", (int)m_resourceCacheSize / 1024);
+
+    if (m_resourceCacheSize > STARFISH_RESOURCE_CACHE_SIZE && ((tickCount() - m_lastCachePruneTime) > (STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL * 1000))) {
+        size_t removedSize = 0;
+
+        // remove non-referenced resources
+        auto iter = m_imageResourceCache.begin();
+        while (iter != m_imageResourceCache.end()) {
+            ResourceCacheData data = iter->second;
+            if (!data.m_resource->m_isReferencedByAnoterResource && data.m_resource->state() == Resource::State::Finished) {
+                size_t siz = data.m_resource->contentSize();
+                m_resourceCacheSize -= siz;
+                removedSize += siz;
+                m_imageResourceCache.erase(iter++);
+            } else {
+                iter++;
+            }
+        }
+
+        // remove old resources
+        if (m_resourceCacheSize > STARFISH_RESOURCE_CACHE_SIZE * 0.75) {
+            auto iter = m_imageResourceCacheLRUList.begin();
+            while (m_imageResourceCacheLRUList.size() && removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.5) {
+                Resource* res = (*iter);
+                auto iter2 = m_imageResourceCache.find(res->url()->urlString()->utf8Data());
+                if (m_imageResourceCache.end() != iter2 && res->state() == Resource::State::Finished) {
+                    size_t siz = res->contentSize();
+                    m_resourceCacheSize -= siz;
+                    removedSize += siz;
+                    m_imageResourceCache.erase(iter2);
+                }
+                m_imageResourceCacheLRUList.erase(iter++);
+            }
+        }
+
+        m_lastCachePruneTime = tickCount();
+        STARFISH_LOG_INFO("ResourceLoader::cachePruning - prune %dKB current cache size is %dKB\n", (int)removedSize / 1024, (int)m_resourceCacheSize / 1024);
+    }
 }
 
 bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel)
 {
+    cachePruning();
+
     if (m_inDocumentOpenState && res->isThisResourceDoesAffectWindowOnLoad()) {
         m_pendingResourceCountWhileDocumentOpening++;
         res->addResourceClient(new DocumentOnLoadChecker(res));
@@ -204,32 +247,25 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::Resource
     // TODO cache every resource
     if (res->isImageResource() && syncLevel != Resource::ResourceRequestSyncLevel::AlwaysSync) {
         std::string url = res->url()->urlString()->utf8Data();
-        auto iter = m_resourceCache.find(url);
-        if (iter == m_resourceCache.end()) {
-            ResourceCacheData* data = new ResourceCacheData;
-            data->m_lastUsedTime = 0;
-            data->m_data.push_back(std::make_pair(res, res->type()));
-            m_resourceCache.insert(std::make_pair(std::move(url), data));
+        auto iter = m_imageResourceCache.find(url);
+        if (iter == m_imageResourceCache.end()) {
+            ResourceCacheData data;
+            data.m_lastUsedTime = 0;
+            data.m_resource = res;
+            m_imageResourceCache.insert(std::make_pair(std::move(url), data));
         } else {
-            ResourceCacheData* data = iter->second;
-            Resource* resourceInCache = nullptr;
-            size_t dataSize = data->m_data.size();
-            Resource::Type resourceType = res->type();
+            ResourceCacheData& data = iter->second;
+            Resource* resourceInCache = data.m_resource;
+            data.m_lastUsedTime = tickCount();
 
-            for (size_t i = 0; i < dataSize; i ++) {
-                if (data->m_data[i].second == resourceType) {
-                    resourceInCache = data->m_data[i].first;
-                    break;
-                }
+            auto iter = std::find(m_imageResourceCacheLRUList.begin(), m_imageResourceCacheLRUList.end(), resourceInCache);
+            if (m_imageResourceCacheLRUList.end() != iter) {
+                m_imageResourceCacheLRUList.erase(iter);
             }
 
-            if (resourceInCache == nullptr) {
-                data->m_data.push_back(std::make_pair(res, resourceType));
-            } else {
-                data->m_lastUsedTime = tickCount();
-                cacheHit(resourceInCache, res, syncLevel);
-                return true;
-            }
+            m_imageResourceCacheLRUList.push_back(res);
+            cacheHit(resourceInCache, res, syncLevel);
+            return true;
         }
 
         STARFISH_ASSERT(res->state() == Resource::BeforeSend);
@@ -243,7 +279,7 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::Resource
 void ResourceLoader::cacheHit(Resource* org, Resource* now, Resource::ResourceRequestSyncLevel syncLevel)
 {
     Resource::State s = org->state();
-    org->m_isCached = true;
+    org->m_isReferencedByAnoterResource = true;
     // STARFISH_LOG_INFO("cache hit! %s\n", org->url()->urlString()->utf8Data());
     if (s == Resource::State::Finished) {
         if (syncLevel == Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded) {

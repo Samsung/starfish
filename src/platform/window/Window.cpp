@@ -55,19 +55,6 @@ extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
 
 namespace StarFish {
 
-namespace {
-    class __GET_TICK_COUNT {
-    public:
-        __GET_TICK_COUNT()
-        {
-            if (gettimeofday(&tv_, NULL) != 0)
-                throw 0;
-        }
-        timeval tv_;
-    };
-    __GET_TICK_COUNT timeStart;
-}
-
 struct IdlerData {
     void (*m_fn)(void*);
     void* m_data;
@@ -79,7 +66,6 @@ public:
         : Window(sf)
     {
         m_mainBox = nullptr;
-        m_background = nullptr;
         m_dummyBox = nullptr;
         m_dummyBoxClipper = nullptr;
         m_renderingAnimator = nullptr;
@@ -129,29 +115,14 @@ public:
     void clearEFLResources()
     {
         clearStackingContext(false);
-
-        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-        auto a = eflWindow->m_drawnImageList.begin();
-        while (a != eflWindow->m_drawnImageList.end()) {
-            std::vector<std::pair<Evas_Object*, bool> > & vec = a->second;
-
-            for (size_t i = 0; i < vec.size(); i ++) {
-                Evas_Object* obj = vec[i].first;
-                evas_object_del(obj);
-            }
-            a++;
-        }
-        eflWindow->m_drawnImageList.clear();
     }
 
     bool m_isActive;
     uintptr_t m_handle;
     Evas_Object* m_window;
-    Evas_Object* m_background;
     Evas_Object* m_canvasAdpater;
     std::vector<Evas_Object*> m_objectList;
     std::vector<Evas_Object*> m_surfaceList;
-    std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool> > > m_drawnImageList;
     Evas_Object* m_mainBox;
     Evas_Object* m_dummyBox;
     Evas_Object* m_dummyBoxClipper;
@@ -271,12 +242,6 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     auto wnd = new WindowImplEFL(sf);
     wnd->m_starFish = sf;
     wnd->m_window = (Evas_Object*)win;
-
-    wnd->m_background = elm_bg_add(wnd->m_window);
-    evas_object_size_hint_weight_set(wnd->m_background, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wnd->m_window, wnd->m_background);
-    elm_bg_color_set(wnd->m_background, 0x00, 0x00, 0x00);
-    evas_object_show(wnd->m_background);
 
 #ifndef STARFISH_TIZEN_WEARABLE_LIB
     Evas* e = evas_object_evas_get(wnd->m_window);
@@ -463,12 +428,6 @@ Window::~Window()
         eflWindow->m_mainBox = nullptr;
     }
 
-    if (eflWindow->m_background) {
-        elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_background);
-        evas_object_del(eflWindow->m_background);
-        eflWindow->m_background = nullptr;
-    }
-
 #ifndef STARFISH_TIZEN_WEARABLE
     ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopMouseUpEventHandler);
@@ -513,31 +472,20 @@ void Window::navigateAsync(URL* url)
 
 // #define STARFISH_ENABLE_TIMER
 
-#ifdef STARFISH_ENABLE_TIMER
-static unsigned long getLongTickCount()
-{
-    static time_t secStart = timeStart.tv_.tv_sec;
-    static time_t usecStart = timeStart.tv_.tv_usec;
-    timeval tv;
-    gettimeofday(&tv, NULL);
-    return (tv.tv_sec - secStart) * 1000 + (tv.tv_usec - usecStart);
-}
-#endif
-
 class Timer {
 public:
     Timer(const char* msg)
     {
 #ifdef STARFISH_ENABLE_TIMER
-        m_start = getLongTickCount();
+        m_start = tickCount();
         m_msg = msg;
 #endif
     }
     ~Timer()
     {
 #ifdef STARFISH_ENABLE_TIMER
-        unsigned long end = getLongTickCount();
-        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (end - m_start) / 1000.f);
+        unsigned long end = tickCount();
+        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (end - m_start));
         fflush(stdout);
 #endif
     }
@@ -579,7 +527,7 @@ Canvas* preparePainting(WindowImplEFL* eflWindow, bool forPainting)
     };
     dummy* d = new dummy;
     d->a = evas;
-    d->b = &eflWindow->m_drawnImageList;
+    d->b = nullptr;
     if (!forPainting) {
         d->b = nullptr;
     }
@@ -827,6 +775,7 @@ void Window::rendering()
         m_needsComposite = false;
     }
 
+
     m_needsRendering = false;
     m_inRendering = false;
 
@@ -844,7 +793,6 @@ void Window::rendering()
             g_surfaceForScreehShot = nullptr;
         }
     }
-
 #endif
 }
 
@@ -1298,7 +1246,6 @@ void Window::close()
     eflWindow->m_objectList.shrink_to_fit();
     eflWindow->m_surfaceList.clear();
     eflWindow->m_surfaceList.shrink_to_fit();
-    eflWindow->m_drawnImageList.clear();
 
     m_starFish->messageLoop()->clearPendingIdlers();
 }
