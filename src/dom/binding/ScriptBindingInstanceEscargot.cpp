@@ -39,6 +39,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "dom/TextTrack.h"
+#include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
 #endif
 
 namespace StarFish {
@@ -1795,6 +1797,85 @@ escargot::ESFunctionObject* bindingTimeRanges(ScriptBindingInstance* scriptBindi
 
     return TimeRangesFunction;
 }
+
+escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(MediaSource, fetchData(scriptBindingInstance)->m_eventTarget);
+
+    MediaSourceFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addSourceBuffer"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::MediaSourceObject);
+            if (!firstArg.isESString()) {
+                THROW_ILLEGAL_INVOCATION()
+            }
+            MediaSource* mediaSource = (MediaSource*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            escargot::ESString* type = firstArg.asESString();
+            SourceBuffer* buffer = mediaSource->addSourceBuffer(toBrowserString(type));
+            if (!buffer)
+                THROW_ILLEGAL_INVOCATION()
+            return buffer->scriptValue();
+        }, escargot::ESString::create("addSourceBuffer"), 1, false)
+    );
+
+    MediaSourceFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("endOfStream"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::MediaSourceObject);
+            MediaSource* mediaSource = (MediaSource*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            if (!firstArg.isUndefinedOrNull() && !firstArg.isESString())
+                THROW_ILLEGAL_INVOCATION();
+            String* error = String::emptyString;
+            if (!firstArg.isUndefinedOrNull())
+                error = toBrowserString(firstArg.toString());
+            if (!mediaSource->endOfStream(error))
+                THROW_ILLEGAL_INVOCATION()
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("endOfStream"), 1, false)
+    );
+
+    // TODO: removeSourceBuffer, isTypeSupported, attributes
+
+    return MediaSourceFunction;
+}
+
+escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(SourceBuffer, fetchData(scriptBindingInstance)->m_eventTarget);
+    // TODO: abort, remove, attributes
+    return SourceBufferFunction;
+}
+
+escargot::ESFunctionObject* bindingSourceBufferList(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(SourceBufferList, fetchData(scriptBindingInstance)->m_eventTarget);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferListObject, SourceBufferList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("SourceBuffer"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferListObject, SourceBufferList);
+        SourceBuffer* buffer = originalObj->at(v.toInt32());
+        if (buffer) {
+            return buffer->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, nullptr);
+
+    return SourceBufferListFunction;
+}
+
 #endif
 
 escargot::ESFunctionObject* bindingDocumentFragment(ScriptBindingInstance* scriptBindingInstance)
@@ -4445,6 +4526,12 @@ escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInsta
             Blob* b = (Blob*)arg0.toObject()->extraPointerData();
             String* url = URL::createObjectURL(b);
             return toJSString(url);
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+        } else if (arg0.isObject() && (arg0.toObject()->extraData() & ScriptWrappable::Type::MediaSourceObject)) {
+            MediaSource* m = (MediaSource*)arg0.toObject()->extraPointerData();
+            String* url = URL::createObjectURL(m);
+            return toJSString(url);
+#endif
         } else {
             escargot::ESString* msg = escargot::ESString::create("Failed to execute 'createObjectURL' on 'URL': No function was found that matched the signature provided.");
             instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));

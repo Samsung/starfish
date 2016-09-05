@@ -39,6 +39,9 @@ class TextTrackList;
 class TextTrackCue;
 class TextTrackCueList;
 class VTTCue;
+class MediaSource;
+class SourceBuffer;
+class SourceBufferList;
 #endif
 class HTMLElement;
 class HTMLHtmlElement;
@@ -119,6 +122,9 @@ public:
         TextTrackCueObject = 1 << 19 | EventTargetObject,
         TextTrackCueListObject = 1 << 20,
         TimeRangesObject = 1 << 21,
+        MediaSourceObject = 1 << 22 | EventTargetObject,
+        SourceBufferObject = 1 << 23 | EventTargetObject,
+        SourceBufferListObject = 1 << 24 | EventTargetObject,
 #endif
     };
     ScriptWrappable(void* extraPointerData);
@@ -183,6 +189,9 @@ public:
     void initScriptWrappable(TextTrackCueList* ptr);
     void initScriptWrappable(VTTCue* ptr);
     void initScriptWrappable(TimeRanges* ptr);
+    void initScriptWrappable(MediaSource* ptr);
+    void initScriptWrappable(SourceBuffer* ptr);
+    void initScriptWrappable(SourceBufferList* ptr);
 #endif
     void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr);
