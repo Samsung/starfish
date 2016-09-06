@@ -19,7 +19,7 @@
 
 #include "dom/binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
-#include "platform/multimedia/MediaPlayer.h"
+#include "platform/multimedia/MediaSourceClient.h"
 
 namespace StarFish {
 
@@ -44,11 +44,18 @@ public:
     }
 
     // data: ArrayBuffer/ArrayBufferView type
-    void appendBuffer(ScriptValue data);
+    void appendBuffer(const void* data, unsigned long length);
     // TODO
 //    void appendStream(ReadableStream stream, unsigned long long maxSize);
     void abort();
     void remove(double start, double end);
+
+    void prepareAppend(const void* data, unsigned long length);
+    void runBufferAppend();
+    void setUpdating(bool flag)
+    {
+        m_updating = flag;
+    }
 
 protected:
     AppendMode m_mode;
@@ -61,8 +68,9 @@ protected:
     double m_appendWindowStart;
     double m_appendWindowEnd;
     String* m_type;
-    MediaSourceClient* m_mseClient;
 
+    MediaSourceClient* m_mseClient;
+    MediaSourceClient::MediaRawBuffer m_inputBuffer;
 };
 
 class SourceBufferList : public EventTarget {

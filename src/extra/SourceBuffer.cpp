@@ -32,9 +32,32 @@ SourceBuffer::SourceBuffer(String* type, MediaSourceClient* client)
     m_mseClient->setFormat(type);
 }
 
-void SourceBuffer::appendBuffer(ScriptValue data)
+void SourceBuffer::runBufferAppend()
 {
-    // TODO
+    m_mseClient->appendBuffer(m_inputBuffer);
+    setUpdating(false);
+    dispatchEvent(new Event(String::fromUTF8("update")));
+    dispatchEvent(new Event(String::fromUTF8("updateend")));
+}
+
+void SourceBuffer::prepareAppend(const void* data, unsigned long length)
+{
+    if (m_inputBuffer.size == 0) {
+        m_inputBuffer.memory = (char*) data;
+        m_inputBuffer.size = length;
+    }
+}
+
+void SourceBuffer::appendBuffer(const void* data, unsigned long length)
+{
+    printf("SourceBuffer::appendBuffer %ld\n", length);
+    prepareAppend(data, length);
+
+    setUpdating(true);
+    dispatchEvent(new Event(String::fromUTF8("updatestart")));
+
+    // TODO: should run asynchrously
+    runBufferAppend();
 }
 
 }

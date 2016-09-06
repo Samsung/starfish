@@ -18,14 +18,87 @@
 #define __StarFishMediaSourceClient__
 
 class AVFormatContext;
+class AVIOContext;
 namespace StarFish {
 
+class AVIOContextWrapper : public gc {
+public:
+    AVIOContextWrapper(char* videoData, const int videoLen);
+    ~AVIOContextWrapper();
+
+    static int read(void *opaque, unsigned char *buf, int buf_size);
+
+    static int write(void *opaque, unsigned char *buf, int buf_size)
+    {
+        // TODO
+        return 0;
+    }
+
+    static int64_t seek(void *opaque, int64_t offset, int whence)
+    {
+        // TODO
+        return 0;
+    }
+
+    AVIOContext* get_avio()
+    {
+        return m_avioctx;
+    }
+
+    int pos()
+    {
+        return m_pos;
+    }
+
+    void increasePosition(int size)
+    {
+        m_pos += size;
+    }
+
+    int dataSize()
+    {
+        return m_dataSize;
+    }
+
+    char* rawData()
+    {
+        return m_rawData;
+    }
+
+private:
+    // Output buffer
+    int m_bufferSize;
+    char* m_buffer;
+
+    // Internal buffer
+    int m_pos;
+    char* m_rawData;
+    int m_dataSize;
+    AVIOContext* m_avioctx;
+};
+
+
 class VideoPlayer;
+
 class MediaSourceClient : public gc {
 public:
+    struct MediaRawBuffer {
+        char* memory;
+        size_t size;
+    };
+    struct MediaPacket {
+        uint8_t* data;
+        int size;
+        int64_t pts;
+    };
     MediaSourceClient();
     void registerMediaPlayer(VideoPlayer* player);
     void setFormat(String* type);
+    void appendBuffer(MediaRawBuffer buffer);
+    AVFormatContext* formatContext()
+    {
+        return m_formatContext;
+    }
 
 protected:
     VideoPlayer* m_player;

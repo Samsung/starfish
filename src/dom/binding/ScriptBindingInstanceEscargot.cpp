@@ -1838,7 +1838,7 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
         }, escargot::ESString::create("endOfStream"), 1, false)
     );
 
-    // TODO: removeSourceBuffer, isTypeSupported, attributes
+    // TODO: removeSourceBuffer, isTypeSupported, set/get attributes
 
     return MediaSourceFunction;
 }
@@ -1846,7 +1846,30 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
 escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBindingInstance)
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(SourceBuffer, fetchData(scriptBindingInstance)->m_eventTarget);
-    // TODO: abort, remove, attributes
+    SourceBufferFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("appendBuffer"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::SourceBufferObject);
+            SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+
+#ifdef USE_ES6_FEATURE
+            if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferObject()) {
+                escargot::ESArrayBufferObject* v = firstArg.asESPointer()->asESArrayBufferObject();
+                sourceBuffer->appendBuffer(v->data(), v->bytelength());
+            } else if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferView()) {
+                escargot::ESArrayBufferView* v = firstArg.asESPointer()->asESArrayBufferView();
+                const char* p = (const char*)v->buffer()->data();
+                sourceBuffer->appendBuffer(p, v->bytelength());
+            } else {
+                THROW_ILLEGAL_INVOCATION();
+            }
+#endif
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("appendBuffer"), 1, false)
+    );
+    // TODO: appendStream, abort, remove, set/get attributes
     return SourceBufferFunction;
 }
 
