@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "URL.h"
 #include "extra/Blob.h"
+#include "extra/MediaSource.h"
 #include "platform/window/Window.h"
 #include "dom/Document.h"
 
@@ -332,94 +333,21 @@ String* URL::createObjectURL(Blob* blob)
     } else {
         store = blob->starFish()->addBlobInBlobURLStore(blob);
     }
-
-    std::string url = "blob:";
-    url += blob->starFish()->window()->document()->documentURI()->urlString()->utf8Data();
-    url += "/";
-
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-        } small;
-        uint32_t big;
-    } spliter;
-
-#ifdef STARFISH_64
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-            uint16_t c;
-            uint16_t d;
-        } small;
-        uint64_t big;
-    } spliter64;
-#endif
-
-    char buf[32];
-#ifdef STARFISH_64
-    spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
-    url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
-    url += buf;
-    url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
-    url += buf;
-    url += "-";
-
-    spliter64.big = (uint64_t)blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.a);
-    url += buf;
-    url += "-";
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.b);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.c);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.d);
-    url += buf;
-#else
-    spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
-    url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
-    url += buf;
-    url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_c;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
-    url += buf;
-    url += "-";
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
-    url += buf;
-
-    spliter.big = (uint32_t)blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
-    url += buf;
-#endif
-    return String::createASCIIString(url.data());
+    return StarFish::blobURLStoreToString(store, blob->starFish()->window()->document()->documentURI()->urlString());
 }
+
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+String* URL::createObjectURL(MediaSource* mediaSource)
+{
+    BlobURLStore store;
+    if (mediaSource->starFish()->isValidMediaSourceBlobURL(mediaSource)) {
+        store = mediaSource->starFish()->findMediaSourceBlobURL(mediaSource);
+    } else {
+        store = mediaSource->starFish()->addMediaSourceInBlobURLStore(mediaSource);
+    }
+    return StarFish::blobURLStoreToString(store, mediaSource->starFish()->window()->document()->documentURI()->urlString());
+}
+#endif
 
 String* URL::origin()
 {

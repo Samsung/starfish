@@ -29,6 +29,7 @@ class ScriptBindingInstance;
 class ImageData;
 class ThreadPool;
 class Blob;
+class MediaSource;
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
 F(abbr) \
@@ -250,12 +251,12 @@ enum StarFishDeviceKind {
 
 struct BlobURLStore {
 #ifdef STARFISH_32
-    Blob* m_blob;
+    void* m_blob;
     uint32_t m_a;
     uint32_t m_b;
     uint32_t m_c;
 #else
-    Blob* m_blob;
+    void* m_blob;
     uint32_t m_a;
     uint32_t m_b;
 #endif
@@ -359,11 +360,20 @@ public:
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
 
+    static bool stringToBlobURLString(String* url, BlobURLStore& result);
+    static String* blobURLStoreToString(BlobURLStore store, String* origin);
+
     BlobURLStore addBlobInBlobURLStore(Blob* ptr);
     void removeBlobFromBlobURLStore(Blob* ptr);
     bool isValidBlobURL(BlobURLStore ptr);
     bool isValidBlobURL(Blob* ptr);
     BlobURLStore findBlobURL(Blob* ptr);
+
+    BlobURLStore addMediaSourceInBlobURLStore(MediaSource* ptr);
+    void removeMediaSourceFromBlobURLStore(MediaSource* ptr);
+    bool isValidMediaSourceBlobURL(BlobURLStore ptr);
+    bool isValidMediaSourceBlobURL(MediaSource* ptr);
+    BlobURLStore findMediaSourceBlobURL(MediaSource* ptr);
 
 protected:
     void enter();
@@ -391,6 +401,8 @@ protected:
         gc_allocator<std::pair<void*, size_t>>> m_rootMap;
     std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
         gc_allocator<BlobURLStore>> m_urlBlobStore;
+    std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
+        gc_allocator<BlobURLStore>> m_urlMediaSourceBlobStore;
     std::unordered_map<std::string, AtomicString,
         std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString>>> m_atomicStringMap;
 };

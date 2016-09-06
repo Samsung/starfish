@@ -25,8 +25,9 @@
 
 namespace StarFish {
 
-MediaSource::MediaSource()
+MediaSource::MediaSource(StarFish* starFish)
     : EventTarget()
+    , m_starFish(starFish)
 {
     m_mseClient = new MediaSourceClient();
 }
