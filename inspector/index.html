@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>StarFish Inspector</title>
+  </head>
+  <body>
+    <div id="content-header">
+        <div>
+            Console
+        </div>
+    </div>
+    <div id="content-wrapper">
+        <div id="console">
+            <div id="console-output">
+            </div>
+            <input id="console-input">
+        </div>
+    </div>
+    <div id="overlay">
+        Inspector target closed
+    </div>
+  </body>
+</html>
+<style>
+
+html, body {
+height: 100%;
+margin: 0;
+overflow: hidden;
+font-family: monospace;
+}
+
+#overlay {
+position: absolute;
+width: 100%;
+height: 100%;
+color: black;
+left: 0;
+top: 0;
+font-size: 4em;
+text-align: center;
+padding-top: 100px;
+background: rgba(100, 100, 100, 0.4);
+z-index: 65535;
+}
+
+#content-header {
+background: rgb(243, 243, 243);
+color: rgb(56, 56, 56);
+}
+
+#content-header div {
+display: inline-block;
+padding: 6px;
+border-bottom: 1px rgb(62, 130, 247) solid;
+}
+
+#content-wrapper {
+
+}
+
+#console {
+height: 100%;
+}
+
+#console-output {
+display: block;
+height: 100%;
+box-sizing: border-box;
+border: 1px rgb(204, 204, 204) solid;
+overflow-y: auto;
+}
+
+.console-output-log-user-input {
+padding: 4px;
+padding-left: 20px;
+background: url('gray_arrow.png') no-repeat left center white;
+border-bottom: 1px rgb(204, 204, 204) solid;
+}
+
+.console-output-log-info {
+padding: 4px;
+background: white;
+border-bottom: 1px rgb(204, 204, 204) solid;
+}
+
+.console-output-log-error {
+padding: 4px;
+background: rgb(255,240,240);
+color: red;
+border-bottom: 1px rgb(204, 204, 204) solid;
+}
+
+#console-input {
+display: block;
+width: 100%;
+padding: 4px;
+padding-left: 20px;
+background-color: white;
+background: url('blue_arrow.png') no-repeat left center white;
+border: 1px rgb(204, 204, 204) solid
+}
+
+</style>
+<script>
+function resizeUI()
+{
+    document.getElementById("content-wrapper").style.height = window.innerHeight - document.getElementById("content-header").getBoundingClientRect().height + "px"
+    document.getElementById("console-output").style.height = document.getElementById("console").getBoundingClientRect().height - document.getElementById("console-input").getBoundingClientRect().height + "px"
+}
+resizeUI()
+
+document.getElementById("console-input").focus();
+
+function addConsoleUserInput(input)
+{
+    var div = document.createElement("div")
+    div.textContent = input;
+    div.className = "console-output-log-user-input";
+    document.getElementById("console-output").appendChild(div)
+}
+
+function addConsoleInfo(input)
+{
+    var div = document.createElement("div")
+    div.textContent = input;
+    div.className = "console-output-log-info";
+    document.getElementById("console-output").appendChild(div)
+}
+
+function addConsoleError(input)
+{
+    var div = document.createElement("div")
+    div.textContent = input;
+    div.className = "console-output-log-error";
+    document.getElementById("console-output").appendChild(div)
+}
+
+function scrollDownConsoleOutoutWindow()
+{
+   var element = document.getElementById("console-output");
+   element.scrollTop = element.scrollHeight - element.clientHeight;
+}
+
+/*
+for(var i = 0; i < 1000; i ++)
+    addConsoleUserInput("test")
+scrollDownConsoleOutoutWindow()
+*/
+
+document.getElementById("console-input").onkeyup = function(e)
+{
+    if (e.keyCode == 13 && this.value.trim().length) {
+        addConsoleUserInput(this.value)
+        scrollDownConsoleOutoutWindow()
+        var content = this.value;
+        this.value ="";
+
+        var obj = {}
+        obj.command = "eval"
+        obj.content = content;
+        sock.send(JSON.stringify(obj))
+    }
+}
+
+var win = nw.Window.get();
+window.addEventListener('resize',resizeUI)
+
+win.width = 800
+win.height = 600
+
+console.log = process.stdout.write
+var args = nw.App.argv;
+
+console = (function(){
+    var util = require('util');
+    return {
+        log:function(x){
+            process.stdout.write(util.format.apply(util, arguments) + "\n");
+        }
+    }
+})()
+
+window.onerror = function(e) { console.log(e) }
+var zmq = require('zmq')
+  , sock = zmq.socket('dealer');
+
+
+/*
+sock.on('connect', function(fd, ep) {
+    console.log('connected, endpoint:', ep);
+    overlay.style.display = "none"
+});
+sock.on('disconnect', function(fd, ep) {
+    console.log('disconnected');
+    overlay.style.display = "";
+});
+console.log('Start monitoring...');
+sock.monitor(500, 0);
+*/
+
+var addr = 'tcp://127.0.0.1:23888'
+if (nw.App.argv[0]) {
+    addr = nw.App.argv[0]
+}
+sock.connect(addr);
+console.log('Worker connected to port ' + addr);
+
+
+sock.on('message', function(msg){
+  console.log('recv: %s', msg.toString());
+  var obj = JSON.parse(msg.toString());
+  if (obj.command == "console-info") {
+    addConsoleInfo(obj.content); 
+   scrollDownConsoleOutoutWindow()
+  } else if (obj.command == "console-error") {
+    addConsoleError(obj.content); 
+    scrollDownConsoleOutoutWindow()
+  } else if (obj.command == "pong") {
+    // console.log("pong info " + pingCnt + " " + obj.content);
+    if ((pingCnt-1) == obj.content) {
+        // console.log("targetOpen");
+        overlay.style.display = "none";
+    }
+    lastGotPingContent = obj.content;
+  }
+});
+
+var pingCnt = 0;
+var lastGotPingContent = "";
+setInterval(function() {
+  if (lastGotPingContent && lastGotPingContent != (pingCnt-1))
+    overlay.style.display = "block"
+  var obj = {
+     command : "ping",
+     content : (pingCnt++) + ""
+  }
+  console.log(JSON.stringify(obj))
+  sock.send(JSON.stringify(obj));
+}, 1000);
+
+
+</script>

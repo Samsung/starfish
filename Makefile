@@ -32,6 +32,9 @@ endif
 MEDIA_SUPPORT=true
 MEDIA_SUPPORT_KEY=STARFISH_ENABLE_MULTIMEDIA
 
+# inspector
+INSPECTOR_SUPPORT=false
+
 $(info goal... $(MAKECMDGOALS))
 
 ifneq (,$(findstring x86,$(MAKECMDGOALS)))
@@ -161,6 +164,7 @@ LDFLAGS += -lpthread -lcurl
 # LDFLAGS += -Wl,--gc-sections
 
 ifeq ($(ARCH), x64)
+  INSPECTOR_SUPPORT=true
   CXXFLAGS += -DSTARFISH_ENABLE_TEST
   CXXFLAGS += -DSTARFISH_ENABLE_MULTI_PAGE
 else ifeq ($(ARCH), x86)
@@ -245,6 +249,10 @@ ifeq ($(MEDIA_SUPPORT), true)
   LDFLAGS += $(shell pkg-config --libs libavcodec libavutil libavformat)
 endif
 
+ifeq ($(INSPECTOR_SUPPORT), true)
+  CXXFLAGS += -DSTARFISH_ENABLE_INSPECTOR
+endif
+
 ################################################################################
 ################################################################################
 # Third-party build flags
@@ -322,6 +330,7 @@ SRC += $(foreach dir, src/dom/builder/html , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/binding , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/layout , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/loader , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/inspector , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/style , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/util , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/threading , $(wildcard $(dir)/*.cpp))
@@ -375,16 +384,29 @@ SRC += third_party/skia_matrix/SkDebug.cpp
 # clipper
 SRC += third_party/clipper/cpp/clipper.cpp
 
-#webm
+# webm
 ifeq ($(MEDIA_SUPPORT), true)
   SRC_CC += third_party/webm/webvttparser.cc
+endif
+
+# zeromq
+ifeq ($(INSPECTOR_SUPPORT), true)
+  CXXFLAGS += -Ithird_party/zeromq/include
+  CXXFLAGS += -Ithird_party/cppzmq/
+  ifneq (,$(findstring tizen,$(HOST)))
+    ZMQLIBS = third_party/zeromq/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE).shared/.libs/libzmq.a
+  else
+    ZMQLIBS = third_party/zeromq/out/$(HOST)/$(ARCH)/$(MODE).shared/.libs/libzmq.a
+  endif
+else
+  ZMQLIBS=
 endif
 
 # OBJS
 OBJS := $(SRC:%.cpp= $(OUTDIR)/%.o)
 OBJS += $(SRC_C:%.c= $(OUTDIR)/%.o)
 OBJS += $(SRC_CC:%.cc= $(OUTDIR)/%.o)
-THIRD_PARTY_OBJS := $(JSLIBS) $(GCLIBS)
+THIRD_PARTY_OBJS := $(JSLIBS) $(GCLIBS) $(ZMQLIBS)
 
 ################################################################################
 ################################################################################
@@ -618,6 +640,12 @@ install_pixel_test_dep:
 	fc-cache -fv
 	./set_nodewebkit_env.sh
 	fc-match SamsungOne
+
+install_inspector_nwjs:
+	cd inspector ; ./setup_nwjs.sh
+	
+run_inspector:
+	./inspector/nwjs-v0.17.0-linux-x64/nw ./inspector/ > /dev/null &
 
 pixel_test:
 	./tool/pixel_test/pixel_test.sh $(tc) $(screen)

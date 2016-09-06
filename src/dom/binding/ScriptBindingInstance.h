@@ -31,7 +31,7 @@ public:
     {
         return m_data;
     }
-    void evaluate(String* str);
+    String* evaluate(String* str);
 protected:
     void* m_data;
 #ifdef USE_ES6_FEATURE

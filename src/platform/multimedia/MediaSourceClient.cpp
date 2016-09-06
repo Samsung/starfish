@@ -113,8 +113,8 @@ void MediaSourceClient::appendBuffer(MediaRawBuffer buffer)
     if ((ret = avformat_find_stream_info(m_formatContext, NULL)) < 0) {
         STARFISH_LOG_ERROR("avformat_find_stream_info: Error(%u)\n", ret);
     }
-    // FIXME
-    m_player->notifyInitialPacketReady();
+    // FIXME x64 build crash
+    // m_player->notifyInitialPacketReady();
 }
 
 void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)

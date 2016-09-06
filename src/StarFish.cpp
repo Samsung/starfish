@@ -28,6 +28,9 @@
 #include "platform/window/Window.h"
 #include "platform/canvas/image/ImageData.h"
 #include "dom/binding/ScriptBindingInstance.h"
+#include "inspector/Inspector.h"
+#include "extra/Console.h"
+
 #include <malloc.h>
 #include <Elementary.h>
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
@@ -90,6 +93,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     , m_lineBreaker(nullptr)
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
+    , m_console(new Console(this))
+    , m_inspector(nullptr)
     , m_enterCount(0)
 {
     if (!g_starFishGlobalInit) {
@@ -155,6 +160,7 @@ StarFish::~StarFish()
         fclose(fp_mem);
 #endif
     close();
+    delete m_inspector;
     delete m_lineBreaker;
     delete m_window;
 }
@@ -247,9 +253,9 @@ void StarFish::close()
     m_window->close();
 }
 
-void StarFish::evaluate(String* s)
+String* StarFish::evaluate(String* s)
 {
-    m_window->scriptBindingInstance()->evaluate(s);
+    return m_window->scriptBindingInstance()->evaluate(s);
 }
 
 void StarFish::addPointerInRootSet(void *ptr)
@@ -573,7 +579,13 @@ BlobURLStore StarFish::findMediaSourceBlobURL(MediaSource* ptr)
     auto iter = m_urlMediaSourceBlobStore.find(s);
     return *iter;
 }
-
+#if defined(STARFISH_ENABLE_INSPECTOR)
+void StarFish::setupInspector(uint32_t portNumber)
+{
+    STARFISH_ASSERT(m_inspector == nullptr);
+    m_inspector = new Inspector(this, portNumber);
+}
+#endif
 StaticStrings::StaticStrings(StarFish* sf)
     : m_starFish(sf)
     , m_xhtmlNamespaceURI(AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))

@@ -24,6 +24,7 @@
 #include "dom/DOM.h"
 #include "dom/NodeList.h"
 #include "style/CSSStyleLookupTrie.h"
+#include "extra/Console.h"
 
 #include <Escargot.h>
 #include <vm/ESVMInstance.h>
@@ -264,15 +265,15 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 
     escargot::ESObject* console = escargot::ESObject::create();
     console->set(escargot::ESString::create("log"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESString* msg = instance->currentExecutionContext()->readArgument(0).toString();
-#ifndef STARFISH_TIZEN_WEARABLE
-        STARFISH_LOG_INFO("%s\n", msg->utf8Data());
-#else
-        STARFISH_LOG_INFO("console.log: %s\n", msg->utf8Data());
-#endif
-
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        wnd->starFish()->console()->log(toBrowserString(instance->currentExecutionContext()->readArgument(0).toString()));
         return escargot::ESValue();
     }, escargot::ESString::create("log"), 1, false));
+    console->set(escargot::ESString::create("error"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        wnd->starFish()->console()->error(toBrowserString(instance->currentExecutionContext()->readArgument(0).toString()));
+        return escargot::ESValue();
+    }, escargot::ESString::create("error"), 1, false));
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
     // Navigator
@@ -4766,18 +4767,20 @@ escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBin
     return DOMExceptionFunction;
 }
 
-void ScriptBindingInstance::evaluate(String* str)
+String* ScriptBindingInstance::evaluate(String* str)
 {
     std::jmp_buf tryPosition;
     if (setjmp(fetchData(this)->m_instance->registerTryPos(&tryPosition)) == 0) {
         auto result = fetchData(this)->m_instance->evaluate(toJSString(str).asESString());
-        STARFISH_LOG_INFO("ScriptBindingInstance::evaluate -> %s\n", result.toString()->utf8Data());
+        String* s = toBrowserString(result);
         fetchData(this)->m_instance->unregisterTryPos(&tryPosition);
         fetchData(this)->m_instance->unregisterCheckedObjectAll();
+        return s;
     } else {
         escargot::ESValue err = fetchData(this)->m_instance->getCatchedError();
-        STARFISH_LOG_ERROR("Uncaught %s\n", err.toString()->utf8Data());
+        ((Window*)fetchData(this)->m_instance->globalObject()->extraPointerData())->starFish()->console()->error(toBrowserString(err));
     }
+    return String::emptyString;
 }
 
 }
