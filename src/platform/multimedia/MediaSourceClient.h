@@ -14,28 +14,24 @@
  *    limitations under the License.
  */
 
-#ifdef STARFISH_ENABLE_MULTIMEDIA
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaSourceClient__)
+#define __StarFishMediaSourceClient__
 
-#include "StarFishConfig.h"
-#include "SourceBuffer.h"
-#include "dom/Event.h"
-#include "dom/DOMException.h"
-#include "platform/multimedia/MediaSourceClient.h"
-
+class AVFormatContext;
 namespace StarFish {
 
-SourceBuffer::SourceBuffer(String* type, MediaSourceClient* client)
-    : EventTarget()
-    , m_type(type)
-    , m_mseClient(client)
-{
-    m_mseClient->setFormat(type);
-}
+class VideoPlayer;
+class MediaSourceClient : public gc {
+public:
+    MediaSourceClient();
+    void registerMediaPlayer(VideoPlayer* player);
+    void setFormat(String* type);
 
-void SourceBuffer::appendBuffer(ScriptValue data)
-{
-    // TODO
-}
+protected:
+    VideoPlayer* m_player;
+    AVFormatContext* m_formatContext;
+    bool m_isWebm;
+};
 
 }
 

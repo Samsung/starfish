@@ -27,6 +27,7 @@ class AudioTrackList;
 class VideoTrackList;
 class TextTrackList;
 class TimeRanges;
+class MediaSourceClient;
 
 class SourceBuffer : public EventTarget {
 public:
@@ -35,11 +36,7 @@ public:
         Sequence,
     };
 
-    SourceBuffer()
-        : EventTarget()
-    {
-
-    }
+    SourceBuffer(String* type, MediaSourceClient* client);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -63,6 +60,8 @@ protected:
     TextTrackList* m_textTracks;
     double m_appendWindowStart;
     double m_appendWindowEnd;
+    String* m_type;
+    MediaSourceClient* m_mseClient;
 
 };
 

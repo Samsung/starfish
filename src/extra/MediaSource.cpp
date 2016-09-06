@@ -14,23 +14,41 @@
  *    limitations under the License.
  */
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+
 #include "StarFishConfig.h"
 #include "MediaSource.h"
+#include "SourceBuffer.h"
 #include "dom/Event.h"
 #include "dom/DOMException.h"
-#include "platform/window/Window.h"
+#include "platform/multimedia/MediaSourceClient.h"
 
 namespace StarFish {
 
 MediaSource::MediaSource()
     : EventTarget()
 {
+    m_mseClient = new MediaSourceClient();
 }
 
 SourceBuffer* MediaSource::addSourceBuffer(String* type)
 {
-    // TODO
-    return NULL;
+    // TODO: consider type Error
+    // 
+    // if (m_readyState != Open)
+    //    throw InvalidStateError
+        
+//    STARFISH_ASSERT(isTypeSupported(type) == true)
+//    STARFISH_ASSERT(m_readyState == Open)
+
+    SourceBuffer* buffer = new SourceBuffer(type, m_mseClient);
+    if (!m_sourceBuffers)
+        m_sourceBuffers = new SourceBufferList();
+    m_sourceBuffers->add(buffer);
+    
+    Event* e = new Event(String::fromUTF8("addsourcebuffer"), EventInit(false, false));
+    m_sourceBuffers->dispatchEvent(e);
+    return buffer;
 }
 
 void MediaSource::endOfStream()
@@ -43,4 +61,10 @@ void MediaSource::endOfStream(EndOfStreamError error)
     // TODO
 }
 
+void MediaSource::registerMediaPlayer(VideoPlayer* player)
+{
+    m_mseClient->registerMediaPlayer(player);
 }
+
+}
+#endif
