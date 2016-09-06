@@ -1800,7 +1800,18 @@ escargot::ESFunctionObject* bindingTimeRanges(ScriptBindingInstance* scriptBindi
 
 escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(MediaSource, fetchData(scriptBindingInstance)->m_eventTarget);
+    // DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(MediaSource, fetchData(scriptBindingInstance)->m_eventTarget);
+
+    auto MediaSourceFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* w = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData());
+        MediaSource* b = new MediaSource(w->starFish());
+        return b->scriptValue();
+    }, escargot::ESString::create("MediaSource"), 0, true, true);
+
+    MediaSourceFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
+    MediaSourceFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    MediaSourceFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget);
+    MediaSourceFunction->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget);
 
     MediaSourceFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addSourceBuffer"), true, true, true,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
