@@ -60,6 +60,22 @@ void MediaSourceClient::setFormat(String* type)
 #endif
 }
 
+void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
+{
+    // NOTE : This function running on non-main thread. Use Mutex to protect variables.
+
+    // HINT
+    // void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts)
+}
+
+void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
+{
+    // NOTE : This function running on non-main thread. Use Mutex to protect variables.
+
+    // HINT
+    // void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts)
+}
+
 }
 
 #endif
