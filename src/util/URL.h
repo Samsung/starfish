@@ -40,11 +40,7 @@ public:
     static String* getURLString(String* baseURL, String* url);
     static String* createObjectURL(Blob* blob);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    static String* createObjectURL(MediaSource* blob)
-    {
-        // TODO
-        return String::emptyString;
-    }
+    static String* createObjectURL(MediaSource* blob);
 #endif
     static URL* createURL(String* baseURL, String* url)
     {

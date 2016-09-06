@@ -274,6 +274,173 @@ void StarFish::removePointerFromRootSet(void *ptr)
     }
 }
 
+bool StarFish::stringToBlobURLString(String* url, BlobURLStore& store)
+{
+    size_t idx = url->lastIndexOf('/');
+    if (idx == SIZE_MAX) {
+        return false;
+    }
+
+    idx++;
+    if (idx >= url->length()) {
+        return false;
+    }
+    String* uuid = url->substring(idx, url->length() - idx);
+
+    const char* str = uuid->utf8Data();
+    if (strlen(str) != 36) {
+        return false;
+    }
+
+    unsigned int a0, a1, a2, a3, a4, a5, a6, a7;
+    sscanf(str, "%04X%04X-%04X-%04X-%04X-%04X%04X%04X", &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7);
+
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+        } small;
+        uint32_t big;
+    } spliter;
+
+#ifdef STARFISH_64
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+            uint16_t c;
+            uint16_t d;
+        } small;
+        uint64_t big;
+    } spliter64;
+#endif
+
+#ifdef STARFISH_64
+    spliter.small.a = a0;
+    spliter.small.b = a1;
+    store.m_a = spliter.big;
+
+    spliter.small.a = a2;
+    spliter.small.b = a3;
+    store.m_b = spliter.big;
+
+
+    spliter64.small.a = a4;
+    spliter64.small.b = a5;
+    spliter64.small.c = a6;
+    spliter64.small.d = a7;
+    store.m_blob = (void*)spliter64.big;
+#else
+    spliter.small.a = a0;
+    spliter.small.b = a1;
+    store.m_a = spliter.big;
+
+    spliter.small.a = a2;
+    spliter.small.b = a3;
+    store.m_b = spliter.big;
+
+    spliter.small.a = a4;
+    spliter.small.b = a5;
+    store.m_c = spliter.big;
+
+    spliter.small.a = a6;
+    spliter.small.b = a7;
+    store.m_blob = (void*)spliter.big;
+#endif
+
+    return true;
+}
+
+String* StarFish::blobURLStoreToString(BlobURLStore store, String* origin)
+{
+    std::string url = "blob:";
+    url += origin->utf8Data();
+    url += "/";
+
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+        } small;
+        uint32_t big;
+    } spliter;
+
+#ifdef STARFISH_64
+    union {
+        struct {
+            uint16_t a;
+            uint16_t b;
+            uint16_t c;
+            uint16_t d;
+        } small;
+        uint64_t big;
+    } spliter64;
+#endif
+
+    char buf[32];
+#ifdef STARFISH_64
+    spliter.big = store.m_a;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter.big = store.m_b;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    url += "-";
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter64.big = (uint64_t)store.m_blob;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.a);
+    url += buf;
+    url += "-";
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.b);
+    url += buf;
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.c);
+    url += buf;
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.d);
+    url += buf;
+#else
+    spliter.big = store.m_a;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter.big = store.m_b;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    url += "-";
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+    url += "-";
+
+    spliter.big = store.m_c;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+    url += "-";
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+
+    spliter.big = (uint32_t)store.m_blob;
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    url += buf;
+
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    url += buf;
+#endif
+    return String::createASCIIString(url.data());
+}
+
 BlobURLStore StarFish::addBlobInBlobURLStore(Blob* ptr)
 {
 #ifndef NDEBUG
@@ -337,6 +504,73 @@ BlobURLStore StarFish::findBlobURL(Blob* ptr)
     BlobURLStore s;
     s.m_blob = ptr;
     auto iter = m_urlBlobStore.find(s);
+    return *iter;
+}
+
+
+BlobURLStore StarFish::addMediaSourceInBlobURLStore(MediaSource* ptr)
+{
+#ifndef NDEBUG
+    {
+        BlobURLStore s;
+        s.m_blob = ptr;
+        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) == m_urlMediaSourceBlobStore.end());
+    }
+#endif
+    BlobURLStore a;
+    a.m_blob = ptr;
+
+#ifdef STARFISH_32
+    a.m_a = rand();
+    a.m_b = rand();
+    a.m_c = rand();
+#else
+    a.m_a = rand();
+    a.m_b = rand();
+#endif
+
+    m_urlMediaSourceBlobStore.insert(a);
+
+    return a;
+}
+
+void StarFish::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
+{
+#ifndef NDEBUG
+    {
+        BlobURLStore s;
+        s.m_blob = ptr;
+        STARFISH_ASSERT(m_urlMediaSourceBlobStore.find(s) != m_urlMediaSourceBlobStore.end());
+    }
+#endif
+    BlobURLStore s;
+    s.m_blob = ptr;
+    m_urlMediaSourceBlobStore.erase(s);
+}
+
+bool StarFish::isValidMediaSourceBlobURL(BlobURLStore ptr)
+{
+    auto iter = m_urlMediaSourceBlobStore.find(ptr);
+#ifdef STARFISH_32
+    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
+#else
+    return iter != m_urlMediaSourceBlobStore.end() && ptr.m_a == iter->m_a && ptr.m_b == iter->m_b;
+#endif
+}
+
+bool StarFish::isValidMediaSourceBlobURL(MediaSource* ptr)
+{
+    BlobURLStore s;
+    s.m_blob = ptr;
+    auto iter = m_urlMediaSourceBlobStore.find(s);
+    return iter != m_urlMediaSourceBlobStore.end();
+}
+
+BlobURLStore StarFish::findMediaSourceBlobURL(MediaSource* ptr)
+{
+    BlobURLStore s;
+    s.m_blob = ptr;
+    auto iter = m_urlMediaSourceBlobStore.find(s);
     return *iter;
 }
 

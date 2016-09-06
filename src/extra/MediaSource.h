@@ -40,11 +40,16 @@ public:
         Decode,
     };
 
-    MediaSource();
+    MediaSource(StarFish* starFish);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    StarFish* starFish()
+    {
+        return m_starFish;
     }
 
     SourceBuffer* addSourceBuffer(String* type);
@@ -73,9 +78,10 @@ public:
     void registerMediaPlayer(VideoPlayer* player);
 
 protected:
+    ReadyState m_readyState;
+    StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;
     SourceBufferList* m_activeSourceBuffers;
-    ReadyState m_readyState;
     double m_duration;
     MediaSourceClient* m_mseClient;
 
