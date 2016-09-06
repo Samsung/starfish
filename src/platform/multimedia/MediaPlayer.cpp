@@ -380,18 +380,20 @@ void VideoPlayer::prepareCPlayer()
             PLAYER_LOGI("prepare() FAIL - INVALID BLOB URL\n");
             return;
         }
-        if (!m_videoElement->document()->window()->starFish()->isValidMediaSourceBlobURL(store)) {
-            PLAYER_LOGI("prepare() FAIL - INVALID MEDIA SOURCE URL\n");
+        if (m_videoElement->document()->window()->starFish()->isValidMediaSourceBlobURL(store)) {
+            MediaSource* mediaSource = (MediaSource*)store.m_blob;
+            m_currentMediaSource = mediaSource;
+            mediaSource->registerMediaPlayer(this);
+            player_set_uri(m_cplayer, "external_demuxer://aaaa");
+            player_set_video_stream_info(m_cplayer, &m_videoInfo);
+            player_set_buffer_need_video_data_cb(m_cplayer, __videoPlayerBufferNeedVideoDataCB, (void*)this);
+            player_set_buffer_need_audio_data_cb(m_cplayer, __videoPlayerBufferNeedAudioDataCB, (void*)this);
+            player_set_buffer_enough_video_data_cb(m_cplayer, __videoPlayerBufferEnoughDataCB, (void*)this);
+        } else if (m_videoElement->document()->window()->starFish()->isValidBlobURL(store)) {
+            PLAYER_LOGI("prepare() FAIL - blob type of non-MediaSource NOT SUPPORTED yet\n");
             return;
         }
-        MediaSource* mediaSource = (MediaSource*)store.m_blob;
-        m_currentMediaSource = mediaSource;
-        mediaSource->registerMediaPlayer(this);
-        player_set_uri(m_cplayer, "external_demuxer://aaaa");
-        player_set_video_stream_info(m_cplayer, &m_videoInfo);
-        player_set_buffer_need_video_data_cb(m_cplayer, __videoPlayerBufferNeedVideoDataCB, (void*)this);
-        player_set_buffer_need_audio_data_cb(m_cplayer, __videoPlayerBufferNeedAudioDataCB, (void*)this);
-        player_set_buffer_enough_video_data_cb(m_cplayer, __videoPlayerBufferEnoughDataCB, (void*)this);
+
     } else {
         return;
     }
