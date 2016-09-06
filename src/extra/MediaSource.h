@@ -19,12 +19,13 @@
 
 #include "dom/binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
-#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 
 class SourceBuffer;
 class SourceBufferList;
+class VideoPlayer;
+class MediaSourceClient;
 
 class MediaSource : public EventTarget {
 public:
@@ -62,13 +63,21 @@ public:
             return false;
         return true;
     }
-    bool isTypeSupported(String* type);
+
+    bool isTypeSupported(String* type)
+    {
+        // TODO
+        return true;
+    }
+
+    void registerMediaPlayer(VideoPlayer* player);
 
 protected:
     SourceBufferList* m_sourceBuffers;
     SourceBufferList* m_activeSourceBuffers;
     ReadyState m_readyState;
     double m_duration;
+    MediaSourceClient* m_mseClient;
 
 };
 

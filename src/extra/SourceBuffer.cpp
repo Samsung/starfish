@@ -14,13 +14,23 @@
  *    limitations under the License.
  */
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+
 #include "StarFishConfig.h"
 #include "SourceBuffer.h"
 #include "dom/Event.h"
 #include "dom/DOMException.h"
-#include "platform/window/Window.h"
+#include "platform/multimedia/MediaSourceClient.h"
 
 namespace StarFish {
+
+SourceBuffer::SourceBuffer(String* type, MediaSourceClient* client)
+    : EventTarget()
+    , m_type(type)
+    , m_mseClient(client)
+{
+    m_mseClient->setFormat(type);
+}
 
 void SourceBuffer::appendBuffer(ScriptValue data)
 {
@@ -28,3 +38,5 @@ void SourceBuffer::appendBuffer(ScriptValue data)
 }
 
 }
+
+#endif
