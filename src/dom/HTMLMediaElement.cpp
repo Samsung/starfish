@@ -44,8 +44,12 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
             url = URL::createURL(document()->documentURI()->urlString(), value);
         }
         m_mediaPlayer->setURL(url);
-        if (preloadEnum() != HTMLMediaElement::PRELOAD_NONE || autoplay()) {
+        if (preloadEnum() != HTMLMediaElement::PRELOAD_NONE) {
             load();
+        } else if (autoplay()) {
+            // When autoplay is true, ignore preload condition
+            load();
+            play();
         }
     } else if (name == document()->window()->starFish()->staticStrings()->m_loop) {
         // loop

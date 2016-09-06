@@ -25,6 +25,7 @@
 #include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "extra/MediaSource.h"
 
 #ifdef STARFISH_TIZEN
 #include <efl_extension.h>
@@ -34,6 +35,12 @@
 #include <player_product.h>
 #endif
 #endif
+
+#define DEFAULT_VIDEO_STREAM_INFO_MIME "video/x-vp9"
+#define DEFAULT_VIDEO_STREAM_INFO_WIDTH 512
+#define DEFAULT_VIDEO_STREAM_INFO_HEIGHT 288
+#define DEFAULT_VIDEO_STREAM_INFO_FRAMERATE_DEN 1
+#define DEFAULT_VIDEO_STREAM_INFO_FRAMERATE_NUM 1000
 
 #define PLAYER_LOGI(...) \
     STARFISH_LOG_ERROR("[MediaPlayer] "); \
@@ -56,6 +63,7 @@ VideoPlayer::VideoPlayer(HTMLVideoElement* videoElement)
     : MediaPlayer()
     , m_videoElement(videoElement)
     , m_currentUrl(nullptr)
+    , m_currentMediaSource(nullptr)
     , m_cplayer(NULL)
     , m_lastRequest(VideoPlayer::REQUEST_NONE)
 #ifdef STARFISH_TIZEN_TV
@@ -74,6 +82,7 @@ VideoPlayer::VideoPlayer(HTMLVideoElement* videoElement)
     }, NULL, NULL, NULL);
 
     STARFISH_ASSERT(videoElement);
+    clearVideoStreamInfo();
 }
 
 static void __videoPlayerPrepareCB(void *user_data)
@@ -97,7 +106,34 @@ static void __videoPlayerCompleteCB(void *user_data)
 
 static void __videoPlayerBufferingCB(int percent, void *user_data)
 {
-    PLAYER_LOGI("__videoPlayerCompleteCB() %d percent\n", percent);
+    PLAYER_LOGI("__videoPlayerBufferingCB() %d percent\n", percent);
+}
+
+static void __videoPlayerBufferNeedVideoDataCB(unsigned int size, void *user_data)
+{
+    PLAYER_LOGI("__videoPlayerBufferNeedVideoDataCB()\n");
+    // TODO : element and MediaPlayer should be rooted
+    // TODO : member of MediaPlayer should be locked
+    VideoPlayer* player = (VideoPlayer*)user_data;
+    if (player->currentMediaSource()) {
+        player->onBufferNeedVideoData(player->currentMediaSource());
+    }
+}
+
+static void __videoPlayerBufferNeedAudioDataCB(unsigned int size, void *user_data)
+{
+    PLAYER_LOGI("__videoPlayerBufferNeedAudioDataCB()\n");
+    // TODO : element and MediaPlayer should be rooted
+    // TODO : member of MediaPlayer should be locked
+    VideoPlayer* player = (VideoPlayer*)user_data;
+    if (player->currentMediaSource()) {
+        player->onBufferNeedAudioData(player->currentMediaSource());
+    }
+}
+
+static void __videoPlayerBufferEnoughDataCB(void *user_data)
+{
+    PLAYER_LOGI("__videoPlayerBufferEnoughDataCB()\n");
 }
 
 static void __videoPlayerErrorCB(int errorCode, void *user_data)
@@ -302,7 +338,30 @@ void VideoPlayer::prepareCPlayer()
     }
 #endif
     PLAYER_LOGI("prepareCPlayer()\n");
+
+    // Set display options (should reset after unprepare)
+#ifdef STARFISH_TIZEN_TV
+    Evas_Object* win = (Evas_Object*) m_videoElement->document()->window()->unwrap();
+    player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get(win));
+    player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
+    player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
+    player_display_roi_mode_e roi_mode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
+
+    player_set_display(m_cplayer, (player_display_type_e) display_type, display_handle);
+    player_set_display_mode(m_cplayer, display_mode);
+    player_set_x11_display_roi_mode(m_cplayer, roi_mode);
+    player_display_video_at_paused_state(m_cplayer, TRUE);
+#elif STARFISH_TIZEN_MOBILE
+    player_display_h display_handle = GET_DISPLAY((Evas_Object*) m_surface->unwrap());
+    player_display_type_e display_type = PLAYER_DISPLAY_TYPE_EVAS;
+    player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER;
+
+    player_set_display(m_cplayer, display_type, display_handle);
+    player_set_display_mode(m_cplayer, display_mode);
+#endif
+
     if (m_currentUrl->isFileURL() || m_currentUrl->isNetworkURL()) {
+        PLAYER_LOGI("prepare() for non-blob resource\n");
         PLAYER_LOGI("url : %s\n", m_currentUrl->urlString()->utf8Data());
         player_set_uri(m_cplayer, const_cast<char*>(m_currentUrl->urlString()->utf8Data()));
 
@@ -310,36 +369,42 @@ void VideoPlayer::prepareCPlayer()
         // FIXME
         if (m_currentUrl->isNetworkURL())
             player_set_streaming_type(m_cplayer, const_cast<char*>("FFMPEG_HTTP"));
-
-        // Set display options (should reset after unprepare)
-        Evas_Object* win = (Evas_Object*) m_videoElement->document()->window()->unwrap();
-        player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get(win));
-        player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
-        player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
-        player_display_roi_mode_e roi_mode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
-
-        player_set_display(m_cplayer, (player_display_type_e) display_type, display_handle);
-        player_set_display_mode(m_cplayer, display_mode);
-        player_set_x11_display_roi_mode(m_cplayer, roi_mode);
-        player_display_video_at_paused_state(m_cplayer, TRUE);
-#elif STARFISH_TIZEN_MOBILE
-        player_display_h display_handle = GET_DISPLAY((Evas_Object*) m_surface->unwrap());
-        player_display_type_e display_type = PLAYER_DISPLAY_TYPE_EVAS;
-        player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER;
-
-        player_set_display(m_cplayer, display_type, display_handle);
-        player_set_display_mode(m_cplayer, display_mode);
 #endif
-
-        setPublicState(MediaPlayer::STATE_PREPARING);
-        lockElementPointer();
-        int errorCode = player_prepare_async(m_cplayer, __videoPlayerPrepareCB, (void*)this);
-        if (errorCode != PLAYER_ERROR_NONE) {
-            PLAYER_LOGE(errorCode, "player_prepare_async()\n");
-            unlockElementPointer();
-            setPublicState(MediaPlayer::STATE_NONE);
+    } else if (m_currentUrl->isBlobURL()) {
+        STARFISH_ASSERT(isPublicState(MediaPlayer::STATE_NONE));
+        STARFISH_ASSERT(m_videoElement);
+        PLAYER_LOGI("prepare() for blob resource\n");
+        // Validate Blob url
+        BlobURLStore store;
+        if (!StarFish::stringToBlobURLString(m_currentUrl->urlString(), store)) {
+            PLAYER_LOGI("prepare() FAIL - INVALID BLOB URL\n");
             return;
         }
+        if (!m_videoElement->document()->window()->starFish()->isValidMediaSourceBlobURL(store)) {
+            PLAYER_LOGI("prepare() FAIL - INVALID MEDIA SOURCE URL\n");
+            return;
+        }
+        MediaSource* mediaSource = (MediaSource*)store.m_blob;
+        m_currentMediaSource = mediaSource;
+        mediaSource->registerMediaPlayer(this);
+        player_set_uri(m_cplayer, "external_demuxer://aaaa");
+        player_set_video_stream_info(m_cplayer, &m_videoInfo);
+        player_set_buffer_need_video_data_cb(m_cplayer, __videoPlayerBufferNeedVideoDataCB, (void*)this);
+        player_set_buffer_need_audio_data_cb(m_cplayer, __videoPlayerBufferNeedAudioDataCB, (void*)this);
+        player_set_buffer_enough_video_data_cb(m_cplayer, __videoPlayerBufferEnoughDataCB, (void*)this);
+    } else {
+        return;
+    }
+
+    // prepare
+    setPublicState(MediaPlayer::STATE_PREPARING);
+    lockElementPointer();
+    int errorCode = player_prepare_async(m_cplayer, __videoPlayerPrepareCB, (void*)this);
+    if (errorCode != PLAYER_ERROR_NONE) {
+        PLAYER_LOGE(errorCode, "player_prepare_async()\n");
+        unlockElementPointer();
+        setPublicState(MediaPlayer::STATE_NONE);
+        return;
     }
 }
 
@@ -478,6 +543,35 @@ void VideoPlayer::prepare()
     prepareCPlayer();
 }
 
+void VideoPlayer::pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts)
+{
+    if (!m_cplayer) {
+        PLAYER_LOGI("pushVideoPacket() FAIL : player does not exist (something wrong)\n");
+        return;
+    }
+    int ret = player_submit_packet(m_cplayer, buf, len, pts, PLAYER_TRACK_TYPE_VIDEO);
+    if (ret != PLAYER_ERROR_NONE) {
+        setPublicState(MediaPlayer::STATE_UNKNOWN_ERROR);
+        PLAYER_LOGI("pushVideoPacket() FAIL : unknown error\n");
+        return;
+    }
+}
+
+void VideoPlayer::pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts)
+{
+    if (!m_cplayer) {
+        PLAYER_LOGI("pushAudioPacket() FAIL : player does not exist (something wrong)\n");
+        return;
+    }
+    int ret = player_submit_packet(m_cplayer, buf, len, pts, PLAYER_TRACK_TYPE_AUDIO);
+    if (ret != PLAYER_ERROR_NONE) {
+        setPublicState(MediaPlayer::STATE_UNKNOWN_ERROR);
+        PLAYER_LOGI("pushAudioPacket() FAIL : unknown error\n");
+        return;
+    }
+}
+
+
 #ifdef STARFISH_TIZEN_TV
 void VideoPlayer::setDisplayArea(int x, int y, int width, int height)
 {
@@ -554,17 +648,29 @@ void VideoPlayer::setLoop(bool loop)
 
 void VideoPlayer::setVideoStreamInfo(String* type, int width, int height, int den, int num)
 {
-    if (!m_videoInfo) {
-        m_videoInfo =
-        (player_video_stream_info_s*) malloc(sizeof(player_video_stream_info_s));
+    m_videoInfo.mime = type->utf8Data();
+    m_videoInfo.width = width;
+    m_videoInfo.height = height;
+    m_videoInfo.framerate_den = den;
+    m_videoInfo.framerate_num = num;
+
+    if (!m_cplayer) {
+        return;
     }
-    m_videoInfo->mime = type->utf8Data();
-    m_videoInfo->width = width;
-    m_videoInfo->height = height;
-    m_videoInfo->framerate_den = den;
-    m_videoInfo->framerate_num = num;
+    if (m_currentUrl && m_currentUrl->isBlobURL())
+        player_set_video_stream_info(m_cplayer, &m_videoInfo);
     // TODO: maybe should call this after player_create
-//    player_set_video_stream_info(m_cplayer, m_videoInfo);
+    // player_set_video_stream_info(m_cplayer, m_videoInfo);
+}
+
+void VideoPlayer::clearVideoStreamInfo()
+{
+    // Set default streaming info
+    m_videoInfo.mime = DEFAULT_VIDEO_STREAM_INFO_MIME;
+    m_videoInfo.width = DEFAULT_VIDEO_STREAM_INFO_WIDTH;
+    m_videoInfo.height = DEFAULT_VIDEO_STREAM_INFO_HEIGHT;
+    m_videoInfo.framerate_den = DEFAULT_VIDEO_STREAM_INFO_FRAMERATE_DEN;
+    m_videoInfo.framerate_num = DEFAULT_VIDEO_STREAM_INFO_FRAMERATE_NUM;
 }
 
 int VideoPlayer::width()

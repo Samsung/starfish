@@ -78,6 +78,7 @@ public:
 
     virtual bool isVideoPlayer() { return true; }
 
+
 #if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
 public:
     VideoPlayer(HTMLVideoElement* videoElement);
@@ -104,6 +105,8 @@ public:
     void destroyCPlayer();
 
     void setVideoStreamInfo(String* type, int width, int height, int den, int num);
+    void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts);
+    void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts);
 
 #ifdef STARFISH_TIZEN_TV
     void setDisplayArea(int x, int y, int width, int height);
@@ -124,6 +127,7 @@ private:
     void popPendingUrl();
     void pushPendingUrl();
     bool lastRequestIs(Request r) { return r == m_lastRequest; }
+    void clearVideoStreamInfo();
 
 #else  /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
 public:
@@ -136,17 +140,25 @@ public:
     virtual void setLoop(bool loop) { }
     int width() { return 0; }
     int height() { return 0; }
+
+    void setVideoStreamInfo(String* type, int width, int height, int den, int num) { }
+    void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts) { }
+    void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts) { }
 #endif /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
 
 public:
     virtual void onUnprepared();
     virtual void onPrepared(URL* url);
     virtual void onPlayFinished(URL* url);
+    void onBufferNeedVideoData(MediaSource* ms);
+    void onBufferNeedAudioData(MediaSource* ms);
     HTMLVideoElement* videoElement() { return m_videoElement; }
+    MediaSource* currentMediaSource() { return m_currentMediaSource; }
 
 protected:
     HTMLVideoElement* m_videoElement;
     URL* m_currentUrl;
+    MediaSource* m_currentMediaSource;
 #if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
     player_h m_cplayer;
     Request m_lastRequest;
@@ -155,9 +167,10 @@ protected:
 #elif STARFISH_TIZEN_MOBILE
     CanvasSurface* m_surface;
 #endif
+    player_video_stream_info_s m_videoInfo;
+
     bool m_isElementPointerLocked;
     bool m_hasPendingUrl;
-    player_video_stream_info_s* m_videoInfo;
 #endif
 };
 
