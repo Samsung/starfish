@@ -103,6 +103,8 @@ public:
     bool assureCPlayer();
     void destroyCPlayer();
 
+    void setVideoStreamInfo(String* type, int width, int height, int den, int num);
+
 #ifdef STARFISH_TIZEN_TV
     void setDisplayArea(int x, int y, int width, int height);
 #elif STARFISH_TIZEN_MOBILE
@@ -123,7 +125,6 @@ private:
     void pushPendingUrl();
     bool lastRequestIs(Request r) { return r == m_lastRequest; }
 
-    void setVideoStreamInfo(String* type, int width, int height, int den, int num);
 #else  /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
 public:
     VideoPlayer(HTMLVideoElement* videoElement)

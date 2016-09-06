@@ -554,7 +554,6 @@ void VideoPlayer::setLoop(bool loop)
 
 void VideoPlayer::setVideoStreamInfo(String* type, int width, int height, int den, int num)
 {
-/*
     if (!m_videoInfo) {
         m_videoInfo =
         (player_video_stream_info_s*) malloc(sizeof(player_video_stream_info_s));
@@ -564,8 +563,8 @@ void VideoPlayer::setVideoStreamInfo(String* type, int width, int height, int de
     m_videoInfo->height = height;
     m_videoInfo->framerate_den = den;
     m_videoInfo->framerate_num = num;
-    player_set_video_stream_info(m_cplayer, m_videoInfo);
-*/
+    // TODO: maybe should call this after player_create
+//    player_set_video_stream_info(m_cplayer, m_videoInfo);
 }
 
 int VideoPlayer::width()
