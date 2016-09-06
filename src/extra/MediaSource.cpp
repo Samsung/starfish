@@ -66,5 +66,10 @@ void MediaSource::registerMediaPlayer(VideoPlayer* player)
     m_mseClient->registerMediaPlayer(player);
 }
 
+MediaSourceClient* MediaSource::mseClient()
+{
+    return m_mseClient;
+}
+
 }
 #endif
