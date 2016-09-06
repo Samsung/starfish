@@ -241,6 +241,8 @@ endif
 # for media support
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -D$(MEDIA_SUPPORT_KEY)
+  CXXFLAGS += $(shell pkg-config --cflags libavcodec libavutil libavformat)
+  LDFLAGS += $(shell pkg-config --libs libavcodec libavutil libavformat)
 endif
 
 ################################################################################
@@ -394,14 +396,14 @@ ifeq ($(HOST), linux)
   CC           = gcc
   CXX          = g++
   STRIP        = strip
-  CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n libavcodec libavutil libavformat)
-  LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n libavcodec libavutil libavformat)
+  CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n)
+  LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n)
 else ifeq ($(HOST), tizen_obs)
   CC           = gcc
   CXX          = g++
   STRIP        = strip
   TIZEN_DEPS = dlog elementary ecore libpng cairo freetype2 fontconfig icu-uc icu-i18n \
-               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player libavcodec libavutil libavformat
+               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player
   CXXFLAGS    += $(shell pkg-config --cflags $(TIZEN_DEPS))
   LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS))
   LIB = libWebWidgetEngine.so
@@ -599,6 +601,9 @@ endif
 
 run:
 	phantomjs --web-security=false --local-to-remote-url-access=true runner.js ${RUN_ARGS}
+
+install_ffmpeg:
+	sudo apt-get install libavformat-dev libavcodec-dev libavutil-dev
 
 install_git_prepush:
 	cp -rf tool/reftest/pre-push .git/hooks/

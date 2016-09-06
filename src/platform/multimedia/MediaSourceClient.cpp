@@ -52,11 +52,11 @@ void MediaSourceClient::setFormat(String* type)
     m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO;
 
 #if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
-    String* type = String::emptyString;
+    String* typestr = String::emptyString;
     if (m_isWebm)
-        type = String::createFromUTF8("video/x-vp9");
+        typestr = String::fromUTF8("video/x-vp9");
     if (m_player)
-        m_player->setVideoStreamInfo(type, 512, 288, 1, 1000);
+        m_player->setVideoStreamInfo(typestr, 512, 288, 1, 1000);
 #endif
 }
 

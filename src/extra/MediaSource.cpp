@@ -34,10 +34,9 @@ MediaSource::MediaSource()
 SourceBuffer* MediaSource::addSourceBuffer(String* type)
 {
     // TODO: consider type Error
-    // 
+    //
     // if (m_readyState != Open)
     //    throw InvalidStateError
-        
 //    STARFISH_ASSERT(isTypeSupported(type) == true)
 //    STARFISH_ASSERT(m_readyState == Open)
 
@@ -45,7 +44,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     if (!m_sourceBuffers)
         m_sourceBuffers = new SourceBufferList();
     m_sourceBuffers->add(buffer);
-    
+
     Event* e = new Event(String::fromUTF8("addsourcebuffer"), EventInit(false, false));
     m_sourceBuffers->dispatchEvent(e);
     return buffer;
