@@ -77,6 +77,14 @@ public:
 
     void registerMediaPlayer(VideoPlayer* player);
     MediaSourceClient* mseClient();
+    ReadyState readyState()
+    {
+        return m_readyState;
+    }
+    void setReadyState(ReadyState state)
+    {
+        m_readyState = state;
+    }
 
 protected:
     ReadyState m_readyState;

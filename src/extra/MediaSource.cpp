@@ -41,7 +41,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 //    STARFISH_ASSERT(isTypeSupported(type) == true)
 //    STARFISH_ASSERT(m_readyState == Open)
 
-    SourceBuffer* buffer = new SourceBuffer(type, m_mseClient);
+    SourceBuffer* buffer = new SourceBuffer(type, this, m_mseClient);
     if (!m_sourceBuffers)
         m_sourceBuffers = new SourceBufferList();
     m_sourceBuffers->add(buffer);
@@ -54,6 +54,8 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 void MediaSource::endOfStream()
 {
     // TODO
+    setReadyState(Ended);
+    dispatchEvent(new Event(String::fromUTF8("sourceended")));
 }
 
 void MediaSource::endOfStream(EndOfStreamError error)
@@ -64,6 +66,8 @@ void MediaSource::endOfStream(EndOfStreamError error)
 void MediaSource::registerMediaPlayer(VideoPlayer* player)
 {
     m_mseClient->registerMediaPlayer(player);
+    setReadyState(Open);
+    dispatchEvent(new Event(String::fromUTF8("sourceopen")));
 }
 
 MediaSourceClient* MediaSource::mseClient()

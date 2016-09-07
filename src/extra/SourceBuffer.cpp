@@ -21,12 +21,14 @@
 #include "dom/Event.h"
 #include "dom/DOMException.h"
 #include "platform/multimedia/MediaSourceClient.h"
+#include "MediaSource.h"
 
 namespace StarFish {
 
-SourceBuffer::SourceBuffer(String* type, MediaSourceClient* client)
+SourceBuffer::SourceBuffer(String* type, MediaSource* parent, MediaSourceClient* client)
     : EventTarget()
     , m_type(type)
+    , m_parentMediaSource(parent)
     , m_mseClient(client)
 {
     m_mseClient->setFormat(type);
@@ -45,6 +47,10 @@ void SourceBuffer::prepareAppend(const void* data, unsigned long length)
     if (m_inputBuffer.size == 0) {
         m_inputBuffer.memory = (char*) data;
         m_inputBuffer.size = length;
+    }
+    if (m_parentMediaSource->readyState() == MediaSource::Ended) {
+        m_parentMediaSource->setReadyState(MediaSource::Open);
+        m_parentMediaSource->dispatchEvent(new Event(String::fromUTF8("sourceopen")));
     }
 }
 
