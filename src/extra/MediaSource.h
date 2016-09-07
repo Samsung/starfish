@@ -81,10 +81,8 @@ public:
     {
         return m_readyState;
     }
-    void setReadyState(ReadyState state)
-    {
-        m_readyState = state;
-    }
+    void setReadyState(ReadyState state);
+    void dispatchStateChangeEvent();
 
 protected:
     ReadyState m_readyState;

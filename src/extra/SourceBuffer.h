@@ -32,6 +32,12 @@ class MediaSource;
 
 class SourceBuffer : public EventTarget {
 public:
+    enum UpdateState {
+        Success,
+        Error,
+        Abort,
+    };
+
     enum AppendMode {
         Segments,
         Sequence,
@@ -53,10 +59,8 @@ public:
 
     void prepareAppend(const void* data, unsigned long length);
     void runBufferAppend();
-    void setUpdating(bool flag)
-    {
-        m_updating = flag;
-    }
+    void setUpdating(bool flag, UpdateState state);
+    void dispatchUpdateEvent(UpdateState state);
 
 protected:
     AppendMode m_mode;
