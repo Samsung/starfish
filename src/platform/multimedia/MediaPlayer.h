@@ -38,7 +38,9 @@ public:
         STATE_READY = 1 << 2,
         STATE_PLAYING = 1 << 3,
         STATE_PAUSED = 1 << 4,
-        STATE_UNKNOWN_ERROR = 1 << 5,
+        STATE_WAITING_FOR_MEDIASOURCE_READY = 1 << 5,
+        STATE_MEDIASOURCE_READY = 1 << 6,
+        STATE_UNKNOWN_ERROR = 1 << 7,
     };
 
     enum Error {
@@ -97,6 +99,7 @@ public:
 
     int width();
     int height();
+    URL* currentURL() { return m_currentUrl; }
 
     void prepareCBShouldBeExecutedInMainThread();
     void playFinishedCBShouldBeExecutedInMainThread();
@@ -105,6 +108,7 @@ public:
     void destroyCPlayer();
 
     void setVideoStreamInfo(String* type, int width, int height, int den, int num);
+    void notifyInitialPacketReady();
     void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts);
     void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts);
 
@@ -115,6 +119,7 @@ public:
 #endif
 private:
     void prepareCPlayer();
+    void startLoadingCPlayer();
     void unprepareCPlayer();
     void playCPlayer();
     void pauseCPlayer();
@@ -171,6 +176,7 @@ protected:
 
     bool m_isElementPointerLocked;
     bool m_hasPendingUrl;
+    bool m_initialPacketReady;
 #endif
 };
 

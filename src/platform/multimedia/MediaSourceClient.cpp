@@ -69,6 +69,7 @@ int AVIOContextWrapper::read(void *opaque, unsigned char *buf, int buf_size)
 MediaSourceClient::MediaSourceClient()
     : m_isWebm(false)
 {
+    m_formatContext = nullptr;
     av_register_all();
     avcodec_register_all();
     avformat_network_init();
@@ -112,17 +113,28 @@ void MediaSourceClient::appendBuffer(MediaRawBuffer buffer)
     if ((ret = avformat_find_stream_info(m_formatContext, NULL)) < 0) {
         STARFISH_LOG_ERROR("avformat_find_stream_info: Error(%u)\n", ret);
     }
+    // FIXME
+    m_player->notifyInitialPacketReady();
 }
 
 void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
 {
     // NOTE : This function running on non-main thread. Use Mutex to protect variables.
+    STARFISH_LOG_ERROR("onBufferNeedVideoData()\n");
     int video_stream_idx = 0;
     int ret;
     AVPacket avpacket;
     avpacket.size = 0;
     avpacket.data = NULL;
     av_init_packet(&avpacket);
+    if (!ms->mseClient()) {
+        STARFISH_LOG_ERROR("onBufferNeedVideoData() : MSEClient not ready\n");
+        return;
+    }
+    if (!ms->mseClient()->formatContext()) {
+        STARFISH_LOG_ERROR("onBufferNeedVideoData() : MSEClient's formatContext not ready\n");
+        return;
+    }
     while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == video_stream_idx) {
             pushVideoPacket(avpacket.data, avpacket.size, avpacket.pts);
@@ -132,17 +144,27 @@ void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
             avpacket.data = NULL;
         }
     }
+    STARFISH_LOG_ERROR("onBufferNeedVideoData()-end\n");
 }
 
 void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
 {
     // NOTE : This function running on non-main thread. Use Mutex to protect variables.
+    STARFISH_LOG_ERROR("onBufferNeedAudioData()\n");
     int audio_stream_idx = 1;
     int ret;
     AVPacket avpacket;
     avpacket.size = 0;
     avpacket.data = NULL;
     av_init_packet(&avpacket);
+    if (!ms->mseClient()) {
+        STARFISH_LOG_ERROR("onBufferNeedVideoData() : MSEClient not ready\n");
+        return;
+    }
+    if (!ms->mseClient()->formatContext()) {
+        STARFISH_LOG_ERROR("onBufferNeedAudioData() : MSEClient's formatContext not ready\n");
+        return;
+    }
     while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == audio_stream_idx) {
             pushAudioPacket(avpacket.data, avpacket.size, avpacket.pts);
@@ -152,6 +174,7 @@ void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
             avpacket.data = NULL;
         }
     }
+    STARFISH_LOG_ERROR("onBufferNeedAudioData()-end\n");
 }
 
 }
