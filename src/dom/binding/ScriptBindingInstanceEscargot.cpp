@@ -1810,7 +1810,7 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
 
     MediaSourceFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
     MediaSourceFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
-    MediaSourceFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget);
+    MediaSourceFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget->protoType());
     MediaSourceFunction->set__proto__(fetchData(scriptBindingInstance)->m_eventTarget);
 
     MediaSourceFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addSourceBuffer"), true, true, true,
