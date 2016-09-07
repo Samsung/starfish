@@ -21,12 +21,14 @@
 #include "dom/Event.h"
 #include "dom/DOMException.h"
 #include "platform/multimedia/MediaSourceClient.h"
+#include "platform/message_loop/MessageLoop.h"
 #include "MediaSource.h"
 
 namespace StarFish {
 
 SourceBuffer::SourceBuffer(String* type, MediaSource* parent, MediaSourceClient* client)
     : EventTarget()
+    , m_updating(false)
     , m_type(type)
     , m_parentMediaSource(parent)
     , m_mseClient(client)
@@ -37,9 +39,11 @@ SourceBuffer::SourceBuffer(String* type, MediaSource* parent, MediaSourceClient*
 void SourceBuffer::runBufferAppend()
 {
     m_mseClient->appendBuffer(m_inputBuffer);
-    setUpdating(false);
-    dispatchEvent(new Event(String::fromUTF8("update")));
-    dispatchEvent(new Event(String::fromUTF8("updateend")));
+    // FIXME: should change to run other thread, then don't use addIdler
+    m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
+        SourceBuffer* sourceBuffer = (SourceBuffer*)data;
+        sourceBuffer->setUpdating(false, SourceBuffer::Success);
+    }, this);
 }
 
 void SourceBuffer::prepareAppend(const void* data, unsigned long length)
@@ -49,8 +53,43 @@ void SourceBuffer::prepareAppend(const void* data, unsigned long length)
         m_inputBuffer.size = length;
     }
     if (m_parentMediaSource->readyState() == MediaSource::Ended) {
-        m_parentMediaSource->setReadyState(MediaSource::Open);
-        m_parentMediaSource->dispatchEvent(new Event(String::fromUTF8("sourceopen")));
+        m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
+            MediaSource* mediaSource = (MediaSource*)data;
+            mediaSource->setReadyState(MediaSource::Open);
+        }, m_parentMediaSource);
+    }
+}
+
+void SourceBuffer::dispatchUpdateEvent(UpdateState state)
+{
+    String* eventName = String::emptyString;
+    if (m_updating && state == SourceBuffer::Success)
+        eventName = m_parentMediaSource->starFish()->staticStrings()->m_updatestart.localName();
+    else if (!m_updating) {
+        if (state == SourceBuffer::Success)
+            eventName = m_parentMediaSource->starFish()->staticStrings()->m_update.localName();
+        else if (state == SourceBuffer::Error)
+            eventName = m_parentMediaSource->starFish()->staticStrings()->m_error.localName();
+        else if (state == SourceBuffer::Abort)
+            eventName = m_parentMediaSource->starFish()->staticStrings()->m_abort.localName();
+        else
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+
+    dispatchEvent(this, new Event(eventName));
+
+    if (!m_updating) {
+        eventName = m_parentMediaSource->starFish()->staticStrings()->m_updateend.localName();
+        dispatchEvent(this, new Event(eventName));
+    }
+}
+
+void SourceBuffer::setUpdating(bool flag, UpdateState state)
+{
+    if (m_updating != flag) {
+        m_updating = flag;
+        dispatchUpdateEvent(state);
     }
 }
 
@@ -59,8 +98,10 @@ void SourceBuffer::appendBuffer(const void* data, unsigned long length)
     printf("SourceBuffer::appendBuffer %ld\n", length);
     prepareAppend(data, length);
 
-    setUpdating(true);
-    dispatchEvent(new Event(String::fromUTF8("updatestart")));
+    m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
+        SourceBuffer* sourceBuffer = (SourceBuffer*)data;
+        sourceBuffer->setUpdating(true, SourceBuffer::Success);
+    }, this);
 
     // TODO: should run asynchrously
     runBufferAppend();

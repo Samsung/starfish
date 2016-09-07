@@ -642,6 +642,12 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_exit = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "exit"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "cuechange"));
+    m_sourceopen = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "sourceopen"));
+    m_sourceended = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "sourceended"));
+    m_sourceclose = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "sourceclose"));
+    m_updatestart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "updatestart"));
+    m_update = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "update"));
+    m_updateend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "updateend"));
 #endif
 }
 

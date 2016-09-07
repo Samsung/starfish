@@ -233,6 +233,12 @@ public:
     QualifiedName m_exit;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
+    QualifiedName m_sourceopen;
+    QualifiedName m_sourceended;
+    QualifiedName m_sourceclose;
+    QualifiedName m_updatestart;
+    QualifiedName m_update;
+    QualifiedName m_updateend;
 #endif
 protected:
 };
