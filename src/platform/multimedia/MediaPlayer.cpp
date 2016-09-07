@@ -248,11 +248,13 @@ void VideoPlayer::prepareCBShouldBeExecutedInMainThread()
     unlockElementPointer();
     // If public state changed during PREPARING, exit.
     if (!isPublicState(MediaPlayer::STATE_PREPARING) || !m_cplayer) {
+        PLAYER_LOGI("prepareCBShouldBeExecutedInMainThread() - public state changed during PREPARING, exit.\n");
         return;
     }
     // If cplayer's state is not ready -> load fail
     player_state_e state;
     if (player_get_state(m_cplayer, &state) != PLAYER_ERROR_NONE || state != PLAYER_STATE_READY) {
+        PLAYER_LOGI("prepareCBShouldBeExecutedInMainThread() - unknown error exit.\n");
         setPublicState(MediaPlayer::STATE_UNKNOWN_ERROR);
         onPrepared(nullptr);
         return;
@@ -262,6 +264,8 @@ void VideoPlayer::prepareCBShouldBeExecutedInMainThread()
     // If there was another prepare() request during PREPARING,
     // forget current request and start to load new request.
     if (hasPendingUrl()) {
+        PLAYER_LOGI("-- Player has pending request for loading another URL.\n");
+        PLAYER_LOGI("-- Unprepare current and then start to prepare new one.\n");
         unprepareCPlayer();
         popPendingUrl();
         prepareCPlayer();
@@ -271,6 +275,7 @@ void VideoPlayer::prepareCBShouldBeExecutedInMainThread()
 
     // If there was a play() request during PREPARING, start playing
     if (lastRequestIs(VideoPlayer::REQUEST_PLAY)) {
+        PLAYER_LOGI("prepareCBShouldBeExecutedInMainThread() - player has been accepted playing request. start to play!\n");
         playCPlayer();
     }
 
@@ -317,6 +322,7 @@ void VideoPlayer::destroyCPlayer()
     player_destroy(m_cplayer);
     m_currentUrl = nullptr;
     m_cplayer = NULL;
+    clearVideoStreamInfo();
 
     // Set public state
     setPublicState(MediaPlayer::STATE_NONE);
@@ -370,6 +376,8 @@ void VideoPlayer::prepareCPlayer()
         if (m_currentUrl->isNetworkURL())
             player_set_streaming_type(m_cplayer, const_cast<char*>("FFMPEG_HTTP"));
 #endif
+        startLoadingCPlayer();
+
     } else if (m_currentUrl->isBlobURL()) {
         STARFISH_ASSERT(isPublicState(MediaPlayer::STATE_NONE));
         STARFISH_ASSERT(m_videoElement);
@@ -384,11 +392,14 @@ void VideoPlayer::prepareCPlayer()
             MediaSource* mediaSource = (MediaSource*)store.m_blob;
             m_currentMediaSource = mediaSource;
             mediaSource->registerMediaPlayer(this);
+            // TODO : mediaSource->setState(OPEN)
             player_set_uri(m_cplayer, "external_demuxer://aaaa");
             player_set_video_stream_info(m_cplayer, &m_videoInfo);
             player_set_buffer_need_video_data_cb(m_cplayer, __videoPlayerBufferNeedVideoDataCB, (void*)this);
             player_set_buffer_need_audio_data_cb(m_cplayer, __videoPlayerBufferNeedAudioDataCB, (void*)this);
             player_set_buffer_enough_video_data_cb(m_cplayer, __videoPlayerBufferEnoughDataCB, (void*)this);
+            setPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY);
+            PLAYER_LOGI("prepare() is waiting ready signal from MediaSource\n");
         } else if (m_videoElement->document()->window()->starFish()->isValidBlobURL(store)) {
             PLAYER_LOGI("prepare() FAIL - blob type of non-MediaSource NOT SUPPORTED yet\n");
             return;
@@ -398,7 +409,12 @@ void VideoPlayer::prepareCPlayer()
         return;
     }
 
-    // prepare
+
+}
+
+void VideoPlayer::startLoadingCPlayer()
+{
+    PLAYER_LOGI("prepare() - startLoadingCPlayer()\n");
     setPublicState(MediaPlayer::STATE_PREPARING);
     lockElementPointer();
     int errorCode = player_prepare_async(m_cplayer, __videoPlayerPrepareCB, (void*)this);
@@ -439,6 +455,7 @@ void VideoPlayer::playCPlayer()
     }
     PLAYER_LOGI("playCPlayer()\n");
 #ifdef STARFISH_TIZEN_TV
+    // DEBUG
     player_set_x11_display_dst_roi(m_cplayer, m_displayArea.x(), m_displayArea.y(), m_displayArea.width(), m_displayArea.height());
     PLAYER_LOGI("video display area : %f %f %f %f\n", m_displayArea.x(), m_displayArea.y(), m_displayArea.width(), m_displayArea.height());
 #endif
@@ -557,6 +574,7 @@ void VideoPlayer::pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts)
         PLAYER_LOGI("pushVideoPacket() FAIL : unknown error\n");
         return;
     }
+    PLAYER_LOGI("pushVideoPacket() len(%u) pts(%llu)\n", len, pts);
 }
 
 void VideoPlayer::pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts)
@@ -571,6 +589,7 @@ void VideoPlayer::pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts)
         PLAYER_LOGI("pushAudioPacket() FAIL : unknown error\n");
         return;
     }
+    PLAYER_LOGI("pushAudioPacket() len(%u) pts(%llu)\n", len, pts);
 }
 
 
@@ -588,6 +607,23 @@ void VideoPlayer::setDisplayArea(CanvasSurface* surface)
     m_surface = surface;
 }
 #endif
+
+void VideoPlayer::notifyInitialPacketReady()
+{
+    PLAYER_LOGI("notifyInitialPacketReady()\n");
+    // TODO : rooting element
+    videoElement()->document()->window()->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+        PLAYER_LOGI("notifyInitialPacketReady() - in main thread\n");
+        VideoPlayer* player = ((VideoPlayer*)data);
+        if (!(player->currentURL() && player->currentURL()->isBlobURL()))
+            return;
+        if (!player->isPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY))
+            return;
+        player->setPublicState(MediaPlayer::STATE_MEDIASOURCE_READY);
+        PLAYER_LOGI("notifyInitialPacketReady() - player state has been changed to STATE_MEDIASOURCE_READY, now start to prepare\n");
+        player->startLoadingCPlayer();
+    }, this);
+}
 
 void VideoPlayer::play()
 {
@@ -612,6 +648,10 @@ void VideoPlayer::play()
         } else {
             PLAYER_LOGI("play() FAIL : setURL() first\n");
         }
+        return;
+    }
+    if (isPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY)) {
+        PLAYER_LOGI("play() WAIT : current processing url is Blob, and player is waiting initialPacket be ready\n");
         return;
     }
     playCPlayer();
@@ -681,10 +721,14 @@ int VideoPlayer::width()
         return 0;
 
 #ifdef STARFISH_TIZEN_TV
+    if (m_currentUrl && m_currentUrl->isBlobURL()) {
+        return m_videoInfo.width;
+    }
     player_video_track_info info;
     int errorCode = player_get_video_info(m_cplayer, &info);
     if (errorCode != PLAYER_ERROR_NONE) {
-        PLAYER_LOGI("player_get_video_info() is failed(%d)\n", errorCode);
+        PLAYER_LOGI("player_get_video_info() is failed(%u)\n", errorCode);
+        return 0;
     }
     return info.width;
 #else
@@ -698,10 +742,14 @@ int VideoPlayer::height()
     if (!m_cplayer)
         return 0;
 #ifdef STARFISH_TIZEN_TV
+    if (m_currentUrl && m_currentUrl->isBlobURL()) {
+        return m_videoInfo.height;
+    }
     player_video_track_info info;
     int errorCode = player_get_video_info(m_cplayer, &info);
     if (errorCode != PLAYER_ERROR_NONE) {
-        PLAYER_LOGI("player_get_video_info() is failed(%d)\n", errorCode);
+        PLAYER_LOGI("player_get_video_info() is failed(%u)\n", errorCode);
+        return 0;
     }
     return info.height;
 #else
