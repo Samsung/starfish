@@ -40,7 +40,7 @@ void Console::error(String* m)
     if (m_starFish->inspector()) {
         m_starFish->inspector()->sendErrorMessage(m);
     }
-    STARFISH_LOG_INFO("console.error: %s\n", m->utf8Data());
+    STARFISH_LOG_ERROR("console.error: %s\n", m->utf8Data());
 }
 
 }
