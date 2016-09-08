@@ -26,6 +26,8 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+#define PUSH_DURATION_PER_CB 2 // second
+
 namespace StarFish {
 
 AVIOContextWrapper::AVIOContextWrapper(MediaRawData data)
@@ -119,7 +121,7 @@ void MediaSourceClient::setFormat(String* type)
     if (m_isWebm)
         typestr = String::fromUTF8("video/x-vp9");
     if (m_player)
-        m_player->setVideoStreamInfo(typestr, 512, 288, 1, 1000);
+        m_player->setVideoStreamInfo(typestr, 512, 288, 100, 2997);
 #endif
 }
 
@@ -181,18 +183,27 @@ void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
         STARFISH_LOG_ERROR("onBufferNeedVideoData() : MSEClient's formatContext not ready\n");
         return;
     }
-    // TODO : push packets for 2 sec
     int video_stream_idx = ms->mseClient()->videoStreamIdx();
     STARFISH_LOG_ERROR("onBufferNeedVideoData(%d)\n", video_stream_idx);
-    if ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
+    // FIXME : stream's time_base returns wrong value (2016.09.08),
+    // AVRational timeBase = ms->mseClient()->formatContext()->streams[video_stream_idx]->time_base;
+    AVRational timeBase = { 1, 30 };
+    int64_t threshold = timeBase.den * PUSH_DURATION_PER_CB;
+    int64_t initialPts = AV_NOPTS_VALUE;
+    while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == video_stream_idx) {
             pushVideoPacket(avpacket.data, avpacket.size, avpacket.pts);
+            if (initialPts == (int64_t)AV_NOPTS_VALUE)
+                initialPts = avpacket.pts;
+            if ((avpacket.pts - initialPts) * timeBase.num >= threshold) {
+                break;
+            }
             avpacket.size = 0;
             avpacket.data = NULL;
         }
     }
     av_free_packet(&avpacket);
-    STARFISH_LOG_ERROR("onBufferNeedVideoData()-end\n");
+    // STARFISH_LOG_ERROR("onBufferNeedVideoData()-end\n");
 }
 
 void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
@@ -214,15 +225,25 @@ void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
     }
     // TODO : push packets for 2 sec
     int audio_stream_idx = ms->mseClient()->audioStreamIdx();
-    if ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
+    // FIXME : stream's time_base returns wrong value (2016.09.08),
+    // AVRational timeBase = ms->mseClient()->formatContext()->streams[audio_stream_idx]->time_base;
+    AVRational timeBase = { 1, 30 };
+    int64_t threshold = timeBase.den * PUSH_DURATION_PER_CB;
+    int64_t initialPts = AV_NOPTS_VALUE;
+    while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == audio_stream_idx) {
             pushAudioPacket(avpacket.data, avpacket.size, avpacket.pts);
+            if (initialPts == (int64_t)AV_NOPTS_VALUE)
+                initialPts = avpacket.pts;
+            if ((avpacket.pts - initialPts) * timeBase.num >= threshold) {
+                break;
+            }
             avpacket.size = 0;
             avpacket.data = NULL;
         }
     }
     av_free_packet(&avpacket);
-    STARFISH_LOG_ERROR("onBufferNeedAudioData()-end\n");
+    // STARFISH_LOG_ERROR("onBufferNeedAudioData()-end\n");
 }
 
 }
