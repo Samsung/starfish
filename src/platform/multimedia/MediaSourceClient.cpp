@@ -34,7 +34,10 @@ AVIOContextWrapper::AVIOContextWrapper(MediaRawData data)
     // Output buffer
     m_bufferSize = 4096;
     m_buffer = static_cast<char*>(av_malloc(m_bufferSize));
-
+    if (!m_buffer) {
+        STARFISH_LOG_ERROR("av_malloc is failed\n");
+        return;
+    }
 
     // Internal buffer
     m_pos = 0;
@@ -100,6 +103,11 @@ void MediaSourceClient::setFormat(String* type)
     if (!m_formatContext)
         m_formatContext = avformat_alloc_context();
 
+    if (!m_formatContext) {
+        STARFISH_LOG_ERROR("[MediaSourceClient::setFormat] avformat context is not found\n");
+        return;
+    }
+
     if (type->startsWith("video/webm")) {
         m_formatContext->iformat = av_find_input_format("webm");
         m_isWebm = true;
@@ -122,16 +130,27 @@ void MediaSourceClient::appendBuffer(MediaRawData buffer)
         return;
     }
 
+    if (!m_formatContext) {
+        STARFISH_LOG_ERROR("[appendBuffer] avformat context is not found\n");
+        return;
+    }
+
     m_ioContext = new AVIOContextWrapper(buffer);
+    if (!m_ioContext || !m_ioContext->get_avio()) {
+        STARFISH_LOG_ERROR("[appendBuffer] AVIOContextWrapper is not found\n");
+        return;
+    }
     m_formatContext->pb = m_ioContext->get_avio();
 
     int ret;
     if ((ret = avformat_open_input(&m_formatContext, "", NULL, NULL)) < 0) {
-        STARFISH_LOG_ERROR("avformat_open_input: Error(%u)\n", ret);
+        STARFISH_LOG_ERROR("[appendBuffer] avformat_open_input: Error(%u)\n", ret);
+        return;
     }
 
     if ((ret = avformat_find_stream_info(m_formatContext, NULL)) < 0) {
-        STARFISH_LOG_ERROR("avformat_find_stream_info: Error(%u)\n", ret);
+        STARFISH_LOG_ERROR("[appendBuffer] avformat_find_stream_info: Error(%u)\n", ret);
+        return;
     }
 
     for (int i = 0; i < (int)m_formatContext->nb_streams; i++) {
