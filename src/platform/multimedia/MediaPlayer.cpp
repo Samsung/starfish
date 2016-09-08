@@ -392,7 +392,6 @@ void VideoPlayer::prepareCPlayer()
             MediaSource* mediaSource = (MediaSource*)store.m_blob;
             m_currentMediaSource = mediaSource;
             mediaSource->registerMediaPlayer(this);
-            // TODO : mediaSource->setState(OPEN)
             player_set_uri(m_cplayer, "external_demuxer://aaaa");
             player_set_video_stream_info(m_cplayer, &m_videoInfo);
             player_set_buffer_need_video_data_cb(m_cplayer, __videoPlayerBufferNeedVideoDataCB, (void*)this);
@@ -611,18 +610,13 @@ void VideoPlayer::setDisplayArea(CanvasSurface* surface)
 void VideoPlayer::notifyInitialPacketReady()
 {
     PLAYER_LOGI("notifyInitialPacketReady()\n");
-    // TODO : rooting element
-    videoElement()->document()->window()->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        PLAYER_LOGI("notifyInitialPacketReady() - in main thread\n");
-        VideoPlayer* player = ((VideoPlayer*)data);
-        if (!(player->currentURL() && player->currentURL()->isBlobURL()))
-            return;
-        if (!player->isPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY))
-            return;
-        player->setPublicState(MediaPlayer::STATE_MEDIASOURCE_READY);
-        PLAYER_LOGI("notifyInitialPacketReady() - player state has been changed to STATE_MEDIASOURCE_READY, now start to prepare\n");
-        player->startLoadingCPlayer();
-    }, this);
+    if (!(currentURL() && currentURL()->isBlobURL()))
+        return;
+    if (!isPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY))
+        return;
+    setPublicState(MediaPlayer::STATE_MEDIASOURCE_READY);
+    PLAYER_LOGI("notifyInitialPacketReady() - player state has been changed to STATE_MEDIASOURCE_READY, now start to prepare\n");
+    startLoadingCPlayer();
 }
 
 void VideoPlayer::play()
