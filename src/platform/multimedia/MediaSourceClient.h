@@ -21,10 +21,18 @@ class AVFormatContext;
 class AVIOContext;
 namespace StarFish {
 
+struct MediaRawData {
+    char* memory;
+    size_t size;
+};
+
 class AVIOContextWrapper : public gc {
 public:
     AVIOContextWrapper(char* videoData, const int videoLen);
+    AVIOContextWrapper(MediaRawData data);
     ~AVIOContextWrapper();
+
+    void pushMediaData(MediaRawData data);
 
     static int read(void *opaque, unsigned char *buf, int buf_size);
 
@@ -50,19 +58,48 @@ public:
         return m_pos;
     }
 
+    void clearPosition()
+    {
+        m_pos = 0;
+    }
+
     void increasePosition(int size)
     {
         m_pos += size;
     }
 
+    int dataListSize()
+    {
+        return m_rawDataList.size();
+    }
+
+    bool hasNextDataIdx()
+    {
+        return (m_curListIdx + 1 < dataListSize());
+    }
+
+    bool moveToNextDataIfPossible()
+    {
+        if (!hasNextDataIdx())
+            return false;
+        m_curListIdx++;
+        clearPosition();
+        return true;
+    }
+
+    int curDataListIdx()
+    {
+        return m_curListIdx;
+    }
+
     int dataSize()
     {
-        return m_dataSize;
+        return m_rawDataList[m_curListIdx].size;
     }
 
     char* rawData()
     {
-        return m_rawData;
+        return m_rawDataList[m_curListIdx].memory;
     }
 
 private:
@@ -74,18 +111,17 @@ private:
     int m_pos;
     char* m_rawData;
     int m_dataSize;
+    std::vector<MediaRawData> m_rawDataList;
+    int m_curListIdx;
     AVIOContext* m_avioctx;
 };
 
 
 class VideoPlayer;
+class Mutex;
 
 class MediaSourceClient : public gc {
 public:
-    struct MediaRawBuffer {
-        char* memory;
-        size_t size;
-    };
     struct MediaPacket {
         uint8_t* data;
         int size;
@@ -94,16 +130,31 @@ public:
     MediaSourceClient();
     void registerMediaPlayer(VideoPlayer* player);
     void setFormat(String* type);
-    void appendBuffer(MediaRawBuffer buffer);
+    void appendBuffer(MediaRawData buffer);
     AVFormatContext* formatContext()
     {
         return m_formatContext;
     }
 
+    int videoStreamIdx()
+    {
+        return m_videoStreamIdx;
+    }
+
+    int audioStreamIdx()
+    {
+        return m_audioStreamIdx;
+    }
+
 protected:
     VideoPlayer* m_player;
     AVFormatContext* m_formatContext;
+    AVIOContextWrapper* m_ioContext;
+    int m_videoStreamIdx;
+    int m_audioStreamIdx;
+    int m_subtitleStreamIdx;
     bool m_isWebm;
+    Mutex* m_mutex;
 };
 
 }

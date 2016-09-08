@@ -76,7 +76,7 @@ protected:
 
     MediaSource* m_parentMediaSource;
     MediaSourceClient* m_mseClient;
-    MediaSourceClient::MediaRawBuffer m_inputBuffer;
+    MediaRawData m_inputBuffer;
 };
 
 class SourceBufferList : public EventTarget {
