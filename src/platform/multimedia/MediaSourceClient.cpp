@@ -28,17 +28,19 @@ extern "C" {
 
 namespace StarFish {
 
-AVIOContextWrapper::AVIOContextWrapper(char* videoData, const int videoLen)
+AVIOContextWrapper::AVIOContextWrapper(MediaRawData data)
 {
-    printf("construct AVIOMemContext %d\n", videoLen);
+    STARFISH_LOG_ERROR("construct AVIOMemContext %d\n", (int)data.size);
     // Output buffer
     m_bufferSize = 4096;
     m_buffer = static_cast<char*>(av_malloc(m_bufferSize));
 
+
     // Internal buffer
     m_pos = 0;
-    this->m_rawData = videoData;
-    this->m_dataSize = videoLen;
+    m_rawDataList.clear();
+    m_rawDataList.push_back(data);
+    m_curListIdx = 0;
 
     m_avioctx = avio_alloc_context((unsigned char*) m_buffer, m_bufferSize, 0, this, &AVIOContextWrapper::read, &AVIOContextWrapper::write, &AVIOContextWrapper::seek);
 }
@@ -48,15 +50,24 @@ AVIOContextWrapper::~AVIOContextWrapper()
     av_free(m_buffer);
 }
 
+void AVIOContextWrapper::pushMediaData(MediaRawData data)
+{
+    m_rawDataList.push_back(data);
+}
+
 int AVIOContextWrapper::read(void *opaque, unsigned char *buf, int buf_size)
 {
-    printf("avio read %p %p %d\n", opaque, buf, buf_size);
     AVIOContextWrapper* ctx = static_cast<AVIOContextWrapper*>(opaque);
+    printf("[AVIOContextWrapper::read] buf %d pos %d\n", buf_size, ctx->pos());
     // Read from pos to pos + buf_size
     if (ctx->pos() + buf_size > ctx->dataSize()) {
         int len = ctx->dataSize() - ctx->pos();
         memcpy(buf, ctx->rawData() + ctx->pos(), len);
         ctx->increasePosition(len);
+        if (ctx->moveToNextDataIfPossible()) {
+            printf("----[AVIOContextWrapper::read] move next buffer\n");
+            return len + AVIOContextWrapper::read(ctx, buf + len, buf_size - len);
+        }
         return len;
     } else {
         memcpy(buf, ctx->rawData() + ctx->pos(), buf_size);
@@ -67,9 +78,13 @@ int AVIOContextWrapper::read(void *opaque, unsigned char *buf, int buf_size)
 }
 
 MediaSourceClient::MediaSourceClient()
-    : m_isWebm(false)
+    : m_formatContext(nullptr)
+    , m_ioContext(nullptr)
+    , m_videoStreamIdx(0)
+    , m_audioStreamIdx(1)
+    , m_subtitleStreamIdx(0)
+    , m_isWebm(false)
 {
-    m_formatContext = nullptr;
     av_register_all();
     avcodec_register_all();
     avformat_network_init();
@@ -100,10 +115,15 @@ void MediaSourceClient::setFormat(String* type)
 #endif
 }
 
-void MediaSourceClient::appendBuffer(MediaRawBuffer buffer)
+void MediaSourceClient::appendBuffer(MediaRawData buffer)
 {
-    AVIOContextWrapper mem_ctx = AVIOContextWrapper(buffer.memory, buffer.size);
-    m_formatContext->pb = mem_ctx.get_avio();
+    if (m_ioContext) {
+        m_ioContext->pushMediaData(buffer);
+        return;
+    }
+
+    m_ioContext = new AVIOContextWrapper(buffer);
+    m_formatContext->pb = m_ioContext->get_avio();
 
     int ret;
     if ((ret = avformat_open_input(&m_formatContext, "", NULL, NULL)) < 0) {
@@ -113,6 +133,17 @@ void MediaSourceClient::appendBuffer(MediaRawBuffer buffer)
     if ((ret = avformat_find_stream_info(m_formatContext, NULL)) < 0) {
         STARFISH_LOG_ERROR("avformat_find_stream_info: Error(%u)\n", ret);
     }
+
+    for (int i = 0; i < (int)m_formatContext->nb_streams; i++) {
+        if (m_formatContext->streams[i]->codec->coder_type == AVMEDIA_TYPE_VIDEO) {
+            m_videoStreamIdx = i;
+        } else if (m_formatContext->streams[i]->codec->coder_type == AVMEDIA_TYPE_AUDIO) {
+            m_audioStreamIdx = i;
+        } else if (m_formatContext->streams[i]->codec->coder_type == AVMEDIA_TYPE_SUBTITLE) {
+            m_subtitleStreamIdx = i;
+        }
+    }
+
     // FIXME x64 build crash
     // m_player->notifyInitialPacketReady();
 }
@@ -121,7 +152,6 @@ void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
 {
     // NOTE : This function running on non-main thread. Use Mutex to protect variables.
     STARFISH_LOG_ERROR("onBufferNeedVideoData()\n");
-    int video_stream_idx = 0;
     int ret;
     AVPacket avpacket;
     avpacket.size = 0;
@@ -135,15 +165,16 @@ void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
         STARFISH_LOG_ERROR("onBufferNeedVideoData() : MSEClient's formatContext not ready\n");
         return;
     }
+    int video_stream_idx = ms->mseClient()->videoStreamIdx();
+    STARFISH_LOG_ERROR("onBufferNeedVideoData(%d)\n", video_stream_idx);
     while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == video_stream_idx) {
             pushVideoPacket(avpacket.data, avpacket.size, avpacket.pts);
-            av_free_packet(&avpacket);
-            av_init_packet(&avpacket);
             avpacket.size = 0;
             avpacket.data = NULL;
         }
     }
+    av_free_packet(&avpacket);
     STARFISH_LOG_ERROR("onBufferNeedVideoData()-end\n");
 }
 
@@ -151,7 +182,6 @@ void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
 {
     // NOTE : This function running on non-main thread. Use Mutex to protect variables.
     STARFISH_LOG_ERROR("onBufferNeedAudioData()\n");
-    int audio_stream_idx = 1;
     int ret;
     AVPacket avpacket;
     avpacket.size = 0;
@@ -165,15 +195,15 @@ void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
         STARFISH_LOG_ERROR("onBufferNeedAudioData() : MSEClient's formatContext not ready\n");
         return;
     }
+    int audio_stream_idx = ms->mseClient()->audioStreamIdx();
     while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == audio_stream_idx) {
             pushAudioPacket(avpacket.data, avpacket.size, avpacket.pts);
-            av_free_packet(&avpacket);
-            av_init_packet(&avpacket);
             avpacket.size = 0;
             avpacket.data = NULL;
         }
     }
+    av_free_packet(&avpacket);
     STARFISH_LOG_ERROR("onBufferNeedAudioData()-end\n");
 }
 
