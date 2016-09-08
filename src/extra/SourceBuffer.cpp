@@ -50,10 +50,9 @@ void SourceBuffer::runBufferAppend()
 
 void SourceBuffer::prepareAppend(const void* data, unsigned long length)
 {
-    if (m_inputBuffer.size == 0) {
-        m_inputBuffer.memory = (char*) data;
-        m_inputBuffer.size = length;
-    }
+    // FIXME: temp. inputBuffer policy should be set.
+    m_inputBuffer.memory = (char*) data;
+    m_inputBuffer.size = length;
     if (m_parentMediaSource->readyState() == MediaSource::Ended) {
         m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
             MediaSource* mediaSource = (MediaSource*)data;
@@ -97,7 +96,7 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
 
 void SourceBuffer::appendBuffer(const void* data, unsigned long length)
 {
-    printf("SourceBuffer::appendBuffer %ld\n", length);
+    printf("SourceBuffer::appendBuffer %ld %p\n", length, data);
     prepareAppend(data, length);
 
     m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {

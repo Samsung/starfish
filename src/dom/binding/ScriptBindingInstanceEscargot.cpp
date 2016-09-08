@@ -4438,7 +4438,7 @@ escargot::ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInst
             // ESArrayBufferObject
             if (element.isESPointer() && element.asESPointer()->isESArrayBufferObject()) {
                 escargot::ESArrayBufferObject* v = element.asESPointer()->asESArrayBufferObject();
-                bufferInfo.push_back(std::make_pair(v->data(), v->bytelength()));
+                bufferInfo.push_back(std::make_pair((void*)v->data(), v->bytelength()));
                 totalByteLength += v->bytelength();
             }
 #endif
