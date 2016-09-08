@@ -4316,6 +4316,24 @@ escargot::ESFunctionObject* bindingXMLHttpRequest(ScriptBindingInstance* scriptB
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("LOADING"), false, true, false, escargot::ESValue(3));
     xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DONE"), false, true, false, escargot::ESValue(4));
 
+    escargot::ESFunctionObject* xhrSetRequestHeaderFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
+        if (instance->currentExecutionContext()->argumentCount() < 2) {
+            auto msg = escargot::ESString::create("Failed to execute 'setRequestHeader' on 'XMLHttpRequest': setRequestHeader needs 2 parameter.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+        }
+        try {
+            String* s1 = toBrowserString(instance->currentExecutionContext()->readArgument(0))->trim();
+            String* s2 = toBrowserString(instance->currentExecutionContext()->readArgument(1))->trim();
+            originalObj->setRequestHeader(s1, s2);
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("setRequestHeader"), 2, false);
+    xhrElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setRequestHeader"), false, false, false, xhrSetRequestHeaderFunction);
+
     escargot::ESFunctionObject* xhrOpenFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::XMLHttpRequestObject, XMLHttpRequest);
         try {

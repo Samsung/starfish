@@ -127,6 +127,16 @@ void XMLHttpRequest::setTimeout(uint32_t timeout)
     m_networkRequest->setTimeout(timeout);
 }
 
+void XMLHttpRequest::setRequestHeader(String* h, String* c)
+{
+    if (m_networkRequest->readyState() != NetworkRequest::OPENED) {
+        throw new DOMException(m_networkRequest->starFish()->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "InvalidStateError");
+    }
+    if (h->length() == 0)
+        throw new DOMException(m_networkRequest->starFish()->window()->scriptBindingInstance(), DOMException::SYNTAX_ERR, "InvalidStateError");
+    m_networkRequest->setRequestHeader(h, c);
+}
+
 void XMLHttpRequest::onProgressEvent(NetworkRequest* request, bool isExplicitAction)
 {
     String* eventName = String::emptyString;

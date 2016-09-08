@@ -544,9 +544,16 @@ void NetworkRequest::send(String* body)
                 list = curl_slist_append(list, headerText.data());
             }
 
+            for (size_t i = 0; i < m_requestHeaders.size(); i++) {
+                headerText = std::string(m_requestHeaders[i].first->utf8Data()) + ":";
+                headerText += m_requestHeaders[i].second->utf8Data();
+                list = curl_slist_append(list, headerText.data());
+            }
+
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
             data->headerList = list;
 
+            curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
             curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
             // TODO
             // we should prevent infinite redirect
@@ -715,6 +722,11 @@ void NetworkRequest::blobURLWorker(NetworkRequest* res, String* url)
     res->m_response.assign(buf, &buf[((Blob*)store.m_blob)->size()]);
 
     res->handleResponseEOF();
+}
+
+void NetworkRequest::setRequestHeader(String* h, String* c)
+{
+    m_requestHeaders.push_back(std::make_pair(h, c));
 }
 
 void* NetworkRequest::networkWorker(void* data)

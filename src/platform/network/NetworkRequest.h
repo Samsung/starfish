@@ -195,6 +195,8 @@ public:
     {
         return m_url;
     }
+
+    void setRequestHeader(String* h, String* c);
 protected:
     void pareseHeader(const char* header, size_t len);
     void initVariables();
@@ -232,6 +234,7 @@ protected:
     NetworkRequestResponse m_response;
     NetworkRequestResponseHeader m_responseHeaderData;
     std::vector<size_t, gc_allocator<size_t>> m_requstedIdlers;
+    std::vector<std::pair<String*, String*>, gc_allocator<std::pair<String*, String*>>> m_requestHeaders;
     void pushIdlerHandle(size_t handle)
     {
         m_requstedIdlers.push_back(handle);
