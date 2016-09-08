@@ -17,6 +17,7 @@
 #ifndef __StarFishWindow__
 #define __StarFishWindow__
 
+#include "util/URL.h"
 #include "style/Style.h"
 #include "dom/EventTarget.h"
 

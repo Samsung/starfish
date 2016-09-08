@@ -15,6 +15,10 @@
  */
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
+
+#include "StarFishConfig.h"
+#include "Inspector.h"
+
 #define RAPIDJSON_PARSE_DEFAULT_FLAGS kParseFullPrecisionFlag
 #define RAPIDJSON_ERROR_CHARTYPE char
 #define RAPIDJSON_NAMESPACE rapidjson_starfish
@@ -24,9 +28,6 @@
 #include "../../third_party/rapidjson/include/rapidjson/writer.h"
 #include "../../third_party/rapidjson/include/rapidjson/error/en.h"
 #undef RAPIDJSON_NAMESPACE
-
-#include "StarFishConfig.h"
-#include "Inspector.h"
 
 #include "platform/message_loop/MessageLoop.h"
 

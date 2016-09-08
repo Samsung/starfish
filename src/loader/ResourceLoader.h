@@ -66,8 +66,10 @@ public:
         m_imageResourceCache.clear();
         m_imageResourceCacheLRUList.clear();
     }
-private:
+
     void cachePruning();
+    void notifyImageResourceActiveState(ImageResource* res);
+private:
     void cancelAllOfPendingRequests();
     void cacheHit(Resource* org, Resource* now, Resource::ResourceRequestSyncLevel syncLevel);
     // return value means cache hit

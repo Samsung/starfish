@@ -17,6 +17,7 @@
 #ifndef __StarFishDocument__
 #define __StarFishDocument__
 
+#include "util/URL.h"
 #include "dom/Node.h"
 #include "platform/window/Window.h"
 #include "loader/ResourceLoader.h"

@@ -17,6 +17,7 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaPlayer__)
 #define __StarFishMediaPlayer__
 
+#include "util/URL.h"
 #include "platform/canvas/Canvas.h"
 
 #if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)

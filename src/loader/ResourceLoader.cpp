@@ -27,11 +27,11 @@ extern bool g_fireOnloadEvent;
 #endif
 
 #ifndef STARFISH_RESOURCE_CACHE_SIZE
-#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024
+#define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024 * 2
 #endif
 
 #ifndef STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL
-#define STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL 2
+#define STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL 3
 #endif
 
 namespace StarFish {
@@ -216,10 +216,11 @@ void ResourceLoader::cachePruning()
         // remove old resources
         if (m_resourceCacheSize > STARFISH_RESOURCE_CACHE_SIZE * 0.75) {
             auto iter = m_imageResourceCacheLRUList.begin();
-            while (m_imageResourceCacheLRUList.size() && removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.5) {
+            size_t currentTick = tickCount();
+            while (m_imageResourceCacheLRUList.size() && removedSize < STARFISH_RESOURCE_CACHE_SIZE * 0.25) {
                 Resource* res = (*iter);
                 auto iter2 = m_imageResourceCache.find(res->url()->urlString()->utf8Data());
-                if (m_imageResourceCache.end() != iter2 && res->state() == Resource::State::Finished) {
+                if (m_imageResourceCache.end() != iter2 && res->state() == Resource::State::Finished && ((currentTick - iter2->second.m_lastUsedTime) > (STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL * 1000))) {
                     size_t siz = res->contentSize();
                     m_resourceCacheSize -= siz;
                     removedSize += siz;
@@ -234,10 +235,16 @@ void ResourceLoader::cachePruning()
     }
 }
 
+void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
+{
+    auto iter = m_imageResourceCache.find(res->url()->urlString()->utf8Data());
+    if (iter != m_imageResourceCache.end()) {
+        iter->second.m_lastUsedTime = tickCount();
+    }
+}
+
 bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel)
 {
-    cachePruning();
-
     if (m_inDocumentOpenState && res->isThisResourceDoesAffectWindowOnLoad()) {
         m_pendingResourceCountWhileDocumentOpening++;
         res->addResourceClient(new DocumentOnLoadChecker(res));
@@ -272,6 +279,7 @@ bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::Resource
         res->addResourceClient(new ResourceSizeTracer(res));
     }
 
+    cachePruning();
     return false;
 }
 

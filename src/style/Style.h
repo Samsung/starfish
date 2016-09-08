@@ -18,6 +18,7 @@
 #define __StarFishStyle__
 
 #include "util/String.h"
+#include "util/URL.h"
 #include "style/Unit.h"
 #include "style/Length.h"
 #include "platform/canvas/font/Font.h"

@@ -214,7 +214,6 @@
 
 #include "util/String.h"
 #include "util/QualifiedName.h"
-#include "util/URL.h"
 #include "style/Unit.h"
 
 #endif
