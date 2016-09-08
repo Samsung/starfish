@@ -21,6 +21,7 @@
 #include "dom/Event.h"
 #include "dom/DOMException.h"
 #include "platform/multimedia/MediaSourceClient.h"
+#include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "MediaSource.h"
 
@@ -43,6 +44,7 @@ void SourceBuffer::runBufferAppend()
     m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         SourceBuffer* sourceBuffer = (SourceBuffer*)data;
         sourceBuffer->setUpdating(false, SourceBuffer::Success);
+        sourceBuffer->mseClient()->videoPlayer()->notifyInitialPacketReady(sourceBuffer->parentMediaSource());
     }, this);
 }
 

@@ -143,9 +143,6 @@ void MediaSourceClient::appendBuffer(MediaRawData buffer)
             m_subtitleStreamIdx = i;
         }
     }
-
-    // FIXME x64 build crash
-    // m_player->notifyInitialPacketReady();
 }
 
 void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
@@ -165,9 +162,10 @@ void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
         STARFISH_LOG_ERROR("onBufferNeedVideoData() : MSEClient's formatContext not ready\n");
         return;
     }
+    // TODO : push packets for 2 sec
     int video_stream_idx = ms->mseClient()->videoStreamIdx();
     STARFISH_LOG_ERROR("onBufferNeedVideoData(%d)\n", video_stream_idx);
-    while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
+    if ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == video_stream_idx) {
             pushVideoPacket(avpacket.data, avpacket.size, avpacket.pts);
             avpacket.size = 0;
@@ -195,8 +193,9 @@ void VideoPlayer::onBufferNeedAudioData(MediaSource* ms)
         STARFISH_LOG_ERROR("onBufferNeedAudioData() : MSEClient's formatContext not ready\n");
         return;
     }
+    // TODO : push packets for 2 sec
     int audio_stream_idx = ms->mseClient()->audioStreamIdx();
-    while ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
+    if ((ret = av_read_frame(ms->mseClient()->formatContext(), &avpacket)) >= 0) {
         if (avpacket.stream_index == audio_stream_idx) {
             pushAudioPacket(avpacket.data, avpacket.size, avpacket.pts);
             avpacket.size = 0;

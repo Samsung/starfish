@@ -29,6 +29,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_mediaPlayer(nullptr)
     , m_textTracks(new TextTrackList())
     , m_readyState(HTMLMediaElement::HAVE_NOTHING)
+    , m_srcUrl(nullptr)
 {
 }
 
@@ -39,11 +40,10 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
         if (!m_mediaPlayer) {
             return;
         }
-        URL* url = nullptr;
         if (value->length() != 0) {
-            url = URL::createURL(document()->documentURI()->urlString(), value);
+            m_srcUrl = URL::createURL(document()->documentURI()->urlString(), value);
         }
-        m_mediaPlayer->setURL(url);
+        m_mediaPlayer->setURL(m_srcUrl);
         if (autoplay()) {
             // When autoplay is true, ignore preload condition
             load();
@@ -95,7 +95,16 @@ void HTMLMediaElement::play()
     if (!m_mediaPlayer) {
         return;
     }
-    m_mediaPlayer->play();
+    if (!m_srcUrl) {
+        return;
+    }
+    if (m_mediaPlayer->currentURL() && m_mediaPlayer->currentURL() == m_srcUrl
+        && m_mediaPlayer->isPublicState(MediaPlayer::STATE_PAUSED | MediaPlayer::STATE_PREPARING | MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY)) {
+        m_mediaPlayer->play();
+    } else {
+        m_mediaPlayer->prepare();
+        m_mediaPlayer->play();
+    }
 }
 
 void HTMLMediaElement::addTextTrack(TextTrack* track)
