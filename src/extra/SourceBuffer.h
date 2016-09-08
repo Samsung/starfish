@@ -62,6 +62,9 @@ public:
     void setUpdating(bool flag, UpdateState state);
     void dispatchUpdateEvent(UpdateState state);
 
+    MediaSourceClient* mseClient() { return m_mseClient; }
+    MediaSource* parentMediaSource() { return m_parentMediaSource; }
+
 protected:
     AppendMode m_mode;
     bool m_updating;

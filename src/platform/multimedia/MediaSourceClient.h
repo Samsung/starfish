@@ -146,6 +146,11 @@ public:
         return m_audioStreamIdx;
     }
 
+    VideoPlayer* videoPlayer()
+    {
+        return m_player;
+    }
+
 protected:
     VideoPlayer* m_player;
     AVFormatContext* m_formatContext;

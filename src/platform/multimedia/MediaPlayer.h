@@ -39,7 +39,6 @@ public:
         STATE_PLAYING = 1 << 3,
         STATE_PAUSED = 1 << 4,
         STATE_WAITING_FOR_MEDIASOURCE_READY = 1 << 5,
-        STATE_MEDIASOURCE_READY = 1 << 6,
         STATE_UNKNOWN_ERROR = 1 << 7,
     };
 
@@ -56,6 +55,7 @@ public:
 
     virtual void setLoop(bool loop) = 0;
     virtual void setURL(URL* url) { m_inputUrl = url; }
+    URL* currentURL() { return m_currentUrl; }
 
     virtual void onUnprepared() { }
     virtual void onPrepared(URL* url) { }
@@ -65,7 +65,8 @@ public:
     void setPublicState(PublicState state) { m_state = state; }
 
 protected:
-    URL* m_inputUrl;
+    URL* m_inputUrl; // the URL has been accepted recently
+    URL* m_currentUrl; // the URL is being processed currently
     PublicState m_state;
 };
 
@@ -99,7 +100,6 @@ public:
 
     int width();
     int height();
-    URL* currentURL() { return m_currentUrl; }
 
     void prepareCBShouldBeExecutedInMainThread();
     void playFinishedCBShouldBeExecutedInMainThread();
@@ -108,7 +108,7 @@ public:
     void destroyCPlayer();
 
     void setVideoStreamInfo(String* type, int width, int height, int den, int num);
-    void notifyInitialPacketReady();
+    void notifyInitialPacketReady(MediaSource* ms);
     void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts);
     void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts);
 
@@ -147,6 +147,7 @@ public:
     int height() { return 0; }
 
     void setVideoStreamInfo(String* type, int width, int height, int den, int num) { }
+    void notifyInitialPacketReady(MediaSource* ms) { }
     void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts) { }
     void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts) { }
 #endif /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
@@ -162,7 +163,6 @@ public:
 
 protected:
     HTMLVideoElement* m_videoElement;
-    URL* m_currentUrl;
     MediaSource* m_currentMediaSource;
 #if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
     player_h m_cplayer;

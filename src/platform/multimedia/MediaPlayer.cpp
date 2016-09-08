@@ -62,7 +62,6 @@ MediaPlayer::MediaPlayer()
 VideoPlayer::VideoPlayer(HTMLVideoElement* videoElement)
     : MediaPlayer()
     , m_videoElement(videoElement)
-    , m_currentUrl(nullptr)
     , m_currentMediaSource(nullptr)
     , m_cplayer(NULL)
     , m_lastRequest(VideoPlayer::REQUEST_NONE)
@@ -83,6 +82,7 @@ VideoPlayer::VideoPlayer(HTMLVideoElement* videoElement)
 
     STARFISH_ASSERT(videoElement);
     clearVideoStreamInfo();
+    m_currentUrl = nullptr;
 }
 
 static void __videoPlayerPrepareCB(void *user_data)
@@ -201,6 +201,9 @@ bool VideoPlayer::assureCPlayer()
         player_set_completed_cb(m_cplayer, __videoPlayerCompleteCB, (void*)this);
         player_set_error_cb(m_cplayer, __videoPlayerErrorCB, (void*)this);
         player_set_buffering_cb(m_cplayer, __videoPlayerBufferingCB, (void*)this);
+        player_set_buffer_need_video_data_cb(m_cplayer, __videoPlayerBufferNeedVideoDataCB, (void*)this);
+        player_set_buffer_need_audio_data_cb(m_cplayer, __videoPlayerBufferNeedAudioDataCB, (void*)this);
+        player_set_buffer_enough_video_data_cb(m_cplayer, __videoPlayerBufferEnoughDataCB, (void*)this);
     }
     return true;
 }
@@ -394,9 +397,6 @@ void VideoPlayer::prepareCPlayer()
             mediaSource->registerMediaPlayer(this);
             player_set_uri(m_cplayer, "external_demuxer://aaaa");
             player_set_video_stream_info(m_cplayer, &m_videoInfo);
-            player_set_buffer_need_video_data_cb(m_cplayer, __videoPlayerBufferNeedVideoDataCB, (void*)this);
-            player_set_buffer_need_audio_data_cb(m_cplayer, __videoPlayerBufferNeedAudioDataCB, (void*)this);
-            player_set_buffer_enough_video_data_cb(m_cplayer, __videoPlayerBufferEnoughDataCB, (void*)this);
             setPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY);
             PLAYER_LOGI("prepare() is waiting ready signal from MediaSource\n");
         } else if (m_videoElement->document()->window()->starFish()->isValidBlobURL(store)) {
@@ -557,6 +557,9 @@ void VideoPlayer::prepare()
         PLAYER_LOGI("prepare() FAIL : unknown error\n");
         return;
     }
+    if (isPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY)) {
+        PLAYER_LOGI("prepare() : player was waiting MediaSource to be ready, but has gotten new prepare request.\n");
+    }
     m_currentUrl = m_inputUrl;
     prepareCPlayer();
 }
@@ -607,15 +610,23 @@ void VideoPlayer::setDisplayArea(CanvasSurface* surface)
 }
 #endif
 
-void VideoPlayer::notifyInitialPacketReady()
+void VideoPlayer::notifyInitialPacketReady(MediaSource* ms)
 {
     PLAYER_LOGI("notifyInitialPacketReady()\n");
     if (!(currentURL() && currentURL()->isBlobURL()))
         return;
     if (!isPublicState(MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY))
         return;
-    setPublicState(MediaPlayer::STATE_MEDIASOURCE_READY);
-    PLAYER_LOGI("notifyInitialPacketReady() - player state has been changed to STATE_MEDIASOURCE_READY, now start to prepare\n");
+    STARFISH_ASSERT(ms);
+    BlobURLStore store;
+    if (!StarFish::stringToBlobURLString(m_currentUrl->urlString(), store)) {
+        PLAYER_LOGI("notifyInitialPacketReady() - Unknown error\n");
+        STARFISH_ASSERT(false);
+        return;
+    }
+    if (((MediaSource*)store.m_blob) != ms)
+        return;
+    PLAYER_LOGI("notifyInitialPacketReady() - media source ready, now start to prepare\n");
     startLoadingCPlayer();
 }
 
@@ -637,8 +648,7 @@ void VideoPlayer::play()
     }
     if (isPublicState(MediaPlayer::STATE_NONE)) {
         if (m_inputUrl) {
-            m_currentUrl = m_inputUrl;
-            prepareCPlayer();
+            PLAYER_LOGI("play() FAIL : prepare() first\n");
         } else {
             PLAYER_LOGI("play() FAIL : setURL() first\n");
         }
