@@ -94,7 +94,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
     , m_console(new Console(this))
+#if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
+#endif
     , m_enterCount(0)
 {
     if (!g_starFishGlobalInit) {
@@ -160,7 +162,9 @@ StarFish::~StarFish()
         fclose(fp_mem);
 #endif
     close();
+#if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
+#endif
     delete m_lineBreaker;
     delete m_window;
 }
