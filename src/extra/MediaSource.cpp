@@ -55,6 +55,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
 void MediaSource::endOfStream()
 {
+    printf("[MediaSource::endOfStream]");
     starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         MediaSource* mediaSource = (MediaSource*)data;
         mediaSource->setReadyState(MediaSource::Ended);

@@ -63,15 +63,14 @@ void AVIOContextWrapper::pushMediaData(MediaRawData data)
 int AVIOContextWrapper::read(void *opaque, unsigned char *buf, int buf_size)
 {
     AVIOContextWrapper* ctx = static_cast<AVIOContextWrapper*>(opaque);
-    printf("[AVIOContextWrapper::read] buf %d pos %d\n", buf_size, ctx->pos());
+    printf("[AVIOContextWrapper::read] buf %d pos %d of dataSize %d (%p)\n", buf_size, ctx->pos(), ctx->dataSize(), ctx->rawData());
     // Read from pos to pos + buf_size
     if (ctx->pos() + buf_size > ctx->dataSize()) {
         int len = ctx->dataSize() - ctx->pos();
         memcpy(buf, ctx->rawData() + ctx->pos(), len);
         ctx->increasePosition(len);
         if (ctx->moveToNextDataIfPossible()) {
-            printf("----[AVIOContextWrapper::read] move next buffer\n");
-            return len + AVIOContextWrapper::read(ctx, buf + len, buf_size - len);
+            STARFISH_LOG_ERROR("----[AVIOContextWrapper::read] move next buffer\n");
         }
         return len;
     } else {
