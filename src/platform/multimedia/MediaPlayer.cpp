@@ -40,16 +40,26 @@
 #define DEFAULT_VIDEO_STREAM_INFO_WIDTH 512
 #define DEFAULT_VIDEO_STREAM_INFO_HEIGHT 288
 #define DEFAULT_VIDEO_STREAM_INFO_FRAMERATE_DEN 1
-#define DEFAULT_VIDEO_STREAM_INFO_FRAMERATE_NUM 1000
+#define DEFAULT_VIDEO_STREAM_INFO_FRAMERATE_NUM 30
+
+#define PLAYER_DEBUG
+
+#ifdef PLAYER_DEBUG
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <pthread.h>
 
 #define PLAYER_LOGI(...) \
-    STARFISH_LOG_ERROR("[MediaPlayer] "); \
+    STARFISH_LOG_ERROR("[MediaPlayer|%ld] ", syscall(SYS_gettid)); \
     STARFISH_LOG_ERROR(__VA_ARGS__);
 
 #define PLAYER_LOGE(errorcode, ...) \
-    STARFISH_LOG_ERROR("[MediaPlayer] ERROR(%u)| ", errorcode); \
+    STARFISH_LOG_ERROR("[MediaPlayer|%ld] ERROR(%u)| ", syscall(SYS_gettid), errorcode); \
     STARFISH_LOG_ERROR(__VA_ARGS__);
-
+#else
+#define PLAYER_LOGI(...)
+#define PLAYER_LOGE(...)
+#endif
 namespace StarFish {
 
 MediaPlayer::MediaPlayer()
@@ -591,7 +601,7 @@ void VideoPlayer::pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts)
         PLAYER_LOGI("pushAudioPacket() FAIL : unknown error\n");
         return;
     }
-    PLAYER_LOGI("pushAudioPacket() len(%u) pts(%llu)\n", len, pts);
+    // PLAYER_LOGI("pushAudioPacket() len(%u) pts(%llu)\n", len, pts);
 }
 
 
@@ -763,6 +773,7 @@ int VideoPlayer::height()
 }
 
 #endif /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
+#undef PLAYER_DEBUG
 #undef PLAYER_LOGI
 #undef PLAYER_LOGE
 }
