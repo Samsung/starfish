@@ -17,6 +17,7 @@
 #ifndef __StarFishNetworkRequest__
 #define __StarFishNetworkRequest__
 
+#include "util/URL.h"
 #include "platform/threading/Mutex.h"
 #include "platform/threading/Semaphore.h"
 #include "platform/threading/Locker.h"

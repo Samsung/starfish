@@ -1177,6 +1177,8 @@ void Window::pause()
     m_isRunning = false;
 
     document()->setVisibleState(PageVisibilityState::PageVisibilityStateHidden);
+
+    document()->resourceLoader()->cachePruning();
 }
 
 void Window::resume()

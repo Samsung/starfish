@@ -17,7 +17,7 @@
 #ifndef __StarFishResource__
 #define __StarFishResource__
 
-#include "loader/Resource.h"
+#include "util/URL.h"
 #include "loader/ResourceClient.h"
 #include "platform/network/NetworkRequest.h"
 
