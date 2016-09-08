@@ -71,6 +71,7 @@ public:
     void abort();
 
     void setTimeout(uint32_t timeout);
+    void setRequestHeader(String* h, String* c);
 
     virtual void onProgressEvent(NetworkRequest* request, bool isExplicitAction);
     virtual void onReadyStateChange(NetworkRequest* request, bool fromExplicit);
