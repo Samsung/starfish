@@ -29,7 +29,7 @@ ifeq ($(OS),Darwin)
 endif
 
 # Set media flag (only works on x64)
-MEDIA_SUPPORT=true
+MEDIA_SUPPORT=false
 MEDIA_SUPPORT_KEY=STARFISH_ENABLE_MULTIMEDIA
 
 # inspector
@@ -165,6 +165,7 @@ LDFLAGS += -lpthread -lcurl
 
 ifeq ($(ARCH), x64)
   INSPECTOR_SUPPORT=true
+  MEDIA_SUPPORT=true
   CXXFLAGS += -DSTARFISH_ENABLE_TEST
   CXXFLAGS += -DSTARFISH_ENABLE_MULTI_PAGE
 else ifeq ($(ARCH), x86)
@@ -230,9 +231,11 @@ ifneq (,$(findstring tizen,$(HOST)))
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
   endif
   ifeq ($(TIZEN_PROFILE),tv)
+    MEDIA_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_TV
   endif
   ifeq ($(TIZEN_PROFILE),mobile)
+    MEDIA_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_MOBILE
   endif
 endif

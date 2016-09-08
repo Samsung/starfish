@@ -29,17 +29,21 @@ Console::Console(StarFish* starFish)
 
 void Console::log(String* m)
 {
+#if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_starFish->inspector()) {
         m_starFish->inspector()->sendInfoMessage(m);
     }
+#endif
     STARFISH_LOG_INFO("console.log: %s\n", m->utf8Data());
 }
 
 void Console::error(String* m)
 {
+#if defined(STARFISH_ENABLE_INSPECTOR)
     if (m_starFish->inspector()) {
         m_starFish->inspector()->sendErrorMessage(m);
     }
+#endif
     STARFISH_LOG_ERROR("console.error: %s\n", m->utf8Data());
 }
 
