@@ -329,7 +329,7 @@ void HTMLMediaElement::setAutoplay(bool autoplay)
     if (autoplay) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
-            setAttribute(name, String::fromUTF8(""));
+            setAttribute(name, String::emptyString);
         }
     } else {
         removeAttribute(name);
@@ -342,7 +342,7 @@ void HTMLMediaElement::setLoop(bool loop)
     if (loop) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
-            setAttribute(name, String::fromUTF8(""));
+            setAttribute(name, String::emptyString);
         }
     } else {
         removeAttribute(name);
@@ -355,7 +355,7 @@ void HTMLMediaElement::setControls(bool controls)
     if (controls) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
-            setAttribute(name, String::fromUTF8(""));
+            setAttribute(name, String::emptyString);
         }
     } else {
         removeAttribute(name);
