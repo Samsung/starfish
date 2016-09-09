@@ -19,26 +19,17 @@
 #include "StarFishConfig.h"
 #include "dom/HTMLVideoElement.h"
 
+#define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
+#define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
+
 namespace StarFish {
-
-unsigned long HTMLVideoElement::width()
-{
-    // TODO
-    return 0;
-}
-
-unsigned long HTMLVideoElement::height()
-{
-    // TODO
-    return 0;
-}
 
 unsigned long HTMLVideoElement::videoWidth()
 {
     if (m_readyState > HTMLMediaElement::HAVE_NOTHING) {
         return videoPlayer()->width();
     }
-    return 0;
+    return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
 }
 
 unsigned long HTMLVideoElement::videoHeight()
@@ -46,23 +37,23 @@ unsigned long HTMLVideoElement::videoHeight()
     if (m_readyState > HTMLMediaElement::HAVE_NOTHING) {
         return videoPlayer()->height();
     }
-    return 0;
+    return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
+}
+
+void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
+{
+    if (name == document()->window()->starFish()->staticStrings()->m_width
+        || name == document()->window()->starFish()->staticStrings()->m_height) {
+        if (frame()) {
+            setNeedsLayout();
+        }
+    }
 }
 
 String* HTMLVideoElement::poster()
 {
     // TODO
     return String::emptyString;
-}
-
-void HTMLVideoElement::setWidth(unsigned long width)
-{
-    // TODO
-}
-
-void HTMLVideoElement::setHeight(unsigned long height)
-{
-    // TODO
 }
 
 void HTMLVideoElement::setPoster(String* poster)

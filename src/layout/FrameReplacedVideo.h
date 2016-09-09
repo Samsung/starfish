@@ -51,8 +51,6 @@ public:
         auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
         unsigned long videoWidth = v->videoWidth();
         unsigned long videoHeight = v->videoHeight();
-        videoWidth = videoWidth == 0 ? STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS : videoWidth;
-        videoHeight = videoHeight == 0 ? STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS : videoHeight;
         result.m_intrinsicContentSize = LayoutSize(videoWidth, videoHeight);
         return result;
     }
@@ -70,7 +68,7 @@ public:
         auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
         LayoutRect layout(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight());
         c->applyMatrixTo(layout);
-        v->setPlayerDisplayArea(layout.x().toInt(), layout.y().toInt(), layout.width().toInt(), layout.height().toInt());
+        v->videoPlayer()->setDisplayArea(layout.x().toInt(), layout.y().toInt(), layout.width().toInt(), layout.height().toInt());
 #endif
     }
 

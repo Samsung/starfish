@@ -19,17 +19,14 @@
 
 #include "dom/HTMLMediaElement.h"
 
-#define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
-#define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
-
 namespace StarFish {
 
 class HTMLVideoElement : public HTMLMediaElement {
 public:
     HTMLVideoElement(Document* document)
         : HTMLMediaElement(document)
+        , m_hasPendingSrc(false)
     {
-        m_videoSurface = CanvasSurface::create(document->window(), STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS, STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS);
         VideoPlayer* player = new VideoPlayer(this);
 #ifdef STARFISH_TIZEN_MOBILE
         player->setDisplayArea(m_videoSurface);
@@ -57,29 +54,34 @@ public:
         return true;
     }
 
-    unsigned long width();
-    unsigned long height();
+    virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+
+    String* width()
+    {
+        return getAttribute(document()->window()->starFish()->staticStrings()->m_width);
+    }
+
+    void setWidth(int width)
+    {
+        setAttribute(document()->window()->starFish()->staticStrings()->m_width, String::fromInt(width));
+    }
+
+    String* height()
+    {
+        return getAttribute(document()->window()->starFish()->staticStrings()->m_height);
+    }
+
+    void setHeight(int height)
+    {
+        setAttribute(document()->window()->starFish()->staticStrings()->m_height, String::fromInt(height));
+    }
+
     unsigned long videoWidth();
     unsigned long videoHeight();
     String* poster();
 
-    void setWidth(unsigned long width);
-    void setHeight(unsigned long height);
     void setPoster(String* poster);
 
-    CanvasSurface* videoSurface()
-    {
-        return m_videoSurface;
-    }
-
-#ifdef STARFISH_TIZEN_TV
-    void setPlayerDisplayArea(int x, int y, int width, int height)
-    {
-        videoPlayer()->setDisplayArea(x, y, width, height);
-    }
-#endif
-
-protected:
     VideoPlayer* videoPlayer()
     {
         STARFISH_ASSERT(m_mediaPlayer && m_mediaPlayer->isVideoPlayer());
@@ -87,7 +89,6 @@ protected:
     }
 
 protected:
-    CanvasSurface* m_videoSurface;
     bool m_hasPendingSrc;
 };
 }
