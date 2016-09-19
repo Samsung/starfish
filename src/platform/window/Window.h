@@ -55,6 +55,11 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::WindowObject;
+    }
+
     bool inRendering()
     {
         return m_inRendering;

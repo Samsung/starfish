@@ -55,7 +55,7 @@ public:
     virtual void handleDefaultEvent(Event* event)
     {
         if (event->isUIEvent() && event->asUIEvent()->isMouseEvent()) {
-            if (event->type()->equals("click")) {
+            if (event->eventType()->equals("click")) {
                 auto href = document()->window()->starFish()->staticStrings()->m_href;
                 size_t s = hasAttribute(href);
                 if (s != SIZE_MAX) {

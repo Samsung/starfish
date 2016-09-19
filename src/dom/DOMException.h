@@ -64,6 +64,11 @@ public:
         initScriptWrappable(this, instance);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::DOMExceptionObject;
+    }
+
     String* message() { return m_message; }
     const char* name() { return s_names[m_code]; }
     int code() { return m_code; }

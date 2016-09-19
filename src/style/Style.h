@@ -1081,6 +1081,10 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::CSSStyleDeclarationObject;
+    }
 
     String* generateCSSText();
 
@@ -1282,6 +1286,11 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::CSSStyleRuleObject;
     }
 
 

@@ -129,7 +129,7 @@ void Inspector::sendInfoMessage(String* m)
     std::string ownShipRadarString = strbuf.GetString();
     zmq::message_t request(ownShipRadarString.data(), ownShipRadarString.size());
     bool result = m_zmqSocket.send(request, ZMQ_NOBLOCK);
-    STARFISH_LOG_INFO("inspector::sendInfoMessage %d, %d\n", (int)result, zmq_errno());
+    // STARFISH_LOG_INFO("inspector::sendInfoMessage %d, %d\n", (int)result, zmq_errno());
 }
 
 void Inspector::sendErrorMessage(String* m)
@@ -153,7 +153,7 @@ void Inspector::sendErrorMessage(String* m)
     std::string ownShipRadarString = strbuf.GetString();
     zmq::message_t request(ownShipRadarString.data(), ownShipRadarString.size());
     bool result = m_zmqSocket.send(request, ZMQ_NOBLOCK);
-    STARFISH_LOG_INFO("inspector::sendInfoMessage %d, %d\n", (int)result, zmq_errno());
+    // STARFISH_LOG_INFO("inspector::sendInfoMessage %d, %d\n", (int)result, zmq_errno());
 }
 
 Inspector::~Inspector()

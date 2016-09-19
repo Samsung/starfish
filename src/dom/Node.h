@@ -164,6 +164,11 @@ public:
 
     virtual NodeType nodeType() = 0;
     virtual String* nodeName() = 0;
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::NodeObject;
+    }
+
     virtual void beginParsing()
     {
         m_inParsing = true;

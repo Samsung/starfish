@@ -52,6 +52,11 @@ public:
         initScriptWrappable(this, instance);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::URLObject;
+    }
+
     String* baseURI() const;
 
     bool isNetworkURL()

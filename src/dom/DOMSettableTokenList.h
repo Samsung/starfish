@@ -31,13 +31,11 @@ public:
 
     /* 7.2. Interface DOMSettableTokenList */
 
-    // FIXME:mh.byun(wrong behavior)
     String* value()
     {
         return m_value;
     }
 
-    // FIXME:mh.byun(wrong behavior)
     void setValue(String* value)
     {
         m_value = value;
@@ -46,6 +44,11 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this, instance);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::DOMSettableTokenListObject;
     }
 
 private:

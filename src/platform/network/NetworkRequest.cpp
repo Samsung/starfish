@@ -714,7 +714,7 @@ void NetworkRequest::blobURLWorker(NetworkRequest* res, String* url)
         return;
     }
 
-    res->m_responseMimeType = ((Blob*)store.m_blob)->type();
+    res->m_responseMimeType = ((Blob*)store.m_blob)->mimeType();
     res->changeReadyState(HEADERS_RECEIVED, true);
 
     res->changeReadyState(LOADING, true);

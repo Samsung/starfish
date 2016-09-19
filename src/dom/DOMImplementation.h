@@ -40,6 +40,11 @@ public:
         initScriptWrappable(this, instance);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::DOMImplementationObject;
+    }
+
     DocumentType* createDocumentType(String* qualifiedName, String* publicId, String* systemId);
     Document* createHTMLDocument(String* title = String::spaceString);
 
