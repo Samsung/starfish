@@ -89,6 +89,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::TimeRangesObject;
+    }
+
     double start(unsigned long idx)
     {
         if (idx < m_list.size())
@@ -109,7 +114,7 @@ public:
     }
 
 private:
-    std::vector<TimeRange> m_list;
+    std::vector<TimeRange, gc_allocator<TimeRange>> m_list;
 };
 
 class TextTrackCue : public EventTarget {
@@ -128,6 +133,11 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::TextTrackCueObject;
     }
 
     virtual bool isVTTCue() const
@@ -224,6 +234,11 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::TextTrackCueListObject;
     }
 
     unsigned long length() const

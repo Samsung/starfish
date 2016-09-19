@@ -34,6 +34,12 @@ public:
     {
         initScriptWrappable(this, instance);
     }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::NamedNodeMapObject;
+    }
+
     unsigned long length();
     Attr* item(unsigned long index);
     Attr* getNamedItem(QualifiedName name);

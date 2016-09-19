@@ -37,6 +37,11 @@ public:
         initScriptWrappable(this, instance);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::DOMTokenListObject;
+    }
+
     static void tokenize(std::vector<String*, gc_allocator<String*>>* tokens, String* src);
     static void concatTokensInsideParentheses(std::vector<String*, gc_allocator<String*>>* tokens);
     unsigned long length();

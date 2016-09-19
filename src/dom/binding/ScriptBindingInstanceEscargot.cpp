@@ -187,27 +187,27 @@ void ScriptBindingInstance::close()
         escargot::ESVMInstance::currentInstance()->throwError(__err->scriptValue()); \
     }
 
-#define CHECK_TYPEOF(thisValue, type)                                                 \
+#define CHECK_TYPEOF(thisValue, btype)                                                 \
     {                                                                                 \
         escargot::ESValue v = thisValue;                                              \
-        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) { \
+        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == kEscargotObjectCheckMagic) && (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData())->type() & btype))) { \
             THROW_ILLEGAL_INVOCATION()                                                \
         }                                                                             \
     }
 
-#define CHECK_TYPEOF_WITH_ERRCODE(thisValue, type, instance, errcode) \
+#define CHECK_TYPEOF_WITH_ERRCODE(thisValue, btype, instance, errcode) \
     { \
         escargot::ESValue v = thisValue; \
-        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) { \
+        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == kEscargotObjectCheckMagic) && (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData())->type() & btype))) { \
             THROW_DOM_EXCEPTION(instance, errcode); \
         } \
     }
 
-#define GENERATE_THIS_AND_CHECK_TYPE(type, destType)                                                \
+#define GENERATE_THIS_AND_CHECK_TYPE(btype, destType)                                                \
     escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();        \
     {                                                                                               \
         escargot::ESValue v = thisValue;                                                            \
-        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() & type))) {               \
+        if (!(v.isObject() && (v.asESPointer()->asESObject()->extraData() == kEscargotObjectCheckMagic) && (((ScriptWrappable*)v.asESPointer()->asESObject()->extraPointerData())->type() & btype))) { \
             THROW_ILLEGAL_INVOCATION()                                                              \
         }                                                                                           \
     }                                                                                               \
@@ -315,7 +315,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         if (thisValue.isESPointer() && thisValue.asESPointer()->isESObject()) {
             escargot::ESObject* obj = thisValue.asESPointer()->asESObject();
-            if (obj->extraData()) {
+            if (obj->extraData() == kEscargotObjectCheckMagic) {
                 escargot::ESValue constructor = thisValue.asESPointer()->asESObject()->get(escargot::ESString::create("constructor"));
                 if (constructor.isObject()) {
                     escargot::ESValue constructor_name = constructor.asESPointer()->asESObject()->get(escargot::ESString::create("name"));
@@ -396,7 +396,7 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         }
         bool ret = false;
         if (argCount == 1 && firstArg.isObject()) {
-            if (!(firstArg.isObject() && (firstArg.asESPointer()->asESObject()->extraData() & ScriptWrappable::Type::EventObject))) {
+            if (!(firstArg.isObject() && (firstArg.asESPointer()->asESObject()->extraData() == kEscargotObjectCheckMagic) && ((ScriptWrappable*)firstArg.asESPointer()->asESObject()->extraPointerData())->type() == ScriptWrappable::Type::EventObject)) {
                 auto msg = escargot::ESString::create("Failed to execute 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'.");
                 instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
             }
@@ -3355,7 +3355,7 @@ escargot::ESFunctionObject* bindingEvent(ScriptBindingInstance* scriptBindingIns
         eventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
-        String* type = const_cast<String*>(originalObj->type());
+        String* type = const_cast<String*>(originalObj->eventType());
         return toJSString(type);
     }, nullptr);
 
@@ -4463,7 +4463,7 @@ escargot::ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInst
             // Blob
             if (element.isObject()) {
                 escargot::ESObject* o = element.toObject();
-                if (o->extraData() & ScriptWrappable::Type::BlobObject) {
+                if (o->extraData() == kEscargotObjectCheckMagic && ((ScriptWrappable*)o->extraPointerData())->type() == ScriptWrappable::Type::BlobObject) {
                     Blob* bb = (Blob*)o->extraPointerData();
                     bufferInfo.push_back(std::make_pair(bb->data(), bb->size()));
                     totalByteLength += bb->size();
@@ -4512,7 +4512,7 @@ escargot::ESFunctionObject* bindingBlob(ScriptBindingInstance* scriptBindingInst
         BlobFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("type"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::BlobObject, Blob);
-        return escargot::ESValue(toJSString(originalObj->type()));
+        return escargot::ESValue(toJSString(originalObj->mimeType()));
     }, nullptr);
 
 
@@ -4575,12 +4575,12 @@ escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInsta
 #endif
     escargot::ESFunctionObject* URLCreateObjectURLFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
-        if (arg0.isObject() && (arg0.toObject()->extraData() & ScriptWrappable::Type::BlobObject)) {
+        if (arg0.isObject() && (arg0.asObject()->extraData() == kEscargotObjectCheckMagic) && ((ScriptWrappable*)arg0.asObject()->extraPointerData())->type() == ScriptWrappable::Type::BlobObject) {
             Blob* b = (Blob*)arg0.toObject()->extraPointerData();
             String* url = URL::createObjectURL(b);
             return toJSString(url);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-        } else if (arg0.isObject() && (arg0.toObject()->extraData() & ScriptWrappable::Type::MediaSourceObject)) {
+        } else if (arg0.isObject() && (arg0.asObject()->extraData() == kEscargotObjectCheckMagic) && ((ScriptWrappable*)arg0.asObject()->extraPointerData())->type() == ScriptWrappable::Type::MediaSourceObject) {
             MediaSource* m = (MediaSource*)arg0.toObject()->extraPointerData();
             String* url = URL::createObjectURL(m);
             return toJSString(url);

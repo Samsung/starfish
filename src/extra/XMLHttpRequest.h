@@ -54,6 +54,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::XMLHttpRequestObject;
+    }
+
     NetworkRequest& networkRequest()
     {
         return *m_networkRequest;

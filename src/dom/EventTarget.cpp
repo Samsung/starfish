@@ -164,7 +164,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
         if (event->stopPropagation())
             break;
         EventTarget* eventTarget = eventPath[i - 1];
-        EventListenerVector* originals = eventTarget->getEventListeners(event->type());
+        EventListenerVector* originals = eventTarget->getEventListeners(event->eventType());
         if (originals) {
             // Iterate Copied Vector : listeners can be removed during iteration
             EventListenerVector copies = EventListenerVector(*originals);
@@ -186,7 +186,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     event->setEventPhase(Event::AT_TARGET);
 
     // 8. Invoke the event listeners of event's target attribute value with event, if event's stop propagation flag is unset.
-    EventListenerVector* originals = origin->getEventListeners(event->type());
+    EventListenerVector* originals = origin->getEventListeners(event->eventType());
     if (originals) {
         if (!event->stopPropagation()) {
             // Iterate Copied Vector : listeners can be removed during iteration
@@ -212,7 +212,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             if (event->stopPropagation())
                 break;
             EventTarget* eventTarget = eventPath[i];
-            EventListenerVector* originals = eventTarget->getEventListeners(event->type());
+            EventListenerVector* originals = eventTarget->getEventListeners(event->eventType());
             if (originals) {
                 // Iterate Copied Vector : listeners can be removed during iteration
                 EventListenerVector copies = EventListenerVector(*originals);

@@ -53,6 +53,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::EventObject;
+    }
+
     virtual bool isUIEvent()
     {
         return false;
@@ -64,7 +69,7 @@ public:
         return (UIEvent*)this;
     }
 
-    String* type() const { return m_type; }
+    String* eventType() const { return m_type; }
     EventTarget* target() const { return m_target; }
     void setTarget(EventTarget* target) { m_target = target; }
 

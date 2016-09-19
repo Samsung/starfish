@@ -50,6 +50,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::SourceBufferObject;
+    }
+
     // data: ArrayBuffer/ArrayBufferView type
     void appendBuffer(const void* data, unsigned long length);
     // TODO
@@ -92,6 +97,11 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::SourceBufferListObject;
     }
 
     unsigned long length() const

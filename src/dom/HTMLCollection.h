@@ -36,6 +36,12 @@ public:
     {
         initScriptWrappable(this, instance);
     }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::HTMLCollectionObject;
+    }
+
     unsigned long length() const;
     Element* item(unsigned long index);
     Element* namedItem(String* name);

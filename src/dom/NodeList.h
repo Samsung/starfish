@@ -37,6 +37,11 @@ public:
         initScriptWrappable(this, instance);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::NodeListObject;
+    }
+
     unsigned long length() const;
     Node* item(unsigned long index);
     ActiveNodeList& activeNodeList()

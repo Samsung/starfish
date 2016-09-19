@@ -145,6 +145,7 @@ public:
 
 
     virtual void initScriptObject(ScriptBindingInstance* instance) = 0;
+    virtual Type type() = 0;
 
     void initScriptWrappable(Window* ptr);
     void initScriptWrappable(Node* ptr);

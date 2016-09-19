@@ -61,6 +61,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::TextTrackObject;
+    }
+
     void dispatchCueChangeEvent();
 
     void addCue(TextTrackCue* cue)
@@ -278,6 +283,11 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::TextTrackListObject;
     }
 
     unsigned long length() const

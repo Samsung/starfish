@@ -47,6 +47,11 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::MediaSourceObject;
+    }
+
     StarFish* starFish()
     {
         return m_starFish;

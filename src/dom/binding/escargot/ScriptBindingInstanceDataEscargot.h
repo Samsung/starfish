@@ -19,6 +19,8 @@
 
 namespace StarFish {
 
+const uint32_t kEscargotObjectCheckMagic = 0x0fff;
+
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     F(node, Node) \
     F(element, Element) \

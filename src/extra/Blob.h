@@ -25,12 +25,12 @@ class StarFish;
 
 class Blob : public ScriptWrappable {
 public:
-    Blob(StarFish* starFish, size_t size, String* type, void* data, bool isClosed, bool isEntryOfBlobURLStore)
+    Blob(StarFish* starFish, size_t size, String* mimeType, void* data, bool isClosed, bool isEntryOfBlobURLStore)
         : ScriptWrappable(this)
     {
         m_starFish = starFish;
         m_size = size;
-        m_type = type;
+        m_mimeType = mimeType;
         m_data = data;
         m_isClosed = isClosed;
         if (isEntryOfBlobURLStore) {
@@ -41,6 +41,11 @@ public:
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::BlobObject;
     }
 
     StarFish* starFish()
@@ -58,9 +63,9 @@ public:
         return m_size;
     }
 
-    String* type()
+    String* mimeType()
     {
-        return m_type;
+        return m_mimeType;
     }
 
     bool isClosed()
@@ -90,7 +95,7 @@ protected:
     bool m_isEntryOfBlobURLStore;
     bool m_isClosed;
     StarFish* m_starFish;
-    String* m_type;
+    String* m_mimeType;
     void* m_data;
     size_t m_size;
 };
