@@ -112,10 +112,12 @@ public:
 
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
             // STARFISH_LOG_INFO("FontImplEFL::~FontImplEFL\n");
-            Evas_Object* m = (Evas_Object*)cd;
-            evas_object_hide(m);
-            evas_object_del(m);
-        }, m_text, NULL, NULL);
+            FontImplEFL* m = (FontImplEFL*)obj;
+            if (m->m_text) {
+                evas_object_hide(m->m_text);
+                evas_object_del(m->m_text);
+            }
+        }, NULL, NULL, NULL);
     }
     ~FontImplEFL()
     {

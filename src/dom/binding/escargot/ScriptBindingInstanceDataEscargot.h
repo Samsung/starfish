@@ -60,7 +60,12 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(xhrElement, XMLHttpRequest) \
     F(blobElement, Blob) \
     F(url, URL) \
-    F(domException, DOMException)
+    F(domException, DOMException) \
+    F(navigator, Navigator) \
+    F(geolocation, Geolocation) \
+    F(geoposition, Geoposition) \
+    F(coordinates, Coordinates) \
+    F(positionError, PositionError)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
@@ -200,6 +205,11 @@ private:
     escargot::ESFunctionObject* m_blobElement;
     escargot::ESFunctionObject* m_url;
     escargot::ESFunctionObject* m_domException;
+    escargot::ESFunctionObject* m_navigator;
+    escargot::ESFunctionObject* m_geolocation;
+    escargot::ESFunctionObject* m_coordinates;
+    escargot::ESFunctionObject* m_geoposition;
+    escargot::ESFunctionObject* m_positionError;
 
 public:
 #define FOR_EACH_SCRIPTVALUE_FN(codeName, exportName) \

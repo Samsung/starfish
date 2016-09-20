@@ -23,6 +23,9 @@
 
 namespace StarFish {
 
+// https://heycam.github.io/webidl/#common-DOMTimeStamp
+typedef unsigned long long DOMTimeStamp;
+
 class MessageLoop;
 class Window;
 class ScriptBindingInstance;

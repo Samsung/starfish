@@ -20,6 +20,7 @@
 namespace StarFish {
 
 uint64_t tickCount(); // increase 1000 by 1 second
+uint64_t timestamp(); // increase 1000 by 1 second
 
 }
 

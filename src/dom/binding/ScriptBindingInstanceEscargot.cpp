@@ -25,6 +25,8 @@
 #include "dom/NodeList.h"
 #include "style/CSSStyleLookupTrie.h"
 #include "extra/Console.h"
+#include "extra/Navigator.h"
+#include "platform/location/Geolocation.h"
 
 #include <Escargot.h>
 #include <vm/ESVMInstance.h>
@@ -276,16 +278,6 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     }, escargot::ESString::create("error"), 1, false));
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
-    // Navigator
-    // TODO implement Navigator function
-    escargot::ESObject* navigator = escargot::ESObject::create();
-    navigator->defineDataProperty(escargot::ESString::create("appCodeName"), true, true, true, escargot::ESString::create(APP_CODE_NAME));
-    navigator->defineDataProperty(escargot::ESString::create("appName"), true, true, true, escargot::ESString::create(APP_CODE_NAME));
-    navigator->defineDataProperty(escargot::ESString::create("appVersion"), true, true, true, escargot::ESString::create(APP_VERSION(APP_NAME, VERSION)));
-    navigator->defineDataProperty(escargot::ESString::create("vendor"), true, true, true, escargot::ESString::create(VENDOR_NAME));
-    navigator->defineDataProperty(escargot::ESString::create("userAgent"), true, true, true, escargot::ESString::create(USER_AGENT(APP_CODE_NAME, VERSION)));
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("navigator"), true, true, true, navigator);
-
 #ifdef STARFISH_ENABLE_MULTI_PAGE
     // Location
     escargot::ESFunctionObject* locationFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -452,6 +444,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptObject();
     }, nullptr, true, false);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fetchData(this)->m_instance->globalObject(), escargot::ESString::create("navigator"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->navigator()->scriptObject();
+    }, nullptr, true, false);
 
     // binding names first
     escargot::ESObject* globalObject = fetchData(this)->m_instance->globalObject();
@@ -4783,6 +4780,231 @@ escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBin
     DOMExceptionFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("DATA_CLONE_ERR"), false, false, false, escargot::ESValue(25));
 
     return DOMExceptionFunction;
+}
+
+escargot::ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION(Navigator, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NavigatorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("appCodeName"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject, Navigator);
+        return toJSString(originalObj->appCodeName());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NavigatorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("appName"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject, Navigator);
+        return toJSString(originalObj->appName());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NavigatorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("appVersion"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject, Navigator);
+        return toJSString(originalObj->appVersion());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NavigatorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("vendor"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject, Navigator);
+        return toJSString(originalObj->vendor());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NavigatorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("userAgent"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject, Navigator);
+        return toJSString(originalObj->userAgent());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        NavigatorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("geolocation"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NavigatorObject, Navigator);
+        return originalObj->geoLocation()->scriptObject();
+    }, nullptr);
+
+    return NavigatorFunction;
+}
+
+escargot::ESFunctionObject* bindingGeolocation(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION(Geolocation, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    escargot::ESFunctionObject* getCurrentPositionFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeolocationObject, Geolocation);
+
+        escargot::ESValue opt = instance->currentExecutionContext()->readArgument(2);
+        int32_t maximumAgeNumber = 0;
+        int32_t timeoutNumber = std::numeric_limits<int32_t>::infinity();
+        bool enableHighAccuracy = false;
+        if (opt.isObject()) {
+            escargot::ESValue maximumAge = opt.asObject()->get(escargot::ESString::create("maximumAge"));
+            double maximumAgeNumberDouble = maximumAge.toNumber();
+            if (std::isnan(maximumAgeNumberDouble) || maximumAgeNumber < 0) {
+                maximumAgeNumber = 0;
+            } else {
+                maximumAgeNumber = maximumAgeNumberDouble;
+            }
+
+            escargot::ESValue timeout = opt.asObject()->get(escargot::ESString::create("timeout"));
+            double timeoutNumberDouble = timeout.toNumber();
+            if (timeout < 0) {
+                timeoutNumber = 0;
+            } else if (std::isnan(timeoutNumberDouble)) {
+                timeoutNumber = std::numeric_limits<int32_t>::infinity();
+            } else {
+                timeoutNumber = timeoutNumberDouble;
+            }
+
+            enableHighAccuracy = opt.asObject()->get(escargot::ESString::create("enableHighAccuracy")).toBoolean();
+        }
+
+        escargot::ESValue cb0 = instance->currentExecutionContext()->readArgument(0);
+        escargot::ESValue cb1 = instance->currentExecutionContext()->readArgument(1);
+        originalObj->getCurrentPosition([](StarFish*, Geoposition* pos, void* data) {
+            if (data) {
+                escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+                escargot::ESValue a = pos->scriptValue();
+                callScriptFunction(fn, &a, 1, ScriptValueUndefined);
+            }
+        }, cb0.isFunction() ? cb0.asFunction() : nullptr, [](StarFish*, PositionError* error, void* data)
+        {
+            if (data) {
+                escargot::ESFunctionObject* fn = (escargot::ESFunctionObject*)data;
+                escargot::ESValue a = error->scriptValue();
+                callScriptFunction(fn, &a, 1, ScriptValueUndefined);
+            }
+        }, cb1.isFunction() ? cb1.asFunction() : nullptr,
+        enableHighAccuracy, timeoutNumber, maximumAgeNumber);
+
+        return escargot::ESValue();
+    }, escargot::ESString::create("getCurrentPosition"), 1);
+
+    GeolocationFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getCurrentPosition"), true, true, true, getCurrentPositionFunction);
+    return GeolocationFunction;
+}
+
+escargot::ESFunctionObject* bindingGeoposition(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION(Geoposition, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        GeopositionFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("coords"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeopositionObject, Geoposition);
+        return escargot::ESValue(originalObj->coords()->scriptObject());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        GeopositionFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("timestamp"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::GeopositionObject, Geoposition);
+        return escargot::ESValue(originalObj->timestamp());
+    }, nullptr);
+
+    return GeopositionFunction;
+}
+
+escargot::ESFunctionObject* bindingCoordinates(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION(Coordinates, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("latitude"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject, Coordinates);
+        return escargot::ESValue(originalObj->latitude());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("longitude"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject, Coordinates);
+        return escargot::ESValue(originalObj->longitude());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("altitude"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject, Coordinates);
+        if (originalObj->altitude())
+            return escargot::ESValue(*originalObj->altitude());
+        else
+            return ScriptValueNull;
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("accuracy"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject, Coordinates);
+        return escargot::ESValue(originalObj->accuracy());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("altitudeAccuracy"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject, Coordinates);
+        if (originalObj->altitudeAccuracy())
+            return escargot::ESValue(*originalObj->altitudeAccuracy());
+        else
+            return ScriptValueNull;
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("heading"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject, Coordinates);
+        if (originalObj->heading())
+            return escargot::ESValue(*originalObj->heading());
+        else
+            return escargot::ESValue(std::numeric_limits<double>::quiet_NaN());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        CoordinatesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("speed"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::CoordinatesObject, Coordinates);
+        if (originalObj->speed())
+            return escargot::ESValue(*originalObj->speed());
+        else
+            return ScriptValueNull;
+    }, nullptr);
+
+    return CoordinatesFunction;
+}
+
+escargot::ESFunctionObject* bindingPositionError(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION(PositionError, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        PositionErrorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("code"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::PositionErrorObject, PositionError);
+        return escargot::ESValue(originalObj->code());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        PositionErrorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("message"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::PositionErrorObject, PositionError);
+        return escargot::ESString::create(originalObj->message());
+    }, nullptr);
+
+    PositionErrorFunction->asESObject()->defineDataProperty(escargot::ESString::create("PERMISSION_DENIED"), false, false, false, escargot::ESValue(1));
+    PositionErrorFunction->asESObject()->defineDataProperty(escargot::ESString::create("POSITION_UNAVAILABLE"), false, false, false, escargot::ESValue(2));
+    PositionErrorFunction->asESObject()->defineDataProperty(escargot::ESString::create("TIMEOUT"), false, false, false, escargot::ESValue(3));
+
+    PositionErrorFunction->protoType().toObject()->defineDataProperty(escargot::ESString::create("PERMISSION_DENIED"), false, false, false, escargot::ESValue(1));
+    PositionErrorFunction->protoType().toObject()->defineDataProperty(escargot::ESString::create("POSITION_UNAVAILABLE"), false, false, false, escargot::ESValue(2));
+    PositionErrorFunction->protoType().toObject()->defineDataProperty(escargot::ESString::create("TIMEOUT"), false, false, false, escargot::ESValue(3));
+
+    return PositionErrorFunction;
 }
 
 String* ScriptBindingInstance::evaluate(String* str)

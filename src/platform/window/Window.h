@@ -32,6 +32,7 @@ class Canvas;
 class HTMLCollection;
 class StackingContext;
 class CanvasSurface;
+class Navigator;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -120,6 +121,11 @@ public:
     Document* document()
     {
         return m_document;
+    }
+
+    Navigator* navigator()
+    {
+        return m_navigator;
     }
 
     StarFish* starFish()
@@ -236,6 +242,7 @@ protected:
 
     StarFish* m_starFish;
     ScriptBindingInstance* m_scriptBindingInstance;
+    Navigator* m_navigator;
     Document* m_document;
     StackingContext* m_rootStackingContext;
     std::vector<CanvasSurface*, gc_allocator<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;

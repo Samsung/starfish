@@ -29,9 +29,6 @@ struct EventInit {
     bool cancelable;
 };
 
-// https://heycam.github.io/webidl/#common-DOMTimeStamp
-typedef unsigned long long DOMTimeStamp;
-
 class Event : public ScriptWrappable {
 protected:
 
