@@ -174,6 +174,9 @@ void GeolocationTizen::getCurrentPosition(GeopositionCallback cb, void* cbData, 
         }
 
         location_manager_create(method, &info->manager);
+        if ((timeout / 1000) > 120) {
+            STARFISH_LOG_WARN("[GeolocationTizen] - timeout more than 120 seconds is ignored in Tizen");
+        }
         int ret = location_manager_request_single_location(info->manager, 120, [](location_error_e error, double latitude, double longitude, double altitude, time_t timestamp, double speed, double direction, double climb, void *user_data) {
             LocationRequestInfoTizen* info = (LocationRequestInfoTizen*)user_data;
             if (error) {

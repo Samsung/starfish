@@ -26,6 +26,7 @@ public:
     Console(StarFish* starFish);
     void log(String* m);
     void error(String* m);
+    void warn(String* m);
 protected:
     StarFish* m_starFish;
 };

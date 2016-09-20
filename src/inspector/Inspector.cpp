@@ -153,7 +153,31 @@ void Inspector::sendErrorMessage(String* m)
     std::string ownShipRadarString = strbuf.GetString();
     zmq::message_t request(ownShipRadarString.data(), ownShipRadarString.size());
     bool result = m_zmqSocket.send(request, ZMQ_NOBLOCK);
-    // STARFISH_LOG_INFO("inspector::sendInfoMessage %d, %d\n", (int)result, zmq_errno());
+    // STARFISH_LOG_INFO("inspector::sendErrorMessage %d, %d\n", (int)result, zmq_errno());
+}
+
+void Inspector::sendWarnMessage(String* m)
+{
+    if (!m_ioThread)
+        return;
+    rapidjson_starfish::Document document;
+    document.Parse("{}");
+    rapidjson_starfish::Value v;
+    v = "console-warn";
+    document.AddMember(rapidjson_starfish::Value("command", document.GetAllocator()), v, document.GetAllocator());
+    rapidjson_starfish::Value v2;
+    v2 = rapidjson_starfish::Value(m->utf8Data(), strlen(m->utf8Data()));
+    document.AddMember(rapidjson_starfish::Value("content", document.GetAllocator()), v2, document.GetAllocator());
+    rapidjson_starfish::StringBuffer strbuf;
+    strbuf.Clear();
+
+    rapidjson_starfish::Writer<rapidjson_starfish::StringBuffer> writer(strbuf);
+    document.Accept(writer);
+
+    std::string ownShipRadarString = strbuf.GetString();
+    zmq::message_t request(ownShipRadarString.data(), ownShipRadarString.size());
+    bool result = m_zmqSocket.send(request, ZMQ_NOBLOCK);
+    // STARFISH_LOG_INFO("inspector::sendWarnMessage %d, %d\n", (int)result, zmq_errno());
 }
 
 Inspector::~Inspector()

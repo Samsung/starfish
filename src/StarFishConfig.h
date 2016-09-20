@@ -169,6 +169,13 @@
 #define STARFISH_LOG_ERROR(...) dlog_print(DLOG_ERROR, "StarFish", __VA_ARGS__);
 #endif
 
+#define STARFISH_LOG_WARN(...) fprintf(stderr, __VA_ARGS__);
+#ifdef STARFISH_TIZEN_WEARABLE
+#undef STARFISH_LOG_WARN
+#include <dlog.h>
+#define STARFISH_LOG_WARN(...) dlog_print(DLOG_WARN, "StarFish", __VA_ARGS__);
+#endif
+
 #define STARFISH_CRASH STARFISH_RELEASE_ASSERT_NOT_REACHED
 
 #if defined(NDEBUG)
