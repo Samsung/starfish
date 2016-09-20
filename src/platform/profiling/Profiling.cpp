@@ -17,6 +17,8 @@
 #include "StarFishConfig.h"
 #include "Profiling.h"
 
+#include <sys/timeb.h>
+
 namespace StarFish {
 
 uint64_t tickCount()
@@ -29,6 +31,16 @@ uint64_t tickCount()
     tick = gettick.tv_sec * 1000 + gettick.tv_usec / 1000;
     return tick;
 
+}
+
+uint64_t timestamp()
+{
+    struct timeb timer_msec;
+    long long int timestamp_msec;
+    ftime(&timer_msec);
+    timestamp_msec = ((long long int) timer_msec.time) * 1000ll +
+        (long long int) timer_msec.millitm;
+    return timestamp_msec;
 }
 
 }

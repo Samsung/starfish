@@ -85,7 +85,12 @@ class DOMException;
 #ifdef STARFISH_EXP
 class DOMImplementation;
 #endif
+class Navigator;
 class ScriptBindingInstance;
+class Geolocation;
+class Geoposition;
+class PositionError;
+class Coordinates;
 
 typedef escargot::ESValue ScriptValue;
 typedef escargot::ESObject* ScriptObject;
@@ -126,6 +131,11 @@ public:
         SourceBufferObject = 1 << 23 | EventTargetObject,
         SourceBufferListObject = 1 << 24 | EventTargetObject,
 #endif
+        NavigatorObject = 1 << 25,
+        GeolocationObject = 1 << 26,
+        GeopositionObject = 1 << 27,
+        PositionErrorObject = 1 << 28,
+        CoordinatesObject = 1 << 29,
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -210,6 +220,11 @@ public:
     void initScriptWrappable(Blob* ptr);
     void initScriptWrappable(URL* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance);
+    void initScriptWrappable(Navigator* ptr);
+    void initScriptWrappable(Geolocation* ptr);
+    void initScriptWrappable(Geoposition* ptr);
+    void initScriptWrappable(Coordinates* ptr);
+    void initScriptWrappable(PositionError* ptr);
 
     bool hasProperty(String* name);
 

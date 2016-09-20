@@ -13,15 +13,19 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+#include "StarFishConfig.h"
 
-#ifndef __StarFishProfiling__
-#define __StarFishProfiling__
+#include "Navigator.h"
+#include "platform/location/Geolocation.h"
 
 namespace StarFish {
 
-uint64_t tickCount(); // increase 1000 by 1 second
-uint64_t timestamp(); // increase 1000 by 1 second
+Navigator::Navigator(StarFish* starFish)
+    : ScriptWrappable(this)
+    , m_starFish(starFish)
+    , m_geoLocation(nullptr)
+{
 
 }
 
-#endif
+}

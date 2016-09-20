@@ -345,6 +345,7 @@ SRC += $(foreach dir, src/platform/canvas , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/image , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/canvas/font , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/file_io , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/platform/location , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/platform/profiling , $(wildcard $(dir)/*.cpp))
 
 SRC += $(foreach dir, src/public , $(wildcard $(dir)/*.cpp))
@@ -452,11 +453,11 @@ else ifneq (,$(findstring tizen,$(HOST)))
 
   TIZEN_INCLUDE = dlog elementary-1 elocation-1 efl-1 ecore-x-1 eina-1 eina-1/eina eet-1 evas-1 ecore-1 ecore-evas-1 ecore-file-1 \
                   ecore-input-1 edje-1 eo-1 emotion-1 ecore-imf-1 ecore-con-1 eio-1 eldbus-1 efl-extension \
-                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 dbus-1.0 freetype2 media cairo network
+                  efreet-1 ecore-input-evas-1 ecore-audio-1 embryo-1 ecore-imf-evas-1 ethumb-1 eeze-1 eeze-1 e_dbus-1 dbus-1.0 freetype2 media cairo network  location
   ifneq ($(TIZEN_VERSION), 2.3.1)
     TIZEN_INCLUDE += emile-1 ethumb-client-1
   endif
-  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo capi-network-connection dlog icui18n icuuc icudata
+  TIZEN_LIB = ecore evas rt efl-extension freetype capi-media-player elementary fontconfig ecore_evas ecore_input cairo capi-network-connection dlog icui18n icuuc icudata capi-location-manager
 
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
   CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))

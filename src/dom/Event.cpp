@@ -16,11 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "Event.h"
-
-#include <time.h>
-
-#define BILLION 1000000000L
-#define MILLION 1000000L
+#include "platform/profiling/Profiling.h"
 
 namespace StarFish {
 
@@ -48,9 +44,7 @@ Event::Event()
     , m_defaultPrevented(false)
     , m_isDispatched(false)
 {
-    struct timespec time;
-    clock_gettime(CLOCK_REALTIME, &time);
-    m_timeStamp = (unsigned long long)(BILLION * time.tv_sec + time.tv_nsec) / MILLION;
+    m_timeStamp = timestamp();
 }
 
 Event::Event(String* eventType, const EventInit& init)
@@ -65,9 +59,7 @@ Event::Event(String* eventType, const EventInit& init)
     , m_defaultPrevented(false)
     , m_isDispatched(false)
 {
-    struct timespec time;
-    clock_gettime(CLOCK_REALTIME, &time);
-    m_timeStamp = (unsigned long long)(BILLION * time.tv_sec + time.tv_nsec) / MILLION;
+    m_timeStamp = timestamp();
 }
 
 ProgressEventInit::ProgressEventInit()
