@@ -47,4 +47,14 @@ void Console::error(String* m)
     STARFISH_LOG_ERROR("console.error: %s\n", m->utf8Data());
 }
 
+void Console::warn(String* m)
+{
+#if defined(STARFISH_ENABLE_INSPECTOR)
+    if (m_starFish->inspector()) {
+        m_starFish->inspector()->sendWarnMessage(m);
+    }
+#endif
+    STARFISH_LOG_ERROR("console.warn: %s\n", m->utf8Data());
+}
+
 }

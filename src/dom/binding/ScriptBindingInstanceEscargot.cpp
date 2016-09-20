@@ -276,6 +276,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         wnd->starFish()->console()->error(toBrowserString(instance->currentExecutionContext()->readArgument(0).toString()));
         return escargot::ESValue();
     }, escargot::ESString::create("error"), 1, false));
+    console->set(escargot::ESString::create("warn"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        wnd->starFish()->console()->warn(toBrowserString(instance->currentExecutionContext()->readArgument(0).toString()));
+        return escargot::ESValue();
+    }, escargot::ESString::create("warn"), 1, false));
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
 #ifdef STARFISH_ENABLE_MULTI_PAGE
@@ -4840,7 +4845,7 @@ escargot::ESFunctionObject* bindingGeolocation(ScriptBindingInstance* scriptBind
 
         escargot::ESValue opt = instance->currentExecutionContext()->readArgument(2);
         int32_t maximumAgeNumber = 0;
-        int32_t timeoutNumber = std::numeric_limits<int32_t>::infinity();
+        int32_t timeoutNumber = std::numeric_limits<int32_t>::max();
         bool enableHighAccuracy = false;
         if (opt.isObject()) {
             escargot::ESValue maximumAge = opt.asObject()->get(escargot::ESString::create("maximumAge"));
@@ -4853,10 +4858,10 @@ escargot::ESFunctionObject* bindingGeolocation(ScriptBindingInstance* scriptBind
 
             escargot::ESValue timeout = opt.asObject()->get(escargot::ESString::create("timeout"));
             double timeoutNumberDouble = timeout.toNumber();
-            if (timeout < 0) {
+            if (std::isnan(timeoutNumberDouble)) {
+                timeoutNumber = std::numeric_limits<int32_t>::max();
+            } else if (timeout < 0) {
                 timeoutNumber = 0;
-            } else if (std::isnan(timeoutNumberDouble)) {
-                timeoutNumber = std::numeric_limits<int32_t>::infinity();
             } else {
                 timeoutNumber = timeoutNumberDouble;
             }

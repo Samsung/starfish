@@ -29,6 +29,7 @@ public:
 
     void sendInfoMessage(String* m);
     void sendErrorMessage(String* m);
+    void sendWarnMessage(String* m);
 protected:
     StarFish* m_starFish;
     zmq::context_t m_zmqContext;
