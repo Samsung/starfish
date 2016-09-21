@@ -429,7 +429,10 @@ else ifeq ($(HOST), tizen_obs)
   CXX          = g++
   STRIP        = strip
   TIZEN_DEPS = dlog elementary ecore libpng cairo freetype2 fontconfig icu-uc icu-i18n \
-               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player capi-location-manager 
+               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player
+ifneq ($(TIZEN_PROFILE),tv)
+	TIZEN_DEPS += capi-location-manager
+endif
   CXXFLAGS    += $(shell pkg-config --cflags $(TIZEN_DEPS))
   LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS))
   LIB = libWebWidgetEngine.so
@@ -647,7 +650,7 @@ install_pixel_test_dep:
 
 install_inspector_nwjs:
 	cd inspector ; ./setup_nwjs.sh
-	
+
 run_inspector:
 	./inspector/nwjs-v0.17.0-linux-x64/nw ./inspector/ > /dev/null &
 
