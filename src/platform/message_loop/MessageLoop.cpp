@@ -37,7 +37,7 @@ struct IdlerData {
     void* m_data;
     void* m_data1;
     void* m_data2;
-    Ecore_Idler* m_idler;
+    Ecore_Animator* m_idler;
     MessageLoop* m_ml;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
@@ -52,7 +52,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*), void* data)
     id->m_fn = fn;
     id->m_data = data;
     id->m_ml = this;
-    id->m_idler = ecore_idler_add([](void* data) -> Eina_Bool {
+    id->m_idler = ecore_animator_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
         StarFishEnterer enter(id->m_ml->m_starFish);
@@ -75,7 +75,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*), void* data, void*
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
-    id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
+    id->m_idler =  ecore_animator_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
         StarFishEnterer enter(id->m_ml->m_starFish);
@@ -99,7 +99,7 @@ size_t MessageLoop::addIdler(void (*fn)(size_t, void*, void*, void*), void* data
     id->m_data1 = data1;
     id->m_data2 = data2;
     id->m_ml = this;
-    id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
+    id->m_idler =  ecore_animator_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
 
@@ -155,7 +155,7 @@ size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(void (*fn)(size_t handl
     id->m_data = data;
     id->m_data1 = data1;
     id->m_ml = this;
-    id->m_idler =  ecore_idler_add([](void* data) -> Eina_Bool {
+    id->m_idler =  ecore_animator_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
         ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data, id->m_data1);
@@ -170,7 +170,7 @@ void MessageLoop::removeIdler(size_t handle)
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = (IdlerData*)handle;
     m_idlers.erase(m_idlers.find(handle));
-    ecore_idler_del(id->m_idler);
+    ecore_animator_del(id->m_idler);
     GC_FREE(id);
 }
 
@@ -185,7 +185,7 @@ void MessageLoop::clearPendingIdlers()
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
-        ecore_idler_del(id->m_idler);
+        ecore_animator_del(id->m_idler);
         GC_FREE(id);
     }
     m_idlers.clear();

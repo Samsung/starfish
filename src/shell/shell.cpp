@@ -174,7 +174,7 @@ int main(int argc, char *argv[])
             pass->sf = (StarFish::StarFish*)data;
             memcpy(b, buf, sizeof buf);
             ecore_thread_main_loop_begin();
-            ecore_idler_add([](void *data) -> Eina_Bool {
+            ecore_animator_add([](void *data) -> Eina_Bool {
                 Pass* p = (Pass*)data;
 
                 if (strncmp(p->buf, "!exit", 5) == 0) {

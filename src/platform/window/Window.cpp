@@ -230,9 +230,9 @@ CanvasSurface* CanvasSurface::create(Window* wnd, size_t w, size_t h)
     return new CanvasSurfaceEFL(wnd, w, h);
 }
 
-void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
+static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv, void* user_data)
 {
-    ecore_idler_add([](void* user_data) -> Eina_Bool {
+    ecore_animator_add([](void* user_data) -> Eina_Bool {
         WindowImplEFL* wnd = (WindowImplEFL*)user_data;
         wnd->setNeedsLayout();
         return ECORE_CALLBACK_CANCEL;
@@ -862,10 +862,13 @@ void Window::setNetworkState(bool state)
 void Window::screenShot(std::string filePath)
 {
     bool oldNeedsPainting = m_needsPainting;
+    bool oldOnLoad = g_fireOnloadEvent;
+    g_fireOnloadEvent = true;
     setNeedsPainting();
     setenv("SCREEN_SHOT", filePath.data(), 1);
     rendering();
     setenv("SCREEN_SHOT", "", 1);
+    g_fireOnloadEvent = oldOnLoad;
 
     m_needsPainting = oldNeedsPainting;
     setNeedsRendering();
