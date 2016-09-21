@@ -33,6 +33,7 @@ BuildRequires: pkgconfig(libavutil)
 BuildRequires: pkgconfig(libavformat)
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
+BuildRequires: pkgconfig(capi-location-manager)
 
 %description
 Implementation of Web Widget Engine
