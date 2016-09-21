@@ -33,7 +33,9 @@ BuildRequires: pkgconfig(libavutil)
 BuildRequires: pkgconfig(libavformat)
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
+%if "%{?tizen_profile_name}" != "tv"
 BuildRequires: pkgconfig(capi-location-manager)
+%endif
 
 %description
 Implementation of Web Widget Engine
