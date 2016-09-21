@@ -51,8 +51,6 @@ struct LocationRequestInfoTizen {
     double climb;
     double direction;
     double speed;
-    double horizontal;
-    double vertical;
     double horizontalAccuracy;
     double verticalAccuracy;
 
@@ -84,8 +82,6 @@ public:
         double climb;
         double direction;
         double speed;
-        double horizontal;
-        double vertical;
         double horizontalAccuracy;
         double verticalAccuracy;
         DOMTimeStamp timestamp;
@@ -155,8 +151,6 @@ void GeolocationTizen::getCurrentPosition(GeopositionCallback cb, void* cbData, 
             info->climb = m_cachedLocation.climb;
             info->direction = m_cachedLocation.direction;
             info->speed = m_cachedLocation.speed;
-            info->horizontal = m_cachedLocation.horizontal;
-            info->vertical = m_cachedLocation.vertical;
             info->horizontalAccuracy = m_cachedLocation.horizontalAccuracy;
             info->verticalAccuracy = m_cachedLocation.verticalAccuracy;
             info->timestamp = m_cachedLocation.timestamp;
@@ -203,6 +197,9 @@ void GeolocationTizen::getCurrentPosition(GeopositionCallback cb, void* cbData, 
 
             info->starFish->window()->clearTimeout(info->timeoutId);
 
+            location_accuracy_level_e level;
+            location_manager_get_last_accuracy(info->manager, &level, &info->horizontalAccuracy, &info->verticalAccuracy);
+
             info->geolocation->m_cachedLocation.latitude = info->latitude = latitude;
             info->geolocation->m_cachedLocation.longitude = info->longitude = longitude;
             info->geolocation->m_cachedLocation.altitude = info->altitude = altitude;
@@ -210,9 +207,8 @@ void GeolocationTizen::getCurrentPosition(GeopositionCallback cb, void* cbData, 
             info->geolocation->m_cachedLocation.direction = info->direction = direction;
             info->geolocation->m_cachedLocation.climb = info->climb = climb;
             info->geolocation->m_cachedLocation.timestamp = info->timestamp = (uint64_t)timestamp * 1000L;
-
-            location_accuracy_level_e level;
-            location_manager_get_last_accuracy(info->manager, &level, &info->horizontalAccuracy, &info->verticalAccuracy);
+            info->geolocation->m_cachedLocation.horizontalAccuracy = info->horizontalAccuracy;
+            info->geolocation->m_cachedLocation.verticalAccuracy = info->verticalAccuracy;
 
             info->starFish->messageLoop()->addIdler([](size_t, void* data) {
                 LocationRequestInfoTizen* info = (LocationRequestInfoTizen*)data;
