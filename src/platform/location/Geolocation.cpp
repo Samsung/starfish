@@ -22,7 +22,7 @@
 
 namespace StarFish {
 
-#ifndef STARFISH_TIZEN
+#if !defined(STARFISH_TIZEN_MOBILE) && !defined(STARFISH_TIZEN_WEARABLE)
 Geolocation* Geolocation::create(StarFish* starFish)
 {
     return new Geolocation(starFish);

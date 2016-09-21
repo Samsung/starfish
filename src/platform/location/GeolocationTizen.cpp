@@ -17,7 +17,7 @@
 #include "StarFishConfig.h"
 #include "Geolocation.h"
 
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE)
 
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/profiling/Profiling.h"
@@ -92,7 +92,7 @@ public:
     } m_cachedLocation;
 };
 
-#ifdef STARFISH_TIZEN
+#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE)
 Geolocation* Geolocation::create(StarFish* starFish)
 {
     return new GeolocationTizen(starFish);
