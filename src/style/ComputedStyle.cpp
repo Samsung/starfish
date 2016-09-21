@@ -235,7 +235,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamagePainting | damage);
 
     if (newStyle->m_inheritedStyles.m_direction != oldStyle->m_inheritedStyles.m_direction)
-        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
 
     if (newStyle->m_inheritedStyles.m_whiteSpace != oldStyle->m_inheritedStyles.m_whiteSpace)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);

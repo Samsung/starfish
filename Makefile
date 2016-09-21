@@ -429,7 +429,7 @@ else ifeq ($(HOST), tizen_obs)
   CXX          = g++
   STRIP        = strip
   TIZEN_DEPS = dlog elementary ecore libpng cairo freetype2 fontconfig icu-uc icu-i18n \
-               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player
+               ecore-imf-evas efl-extension libpng capi-network-connection capi-media-player capi-location-manager 
   CXXFLAGS    += $(shell pkg-config --cflags $(TIZEN_DEPS))
   LDFLAGS     += $(shell pkg-config --libs $(TIZEN_DEPS))
   LIB = libWebWidgetEngine.so
