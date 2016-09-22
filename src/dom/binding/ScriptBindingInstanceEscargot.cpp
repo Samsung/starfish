@@ -4850,7 +4850,7 @@ escargot::ESFunctionObject* bindingGeolocation(ScriptBindingInstance* scriptBind
         if (opt.isObject()) {
             escargot::ESValue maximumAge = opt.asObject()->get(escargot::ESString::create("maximumAge"));
             double maximumAgeNumberDouble = maximumAge.toNumber();
-            if (std::isnan(maximumAgeNumberDouble) || maximumAgeNumber < 0) {
+            if (std::isnan(maximumAgeNumberDouble) || maximumAgeNumberDouble < 0) {
                 maximumAgeNumber = 0;
             } else {
                 maximumAgeNumber = maximumAgeNumberDouble;
@@ -4860,7 +4860,7 @@ escargot::ESFunctionObject* bindingGeolocation(ScriptBindingInstance* scriptBind
             double timeoutNumberDouble = timeout.toNumber();
             if (std::isnan(timeoutNumberDouble)) {
                 timeoutNumber = std::numeric_limits<int32_t>::max();
-            } else if (timeout < 0) {
+            } else if (timeoutNumberDouble < 0) {
                 timeoutNumber = 0;
             } else {
                 timeoutNumber = timeoutNumberDouble;

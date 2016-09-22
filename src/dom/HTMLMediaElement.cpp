@@ -36,6 +36,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
 void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
         if (!m_mediaPlayer) {
             return;

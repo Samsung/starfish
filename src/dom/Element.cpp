@@ -48,6 +48,7 @@
 #include "HTMLTrackElement.h"
 #endif
 #include "dom/Attr.h"
+#include "dom/xml/XMLSerializer.h"
 
 namespace StarFish {
 
@@ -200,8 +201,7 @@ void Element::setTextContent(String* text)
 #ifdef STARFISH_ENABLE_TEST
 String* Element::innerHTML()
 {
-    // STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return String::emptyString;
+    return XMLSerializer::serializeToXML(this, false);
 }
 
 void Element::setInnerHTML(String* html)
@@ -215,7 +215,9 @@ void Element::setInnerHTML(String* html)
     HTMLParser parser(document()->window()->starFish(), df, this, html);
     parser.startParse();
     parser.parseStep();
+    parser.endParse();
     appendChild(df);
+
 }
 #endif
 

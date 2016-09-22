@@ -46,7 +46,8 @@ void HTMLParser::parseStep()
             TextPosition pos;
             HTMLScriptElement* script = m_treeBuilder.takeScriptToProcess(pos)->asHTMLElement()->asHTMLScriptElement();
             script->clearParserInserted();
-            bool shouldStop = script->executeScript(m_treeBuilder.isParsingFragment(), true);
+            bool shouldStop = script->executeScript(false, true);
+            script->markScriptExecuted();
             if (shouldStop)
                 break;
         }

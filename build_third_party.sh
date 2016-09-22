@@ -8,6 +8,7 @@ if [ ! -f /proc/cpuinfo ]; then
 	exit 1
 fi
 NUMPROC=$(grep 'processor' /proc/cpuinfo | wc -l)
+CU=$PWD
 
 
 #COMPILER_VERSION_MAJOR=4.9
@@ -227,7 +228,7 @@ fi
 fi
 
 
-cd -
+cd $CU
 
 
 #exit

@@ -312,6 +312,9 @@ CXXFLAGS += -Ithird_party/skia_matrix/
 #clipper
 CXXFLAGS += -Ithird_party/clipper/cpp/
 
+#rapidxml
+CXXFLAGS += -Ithird_party/rapidxml/
+
 #webm
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -Ithird_party/webm/
@@ -331,6 +334,7 @@ SRC += $(foreach dir, src/dom/parser , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/builder , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/builder/html , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/dom/binding , $(wildcard $(dir)/*.cpp))
+SRC += $(foreach dir, src/dom/xml , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/layout , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/loader , $(wildcard $(dir)/*.cpp))
 SRC += $(foreach dir, src/inspector , $(wildcard $(dir)/*.cpp))

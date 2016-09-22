@@ -32,7 +32,6 @@ public:
         m_starFish = sf;
         m_document = document;
         m_documentFragment = nullptr;
-        m_contextElement = nullptr;
         m_source = sourceString;
         m_input.appendToEnd(SegmentedString(sourceString));
         m_token = new HTMLToken();
@@ -43,7 +42,6 @@ public:
     {
         m_starFish = sf;
         m_documentFragment = df;
-        m_contextElement = contextElement;
         m_document = df->document();
         m_source = sourceString;
         m_input.appendToEnd(SegmentedString(sourceString));
@@ -70,7 +68,6 @@ private:
     StarFish* m_starFish;
     Document* m_document;
     DocumentFragment* m_documentFragment;
-    Element* m_contextElement;
     HTMLToken* m_token;
     HTMLTreeBuilder m_treeBuilder;
     HTMLTokenizer m_tokenizer;
