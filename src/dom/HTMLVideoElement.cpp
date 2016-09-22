@@ -42,6 +42,8 @@ unsigned long HTMLVideoElement::videoHeight()
 
 void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
+    HTMLMediaElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
+
     if (name == document()->window()->starFish()->staticStrings()->m_width
         || name == document()->window()->starFish()->staticStrings()->m_height) {
         if (frame()) {

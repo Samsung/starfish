@@ -81,6 +81,11 @@ public:
         return m_didScriptExecuted;
     }
     bool executeScript(bool forceSync = false, bool inParser = false);
+    void markScriptExecuted()
+    {
+        m_isAlreadyStarted = true;
+        m_didScriptExecuted = true;
+    }
 
 protected:
     bool m_isAlreadyStarted;
