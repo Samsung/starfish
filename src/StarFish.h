@@ -424,6 +424,7 @@ protected:
     Inspector* m_inspector;
 #endif
     size_t m_enterCount;
+    unsigned int m_seed;
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
         gc_allocator<std::pair<void*, size_t>>> m_rootMap;
     std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
