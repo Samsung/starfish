@@ -734,11 +734,13 @@ void ScriptWrappable::initScriptWrappable(PositionError* ptr)
     scriptObject()->set__proto__(data->positionError()->protoType());
 }
 
+#ifdef STARFISH_ENABLE_DOMPARSER
 void ScriptWrappable::initScriptWrappable(DOMParser* ptr)
 {
     auto data = fetchData(ptr->starFish()->window()->scriptBindingInstance());
     scriptObject()->set__proto__(data->domParser()->protoType());
 }
+#endif
 
 void ScriptWrappable::initScriptWrappable(HTMLDocument*)
 {
