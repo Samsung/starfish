@@ -66,7 +66,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(geoposition, Geoposition) \
     F(coordinates, Coordinates) \
     F(positionError, PositionError) \
-    F(domParser, DOMParser) \
+
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
@@ -94,10 +94,18 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
 #endif
 
+#ifdef STARFISH_ENABLE_DOMPARSER
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) \
+    F(domParser, DOMParser)
+#else
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
+#endif
+
 #define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
     STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
-    STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F)
+    STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
 
 #define FOR_EACH_DECLARE_FN(codeName, exportName) \
     escargot::ESFunctionObject* binding##exportName(ScriptBindingInstance* scriptBindingInstance);

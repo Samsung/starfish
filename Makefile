@@ -32,8 +32,14 @@ endif
 MEDIA_SUPPORT=false
 MEDIA_SUPPORT_KEY=STARFISH_ENABLE_MULTIMEDIA
 
+# multipage
+MULTIPAGE_SUPPORT=false
+
 # inspector
 INSPECTOR_SUPPORT=false
+
+# dom parser
+DOMPARSER_SUPPORT=false
 
 $(info goal... $(MAKECMDGOALS))
 
@@ -166,8 +172,9 @@ LDFLAGS += -lpthread -lcurl
 ifeq ($(ARCH), x64)
   INSPECTOR_SUPPORT=true
   MEDIA_SUPPORT=true
+  DOMPARSER_SUPPORT=true
+  MULTIPAGE_SUPPORT=true
   CXXFLAGS += -DSTARFISH_ENABLE_TEST
-  CXXFLAGS += -DSTARFISH_ENABLE_MULTI_PAGE
 else ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2
   LDFLAGS += -m32
@@ -232,10 +239,12 @@ ifneq (,$(findstring tizen,$(HOST)))
   endif
   ifeq ($(TIZEN_PROFILE),tv)
     MEDIA_SUPPORT=true
+    DOMPARSER_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_TV
   endif
   ifeq ($(TIZEN_PROFILE),mobile)
     MEDIA_SUPPORT=true
+    DOMPARSER_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_MOBILE
   endif
 endif
@@ -254,6 +263,14 @@ endif
 
 ifeq ($(INSPECTOR_SUPPORT), true)
   CXXFLAGS += -DSTARFISH_ENABLE_INSPECTOR
+endif
+
+ifeq ($(MULTIPAGE_SUPPORT), true)
+  CXXFLAGS += -DSTARFISH_ENABLE_MULTI_PAGE
+endif
+
+ifeq ($(DOMPARSER_SUPPORT), true)
+  CXXFLAGS += -DSTARFISH_ENABLE_DOMPARSER
 endif
 
 ################################################################################

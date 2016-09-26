@@ -13,8 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
-#ifndef __StarFishDOMParser__
+#if defined(STARFISH_ENABLE_DOMPARSER) && !defined(__StarFishDOMParser__)
 #define __StarFishDOMParser__
 
 #include "dom/binding/ScriptWrappable.h"

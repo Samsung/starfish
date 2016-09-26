@@ -13,7 +13,7 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-
+#ifdef STARFISH_ENABLE_DOMPARSER
 #include "StarFishConfig.h"
 #include "DOMParser.h"
 #include "dom/DOMException.h"
@@ -130,3 +130,4 @@ Document* DOMParser::parseFromString(String* str, String* type)
 }
 
 }
+#endif
