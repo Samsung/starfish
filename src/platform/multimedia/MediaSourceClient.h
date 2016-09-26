@@ -97,6 +97,11 @@ public:
         return m_rawDataList[m_curListIdx].size;
     }
 
+    int totalSize()
+    {
+        return m_totalSize;
+    }
+
     char* rawData()
     {
         return m_rawDataList[m_curListIdx].memory;
@@ -111,6 +116,7 @@ private:
     int m_pos;
     char* m_rawData;
     int m_dataSize;
+    int m_totalSize;
     std::vector<MediaRawData> m_rawDataList;
     int m_curListIdx;
     AVIOContext* m_avioctx;
@@ -151,6 +157,16 @@ public:
         return m_player;
     }
 
+    bool isReady()
+    {
+        return m_isReady;
+    }
+
+    void setReady()
+    {
+        m_isReady = true;
+    }
+
 protected:
     VideoPlayer* m_player;
     AVFormatContext* m_formatContext;
@@ -159,6 +175,7 @@ protected:
     int m_audioStreamIdx;
     int m_subtitleStreamIdx;
     bool m_isWebm;
+    bool m_isReady;
     Mutex* m_mutex;
 };
 
