@@ -192,6 +192,14 @@ void HTMLDocumentBuilder::build(URL* url)
 #endif
 }
 
+void HTMLDocumentBuilder::build(String* str)
+{
+    m_document->resourceLoader()->markDocumentOpenState();
+    HTMLParser parser(m_document->window()->starFish(), m_document, str);
+    parser.startParse();
+    parser.parseStep();
+}
+
 void HTMLDocumentBuilder::resume()
 {
     m_parser->parseStep();

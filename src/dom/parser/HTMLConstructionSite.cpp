@@ -42,14 +42,7 @@
 #include "StarFishConfig.h"
 #include "HTMLConstructionSite.h"
 
-#include "dom/Comment.h"
-#include "dom/DocumentType.h"
-#include "dom/Element.h"
-#include "dom/Text.h"
-#include "dom/DocumentFragment.h"
-
-#include "dom/HTMLScriptElement.h"
-#include "dom/HTMLHtmlElement.h"
+#include "dom/DOM.h"
 #include "dom/parser/AtomicHTMLToken.h"
 #include "dom/parser/HTMLParserIdioms.h"
 #include "dom/parser/HTMLStackItem.h"
@@ -759,8 +752,15 @@ void HTMLConstructionSite::takeAllChildren(HTMLStackItem* newParent, HTMLElement
 
 Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token, const AtomicString& namespaceURI)
 {
+    Element* element;
     QualifiedName tagName(namespaceURI, AtomicString::createAttrAtomicString(m_document->window()->starFish(), token->name()));
-    Element* element = ownerDocumentForCurrentNode().createElement(tagName, false);
+
+    // TODO add special xml documents here!
+    if (namespaceURI == m_document->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI) {
+        element = HTMLDocument::createHTMLElement(&ownerDocumentForCurrentNode(), tagName.localNameAtomic());
+    } else {
+        element = new NamedElement(&ownerDocumentForCurrentNode(), tagName);
+    }
     setAttributes(element, token);
     return element;
 }
@@ -783,7 +783,7 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     // have to pass the current form element. We should rework form association
     // to occur after construction to allow better code sharing here.
     // Element* element = HTMLElementFactory::createHTMLElement(token->name(), document, form, true);
-    QualifiedName tagName = QualifiedName(token->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(m_document->window()->starFish(), token->name()));
+    AtomicString tagName = AtomicString::createAttrAtomicString(m_document->window()->starFish(), token->name());
     Element* element = ownerDocumentForCurrentNode().createElement(tagName, false);
     setAttributes(element, token);
     ASSERT(element->isHTMLElement());

@@ -48,7 +48,7 @@ void HTMLMetaElement::didNodeRemovedFromDocumenTree()
 
 void HTMLMetaElement::checkPlatformFlags()
 {
-    if (isInDocumentScope()) {
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
 #ifdef STARFISH_ENABLE_TEST
         if (m_name->equalsWithoutCase("pixel-test")) {
             g_enablePixelTest = true;

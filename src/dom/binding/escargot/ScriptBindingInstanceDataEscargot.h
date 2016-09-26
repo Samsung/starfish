@@ -65,7 +65,8 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(geolocation, Geolocation) \
     F(geoposition, Geoposition) \
     F(coordinates, Coordinates) \
-    F(positionError, PositionError)
+    F(positionError, PositionError) \
+    F(domParser, DOMParser) \
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
@@ -210,6 +211,7 @@ private:
     escargot::ESFunctionObject* m_coordinates;
     escargot::ESFunctionObject* m_geoposition;
     escargot::ESFunctionObject* m_positionError;
+    escargot::ESFunctionObject* m_domParser;
 
 public:
 #define FOR_EACH_SCRIPTVALUE_FN(codeName, exportName) \

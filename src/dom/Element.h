@@ -62,13 +62,22 @@ public:
         m_className = String::emptyString;
     }
 
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::NodeObject;
+    }
+
     /* 4.4 Interface Node */
     virtual NodeType nodeType()
     {
         return ELEMENT_NODE;
     }
 
-    virtual String* nodeName() = 0;
     virtual String* textContent()
     {
         if ((nodeType() == TEXT_NODE) || (nodeType() == DOCUMENT_FRAGMENT_NODE)) {
@@ -239,6 +248,35 @@ private:
     std::vector<String*, gc_allocator<String*>> m_classNames;
     AttributeVector m_attributes;
 };
+
+// used for not of html, xhtml, svg element
+class NamedElement : public Element {
+public:
+    NamedElement(Document* document, const QualifiedName& name)
+        : Element(document)
+        , m_name(name)
+    {
+    }
+
+    virtual QualifiedName name()
+    {
+        return m_name;
+    }
+
+    virtual String* localName()
+    {
+        return m_name.localName();
+    }
+
+    virtual String* nodeName()
+    {
+        return m_name.localName();
+    }
+
+protected:
+    QualifiedName m_name;
+};
+
 }
 
 #endif

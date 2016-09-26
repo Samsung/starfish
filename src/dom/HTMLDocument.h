@@ -26,8 +26,8 @@ class Window;
 
 class HTMLDocument : public Document {
 public:
-    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet)
-        : Document(window, scriptBindingInstance, url, charSet)
+    HTMLDocument(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet, bool doesParticipateInRendering)
+        : Document(window, scriptBindingInstance, url, charSet, doesParticipateInRendering)
     {
     }
 
@@ -36,6 +36,8 @@ public:
         initScriptWrappable(this);
     }
 
+    virtual Element* createElement(AtomicString localName, bool shouldCheckName);
+    static Element* createHTMLElement(Document* document, AtomicString localName);
 protected:
 };
 

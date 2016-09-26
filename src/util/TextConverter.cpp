@@ -33,7 +33,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
 
         m_converter = ucnv_open(type->utf8Data(), &err);
         if (!U_FAILURE(err)) {
-            m_encoding = type;
+            m_encoding = String::fromUTF8(ucnv_getName(m_converter, &err));
             registerFinalizer();
             return;
         } else {

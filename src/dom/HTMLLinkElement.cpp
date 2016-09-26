@@ -51,7 +51,7 @@ void HTMLLinkElement::didNodeRemovedFromDocumenTree()
 
 void HTMLLinkElement::checkLoadStyleSheet()
 {
-    if (!isInDocumentScope()) {
+    if (!isInDocumentScopeAndDocumentParticipateInRendering()) {
         unloadStyleSheetIfExists();
         return;
     }

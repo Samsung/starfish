@@ -38,7 +38,7 @@ bool isCSSType(const char* type)
 void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
 {
     HTMLElement::didCharacterDataModified(before, after);
-    if (isInDocumentScope()) {
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
         removeStyleSheet();
         generateStyleSheet();
     }
@@ -47,7 +47,7 @@ void HTMLStyleElement::didCharacterDataModified(String* before, String* after)
 void HTMLStyleElement::didNodeInserted(Node* parent, Node* newChild)
 {
     HTMLElement::didNodeInserted(parent, newChild);
-    if (isInDocumentScope()) {
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
         removeStyleSheet();
         generateStyleSheet();
     }
@@ -56,7 +56,7 @@ void HTMLStyleElement::didNodeInserted(Node* parent, Node* newChild)
 void HTMLStyleElement::didNodeRemoved(Node* parent, Node* oldChild)
 {
     HTMLElement::didNodeInserted(parent, oldChild);
-    if (isInDocumentScope()) {
+    if (isInDocumentScopeAndDocumentParticipateInRendering()) {
         removeStyleSheet();
         generateStyleSheet();
     }
@@ -77,7 +77,7 @@ void HTMLStyleElement::didNodeRemovedFromDocumenTree()
 
 void HTMLStyleElement::generateStyleSheet()
 {
-    STARFISH_ASSERT(isInDocumentScope());
+    STARFISH_ASSERT(isInDocumentScopeAndDocumentParticipateInRendering());
 
     if (m_inParsing)
         return;

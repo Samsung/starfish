@@ -453,14 +453,47 @@ bool Node::isInDocumentScope()
     return false;
 }
 
-void notifyNodeInsertedToDocumentTree(Node* node)
+bool Node::isInDocumentScopeAndDocumentParticipateInRendering()
 {
+    Node* t = this;
+    while (t) {
+        if (t->isDocument())
+            return t->asDocument()->doesParticipateInRendering();
+        t = t->parentNode();
+    }
+    return false;
+}
+
+static void notifyNodeInsertedToDocumentTree(Node* head, Node* node)
+{
+    // adopt node
+    if (node->document() != head->document()) {
+        node->setDocument(head->document());
+        node->didNodeAdopted();
+    }
+
     node->didNodeInsertedToDocumenTree();
     Node* child = node->firstChild();
     while (child) {
-        notifyNodeInsertedToDocumentTree(child);
+        notifyNodeInsertedToDocumentTree(head, child);
         child = child->nextSibling();
     }
+}
+
+static void didInsertNode(Node* self, Node* child)
+{
+    child->setParentNode(self);
+
+    self->notifyDOMEventToParentTree(self, [self, child](Node* parent) {
+        parent->didNodeInserted(self, child);
+    });
+
+    if (self->isInDocumentScope() && self->document()->doesParticipateInRendering()) {
+        notifyNodeInsertedToDocumentTree(self, child);
+        child->setNeedsStyleRecalc();
+        child->setNeedsFrameTreeBuild();
+    }
+
 }
 
 Node* Node::appendChild(Node* child)
@@ -494,17 +527,8 @@ Node* Node::appendChild(Node* child)
         m_firstChild = child;
     }
     m_lastChild = child;
-    child->setParentNode(this);
-    child->setNeedsStyleRecalc();
-    setNeedsFrameTreeBuild();
 
-    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
-        parent->didNodeInserted(this, child);
-    });
-
-    if (isInDocumentScope()) {
-        notifyNodeInsertedToDocumentTree(child);
-    }
+    didInsertNode(this, child);
 
     return child;
 }
@@ -543,19 +567,10 @@ Node* Node::insertBefore(Node* child, Node* childRef)
         m_firstChild = child;
     }
 
-    child->setParentNode(this);
     child->setPreviousSibling(prev);
     child->setNextSibling(childRef);
-    child->setNeedsStyleRecalc();
-    setNeedsFrameTreeBuild();
 
-    notifyDOMEventToParentTree(this, [this, child](Node* parent) {
-        parent->didNodeInserted(this, child);
-    });
-
-    if (isInDocumentScope()) {
-        notifyNodeInsertedToDocumentTree(child);
-    }
+    didInsertNode(this, child);
 
     return child;
 }
@@ -659,7 +674,7 @@ Node* Node::removeChild(Node* child)
     child->setParentNode(nullptr);
     setNeedsFrameTreeBuild();
 
-    if (isInDocumentScope()) {
+    if (isInDocumentScope() && document()->doesParticipateInRendering()) {
         notifyNodeRemoveFromDocumentTree(child);
     }
 
@@ -684,11 +699,13 @@ Node* Node::parserAppendChild(Node* child)
         m_firstChild = child;
     }
     m_lastChild = child;
+
     child->setParentNode(this);
     child->setNeedsStyleRecalc();
     setNeedsFrameTreeBuild();
+
     if (isInDocumentScope()) {
-        notifyNodeInsertedToDocumentTree(child);
+        notifyNodeInsertedToDocumentTree(this, child);
     }
 
     notifyDOMEventToParentTree(this, [this, child](Node* parent) {
@@ -775,7 +792,7 @@ void Node::parserInsertBefore(Node* child, Node* childRef)
     });
 
     if (isInDocumentScope()) {
-        notifyNodeInsertedToDocumentTree(child);
+        notifyNodeInsertedToDocumentTree(this, child);
     }
 }
 
@@ -800,7 +817,7 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
     {
         QualifiedName* qualifiedName = (QualifiedName*)data;
         if (node->isElement()) {
-            if (node->asElement()->name() == *qualifiedName)
+            if (node->asElement()->name().localNameAtomic() == qualifiedName->localNameAtomic())
                 return true;
             if (qualifiedName->localName()->equals("*"))
                 return true;
@@ -870,6 +887,9 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
 
 void Node::setNeedsFrameTreeBuild()
 {
+    if (!document()->doesParticipateInRendering())
+        return;
+
     Frame* old = frame();
     if (old) {
         Frame* parent = old->parent();

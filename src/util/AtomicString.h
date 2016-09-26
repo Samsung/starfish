@@ -23,12 +23,17 @@ class StarFish;
 
 class AtomicString {
     friend class StarFish;
-    AtomicString(String* str)
+    explicit AtomicString(String* str)
     {
         m_string = str;
     }
 
 public:
+    AtomicString()
+    {
+        m_string = String::emptyString;
+    }
+
     static AtomicString createAtomicString(StarFish* sf, String* str);
     static AtomicString createAtomicString(StarFish* sf, const char* str);
     static AtomicString createAttrAtomicString(StarFish* sf, String* str);

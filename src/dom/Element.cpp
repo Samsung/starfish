@@ -225,9 +225,9 @@ Node* Element::clone()
 {
     Element* newNode = nullptr;
     if (isHTMLElement()) {
-        newNode = document()->createElement(name(), false);
+        newNode = HTMLDocument::createHTMLElement(document(), name().localNameAtomic());
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        newNode = new NamedElement(document(), name());
     }
 
     STARFISH_ASSERT(newNode);

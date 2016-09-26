@@ -58,6 +58,7 @@
 #include "dom/Attr.h"
 #include "dom/Traverse.h"
 #include "dom/NodeList.h"
+#include "dom/DOMParser.h"
 #include "extra/Blob.h"
 #include "extra/XMLHttpRequest.h"
 

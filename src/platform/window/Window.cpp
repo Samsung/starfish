@@ -464,7 +464,7 @@ void Window::navigate(URL* url)
 
     m_navigator = new Navigator(m_starFish);
 
-    m_document = new HTMLDocument(this, scriptBindingInstance(), url, String::createASCIIString("UTF-8"));
+    m_document = new HTMLDocument(this, scriptBindingInstance(), url, String::createASCIIString("UTF-8"), true);
     m_document->open();
 }
 

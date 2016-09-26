@@ -230,7 +230,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             FrameTreeBuilder::clearTree(current);
             return;
         }
-        bool isHTMLElement = current->isElement() && current->asElement()->asHTMLElement();
+        bool isHTMLElement = current->isElement() && current->asElement()->isHTMLElement();
         if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
             auto element = current->asElement()->asHTMLElement()->asHTMLImageElement();
             currentFrame = new FrameReplacedImage(current);

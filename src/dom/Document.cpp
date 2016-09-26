@@ -30,10 +30,11 @@
 
 namespace StarFish {
 
-Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* uri, String* charSet)
+Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* uri, String* charSet, bool doesParticipateInRendering)
     : Node(this, scriptBindingInstance)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
+    , m_doesParticipateInRendering(doesParticipateInRendering)
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_window(window)
     , m_documentURI(uri)
@@ -299,60 +300,12 @@ DocumentFragment* Document::createDocumentFragment()
     return new DocumentFragment(this);
 }
 
-Element* Document::createElement(QualifiedName localName, bool shouldCheckName)
+Element* Document::createElement(AtomicString localName, bool shouldCheckName)
 {
-    if (shouldCheckName && !QualifiedName::checkNameProductionRule(localName.localName(), localName.localName()->length()))
+    if (shouldCheckName && !QualifiedName::checkNameProductionRule(localName.string(), localName.string()->length()))
         throw new DOMException(document()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
-#ifdef STARFISH_TC_COVERAGE
-    if (localName.localName()->equals("style")) {
-        STARFISH_LOG_INFO("+++tag:Element&&&style\n");
-    } else {
-        STARFISH_LOG_INFO("+++tag:%s\n", localName.localName()->utf8Data());
-    }
-#endif
-
-    if (localName == window()->starFish()->staticStrings()->m_htmlTagName) {
-        return new HTMLHtmlElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_headTagName) {
-        return new HTMLHeadElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_styleTagName) {
-        return new HTMLStyleElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_scriptTagName) {
-        return new HTMLScriptElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_linkTagName) {
-        return new HTMLLinkElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_metaTagName) {
-        return new HTMLMetaElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_bodyTagName) {
-        return new HTMLBodyElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_divTagName) {
-        return new HTMLDivElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_pTagName) {
-        return new HTMLParagraphElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_spanTagName) {
-        return new HTMLSpanElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_brTagName) {
-        return new HTMLBRElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_imgTagName) {
-        return new HTMLImageElement(this);
-    }
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-    else if (localName == window()->starFish()->staticStrings()->m_videoTagName) {
-        return new HTMLVideoElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_audioTagName) {
-        return new HTMLAudioElement(this);
-    } else if (localName == window()->starFish()->staticStrings()->m_trackTagName) {
-        return new HTMLTrackElement(this);
-    }
-#endif
-#ifdef STARFISH_ENABLE_MULTI_PAGE
-    else if (localName == window()->starFish()->staticStrings()->m_aTagName) {
-        return new HTMLAnchorElement(this);
-    }
-#endif
-    STARFISH_LOG_INFO("got unknown element - %s\n", localName.localName()->utf8Data());
-    return new HTMLUnknownElement(this, localName);
+    return new NamedElement(this, QualifiedName(AtomicString(), localName));
 }
 
 Text* Document::createTextNode(String* data)

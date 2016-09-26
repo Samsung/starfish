@@ -34,6 +34,7 @@ public:
     }
 
     virtual void build(URL* url) = 0;
+    virtual void build(String* str) = 0;
     virtual void resume() = 0;
 
     Document* document()

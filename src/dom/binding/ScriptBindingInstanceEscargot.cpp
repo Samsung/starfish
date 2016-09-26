@@ -339,7 +339,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
         if (instance->currentExecutionContext()->argumentCount() < 2) {
-            THROW_ILLEGAL_INVOCATION()
+            auto msg = escargot::ESString::create("Failed to execute 'addEventListener' on 'EventTaraget': needs 2 parameter.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
         }
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
@@ -363,7 +364,8 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::EventTargetObject);
         if (instance->currentExecutionContext()->argumentCount() < 2) {
-            THROW_ILLEGAL_INVOCATION()
+            auto msg = escargot::ESString::create("Failed to execute 'removeEventListener' on 'EventTaraget': needs 2 parameter.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
         }
         escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
         escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
@@ -1003,6 +1005,8 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isElement()) {
+            if (nd->asElement()->name().namespaceURIAtomic() == AtomicString::emptyAtomicString())
+                return ScriptValueNull;
             return toJSString(nd->asElement()->name().namespaceURI());
         } else {
             THROW_ILLEGAL_INVOCATION();
@@ -2070,7 +2074,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isDocument()) {
-            return escargot::ESString::create("UTF-8");
+            return toJSString(nd->asDocument()->charset());
         }
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);
@@ -2092,7 +2096,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isDocument()) {
-            return escargot::ESString::create("text/html");
+            return toJSString(nd->asDocument()->contentType());
         }
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);
@@ -2103,7 +2107,29 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isDocument()) {
-            return escargot::ESString::create("CSS1Compat");
+            return toJSString(nd->asDocument()->compatMode());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("documentURI"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return nd->asDocument()->documentURI() ? toJSString(nd->asDocument()->documentURI()->urlString()) : ScriptValueNull;
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("URL"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return nd->asDocument()->documentURI() ? toJSString(nd->asDocument()->documentURI()->urlString()) : ScriptValueNull;
         }
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);
@@ -2206,12 +2232,12 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
                 Document* doc = obj->asDocument();
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
                 if (argValue.isUndefined()) {
-                    QualifiedName name = QualifiedName(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), "undefined"));
+                    AtomicString name = AtomicString::createAttrAtomicString(doc->window()->starFish(), "undefined");
                     Element* elem = doc->createElement(name, true);
                     if (elem != nullptr)
                         return elem->scriptValue();
                 } else if (argValue.isNull()) {
-                    QualifiedName name = QualifiedName(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), "null"));
+                    AtomicString name = AtomicString::createAttrAtomicString(doc->window()->starFish(), "null");
                     Element* elem = doc->createElement(name, true);
                     if (elem != nullptr)
                         return elem->scriptValue();
@@ -2220,7 +2246,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
                     auto bStr = toBrowserString(argStr);
                     if (!QualifiedName::checkNameProductionRule(bStr, bStr->length()))
                         throw new DOMException(doc->window()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
-                    QualifiedName name = QualifiedName(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), argStr->utf8Data()));
+                    AtomicString name = AtomicString::createAttrAtomicString(doc->window()->starFish(), argStr->utf8Data());
                     Element* elem = doc->createElement(name, true);
                     if (elem != nullptr)
                         return elem->scriptValue();
@@ -5010,6 +5036,42 @@ escargot::ESFunctionObject* bindingPositionError(ScriptBindingInstance* scriptBi
     PositionErrorFunction->protoType().toObject()->defineDataProperty(escargot::ESString::create("TIMEOUT"), false, false, false, escargot::ESValue(3));
 
     return PositionErrorFunction;
+}
+
+escargot::ESFunctionObject* bindingDOMParser(ScriptBindingInstance* scriptBindingInstance)
+{
+    /* XMLHttpRequest */
+    escargot::ESFunctionObject* DOMParserFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* wnd = ((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData());
+        auto v = new DOMParser(wnd->starFish());
+        return v->scriptValue();
+    }, escargot::ESString::create("DOMParser"), 0, true, false);
+
+    DOMParserFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    DOMParserFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    fetchData(scriptBindingInstance)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("DOMParser"), false, false, false, DOMParserFunction);
+
+    escargot::ESFunctionObject* parseFromStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMParserObject, DOMParser);
+
+        if (instance->currentInstance()->currentExecutionContext()->argumentCount() < 2) {
+            auto msg = escargot::ESString::create("Failed to execute 'parseFromString' on 'DOMParser': needs 2 parameter.");
+            instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+        }
+
+        try {
+            Document* doc = originalObj->parseFromString(toBrowserString(instance->currentInstance()->currentExecutionContext()->readArgument(0)), toBrowserString(instance->currentInstance()->currentExecutionContext()->readArgument(1)));
+            return doc->scriptValue();
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }, escargot::ESString::create("parseFromString"), 2);
+
+    DOMParserFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("parseFromString"), true, true, true, parseFromStringFunction);
+
+    return DOMParserFunction;
+
 }
 
 String* ScriptBindingInstance::evaluate(String* str)
