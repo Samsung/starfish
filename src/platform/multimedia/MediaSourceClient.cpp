@@ -45,6 +45,7 @@ AVIOContextWrapper::AVIOContextWrapper(MediaRawData data)
     m_pos = 0;
     m_rawDataList.clear();
     m_rawDataList.push_back(data);
+    m_totalSize = data.size;
     m_curListIdx = 0;
 
     m_avioctx = avio_alloc_context((unsigned char*) m_buffer, m_bufferSize, 0, this, &AVIOContextWrapper::read, &AVIOContextWrapper::write, &AVIOContextWrapper::seek);
@@ -53,11 +54,13 @@ AVIOContextWrapper::AVIOContextWrapper(MediaRawData data)
 AVIOContextWrapper::~AVIOContextWrapper()
 {
     av_free(m_buffer);
+    av_free(m_avioctx);
 }
 
 void AVIOContextWrapper::pushMediaData(MediaRawData data)
 {
     m_rawDataList.push_back(data);
+    m_totalSize += data.size;
 }
 
 int AVIOContextWrapper::read(void *opaque, unsigned char *buf, int buf_size)
@@ -88,6 +91,7 @@ MediaSourceClient::MediaSourceClient()
     , m_audioStreamIdx(1)
     , m_subtitleStreamIdx(0)
     , m_isWebm(false)
+    , m_isReady(false)
 {
     av_register_all();
     avcodec_register_all();
@@ -109,7 +113,7 @@ void MediaSourceClient::setFormat(String* type)
         return;
     }
 
-    if (type->startsWith("video/webm")) {
+    if (type->startsWith("video/webm") || type->startsWith("audio/webm")) {
         m_formatContext->iformat = av_find_input_format("webm");
         m_isWebm = true;
     }
@@ -128,7 +132,12 @@ void MediaSourceClient::appendBuffer(MediaRawData buffer)
 {
     if (m_ioContext) {
         m_ioContext->pushMediaData(buffer);
-        return;
+    } else {
+        m_ioContext = new AVIOContextWrapper(buffer);
+        if (!m_ioContext || !m_ioContext->get_avio()) {
+            STARFISH_LOG_ERROR("[appendBuffer] AVIOContextWrapper is not found\n");
+            return;
+        }
     }
 
     if (!m_formatContext) {
@@ -136,13 +145,11 @@ void MediaSourceClient::appendBuffer(MediaRawData buffer)
         return;
     }
 
-    m_ioContext = new AVIOContextWrapper(buffer);
-    if (!m_ioContext || !m_ioContext->get_avio()) {
-        STARFISH_LOG_ERROR("[appendBuffer] AVIOContextWrapper is not found\n");
+    // FIXME: wait until real video data is received (to support shaka)
+    if (m_isReady || m_ioContext->totalSize() < 2048)
         return;
-    }
-    m_formatContext->pb = m_ioContext->get_avio();
 
+    m_formatContext->pb = m_ioContext->get_avio();
     int ret;
     if ((ret = avformat_open_input(&m_formatContext, "", NULL, NULL)) < 0) {
         STARFISH_LOG_ERROR("[appendBuffer] avformat_open_input: Error(%u)\n", ret);
@@ -155,14 +162,16 @@ void MediaSourceClient::appendBuffer(MediaRawData buffer)
     }
 
     for (int i = 0; i < (int)m_formatContext->nb_streams; i++) {
-        if (m_formatContext->streams[i]->codec->coder_type == AVMEDIA_TYPE_VIDEO) {
+        STARFISH_ASSERT(m_formatContext->streams[i]->codec);
+        if (m_formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
             m_videoStreamIdx = i;
-        } else if (m_formatContext->streams[i]->codec->coder_type == AVMEDIA_TYPE_AUDIO) {
+        } else if (m_formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
             m_audioStreamIdx = i;
-        } else if (m_formatContext->streams[i]->codec->coder_type == AVMEDIA_TYPE_SUBTITLE) {
+        } else if (m_formatContext->streams[i]->codec->codec_type == AVMEDIA_TYPE_SUBTITLE) {
             m_subtitleStreamIdx = i;
         }
     }
+    setReady();
 }
 
 void VideoPlayer::onBufferNeedVideoData(MediaSource* ms)
