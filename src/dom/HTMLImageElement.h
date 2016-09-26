@@ -94,8 +94,11 @@ public:
     }
 
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
+    virtual void didNodeAdopted();
 
 private:
+    void unloadImage();
+    void loadImage(String* src);
     ImageResource* m_imageResource;
     ImageData* m_imageData;
 };

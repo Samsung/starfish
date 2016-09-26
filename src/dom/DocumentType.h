@@ -23,18 +23,6 @@ namespace StarFish {
 
 class DocumentType : public Node {
 public:
-    DocumentType(Document* document)
-        : Node(document)
-        // FIXME: should be given by the parser
-        , m_name(String::createASCIIString("html"))
-        , m_publicId(String::emptyString)
-        , m_systemId(String::emptyString)
-    {
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("+++doctype:!DOCTYPE\n");
-#endif
-    }
-
     DocumentType(Document* document, String* name, String* publicId, String* systemId)
         : Node(document)
         , m_name(name)
@@ -95,10 +83,7 @@ public:
 
     virtual Node* clone()
     {
-        DocumentType* n = new DocumentType(document());
-        n->m_name = m_name;
-        n->m_publicId = m_publicId;
-        n->m_systemId = m_systemId;
+        DocumentType* n = new DocumentType(document(), m_name, m_publicId, m_systemId);
         return n;
     }
 

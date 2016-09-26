@@ -14,37 +14,44 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishDocumentBuilderElement__
-#define __StarFishDocumentBuilderElement__
+#ifndef __StarFishDOMParser__
+#define __StarFishDOMParser__
 
-#include "../Document.h"
+#include "dom/binding/ScriptWrappable.h"
 
 namespace StarFish {
 
-class DocumentBuilder : public gc {
+class StarFish;
+class Document;
+
+class DOMParser : public ScriptWrappable {
 public:
-    DocumentBuilder(Document* document)
-        : m_document(document)
-    {
-    }
-
-    virtual ~DocumentBuilder()
+    DOMParser(StarFish* sf)
+        : ScriptWrappable(this)
+        , m_starFish(sf)
     {
 
     }
 
-    virtual void build(URL* url) = 0;
-    virtual void build(String* str) = 0;
-    virtual void resume() = 0;
-
-    Document* document()
+    virtual void initScriptObject(ScriptBindingInstance* instance)
     {
-        return m_document;
+        initScriptWrappable(this);
     }
-protected:
-    Document* m_document;
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::DOMParserObject;
+    }
+
+    StarFish* starFish()
+    {
+        return m_starFish;
+    }
+
+    Document* parseFromString(String* str, String* type);
+private:
+    StarFish* m_starFish;
 };
-
 
 }
 

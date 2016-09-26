@@ -62,7 +62,7 @@ public:
     virtual void finishParsing()
     {
         HTMLElement::finishParsing();
-        if (isInDocumentScope())
+        if (isInDocumentScopeAndDocumentParticipateInRendering())
             generateStyleSheet();
     }
 

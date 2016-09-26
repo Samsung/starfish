@@ -48,18 +48,35 @@ class Document : public Node {
     friend class Window;
     friend class ActiveNetworkRequestTracker;
     friend class HTMLMetaElement;
+    friend class DOMParser;
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet);
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet, bool doesParticipateInRendering);
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
     void setCompatibilityMode(CompatibilityMode m)
     {
         m_compatibilityMode = m;
     }
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this);
+    }
+
     CompatibilityMode compatibilityMode() const { return m_compatibilityMode; }
     bool inQuirksMode() const { return m_compatibilityMode == QuirksMode; }
     bool inLimitedQuirksMode() const { return m_compatibilityMode == LimitedQuirksMode; }
     bool inNoQuirksMode() const { return m_compatibilityMode == NoQuirksMode; }
+    bool doesParticipateInRendering() { return m_doesParticipateInRendering; }
+
+    String* compatMode()
+    {
+        if (inNoQuirksMode() || inLimitedQuirksMode()) {
+            return String::createASCIIString("CSS1Compat");
+        } else {
+            return String::createASCIIString("BackCompat");
+        }
+    }
 
     /* 4.2.2. Interface NonElementParentNode */
     Element* getElementById(String* id);
@@ -75,7 +92,7 @@ public:
     }
 
     DocumentFragment* createDocumentFragment();
-    Element* createElement(QualifiedName localName, bool shouldCheckName);
+    virtual Element* createElement(AtomicString localName, bool shouldCheckName);
     Text* createTextNode(String* data);
     Comment* createComment(String* data);
     // Moved to Node as it is common to Document and Element
@@ -190,6 +207,11 @@ public:
     {
         return m_charset;
     }
+    String* contentType()
+    {
+        return String::createASCIIString("text/html");
+    }
+
 protected:
     // only used in html document builder
     friend class HTMLResourceClient;
@@ -199,6 +221,8 @@ protected:
     }
     bool m_inParsing : 1;
     bool m_didLoadBrokenImage : 1;
+    bool m_doesParticipateInRendering : 1;
+
     CompatibilityMode m_compatibilityMode;
     Window* m_window;
     URL* m_documentURI;
@@ -224,6 +248,9 @@ private:
 
 void Node::setNeedsStyleRecalc()
 {
+    if (!document()->doesParticipateInRendering())
+        return;
+
     if (!m_needsStyleRecalc) {
         m_needsStyleRecalc = true;
 
@@ -238,16 +265,25 @@ void Node::setNeedsStyleRecalc()
 
 void Node::setNeedsLayout()
 {
+    if (!document()->doesParticipateInRendering())
+        return;
+
     m_document->window()->setNeedsLayout();
 }
 
 void Node::setNeedsPainting()
 {
+    if (!document()->doesParticipateInRendering())
+        return;
+
     m_document->window()->setNeedsPainting();
 }
 
 void Node::setNeedsComposite()
 {
+    if (!document()->doesParticipateInRendering())
+        return;
+
     m_document->window()->setNeedsComposite();
 }
 

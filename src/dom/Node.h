@@ -289,6 +289,7 @@ public:
     }
 
     bool isInDocumentScope();
+    bool isInDocumentScopeAndDocumentParticipateInRendering();
 
     Node* appendChild(Node* child);
     Node* insertBefore(Node* child, Node* childRef = nullptr);
@@ -404,6 +405,11 @@ public:
     void setParentNode(Node* s)
     {
         m_parentNode = s;
+    }
+
+    void setDocument(Document* s)
+    {
+        m_document = s;
     }
 
     void remove()
@@ -560,8 +566,12 @@ public:
     virtual void didCharacterDataModified(String* before, String* after) { }
     virtual void didNodeInserted(Node* parent, Node* newChild);
     virtual void didNodeRemoved(Node* parent, Node* oldChild);
+
+    // These two callbacks are fired only document participate in rendering
     virtual void didNodeInsertedToDocumenTree() { }
     virtual void didNodeRemovedFromDocumenTree() { }
+
+    virtual void didNodeAdopted() { }
 
     bool hasRareMembers()
     {

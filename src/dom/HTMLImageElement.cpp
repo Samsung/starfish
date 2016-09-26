@@ -57,7 +57,6 @@ public:
         }
 
         m_element->m_imageData = imageData;
-        m_element->m_imageResource = nullptr;
 
         if (m_element->frame()) {
             if (sizeBefore == sizeNow) {
@@ -78,18 +77,10 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        if (m_imageResource) {
-            m_imageResource->cancel();
-            m_imageResource = nullptr;
-        }
-
-        if (value->length()) {
-            m_imageResource = document()->resourceLoader()->fetchImage(URL::createURL(document()->documentURI()->baseURI(), value));
-            m_imageResource->addResourceClient(new ImageDownloadClient(this, m_imageResource));
-            m_imageResource->addResourceClient(new ElementResourceClient(this, m_imageResource));
-            m_imageResource->request(Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
+        if (value->length() && document()->doesParticipateInRendering()) {
+            loadImage(value);
         } else {
-            m_imageData = nullptr;
+            unloadImage();
         }
     } else if (name == document()->window()->starFish()->staticStrings()->m_width
         || name == document()->window()->starFish()->staticStrings()->m_height) {
@@ -97,6 +88,38 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
             setNeedsLayout();
         }
     }
+}
+
+void HTMLImageElement::didNodeAdopted()
+{
+    HTMLElement::didNodeAdopted();
+    if (document()->doesParticipateInRendering()) {
+        if (getAttribute(document()->window()->starFish()->staticStrings()->m_src)->length()) {
+            loadImage(getAttribute(document()->window()->starFish()->staticStrings()->m_src));
+        }
+    } else {
+        unloadImage();
+    }
+}
+
+void HTMLImageElement::unloadImage()
+{
+    if (m_imageResource) {
+        m_imageResource->cancel();
+        m_imageResource = nullptr;
+    }
+    m_imageData = nullptr;
+    if (frame())
+        setNeedsLayout();
+}
+
+void HTMLImageElement::loadImage(String* src)
+{
+    unloadImage();
+    m_imageResource = document()->resourceLoader()->fetchImage(URL::createURL(document()->documentURI()->baseURI(), src));
+    m_imageResource->addResourceClient(new ImageDownloadClient(this, m_imageResource));
+    m_imageResource->addResourceClient(new ElementResourceClient(this, m_imageResource));
+    m_imageResource->request(Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded);
 }
 
 }

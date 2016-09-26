@@ -97,7 +97,7 @@ Geolocation* Geolocation::create(StarFish* starFish)
 
 static void sendResult(LocationRequestInfoTizen* info)
 {
-    Coordinates* c = new Coordinates(info->starFish, info->latitude, info->longitude, new(GC) double(info->altitude), info->horizontalAccuracy / 2 + info->verticalAccuracy / 2, nullptr, new(GC) double(info->direction), new(GC) double(info->speed * 1000));
+    Coordinates* c = new Coordinates(info->starFish, info->latitude, info->longitude, new(GC) double(info->altitude), info->horizontalAccuracy, nullptr, new(GC) double(info->direction), new(GC) double(info->speed * 1000));
     info->cb(info->starFish, new Geoposition(info->starFish, c, info->timestamp), info->cbData);
 
     std::vector<LocationRequestInfoTizen*, gc_allocator<LocationRequestInfoTizen*>>& v = info->geolocation->m_pendingRequest;

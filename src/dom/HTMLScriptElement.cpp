@@ -91,7 +91,7 @@ bool HTMLScriptElement::executeScript(bool forceSync, bool inParser)
     if (m_isParserInserted)
         return false;
 
-    if (!m_isAlreadyStarted && isInDocumentScope()) {
+    if (!m_isAlreadyStarted && isInDocumentScopeAndDocumentParticipateInRendering()) {
         String* typeAttr = getAttribute(document()->window()->starFish()->staticStrings()->m_type);
         if (!typeAttr->equals(String::emptyString) && !isJavaScriptType(typeAttr->toLower()->utf8Data()))
             return false;

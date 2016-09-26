@@ -734,6 +734,12 @@ void ScriptWrappable::initScriptWrappable(PositionError* ptr)
     scriptObject()->set__proto__(data->positionError()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(DOMParser* ptr)
+{
+    auto data = fetchData(ptr->starFish()->window()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->domParser()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(HTMLDocument*)
 {
     Node* node = (Node*)this;
