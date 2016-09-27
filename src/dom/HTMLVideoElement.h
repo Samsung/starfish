@@ -28,9 +28,6 @@ public:
         , m_hasPendingSrc(false)
     {
         VideoPlayer* player = new VideoPlayer(this);
-#ifdef STARFISH_TIZEN_MOBILE
-        player->setDisplayArea(m_videoSurface);
-#endif
         m_mediaPlayer = player;
     }
 
