@@ -81,6 +81,7 @@ public:
     {
         ResourceClient::didLoadFailed();
         m_element->m_styleSheetTextResource = nullptr;
+        m_element->didStyleSheetLoadComplete();
     }
 
     virtual void didLoadFinished()
@@ -97,6 +98,7 @@ public:
         }
 
         m_element->m_styleSheetTextResource = nullptr;
+        m_element->didStyleSheetLoadComplete();
     }
 protected:
     HTMLLinkElement* m_element;
@@ -116,6 +118,7 @@ void HTMLLinkElement::loadStyleSheet()
     m_styleSheetTextResource = document()->resourceLoader()->fetchText(url);
     m_styleSheetTextResource->addResourceClient(new StyleSheetDownloadClient(this, m_styleSheetTextResource));
     m_styleSheetTextResource->addResourceClient(new ElementResourceClient(this, m_styleSheetTextResource));
+    willStyleSheetLoad();
     m_styleSheetTextResource->request();
 }
 
@@ -143,6 +146,17 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old, Strin
     } else if (name == document()->window()->starFish()->staticStrings()->m_rel) {
         checkLoadStyleSheet();
     }
+}
+
+void HTMLLinkElement::willStyleSheetLoad()
+{
+    STARFISH_ASSERT(isInDocumentScopeAndDocumentParticipateInRendering());
+    document()->window()->markHasPendingStyleSheet();
+}
+
+void HTMLLinkElement::didStyleSheetLoadComplete()
+{
+    document()->window()->unmarkHasPendingStyleSheet();
 }
 
 }

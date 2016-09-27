@@ -180,6 +180,7 @@ public:
     }
 
     void open();
+
     // method for script element
     void resumeDocumentParsing();
     void notifyDomContentLoaded();

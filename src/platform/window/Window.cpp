@@ -406,6 +406,8 @@ void Window::initFlags()
     m_hasRootElementBackground = false;
     m_hasBodyElementBackground = false;
     m_isRunning = true;
+    m_pendingStyleSheetCount = 0;
+
     m_activeNodeWithTouchDown = nullptr;
 }
 
@@ -669,12 +671,40 @@ void Window::layoutIfNeeds()
     }
 }
 
+void Window::markHasPendingStyleSheet()
+{
+    STARFISH_LOG_INFO("Window::markHasPendingStyleSheet\n");
+    m_pendingStyleSheetCount++;
+}
+
+void Window::unmarkHasPendingStyleSheet()
+{
+    STARFISH_LOG_INFO("Window::unmarkHasPendingStyleSheet\n");
+    if (m_pendingStyleSheetCount > 0) {
+        m_pendingStyleSheetCount--;
+        setNeedsRendering();
+    }
+}
+
 void Window::rendering()
 {
+    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+    if (m_pendingStyleSheetCount && document() && document()->resourceLoader()->isDocumentInOpenState() && ((timestamp() - document()->resourceLoader()->documentOpenTime()) < 1000)) {
+        m_needsRendering = false;
+        setTimeout([](Window* wnd, void* data)
+        {
+            wnd->setNeedsRendering();
+        }, 100, nullptr);
+
+        Canvas* canvas = preparePainting(eflWindow, true);
+#ifndef STARFISH_TIZEN
+        canvas->clearColor(Color(255, 255, 255, 255));
+#endif
+        return;
+    }
+
     if (!m_needsRendering)
         return;
-
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 
     m_inRendering = true;
     STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);

@@ -39,6 +39,7 @@ typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 class Window : public EventTarget {
     friend class HTMLHtmlElement;
     friend class HTMLBodyElement;
+    friend class HTMLLinkElement;
     friend class Node;
 public:
     static Window* create(StarFish* sf, void* win, int width, int height);
@@ -228,6 +229,9 @@ protected:
     void clearStackingContext(bool backupBuffer);
     void paintWindowBackground(Canvas* canvas);
 
+    void markHasPendingStyleSheet();
+    void unmarkHasPendingStyleSheet();
+
     bool m_inRendering;
     bool m_needsRendering;
     bool m_needsStyleRecalc;
@@ -239,6 +243,8 @@ protected:
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
     bool m_isRunning;
+
+    size_t m_pendingStyleSheetCount;
 
     StarFish* m_starFish;
     ScriptBindingInstance* m_scriptBindingInstance;

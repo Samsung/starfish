@@ -20,6 +20,7 @@
 #include "loader/Resource.h"
 #include "loader/TextResource.h"
 #include "loader/ImageResource.h"
+#include "platform/profiling/Profiling.h"
 
 namespace StarFish {
 
@@ -44,7 +45,8 @@ public:
 
     void markDocumentOpenState()
     {
-        m_inDocumentOpenState = true;
+        m_isDocumentInOpenState = true;
+        m_documentOpenTime = timestamp();
         m_pendingResourceCountWhileDocumentOpening = 1;
     }
 
@@ -69,13 +71,24 @@ public:
 
     void cachePruning();
     void notifyImageResourceActiveState(ImageResource* res);
+
+    bool isDocumentInOpenState()
+    {
+        return m_isDocumentInOpenState;
+    }
+
+    uint64_t documentOpenTime()
+    {
+        return m_documentOpenTime;
+    }
 private:
     void cancelAllOfPendingRequests();
     void cacheHit(Resource* org, Resource* now, Resource::ResourceRequestSyncLevel syncLevel);
     // return value means cache hit
     bool requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel);
     void fireDocumentOnLoadEventIfNeeded();
-    bool m_inDocumentOpenState;
+    bool m_isDocumentInOpenState;
+    uint64_t m_documentOpenTime;
     size_t m_pendingResourceCountWhileDocumentOpening;
     Document* m_document;
     std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;
