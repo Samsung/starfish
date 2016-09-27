@@ -162,6 +162,12 @@ public:
     HTMLVideoElement* videoElement() { return m_videoElement; }
     MediaSource* currentMediaSource() { return m_currentMediaSource; }
 
+#ifdef STARFISH_TIZEN_MOBILE
+    CanvasSurface* videoSurface()
+    {
+        return m_videoSurface;
+    }
+#endif
 protected:
     HTMLVideoElement* m_videoElement;
     MediaSource* m_currentMediaSource;
@@ -170,10 +176,10 @@ protected:
     Request m_lastRequest;
 #ifdef STARFISH_TIZEN_TV
     Rect m_displayArea;
-#elif STARFISH_TIZEN_MOBILE
-    CanvasSurface* m_surface;
-#endif
     player_video_stream_info_s m_videoInfo;
+#elif STARFISH_TIZEN_MOBILE
+    CanvasSurface* m_videoSurface;
+#endif
 
     bool m_isElementPointerLocked;
     bool m_hasPendingUrl;

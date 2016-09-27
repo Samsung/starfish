@@ -30,7 +30,6 @@ endif
 
 # Set media flag (only works on x64)
 MEDIA_SUPPORT=false
-MEDIA_SUPPORT_KEY=STARFISH_ENABLE_MULTIMEDIA
 
 # multipage
 MULTIPAGE_SUPPORT=false
@@ -256,7 +255,7 @@ endif
 
 # for media support
 ifeq ($(MEDIA_SUPPORT), true)
-  CXXFLAGS += -D$(MEDIA_SUPPORT_KEY)
+  CXXFLAGS += -DSTARFISH_ENABLE_MULTIMEDIA
   CXXFLAGS += $(shell pkg-config --cflags libavcodec libavutil libavformat)
   LDFLAGS += $(shell pkg-config --libs libavcodec libavutil libavformat)
 endif
@@ -486,6 +485,7 @@ else ifneq (,$(findstring tizen,$(HOST)))
   CXXFLAGS += --sysroot=$(TIZEN_SYSROOT)
   CXXFLAGS +=  $(addprefix -I$(TIZEN_SYSROOT)/usr/include/, $(TIZEN_INCLUDE))
   CXXFLAGS += -Ideps/tizen/include
+  CXXFLAGS += -Ideps/tizen/include/tizen-$(TIZEN_PROFILE)-$(TIZEN_VERSION)-$(TIZEN_ARCH)
   CXXFLAGS += -I$(TIZEN_SYSROOT)/usr/lib/dbus-1.0/include
 
   LDFLAGS += --sysroot=$(TIZEN_SYSROOT)
