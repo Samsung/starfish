@@ -37,7 +37,7 @@ extern bool g_fireOnloadEvent;
 namespace StarFish {
 
 ResourceLoader::ResourceLoader(Document& document)
-    : m_inDocumentOpenState(false)
+    : m_isDocumentInOpenState(false)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_document(&document)
     , m_resourceCacheSize(0)
@@ -245,7 +245,7 @@ void ResourceLoader::notifyImageResourceActiveState(ImageResource* res)
 
 bool ResourceLoader::requestResourcePreprocess(Resource* res, Resource::ResourceRequestSyncLevel syncLevel)
 {
-    if (m_inDocumentOpenState && res->isThisResourceDoesAffectWindowOnLoad()) {
+    if (m_isDocumentInOpenState && res->isThisResourceDoesAffectWindowOnLoad()) {
         m_pendingResourceCountWhileDocumentOpening++;
         res->addResourceClient(new DocumentOnLoadChecker(res));
         res->addResourceClient(new ResourceAliveChecker(res));
@@ -312,8 +312,8 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now, Resource::ResourceRe
 
 void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
 {
-    if (m_pendingResourceCountWhileDocumentOpening == 0 && m_inDocumentOpenState) {
-        m_inDocumentOpenState = false;
+    if (m_pendingResourceCountWhileDocumentOpening == 0 && m_isDocumentInOpenState) {
+        m_isDocumentInOpenState = false;
         m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
             Window* wnd = (Window*)data;
             String* eventType = wnd->starFish()->staticStrings()->m_load.localName();

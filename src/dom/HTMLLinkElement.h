@@ -69,6 +69,8 @@ public:
         return m_generatedSheet;
     }
 protected:
+    void willStyleSheetLoad();
+    void didStyleSheetLoadComplete();
     CSSStyleSheet* m_generatedSheet;
     TextResource* m_styleSheetTextResource;
 };
