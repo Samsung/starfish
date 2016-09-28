@@ -481,7 +481,7 @@ void Window::navigateAsync(URL* url)
     }, url, this);
 }
 
-#define STARFISH_ENABLE_TIMER
+// #define STARFISH_ENABLE_TIMER
 
 class Timer {
 public:
@@ -833,7 +833,7 @@ void Window::rendering()
             if (getenv("EXIT_AFTER_SCREEN_SHOT") && strlen(getenv("EXIT_AFTER_SCREEN_SHOT")))
                 exit(0);
 
-            delete g_surfaceForScreehShot;
+            g_surfaceForScreehShot->detachNativeBuffer();
             g_surfaceForScreehShot = nullptr;
         }
     }
