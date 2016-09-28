@@ -400,7 +400,7 @@ public:
         return isOverflowPropagatedToViewPort() ? false : style()->overflow() != OverflowValue::VisibleOverflow;
     }
 
-    void computeStyleFlags()
+    virtual void computeStyleFlags()
     {
         bool isRootElement = m_flags.m_isRootElement;
 

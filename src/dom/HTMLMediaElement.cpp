@@ -26,10 +26,9 @@ namespace StarFish {
 
 HTMLMediaElement::HTMLMediaElement(Document* document)
     : HTMLElement(document)
-    , m_mediaPlayer(nullptr)
+    , m_mediaPlayer(MediaPlayer::create(this))
     , m_textTracks(new TextTrackList())
     , m_readyState(HTMLMediaElement::HAVE_NOTHING)
-    , m_srcUrl(nullptr)
 {
 }
 
@@ -38,24 +37,15 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
 
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        if (!m_mediaPlayer) {
-            return;
-        }
         if (value->length() != 0) {
-            m_srcUrl = URL::createURL(document()->documentURI()->urlString(), value);
-        }
-        m_mediaPlayer->setURL(m_srcUrl);
-        if (autoplay()) {
-            // When autoplay is true, ignore preload condition
-            load();
-            play();
-        } else if (preloadEnum() != HTMLMediaElement::PRELOAD_NONE) {
-            load();
+            m_mediaPlayer->setURL(URL::createURL(document()->documentURI()->urlString(), value));
+            if (autoplay()) {
+                play();
+            }
+        } else {
+            m_mediaPlayer->setURL(nullptr);
         }
     } else if (name == document()->window()->starFish()->staticStrings()->m_loop) {
-        // loop
-        if (!m_mediaPlayer)
-            return;
         if (attributeRemoved)
             m_mediaPlayer->setLoop(false);
         else
@@ -66,9 +56,6 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
 void HTMLMediaElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
-    if (!m_mediaPlayer) {
-        return;
-    }
     if (autoplay()) {
         m_mediaPlayer->play();
     }
@@ -77,35 +64,18 @@ void HTMLMediaElement::didNodeInsertedToDocumenTree()
 void HTMLMediaElement::didNodeRemovedFromDocumenTree()
 {
     HTMLElement::didNodeRemovedFromDocumenTree();
-    if (!m_mediaPlayer) {
-        return;
-    }
     m_mediaPlayer->pause();
 }
 
 void HTMLMediaElement::load()
 {
-    if (!m_mediaPlayer) {
-        return;
-    }
     m_mediaPlayer->prepare();
 }
 
 void HTMLMediaElement::play()
 {
-    if (!m_mediaPlayer) {
-        return;
-    }
-    if (!m_srcUrl) {
-        return;
-    }
-    if (m_mediaPlayer->currentURL() && m_mediaPlayer->currentURL() == m_srcUrl
-        && m_mediaPlayer->isPublicState(MediaPlayer::STATE_PAUSED | MediaPlayer::STATE_PREPARING | MediaPlayer::STATE_WAITING_FOR_MEDIASOURCE_READY)) {
-        m_mediaPlayer->play();
-    } else {
-        m_mediaPlayer->prepare();
-        m_mediaPlayer->play();
-    }
+    // TODO return promise object
+    m_mediaPlayer->play();
 }
 
 void HTMLMediaElement::addTextTrack(TextTrack* track)
@@ -209,8 +179,7 @@ bool HTMLMediaElement::seeking()
 
 double HTMLMediaElement::currentTime()
 {
-    // TODO
-    return 0;
+    return m_mediaPlayer->currentTime();
 }
 
 double HTMLMediaElement::duration()
@@ -223,13 +192,11 @@ bool HTMLMediaElement::paused()
 {
     if (!m_mediaPlayer)
         return false;
-    return m_mediaPlayer->isPublicState(MediaPlayer::STATE_PAUSED);
+    return m_mediaPlayer->state() != MediaPlayer::State::STATE_PLAYING;
 }
 
 void HTMLMediaElement::pause()
 {
-    if (!m_mediaPlayer)
-        return;
     m_mediaPlayer->pause();
 }
 

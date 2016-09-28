@@ -44,8 +44,10 @@ void SourceBuffer::runBufferAppend()
     m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         SourceBuffer* sourceBuffer = (SourceBuffer*)data;
         sourceBuffer->setUpdating(false, SourceBuffer::Success);
+        /*
         if (sourceBuffer->mseClient()->isReady())
             sourceBuffer->mseClient()->videoPlayer()->notifyInitialPacketReady(sourceBuffer->parentMediaSource());
+            */
     }, this);
 }
 
