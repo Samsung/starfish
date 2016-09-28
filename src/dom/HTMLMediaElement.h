@@ -140,12 +140,17 @@ public:
         return String::emptyString;
     }
 
+    MediaPlayer* mediaPlayer()
+    {
+        return m_mediaPlayer;
+    }
+
 protected:
     MediaPlayer* m_mediaPlayer;
     TextTrackList* m_textTracks;
     ReadyState m_readyState;
-    URL* m_srcUrl;
 };
+
 }
 
 #endif

@@ -26,10 +26,36 @@
 
 namespace StarFish {
 
-MediaPlayer::MediaPlayer()
-    : m_inputUrl(nullptr)
-    , m_state(MediaPlayer::STATE_NONE)
+#if !defined(STARFISH_TIZEN_TV) && !defined(STARFISH_TIZEN_MOBILE)
+MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {
+    return new MediaPlayer(element);
+}
+#endif
+
+MediaPlayer::MediaPlayer(HTMLMediaElement* element)
+    : m_isLooping(false)
+    , m_hasVideo(false)
+    , m_state(State::STATE_NONE)
+    , m_currentPendingOperationCount(0)
+    , m_container(element)
+    , m_starFish(element->document()->window()->starFish())
+    , m_url(nullptr)
+{
+}
+
+void MediaPlayer::processNextOperationQueue()
+{
+    if (m_operationQueue.size()) {
+        STARFISH_ASSERT(m_currentPendingOperationCount == 0);
+        m_currentPendingOperationCount++;
+        m_starFish->messageLoop()->addIdler([](size_t, void* data) {
+            MediaPlayerOperationQueueData* queueData = (MediaPlayerOperationQueueData*)data;
+            queueData->m_mediaPlayer->m_currentPendingOperationCount--;
+            queueData->m_mediaPlayer->processOperationQueue(queueData);
+        }, m_operationQueue.front());
+        m_operationQueue.pop_front();
+    }
 }
 
 }

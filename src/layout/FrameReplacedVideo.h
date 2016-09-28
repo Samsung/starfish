@@ -26,6 +26,12 @@ public:
     FrameReplacedVideo(Node* node)
         : FrameReplaced(node, nullptr)
     {
+        computeStyleFlags();
+    }
+
+    virtual void computeStyleFlags()
+    {
+        FrameReplaced::computeStyleFlags();
         m_flags.m_isEstablishesStackingContext = true;
         m_flags.m_needsGraphicsBuffer = true;
     }
@@ -60,16 +66,14 @@ public:
     }
     virtual void didCompsiteStackingContext(Canvas* c)
     {
-#ifdef STARFISH_TIZEN_TV
-        c->punchHole(Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight()));
         STARFISH_ASSERT(node()->isElement());
         STARFISH_ASSERT(node()->asElement()->isHTMLElement());
         STARFISH_ASSERT(node()->asElement()->asHTMLElement()->isHTMLVideoElement());
         auto v = node()->asElement()->asHTMLElement()->asHTMLVideoElement();
-        LayoutRect layout(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight());
-        c->applyMatrixTo(layout);
-        v->videoPlayer()->setDisplayArea(layout.x().toInt(), layout.y().toInt(), layout.width().toInt(), layout.height().toInt());
-#endif
+        LayoutRect videoRect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight());
+        LayoutRect absVideoRect(videoRect);
+        c->applyMatrixTo(absVideoRect);
+        v->mediaPlayer()->drawVideo(c, videoRect, absVideoRect);
     }
 
 protected:

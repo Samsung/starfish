@@ -25,10 +25,7 @@ class HTMLVideoElement : public HTMLMediaElement {
 public:
     HTMLVideoElement(Document* document)
         : HTMLMediaElement(document)
-        , m_hasPendingSrc(false)
     {
-        VideoPlayer* player = new VideoPlayer(this);
-        m_mediaPlayer = player;
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -76,17 +73,9 @@ public:
     unsigned long videoWidth();
     unsigned long videoHeight();
     String* poster();
-
     void setPoster(String* poster);
 
-    VideoPlayer* videoPlayer()
-    {
-        STARFISH_ASSERT(m_mediaPlayer && m_mediaPlayer->isVideoPlayer());
-        return (VideoPlayer*)m_mediaPlayer;
-    }
-
 protected:
-    bool m_hasPendingSrc;
 };
 }
 

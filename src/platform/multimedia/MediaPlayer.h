@@ -17,12 +17,10 @@
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined (__StarFishMediaPlayer__)
 #define __StarFishMediaPlayer__
 
-#include "util/URL.h"
-#include "platform/canvas/Canvas.h"
+#define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
+#define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
 
-#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
-#include <player.h>
-#endif
+#include "util/URL.h"
 
 namespace StarFish {
 
@@ -30,161 +28,199 @@ class Document;
 class URL;
 class PlayerWindowData;
 class HTMLElement;
+class MediaPlayer;
+class Canvas;
+
+class MediaPlayerOperationQueueData : public gc {
+public:
+    enum EventType {
+        SetURLEventType,
+        RequestPrepareEventType,
+        RequestPlayEventType,
+        RequestPauseEventType,
+    };
+    MediaPlayerOperationQueueData(MediaPlayer* p)
+        : m_mediaPlayer(p)
+    {
+    }
+    virtual ~MediaPlayerOperationQueueData() { }
+    virtual EventType eventType() = 0;
+
+    MediaPlayer* m_mediaPlayer;
+};
+
+class MediaPlayerOperationQueueDataSetURL : public MediaPlayerOperationQueueData {
+public:
+    MediaPlayerOperationQueueDataSetURL(MediaPlayer* p, URL* u)
+        : MediaPlayerOperationQueueData(p)
+        , m_url(u)
+    {
+    }
+
+    virtual EventType eventType()
+    {
+        return EventType::SetURLEventType;
+    }
+
+    URL* m_url;
+};
+
+class MediaPlayerOperationQueueDataRequestPrepare : public MediaPlayerOperationQueueData {
+public:
+    MediaPlayerOperationQueueDataRequestPrepare(MediaPlayer* p)
+        : MediaPlayerOperationQueueData(p)
+    {
+    }
+
+    virtual EventType eventType()
+    {
+        return EventType::RequestPrepareEventType;
+    }
+};
+
+class MediaPlayerOperationQueueDataRequestPlay : public MediaPlayerOperationQueueData {
+public:
+    MediaPlayerOperationQueueDataRequestPlay(MediaPlayer* p)
+        : MediaPlayerOperationQueueData(p)
+    {
+    }
+
+    virtual EventType eventType()
+    {
+        return EventType::RequestPlayEventType;
+    }
+};
+
+class MediaPlayerOperationQueueDataRequestPause : public MediaPlayerOperationQueueData {
+public:
+    MediaPlayerOperationQueueDataRequestPause(MediaPlayer* p)
+        : MediaPlayerOperationQueueData(p)
+    {
+    }
+
+    virtual EventType eventType()
+    {
+        return EventType::RequestPauseEventType;
+    }
+};
+
+typedef std::list<MediaPlayerOperationQueueData*, gc_allocator<MediaPlayerOperationQueueData*>> MediaPlayerOperationQueue;
 
 class MediaPlayer : public gc {
 public:
-    enum PublicState {
+    enum State {
         STATE_NONE = 1 << 0,
-        STATE_PREPARING = 1 << 1,
-        STATE_READY = 1 << 2,
-        STATE_PLAYING = 1 << 3,
-        STATE_PAUSED = 1 << 4,
-        STATE_WAITING_FOR_MEDIASOURCE_READY = 1 << 5,
-        STATE_UNKNOWN_ERROR = 1 << 7,
+        STATE_PLAYING = 1 << 1,
+        STATE_PAUSED = 1 << 2,
     };
 
-    enum Error {
-        PLAYER_ERROR_UNKNOWN,
-    };
+    static MediaPlayer* create(HTMLMediaElement* element);
+    void close()
+    {
+        // TODO
+    }
 
-    MediaPlayer();
-    virtual bool isVideoPlayer() { return false; }
+    void play()
+    {
+        m_state = State::STATE_PLAYING;
+        appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this));
+        startOperationQueueIfNeeded();
+    }
 
-    virtual void prepare() = 0;
-    virtual void play() = 0;
-    virtual void pause() = 0;
+    void pause()
+    {
+        m_state = State::STATE_PAUSED;
+        appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPause(this));
+        startOperationQueueIfNeeded();
+    }
 
-    virtual void setLoop(bool loop) = 0;
-    virtual void setURL(URL* url) { m_inputUrl = url; }
-    URL* currentURL() { return m_currentUrl; }
+    void setLoop(bool loop) { m_isLooping = true; }
+    bool loop()
+    {
+        return m_isLooping;
+    }
 
-    virtual void onUnprepared() { }
-    virtual void onPrepared(URL* url) { }
-    virtual void onPlayFinished(URL* url) { }
+    void setURL(URL* url)
+    {
+        m_state = State::STATE_NONE;
+        m_url = url;
+        appendToOperationQueue(new MediaPlayerOperationQueueDataSetURL(this, m_url));
+        startOperationQueueIfNeeded();
+    }
 
-    bool isPublicState(unsigned state) { return ((m_state & state) > 0); }
-    void setPublicState(PublicState state) { m_state = state; }
+    void prepare()
+    {
+        appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPrepare(this));
+        startOperationQueueIfNeeded();
+    }
+
+    virtual double currentTime()
+    {
+        return 0;
+    }
+
+    State state()
+    {
+        return m_state;
+    }
+
+    URL* url() { return m_url; }
+
+    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
+    {
+    }
+
+    virtual unsigned long videoWidth()
+    {
+        return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
+    }
+
+    virtual unsigned long videoHeight()
+    {
+        return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
+    }
 
 protected:
-    URL* m_inputUrl; // the URL has been accepted recently
-    URL* m_currentUrl; // the URL is being processed currently
-    PublicState m_state;
-};
-
-
-class VideoPlayer : public MediaPlayer {
-public:
-    enum Request {
-        REQUEST_NONE,
-        REQUEST_PLAY,
-        REQUEST_PAUSE,
-    };
-
-    virtual bool isVideoPlayer() { return true; }
-
-
-#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
-public:
-    VideoPlayer(HTMLVideoElement* videoElement);
-    virtual void prepare();
-    virtual void play();
-    virtual void pause();
-
-    virtual void setLoop(bool loop);
-    virtual void setURL(URL* url)
+    virtual unsigned long videoWidthImpl()
     {
-        if (!url) {
-            unprepareCPlayer();
+        return 0;
+    }
+
+    virtual unsigned long videoHeightImpl()
+    {
+        return 0;
+    }
+
+    MediaPlayer(HTMLMediaElement* element);
+    virtual void processOperationQueue(MediaPlayerOperationQueueData*)
+    {
+        processNextOperationQueue();
+    }
+    void processNextOperationQueue();
+    void startOperationQueueIfNeeded()
+    {
+        if (m_currentPendingOperationCount == 0) {
+            processNextOperationQueue();
         }
-        m_inputUrl = url;
     }
-
-    int width();
-    int height();
-
-    void prepareCBShouldBeExecutedInMainThread();
-    void playFinishedCBShouldBeExecutedInMainThread();
-
-    bool assureCPlayer();
-    void destroyCPlayer();
-
-    void setVideoStreamInfo(String* type, int width, int height, int den, int num);
-    void notifyInitialPacketReady(MediaSource* ms);
-    void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts);
-    void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts);
-
-#ifdef STARFISH_TIZEN_TV
-    void setDisplayArea(int x, int y, int width, int height);
-#elif STARFISH_TIZEN_MOBILE
-    void setDisplayArea(CanvasSurface* surface);
-#endif
-private:
-    void prepareCPlayer();
-    void startLoadingCPlayer();
-    void unprepareCPlayer();
-    void playCPlayer();
-    void pauseCPlayer();
-    void stopCPlayer();
-
-    void lockElementPointer();
-    void unlockElementPointer();
-
-    bool hasPendingUrl();
-    void popPendingUrl();
-    void pushPendingUrl();
-    bool lastRequestIs(Request r) { return r == m_lastRequest; }
-    void clearVideoStreamInfo();
-
-#else  /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
-public:
-    VideoPlayer(HTMLVideoElement* videoElement)
-        : MediaPlayer() { }
-
-    virtual void prepare() { }
-    virtual void play() { }
-    virtual void pause() { }
-    virtual void setLoop(bool loop) { }
-    int width() { return 0; }
-    int height() { return 0; }
-
-    void setVideoStreamInfo(String* type, int width, int height, int den, int num) { }
-    void notifyInitialPacketReady(MediaSource* ms) { }
-    void pushVideoPacket(uint8_t *buf, uint32_t len, uint64_t pts) { }
-    void pushAudioPacket(uint8_t *buf, uint32_t len, uint64_t pts) { }
-#endif /* STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE) */
-
-public:
-    virtual void onUnprepared();
-    virtual void onPrepared(URL* url);
-    virtual void onPlayFinished(URL* url);
-    void onBufferNeedVideoData(MediaSource* ms);
-    void onBufferNeedAudioData(MediaSource* ms);
-    HTMLVideoElement* videoElement() { return m_videoElement; }
-    MediaSource* currentMediaSource() { return m_currentMediaSource; }
-
-#ifdef STARFISH_TIZEN_MOBILE
-    CanvasSurface* videoSurface()
+    void prependToOperationQueue(MediaPlayerOperationQueueData* data)
     {
-        return m_videoSurface;
+        m_operationQueue.push_front(data);
     }
-#endif
-protected:
-    HTMLVideoElement* m_videoElement;
-    MediaSource* m_currentMediaSource;
-#if STARFISH_TIZEN && !(STARFISH_TIZEN_WEARABLE)
-    player_h m_cplayer;
-    Request m_lastRequest;
-#ifdef STARFISH_TIZEN_TV
-    Rect m_displayArea;
-    player_video_stream_info_s m_videoInfo;
-#elif STARFISH_TIZEN_MOBILE
-    CanvasSurface* m_videoSurface;
-#endif
 
-    bool m_isElementPointerLocked;
-    bool m_hasPendingUrl;
-    bool m_initialPacketReady;
-#endif
+    void appendToOperationQueue(MediaPlayerOperationQueueData* data)
+    {
+        m_operationQueue.push_back(data);
+    }
+
+    bool m_isLooping;
+    bool m_hasVideo;
+    State m_state;
+    size_t m_currentPendingOperationCount;
+    HTMLMediaElement* m_container;
+    StarFish* m_starFish;
+    URL* m_url;
+    MediaPlayerOperationQueue m_operationQueue;
 };
 
 }

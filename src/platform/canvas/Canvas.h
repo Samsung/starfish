@@ -31,6 +31,7 @@ protected:
 public:
     static CanvasSurface* create(Window* window, size_t w, size_t h);
     virtual void* unwrap() = 0;
+    virtual void resize(size_t w, size_t h) = 0;
     virtual size_t width() = 0;
     virtual size_t height() = 0;
     virtual void clear() = 0;

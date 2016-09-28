@@ -163,13 +163,11 @@ public:
         // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
 
         STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
-        /*
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
             CanvasSurfaceEFL* s = (CanvasSurfaceEFL*)obj;
-            STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", s);
-            s->detachNative((Evas_Object*)cd);
-        }, m_image, NULL, NULL);
-        */
+            // STARFISH_LOG_INFO("release CanvasSurfaceEFL %p\n", s);
+            s->detachNativeBuffer();
+        }, NULL, NULL, NULL);
     }
 
     void detachNative(Evas_Object* image)
@@ -193,6 +191,12 @@ public:
     {
         detachNative(m_image);
         m_image = nullptr;
+    }
+
+    virtual void resize(size_t w, size_t h)
+    {
+        STARFISH_ASSERT(m_image);
+        evas_object_image_size_set(m_image, w, h);
     }
 
     virtual void* unwrap()
@@ -477,7 +481,7 @@ void Window::navigateAsync(URL* url)
     }, url, this);
 }
 
-// #define STARFISH_ENABLE_TIMER
+#define STARFISH_ENABLE_TIMER
 
 class Timer {
 public:
@@ -492,7 +496,7 @@ public:
     {
 #ifdef STARFISH_ENABLE_TIMER
         unsigned long end = tickCount();
-        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (end - m_start));
+        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (float)(end - m_start));
         fflush(stdout);
 #endif
     }
@@ -653,14 +657,14 @@ void Window::layoutIfNeeds()
             m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool
             {
                 box->establishesStackingContextIfNeeds();
-                if (box->node() && box->isRootElement()) {
-                    box->node()->document()->window()->m_rootStackingContext = box->stackingContext();
-                    STARFISH_ASSERT(box->node()->document()->window()->m_rootStackingContext);
-                }
                 return true;
             }, nullptr, nullptr);
-            if (m_document->frame()->firstChild())
-                m_document->frame()->firstChild()->asFrameBox()->stackingContext()->computeStackingContextProperties();
+            if (m_document->frame()->firstChild()) {
+                m_rootStackingContext = m_document->frame()->firstChild()->asFrameBox()->stackingContext();
+                m_rootStackingContext->computeStackingContextProperties();
+            }
+
+            // STARFISH_LOG_INFO("computeStackingContextProperties end composite %d\n", (int)m_rootStackingContext->needsOwnBuffer());
         }
         m_needsLayout = false;
 #ifdef STARFISH_ENABLE_TEST
@@ -802,7 +806,7 @@ void Window::rendering()
 
     if (m_needsComposite) {
         Timer t("composite");
-        if (m_document->frame()->firstChild() && m_document->frame()->firstChild()->asFrameBox()->stackingContext()->needsOwnBuffer()) {
+        if (m_document->frame()->firstChild() && m_rootStackingContext->needsOwnBuffer()) {
             Canvas* canvas = preparePainting(eflWindow, false);
             paintWindowBackground(canvas);
             m_document->frame()->firstChild()->asFrameBox()->stackingContext()->compositeStackingContext(canvas);

@@ -19,25 +19,16 @@
 #include "StarFishConfig.h"
 #include "dom/HTMLVideoElement.h"
 
-#define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
-#define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
-
 namespace StarFish {
 
 unsigned long HTMLVideoElement::videoWidth()
 {
-    if (m_readyState > HTMLMediaElement::HAVE_NOTHING) {
-        return videoPlayer()->width();
-    }
-    return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
+    return m_mediaPlayer->videoWidth();
 }
 
 unsigned long HTMLVideoElement::videoHeight()
 {
-    if (m_readyState > HTMLMediaElement::HAVE_NOTHING) {
-        return videoPlayer()->height();
-    }
-    return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
+    return m_mediaPlayer->videoHeight();
 }
 
 void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
@@ -61,30 +52,6 @@ String* HTMLVideoElement::poster()
 void HTMLVideoElement::setPoster(String* poster)
 {
     // TODO
-}
-
-void VideoPlayer::onPrepared(URL* url)
-{
-    if (!url) {
-        return;
-    }
-    if (m_videoElement) {
-        m_videoElement->setReadyState(HTMLMediaElement::HAVE_METADATA);
-        m_videoElement->setNeedsLayout();
-    }
-
-}
-
-void VideoPlayer::onUnprepared()
-{
-    if (m_videoElement) {
-        m_videoElement->setReadyState(HTMLMediaElement::HAVE_NOTHING);
-    }
-}
-
-void VideoPlayer::onPlayFinished(URL* url)
-{
-
 }
 
 }
