@@ -256,8 +256,8 @@ endif
 # for media support
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -DSTARFISH_ENABLE_MULTIMEDIA
-  CXXFLAGS += $(shell pkg-config --cflags libavcodec libavutil libavformat)
-  LDFLAGS += $(shell pkg-config --libs libavcodec libavutil libavformat)
+  #CXXFLAGS += $(shell pkg-config --cflags libavcodec libavutil libavformat)
+  LDFLAGS += -lavformat -lavcodec -lavutil
 endif
 
 ifeq ($(INSPECTOR_SUPPORT), true)
