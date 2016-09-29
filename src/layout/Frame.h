@@ -528,12 +528,23 @@ public:
         return (FrameInline*)this;
     }
 
-    virtual ComputedStyle* style()
+    ComputedStyle* style()
     {
         if (LIKELY(node() != nullptr))
             return node()->style();
         else
             return m_styleWhenNodeIsNull;
+    }
+
+    void updateComputedStyle(Node* refNode)
+    {
+        STARFISH_ASSERT(node() == nullptr);
+        STARFISH_ASSERT(m_styleWhenNodeIsNull);
+        ComputedStyle* newStyle = new ComputedStyle(refNode->style());
+        newStyle->setDisplay(m_styleWhenNodeIsNull->display());
+        newStyle->loadResources(refNode, m_styleWhenNodeIsNull);
+        newStyle->arrangeStyleValues(refNode->style(), refNode);
+        m_styleWhenNodeIsNull = newStyle;
     }
 
     Node* node()

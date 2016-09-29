@@ -2404,6 +2404,16 @@ void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedSty
     }
 
     if (inheritedStyleChanged | element->childNeedsStyleRecalc()) {
+        if (inheritedStyleChanged && element->frame() && element->frame()->isFrameBlockBox()) {
+            Frame* frame = element->frame();
+            frame = frame->firstChild();
+            while (frame) {
+                if (frame->node() == nullptr)
+                    frame->updateComputedStyle(element);
+                frame = frame->next();
+            }
+        }
+
         ComputedStyle* childStyle = nullptr;
         Node* child = element->firstChild();
         while (child) {
