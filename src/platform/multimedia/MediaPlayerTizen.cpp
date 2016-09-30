@@ -15,6 +15,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+#ifdef STARFISH_TIZEN
 
 #include "StarFishConfig.h"
 #include "MediaPlayerTizen.h"
@@ -25,8 +26,6 @@
 #include "platform/canvas/Canvas.h"
 #include "platform/threading/Thread.h"
 #include "extra/MediaSource.h"
-
-#include <Elementary.h>
 
 namespace StarFish {
 
@@ -95,7 +94,7 @@ void MediaPlayerTizen::initDisplay()
 
 void MediaPlayerTizen::setNativeOptions(URL* url)
 {
-    player_display_h displayHandle = GET_DISPLAY((Evas_Object*)m_canvasSurface->unwrap());
+    player_display_h displayHandle = GET_DISPLAY(m_canvasSurface->unwrap());
     player_display_type_e displayType = PLAYER_DISPLAY_TYPE_EVAS;
     player_display_mode_e displayMode = PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER;
 
@@ -225,4 +224,5 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 
 }
 
+#endif
 #endif /* STARFISH_ENABLE_MULTIMEDIA */
