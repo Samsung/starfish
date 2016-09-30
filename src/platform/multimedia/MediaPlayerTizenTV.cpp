@@ -165,7 +165,6 @@ public:
                             free(videoCodec);
                             free(audioCodec);
 
-                            self->prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(self));
                             self->processNextOperationQueue();
                         }, user_data);
                     }, this);
@@ -181,6 +180,7 @@ public:
                 player_start(m_nativePlayer);
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::processOperationQueue::player_start\n");
             } else if (state == PLAYER_STATE_IDLE) {
+                prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this));
                 prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPrepare(this));
             } else if (state == PLAYER_STATE_PLAYING) {
                 // ignore command
@@ -234,9 +234,6 @@ public:
     {
         canvas->punchHole(Rect(videoRect.x(), videoRect.y(), videoRect.width(), videoRect.height()));
         player_set_x11_display_dst_roi(m_nativePlayer, absVideoRect.x(), absVideoRect.y(), absVideoRect.width(), absVideoRect.height());
-        // canvas->setColor(Color(0, 0, 0, 255));
-        // canvas->drawRect(videoRect);
-        // canvas->drawImage(m_canvasSurface, Rect(videoRect.x(), videoRect.y(), videoRect.width(), videoRect.height()));
     }
 
     bool m_isURISetted;
