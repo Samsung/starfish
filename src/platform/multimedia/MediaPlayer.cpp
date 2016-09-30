@@ -26,7 +26,7 @@
 
 namespace StarFish {
 
-#if !defined(STARFISH_TIZEN_TV) && !defined(STARFISH_TIZEN_MOBILE)
+#if !defined(STARFISH_TIZEN)
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {
     return new MediaPlayer(element);
