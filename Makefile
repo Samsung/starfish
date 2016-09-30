@@ -444,6 +444,8 @@ ifeq ($(HOST), linux)
   STRIP        = strip
   CXXFLAGS += $(shell pkg-config --cflags elementary ecore ecore-x libpng cairo freetype2 fontconfig icu-uc icu-i18n)
   LDFLAGS += $(shell pkg-config --libs elementary ecore ecore-x ecore-imf-evas libpng cairo freetype2 fontconfig icu-uc icu-i18n)
+  CXXFLAGS += -I/usr/local/include/
+  LDFLAGS += -L/usr/local/lib/ -Wl,-rpath /usr/local/lib
 else ifeq ($(HOST), tizen_obs)
   CC           = gcc
   CXX          = g++

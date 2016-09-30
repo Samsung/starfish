@@ -20,12 +20,80 @@
 
 #include "dom/binding/ScriptBindingInstance.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "platform/multimedia/Demuxer.h"
 #include "StarFishPublic.h"
 
 #include <pthread.h>
 #include <Elementary.h>
 
 using namespace StarFish;
+
+class DemuxerFileSource : public DemuxerSource {
+public:
+    DemuxerFileSource(std::string fileName)
+    {
+        m_readed = 0;
+        // m_debug = 0;
+        m_fp = fopen(fileName.c_str(), "rb");
+    }
+
+    virtual int64_t onSeek(int64_t position, SeekWhence whence)
+    {
+        if (whence == DemuxerSource::SeekWhenceLookSize) {
+            int64_t before = ftell(m_fp);
+            fseek(m_fp, 0L, SEEK_END);
+            int64_t sz = ftell(m_fp);
+
+            fseek(m_fp, before, SEEK_SET);
+            return sz;
+            // STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceLookSize %d\n", (int)(m_debug));
+            // return std::min(m_debug, (int64_t)sz);
+        } else if (whence == DemuxerSource::SeekWhenceSet) {
+            STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
+            /*if (m_debug < position) {
+                return -1;
+            }*/
+            fseek(m_fp, position, SEEK_SET);
+            return ftell(m_fp);
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+
+    virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, uint8_t* buffer)
+    {
+        int pos = ftell(m_fp) + sizeWantToRead;
+        /*
+        if (pos > m_debug) {
+            sizeWantToRead -= pos - m_debug;
+            return;
+        }*/
+        int read = fread(buffer, 1, sizeWantToRead, m_fp);
+        sizeSuccessToRead = (size_t)read;
+        STARFISH_LOG_INFO("onRead %d %d %d %fKB\n", (int)sizeWantToRead, (int)read, (int)sizeSuccessToRead, m_readed / 1024.f);
+        m_readed += sizeSuccessToRead;
+    }
+
+    FILE* m_fp;
+    size_t m_readed;
+
+    // int64_t m_debug;
+};
+
+void testDemuxer()
+{
+    auto ptr = new DemuxerFileSource("toystory.mp4");
+    Demuxer* demuxer = Demuxer::create(ptr, String::fromUTF8("video/mp4"));
+    while (!demuxer->findStreamInfo()) {
+        // ptr->m_debug++;
+    }
+
+    // printf("aaaaaaaaaaaaaaaaaaaa %d\n", (int)ptr->m_debug);
+    while (demuxer->findStreamPacket()) {
+
+    }
+
+}
 
 bool hasEnding(std::string const &fullString, std::string const &ending)
 {
@@ -151,6 +219,9 @@ int main(int argc, char *argv[])
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 
     StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr, width, height, 1);
+
+    // testDemuxer();
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
     sf->setupInspector();
 #endif
