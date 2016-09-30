@@ -653,6 +653,24 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_updatestart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "updatestart"));
     m_update = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "update"));
     m_updateend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "updateend"));
+    m_suspend = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "suspend"));
+    m_emptied = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "emptied"));
+    m_stalled = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "stalled"));
+    m_loadedmetadata = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadedmetadata"));
+    m_loadeddata = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadeddata"));
+    m_canplay = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "canplay"));
+    m_canplaythrough = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "canplaythrough"));
+    m_playing = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "playing"));
+    m_waiting = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "waiting"));
+    m_seeking = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "seeking"));
+    m_seeked = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "seeked"));
+    m_ended = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "ended"));
+    m_durationchange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "durationchange"));
+    m_timeupdate = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "timeupdate"));
+    m_play = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "play"));
+    m_pause = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "pause"));
+    m_ratechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "ratechange"));
+    m_volumechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "volumechange"));
 #endif
 }
 
