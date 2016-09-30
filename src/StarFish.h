@@ -242,6 +242,24 @@ public:
     QualifiedName m_updatestart;
     QualifiedName m_update;
     QualifiedName m_updateend;
+    QualifiedName m_suspend;
+    QualifiedName m_emptied;
+    QualifiedName m_stalled;
+    QualifiedName m_loadedmetadata;
+    QualifiedName m_loadeddata;
+    QualifiedName m_canplay;
+    QualifiedName m_canplaythrough;
+    QualifiedName m_playing;
+    QualifiedName m_waiting;
+    QualifiedName m_seeking;
+    QualifiedName m_seeked;
+    QualifiedName m_ended;
+    QualifiedName m_durationchange;
+    QualifiedName m_timeupdate;
+    QualifiedName m_play;
+    QualifiedName m_pause;
+    QualifiedName m_ratechange;
+    QualifiedName m_volumechange;
 #endif
 protected:
 };

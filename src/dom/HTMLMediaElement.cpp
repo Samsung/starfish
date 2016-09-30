@@ -21,6 +21,7 @@
 #include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
 #include "util/URL.h"
+#include "platform/message_loop/MessageLoop.h"
 
 namespace StarFish {
 
@@ -29,6 +30,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_mediaPlayer(MediaPlayer::create(this))
     , m_textTracks(new TextTrackList())
     , m_readyState(HTMLMediaElement::HAVE_NOTHING)
+    , m_networkState(HTMLMediaElement::NETWORK_EMPTY)
 {
 }
 
@@ -123,12 +125,6 @@ void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
-HTMLMediaElement::NetState HTMLMediaElement::networkState()
-{
-    // TODO
-    return HTMLMediaElement::NETWORK_EMPTY;
-}
-
 HTMLMediaElement::PreloadState HTMLMediaElement::preloadEnum()
 {
     QualifiedName preload = document()->window()->starFish()->staticStrings()->m_preload;
@@ -163,12 +159,6 @@ String* HTMLMediaElement::canPlayType(String* type)
 {
     // TODO
     return String::emptyString;
-}
-
-HTMLMediaElement::ReadyState HTMLMediaElement::readyState()
-{
-    // TODO
-    return HTMLMediaElement::HAVE_NOTHING;
 }
 
 bool HTMLMediaElement::seeking()
@@ -339,6 +329,69 @@ void HTMLMediaElement::setMuted(bool muted)
 {
     // TODO
 }
+
+HTMLMediaElement::ReadyState HTMLMediaElement::readyState()
+{
+    // TODO
+    return HTMLMediaElement::HAVE_NOTHING;
+}
+
+void HTMLMediaElement::updateReadyState(HTMLMediaElement::ReadyState state)
+{
+    if (state == m_readyState) {
+        return;
+    }
+    if (networkState() != HTMLMediaElement::NETWORK_EMPTY) {
+        HTMLMediaElement::ReadyState prevState = m_readyState;
+        if (prevState == HTMLMediaElement::HAVE_METADATA && state >= HTMLMediaElement::HAVE_CURRENT_DATA) {
+            dispatchLoadedmetadataEvent();
+        }
+    }
+}
+
+HTMLMediaElement::NetState HTMLMediaElement::networkState()
+{
+    // TODO
+    return HTMLMediaElement::NETWORK_EMPTY;
+}
+
+void HTMLMediaElement::updateNetworkState(HTMLMediaElement::NetState state)
+{
+    // TODO
+}
+
+#define ADD_DISPATCH_EVENT_DEF(name, Name) \
+void HTMLMediaElement::dispatch##Name##Event() \
+{ \
+    document()->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) { \
+        HTMLMediaElement* element = (HTMLMediaElement*)data; \
+        String* eventType = element->document()->window()->starFish()->staticStrings()->m_##name.localName(); \
+        Event* e = new Event(eventType, EventInit(false, false)); \
+        element->dispatchEvent(e); \
+    }, this); \
+}
+ADD_DISPATCH_EVENT_DEF(progress, Progress);
+ADD_DISPATCH_EVENT_DEF(suspend, Suspend);
+ADD_DISPATCH_EVENT_DEF(abort, Abort);
+ADD_DISPATCH_EVENT_DEF(error, Error);
+ADD_DISPATCH_EVENT_DEF(emptied, Emptied);
+ADD_DISPATCH_EVENT_DEF(stalled, Stalled);
+ADD_DISPATCH_EVENT_DEF(loadedmetadata, Loadedmetadata);
+ADD_DISPATCH_EVENT_DEF(loadeddata, Loadeddata);
+ADD_DISPATCH_EVENT_DEF(canplay, Canplay);
+ADD_DISPATCH_EVENT_DEF(canplaythrough, Canplaythrough);
+ADD_DISPATCH_EVENT_DEF(playing, Playing);
+ADD_DISPATCH_EVENT_DEF(waiting, Qaiting);
+ADD_DISPATCH_EVENT_DEF(seeking, Seeking);
+ADD_DISPATCH_EVENT_DEF(seeked, Seeked);
+ADD_DISPATCH_EVENT_DEF(ended, Ended);
+ADD_DISPATCH_EVENT_DEF(durationchange, Durationchange);
+ADD_DISPATCH_EVENT_DEF(timeupdate, Timeupdate);
+ADD_DISPATCH_EVENT_DEF(play, Play);
+ADD_DISPATCH_EVENT_DEF(pause, Pause);
+ADD_DISPATCH_EVENT_DEF(ratechange, Ratechange);
+ADD_DISPATCH_EVENT_DEF(volumechange, Volumechange);
+#undef ADD_DISPATCH_EVENT_DEF
 
 }
 

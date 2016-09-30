@@ -122,10 +122,8 @@ public:
     void setVolume(bool volume);
     void setMuted(bool muted);
 
-    void setReadyState(ReadyState state)
-    {
-        m_readyState = state;
-    }
+    void updateReadyState(ReadyState state);
+    void updateNetworkState(NetState state);
 
     static String* preloadToString(StarFish* starfish, PreloadState state)
     {
@@ -145,10 +143,33 @@ public:
         return m_mediaPlayer;
     }
 
+    void dispatchProgressEvent();
+    void dispatchSuspendEvent();
+    void dispatchAbortEvent();
+    void dispatchErrorEvent();
+    void dispatchEmptiedEvent();
+    void dispatchStalledEvent();
+    void dispatchLoadedmetadataEvent();
+    void dispatchLoadeddataEvent();
+    void dispatchCanplayEvent();
+    void dispatchCanplaythroughEvent();
+    void dispatchPlayingEvent();
+    void dispatchQaitingEvent();
+    void dispatchSeekingEvent();
+    void dispatchSeekedEvent();
+    void dispatchEndedEvent();
+    void dispatchDurationchangeEvent();
+    void dispatchTimeupdateEvent();
+    void dispatchPlayEvent();
+    void dispatchPauseEvent();
+    void dispatchRatechangeEvent();
+    void dispatchVolumechangeEvent();
+
 protected:
     MediaPlayer* m_mediaPlayer;
     TextTrackList* m_textTracks;
     ReadyState m_readyState;
+    NetState m_networkState;
 };
 
 }
