@@ -28,7 +28,6 @@
 #include "extra/MediaSource.h"
 
 #include <media/player.h>
-#include <Elementary.h>
 
 namespace StarFish {
 
@@ -160,7 +159,6 @@ public:
                             free(videoCodec);
                             free(audioCodec);
 
-                            self->prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(self));
                             self->processNextOperationQueue();
                         }, user_data);
                     }, this);
@@ -176,6 +174,7 @@ public:
                 player_start(m_nativePlayer);
                 STARFISH_LOG_INFO("MediaPlayerTizen::processOperationQueue::player_start\n");
             } else if (state == PLAYER_STATE_IDLE) {
+                prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this));
                 prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPrepare(this));
             } else if (state == PLAYER_STATE_PLAYING) {
                 // ignore command

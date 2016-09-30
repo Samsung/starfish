@@ -227,6 +227,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         DisplayValue display = current->style()->display();
         bool isVisible = display != DisplayValue::NoneDisplayValue;
         if (!isVisible) {
+            current->clearNeedsFrameTreeBuild();
             FrameTreeBuilder::clearTree(current);
             return;
         }
@@ -331,6 +332,12 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
     }
 
     Frame* currentFrame = current->frame();
+
+    // display == none
+    if (!currentFrame) {
+        return;
+    }
+
     if (currentFrame->style()->display() == InlineBlockDisplayValue || !currentFrame->isNormalFlow()) {
         ctx.computeTextDecorationData(currentFrame->style());
     } else {
