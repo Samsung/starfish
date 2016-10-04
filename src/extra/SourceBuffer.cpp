@@ -21,7 +21,6 @@
 #include "dom/Event.h"
 #include "dom/DOMException.h"
 #include "dom/HTMLMediaElement.h"
-#include "platform/multimedia/MediaSourceClient.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "MediaSource.h"
