@@ -24,6 +24,7 @@
 namespace StarFish {
 
 class CanvasSurface;
+class MediaSource;
 
 class MediaPlayerTizen : public MediaPlayer {
 public:
@@ -36,6 +37,7 @@ public:
     virtual void setNativeOptions(URL* url);
 
     void pauseOperation();
+    void stopOperation();
 
     virtual unsigned long videoWidth()
     {
@@ -65,6 +67,7 @@ public:
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
 
     bool m_isURISetted;
+    MediaSource* m_activeMediaSource;
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;
     unsigned long m_videoWidth, m_videoHeight;

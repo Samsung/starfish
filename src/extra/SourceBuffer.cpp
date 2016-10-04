@@ -20,48 +20,18 @@
 #include "SourceBuffer.h"
 #include "dom/Event.h"
 #include "dom/DOMException.h"
-#include "platform/multimedia/MediaSourceClient.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "MediaSource.h"
 
 namespace StarFish {
 
-SourceBuffer::SourceBuffer(String* type, MediaSource* parent, MediaSourceClient* client)
+SourceBuffer::SourceBuffer(String* type, MediaSource* parent)
     : EventTarget()
     , m_updating(false)
     , m_type(type)
     , m_parentMediaSource(parent)
-    , m_mseClient(client)
 {
-    m_mseClient->setFormat(type);
-}
-
-void SourceBuffer::runBufferAppend()
-{
-    m_mseClient->appendBuffer(m_inputBuffer);
-    // FIXME: should change to run other thread, then don't use addIdler
-    m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-        SourceBuffer* sourceBuffer = (SourceBuffer*)data;
-        sourceBuffer->setUpdating(false, SourceBuffer::Success);
-        /*
-        if (sourceBuffer->mseClient()->isReady())
-            sourceBuffer->mseClient()->videoPlayer()->notifyInitialPacketReady(sourceBuffer->parentMediaSource());
-            */
-    }, this);
-}
-
-void SourceBuffer::prepareAppend(const void* data, unsigned long length)
-{
-    // FIXME: temp. inputBuffer policy should be set.
-    m_inputBuffer.memory = (char*) data;
-    m_inputBuffer.size = length;
-    if (m_parentMediaSource->readyState() == MediaSource::Ended) {
-        m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-            MediaSource* mediaSource = (MediaSource*)data;
-            mediaSource->setReadyState(MediaSource::Open);
-        }, m_parentMediaSource);
-    }
 }
 
 void SourceBuffer::dispatchUpdateEvent(UpdateState state)
@@ -99,16 +69,10 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
 
 void SourceBuffer::appendBuffer(const void* data, unsigned long length)
 {
-    printf("SourceBuffer::appendBuffer %ld %p\n", length, data);
-    prepareAppend(data, length);
-
     m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         SourceBuffer* sourceBuffer = (SourceBuffer*)data;
         sourceBuffer->setUpdating(true, SourceBuffer::Success);
     }, this);
-
-    // TODO: should run asynchrously
-    runBufferAppend();
 }
 
 }

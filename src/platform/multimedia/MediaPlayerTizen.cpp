@@ -26,6 +26,7 @@
 #include "platform/canvas/Canvas.h"
 #include "platform/threading/Thread.h"
 #include "extra/MediaSource.h"
+#include "extra/Blob.h"
 
 namespace StarFish {
 
@@ -65,6 +66,7 @@ static void mediaPlayerErrorCallback(int errorCode, void *user_data)
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_isURISetted(false)
+    , m_activeMediaSource(nullptr)
     , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
@@ -115,20 +117,34 @@ void MediaPlayerTizen::processOperationQueue(MediaPlayerOperationQueueData* data
         }
 
         if (state != PLAYER_STATE_IDLE) {
-            player_unprepare(m_nativePlayer);
-            if (m_container->isHTMLVideoElement() && m_container->frame()) {
-                m_container->setNeedsLayout();
-            }
+            stopOperation();
         }
 
         setNativeOptions(url);
 
+        STARFISH_LOG_INFO("MediaPlayerTizen::processOperationQueue seturl %s\n", url->urlString()->utf8Data());
+
         m_hasVideo = false;
+        m_isURISetted = false;
         if (url) {
-            player_set_uri(m_nativePlayer, url->urlString()->utf8Data());
+            if (url->isBlobURL()) {
+                BlobURLStore store;
+                if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
+                    STARFISH_LOG_ERROR("MediaPlayerTizen::processOperationQueue, seturl, FAIL - INVALID BLOB URL\n");
+                    return;
+                }
+                if (m_starFish->isValidBlobURL(store)) {
+                    player_set_memory_buffer(m_nativePlayer, ((Blob *)store.m_blob)->data(), ((Blob *)store.m_blob)->size());
+                } else if (m_starFish->isValidMediaSourceBlobURL(store)) {
+                    // player_set_uri(m_nativePlayer, "demuxer://aaaa");
+                } else {
+                    // fire eror
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+            } else {
+                player_set_uri(m_nativePlayer, url->urlString()->utf8Data());
+            }
             m_isURISetted = true;
-        } else {
-            m_isURISetted = false;
         }
         processNextOperationQueue();
     } else if (type == MediaPlayerOperationQueueData::RequestPrepareEventType) {
@@ -206,6 +222,19 @@ void MediaPlayerTizen::pauseOperation()
 {
     m_starFish->removePointerFromRootSet(this);
     player_pause(m_nativePlayer);
+}
+
+void MediaPlayerTizen::stopOperation()
+{
+    player_unprepare(m_nativePlayer);
+    if (m_container->isHTMLVideoElement() && m_container->frame()) {
+        m_container->setNeedsLayout();
+    }
+
+    if (m_activeMediaSource) {
+        // m_activeMediaSource->close();
+    }
+    m_activeMediaSource = nullptr;
 }
 
 void MediaPlayerTizen::drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
