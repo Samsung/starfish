@@ -181,16 +181,6 @@ public:
     }
 
 protected:
-    virtual unsigned long videoWidthImpl()
-    {
-        return 0;
-    }
-
-    virtual unsigned long videoHeightImpl()
-    {
-        return 0;
-    }
-
     MediaPlayer(HTMLMediaElement* element);
     virtual void processOperationQueue(MediaPlayerOperationQueueData*)
     {

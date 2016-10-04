@@ -1823,18 +1823,18 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
     MediaSourceFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addSourceBuffer"), true, true, true,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
         {
-            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject, MediaSource);
             escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::MediaSourceObject);
-            if (!firstArg.isESString()) {
-                THROW_ILLEGAL_INVOCATION()
+
+            try {
+                MediaSource* mediaSource = originalObj;
+                String* type = toBrowserString(firstArg);
+                SourceBuffer* buffer = mediaSource->addSourceBuffer(type);
+                return buffer->scriptValue();
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
-            MediaSource* mediaSource = (MediaSource*)thisValue.asESPointer()->asESObject()->extraPointerData();
-            escargot::ESString* type = firstArg.asESString();
-            SourceBuffer* buffer = mediaSource->addSourceBuffer(toBrowserString(type));
-            if (!buffer)
-                THROW_ILLEGAL_INVOCATION()
-            return buffer->scriptValue();
         }, escargot::ESString::create("addSourceBuffer"), 1, false)
     );
 
@@ -1881,7 +1881,7 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
                 const char* p = (const char*)v->buffer()->data();
                 sourceBuffer->appendBuffer(p, v->bytelength());
             } else {
-                THROW_ILLEGAL_INVOCATION();
+                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Failed to execute 'appendBuffer' on 'SourceBuffer': No function was found that matched the signature provided."))));
             }
 #endif
             return escargot::ESValue(escargot::ESValue::ESUndefined);

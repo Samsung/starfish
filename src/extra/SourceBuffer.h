@@ -19,7 +19,6 @@
 
 #include "dom/binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
-#include "platform/multimedia/MediaSourceClient.h"
 
 namespace StarFish {
 
@@ -27,7 +26,6 @@ class AudioTrackList;
 class VideoTrackList;
 class TextTrackList;
 class TimeRanges;
-class MediaSourceClient;
 class MediaSource;
 
 class SourceBuffer : public EventTarget {
@@ -43,7 +41,7 @@ public:
         Sequence,
     };
 
-    SourceBuffer(String* type, MediaSource* parent, MediaSourceClient* client);
+    SourceBuffer(String* type, MediaSource* parent);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -67,7 +65,6 @@ public:
     void setUpdating(bool flag, UpdateState state);
     void dispatchUpdateEvent(UpdateState state);
 
-    MediaSourceClient* mseClient() { return m_mseClient; }
     MediaSource* parentMediaSource() { return m_parentMediaSource; }
 
 protected:
@@ -83,8 +80,6 @@ protected:
     String* m_type;
 
     MediaSource* m_parentMediaSource;
-    MediaSourceClient* m_mseClient;
-    MediaRawData m_inputBuffer;
 };
 
 class SourceBufferList : public EventTarget {

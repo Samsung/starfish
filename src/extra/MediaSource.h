@@ -80,22 +80,29 @@ public:
         return true;
     }
 
-    void registerMediaPlayer(VideoPlayer* player);
-    MediaSourceClient* mseClient();
     ReadyState readyState()
     {
         return m_readyState;
     }
-    void setReadyState(ReadyState state);
-    void dispatchStateChangeEvent();
+
+    void open()
+    {
+        setReadyState(ReadyState::Open);
+    }
+
+    void close()
+    {
+        setReadyState(ReadyState::Closed);
+    }
 
 protected:
+    void setReadyState(ReadyState state);
+    void dispatchStateChangeEvent();
     ReadyState m_readyState;
     StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;
     SourceBufferList* m_activeSourceBuffers;
     double m_duration;
-    MediaSourceClient* m_mseClient;
 
 };
 

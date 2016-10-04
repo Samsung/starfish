@@ -21,7 +21,7 @@
 #include "SourceBuffer.h"
 #include "dom/Event.h"
 #include "dom/DOMException.h"
-#include "platform/multimedia/MediaSourceClient.h"
+#include "platform/window/Window.h"
 #include "platform/message_loop/MessageLoop.h"
 
 namespace StarFish {
@@ -30,20 +30,21 @@ MediaSource::MediaSource(StarFish* starFish)
     : EventTarget()
     , m_readyState(Closed)
     , m_starFish(starFish)
+    , m_duration(0)
 {
-    m_mseClient = new MediaSourceClient();
 }
 
 SourceBuffer* MediaSource::addSourceBuffer(String* type)
 {
-    // TODO: consider type Error
-    //
-    // if (m_readyState != Open)
-    //    throw InvalidStateError
-//    STARFISH_ASSERT(isTypeSupported(type) == true)
-//    STARFISH_ASSERT(m_readyState == Open)
+    if (!isTypeSupported(type))
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::TYPE_ERR, "Unsupport type");
+    if (m_readyState != Open)
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "When execute appendSourceBuffer, readyState of MediaSource must be 'open'");
 
-    SourceBuffer* buffer = new SourceBuffer(type, this, m_mseClient);
+    STARFISH_ASSERT(isTypeSupported(type));
+    STARFISH_ASSERT(m_readyState == Open);
+
+    SourceBuffer* buffer = new SourceBuffer(type, this);
     if (!m_sourceBuffers)
         m_sourceBuffers = new SourceBufferList();
     m_sourceBuffers->add(buffer);
@@ -55,7 +56,6 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
 void MediaSource::endOfStream()
 {
-    printf("[MediaSource::endOfStream]");
     starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
         MediaSource* mediaSource = (MediaSource*)data;
         mediaSource->setReadyState(MediaSource::Ended);
@@ -88,20 +88,6 @@ void MediaSource::setReadyState(ReadyState state)
         m_readyState = state;
         dispatchStateChangeEvent();
     }
-}
-
-void MediaSource::registerMediaPlayer(VideoPlayer* player)
-{
-    m_mseClient->registerMediaPlayer(player);
-    starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-        MediaSource* mediaSource = (MediaSource*)data;
-        mediaSource->setReadyState(MediaSource::Open);
-    }, this);
-}
-
-MediaSourceClient* MediaSource::mseClient()
-{
-    return m_mseClient;
 }
 
 }
