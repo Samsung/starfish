@@ -21,6 +21,7 @@
 #include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
 #include "util/URL.h"
+#include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 
 namespace StarFish {
@@ -30,7 +31,6 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_mediaPlayer(MediaPlayer::create(this))
     , m_textTracks(new TextTrackList())
     , m_readyState(HTMLMediaElement::HAVE_NOTHING)
-    , m_networkState(HTMLMediaElement::NETWORK_EMPTY)
 {
 }
 
@@ -182,7 +182,7 @@ bool HTMLMediaElement::paused()
 {
     if (!m_mediaPlayer)
         return false;
-    return m_mediaPlayer->state() != MediaPlayer::State::STATE_PLAYING;
+    return m_mediaPlayer->playbackState() != MediaPlayer::PLAYBACK_STATE_PLAYING;
 }
 
 void HTMLMediaElement::pause()
@@ -254,6 +254,12 @@ bool HTMLMediaElement::muted()
 {
     // TODO
     return false;
+}
+
+String* HTMLMediaElement::currentSrc()
+{
+    STARFISH_ASSERT(m_mediaPlayer);
+    return m_mediaPlayer->url() ? m_mediaPlayer->url()->urlString() : String::emptyString;
 }
 
 void HTMLMediaElement::setPreload(String* preload)
@@ -343,31 +349,57 @@ void HTMLMediaElement::updateReadyState(HTMLMediaElement::ReadyState state)
     }
     if (networkState() != HTMLMediaElement::NETWORK_EMPTY) {
         HTMLMediaElement::ReadyState prevState = m_readyState;
-        if (prevState == HTMLMediaElement::HAVE_METADATA && state >= HTMLMediaElement::HAVE_CURRENT_DATA) {
+        if (prevState == HTMLMediaElement::HAVE_NOTHING && state == HTMLMediaElement::HAVE_METADATA) {
             dispatchLoadedmetadataEvent();
         }
+        if (prevState == HTMLMediaElement::HAVE_METADATA && state >= HTMLMediaElement::HAVE_CURRENT_DATA) {
+            dispatchLoadeddataEvent();
+        }
+        if (prevState >= HTMLMediaElement::HAVE_FUTURE_DATA && state <= HTMLMediaElement::HAVE_CURRENT_DATA) {
+            if (m_mediaPlayer && m_mediaPlayer->isPlaybackState(MediaPlayer::PLAYBACK_STATE_PLAYING)) {
+                dispatchTimeupdateEvent();
+                dispatchWaitingEvent();
+            }
+        }
+        if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA && state >= HTMLMediaElement::HAVE_FUTURE_DATA) {
+            dispatchCanplayEvent();
+            if (m_mediaPlayer && m_mediaPlayer->isPlaybackState(MediaPlayer::PLAYBACK_STATE_PLAYING)) {
+                dispatchPlayingEvent();
+            }
+        }
+        if (state == HTMLMediaElement::HAVE_ENOUGH_DATA) {
+            dispatchCanplaythroughEvent();
+            // if(autoplay() && m_mediaPlayer && m_mediaPlayer->isState(MediaPlayer::STATE_PAUSED)
+        }
     }
+    m_readyState = state;
 }
 
 HTMLMediaElement::NetState HTMLMediaElement::networkState()
 {
-    // TODO
-    return HTMLMediaElement::NETWORK_EMPTY;
-}
-
-void HTMLMediaElement::updateNetworkState(HTMLMediaElement::NetState state)
-{
-    // TODO
+    // NOTE: We do not have aync resource selecting, so no NETWORK_NO_SOURCE state
+    if (currentSrc() == String::emptyString) {
+        return NetState::NETWORK_EMPTY;
+    }
+    MediaPlayer::LoadState dState = m_mediaPlayer->loadState();
+    if (dState == MediaPlayer::LOAD_STATE_NONE) {
+        return NetState::NETWORK_IDLE;
+    }
+    return NetState::NETWORK_LOADING;
 }
 
 #define ADD_DISPATCH_EVENT_DEF(name, Name) \
+void HTMLMediaElement::dispatch##Name##EventNow() \
+{ \
+    String* eventType = document()->window()->starFish()->staticStrings()->m_##name.localName(); \
+    Event* e = new Event(eventType, EventInit(false, false)); \
+    dispatchEvent(e); \
+} \
 void HTMLMediaElement::dispatch##Name##Event() \
 { \
     document()->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) { \
         HTMLMediaElement* element = (HTMLMediaElement*)data; \
-        String* eventType = element->document()->window()->starFish()->staticStrings()->m_##name.localName(); \
-        Event* e = new Event(eventType, EventInit(false, false)); \
-        element->dispatchEvent(e); \
+        element->dispatch##Name##EventNow(); \
     }, this); \
 }
 ADD_DISPATCH_EVENT_DEF(progress, Progress);
@@ -381,7 +413,7 @@ ADD_DISPATCH_EVENT_DEF(loadeddata, Loadeddata);
 ADD_DISPATCH_EVENT_DEF(canplay, Canplay);
 ADD_DISPATCH_EVENT_DEF(canplaythrough, Canplaythrough);
 ADD_DISPATCH_EVENT_DEF(playing, Playing);
-ADD_DISPATCH_EVENT_DEF(waiting, Qaiting);
+ADD_DISPATCH_EVENT_DEF(waiting, Waiting);
 ADD_DISPATCH_EVENT_DEF(seeking, Seeking);
 ADD_DISPATCH_EVENT_DEF(seeked, Seeked);
 ADD_DISPATCH_EVENT_DEF(ended, Ended);

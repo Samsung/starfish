@@ -18,10 +18,10 @@
 #ifdef STARFISH_TIZEN_TV
 
 #include "StarFishConfig.h"
-#include "MediaPlayerTizen.h"
 #include "util/URL.h"
 #include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
+#include "MediaPlayerTizen.h"
 #include "platform/canvas/Canvas.h"
 
 #include <Elementary.h>

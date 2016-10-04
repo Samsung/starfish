@@ -18,6 +18,7 @@
 #define __StarFishFrameReplacedVideo__
 
 #include "layout/FrameReplaced.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 

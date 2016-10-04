@@ -18,6 +18,7 @@
 
 #include "StarFishConfig.h"
 #include "dom/HTMLVideoElement.h"
+#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 
