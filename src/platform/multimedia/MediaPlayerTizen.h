@@ -39,6 +39,8 @@ public:
     void pauseOperation();
     void stopOperation();
 
+    void unprepareOperation();
+
     virtual unsigned long videoWidth()
     {
         if (m_hasVideo) {

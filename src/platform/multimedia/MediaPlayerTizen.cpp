@@ -18,10 +18,10 @@
 #ifdef STARFISH_TIZEN
 
 #include "StarFishConfig.h"
-#include "MediaPlayerTizen.h"
 #include "util/URL.h"
 #include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
+#include "MediaPlayerTizen.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/canvas/Canvas.h"
 #include "platform/threading/Thread.h"
@@ -77,6 +77,11 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
             MediaPlayerTizen* player = (MediaPlayerTizen*)data;
             player->m_starFish->removePointerFromRootSet(player);
             player_stop(player->m_nativePlayer);
+            player->m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
+            if (player->m_container) {
+                player->m_container->dispatchPauseEventNow();
+                player->m_container->dispatchEndedEventNow();
+            }
         }, data);
     }, this);
 
@@ -117,7 +122,7 @@ void MediaPlayerTizen::processOperationQueue(MediaPlayerOperationQueueData* data
         }
 
         if (state != PLAYER_STATE_IDLE) {
-            stopOperation();
+            unprepareOperation();
         }
 
         setNativeOptions(url);
@@ -151,6 +156,8 @@ void MediaPlayerTizen::processOperationQueue(MediaPlayerOperationQueueData* data
         if (state == PLAYER_STATE_IDLE) {
             if (m_isURISetted) {
                 m_starFish->addPointerInRootSet(this);
+                STARFISH_ASSERT(m_container && m_container->readyState() == HTMLMediaElement::HAVE_NOTHING);
+                updateLoadState(MediaPlayer::LOAD_STATE_PREPARING);
                 player_prepare_async(m_nativePlayer, [](void *user_data) {
                     MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
                     STARFISH_ASSERT(!isMainThread());
@@ -183,6 +190,10 @@ void MediaPlayerTizen::processOperationQueue(MediaPlayerOperationQueueData* data
 
                         free(videoCodec);
                         free(audioCodec);
+
+                        self->updateElementReadyState(HTMLMediaElement::HAVE_METADATA);
+                        self->updateElementReadyState(HTMLMediaElement::HAVE_FUTURE_DATA);
+                        self->updateLoadState(MediaPlayer::LOAD_STATE_PREPARED);
 
                         self->processNextOperationQueue();
                     }, user_data);
@@ -222,9 +233,12 @@ void MediaPlayerTizen::pauseOperation()
 {
     m_starFish->removePointerFromRootSet(this);
     player_pause(m_nativePlayer);
+    if (m_container) {
+        m_container->dispatchPauseEvent();
+    }
 }
 
-void MediaPlayerTizen::stopOperation()
+void MediaPlayerTizen::unprepareOperation()
 {
     player_unprepare(m_nativePlayer);
     if (m_container->isHTMLVideoElement() && m_container->frame()) {
@@ -235,6 +249,11 @@ void MediaPlayerTizen::stopOperation()
         // m_activeMediaSource->close();
     }
     m_activeMediaSource = nullptr;
+    m_url = nullptr;
+    if (m_container) {
+        m_container->updateReadyState(HTMLMediaElement::HAVE_NOTHING);
+        m_loadState = MediaPlayer::LOAD_STATE_NONE;
+    }
 }
 
 void MediaPlayerTizen::drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)

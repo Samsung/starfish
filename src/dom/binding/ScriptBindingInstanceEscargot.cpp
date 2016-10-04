@@ -3085,6 +3085,7 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
     HTMLMediaElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("HAVE_ENOUGH_DATA"), false, true, false, escargot::ESValue(HTMLMediaElement::HAVE_ENOUGH_DATA));
 
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, src, setSrc, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, currentSrc, TYPE_STRING);
     DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, networkState, TYPE_NUMBER);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, preload, setPreload, TYPE_STRING);
     DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, buffered, TYPE_SCRIPTVALUE);

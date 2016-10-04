@@ -17,10 +17,10 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFishConfig.h"
-#include "MediaPlayer.h"
-#include "util/URL.h"
 #include "dom/Document.h"
 #include "dom/HTMLVideoElement.h"
+#include "MediaPlayer.h"
+#include "util/URL.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "extra/MediaSource.h"
 
@@ -36,11 +36,12 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     : m_isLooping(false)
     , m_hasVideo(false)
-    , m_state(State::STATE_NONE)
+    , m_playbackState(PlaybackState::PLAYBACK_STATE_NONE)
     , m_currentPendingOperationCount(0)
     , m_container(element)
     , m_starFish(element->document()->window()->starFish())
     , m_url(nullptr)
+    , m_loadState(MediaPlayer::LOAD_STATE_NONE)
 {
 }
 
@@ -55,6 +56,13 @@ void MediaPlayer::processNextOperationQueue()
             queueData->m_mediaPlayer->processOperationQueue(queueData);
         }, m_operationQueue.front());
         m_operationQueue.pop_front();
+    }
+}
+
+void MediaPlayer::updateElementReadyState(HTMLMediaElement::ReadyState state)
+{
+    if (m_container) {
+        m_container->updateReadyState(state);
     }
 }
 

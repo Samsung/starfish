@@ -28,6 +28,7 @@ class Document;
 class URL;
 class PlayerWindowData;
 class HTMLElement;
+class HTMLMediaElement;
 class MediaPlayer;
 class Canvas;
 
@@ -108,10 +109,18 @@ typedef std::list<MediaPlayerOperationQueueData*, gc_allocator<MediaPlayerOperat
 
 class MediaPlayer : public gc {
 public:
-    enum State {
-        STATE_NONE = 1 << 0,
-        STATE_PLAYING = 1 << 1,
-        STATE_PAUSED = 1 << 2,
+    enum PlaybackState {
+        PLAYBACK_STATE_NONE = 1 << 0,
+        PLAYBACK_STATE_PLAYING = 1 << 1,
+        PLAYBACK_STATE_PAUSED = 1 << 2,
+        PLAYBACK_STATE_END = 1 << 3 | PLAYBACK_STATE_PAUSED,
+    };
+
+    enum LoadState {
+        LOAD_STATE_NONE,
+        LOAD_STATE_PREPARING,
+        LOAD_STATE_PREPARED,
+        LOAD_STATE_DONE,
     };
 
     static MediaPlayer* create(HTMLMediaElement* element);
@@ -122,14 +131,14 @@ public:
 
     void play()
     {
-        m_state = State::STATE_PLAYING;
+        m_playbackState = PlaybackState::PLAYBACK_STATE_PLAYING;
         appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this));
         startOperationQueueIfNeeded();
     }
 
     void pause()
     {
-        m_state = State::STATE_PAUSED;
+        m_playbackState = PlaybackState::PLAYBACK_STATE_PAUSED;
         appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPause(this));
         startOperationQueueIfNeeded();
     }
@@ -142,7 +151,7 @@ public:
 
     void setURL(URL* url)
     {
-        m_state = State::STATE_NONE;
+        m_playbackState = PlaybackState::PLAYBACK_STATE_NONE;
         m_url = url;
         appendToOperationQueue(new MediaPlayerOperationQueueDataSetURL(this, m_url));
         startOperationQueueIfNeeded();
@@ -159,10 +168,29 @@ public:
         return 0;
     }
 
-    State state()
+    PlaybackState playbackState()
     {
-        return m_state;
+        return m_playbackState;
     }
+
+
+    bool isPlaybackState(PlaybackState state)
+    {
+        return (state & m_playbackState) == state;
+    }
+
+    LoadState loadState()
+    {
+        return m_loadState;
+    }
+
+    void updateLoadState(LoadState state)
+    {
+        // TODO : Consider Events
+        m_loadState = state;
+    }
+
+    void updateElementReadyState(HTMLMediaElement::ReadyState state);
 
     URL* url() { return m_url; }
 
@@ -205,12 +233,13 @@ protected:
 
     bool m_isLooping;
     bool m_hasVideo;
-    State m_state;
+    PlaybackState m_playbackState;
     size_t m_currentPendingOperationCount;
     HTMLMediaElement* m_container;
     StarFish* m_starFish;
     URL* m_url;
     MediaPlayerOperationQueue m_operationQueue;
+    LoadState m_loadState;
 };
 
 }

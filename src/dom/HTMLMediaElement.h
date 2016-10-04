@@ -19,13 +19,13 @@
 
 #include "dom/Document.h"
 #include "dom/HTMLElement.h"
-#include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
 
 class TextTrack;
 class TextTrackList;
 class TimeRanges;
+class MediaPlayer;
 
 class HTMLMediaElement : public HTMLElement {
 public:
@@ -33,7 +33,7 @@ public:
         NETWORK_EMPTY,
         NETWORK_IDLE,
         NETWORK_LOADING,
-        NETWORK_NO_SOURCE,
+        NETWORK_NO_SOURCE, // TODO
     };
 
     enum ReadyState {
@@ -87,6 +87,7 @@ public:
         return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
     }
 
+    String* currentSrc();
     NetState networkState();
     PreloadState preloadEnum();
     String* preload();
@@ -123,7 +124,6 @@ public:
     void setMuted(bool muted);
 
     void updateReadyState(ReadyState state);
-    void updateNetworkState(NetState state);
 
     static String* preloadToString(StarFish* starfish, PreloadState state)
     {
@@ -143,33 +143,36 @@ public:
         return m_mediaPlayer;
     }
 
-    void dispatchProgressEvent();
-    void dispatchSuspendEvent();
-    void dispatchAbortEvent();
-    void dispatchErrorEvent();
-    void dispatchEmptiedEvent();
-    void dispatchStalledEvent();
-    void dispatchLoadedmetadataEvent();
-    void dispatchLoadeddataEvent();
-    void dispatchCanplayEvent();
-    void dispatchCanplaythroughEvent();
-    void dispatchPlayingEvent();
-    void dispatchQaitingEvent();
-    void dispatchSeekingEvent();
-    void dispatchSeekedEvent();
-    void dispatchEndedEvent();
-    void dispatchDurationchangeEvent();
-    void dispatchTimeupdateEvent();
-    void dispatchPlayEvent();
-    void dispatchPauseEvent();
-    void dispatchRatechangeEvent();
-    void dispatchVolumechangeEvent();
+#define ADD_DISPATCH_EVENT_DECL(Name) \
+    void dispatch##Name##EventNow(); \
+    void dispatch##Name##Event();
+    ADD_DISPATCH_EVENT_DECL(Progress);
+    ADD_DISPATCH_EVENT_DECL(Suspend);
+    ADD_DISPATCH_EVENT_DECL(Abort);
+    ADD_DISPATCH_EVENT_DECL(Error);
+    ADD_DISPATCH_EVENT_DECL(Emptied);
+    ADD_DISPATCH_EVENT_DECL(Stalled);
+    ADD_DISPATCH_EVENT_DECL(Loadedmetadata);
+    ADD_DISPATCH_EVENT_DECL(Loadeddata);
+    ADD_DISPATCH_EVENT_DECL(Canplay);
+    ADD_DISPATCH_EVENT_DECL(Canplaythrough);
+    ADD_DISPATCH_EVENT_DECL(Playing);
+    ADD_DISPATCH_EVENT_DECL(Waiting);
+    ADD_DISPATCH_EVENT_DECL(Seeking);
+    ADD_DISPATCH_EVENT_DECL(Seeked);
+    ADD_DISPATCH_EVENT_DECL(Ended);
+    ADD_DISPATCH_EVENT_DECL(Durationchange);
+    ADD_DISPATCH_EVENT_DECL(Timeupdate);
+    ADD_DISPATCH_EVENT_DECL(Play);
+    ADD_DISPATCH_EVENT_DECL(Pause);
+    ADD_DISPATCH_EVENT_DECL(Ratechange);
+    ADD_DISPATCH_EVENT_DECL(Volumechange);
+#undef ADD_DISPATCH_EVENT_DECL
 
 protected:
     MediaPlayer* m_mediaPlayer;
     TextTrackList* m_textTracks;
     ReadyState m_readyState;
-    NetState m_networkState;
 };
 
 }
