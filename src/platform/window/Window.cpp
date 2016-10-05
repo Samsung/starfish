@@ -48,6 +48,7 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 bool g_fireOnloadEvent = false;
+bool g_forceRendering = false;
 #endif
 
 #ifndef STARFISH_TIZEN_WEARABLE_LIB
@@ -411,6 +412,8 @@ void Window::initFlags()
     m_hasBodyElementBackground = false;
     m_isRunning = true;
     m_pendingStyleSheetCount = 0;
+    m_lastRenderingTime = 0;
+    m_starFish->messageLoop()->m_renderingIsDelayed = false;
 
     m_activeNodeWithTouchDown = nullptr;
 }
@@ -481,7 +484,7 @@ void Window::navigateAsync(URL* url)
     }, url, this);
 }
 
-#define STARFISH_ENABLE_TIMER
+// #define STARFISH_ENABLE_TIMER
 
 class Timer {
 public:
@@ -710,6 +713,26 @@ void Window::rendering()
     if (!m_needsRendering)
         return;
 
+    uint64_t currentTick = tickCount();
+    if ((m_starFish->messageLoop()->hasPendingIdler() && ((currentTick - m_lastRenderingTime) < 100))
+#ifdef STARFISH_ENABLE_TEST
+        && !g_forceRendering
+#endif
+    ) {
+        m_needsRendering = false;
+        STARFISH_LOG_INFO("Window::rendering is delayed... \n");
+        m_starFish->messageLoop()->m_renderingIsDelayed = true;
+
+        setTimeout([](Window* wnd, void* data)
+        {
+            wnd->setNeedsRendering();
+        }, 100, nullptr);
+        return;
+    }
+
+    STARFISH_LOG_INFO("Window::rendering... \n");
+    m_lastRenderingTime = currentTick;
+    starFish()->messageLoop()->m_renderingIsDelayed = false;
     m_inRendering = true;
     STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
 
@@ -898,11 +921,13 @@ void Window::screenShot(std::string filePath)
     bool oldNeedsPainting = m_needsPainting;
     bool oldOnLoad = g_fireOnloadEvent;
     g_fireOnloadEvent = true;
+    g_forceRendering = true;
     setNeedsPainting();
     setenv("SCREEN_SHOT", filePath.data(), 1);
     rendering();
     setenv("SCREEN_SHOT", "", 1);
     g_fireOnloadEvent = oldOnLoad;
+    g_forceRendering = false;
 
     m_needsPainting = oldNeedsPainting;
     setNeedsRendering();

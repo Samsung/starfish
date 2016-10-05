@@ -108,7 +108,7 @@ public:
         m_metrics.m_xheightRate = met.m_xheightRate;
 #endif
 
-        m_spaceWidth = measureText(String::spaceString);
+        m_spaceWidth = measureText(StringView(String::spaceString, 0, 1));
 
         GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
             // STARFISH_LOG_INFO("FontImplEFL::~FontImplEFL\n");
@@ -137,14 +137,27 @@ public:
         m_text = nullptr;
     }
 
-    virtual LayoutUnit measureText(String* str)
+    virtual LayoutUnit measureText(const StringView& str)
     {
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
-            return str->length() * m_size;
+            return str.length() * m_size;
         }
 #endif
-        evas_object_text_text_set(m_text, str->utf8Data());
+        if (str.originalString()->isASCIIString()) {
+            bool isShort = str.length() < 128;
+            char* buf = isShort ? (char*)alloca(128) : (char*)malloc(str.length() + 1);
+            strncpy(buf, str.originalString()->asASCIIString()->data() + str.start(), str.end() - str.start());
+            buf[str.length()] = 0;
+            evas_object_text_text_set(m_text, buf);
+            if (!isShort) {
+                free(buf);
+            }
+        } else {
+            UTF8NonGCString s = str.originalString()->toUTF8NonGCString(str.start(), str.end());
+            evas_object_text_text_set(m_text, s.c_str());
+        }
+
         Evas_Coord minw, minh;
         evas_object_geometry_get(m_text, 0, 0, &minw, &minh);
         return minw;

@@ -64,24 +64,21 @@ public:
 
 struct TextRun {
     FrameText* m_frameText;
-    size_t m_startPosition;
-    size_t m_endPosition;
+    StringView m_stringView;
     CharDirection m_direction;
 
-    TextRun(FrameText* frameText, size_t startPosition, size_t endPosition, CharDirection dir)
+    TextRun(FrameText* frameText, String* str, size_t startPosition, size_t endPosition, CharDirection dir)
+        : m_stringView(StringView(str, startPosition, endPosition))
     {
-        m_frameText= frameText;
-        m_startPosition = startPosition;
-        m_endPosition = endPosition;
+        m_frameText = frameText;
         m_direction = dir;
     }
 };
 
 class InlineTextBox : public InlineBox {
 public:
-    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, String* str, const TextRun& run)
+    InlineTextBox(Node* node, ComputedStyle* style, Frame* parent, const TextRun& run)
         : InlineBox(node, style, parent)
-        , m_text(str)
         , m_textRun(run)
     {
     }
@@ -93,7 +90,8 @@ public:
     virtual void dump(int depth)
     {
         InlineBox::dump(depth);
-        printf(" [(%s), dir: %d] ", m_text->utf8Data(), (int)charDirection());
+        printf(" [(%s), dir: %d, start: %d, end %d] ", m_textRun.m_stringView.substring()->utf8Data(), (int)charDirection(),
+            (int)m_textRun.m_stringView.start(), (int)m_textRun.m_stringView.end());
     }
 #endif
     virtual const char* name()
@@ -101,14 +99,9 @@ public:
         return "InlineTextBox";
     }
 
-    String* text()
-    {
-        return m_text;
-    }
-
     void setText(String* t)
     {
-        m_text = t;
+        m_textRun.m_stringView = StringView(t, 0, t->length());
     }
 
     CharDirection charDirection()
@@ -132,7 +125,6 @@ public:
     }
 
 protected:
-    String* m_text;
     TextRun m_textRun;
 };
 

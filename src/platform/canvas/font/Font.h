@@ -45,7 +45,7 @@ public:
 
     }
 
-    virtual LayoutUnit measureText(String*) = 0;
+    virtual LayoutUnit measureText(const StringView& sv) = 0;
     virtual void* unwrap() = 0;
 
     float spaceWidth()
