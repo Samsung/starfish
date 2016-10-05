@@ -6,12 +6,19 @@ Source:        %{name}-%{version}.tar.gz
 Group:         Development/Libraries
 License:       Apache-2.0 and LGPL-2.1+ and BSD-2.0 and ICU and BSL-1.0 and MIT and MPL-1.1
 
-
 %if "%{?tizen_profile_name}" == "mobile"
 #ExcludeArch: %{arm} %ix86 x86_64
 %endif
 %if "%{?tizen_profile_name}" == "tv"
 #ExcludeArch: %{arm} %ix86 x86_64
+%endif
+
+%if %{?profile:1}%{!?profile:0}
+%define tizen_profile_name {%profile}
+%endif
+
+%if %{?sec_product_feature_profile_wearable:1}%{!?sec_product_feature_profile_wearable:0}
+%define tizen_profile_name wearable
 %endif
 
 # build requirements
@@ -28,14 +35,17 @@ BuildRequires: pkgconfig(icu-i18n)
 BuildRequires: pkgconfig(icu-uc)
 BuildRequires: pkgconfig(libcurl)
 BuildRequires: pkgconfig(libxml-2.0)
+%if "%{?tizen_profile_name}" != "wearable"
 BuildRequires: pkgconfig(libavcodec)
 BuildRequires: pkgconfig(libavutil)
 BuildRequires: pkgconfig(libavformat)
+%endif
 BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
 %if "%{?tizen_profile_name}" != "tv"
 BuildRequires: pkgconfig(capi-location-manager)
 %endif
+
 
 %description
 Implementation of Web Widget Engine

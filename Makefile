@@ -230,12 +230,6 @@ ifneq (,$(findstring tizen,$(HOST)))
     CXXFLAGS_DEBUG += -O1 # _FORTIFY_SOURCE requires compiling with optimization
     CXXFLAGS += -DSTARFISH_TIZEN_OBS
   endif
-  ifneq (,$(findstring tizen_wearable,$(HOST)))
-    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
-  endif
-  ifneq (,$(findstring tizen3_wearable,$(HOST)))
-    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
-  endif
   ifeq ($(TIZEN_PROFILE),tv)
     MEDIA_SUPPORT=true
     DOMPARSER_SUPPORT=true
@@ -245,6 +239,9 @@ ifneq (,$(findstring tizen,$(HOST)))
     MEDIA_SUPPORT=true
     DOMPARSER_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_MOBILE
+  endif
+  ifeq ($(TIZEN_PROFILE),wearable)
+    CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
   endif
 endif
 
@@ -256,7 +253,6 @@ endif
 # for media support
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -DSTARFISH_ENABLE_MULTIMEDIA
-  #CXXFLAGS += $(shell pkg-config --cflags libavcodec libavutil libavformat)
   LDFLAGS += -lavformat -lavcodec -lavutil
 endif
 
