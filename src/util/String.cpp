@@ -175,8 +175,7 @@ size_t utf32ToUtf8(char32_t uc, char* UTF8)
         }
         tRequiredSize = 6;
     } else {
-        tRequiredSize = 1;
-        uc = 0xFFFD;
+        return utf32ToUtf8(0xFFFD, UTF8);
     }
 
     return tRequiredSize;
@@ -219,6 +218,49 @@ bool isZeroWidthChar(char32_t CHAR)
     if (CHAR == 0xAD || CHAR == 0x200B || CHAR == 0x200E || CHAR == 0x200F || CHAR == 0x202A || CHAR == 0x202B || CHAR == 0x202C || CHAR == 0x202D || CHAR == 0x202C || CHAR == 0x202E || CHAR == 0xFEFF || CHAR == 0xFFFC)
         return true;
     return false;
+}
+
+UTF8NonGCString utf32ToUtf8(const UTF32String& str, size_t start, size_t end, bool ignoreZeroWidthChar)
+{
+    UTF8NonGCString ret;
+    ret.reserve((end - start) * 2);
+    char buffer[8];
+    for (size_t i = start; i < end; i++) {
+        if (ignoreZeroWidthChar && isZeroWidthChar(str.data()[i]))
+            continue;
+        size_t length = utf32ToUtf8(str.data()[i], buffer);
+        if (length == 1) {
+            ret.push_back(buffer[0]);
+        } else if (length == 2) {
+            ret.push_back(buffer[0]);
+            ret.push_back(buffer[1]);
+        } else if (length == 3) {
+            ret.push_back(buffer[0]);
+            ret.push_back(buffer[1]);
+            ret.push_back(buffer[2]);
+        } else if (length == 4) {
+            ret.push_back(buffer[0]);
+            ret.push_back(buffer[1]);
+            ret.push_back(buffer[2]);
+            ret.push_back(buffer[3]);
+        } else if (length == 5) {
+            ret.push_back(buffer[0]);
+            ret.push_back(buffer[1]);
+            ret.push_back(buffer[2]);
+            ret.push_back(buffer[3]);
+            ret.push_back(buffer[4]);
+        } else if (length == 6) {
+            ret.push_back(buffer[0]);
+            ret.push_back(buffer[1]);
+            ret.push_back(buffer[2]);
+            ret.push_back(buffer[3]);
+            ret.push_back(buffer[4]);
+            ret.push_back(buffer[5]);
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+    return ret;
 }
 
 const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len, size_t* bufferSize = NULL)
@@ -631,26 +673,50 @@ UTF16String String::toUTF16String() const
     return out;
 }
 
-UTF16NonGCString String::toUTF16NonGCString() const
+UTF16NonGCString String::toUTF16NonGCString(size_t start, size_t end) const
 {
     UTF16NonGCString out;
-    size_t len = length();
-    out.reserve(len);
-    for (size_t i = 0; i < len; i++) {
-        char32_t src = charAt(i);
-        char16_t dst[2];
-        int ret = utf32ToUtf16(src, dst);
+    if (isASCIIString()) {
+        out.assign(asASCIIString()->begin() +  start, asASCIIString()->begin() + end);
+    } else {
+        out.reserve(end - start);
+        for (size_t i = start; i < end; i++) {
+            char32_t src = charAt(i);
+            char16_t dst[2];
+            int ret = utf32ToUtf16(src, dst);
 
-        if (LIKELY(ret == 1)) {
-            out.push_back(src);
-        } else if (ret == 2) {
-            out.push_back(dst[0]);
-            out.push_back(dst[1]);
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            if (LIKELY(ret == 1)) {
+                out.push_back(src);
+            } else if (ret == 2) {
+                out.push_back(dst[0]);
+                out.push_back(dst[1]);
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }
     }
     return out;
+}
+
+UTF16NonGCString String::toUTF16NonGCString() const
+{
+    return toUTF16NonGCString(0, length());
+}
+
+UTF8NonGCString String::toUTF8NonGCString(size_t start, size_t end, bool ignoreZeroWidthChar) const
+{
+    if (isASCIIString()) {
+        UTF8NonGCString ret;
+        ret.reserve(end - start);
+        for (size_t i = start; i < end; i ++) {
+            if (ignoreZeroWidthChar && isZeroWidthChar(asASCIIString()->data()[i]))
+                continue;
+            ret.push_back(asASCIIString()->data()[i]);
+        }
+        return ret;
+    } else {
+        return utf32ToUtf8(*asUTF32String(), start, end, ignoreZeroWidthChar);
+    }
 }
 
 bool String::equals(const String* str) const

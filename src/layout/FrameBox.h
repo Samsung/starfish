@@ -592,6 +592,7 @@ public:
 protected:
     // content + padding + border
     LayoutRect m_frameRect;
+
     LayoutBoxSurroundData m_padding, m_border, m_margin;
     MarginCollapseResult m_marginCollapseResult;
     StackingContext* m_stackingContext;

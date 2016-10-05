@@ -37,6 +37,7 @@ class Navigator;
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
 class Window : public EventTarget {
+    friend class MessageLoop;
     friend class HTMLHtmlElement;
     friend class HTMLBodyElement;
     friend class HTMLLinkElement;
@@ -245,6 +246,7 @@ protected:
     bool m_isRunning;
 
     size_t m_pendingStyleSheetCount;
+    uint64_t m_lastRenderingTime;
 
     StarFish* m_starFish;
     ScriptBindingInstance* m_scriptBindingInstance;

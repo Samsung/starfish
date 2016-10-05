@@ -48,6 +48,7 @@ namespace StarFish {
 
 typedef std::basic_string<char, std::char_traits<char>, gc_allocator<char> > ASCIIString;
 typedef std::basic_string<char16_t, std::char_traits<char16_t>, gc_allocator<char16_t> > UTF16String;
+typedef std::basic_string<char> UTF8NonGCString;
 typedef std::basic_string<char16_t> UTF16NonGCString;
 typedef std::basic_string<char32_t, std::char_traits<char32_t>, gc_allocator<char32_t> > UTF32String;
 
@@ -133,6 +134,9 @@ public:
 
     UTF16String toUTF16String() const;
     UTF16NonGCString toUTF16NonGCString() const;
+    UTF16NonGCString toUTF16NonGCString(size_t start, size_t end) const;
+
+    UTF8NonGCString toUTF8NonGCString(size_t start, size_t end, bool ignoreZeroWidthChar = false) const;
 
     // 1. this method always creates new buffer
     // 2. this method does NOT return NULL-TERMINATED char buffer!
@@ -537,6 +541,44 @@ private:
     bool m_doNotExcludeLineNumbers;
     bool m_is8Bit;
     String* m_string;
+};
+
+class StringView : public gc {
+public:
+    StringView(String* string, size_t start, size_t end)
+        : m_string(string)
+        , m_start(start)
+        , m_end(end)
+    {
+    }
+
+    String* substring() const
+    {
+        return m_string->substring(m_start, m_end - m_start);
+    }
+
+    String* originalString() const
+    {
+        return m_string;
+    }
+
+    size_t start() const
+    {
+        return m_start;
+    }
+
+    size_t end() const
+    {
+        return m_end;
+    }
+
+    size_t length() const
+    {
+        return m_end - m_start;
+    }
+protected:
+    String* m_string;
+    size_t m_start, m_end;
 };
 
 // An abstract number of element in a sequence. The sequence has a first element.

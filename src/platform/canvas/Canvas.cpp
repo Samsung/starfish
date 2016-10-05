@@ -782,7 +782,7 @@ public:
         evas_object_show(eo);
     }
 
-    virtual void drawText(LayoutUnit x, LayoutUnit y, String* text)
+    virtual void drawText(LayoutUnit x, LayoutUnit y, const StringView& sv)
     {
         if (!lastState().m_visible) {
             return;
@@ -790,11 +790,11 @@ public:
 
 #ifdef STARFISH_ENABLE_TEST
         if (g_enablePixelTest) {
-            if (!text->equals(String::spaceString)) {
+            if (!(sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ')) {
                 float h = lastState().m_font->size();
                 float xx = x;
-                for (size_t i = 0; i < text->length(); i++) {
-                    char32_t ch = text->charAt(i);
+                for (size_t i = sv.start(); i < sv.end(); i++) {
+                    char32_t ch = sv.originalString()->charAt(i);
                     if (ch == 160) { // nbsp
 
                     } else {
@@ -839,13 +839,13 @@ public:
         bool isSpace = false;
 
         if (!lastState().m_hasUnderLine && !lastState().m_hasLineThrough) {
-            if (text->equals(String::spaceString))
+            if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ')
                 return;
 
             Evas_Object* eo = evas_object_text_add(m_canvas);
             if (m_objList)
                 m_objList->push_back(eo);
-            LayoutSize sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
+            LayoutSize sz(lastState().m_font->measureText(sv), lastState().m_font->metrics().m_fontHeight);
             LayoutRect rt(x, y, sz.width(), sz.height());
 
             LayoutUnit xx = 0, yy = 0;
@@ -874,7 +874,8 @@ public:
             float ptSize = siz;
             evas_object_text_font_set(eo, lastState().m_font->familyName()->utf8Data(), ptSize);
             evas_object_color_set(eo, lastState().m_color.r(), lastState().m_color.g(), lastState().m_color.b(), lastState().m_color.a());
-            evas_object_text_text_set(eo, text->utf8DataIgnoreZeroWidthChar());
+            UTF8NonGCString us = sv.originalString()->toUTF8NonGCString(sv.start(), sv.end(), true);
+            evas_object_text_text_set(eo, us.c_str());
 
             evas_object_move(eo, (int)xx, (int)yy);
             applyClippers(eo);
@@ -882,16 +883,17 @@ public:
 
             evas_object_show(eo);
         } else {
-            if (text->equals(String::spaceString) || (text->length() == 1 && text->charAt(0) == 0xA0)) {
+            StringView stringToDraw = sv;
+            if (sv.length() == 1 && (sv.originalString()->charAt(sv.start()) == ' ' || sv.originalString()->charAt(sv.start()) == 0xA0)) {
                 // FIXME evas textblock doesn't render 1 length space char
-                text = text->concat(String::spaceString);
+                stringToDraw = StringView(String::createASCIIString("  "), 0, 2);
                 isSpace = true;
             }
 
             Evas_Object* eo = evas_object_textblock_add(m_canvas);
             if (m_objList)
                 m_objList->push_back(eo);
-            LayoutSize sz(lastState().m_font->measureText(text), lastState().m_font->metrics().m_fontHeight);
+            LayoutSize sz(lastState().m_font->measureText(stringToDraw), lastState().m_font->metrics().m_fontHeight);
             // FIXME: evas textblock doesn't render 1 length space char
             if (isSpace)
                 sz.setWidth(sz.width() / 2);
@@ -983,7 +985,8 @@ public:
             evas_textblock_style_set(st, buf);
             evas_object_textblock_style_set(eo, st);
 //            evas_object_color_set(eo, lastState().m_color.r(), lastState().m_color.g(), lastState().m_color.b(), lastState().m_color.a());
-            evas_object_textblock_text_markup_set(eo, text->utf8Data());
+            UTF8NonGCString us = stringToDraw.originalString()->toUTF8NonGCString(stringToDraw.start(), stringToDraw.end());
+            evas_object_textblock_text_markup_set(eo, us.c_str());
 
             evas_object_resize(eo, ww, hh);
             evas_object_move(eo, xx, yy);
