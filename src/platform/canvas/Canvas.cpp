@@ -782,7 +782,7 @@ public:
         evas_object_show(eo);
     }
 
-    virtual void drawText(LayoutUnit x, LayoutUnit y, const StringView& sv)
+    virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth, const StringView& sv)
     {
         if (!lastState().m_visible) {
             return;
@@ -845,7 +845,10 @@ public:
             Evas_Object* eo = evas_object_text_add(m_canvas);
             if (m_objList)
                 m_objList->push_back(eo);
-            LayoutSize sz(lastState().m_font->measureText(sv), lastState().m_font->metrics().m_fontHeight);
+            LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
+            if (lastState().m_mapMode) {
+                sz.setWidth(lastState().m_font->measureText(sv));
+            }
             LayoutRect rt(x, y, sz.width(), sz.height());
 
             LayoutUnit xx = 0, yy = 0;
@@ -888,12 +891,16 @@ public:
                 // FIXME evas textblock doesn't render 1 length space char
                 stringToDraw = StringView(String::createASCIIString("  "), 0, 2);
                 isSpace = true;
+                stringWidth *= 2;
             }
 
             Evas_Object* eo = evas_object_textblock_add(m_canvas);
             if (m_objList)
                 m_objList->push_back(eo);
-            LayoutSize sz(lastState().m_font->measureText(stringToDraw), lastState().m_font->metrics().m_fontHeight);
+            LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
+            if (lastState().m_mapMode) {
+                sz.setWidth(lastState().m_font->measureText(sv));
+            }
             // FIXME: evas textblock doesn't render 1 length space char
             if (isSpace)
                 sz.setWidth(sz.width() / 2);

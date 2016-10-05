@@ -89,7 +89,7 @@ public:
 
     virtual void punchHole(const Rect& rt) = 0;
 
-    virtual void drawText(LayoutUnit x, LayoutUnit y, const StringView& text) = 0;
+    virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth, const StringView& text) = 0;
 
     virtual void drawImage(ImageData* data, const Rect& dst) = 0;
     virtual void drawImage(CanvasSurface* data, const Rect& dst) = 0;

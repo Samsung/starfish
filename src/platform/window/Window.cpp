@@ -714,6 +714,7 @@ void Window::rendering()
         return;
 
     uint64_t currentTick = tickCount();
+/*
     if ((m_starFish->messageLoop()->hasPendingIdler() && ((currentTick - m_lastRenderingTime) < 100))
 #ifdef STARFISH_ENABLE_TEST
         && !g_forceRendering
@@ -726,11 +727,12 @@ void Window::rendering()
         setTimeout([](Window* wnd, void* data)
         {
             wnd->setNeedsRendering();
-        }, 100, nullptr);
+        }, 1000 / 60.f, nullptr);
         return;
     }
-
     STARFISH_LOG_INFO("Window::rendering... \n");
+*/
+
     m_lastRenderingTime = currentTick;
     starFish()->messageLoop()->m_renderingIsDelayed = false;
     m_inRendering = true;
