@@ -27,7 +27,7 @@
 #include <Elementary.h>
 
 using namespace StarFish;
-
+/*
 class DemuxerFileSource : public DemuxerSource {
 public:
     DemuxerFileSource(std::string fileName)
@@ -50,9 +50,9 @@ public:
             // return std::min(m_debug, (int64_t)sz);
         } else if (whence == DemuxerSource::SeekWhenceSet) {
             STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
-            /*if (m_debug < position) {
-                return -1;
-            }*/
+            // if (m_debug < position) {
+            //    return -1;
+            // }
             fseek(m_fp, position, SEEK_SET);
             return ftell(m_fp);
         } else {
@@ -63,11 +63,10 @@ public:
     virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, uint8_t* buffer)
     {
         int pos = ftell(m_fp) + sizeWantToRead;
-        /*
-        if (pos > m_debug) {
-            sizeWantToRead -= pos - m_debug;
-            return;
-        }*/
+        // if (pos > m_debug) {
+        //     sizeWantToRead -= pos - m_debug;
+        //     return;
+        // }
         int read = fread(buffer, 1, sizeWantToRead, m_fp);
         sizeSuccessToRead = (size_t)read;
         STARFISH_LOG_INFO("onRead %d %d %d %fKB\n", (int)sizeWantToRead, (int)read, (int)sizeSuccessToRead, m_readed / 1024.f);
@@ -94,7 +93,7 @@ void testDemuxer()
     }
 
 }
-
+*/
 bool hasEnding(std::string const &fullString, std::string const &ending)
 {
     if (fullString.length() >= ending.length()) {

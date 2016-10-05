@@ -22,6 +22,8 @@
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/profiling/Profiling.h"
 
+#include "layout/FrameReplacedImage.h"
+
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
 #endif
@@ -192,6 +194,30 @@ public:
     Resource* m_watcher;
 };
 
+static void traverseChildFrames(Frame* parent, std::unordered_set<std::string>& currentUsingResourcePaths)
+{
+    Frame* c = parent;
+
+    if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
+        String* u = URL::getURLString(c->node()->document()->documentURI()->urlString(), c->node()->asElement()->asHTMLElement()->asHTMLImageElement()->src());
+        currentUsingResourcePaths.insert(u->utf8Data());
+    }
+
+    size_t i = 0;
+    while (i < c->style()->backgroundLayerSize()) {
+        if (c->style()->backgroundImage(i)->length()) {
+            currentUsingResourcePaths.insert(c->style()->backgroundImage(i)->utf8Data());
+        }
+        i++;
+    }
+
+    c = parent->firstChild();
+    while (c) {
+        traverseChildFrames(c, currentUsingResourcePaths);
+        c = c->next();
+    }
+}
+
 void ResourceLoader::cachePruning()
 {
     // STARFISH_LOG_INFO("ResourceLoader - CacheSize %dKB\n", (int)m_resourceCacheSize / 1024);
@@ -199,11 +225,17 @@ void ResourceLoader::cachePruning()
     if (m_resourceCacheSize > STARFISH_RESOURCE_CACHE_SIZE && ((tickCount() - m_lastCachePruneTime) > (STARFISH_RESOURCE_CACHE_PRUNE_MINIMUM_INTERVAL * 1000))) {
         size_t removedSize = 0;
 
+        std::unordered_set<std::string> currentUsingResourcePaths;
+
+        if (document()->frame()) {
+            traverseChildFrames(document()->frame(), currentUsingResourcePaths);
+        }
+
         // remove non-referenced resources
         auto iter = m_imageResourceCache.begin();
         while (iter != m_imageResourceCache.end()) {
             ResourceCacheData data = iter->second;
-            if (!data.m_resource->m_isReferencedByAnoterResource && data.m_resource->state() == Resource::State::Finished) {
+            if ((currentUsingResourcePaths.find(data.m_resource->url()->urlString()->utf8Data()) != currentUsingResourcePaths.end()) && !data.m_resource->m_isReferencedByAnoterResource && data.m_resource->state() == Resource::State::Finished) {
                 size_t siz = data.m_resource->contentSize();
                 m_resourceCacheSize -= siz;
                 removedSize += siz;

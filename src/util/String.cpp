@@ -612,12 +612,36 @@ UTF32String String::toUTF32String()
 UTF16String String::toUTF16String() const
 {
     UTF16String out;
-    for (size_t i = 0; i < length(); i++) {
+    size_t len = length();
+    out.reserve(len);
+    for (size_t i = 0; i < len; i++) {
         char32_t src = charAt(i);
         char16_t dst[2];
         int ret = utf32ToUtf16(src, dst);
 
-        if (ret == 1) {
+        if (LIKELY(ret == 1)) {
+            out.push_back(src);
+        } else if (ret == 2) {
+            out.push_back(dst[0]);
+            out.push_back(dst[1]);
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+    return out;
+}
+
+UTF16NonGCString String::toUTF16NonGCString() const
+{
+    UTF16NonGCString out;
+    size_t len = length();
+    out.reserve(len);
+    for (size_t i = 0; i < len; i++) {
+        char32_t src = charAt(i);
+        char16_t dst[2];
+        int ret = utf32ToUtf16(src, dst);
+
+        if (LIKELY(ret == 1)) {
             out.push_back(src);
         } else if (ret == 2) {
             out.push_back(dst[0]);

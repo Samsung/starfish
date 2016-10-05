@@ -48,6 +48,7 @@ namespace StarFish {
 
 typedef std::basic_string<char, std::char_traits<char>, gc_allocator<char> > ASCIIString;
 typedef std::basic_string<char16_t, std::char_traits<char16_t>, gc_allocator<char16_t> > UTF16String;
+typedef std::basic_string<char16_t> UTF16NonGCString;
 typedef std::basic_string<char32_t, std::char_traits<char32_t>, gc_allocator<char32_t> > UTF32String;
 
 class StringDataASCII;
@@ -131,6 +132,7 @@ public:
     }
 
     UTF16String toUTF16String() const;
+    UTF16NonGCString toUTF16NonGCString() const;
 
     // 1. this method always creates new buffer
     // 2. this method does NOT return NULL-TERMINATED char buffer!
@@ -249,9 +251,13 @@ public:
         return c <= 0x7F ? isASCIISpace(c) : u_charDirection(c) == U_WHITE_SPACE_NEUTRAL;
     }
 
-    bool containsOnlyWhitespace()
+    bool containsOnlyWhitespace(size_t start = 0, size_t end = SIZE_MAX)
     {
-        for (size_t i = 0; i < length(); i ++) {
+        if (end == SIZE_MAX) {
+            end = length();
+        }
+
+        for (size_t i = start; i < end; i ++) {
             if (!isASCIISpace(charAt(i))) {
                 return false;
             }

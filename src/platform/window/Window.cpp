@@ -481,7 +481,7 @@ void Window::navigateAsync(URL* url)
     }, url, this);
 }
 
-// #define STARFISH_ENABLE_TIMER
+#define STARFISH_ENABLE_TIMER
 
 class Timer {
 public:
