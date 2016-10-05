@@ -29,7 +29,7 @@ class MediaPlayer;
 
 class HTMLMediaElement : public HTMLElement {
 public:
-    enum NetState {
+    enum NetworkState {
         NETWORK_EMPTY,
         NETWORK_IDLE,
         NETWORK_LOADING,
@@ -88,7 +88,7 @@ public:
     }
 
     String* currentSrc();
-    NetState networkState();
+    NetworkState networkState();
     PreloadState preloadEnum();
     String* preload();
     TimeRanges* buffered();
@@ -103,7 +103,11 @@ public:
     TimeRanges* played();
     TimeRanges* seekable();
     void load();
+#ifdef USE_ES6_FEATURE
+    Promise* play();
+#else
     void play();
+#endif
     void pause();
     bool ended();
     bool autoplay();

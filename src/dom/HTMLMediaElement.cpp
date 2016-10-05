@@ -74,10 +74,17 @@ void HTMLMediaElement::load()
     m_mediaPlayer->prepare();
 }
 
+#ifdef USE_ES6_FEATURE
+Promise* HTMLMediaElement::play()
+#else
 void HTMLMediaElement::play()
+#endif
 {
-    // TODO return promise object
+#ifdef USE_ES6_FEATURE
+    return m_mediaPlayer->play();
+#else
     m_mediaPlayer->play();
+#endif
 }
 
 void HTMLMediaElement::addTextTrack(TextTrack* track)
@@ -375,17 +382,17 @@ void HTMLMediaElement::updateReadyState(HTMLMediaElement::ReadyState state)
     m_readyState = state;
 }
 
-HTMLMediaElement::NetState HTMLMediaElement::networkState()
+HTMLMediaElement::NetworkState HTMLMediaElement::networkState()
 {
     // NOTE: We do not have aync resource selecting, so no NETWORK_NO_SOURCE state
     if (currentSrc() == String::emptyString) {
-        return NetState::NETWORK_EMPTY;
+        return NetworkState::NETWORK_EMPTY;
     }
     MediaPlayer::LoadState dState = m_mediaPlayer->loadState();
     if (dState == MediaPlayer::LOAD_STATE_NONE) {
-        return NetState::NETWORK_IDLE;
+        return NetworkState::NETWORK_IDLE;
     }
-    return NetState::NETWORK_LOADING;
+    return NetworkState::NETWORK_LOADING;
 }
 
 #define ADD_DISPATCH_EVENT_DEF(name, Name) \

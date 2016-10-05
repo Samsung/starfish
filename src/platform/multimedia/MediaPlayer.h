@@ -81,15 +81,30 @@ public:
 
 class MediaPlayerOperationQueueDataRequestPlay : public MediaPlayerOperationQueueData {
 public:
+#ifdef USE_ES6_FEATURE
+    MediaPlayerOperationQueueDataRequestPlay(MediaPlayer* p, Promise* pm = nullptr)
+#else
     MediaPlayerOperationQueueDataRequestPlay(MediaPlayer* p)
+#endif
         : MediaPlayerOperationQueueData(p)
     {
+#ifdef USE_ES6_FEATURE
+        if (pm) {
+            m_promise = pm;
+        } else {
+            m_promise = new Promise();
+        }
+#endif
     }
 
     virtual EventType eventType()
     {
         return EventType::RequestPlayEventType;
     }
+
+#ifdef USE_ES6_FEATURE
+    Promise* m_promise;
+#endif
 };
 
 class MediaPlayerOperationQueueDataRequestPause : public MediaPlayerOperationQueueData {
@@ -129,11 +144,19 @@ public:
         // TODO
     }
 
+#ifdef USE_ES6_FEATURE
+    Promise* play()
+#else
     void play()
+#endif
     {
         m_playbackState = PlaybackState::PLAYBACK_STATE_PLAYING;
-        appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this));
+        auto request = new MediaPlayerOperationQueueDataRequestPlay(this);
+        appendToOperationQueue(request);
         startOperationQueueIfNeeded();
+#ifdef USE_ES6_FEATURE
+        return request->m_promise;
+#endif
     }
 
     void pause()

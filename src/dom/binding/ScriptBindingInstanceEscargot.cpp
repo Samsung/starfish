@@ -3189,8 +3189,12 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
             Node* nd = originalObj;
             if (!(nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()))
                 THROW_ILLEGAL_INVOCATION();
+#ifdef USE_ES6_FEATURE
+            return originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->play()->scriptValue();
+#else
             originalObj->asElement()->asHTMLElement()->asHTMLMediaElement()->play();
-            return escargot::ESValue(escargot::ESValue::ESUndefined);
+            return escargot::ESValue();
+#endif
         }, escargot::ESString::create("play"), 0, false)
     );
 
