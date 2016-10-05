@@ -78,6 +78,7 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old, Stri
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
         if (value->length() && document()->doesParticipateInRendering()) {
+            // TODO convert src into url string
             loadImage(value);
         } else {
             unloadImage();

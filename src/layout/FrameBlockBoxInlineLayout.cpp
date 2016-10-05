@@ -453,7 +453,7 @@ static CharDirection charDirFromICUDir(UBiDiDirection dir)
 
 static UBiDiDirection getTextDir(String* text)
 {
-    UTF16String str = text->toUTF16String();
+    UTF16NonGCString str = text->toUTF16NonGCString();
     UBiDiDirection dir = ubidi_getBaseDirection((const UChar*)str.data(), str.length());
     return dir;
 }
@@ -807,6 +807,7 @@ static void resolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, st
 
     if (parentDir == DirectionValue::LtrDirectionValue) {
         std::vector<FrameBox*, gc_allocator<FrameBox*>> oldBoxes = std::move(boxes);
+        boxes.reserve(oldBoxes.size());
         std::vector<FrameBox*> rtlStorage; // use normal allocator because oldBoxes has strong reference
 
         CharDirection currentDirection = CharDirection::Ltr;
@@ -863,6 +864,7 @@ static void resolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, st
         }
     } else {
         std::vector<FrameBox*, gc_allocator<FrameBox*>> oldBoxes = std::move(boxes);
+        boxes.reserve(oldBoxes.size());
         std::vector<FrameBox*> ltrStorage; // use normal allocator because oldBoxes has strong reference
 
         CharDirection currentDirection = CharDirection::Rtl;
@@ -1204,7 +1206,8 @@ void textDividerForLayout(StarFish* sf, String* txt, fn f)
             auto breaker = sf->lineBreaker();
             breaker->setText(txt->toUnicodeString(start, nextOffset));
             int32_t c, prev = 0;
-            while ((c = breaker->next()) != icu::BreakIterator::DONE) {
+            size_t txtLen = txt->length();
+            while (((c = breaker->next()) != icu::BreakIterator::DONE) && (c + start <= txtLen)) {
                 f(txt, prev + start, c + start, isWhiteSpace, (prev + start != start));
                 prev = c;
             }
@@ -1290,7 +1293,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
 
                 LayoutUnit unprocessedWidth;
 
-                if (lastContent == f && srcTxt->substring(nextOffset, srcTxt->length() - nextOffset)->containsOnlyWhitespace()) {
+                if (lastContent == f && srcTxt->containsOnlyWhitespace(nextOffset, srcTxt->length() - nextOffset)) {
                     unprocessedWidth = unprocessedEndingWidth;
                 } else {
                     unprocessedWidth = unprocessedStartingWidth;
@@ -1513,7 +1516,7 @@ static std::vector<TextRun> textBidiResolver(FrameText* frameText, DirectionValu
 {
     std::vector<TextRun> result;
     UBiDi* bidi = ubidi_open();
-    UTF16String str = frameText->text()->toUTF16String();
+    UTF16NonGCString str = frameText->text()->toUTF16NonGCString();
     UErrorCode err = (UErrorCode)0;
     ubidi_setPara(bidi, (const UChar*)str.data(), str.length(), directionValue == DirectionValue::LtrDirectionValue ? UBIDI_DEFAULT_LTR : UBIDI_DEFAULT_RTL, NULL, &err);
     STARFISH_ASSERT(U_SUCCESS(err));

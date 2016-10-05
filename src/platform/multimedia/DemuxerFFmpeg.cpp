@@ -15,7 +15,6 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-
 #include "StarFishConfig.h"
 #include "Demuxer.h"
 
@@ -177,4 +176,5 @@ Demuxer* Demuxer::create(DemuxerSource* source, String* formatHint)
 }
 
 }
+
 #endif /* STARFISH_ENABLE_MULTIMEDIA */
