@@ -235,6 +235,22 @@ private:
     escargot::ESObject* m_object;
 };
 
+
+#ifdef USE_ES6_FEATURE
+class Promise : public gc {
+public:
+    Promise();
+    void fulfill(ScriptValue v);
+    void reject(ScriptValue v);
+    ScriptValue scriptValue()
+    {
+        return m_scriptValue;
+    }
+protected:
+    ScriptValue m_scriptValue;
+};
+#endif
+
 ScriptValue createScriptString(String* str);
 ScriptValue createScriptFunction(String** argNames, size_t argc, String* functionBody, bool& error);
 ScriptValue createAttributeStringEventFunction(Element* target, String* functionBody, bool& result);

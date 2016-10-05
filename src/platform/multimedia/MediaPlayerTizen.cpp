@@ -209,8 +209,15 @@ void MediaPlayerTizen::processOperationQueue(MediaPlayerOperationQueueData* data
             m_starFish->addPointerInRootSet(this);
             player_start(m_nativePlayer);
             STARFISH_LOG_INFO("MediaPlayerTizen::processOperationQueue::player_start\n");
+#ifdef USE_ES6_FEATURE
+            ((MediaPlayerOperationQueueDataRequestPlay*)data)->m_promise->fulfill(ScriptValueUndefined);
+#endif
         } else if (state == PLAYER_STATE_IDLE) {
+#ifdef USE_ES6_FEATURE
+            prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this, ((MediaPlayerOperationQueueDataRequestPlay*)data)->m_promise));
+#else
             prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this));
+#endif
             prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPrepare(this));
         } else if (state == PLAYER_STATE_PLAYING) {
             // ignore command

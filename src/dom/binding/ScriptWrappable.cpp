@@ -1536,4 +1536,23 @@ bool isCallableScriptValue(ScriptValue v)
     return false;
 }
 
+#ifdef USE_ES6_FEATURE
+Promise::Promise()
+    : m_scriptValue(escargot::ESPromiseObject::create())
+{
+    // TODO remove below line if escargot fixed
+    m_scriptValue.asESPointer()->asESPromiseObject()->set__proto__(escargot::ESVMInstanceCurrentInstance()->globalObject()->promisePrototype());
+}
+
+void Promise::fulfill(ScriptValue v)
+{
+    m_scriptValue.asESPointer()->asESPromiseObject()->fulfillPromise(escargot::ESVMInstanceCurrentInstance(), v);
+}
+
+void Promise::reject(ScriptValue v)
+{
+    m_scriptValue.asESPointer()->asESPromiseObject()->rejectPromise(escargot::ESVMInstanceCurrentInstance(), v);
+}
+#endif
+
 }
