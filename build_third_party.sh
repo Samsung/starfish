@@ -17,6 +17,49 @@ COMPILER_VERSION_MAJOR=4.6
 COMPILER_VERSION_MINOR=4.6.4
 
 ###########################################################
+# LIBAV(FFmpeg) build
+###########################################################
+
+AVCONFFLAGS_COMMON=" --enable-shared --enable-pic --disable-yasm --disable-encoders --disable-muxers --disable-avresample --disable-swscale --disable-avfilter --disable-avdevice"
+AVCONFFLAGS_release=""
+AVCONFFLAGS_debug="--enable-debug --disable-optimizations"
+
+function build_av_for_linux() {
+    AVCFLAGS_COMMON=
+    AVLDFLAGS_COMMON=
+    for host in linux; do
+    for arch in x64; do
+    for mode in debug release; do
+        echo =========================================================================
+        echo Building libav for $host $arch $mode
+
+        BUILDDIR=out/$host/$arch/$mode
+        rm -rf $BUILDDIR
+        mkdir -p $BUILDDIR
+        cd $BUILDDIR
+
+        AVCONFFLAGS_HOST=AVCONFFLAGS_$host CFLAGS_HOST=CFLAGS_$host LDFLAGS_HOST=LDFLAGS_$host
+        AVCONFFLAGS_ARCH=AVCONFFLAGS_$arch CFLAGS_ARCH=CFLAGS_$arch LDFLAGS_ARCH=LDFLAGS_$arch
+        AVCONFFLAGS_MODE=AVCONFFLAGS_$mode CFLAGS_MODE=CFLAGS_$mode LDFLAGS_MODE=LDFLAGS_$mode
+
+        AVCONFFLAGS="$AVCONFFLAGS_COMMON ${!AVCONFFLAGS_HOST} ${!AVCONFFLAGS_ARCH} ${!AVCONFFLAGS_MODE} ${!AVCONFFLAGS_LIBTYPE}"
+        CFLAGS="$AVCFLAGS_COMMON ${!CFLAGS_HOST} ${!CFLAGS_ARCH} ${!CFLAGS_MODE} ${!CFLAGS_LIBTYPE}"
+        LDFLAGS="$AVLDFLAGS_COMMON ${!LDFLAGS_HOST} ${!LDFLAGS_ARCH} ${!LDFLAGS_MODE} ${!LDFLAGS_LIBTYPE}"
+        echo $AVCONFFLAGS
+        echo $CFLAGS
+        echo $LDFLAGS
+
+        ../../../../configure $AVCONFFLAGS --extra-cflags="$CFLAGS" --extra-ldflags="$LDFLAGS" > /dev/null
+        make -j$NUMPROC > /dev/null
+
+        echo Building libav for $host $arch $mode done
+        cd -
+    done
+    done
+    done
+}
+
+###########################################################
 # GC build
 ###########################################################
 cd third_party/zeromq/
@@ -227,6 +270,11 @@ else
 fi
 fi
 
+
+cd $CU
+cd third_party/libav/
+rm -rf ./out
+build_av_for_linux
 
 cd $CU
 

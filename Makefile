@@ -253,7 +253,6 @@ endif
 # for media support
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -DSTARFISH_ENABLE_MULTIMEDIA
-  LDFLAGS += -lavformat -lavcodec -lavutil
 endif
 
 ifeq ($(INSPECTOR_SUPPORT), true)
@@ -327,9 +326,10 @@ CXXFLAGS += -Ithird_party/clipper/cpp/
 #rapidxml
 CXXFLAGS += -Ithird_party/rapidxml/
 
-#webm
+#webm, libav
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -Ithird_party/webm/
+  CXXFLAGS += -Ithird_party/libav/
 endif
 ################################################################################
 ################################################################################
@@ -404,9 +404,17 @@ SRC += third_party/skia_matrix/SkDebug.cpp
 # clipper
 SRC += third_party/clipper/cpp/clipper.cpp
 
-# webm
+# webm, libav
 ifeq ($(MEDIA_SUPPORT), true)
   SRC_CC += third_party/webm/webvttparser.cc
+  LIBAV_CURPATH=third_party/libav/out/$(HOST)/$(ARCH)/$(MODE)
+  LDFLAGS += -L$(LIBAV_CURPATH)/libavformat/
+  LDFLAGS += -L$(LIBAV_CURPATH)/libavcodec/
+  LDFLAGS += -L$(LIBAV_CURPATH)/libavutil/
+  LDFLAGS += -lavformat -lavcodec -lavutil
+  LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavformat/
+  LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavcodec/
+  LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavutil/
 endif
 
 # zeromq
