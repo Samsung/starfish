@@ -62,7 +62,7 @@ void ImageResource::request(ResourceRequestSyncLevel syncLevel)
     if (m_url->isFileURL()) {
         if (!loader()->requestResourcePreprocess(this, syncLevel)) {
             // cache miss
-            if (ResourceRequestSyncLevel::AlwaysSync == syncLevel) {
+            if (ResourceRequestSyncLevel::NeverSync != syncLevel) {
                 doLoadFile(this);
             } else {
                 pushIdlerHandle(m_loader->m_document->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {

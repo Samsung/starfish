@@ -26,8 +26,7 @@ class MessageLoop : public gc {
     friend class Window;
 public:
     MessageLoop(StarFish* sf)
-        : m_renderingIsDelayed(false)
-        , m_starFish(sf)
+        : m_starFish(sf)
         , m_idlersFromOtherThreadMutex(new Mutex())
     {
     }
@@ -48,7 +47,6 @@ public:
 
     void clearPendingIdlers();
 protected:
-    bool m_renderingIsDelayed;
     StarFish* m_starFish;
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;

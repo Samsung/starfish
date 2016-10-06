@@ -866,6 +866,13 @@ public:
                 if (!shouldApplyEvasMap()) {
                     xx = lastState().m_baseX + rt.x();
                     yy = lastState().m_baseY + rt.y();
+
+                    Rect test((float)xx, (float)yy, (float)rt.width(), (float)rt.height());
+                    Rect canvasSize(0, 0, m_width, m_height);
+                    if (canvasSize.contains(test.x(), test.y()) || canvasSize.contains(test.maxX(), test.y()) || canvasSize.contains(test.x(), test.maxY()) || canvasSize.contains(test.maxX(), test.maxY())) {
+                    } else {
+                        return;
+                    }
                 } else {
                     xx = x;
                     yy = y;
