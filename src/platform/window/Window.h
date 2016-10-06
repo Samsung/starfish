@@ -246,6 +246,7 @@ protected:
     bool m_isRunning;
 
     size_t m_pendingStyleSheetCount;
+    size_t m_pendingRenderingCount;
     uint64_t m_lastRenderingTime;
 
     StarFish* m_starFish;

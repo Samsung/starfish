@@ -413,7 +413,6 @@ void Window::initFlags()
     m_isRunning = true;
     m_pendingStyleSheetCount = 0;
     m_lastRenderingTime = 0;
-    m_starFish->messageLoop()->m_renderingIsDelayed = false;
 
     m_activeNodeWithTouchDown = nullptr;
 }
@@ -714,27 +713,7 @@ void Window::rendering()
         return;
 
     uint64_t currentTick = tickCount();
-/*
-    if ((m_starFish->messageLoop()->hasPendingIdler() && ((currentTick - m_lastRenderingTime) < 100))
-#ifdef STARFISH_ENABLE_TEST
-        && !g_forceRendering
-#endif
-    ) {
-        m_needsRendering = false;
-        STARFISH_LOG_INFO("Window::rendering is delayed... \n");
-        m_starFish->messageLoop()->m_renderingIsDelayed = true;
-
-        setTimeout([](Window* wnd, void* data)
-        {
-            wnd->setNeedsRendering();
-        }, 1000 / 60.f, nullptr);
-        return;
-    }
-    STARFISH_LOG_INFO("Window::rendering... \n");
-*/
-
     m_lastRenderingTime = currentTick;
-    starFish()->messageLoop()->m_renderingIsDelayed = false;
     m_inRendering = true;
     STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
 
@@ -967,6 +946,7 @@ void Window::setNeedsRenderingSlowCase()
         wnd->rendering();
     };
     id->m_data = this;
+
     ((WindowImplEFL*)this)->m_renderingIdlerData = id;
     ((WindowImplEFL*)this)->m_renderingAnimator = ecore_animator_add([](void* data) -> Eina_Bool {
         IdlerData* id = (IdlerData*)data;
