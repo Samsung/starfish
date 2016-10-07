@@ -3044,6 +3044,15 @@ escargot::ESFunctionObject* bindingHTMLAnchorElement(ScriptBindingInstance* scri
         HTML##ElementName##ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create(#getter), \
         DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
     , nullptr);
+
+#define DEFINE_HTMLELEMENT_EVENT_PROPERTY(ElementName, getter, setter, TYPE_F) \
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction( \
+        HTML##ElementName##ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("on"#getter), \
+        DEFINE_HTMLELEMENT_PROPERTY_GETTER(ElementName, getter, TYPE_F) \
+    , \
+        DEFINE_HTMLELEMENT_PROPERTY_SETTER(ElementName, getter, TYPE_F) \
+    );
+
 #define RETURN_TYPE_STRING(getter) \
     return toJSString(__element->getter());
 #define RETURN_TYPE_PRIMITIVE(getter) \
@@ -3057,6 +3066,9 @@ escargot::ESFunctionObject* bindingHTMLAnchorElement(ScriptBindingInstance* scri
     if (__result) { \
         return __result->scriptValue(); \
     }
+#define RETURN_TYPE_EVENT(getter) \
+    return __element->attributeEventListener(__element->document()->window()->starFish()->staticStrings()->m_##getter);
+
 #define ARG_TYPE_STRING(setter) \
     __element->setter(toBrowserString(v.toString()));
 #define ARG_TYPE_NUMBER(setter) \
@@ -3068,6 +3080,13 @@ escargot::ESFunctionObject* bindingHTMLAnchorElement(ScriptBindingInstance* scri
 #define ARG_TYPE_BOOLEAN(setter) \
     if (v.isBoolean()) { \
         __element->setter(v.asBoolean()); \
+    }
+#define ARG_TYPE_EVENT(setter) \
+    auto eventType = __element->document()->window()->starFish()->staticStrings()->m_##setter; \
+    if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) { \
+        __element->setAttributeEventListener(eventType, v); \
+    } else { \
+        __element->clearAttributeEventListener(eventType); \
     }
 
 escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scriptBindingInstance)
@@ -3105,6 +3124,29 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, volume, setVolume, TYPE_BOOLEAN);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, muted, setMuted, TYPE_BOOLEAN);
     DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, textTracks, TYPE_SCRIPTVALUE);
+
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, progress, Progress, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, suspend, Suspend, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, abort, Abort, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, error, Error, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, emptied, Emptied, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, stalled, Stalled, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, loadedmetadata, Loadedmetadata, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, loadeddata, Loadeddata, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, loadstart, Loadstart, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, canplay, Canplay, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, canplaythrough, Canplaythrough, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, playing, Playing, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, waiting, Waiting, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, seeking, Seeking, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, seeked, Seeked, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, ended, Ended, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, durationchange, Durationchange, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, timeupdate, Timeupdate, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, play, Play, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, pause, Pause, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, ratechange, Ratechange, TYPE_EVENT);
+    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, volumechange, Volumechange, TYPE_EVENT);
 
     HTMLMediaElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("addTextTrack"), true, true, true,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue

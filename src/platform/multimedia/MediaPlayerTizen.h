@@ -30,15 +30,33 @@ class MediaPlayerTizen : public MediaPlayer {
 public:
     MediaPlayerTizen(HTMLMediaElement* element);
 
-    virtual void processOperationQueue(MediaPlayerOperationQueueData* data);
+    virtual void close();
+
+    virtual void play()
+    {
+        player_start(m_nativePlayer);
+        processNextOperationQueueInContainer();
+    }
+
+    virtual void pause()
+    {
+        player_pause(m_nativePlayer);
+        processNextOperationQueueInContainer();
+    }
+
+    void setLoop(bool loop) { m_isLooping = true; }
+    bool loop()
+    {
+        return m_isLooping;
+    }
+
+    virtual void prepare(URL* url);
 
     virtual void initDisplay();
 
     virtual void setNativeOptions(URL* url);
 
     void pauseOperation();
-    void stopOperation();
-
     void unprepareOperation();
 
     virtual unsigned long videoWidth()
@@ -68,7 +86,7 @@ public:
 
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
 
-    bool m_isURISetted;
+    bool m_inPrepare;
     MediaSource* m_activeMediaSource;
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;

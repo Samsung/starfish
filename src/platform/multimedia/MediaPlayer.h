@@ -32,96 +32,6 @@ class HTMLMediaElement;
 class MediaPlayer;
 class Canvas;
 
-class MediaPlayerOperationQueueData : public gc {
-public:
-    enum EventType {
-        SetURLEventType,
-        RequestPrepareEventType,
-        RequestPlayEventType,
-        RequestPauseEventType,
-    };
-    MediaPlayerOperationQueueData(MediaPlayer* p)
-        : m_mediaPlayer(p)
-    {
-    }
-    virtual ~MediaPlayerOperationQueueData() { }
-    virtual EventType eventType() = 0;
-
-    MediaPlayer* m_mediaPlayer;
-};
-
-class MediaPlayerOperationQueueDataSetURL : public MediaPlayerOperationQueueData {
-public:
-    MediaPlayerOperationQueueDataSetURL(MediaPlayer* p, URL* u)
-        : MediaPlayerOperationQueueData(p)
-        , m_url(u)
-    {
-    }
-
-    virtual EventType eventType()
-    {
-        return EventType::SetURLEventType;
-    }
-
-    URL* m_url;
-};
-
-class MediaPlayerOperationQueueDataRequestPrepare : public MediaPlayerOperationQueueData {
-public:
-    MediaPlayerOperationQueueDataRequestPrepare(MediaPlayer* p)
-        : MediaPlayerOperationQueueData(p)
-    {
-    }
-
-    virtual EventType eventType()
-    {
-        return EventType::RequestPrepareEventType;
-    }
-};
-
-class MediaPlayerOperationQueueDataRequestPlay : public MediaPlayerOperationQueueData {
-public:
-#ifdef USE_ES6_FEATURE
-    MediaPlayerOperationQueueDataRequestPlay(MediaPlayer* p, Promise* pm = nullptr)
-#else
-    MediaPlayerOperationQueueDataRequestPlay(MediaPlayer* p)
-#endif
-        : MediaPlayerOperationQueueData(p)
-    {
-#ifdef USE_ES6_FEATURE
-        if (pm) {
-            m_promise = pm;
-        } else {
-            m_promise = new Promise();
-        }
-#endif
-    }
-
-    virtual EventType eventType()
-    {
-        return EventType::RequestPlayEventType;
-    }
-
-#ifdef USE_ES6_FEATURE
-    Promise* m_promise;
-#endif
-};
-
-class MediaPlayerOperationQueueDataRequestPause : public MediaPlayerOperationQueueData {
-public:
-    MediaPlayerOperationQueueDataRequestPause(MediaPlayer* p)
-        : MediaPlayerOperationQueueData(p)
-    {
-    }
-
-    virtual EventType eventType()
-    {
-        return EventType::RequestPauseEventType;
-    }
-};
-
-typedef std::list<MediaPlayerOperationQueueData*, gc_allocator<MediaPlayerOperationQueueData*>> MediaPlayerOperationQueue;
-
 class MediaPlayer : public gc {
 public:
     enum PlaybackState {
@@ -131,39 +41,17 @@ public:
         PLAYBACK_STATE_END = 1 << 3 | PLAYBACK_STATE_PAUSED,
     };
 
-    enum LoadState {
-        LOAD_STATE_NONE,
-        LOAD_STATE_PREPARING,
-        LOAD_STATE_PREPARED,
-        LOAD_STATE_DONE,
-    };
-
     static MediaPlayer* create(HTMLMediaElement* element);
-    void close()
+    virtual void close()
     {
-        // TODO
     }
 
-#ifdef USE_ES6_FEATURE
-    Promise* play()
-#else
-    void play()
-#endif
+    virtual void play()
     {
-        m_playbackState = PlaybackState::PLAYBACK_STATE_PLAYING;
-        auto request = new MediaPlayerOperationQueueDataRequestPlay(this);
-        appendToOperationQueue(request);
-        startOperationQueueIfNeeded();
-#ifdef USE_ES6_FEATURE
-        return request->m_promise;
-#endif
     }
 
-    void pause()
+    virtual void pause()
     {
-        m_playbackState = PlaybackState::PLAYBACK_STATE_PAUSED;
-        appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPause(this));
-        startOperationQueueIfNeeded();
     }
 
     void setLoop(bool loop) { m_isLooping = true; }
@@ -172,18 +60,8 @@ public:
         return m_isLooping;
     }
 
-    void setURL(URL* url)
+    virtual void prepare(URL* url)
     {
-        m_playbackState = PlaybackState::PLAYBACK_STATE_NONE;
-        m_url = url;
-        appendToOperationQueue(new MediaPlayerOperationQueueDataSetURL(this, m_url));
-        startOperationQueueIfNeeded();
-    }
-
-    void prepare()
-    {
-        appendToOperationQueue(new MediaPlayerOperationQueueDataRequestPrepare(this));
-        startOperationQueueIfNeeded();
     }
 
     virtual double currentTime()
@@ -195,27 +73,6 @@ public:
     {
         return m_playbackState;
     }
-
-
-    bool isPlaybackState(PlaybackState state)
-    {
-        return (state & m_playbackState) == state;
-    }
-
-    LoadState loadState()
-    {
-        return m_loadState;
-    }
-
-    void updateLoadState(LoadState state)
-    {
-        // TODO : Consider Events
-        m_loadState = state;
-    }
-
-    void updateElementReadyState(HTMLMediaElement::ReadyState state);
-
-    URL* url() { return m_url; }
 
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
     {
@@ -233,36 +90,13 @@ public:
 
 protected:
     MediaPlayer(HTMLMediaElement* element);
-    virtual void processOperationQueue(MediaPlayerOperationQueueData*)
-    {
-        processNextOperationQueue();
-    }
-    void processNextOperationQueue();
-    void startOperationQueueIfNeeded()
-    {
-        if (m_currentPendingOperationCount == 0) {
-            processNextOperationQueue();
-        }
-    }
-    void prependToOperationQueue(MediaPlayerOperationQueueData* data)
-    {
-        m_operationQueue.push_front(data);
-    }
-
-    void appendToOperationQueue(MediaPlayerOperationQueueData* data)
-    {
-        m_operationQueue.push_back(data);
-    }
-
+    void updateElementReadyState(HTMLMediaElement::ReadyState state);
+    void processNextOperationQueueInContainer();
     bool m_isLooping;
     bool m_hasVideo;
     PlaybackState m_playbackState;
-    size_t m_currentPendingOperationCount;
     HTMLMediaElement* m_container;
     StarFish* m_starFish;
-    URL* m_url;
-    MediaPlayerOperationQueue m_operationQueue;
-    LoadState m_loadState;
 };
 
 }

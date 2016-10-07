@@ -36,34 +36,15 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     : m_isLooping(false)
     , m_hasVideo(false)
-    , m_playbackState(PlaybackState::PLAYBACK_STATE_NONE)
-    , m_currentPendingOperationCount(0)
+    , m_playbackState(PLAYBACK_STATE_NONE)
     , m_container(element)
     , m_starFish(element->document()->window()->starFish())
-    , m_url(nullptr)
-    , m_loadState(MediaPlayer::LOAD_STATE_NONE)
 {
 }
 
-void MediaPlayer::processNextOperationQueue()
+void MediaPlayer::processNextOperationQueueInContainer()
 {
-    if (m_operationQueue.size()) {
-        STARFISH_ASSERT(m_currentPendingOperationCount == 0);
-        m_currentPendingOperationCount++;
-        m_starFish->messageLoop()->addIdler([](size_t, void* data) {
-            MediaPlayerOperationQueueData* queueData = (MediaPlayerOperationQueueData*)data;
-            queueData->m_mediaPlayer->m_currentPendingOperationCount--;
-            queueData->m_mediaPlayer->processOperationQueue(queueData);
-        }, m_operationQueue.front());
-        m_operationQueue.pop_front();
-    }
-}
-
-void MediaPlayer::updateElementReadyState(HTMLMediaElement::ReadyState state)
-{
-    if (m_container) {
-        m_container->updateReadyState(state);
-    }
+    m_container->processNextOperationQueue();
 }
 
 }
