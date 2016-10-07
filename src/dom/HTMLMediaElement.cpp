@@ -648,7 +648,7 @@ void HTMLMediaElement::processNextOperationQueue()
                     isAllOfRequestsArePlay = false;
                     break;
                 }
-                iter ++;
+                iter++;
             }
             if (isAllOfRequestsArePlay) {
                 m_currentOperation = m_operationQueue.front();
