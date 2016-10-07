@@ -20,9 +20,13 @@ COMPILER_VERSION_MINOR=4.6.4
 # LIBAV(FFmpeg) build
 ###########################################################
 
-AVCONFFLAGS_COMMON=" --enable-shared --enable-pic --disable-yasm --disable-encoders --disable-muxers --disable-avresample --disable-swscale --disable-avfilter --disable-avdevice"
+AVCONFFLAGS_COMMON=" --enable-shared --enable-pic --disable-asm --disable-encoders --disable-muxers --disable-avresample --disable-swscale --disable-avfilter --disable-avdevice"
 AVCONFFLAGS_release=""
 AVCONFFLAGS_debug="--enable-debug --disable-optimizations"
+
+AVCONFFLAGS_arm="--target-os=linux --arch=arm32"
+AVCONFFLAGS_i386="--target-os=linux --arch=x86"
+AVCONFFLAGS_mobile="--enable-cross-compile"
 
 function build_av_for_linux() {
     AVCFLAGS_COMMON=
@@ -45,15 +49,69 @@ function build_av_for_linux() {
         AVCONFFLAGS="$AVCONFFLAGS_COMMON ${!AVCONFFLAGS_HOST} ${!AVCONFFLAGS_ARCH} ${!AVCONFFLAGS_MODE} ${!AVCONFFLAGS_LIBTYPE}"
         CFLAGS="$AVCFLAGS_COMMON ${!CFLAGS_HOST} ${!CFLAGS_ARCH} ${!CFLAGS_MODE} ${!CFLAGS_LIBTYPE}"
         LDFLAGS="$AVLDFLAGS_COMMON ${!LDFLAGS_HOST} ${!LDFLAGS_ARCH} ${!LDFLAGS_MODE} ${!LDFLAGS_LIBTYPE}"
-        echo $AVCONFFLAGS
-        echo $CFLAGS
-        echo $LDFLAGS
 
         ../../../../configure $AVCONFFLAGS --extra-cflags="$CFLAGS" --extra-ldflags="$LDFLAGS" > /dev/null
         make -j$NUMPROC > /dev/null
 
         echo Building libav for $host $arch $mode done
         cd -
+    done
+    done
+    done
+}
+
+function build_av_for_tizen() {
+
+    for version in 2.3.1 2.4 3.0; do
+    for host in mobile; do
+    for arch in arm i386; do
+    for mode in debug release; do
+
+        if [[ $arch == arm ]]; then
+            device=device
+        elif [[ $arch == i386 ]]; then
+            device=emulator
+        fi
+
+        TIZEN_SYSROOT=$TIZEN_SDK_HOME/platforms/tizen-$version/$host/rootstraps/$host-$version-$device.core
+        COMPILER_PREFIX=$arch-linux-gnueabi
+        TIZEN_TOOLCHAIN=$TIZEN_SDK_HOME/tools/$COMPILER_PREFIX-gcc-$COMPILER_VERSION_MAJOR
+
+        echo =========================================================================
+        if [[ -a $TIZEN_SYSROOT ]]; then
+            echo Building libav for tizen $version $host $arch $mode
+        else
+            echo Skipping libav build for tizen $version $host $arch $mode
+            continue
+        fi
+
+        BUILDDIR=out/tizen_${version}_${host}/$arch/$mode
+        rm -rf $BUILDDIR
+        mkdir -p $BUILDDIR
+        cd $BUILDDIR
+
+        AVCONFFLAGS_HOST=AVCONFFLAGS_$host CFLAGS_HOST=CFLAGS_$host LDFLAGS_HOST=LDFLAGS_$host
+        AVCONFFLAGS_ARCH=AVCONFFLAGS_$arch CFLAGS_ARCH=CFLAGS_$arch LDFLAGS_ARCH=LDFLAGS_$arch
+        AVCONFFLAGS_MODE=AVCONFFLAGS_$mode CFLAGS_MODE=CFLAGS_$mode LDFLAGS_MODE=LDFLAGS_$mode
+
+        AVCONFFLAGS="$AVCONFFLAGS_COMMON ${!AVCONFFLAGS_HOST} ${!AVCONFFLAGS_ARCH} ${!AVCONFFLAGS_MODE} --sysroot=${TIZEN_SYSROOT}"
+        CFLAGS="$AVCFLAGS_COMMON ${!CFLAGS_HOST} ${!CFLAGS_ARCH} ${!CFLAGS_MODE} ${!CFLAGS_LIBTYPE} --sysroot=${TIZEN_SYSROOT}"
+        LDFLAGS="$LDFLAGS_COMMON ${!LDFLAGS_HOST} ${!LDFLAGS_ARCH} ${!LDFLAGS_MODE} ${!LDFLAGS_LIBTYPE}"
+        if [[ $LTO == true ]]; then
+            CFLAGS+= "-flto -ffat-lto-objects"
+            LDFLAGS+= "-flto -ffat-lto-objects"
+#            PLUGINFLAGS="--plugin=$TIZEN_TOOLCHAIN/libexec/gcc/$COMPILER_PREFIX/$COMPILER_VERSION_MINOR/liblto_plugin.so"
+            TOOLCHAIN_GCC_WRAPPER=-gcc
+        fi
+
+        ../../../../configure $AVCONFFLAGS --extra-cflags="$CFLAGS" --extra-ldflags="$LDFLAGS" \
+            --cross-prefix=$TIZEN_TOOLCHAIN/bin/$COMPILER_PREFIX- \
+            --cc=$TIZEN_TOOLCHAIN/bin/$COMPILER_PREFIX-gcc > /dev/null
+        make -j$NUMPROC > /dev/null
+
+        echo Building libav for tizen $version $host $arch $mode done
+        cd -
+    done
     done
     done
     done
@@ -253,7 +311,6 @@ function build_gc_for_tizen_obs() {
 }
 
 
-
 if [[ $1 == tizen_obs_arm ]]; then
     build_gc_for_tizen_obs arm $2
 elif [[ $1 == tizen_obs_i386 ]]; then
@@ -275,6 +332,13 @@ cd $CU
 cd third_party/libav/
 rm -rf ./out
 build_av_for_linux
+
+if [ -z "$TIZEN_SDK_HOME" ]; then
+    echo "Do not build for Tizen"
+else
+    echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
+    build_av_for_tizen
+fi
 
 cd $CU
 
