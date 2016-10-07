@@ -65,7 +65,7 @@ static void mediaPlayerErrorCallback(int errorCode, void *user_data)
 
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
-    , m_isURISetted(false)
+    , m_inPrepare(false)
     , m_activeMediaSource(nullptr)
     , m_canvasSurface(nullptr)
 {
@@ -89,8 +89,16 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
 
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
         MediaPlayerTizen* player = (MediaPlayerTizen*)obj;
-        player_destroy(player->m_nativePlayer);
+        player->unprepareOperation();
     }, NULL, NULL, NULL);
+}
+
+void MediaPlayerTizen::close()
+{
+    unprepareOperation();
+    if (m_nativePlayer)
+        player_destroy(m_nativePlayer);
+    m_nativePlayer = nullptr;
 }
 
 void MediaPlayerTizen::initDisplay()
@@ -109,131 +117,68 @@ void MediaPlayerTizen::setNativeOptions(URL* url)
     player_set_display_mode(m_nativePlayer, displayMode);
 }
 
-void MediaPlayerTizen::processOperationQueue(MediaPlayerOperationQueueData* data)
+void MediaPlayerTizen::prepare(URL* url)
 {
-    auto type = data->eventType();
-    STARFISH_LOG_INFO("MediaPlayerTizen::processOperationQueue %d\n", (int)type);
-    player_state_e state;
-    player_get_state(m_nativePlayer, &state);
-    if (type == MediaPlayerOperationQueueData::SetURLEventType) {
-        URL* url = ((MediaPlayerOperationQueueDataSetURL*)data)->m_url;
-        if (state == PLAYER_STATE_PLAYING) {
-            pauseOperation();
+    if (url->isBlobURL()) {
+        BlobURLStore store;
+        if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
+            STARFISH_LOG_ERROR("MediaPlayerTizen::prepare, seturl, FAIL - INVALID BLOB URL\n");
+            return;
         }
-
-        if (state != PLAYER_STATE_IDLE) {
-            unprepareOperation();
-        }
-
-        setNativeOptions(url);
-
-        STARFISH_LOG_INFO("MediaPlayerTizen::processOperationQueue seturl %s\n", url->urlString()->utf8Data());
-
-        m_hasVideo = false;
-        m_isURISetted = false;
-        if (url) {
-            if (url->isBlobURL()) {
-                BlobURLStore store;
-                if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
-                    STARFISH_LOG_ERROR("MediaPlayerTizen::processOperationQueue, seturl, FAIL - INVALID BLOB URL\n");
-                    return;
-                }
-                if (m_starFish->isValidBlobURL(store)) {
-                    player_set_memory_buffer(m_nativePlayer, ((Blob *)store.m_blob)->data(), ((Blob *)store.m_blob)->size());
-                } else if (m_starFish->isValidMediaSourceBlobURL(store)) {
-                    // player_set_uri(m_nativePlayer, "demuxer://aaaa");
-                } else {
-                    // fire eror
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-            } else {
-                player_set_uri(m_nativePlayer, url->urlString()->utf8Data());
-            }
-            m_isURISetted = true;
-        }
-        processNextOperationQueue();
-    } else if (type == MediaPlayerOperationQueueData::RequestPrepareEventType) {
-        if (state == PLAYER_STATE_IDLE) {
-            if (m_isURISetted) {
-                m_starFish->addPointerInRootSet(this);
-                STARFISH_ASSERT(m_container && m_container->readyState() == HTMLMediaElement::HAVE_NOTHING);
-                updateLoadState(MediaPlayer::LOAD_STATE_PREPARING);
-                player_prepare_async(m_nativePlayer, [](void *user_data) {
-                    MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
-                    STARFISH_ASSERT(!isMainThread());
-                    self->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* user_data) {
-                        MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
-                        self->m_starFish->removePointerFromRootSet(self);
-
-                        char* videoCodec = nullptr;
-                        char* audioCodec = nullptr;
-                        player_get_codec_info(self->m_nativePlayer, &videoCodec, &audioCodec);
-
-                        if (videoCodec) {
-                            self->m_hasVideo = true;
-                            int width = 1;
-                            int height = 1;
-                            player_get_video_size(self->m_nativePlayer, &width, &height);
-                            STARFISH_ASSERT(width > 0);
-                            STARFISH_ASSERT(height > 0);
-                            self->m_videoWidth = (unsigned long)width;
-                            self->m_videoHeight = (unsigned long)height;
-                            if (self->m_container->isHTMLVideoElement() && self->m_container->frame()) {
-                                self->m_container->setNeedsLayout();
-                            }
-                            if (self->m_canvasSurface) {
-                                self->m_canvasSurface->resize(self->m_videoWidth, self->m_videoHeight);
-                            }
-                        }
-
-                        STARFISH_LOG_INFO("MediaPlayerTizen::processOperationQueue::player_prepare_async ok %s %s %d %d\n", videoCodec, audioCodec, (int)self->m_videoWidth, (int)self->m_videoHeight);
-
-                        free(videoCodec);
-                        free(audioCodec);
-
-                        self->updateElementReadyState(HTMLMediaElement::HAVE_METADATA);
-                        self->updateElementReadyState(HTMLMediaElement::HAVE_FUTURE_DATA);
-                        self->updateLoadState(MediaPlayer::LOAD_STATE_PREPARED);
-
-                        self->processNextOperationQueue();
-                    }, user_data);
-                }, this);
-                return;
-            } else {
-                // ignore command
-            }
-        }
-        processNextOperationQueue();
-    } else if (type == MediaPlayerOperationQueueData::RequestPlayEventType) {
-        if (state == PLAYER_STATE_READY || state == PLAYER_STATE_PAUSED) {
-            m_starFish->addPointerInRootSet(this);
-            player_start(m_nativePlayer);
-            STARFISH_LOG_INFO("MediaPlayerTizen::processOperationQueue::player_start\n");
-#ifdef USE_ES6_FEATURE
-            ((MediaPlayerOperationQueueDataRequestPlay*)data)->m_promise->fulfill(ScriptValueUndefined);
-#endif
-        } else if (state == PLAYER_STATE_IDLE) {
-#ifdef USE_ES6_FEATURE
-            prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this, ((MediaPlayerOperationQueueDataRequestPlay*)data)->m_promise));
-#else
-            prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPlay(this));
-#endif
-            prependToOperationQueue(new MediaPlayerOperationQueueDataRequestPrepare(this));
-        } else if (state == PLAYER_STATE_PLAYING) {
-            // ignore command
+        if (m_starFish->isValidBlobURL(store)) {
+            player_set_memory_buffer(m_nativePlayer, ((Blob *)store.m_blob)->data(), ((Blob *)store.m_blob)->size());
+        } else if (m_starFish->isValidMediaSourceBlobURL(store)) {
+            // player_set_uri(m_nativePlayer, "demuxer://aaaa");
         } else {
-            STARFISH_LOG_INFO("invalid state %d\n", (int)state);
+            // fire eror
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        processNextOperationQueue();
-    } else if (type == MediaPlayerOperationQueueData::RequestPauseEventType) {
-        if (state == PLAYER_STATE_PLAYING) {
-            pauseOperation();
-        }
-        processNextOperationQueue();
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        player_set_uri(m_nativePlayer, url->urlString()->utf8Data());
     }
+
+    setNativeOptions(url);
+
+    m_starFish->addPointerInRootSet(this);
+    player_prepare_async(m_nativePlayer, [](void *user_data) {
+        MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
+        STARFISH_ASSERT(!isMainThread());
+        self->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* user_data) {
+            MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
+            self->m_starFish->removePointerFromRootSet(self);
+
+            if (!self->m_nativePlayer)
+                return;
+
+            char* videoCodec = nullptr;
+            char* audioCodec = nullptr;
+            player_get_codec_info(self->m_nativePlayer, &audioCodec, &videoCodec);
+
+            if (videoCodec) {
+                self->m_hasVideo = true;
+                int width = 1;
+                int height = 1;
+                player_get_video_size(self->m_nativePlayer, &width, &height);
+                STARFISH_ASSERT(width > 0);
+                STARFISH_ASSERT(height > 0);
+                self->m_videoWidth = (unsigned long)width;
+                self->m_videoHeight = (unsigned long)height;
+                if (self->m_canvasSurface) {
+                    self->m_canvasSurface->resize(self->m_videoWidth, self->m_videoHeight);
+                }
+            }
+
+            STARFISH_LOG_INFO("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec, audioCodec, (int)self->m_videoWidth, (int)self->m_videoHeight);
+
+            free(videoCodec);
+            free(audioCodec);
+
+            self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
+            self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
+
+            self->processNextOperationQueueInContainer();
+        }, user_data);
+    }, this);
 }
 
 void MediaPlayerTizen::pauseOperation()
@@ -247,19 +192,18 @@ void MediaPlayerTizen::pauseOperation()
 
 void MediaPlayerTizen::unprepareOperation()
 {
-    player_unprepare(m_nativePlayer);
-    if (m_container->isHTMLVideoElement() && m_container->frame()) {
-        m_container->setNeedsLayout();
-    }
+    if (m_nativePlayer) {
+        player_unprepare(m_nativePlayer);
+        if (m_container->isHTMLVideoElement() && m_container->frame()) {
+            m_container->setNeedsLayout();
+        }
 
-    if (m_activeMediaSource) {
-        // m_activeMediaSource->close();
-    }
-    m_activeMediaSource = nullptr;
-    m_url = nullptr;
-    if (m_container) {
-        m_container->updateReadyState(HTMLMediaElement::HAVE_NOTHING);
-        m_loadState = MediaPlayer::LOAD_STATE_NONE;
+        if (m_activeMediaSource) {
+            // m_activeMediaSource->close();
+        }
+        m_activeMediaSource = nullptr;
+
+        m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_NOTHING);
     }
 }
 

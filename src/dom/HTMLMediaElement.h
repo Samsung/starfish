@@ -27,7 +27,90 @@ class TextTrackList;
 class TimeRanges;
 class MediaPlayer;
 
+class MediaOperationQueueData : public gc {
+public:
+    MediaOperationQueueData(HTMLMediaElement* p);
+    virtual void cancelOperation(DOMException* exception) { }
+    virtual void processOperationQueue() = 0;
+    virtual ~MediaOperationQueueData() { }
+    virtual bool isPlayRequest()
+    {
+        return false;
+    }
+    MediaPlayer* mediaPlayer();
+
+    HTMLMediaElement* m_mediaElement;
+};
+
+class MediaOperationQueueDataRequestResourceSelection : public MediaOperationQueueData {
+public:
+    MediaOperationQueueDataRequestResourceSelection(HTMLMediaElement* p)
+        : MediaOperationQueueData(p)
+    {
+    }
+
+    virtual void processOperationQueue();
+};
+
+class MediaOperationQueueDataRequestPrepare : public MediaOperationQueueData {
+public:
+    MediaOperationQueueDataRequestPrepare(HTMLMediaElement* p, URL* u)
+        : MediaOperationQueueData(p)
+        , m_url(u)
+    {
+    }
+
+    virtual void processOperationQueue();
+    virtual void cancelOperation(DOMException* exception);
+
+    URL* m_url;
+};
+
+class MediaOperationQueueDataRequestPlay : public MediaOperationQueueData {
+public:
+#ifdef USE_ES6_FEATURE
+    MediaOperationQueueDataRequestPlay(HTMLMediaElement* p, Promise* pm = nullptr)
+#else
+    MediaOperationQueueDataRequestPlay(HTMLMediaElement* p)
+#endif
+        : MediaOperationQueueData(p)
+    {
+#ifdef USE_ES6_FEATURE
+        if (pm) {
+            m_promise = pm;
+        } else {
+            m_promise = new Promise();
+        }
+#endif
+    }
+    virtual void processOperationQueue();
+    virtual void cancelOperation(DOMException* exception);
+    virtual bool isPlayRequest()
+    {
+        return true;
+    }
+
+#ifdef USE_ES6_FEATURE
+    Promise* m_promise;
+#endif
+};
+
+class MediaOperationQueueDataRequestPause : public MediaOperationQueueData {
+public:
+    MediaOperationQueueDataRequestPause(HTMLMediaElement* p)
+        : MediaOperationQueueData(p)
+    {
+    }
+
+    virtual void processOperationQueue();
+};
+
+typedef std::list<MediaOperationQueueData*, gc_allocator<MediaOperationQueueData*>> MediaOperationQueue;
+
 class HTMLMediaElement : public HTMLElement {
+    friend class MediaPlayer;
+    friend class MediaOperationQueueDataRequestPause;
+    friend class MediaOperationQueueDataRequestResourceSelection;
 public:
     enum NetworkState {
         NETWORK_EMPTY,
@@ -102,6 +185,7 @@ public:
     double playbackRate();
     TimeRanges* played();
     TimeRanges* seekable();
+
     void load();
 #ifdef USE_ES6_FEATURE
     Promise* play();
@@ -127,8 +211,6 @@ public:
     void setVolume(bool volume);
     void setMuted(bool muted);
 
-    void updateReadyState(ReadyState state);
-
     static String* preloadToString(StarFish* starfish, PreloadState state)
     {
         switch (state) {
@@ -147,6 +229,8 @@ public:
         return m_mediaPlayer;
     }
 
+    void mediaPlayerNotifyUpdateReadyStateItsContainer(ReadyState state);
+
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow(); \
     void dispatch##Name##Event();
@@ -158,6 +242,7 @@ public:
     ADD_DISPATCH_EVENT_DECL(Stalled);
     ADD_DISPATCH_EVENT_DECL(Loadedmetadata);
     ADD_DISPATCH_EVENT_DECL(Loadeddata);
+    ADD_DISPATCH_EVENT_DECL(Loadstart);
     ADD_DISPATCH_EVENT_DECL(Canplay);
     ADD_DISPATCH_EVENT_DECL(Canplaythrough);
     ADD_DISPATCH_EVENT_DECL(Playing);
@@ -174,9 +259,46 @@ public:
 #undef ADD_DISPATCH_EVENT_DECL
 
 protected:
+    bool m_isPaused;
+    bool m_isSeeking;
+    bool m_delayingTheLoadEvent;
+    double m_officialPlaybackPosition;
     MediaPlayer* m_mediaPlayer;
+    String* m_currentSrc;
     TextTrackList* m_textTracks;
     ReadyState m_readyState;
+    NetworkState m_networkState;
+
+    MediaOperationQueueData* m_currentOperation;
+    MediaOperationQueue m_operationQueue;
+    size_t m_currentPendingOperationCount;
+    size_t m_currentPendingOperationHandle;
+
+    void initMediaPlayer();
+    void closeMediaPlayer();
+
+
+    void resourceSelection();
+    void dedicatedMediaSourceFailure();
+
+    void processNextOperationQueue();
+    void startOperationQueueIfNeeded()
+    {
+        if (m_currentPendingOperationCount == 0) {
+            processNextOperationQueue();
+        }
+    }
+    void prependToOperationQueue(MediaOperationQueueData* data)
+    {
+        m_operationQueue.push_front(data);
+    }
+
+    void appendToOperationQueue(MediaOperationQueueData* data)
+    {
+        m_operationQueue.push_back(data);
+    }
+
+    void abortEveryPendingOperation(DOMException* exceptionForPlayPromise);
 };
 
 }

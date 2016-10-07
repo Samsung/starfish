@@ -24,12 +24,12 @@ namespace StarFish {
 
 unsigned long HTMLVideoElement::videoWidth()
 {
-    return m_mediaPlayer->videoWidth();
+    return m_mediaPlayer ? m_mediaPlayer->videoWidth() : STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
 }
 
 unsigned long HTMLVideoElement::videoHeight()
 {
-    return m_mediaPlayer->videoHeight();
+    return m_mediaPlayer ? m_mediaPlayer->videoHeight() : STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
 }
 
 void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)

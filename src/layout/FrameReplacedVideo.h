@@ -74,7 +74,8 @@ public:
         LayoutRect videoRect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight());
         LayoutRect absVideoRect(videoRect);
         c->applyMatrixTo(absVideoRect);
-        v->mediaPlayer()->drawVideo(c, videoRect, absVideoRect);
+        if (v->mediaPlayer())
+            v->mediaPlayer()->drawVideo(c, videoRect, absVideoRect);
     }
 
 protected:
