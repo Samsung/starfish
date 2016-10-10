@@ -2011,124 +2011,30 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
 
     // event handler
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onupdatestart"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updatestart;
-        return originalObj->attributeEventListener(eventname);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updatestart;
-        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            originalObj->setAttributeEventListener(eventname, v);
-        } else {
-            originalObj->clearAttributeEventListener(eventname);
-        }
-        return escargot::ESValue();
+#define DEFINE_SOURCEBUFFER_EVENT_HANDLER(eventName) \
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction( \
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("on" #eventName), \
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer); \
+        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_##eventName; \
+        return originalObj->attributeEventListener(eventname); \
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer); \
+        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_##eventName; \
+        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) { \
+            originalObj->setAttributeEventListener(eventname, v); \
+        } else { \
+            originalObj->clearAttributeEventListener(eventname); \
+        } \
+        return escargot::ESValue(); \
     });
 
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onupdatestart"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updatestart;
-        return originalObj->attributeEventListener(eventname);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updatestart;
-        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            originalObj->setAttributeEventListener(eventname, v);
-        } else {
-            originalObj->clearAttributeEventListener(eventname);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onupdate"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_update;
-        return originalObj->attributeEventListener(eventname);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_update;
-        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            originalObj->setAttributeEventListener(eventname, v);
-        } else {
-            originalObj->clearAttributeEventListener(eventname);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onupdateend"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updateend;
-        return originalObj->attributeEventListener(eventname);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updateend;
-        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            originalObj->setAttributeEventListener(eventname, v);
-        } else {
-            originalObj->clearAttributeEventListener(eventname);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onupdateend"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updateend;
-        return originalObj->attributeEventListener(eventname);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_updateend;
-        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            originalObj->setAttributeEventListener(eventname, v);
-        } else {
-            originalObj->clearAttributeEventListener(eventname);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onerror"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_error;
-        return originalObj->attributeEventListener(eventname);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_error;
-        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            originalObj->setAttributeEventListener(eventname, v);
-        } else {
-            originalObj->clearAttributeEventListener(eventname);
-        }
-        return escargot::ESValue();
-    });
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onabort"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_abort;
-        return originalObj->attributeEventListener(eventname);
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        auto eventname = (((Window*)instance->globalObject()->extraPointerData()))->starFish()->staticStrings()->m_abort;
-        if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
-            originalObj->setAttributeEventListener(eventname, v);
-        } else {
-            originalObj->clearAttributeEventListener(eventname);
-        }
-        return escargot::ESValue();
-    });
+    DEFINE_SOURCEBUFFER_EVENT_HANDLER(updatestart);
+    DEFINE_SOURCEBUFFER_EVENT_HANDLER(update);
+    DEFINE_SOURCEBUFFER_EVENT_HANDLER(updateend);
+    DEFINE_SOURCEBUFFER_EVENT_HANDLER(error);
+    DEFINE_SOURCEBUFFER_EVENT_HANDLER(abort);
+#undef DEFINE_SOURCEBUFFER_EVENT_HANDLER
 
     return SourceBufferFunction;
 }
