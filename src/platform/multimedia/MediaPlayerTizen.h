@@ -62,6 +62,8 @@ public:
     void openPreparingMode();
     void closePreparingMode();
 
+    void handlePlayerError(int error);
+
     virtual unsigned long videoWidth()
     {
         if (m_hasVideo) {

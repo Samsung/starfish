@@ -35,6 +35,7 @@ public:
     size_t addIdler(void (*fn)(size_t handle, void*, void*), void* data, void* data1);
     size_t addIdler(void (*fn)(size_t handle, void*, void*, void*), void* data, void* data1, void* data2);
     size_t addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t handle, void*), void* data);
+    size_t addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t handle, void*, void*), void* data, void* data1);
     size_t addIdlerWithNoScriptInstanceEntering(void (*fn)(size_t handle, void*, void*), void* data, void* data1);
 
     void removeIdler(size_t handle);

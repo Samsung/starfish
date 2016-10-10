@@ -93,17 +93,8 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     player_create(&m_nativePlayer);
     player_set_error_cb(m_nativePlayer, [](int errorCode, void* data) {
         PLAYER_LOGI("player_error_cb");
-        STARFISH_ASSERT(isMainThread());
-        printNativePlayerError(errorCode);
         MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-        if (player->m_inPrepare) {
-            player->closePreparingMode();
-            if (player->m_alive) {
-                player->m_container->giveupFetchingResource();
-            } else {
-                player->close();
-            }
-        }
+        player->handlePlayerError(errorCode);
     }, this);
     player_set_completed_cb(m_nativePlayer, [](void* data) {
         PLAYER_LOGI("player_completed_cb");
@@ -126,6 +117,27 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
         MediaPlayerTizen* player = (MediaPlayerTizen*)obj;
         player->unprepareOperation();
     }, NULL, NULL, NULL);
+}
+
+void MediaPlayerTizen::handlePlayerError(int error)
+{
+    if (!isMainThread()) {
+        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data, void* data1) {
+            MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+            int errorCode = (int) data1;
+            player->handlePlayerError(errorCode);
+        }, this, (void*)error);
+        return;
+    }
+    printNativePlayerError(error);
+    if (m_inPrepare) {
+        closePreparingMode();
+        if (m_alive) {
+            m_container->giveupFetchingResource();
+        } else {
+            close();
+        }
+    }
 }
 
 void MediaPlayerTizen::close()
