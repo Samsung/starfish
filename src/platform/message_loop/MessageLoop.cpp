@@ -145,6 +145,39 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t, void
     return (size_t)id;
 }
 
+size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(void (*fn)(size_t, void*, void*), void* data, void* data1)
+{
+    IdlerData* id = new IdlerData;
+    id->m_isMainThreadData = false;
+    id->m_shouldExecute = true;
+    id->m_fn = (void (*)(size_t, void*))fn;
+    id->m_data = data;
+    id->m_data1 = data1;
+    id->m_ml = this;
+
+    {
+        Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
+        m_idlersFromOtherThread.insert((size_t)id);
+    }
+
+    ecore_main_loop_thread_safe_call_async([](void* data) -> void {
+        ecore_idler_add([](void* data) -> Eina_Bool {
+            IdlerData* id = (IdlerData*)data;
+            {
+                Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
+                id->m_ml->m_idlersFromOtherThread.erase(id->m_ml->m_idlersFromOtherThread.find((size_t)id));
+            }
+            if (id->m_shouldExecute) {
+                StarFishEnterer enter(id->m_ml->m_starFish);
+                ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data, id->m_data1);
+            }
+            delete id;
+            return ECORE_CALLBACK_CANCEL;
+        }, data);
+    }, id);
+    return (size_t)id;
+}
+
 size_t MessageLoop::addIdlerWithNoScriptInstanceEntering(void (*fn)(size_t handle, void*, void*), void* data, void* data1)
 {
     STARFISH_ASSERT(isMainThread());
