@@ -34,12 +34,16 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     , m_isAttachedToParent(false)
     , m_updating(false)
     , m_starFish(starFish)
+    , m_buffered(nullptr)
+    , m_timestampOffset(0)
+    , m_audioTracks(nullptr)
+    , m_videoTracks(nullptr)
+    , m_textTracks(nullptr)
     , m_appendWindowStart(0)
     , m_appendWindowEnd(std::numeric_limits<double>::infinity())
     , m_type(type)
     , m_parentMediaSource(nullptr)
 {
-
 }
 
 void SourceBuffer::setUpdating(bool flag, UpdateState state)
@@ -139,12 +143,12 @@ void SourceBuffer::setTimestampOffset(double timeoffset)
     // TODO
 }
 
-void setAppendWindowStart(double timeStamp)
+void SourceBuffer::setAppendWindowStart(double timeStamp)
 {
     // TODO
 }
 
-void setAppendWindowEnd(double timeStamp)
+void SourceBuffer::setAppendWindowEnd(double timeStamp)
 {
     // TODO
 }

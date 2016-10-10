@@ -1889,7 +1889,25 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
     );
     // TODO: appendStream, abort, remove
 
-    // TODO : mode
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("mode"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        return escargot::ESValue(originalObj->mode());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        double mode = firstArg.toNumber();
+        if (std::isnan(mode)) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        if (mode == SourceBuffer::AppendMode::Segments) {
+            originalObj->setMode(SourceBuffer::AppendMode::Segments);
+        } else if (mode == SourceBuffer::AppendMode::Sequence) {
+            originalObj->setMode(SourceBuffer::AppendMode::Sequence);
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("updating"),
@@ -1909,7 +1927,22 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, nullptr);
 
-    // TODO : timestampOffset
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("timestampOffset"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        return escargot::ESValue(originalObj->timestampOffset());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        double timeStampOffset = firstArg.toNumber();
+        if (std::isnan(timeStampOffset)) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        originalObj->setTimestampOffset(timeStampOffset);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    });
+
     /*
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("audioTracks"),
@@ -1944,9 +1977,37 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, nullptr);
 
-    // TODO : appendWindowStart
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("appendWindowStart"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        return escargot::ESValue(originalObj->appendWindowStart());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        double timeStamp = firstArg.toNumber();
+        if (std::isnan(timeStamp)) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        originalObj->setAppendWindowStart(timeStamp);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    });
 
-    // TODO : appendWindowEnd
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("appendWindowEnd"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        return escargot::ESValue(originalObj->appendWindowEnd());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        double timeStamp = firstArg.toNumber();
+        if (std::isnan(timeStamp)) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        originalObj->setAppendWindowEnd(timeStamp);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    });
 
     return SourceBufferFunction;
 }
