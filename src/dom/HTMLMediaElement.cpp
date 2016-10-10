@@ -200,6 +200,24 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
     m_delayingTheLoadEvent = false;
 }
 
+void HTMLMediaElement::giveupFetchingResource()
+{
+    // STARFISH_ASSERT(m_readyState > HAVE_NOTHING);
+    // TODO Set the error attribute to a new MediaError object whose code attribute is set to MEDIA_ERR_NETWORK / MEDIA_ERROR_DECODE
+
+    // Set the element's networkState attribute to the NETWORK_IDLE value.
+    m_networkState = NETWORK_IDLE;
+
+    // Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+    m_delayingTheLoadEvent = false;
+
+    // Fire a simple event named error at the media element.
+    dispatchErrorEvent();
+
+    // Abort the overall resource selection algorithm
+    abortEveryPendingOperation(new DOMException(document()->window()->scriptBindingInstance(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
+}
+
 #ifdef USE_ES6_FEATURE
 Promise* HTMLMediaElement::play()
 #else
@@ -775,7 +793,9 @@ void MediaOperationQueueDataRequestPlay::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestPlay::processOperationQueue()\n");
     mediaPlayer()->play();
+#ifdef USE_ES6_FEATURE
     m_promise->fulfill(ScriptValueUndefined);
+#endif
 }
 
 void MediaOperationQueueDataRequestPlay::cancelOperation(DOMException* exception)

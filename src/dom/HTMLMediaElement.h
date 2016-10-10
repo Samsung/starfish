@@ -258,6 +258,8 @@ public:
     ADD_DISPATCH_EVENT_DECL(Volumechange);
 #undef ADD_DISPATCH_EVENT_DECL
 
+    void giveupFetchingResource();
+
 protected:
     bool m_isPaused;
     bool m_isSeeking;
