@@ -59,6 +59,9 @@ public:
     void pauseOperation();
     void unprepareOperation();
 
+    void openPreparingMode();
+    void closePreparingMode();
+
     virtual unsigned long videoWidth()
     {
         if (m_hasVideo) {

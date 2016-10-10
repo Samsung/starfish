@@ -30,7 +30,7 @@
 
 namespace StarFish {
 
-static void mediaPlayerErrorCallback(int errorCode, void *user_data)
+static void printNativePlayerError(int errorCode)
 {
     switch (errorCode) {
 #define GEN_ERROR_PRINTS(errorenum) \
@@ -70,7 +70,15 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
-    player_set_error_cb(m_nativePlayer, mediaPlayerErrorCallback, this);
+    player_set_error_cb(m_nativePlayer, [](int errorCode, void* data) {
+        STARFISH_ASSERT(isMainThread());
+        printNativePlayerError(errorCode);
+        MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+        if (player->m_inPrepare) {
+            player->closePreparingMode();
+            player->m_container->giveupFetchingResource();
+        }
+    }, this);
     player_set_completed_cb(m_nativePlayer, [](void* data) {
         MediaPlayerTizen* player = (MediaPlayerTizen*)data;
         player->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
@@ -96,8 +104,11 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
 void MediaPlayerTizen::close()
 {
     unprepareOperation();
+    closePreparingMode();
+
     if (m_nativePlayer)
         player_destroy(m_nativePlayer);
+
     m_nativePlayer = nullptr;
 }
 
@@ -115,6 +126,21 @@ void MediaPlayerTizen::setNativeOptions(URL* url)
 
     player_set_display(m_nativePlayer, displayType, displayHandle);
     player_set_display_mode(m_nativePlayer, displayMode);
+}
+
+void MediaPlayerTizen::openPreparingMode()
+{
+    STARFISH_ASSERT(!m_inPrepare);
+    m_inPrepare = true;
+    m_starFish->addPointerInRootSet(this);
+}
+
+void MediaPlayerTizen::closePreparingMode()
+{
+    if (m_inPrepare) {
+        m_starFish->removePointerFromRootSet(this);
+        m_inPrepare = false;
+    }
 }
 
 void MediaPlayerTizen::prepare(URL* url)
@@ -139,16 +165,19 @@ void MediaPlayerTizen::prepare(URL* url)
 
     setNativeOptions(url);
 
-    m_starFish->addPointerInRootSet(this);
+    openPreparingMode();
     player_prepare_async(m_nativePlayer, [](void *user_data) {
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
         STARFISH_ASSERT(!isMainThread());
         self->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* user_data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
-            self->m_starFish->removePointerFromRootSet(self);
+            STARFISH_ASSERT(self->m_inPrepare);
+            self->closePreparingMode();
 
             if (!self->m_nativePlayer)
                 return;
+
+            self->m_inPrepare = false;
 
             char* videoCodec = nullptr;
             char* audioCodec = nullptr;
