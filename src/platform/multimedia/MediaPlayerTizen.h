@@ -90,6 +90,7 @@ public:
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
 
     bool m_inPrepare;
+    bool m_alive;
     MediaSource* m_activeMediaSource;
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;
