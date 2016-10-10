@@ -28,6 +28,26 @@
 #include "extra/MediaSource.h"
 #include "extra/Blob.h"
 
+#define PLAYER_DEBUG
+#ifdef PLAYER_DEBUG
+#include <sys/types.h>
+#include <sys/syscall.h>
+#include <pthread.h>
+
+#define PLAYER_LOGI(...) \
+    STARFISH_LOG_INFO("[MediaPlayer|%ld] ", syscall(SYS_gettid)); \
+    STARFISH_LOG_INFO(__VA_ARGS__); \
+    STARFISH_LOG_INFO("\n");
+#define PLAYER_LOGE(...) \
+    STARFISH_LOG_ERROR("[MediaPlayer|Error|%ld] ", syscall(SYS_gettid)); \
+    STARFISH_LOG_ERROR(__VA_ARGS__); \
+    STARFISH_LOG_ERROR("\n");
+#else
+#define PLAYER_LOGI(...)
+#define PLAYER_LOGE(...)
+#endif
+
+
 namespace StarFish {
 
 static void printNativePlayerError(int errorCode)
@@ -35,7 +55,7 @@ static void printNativePlayerError(int errorCode)
     switch (errorCode) {
 #define GEN_ERROR_PRINTS(errorenum) \
     case errorenum: \
-        STARFISH_LOG_INFO("mediaPlayerErrorCallback() : %s\n", #errorenum); \
+        PLAYER_LOGI("mediaPlayerErrorCallback() : %s\n", #errorenum); \
         return;
         GEN_ERROR_PRINTS(PLAYER_ERROR_OUT_OF_MEMORY)
         GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_PARAMETER)
@@ -58,7 +78,7 @@ static void printNativePlayerError(int errorCode)
         GEN_ERROR_PRINTS(PLAYER_ERROR_PERMISSION_DENIED)
 #undef GEN_ERROR_PRINTS
     default:
-        STARFISH_LOG_INFO("mediaPlayerErrorCallback() : Unknown error\n");
+        PLAYER_LOGI("mediaPlayerErrorCallback() : Unknown error\n");
         return;
     }
 }
@@ -66,20 +86,27 @@ static void printNativePlayerError(int errorCode)
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
+    , m_alive(true)
     , m_activeMediaSource(nullptr)
     , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
     player_set_error_cb(m_nativePlayer, [](int errorCode, void* data) {
+        PLAYER_LOGI("player_error_cb");
         STARFISH_ASSERT(isMainThread());
         printNativePlayerError(errorCode);
         MediaPlayerTizen* player = (MediaPlayerTizen*)data;
         if (player->m_inPrepare) {
             player->closePreparingMode();
-            player->m_container->giveupFetchingResource();
+            if (player->m_alive) {
+                player->m_container->giveupFetchingResource();
+            } else {
+                player->close();
+            }
         }
     }, this);
     player_set_completed_cb(m_nativePlayer, [](void* data) {
+        PLAYER_LOGI("player_completed_cb");
         MediaPlayerTizen* player = (MediaPlayerTizen*)data;
         player->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             MediaPlayerTizen* player = (MediaPlayerTizen*)data;
@@ -103,9 +130,11 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
 
 void MediaPlayerTizen::close()
 {
-    unprepareOperation();
-    closePreparingMode();
+    m_alive = false;
+    if (m_inPrepare)
+        return;
 
+    unprepareOperation();
     if (m_nativePlayer)
         player_destroy(m_nativePlayer);
 
@@ -148,7 +177,7 @@ void MediaPlayerTizen::prepare(URL* url)
     if (url->isBlobURL()) {
         BlobURLStore store;
         if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
-            STARFISH_LOG_ERROR("MediaPlayerTizen::prepare, seturl, FAIL - INVALID BLOB URL\n");
+            PLAYER_LOGE("MediaPlayerTizen::prepare, seturl, FAIL - INVALID BLOB URL\n");
             return;
         }
         if (m_starFish->isValidBlobURL(store)) {
@@ -167,17 +196,20 @@ void MediaPlayerTizen::prepare(URL* url)
 
     openPreparingMode();
     player_prepare_async(m_nativePlayer, [](void *user_data) {
+        PLAYER_LOGI("player_prepare_async_cb");
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
         STARFISH_ASSERT(!isMainThread());
         self->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* user_data) {
+            PLAYER_LOGI("player_prepare_async_cb in MainThread");
             MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
+
             STARFISH_ASSERT(self->m_inPrepare);
             self->closePreparingMode();
 
-            if (!self->m_nativePlayer)
+            if (!self->m_alive) {
+                self->close(); // unprepare() and destroy() to free data
                 return;
-
-            self->m_inPrepare = false;
+            }
 
             char* videoCodec = nullptr;
             char* audioCodec = nullptr;
@@ -197,7 +229,7 @@ void MediaPlayerTizen::prepare(URL* url)
                 }
             }
 
-            STARFISH_LOG_INFO("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec, audioCodec, (int)self->m_videoWidth, (int)self->m_videoHeight);
+            PLAYER_LOGI("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec, audioCodec, (int)self->m_videoWidth, (int)self->m_videoHeight);
 
             free(videoCodec);
             free(audioCodec);
