@@ -55,7 +55,7 @@ static void printNativePlayerError(int errorCode)
     switch (errorCode) {
 #define GEN_ERROR_PRINTS(errorenum) \
     case errorenum: \
-        PLAYER_LOGI("mediaPlayerErrorCallback() : %s\n", #errorenum); \
+        PLAYER_LOGI("%s\n", #errorenum); \
         return;
         GEN_ERROR_PRINTS(PLAYER_ERROR_OUT_OF_MEMORY)
         GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_PARAMETER)
@@ -78,7 +78,7 @@ static void printNativePlayerError(int errorCode)
         GEN_ERROR_PRINTS(PLAYER_ERROR_PERMISSION_DENIED)
 #undef GEN_ERROR_PRINTS
     default:
-        PLAYER_LOGI("mediaPlayerErrorCallback() : Unknown error\n");
+        PLAYER_LOGI("Unknown error\n");
         return;
     }
 }
@@ -195,7 +195,7 @@ void MediaPlayerTizen::prepare(URL* url)
     setNativeOptions(url);
 
     openPreparingMode();
-    player_prepare_async(m_nativePlayer, [](void *user_data) {
+    int nativeResult = player_prepare_async(m_nativePlayer, [](void *user_data) {
         PLAYER_LOGI("player_prepare_async_cb");
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
         STARFISH_ASSERT(!isMainThread());
@@ -240,6 +240,15 @@ void MediaPlayerTizen::prepare(URL* url)
             self->processNextOperationQueueInContainer();
         }, user_data);
     }, this);
+
+    if (nativeResult != PLAYER_ERROR_NONE) {
+        PLAYER_LOGE("player_prepare_async return error !!!");
+        printNativePlayerError(nativeResult);
+        STARFISH_ASSERT_NOT_REACHED();
+
+        STARFISH_ASSERT(m_inPrepare);
+        closePreparingMode();
+    }
 }
 
 void MediaPlayerTizen::pauseOperation()
