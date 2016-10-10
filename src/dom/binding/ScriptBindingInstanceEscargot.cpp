@@ -1875,10 +1875,10 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
 #ifdef USE_ES6_FEATURE
             if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferObject()) {
                 escargot::ESArrayBufferObject* v = firstArg.asESPointer()->asESArrayBufferObject();
-                sourceBuffer->appendBuffer(v->data(), v->bytelength());
+                sourceBuffer->appendBuffer((uint8_t*)v->data(), v->bytelength());
             } else if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferView()) {
                 escargot::ESArrayBufferView* v = firstArg.asESPointer()->asESArrayBufferView();
-                const char* p = (const char*)v->buffer()->data();
+                uint8_t* p = (uint8_t*)v->buffer()->data();
                 sourceBuffer->appendBuffer(p, v->bytelength());
             } else {
                 escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Failed to execute 'appendBuffer' on 'SourceBuffer': No function was found that matched the signature provided."))));

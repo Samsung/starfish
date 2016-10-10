@@ -27,23 +27,36 @@
 
 namespace StarFish {
 
-SourceBuffer::SourceBuffer(String* type, MediaSource* parent)
+SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     : EventTarget()
+    , m_mode(AppendMode::Segments)
+    , m_state(AppendState::WaitingForSegment)
+    , m_isAttachedToParent(false)
     , m_updating(false)
+    , m_starFish(starFish)
+    , m_appendWindowStart(0)
+    , m_appendWindowEnd(std::numeric_limits<double>::infinity())
     , m_type(type)
-    , m_parentMediaSource(parent)
+    , m_parentMediaSource(nullptr)
 {
+
 }
 
-void SourceBuffer::dispatchUpdateEvent(UpdateState state)
+void SourceBuffer::setUpdating(bool flag, UpdateState state)
 {
+    STARFISH_ASSERT(m_updating != flag);
+    m_updating = flag;
+
     String* eventName = String::emptyString;
     if (m_updating && state == SourceBuffer::Success)
         eventName = m_parentMediaSource->starFish()->staticStrings()->m_updatestart.localName();
     else if (!m_updating) {
-        if (state == SourceBuffer::Success)
-            eventName = m_parentMediaSource->starFish()->staticStrings()->m_update.localName();
-        else if (state == SourceBuffer::Error)
+        if (state == SourceBuffer::Success) {
+            m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t, void* data, void* data2) {
+                ((MediaSource*)data)->dispatchEvent((Event*)data2);
+            }, this, new Event(m_parentMediaSource->starFish()->staticStrings()->m_update.localName()));
+            eventName = m_parentMediaSource->starFish()->staticStrings()->m_updateend.localName();
+        } else if (state == SourceBuffer::Error)
             eventName = m_parentMediaSource->starFish()->staticStrings()->m_error.localName();
         else if (state == SourceBuffer::Abort)
             eventName = m_parentMediaSource->starFish()->staticStrings()->m_abort.localName();
@@ -52,28 +65,73 @@ void SourceBuffer::dispatchUpdateEvent(UpdateState state)
     } else
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
-    dispatchEvent(this, new Event(eventName));
-
-    if (!m_updating) {
-        eventName = m_parentMediaSource->starFish()->staticStrings()->m_updateend.localName();
-        dispatchEvent(this, new Event(eventName));
-    }
+    m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t, void* data, void* data2) {
+        ((MediaSource*)data)->dispatchEvent((Event*)data2);
+    }, this, new Event(eventName));
 }
 
-void SourceBuffer::setUpdating(bool flag, UpdateState state)
+void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length)
 {
-    if (m_updating != flag) {
-        m_updating = flag;
-        dispatchUpdateEvent(state);
-    }
+    // Run the prepare append algorithm.
+    prepareAppend();
+
+    // Add data to the end of the input buffer.
+    auto d = new SourceBufferData(data, length);
+    m_sourceBufferDataList.push_back(d);
+
+    // Set the updating attribute to true.
+    // Queue a task to fire a simple event named updatestart at this SourceBuffer object.
+    STARFISH_ASSERT(m_updating == false);
+    setUpdating(true, UpdateState::Success);
+
+    // Asynchronously run the buffer append algorithm.
+    m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t, void* data, void* data2) {
+        ((SourceBuffer*)data)->bufferAppend((SourceBufferData*)data2);
+    }, this, d);
 }
 
-void SourceBuffer::appendBuffer(const void* data, unsigned long length)
+void SourceBuffer::prepareAppend()
 {
-    m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t handle, void* data) {
-        SourceBuffer* sourceBuffer = (SourceBuffer*)data;
-        sourceBuffer->setUpdating(true, SourceBuffer::Success);
-    }, this);
+    // 3.5.4 Prepare Append Algorithm
+
+    // If the SourceBuffer has been removed from the sourceBuffers attribute of the parent media source then throw an InvalidStateError exception and abort these steps.
+    if (!m_isAttachedToParent) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "SourceBuffer has been removed from from parernt MediaSource");
+    }
+
+    // If the updating attribute equals true, then throw an InvalidStateError exception and abort these steps.
+    if (m_updating) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "SourceBuffer is now updating");
+    }
+
+    // TODO If the HTMLMediaElement.error attribute is not null, then throw an InvalidStateError exception and abort these steps.
+
+    // If the readyState attribute of the parent media source is in the "ended" state then run the following steps:
+    if (m_parentMediaSource->readyState() == MediaSource::Ended) {
+        // Set the readyState attribute of the parent media source to "open"
+        // Queue a task to fire a simple event named sourceopen at the parent media source.
+        m_parentMediaSource->setReadyState(MediaSource::Open);
+    }
+
+    // Run the coded frame eviction algorithm.
+    codedFrameEviction();
+
+    // TODO If the buffer full flag equals true, then throw a QuotaExceededError exception and abort these step.
+}
+
+void SourceBuffer::codedFrameEviction()
+{
+    // TODO 3.5.14 Coded Frame Eviction Algorithm
+}
+
+void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
+{
+    STARFISH_ASSERT(inputBuffer->m_isProcessed == false);
+
+    // TODO
+
+    inputBuffer->m_isProcessed = true;
+    setUpdating(false, UpdateState::Success);
 }
 
 }
