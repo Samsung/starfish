@@ -30,14 +30,15 @@ class MediaSourceClient;
 class MediaSource : public EventTarget {
 public:
     enum ReadyState {
-        Closed,
-        Open,
-        Ended,
+        Closed, // Indicates the source is not currently attached to a media element.
+        Open, // The source has been opened by a media element and is ready for data to be appended to the SourceBuffer objects in sourceBuffers.
+        Ended, // The source is still attached to a media element, but endOfStream() has been called.
     };
 
     enum EndOfStreamError {
-        Network,
-        Decode,
+        None,
+        Network, // Terminates playback and signals that a network error has occured.
+        Decode, // Terminates playback and signals that a decoding error has occured.
     };
 
     MediaSource(StarFish* starFish);
@@ -74,7 +75,7 @@ public:
         return true;
     }
 
-    bool isTypeSupported(String* type)
+    static bool isTypeSupported(String* type)
     {
         // TODO
         return true;
@@ -85,19 +86,26 @@ public:
         return m_readyState;
     }
 
-    void open()
+    void setReadyState(ReadyState state);
+
+    // https://www.w3.org/TR/media-source/
+    // 2.4.1 Attaching to a media element
+    bool attach();
+
+    // https://www.w3.org/TR/media-source/
+    // 2.4.2 Detaching from a media element
+    void detach();
+
+    double duration()
     {
-        setReadyState(ReadyState::Open);
+        return m_duration;
     }
 
-    void close()
-    {
-        setReadyState(ReadyState::Closed);
-    }
+    void setDuration(double d);
+
+    // TODO 2.4.4 SourceBuffer Monitoring
 
 protected:
-    void setReadyState(ReadyState state);
-    void dispatchStateChangeEvent();
     ReadyState m_readyState;
     StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;

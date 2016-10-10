@@ -28,8 +28,27 @@ class TextTrackList;
 class TimeRanges;
 class MediaSource;
 
+struct SourceBufferData : public gc {
+    bool m_isProcessed;
+    uint64_t m_groupStartTimestamp;
+    uint64_t m_groupEndTimestamp;
+
+    const uint8_t* m_data;
+    unsigned long m_length;
+    SourceBufferData(const uint8_t* data, unsigned long length)
+        : m_isProcessed(false)
+        , m_groupStartTimestamp(0)
+        , m_groupEndTimestamp(0)
+        , m_data(data)
+        , m_length(length)
+    {
+    }
+};
+
 class SourceBuffer : public EventTarget {
 public:
+    friend class MediaSource;
+    friend class SourceBufferList;
     enum UpdateState {
         Success,
         Error,
@@ -41,7 +60,13 @@ public:
         Sequence,
     };
 
-    SourceBuffer(String* type, MediaSource* parent);
+    enum AppendState {
+        WaitingForSegment,
+        ParsingInitSegment,
+        ParsingMediaSegment
+    };
+
+    SourceBuffer(StarFish* starFish, String* type);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -53,23 +78,47 @@ public:
         return ScriptWrappable::Type::SourceBufferObject;
     }
 
-    // data: ArrayBuffer/ArrayBufferView type
-    void appendBuffer(const void* data, unsigned long length);
-    // TODO
-//    void appendStream(ReadableStream stream, unsigned long long maxSize);
+    void appendBuffer(const uint8_t* data, unsigned long length);
     void abort();
     void remove(double start, double end);
 
-    void prepareAppend(const void* data, unsigned long length);
-    void runBufferAppend();
-    void setUpdating(bool flag, UpdateState state);
-    void dispatchUpdateEvent(UpdateState state);
-
     MediaSource* parentMediaSource() { return m_parentMediaSource; }
 
+    void setMode(AppendMode mode)
+    {
+        m_mode = mode;
+    }
+
+    AppendMode mode()
+    {
+        return m_mode;
+    }
+
 protected:
+    void setUpdating(bool flag, UpdateState state);
+
+    void attachedToParent(MediaSource* ms)
+    {
+        STARFISH_ASSERT(m_isAttachedToParent == false);
+        m_parentMediaSource = ms;
+        m_isAttachedToParent = true;
+    }
+
+    void detachFromParent()
+    {
+        m_parentMediaSource = nullptr;
+        m_isAttachedToParent = false;
+    }
+
+    void prepareAppend();
+    void codedFrameEviction();
+    void bufferAppend(SourceBufferData* data);
+
     AppendMode m_mode;
+    AppendState m_state;
+    bool m_isAttachedToParent;
     bool m_updating;
+    StarFish* m_starFish;
     TimeRanges* buffered;
     double m_timestampOffset;
     AudioTrackList* m_audioTracks;
@@ -78,8 +127,8 @@ protected:
     double m_appendWindowStart;
     double m_appendWindowEnd;
     String* m_type;
-
     MediaSource* m_parentMediaSource;
+    std::vector<SourceBufferData*, gc_allocator<SourceBufferData*>> m_sourceBufferDataList;
 };
 
 class SourceBufferList : public EventTarget {
@@ -104,14 +153,17 @@ public:
         return m_list.size();
     }
 
-    void add(SourceBuffer* buffer)
+    void add(SourceBuffer* buffer, MediaSource* ms)
     {
         m_list.push_back(buffer);
+        buffer->attachedToParent(ms);
     }
 
     void remove(unsigned long index)
     {
+        SourceBuffer* buf = m_list[index];
         m_list.erase(m_list.begin() + index);
+        buf->detachFromParent();
     }
 
     void remove(SourceBuffer* buffer)

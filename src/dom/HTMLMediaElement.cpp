@@ -670,7 +670,7 @@ void HTMLMediaElement::processNextOperationQueue()
 
         m_currentPendingOperationHandle = document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data) {
             MediaOperationQueueData* queueData = (MediaOperationQueueData*)data;
-            STARFISH_LOG_INFO("HTMLMediaElement::processNextOperationQueue::process %d\n", queueData->m_mediaElement->m_operationQueue.size());
+            STARFISH_LOG_INFO("HTMLMediaElement::processNextOperationQueue::process %d\n", (int)queueData->m_mediaElement->m_operationQueue.size());
             queueData->m_mediaElement->m_currentPendingOperationCount--;
             queueData->m_mediaElement->m_currentOperation = nullptr;
             queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
