@@ -1887,7 +1887,67 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
             return escargot::ESValue(escargot::ESValue::ESUndefined);
         }, escargot::ESString::create("appendBuffer"), 1, false)
     );
-    // TODO: appendStream, abort, remove, set/get attributes
+    // TODO: appendStream, abort, remove
+
+    // TODO : mode
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("updating"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        return escargot::ESValue(originalObj->updating());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("buffered"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        TimeRanges* timeRanges = originalObj->buffered();
+        if (timeRanges) {
+            return timeRanges->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, nullptr);
+
+    // TODO : timestampOffset
+    /*
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("audioTracks"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        AudioTrackList* audioTracks = originalObj->audioTracks();
+        if (audioTracks) {
+            return audioTracks->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("videoTracks"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        VideoTrackList* videoTracks = originalObj->videoTracks();
+        if (videoTracks) {
+            return videoTracks->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, nullptr);
+    */
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("textTracks"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+        TextTrackList* textTracks = originalObj->textTracks();
+        if (textTracks) {
+            return textTracks->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, nullptr);
+
+    // TODO : appendWindowStart
+
+    // TODO : appendWindowEnd
+
     return SourceBufferFunction;
 }
 

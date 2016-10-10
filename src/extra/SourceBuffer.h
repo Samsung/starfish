@@ -94,6 +94,52 @@ public:
         return m_mode;
     }
 
+    bool updating()
+    {
+        return m_updating;
+    }
+
+    TimeRanges* buffered()
+    {
+        return m_buffered;
+    }
+
+    double timestampOffset()
+    {
+        return m_timestampOffset;
+    }
+
+    void setTimestampOffset(double timeoffset);
+
+    AudioTrackList* audioTracks()
+    {
+        return m_audioTracks;
+    }
+
+    VideoTrackList* videoTracks()
+    {
+        return m_videoTracks;
+    }
+
+    TextTrackList* textTracks()
+    {
+        return m_textTracks;
+    }
+
+    double appendWindowStart()
+    {
+        return m_appendWindowStart;
+    }
+
+    void setAppendWindowStart(double timeStamp);
+
+    double appendWindowEnd()
+    {
+        return m_appendWindowEnd;
+    }
+
+    void setAppendWindowEnd(double timeStamp);
+
 protected:
     void setUpdating(bool flag, UpdateState state);
 
@@ -119,7 +165,7 @@ protected:
     bool m_isAttachedToParent;
     bool m_updating;
     StarFish* m_starFish;
-    TimeRanges* buffered;
+    TimeRanges* m_buffered;
     double m_timestampOffset;
     AudioTrackList* m_audioTracks;
     VideoTrackList* m_videoTracks;

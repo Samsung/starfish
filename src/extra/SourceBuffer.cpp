@@ -134,6 +134,21 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
     setUpdating(false, UpdateState::Success);
 }
 
+void SourceBuffer::setTimestampOffset(double timeoffset)
+{
+    // TODO
+}
+
+void setAppendWindowStart(double timeStamp)
+{
+    // TODO
+}
+
+void setAppendWindowEnd(double timeStamp)
+{
+    // TODO
+}
+
 }
 
 #endif
