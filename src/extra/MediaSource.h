@@ -96,6 +96,16 @@ public:
     // 2.4.2 Detaching from a media element
     void detach();
 
+    SourceBufferList* sourceBuffers()
+    {
+        return m_sourceBuffers;
+    }
+
+    SourceBufferList* activeSourceBuffers()
+    {
+        return m_activeSourceBuffers;
+    }
+
     double duration()
     {
         return m_duration;

@@ -1838,6 +1838,25 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
         }, escargot::ESString::create("addSourceBuffer"), 1, false)
     );
 
+    MediaSourceFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("removeSourceBuffer"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject, MediaSource);
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            CHECK_TYPEOF(firstArg, ScriptWrappable::Type::SourceBufferObject);
+
+            try {
+                MediaSource* mediaSource = (MediaSource*) originalObj;
+                SourceBuffer* sourceBuffer = (SourceBuffer*) firstArg.asESPointer()->asESObject()->extraPointerData();
+                mediaSource->removeSourceBuffer(sourceBuffer);
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("removeSourceBuffer"), 1, false)
+    );
+
     MediaSourceFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("endOfStream"), true, true, true,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
         {
@@ -1856,7 +1875,64 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
         }, escargot::ESString::create("endOfStream"), 1, false)
     );
 
-    // TODO: removeSourceBuffer, isTypeSupported, set/get attributes
+    // static bool isTypeSupported(type)
+    MediaSourceFunction->defineDataProperty(escargot::ESString::create("isTypeSupported"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            String* type = toBrowserString(firstArg);
+            bool res = MediaSource::isTypeSupported(type);
+            if (res)
+                return escargot::ESValue(escargot::ESValue::ESTrueTag::ESTrue);
+            else
+                return escargot::ESValue(escargot::ESValue::ESFalseTag::ESFalse);
+        }, escargot::ESString::create("isTypeSupported"), 1, false)
+    );
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        MediaSourceFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("sourceBuffers"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject, MediaSource);
+        return escargot::ESValue(originalObj->sourceBuffers()->scriptValue());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        MediaSourceFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("activeSourceBuffers"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject, MediaSource);
+        return escargot::ESValue(originalObj->activeSourceBuffers()->scriptValue());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        MediaSourceFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("readyState"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject, MediaSource);
+        MediaSource::ReadyState readyState = originalObj->readyState();
+
+        if (readyState == MediaSource::Open)
+            return toJSString(originalObj->starFish()->staticStrings()->m_open.localName());
+        else if (readyState == MediaSource::Ended)
+            return toJSString(originalObj->starFish()->staticStrings()->m_ended.localName());
+
+        STARFISH_ASSERT(readyState == MediaSource::Closed);
+        return toJSString(originalObj->starFish()->staticStrings()->m_closed.localName());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        MediaSourceFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("duration"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject, MediaSource);
+        return escargot::ESValue(originalObj->duration());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::MediaSourceObject, MediaSource);
+        escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+        double duration = firstArg.toNumber();
+        if (std::isnan(duration)) {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        originalObj->setDuration(duration);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    });
 
     return MediaSourceFunction;
 }

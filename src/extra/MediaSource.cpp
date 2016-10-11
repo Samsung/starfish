@@ -80,6 +80,11 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     return buffer;
 }
 
+void MediaSource::removeSourceBuffer(SourceBuffer* buffer)
+{
+    // TODO
+}
+
 void MediaSource::endOfStream()
 {
     endOfStream(None);

@@ -665,6 +665,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_seeking = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "seeking"));
     m_seeked = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "seeked"));
     m_ended = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "ended"));
+    m_open = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "open"));
+    m_closed = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "closed"));
     m_durationchange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "durationchange"));
     m_timeupdate = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "timeupdate"));
     m_play = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "play"));

@@ -254,6 +254,8 @@ public:
     QualifiedName m_seeking;
     QualifiedName m_seeked;
     QualifiedName m_ended;
+    QualifiedName m_closed;
+    QualifiedName m_open;
     QualifiedName m_durationchange;
     QualifiedName m_timeupdate;
     QualifiedName m_play;
