@@ -124,7 +124,7 @@ public:
                 // const double rate = pVideoTrack->GetFrameRate();
 
                 VideoStreamInfo info;
-                info.m_streamIndex = trackNum;
+                info.m_streamIndex = trackNum - 1;
                 // info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
                 // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
                 // info.m_timeBaseNum = m_formatContext->streams[i]->codec->time_base.num;
@@ -143,7 +143,7 @@ public:
                 const long long codecDelay = pAudioTrack->GetCodecDelay();
                 const long long seekPreRoll = pAudioTrack->GetSeekPreRoll();
                 AudioStreamInfo info;
-                info.m_streamIndex = trackNum;
+                info.m_streamIndex = trackNum - 1;
                 // info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
                 // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
                 // info.m_sampleFormat = (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
@@ -229,7 +229,7 @@ public:
     bool m_isStreamFinded;
 };
 
-Demuxer* Demuxer::create()
+Demuxer* Demuxer::createWebMDemuxer()
 {
     return new DemuxerWebM();
 }
