@@ -27,7 +27,7 @@
 #include <Elementary.h>
 
 using namespace StarFish;
-/*
+
 class DemuxerMemorySource : public DemuxerSource {
 public:
     DemuxerMemorySource()
@@ -40,7 +40,7 @@ public:
         if (whence == DemuxerSource::SeekWhenceLookSize) {
             return data.size();
         } else if (whence == DemuxerSource::SeekWhenceSet) {
-            STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
+            // STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
             STARFISH_ASSERT((int)position < (int)data.size());
             readPos = position;
             return readPos;
@@ -63,7 +63,7 @@ public:
         sizeSuccessToRead = end - readPos;
         readPos = end;
 
-        STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)(readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
+        // STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)(readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
     }
 
     size_t readPos;
@@ -131,6 +131,7 @@ void copyFileContent(FILE* fp, int start, int end, std::vector<uint8_t>& data)
 
 void testDemuxer()
 {
+    /*
     Demuxer* demuxer = Demuxer::create();
     auto ptr = new DemuxerMemorySource();
     FILE* fp = fopen("feelings.webm", "rb");
@@ -150,9 +151,37 @@ void testDemuxer()
     // 661985-880943
     copyFileContent(fp, 661985, 880943 + 1, ptr3->data);
     demuxer->findStreamPacket(ptr3);
-    fclose(fp);
+    fclose(fp);*/
+
+    Demuxer* demuxer = Demuxer::createMP4Demuxer();
+    auto ptr = new DemuxerMemorySource();
+    FILE* fp = fopen("car.mp4", "rb");
+
+    copyFileContent(fp, 0, 708, ptr->data);
+    if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/mp4"))) {
+        puts("fail0");
+        // ptr->m_debug++;
+    }
+
+    auto ptr2 = new DemuxerMemorySource();
+    // 5931518-6320465
+    copyFileContent(fp, 5931518, 6320465 + 1, ptr2->data);
+    demuxer->findStreamPacket(ptr2);
+
+    auto ptr3 = new DemuxerMemorySource();
+    // 1450907-2164184
+    copyFileContent(fp, 1450907, 2164184 + 1, ptr3->data);
+    demuxer->findStreamPacket(ptr3);
+
+    auto ptr4 = new DemuxerMemorySource();
+    FILE* fp2 = fopen("toystory_frag.mp4", "rb");
+    copyFileContent(fp2, 0, 33517761, ptr4->data);
+
+    demuxer = Demuxer::createMP4Demuxer();
+    demuxer->findStreamInfo(ptr4, String::fromUTF8("video/mp4"));
+    demuxer->findStreamPacket(ptr4);
 }
-*/
+
 bool hasEnding(std::string const &fullString, std::string const &ending)
 {
     if (fullString.length() >= ending.length()) {

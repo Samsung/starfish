@@ -85,7 +85,8 @@ public:
 
 class Demuxer : public gc {
 public:
-    static Demuxer* create();
+    static Demuxer* createWebMDemuxer();
+    static Demuxer* createMP4Demuxer();
     virtual bool findStreamPacket(DemuxerSource* source) = 0;
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint) = 0;
 

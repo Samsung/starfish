@@ -117,7 +117,7 @@ public:
 
             if (formatHint->length())
                 m_formatContext->iformat = av_find_input_format(formatHint->utf8Data());
-            m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO | AVFMT_FLAG_NOFILLIN | AVFMT_FLAG_NOBUFFER | AVFMT_FLAG_NOPARSE | AVFMT_FLAG_FLUSH_PACKETS;
+            m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO | AVFMT_FLAG_NOFILLIN | AVFMT_FLAG_NOBUFFER | AVFMT_FLAG_GENPTS;
             m_formatContext->pb = m_ioContext;
             av_dict_set(&m_formatContext->metadata, "skip_id3v1_tags", "", 0);
 
@@ -185,7 +185,7 @@ public:
 
         // avformat_flush(m_formatContext);
         // avio_flush(m_ioContext);
-        // av_seek_frame(m_formatContext, -1, 0, AVSEEK_FLAG_ANY);
+        av_seek_frame(m_formatContext, -1, 0, AVSEEK_FLAG_ANY);
 
         int ret;
 
@@ -223,12 +223,7 @@ public:
     AVIOContext* m_ioContext;
     uint8_t* m_bufferForIO;
 };
-/*
-Demuxer* Demuxer::create()
-{
-    return new DemuxerFFmpeg();
-}
-*/
+
 
 }
 
