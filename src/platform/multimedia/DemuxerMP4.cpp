@@ -345,7 +345,6 @@ public:
                     dataPtr += trun->samples[i].size;
 
                     STARFISH_ASSERT(dataPtr <= (mdat->data + mdat->size));
-
                     STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
                     for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                         m_demuxerClients[j]->onDetectPacket(packet);
