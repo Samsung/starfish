@@ -37,7 +37,7 @@ public:
     };
     virtual ~DemuxerSource() { }
     virtual int64_t onSeek(int64_t position, SeekWhence whence) = 0;
-    virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, uint8_t* buffer) = 0;
+    virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& errorCode, uint8_t* buffer) = 0;
 };
 
 struct StreamInfo {
@@ -85,9 +85,9 @@ public:
 
 class Demuxer : public gc {
 public:
-    static Demuxer* create(DemuxerSource* source, String* formatHint);
-    virtual bool findStreamPacket() = 0;
-    virtual bool findStreamInfo() = 0;
+    static Demuxer* create();
+    virtual bool findStreamPacket(DemuxerSource* source) = 0;
+    virtual bool findStreamInfo(DemuxerSource* source, String* formatHint) = 0;
 
     void addClient(DemuxerClient* client)
     {
@@ -100,12 +100,10 @@ public:
     }
 
 protected:
-    Demuxer(DemuxerSource* src)
-        : m_demuxerSource(src)
+    Demuxer()
     {
     }
 
-    DemuxerSource* m_demuxerSource;
     std::vector<DemuxerClient*, gc_allocator<DemuxerClient*>> m_demuxerClients;
 };
 

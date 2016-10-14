@@ -680,6 +680,7 @@ class SegmentInfo {
   SegmentInfo& operator=(const SegmentInfo&);
 
  public:
+  friend class Segment;
   Segment* const m_pSegment;
   const long long m_start;
   const long long m_size;
@@ -947,6 +948,14 @@ class Segment {
   Cluster m_eos;  // TODO: make private?
 
   static long long CreateInstance(IMkvReader*, long long, Segment*&);
+  static Segment* CreateInstance(IMkvReader* r, Segment* ref)
+  {
+      auto p = new Segment(r, 0, 0, -1);
+      p->m_pInfo = new SegmentInfo(p, 0, 0, 0, 0);
+      p->m_pInfo->m_timecodeScale = ref->m_pInfo->m_timecodeScale;
+      p->m_pInfo->m_timecodeScale = ref->m_pInfo->m_duration;
+      return p;
+  }
   ~Segment();
 
   long Load();  // loads headers and all clusters
