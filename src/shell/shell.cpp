@@ -28,13 +28,56 @@
 
 using namespace StarFish;
 /*
+class DemuxerMemorySource : public DemuxerSource {
+public:
+    DemuxerMemorySource()
+    {
+        readPos = 0;
+    }
+
+    virtual int64_t onSeek(int64_t position, SeekWhence whence)
+    {
+        if (whence == DemuxerSource::SeekWhenceLookSize) {
+            return data.size();
+        } else if (whence == DemuxerSource::SeekWhenceSet) {
+            STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
+            STARFISH_ASSERT((int)position < (int)data.size());
+            readPos = position;
+            return readPos;
+        } else if (whence == DemuxerSource::SeekWhenceCurrent) {
+            readPos = readPos + position;
+            return readPos;
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+
+    virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& error, uint8_t* buffer)
+    {
+        int readed = 0;
+        int end = readPos + sizeWantToRead;
+        if ((int)end > (int)data.size()) {
+            end = data.size();
+        }
+        memcpy(buffer, data.data() + readPos, end - readPos);
+        sizeSuccessToRead = end - readPos;
+        readPos = end;
+
+        STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)(readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
+    }
+
+    size_t readPos;
+    std::vector<uint8_t> data;
+};
+
 class DemuxerFileSource : public DemuxerSource {
 public:
-    DemuxerFileSource(std::string fileName)
+    DemuxerFileSource(std::string fileName, size_t start = 0, size_t end = 0)
     {
-        m_readed = 0;
-        // m_debug = 0;
         m_fp = fopen(fileName.c_str(), "rb");
+        m_start = start;
+        m_end = end;
+        fseek(m_fp, start, SEEK_SET);
     }
 
     virtual int64_t onSeek(int64_t position, SeekWhence whence)
@@ -45,53 +88,69 @@ public:
             int64_t sz = ftell(m_fp);
 
             fseek(m_fp, before, SEEK_SET);
-            return sz;
-            // STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceLookSize %d\n", (int)(m_debug));
-            // return std::min(m_debug, (int64_t)sz);
+            STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceLookSize\n");
+            return sz - m_start > m_end ? m_end : sz - m_start;
         } else if (whence == DemuxerSource::SeekWhenceSet) {
             STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
-            // if (m_debug < position) {
-            //    return -1;
-            // }
-            fseek(m_fp, position, SEEK_SET);
-            return ftell(m_fp);
+            fseek(m_fp, position + m_start, SEEK_SET);
+            return ftell(m_fp) - m_start;
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
 
-    virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, uint8_t* buffer)
+    virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& error, uint8_t* buffer)
     {
-        int pos = ftell(m_fp) + sizeWantToRead;
-        // if (pos > m_debug) {
-        //     sizeWantToRead -= pos - m_debug;
-        //     return;
-        // }
+        int pos = ftell(m_fp);
+        if ((size_t)pos + sizeWantToRead > (size_t)m_end) {
+            sizeWantToRead = m_end - pos;
+        }
         int read = fread(buffer, 1, sizeWantToRead, m_fp);
         sizeSuccessToRead = (size_t)read;
-        STARFISH_LOG_INFO("onRead %d %d %d %fKB\n", (int)sizeWantToRead, (int)read, (int)sizeSuccessToRead, m_readed / 1024.f);
-        m_readed += sizeSuccessToRead;
+        if (sizeSuccessToRead == 0) {
+            error = -1;
+        } else {
+            error = 0;
+        }
+        STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)pos, (int)read);
     }
 
     FILE* m_fp;
-    size_t m_readed;
-
-    // int64_t m_debug;
+    int64_t m_start, m_end;
 };
+
+void copyFileContent(FILE* fp, int start, int end, std::vector<uint8_t>& data)
+{
+    uint8_t* buf = new uint8_t[end - start];
+    fseek(fp, start, SEEK_SET);
+    int ret = fread(buf, 1, end - start, fp);
+
+    data.insert(data.end(), &buf[0], &buf[end - start]);
+    delete[] buf;
+}
 
 void testDemuxer()
 {
-    auto ptr = new DemuxerFileSource("toystory.mp4");
-    Demuxer* demuxer = Demuxer::create(ptr, String::fromUTF8("video/mp4"));
-    while (!demuxer->findStreamInfo()) {
+    Demuxer* demuxer = Demuxer::create();
+    auto ptr = new DemuxerMemorySource();
+    FILE* fp = fopen("feelings.webm", "rb");
+
+    copyFileContent(fp, 0, 235, ptr->data);
+    if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/webm"))) {
+        puts("fail0");
         // ptr->m_debug++;
     }
 
-    // printf("aaaaaaaaaaaaaaaaaaaa %d\n", (int)ptr->m_debug);
-    while (demuxer->findStreamPacket()) {
+    auto ptr2 = new DemuxerMemorySource();
+    // 2785163-3019334
+    copyFileContent(fp, 2785163, 3019334 + 1, ptr2->data);
+    demuxer->findStreamPacket(ptr2);
 
-    }
-
+    auto ptr3 = new DemuxerMemorySource();
+    // 661985-880943
+    copyFileContent(fp, 661985, 880943 + 1, ptr3->data);
+    demuxer->findStreamPacket(ptr3);
+    fclose(fp);
 }
 */
 bool hasEnding(std::string const &fullString, std::string const &ending)

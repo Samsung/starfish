@@ -29,50 +29,39 @@ bool g_ffmpegInited = false;
 static const int g_ioBufferSize = 4096;
 class DemuxerFFmpeg : public Demuxer {
 public:
-    DemuxerFFmpeg(DemuxerSource* source, String* formatHint)
-        : Demuxer(source)
+    DemuxerFFmpeg()
+        : Demuxer()
         , m_isStreamFinded(false)
+        , m_formatContext(nullptr)
+        , m_ioContext(nullptr)
+    {
+        init();
+    }
+
+    void init()
     {
         if (!g_ffmpegInited) {
             av_register_all();
             avcodec_register_all();
             avformat_network_init();
+            // av_log_set_level(AV_LOG_TRACE);
 
             STARFISH_LOG_INFO("avcodec_version->%d avformat_version->%d \n", avcodec_version(), avformat_version());
             g_ffmpegInited = true;
         }
 
 
-        // TODO delete this buffer
-        m_formatHint = String::emptyString;
+
         m_bufferForIO = (uint8_t*)av_malloc(g_ioBufferSize);
 
-        if (!formatHint->equals(String::emptyString)) {
-            if (formatHint->startsWith("video/", false) || formatHint->startsWith("audio/", false)) {
-                m_formatHint = formatHint->substring(6, formatHint->length() - 6)->toLower();
-                const char* f = m_formatHint->utf8Data();
-                STARFISH_LOG_INFO("DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format %s\n", f);
-            } else {
-                STARFISH_LOG_INFO("DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format X\n");
-            }
-        }
-    }
-
-    virtual bool findStreamInfo()
-    {
-        STARFISH_ASSERT(!m_isStreamFinded);
-
-        // TODO delete this context
-        m_formatContext = avformat_alloc_context();
-        m_formatContext->iformat = av_find_input_format(m_formatHint->utf8Data());
-        m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO;
-
-        // TODO delete this context
-        m_formatContext->pb = avio_alloc_context(m_bufferForIO, g_ioBufferSize, 0, this, [](void *opaque, uint8_t *buf, int buf_size) -> int
+        m_ioContext = avio_alloc_context(m_bufferForIO, g_ioBufferSize, 0, this, [](void *opaque, uint8_t *buf, int buf_size) -> int
         {
             DemuxerFFmpeg* self = (DemuxerFFmpeg*)opaque;
             size_t sizeSuccessToRead = 0;
-            self->m_demuxerSource->onRead(buf_size, sizeSuccessToRead, buf);
+            int error = 0;
+            self->m_demuxerSource->onRead(buf_size, sizeSuccessToRead, error, buf);
+            if (error)
+                return AVERROR(EIO);
             return sizeSuccessToRead;
         }, nullptr, [](void *opaque, int64_t offset, int whence) -> int64_t {
             DemuxerFFmpeg* self = (DemuxerFFmpeg*)opaque;
@@ -82,22 +71,75 @@ public:
             return self->m_demuxerSource->onSeek(offset, (DemuxerSource::SeekWhence)whence);
         });
 
-        int ret;
-        if ((ret = avformat_open_input(&m_formatContext, "", NULL, NULL)) < 0) {
-            av_free(m_formatContext);
-            char error[128];
-            av_strerror(ret, error, 128);
-            STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_open_input: Error(%s).\n", error);
-            return false;
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            STARFISH_LOG_INFO("DemuxerFFmpeg::~DemuxerFFmpeg\n");
+            DemuxerFFmpeg* self = (DemuxerFFmpeg*)obj;
+            av_free(self->m_ioContext);
+            av_free(self->m_bufferForIO);
+            if (self->m_formatContext)
+                avformat_free_context(self->m_formatContext);
+        }, NULL, NULL, NULL);
+    }
+
+    class DemuxerSourceController {
+    public:
+        DemuxerSourceController(DemuxerFFmpeg& src, DemuxerSource* source)
+            : m_src(&src)
+        {
+            STARFISH_ASSERT(src.m_demuxerSource == nullptr);
+            src.m_demuxerSource = source;
+        }
+        ~DemuxerSourceController()
+        {
+            m_src->m_demuxerSource = nullptr;
+        }
+        DemuxerFFmpeg* m_src;
+    };
+
+    virtual bool findStreamInfo(DemuxerSource* source, String* formatHint)
+    {
+        STARFISH_ASSERT(!m_isStreamFinded);
+        DemuxerSourceController c(*this, source);
+
+        if (!formatHint->equals(String::emptyString)) {
+            if (formatHint->startsWith("video/", false) || formatHint->startsWith("audio/", false)) {
+                formatHint = formatHint->substring(6, formatHint->length() - 6)->toLower();
+                STARFISH_LOG_INFO("DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format %s\n", formatHint->utf8Data());
+            } else {
+                STARFISH_LOG_INFO("DemuxerFFmpeg::DemuxerFFmpeg -> av_find_input_format X\n");
+                formatHint = String::emptyString;
+            }
         }
 
+        int ret;
+        if (!m_formatContext) {
+            m_formatContext = avformat_alloc_context();
+
+            if (formatHint->length())
+                m_formatContext->iformat = av_find_input_format(formatHint->utf8Data());
+            m_formatContext->flags = AVFMT_FLAG_CUSTOM_IO | AVFMT_FLAG_NOFILLIN | AVFMT_FLAG_NOBUFFER | AVFMT_FLAG_NOPARSE | AVFMT_FLAG_FLUSH_PACKETS;
+            m_formatContext->pb = m_ioContext;
+            av_dict_set(&m_formatContext->metadata, "skip_id3v1_tags", "", 0);
+
+            if ((ret = avformat_open_input(&m_formatContext, NULL, NULL, NULL)) < 0) {
+                m_formatContext = nullptr;
+                char error[128];
+                av_strerror(ret, error, 128);
+                STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_open_input: Error(%s).\n", error);
+                return false;
+            }
+
+            STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_open_input: ok.\n");
+        }
+/*
         if ((ret = avformat_find_stream_info(m_formatContext, NULL)) < 0) {
-            av_free(m_formatContext);
             char error[128];
             av_strerror(ret, error, 128);
             STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_find_stream_info: Error(%s)\n", error);
             return false;
         }
+*/
+        STARFISH_LOG_ERROR("DemuxerFFmpeg::findStreamInfo avformat_find_stream_info: ok(duration %d).\n", (int)m_formatContext->duration / 1000);
 
         for (size_t i = 0; i < m_formatContext->nb_streams; i++) {
             STARFISH_ASSERT(m_formatContext->streams[i]->codec);
@@ -129,30 +171,41 @@ public:
                 // TODO
             }
         }
+
+        // avio_flush(m_formatContext->pb);
+        // avformat_flush(m_formatContext);
         m_isStreamFinded = true;
+
         return true;
     }
 
-    virtual bool findStreamPacket()
+    virtual bool findStreamPacket(DemuxerSource* source)
     {
+        DemuxerSourceController c(*this, source);
+
+        // avformat_flush(m_formatContext);
+        // avio_flush(m_ioContext);
+        // av_seek_frame(m_formatContext, -1, 0, AVSEEK_FLAG_ANY);
+
+        int ret;
+
         AVPacket avPacket;
         avPacket.size = 0;
         avPacket.data = NULL;
         av_init_packet(&avPacket);
-        
-        int ret;
-        if ((ret = av_read_frame(m_formatContext, &avPacket)) >= 0) {
-            STARFISH_LOG_ERROR("DemuxerFFmpeg::process av_read_frame streamIndex(%d, %p, %d)\n", (int)avPacket.stream_index, avPacket.data, (int)avPacket.size);
+
+        while ((ret = av_read_frame(m_formatContext, &avPacket)) == 0) {
+            uint64_t pts = av_q2d(m_formatContext->streams[avPacket.stream_index]->time_base) * avPacket.pts * 1000;
+            STARFISH_LOG_ERROR("DemuxerFFmpeg::process av_read_frame streamIndex(%d, %dbyte, %dms)\n", (int)avPacket.stream_index, (int)avPacket.size, (int)pts);
             for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                 MediaPacket packet;
                 packet.m_streamIndex = avPacket.stream_index;
                 packet.m_data = avPacket.data;
                 packet.m_dataSize = avPacket.size;
-                packet.m_pts = avPacket.pts;
+                packet.m_pts = pts;
                 m_demuxerClients[j]->onDetectPacket(packet);
             }
             av_free_packet(&avPacket);
-            return true;
         }
         
         av_free_packet(&avPacket);
@@ -164,16 +217,18 @@ public:
         return false;
     }
 
-    AVFormatContext* m_formatContext;
-    uint8_t* m_bufferForIO;
     bool m_isStreamFinded;
-    String* m_formatHint;
+    DemuxerSource* m_demuxerSource;
+    AVFormatContext* m_formatContext;
+    AVIOContext* m_ioContext;
+    uint8_t* m_bufferForIO;
 };
-
-Demuxer* Demuxer::create(DemuxerSource* source, String* formatHint)
+/*
+Demuxer* Demuxer::create()
 {
-    return new DemuxerFFmpeg(source, formatHint);
+    return new DemuxerFFmpeg();
 }
+*/
 
 }
 

@@ -407,22 +407,30 @@ SRC += third_party/clipper/cpp/clipper.cpp
 # webm, libav
 ifeq ($(MEDIA_SUPPORT), true)
   SRC_CC += third_party/webm/webvttparser.cc
-  ifneq (,$(findstring tizen,$(HOST)))
-	LIBAV_CURPATH=third_party/libav/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE)
-  else
-	LIBAV_CURPATH=third_party/libav/out/$(HOST)/$(ARCH)/$(TIZEN_ARCH)/$(MODE)
-  endif
-  ifneq ($(TIZEN_PROFILE),tv)
-	LDFLAGS += -L$(LIBAV_CURPATH)/libavformat/
-	LDFLAGS += -L$(LIBAV_CURPATH)/libavcodec/
-	LDFLAGS += -L$(LIBAV_CURPATH)/libavutil/
-	LDFLAGS += -lavformat -lavcodec -lavutil
-	LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavformat/
-	LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavcodec/
-	LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavutil/
-  else
-	LDFLAGS += -lavformat -lavcodec -lavutil
-  endif
+  SRC_CC += third_party/webm/mkvparser.cc
+  
+ifneq (,$(findstring tizen,$(HOST)))
+  LIBAV_CURPATH=third_party/libav/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE)
+else
+  LIBAV_CURPATH=third_party/libav/out/$(HOST)/$(ARCH)/$(MODE)
+endif
+CXXFLAGS += -I$(LIBAV_CURPATH)
+ifneq ($(TIZEN_PROFILE),tv)
+  LDFLAGS += -L$(LIBAV_CURPATH)/libavformat/
+  LDFLAGS += -L$(LIBAV_CURPATH)/libavcodec/
+  LDFLAGS += -L$(LIBAV_CURPATH)/libavutil/
+  LDFLAGS += -lavformat -lavcodec -lavutil
+  LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavformat/
+  LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavcodec/
+  LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavutil/
+else
+  LDFLAGS += -lavformat -lavcodec -lavutil
+endif
+  LDFLAGS += -lavformat -lavcodec -lavutil
+
+LDFLAGS += -L/usr/local/lib/
+LDFLAGS += -Wl,-rpath /usr/local/lib/
+LDFLAGS += -lavformat -lavcodec -lavutil
 endif
 
 # zeromq
