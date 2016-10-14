@@ -297,8 +297,6 @@ void HTMLMediaElement::pause()
         appendToOperationQueue(new MediaOperationQueueDataRequestPause(this));
         startOperationQueueIfNeeded();
     }
-
-    m_mediaPlayer->pause();
 }
 
 void HTMLMediaElement::addTextTrack(TextTrack* track)
