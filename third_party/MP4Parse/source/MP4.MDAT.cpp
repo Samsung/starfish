@@ -53,5 +53,5 @@ void MDAT::processData( MP4::BinaryStream * stream, size_t length )
 {
     data = new uint8_t[length];
     size = length;
-    stream->ignore( length );
+    stream->read((char*)data, length);
 }
