@@ -430,10 +430,6 @@ ifeq ($(MEDIA_SUPPORT), true)
       LDFLAGS += -lavformat -lavcodec -lavutil
     endif
       LDFLAGS += -lavformat -lavcodec -lavutil
-    
-    LDFLAGS += -L/usr/local/lib/
-    LDFLAGS += -Wl,-rpath /usr/local/lib/
-    LDFLAGS += -lavformat -lavcodec -lavutil
 
 endif
 
@@ -645,7 +641,7 @@ $(OUTDIR)/%.o: %.cpp $(DEPENDENCY_MAKEFILE)
 	mkdir -p $(dir $@)
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 	$(CXX) -MM $(CXXFLAGS) -MT $@ $< > $(OUTDIR)/$*.d
-	
+
 $(OUTDIR)/%.o: %.cc $(DEPENDENCY_MAKEFILE)
 	echo "[CXX] $@"
 	mkdir -p $(dir $@)
