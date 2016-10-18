@@ -84,10 +84,7 @@ public:
 
     MediaSource* parentMediaSource() { return m_parentMediaSource; }
 
-    void setMode(AppendMode mode)
-    {
-        m_mode = mode;
-    }
+    void setMode(AppendMode mode);
 
     AppendMode mode()
     {
@@ -172,6 +169,8 @@ protected:
     TextTrackList* m_textTracks;
     double m_appendWindowStart;
     double m_appendWindowEnd;
+    double m_groupStartTimestamp;
+    double m_groupEndTimestamp;
     String* m_type;
     MediaSource* m_parentMediaSource;
     std::vector<SourceBufferData*, gc_allocator<SourceBufferData*>> m_sourceBufferDataList;
@@ -179,8 +178,9 @@ protected:
 
 class SourceBufferList : public EventTarget {
 public:
-    SourceBufferList()
+    SourceBufferList(StarFish* starFish)
         : EventTarget()
+        , m_starFish(starFish)
     {
     }
 
@@ -203,6 +203,7 @@ public:
     {
         m_list.push_back(buffer);
         buffer->attachedToParent(ms);
+        scheduleEvent(m_starFish->staticStrings()->m_addsourcebuffer.localName());
     }
 
     void remove(unsigned long index)
@@ -210,6 +211,7 @@ public:
         SourceBuffer* buf = m_list[index];
         m_list.erase(m_list.begin() + index);
         buf->detachFromParent();
+        scheduleEvent(m_starFish->staticStrings()->m_removesourcebuffer.localName());
     }
 
     void remove(SourceBuffer* buffer)
@@ -225,6 +227,12 @@ public:
         }
     }
 
+    void clear()
+    {
+        m_list.clear();
+        scheduleEvent(m_starFish->staticStrings()->m_removesourcebuffer.localName());
+    }
+
     SourceBuffer* at(unsigned long index)
     {
         if (index >= m_list.size())
@@ -232,8 +240,11 @@ public:
         return m_list[index];
     }
 
+    void scheduleEvent(String* eventName);
+
 protected:
     std::vector<SourceBuffer*, gc_allocator<SourceBuffer*>> m_list;
+    StarFish* m_starFish;
 };
 
 }
