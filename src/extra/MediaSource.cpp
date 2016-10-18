@@ -53,7 +53,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
     SourceBuffer* buffer = new SourceBuffer(m_starFish, type);
     if (!m_sourceBuffers)
-        m_sourceBuffers = new SourceBufferList();
+        m_sourceBuffers = new SourceBufferList(m_starFish);
     m_sourceBuffers->add(buffer, this);
 
     // FIXME Set the generate timestamps flag on the new object to the value in the "Generate Timestamps Flag" column of the byte stream format registry [MSE-REGISTRY] entry that is associated with type.
@@ -154,8 +154,39 @@ bool MediaSource::attach()
 // 2.4.2 Detaching from a media element
 void MediaSource::detach()
 {
-    // TODO
+    // Update duration to NaN.
+    setDuration(std::numeric_limits<double>::quiet_NaN());
+
+    // Remove all the SourceBuffer objects from activeSourceBuffers.
+    // Queue a task to fire a simple event named removesourcebuffer at activeSourceBuffers.
+    if (m_activeSourceBuffers)
+        m_activeSourceBuffers->clear();
+
+    // Remove all the SourceBuffer objects from sourceBuffers.
+    // Queue a task to fire a simple event named removesourcebuffer at sourceBuffers.
+    if (m_sourceBuffers) {
+        for (unsigned i = 0; i < m_sourceBuffers->length(); i++)
+            m_sourceBuffers->at(i)->detachFromParent();
+        m_sourceBuffers->clear();
+    }
+
+    // Set the readyState attribute to "closed".
+    // Queue a task to fire a simple event named sourceclose at the MediaSource.
     setReadyState(Closed);
+}
+
+SourceBufferList* MediaSource::sourceBuffers()
+{
+    if (!m_sourceBuffers)
+        m_sourceBuffers = new SourceBufferList(m_starFish);
+    return m_sourceBuffers;
+}
+
+SourceBufferList* MediaSource::activeSourceBuffers()
+{
+    if (!m_activeSourceBuffers)
+        m_activeSourceBuffers = new SourceBufferList(m_starFish);
+    return m_activeSourceBuffers;
 }
 
 }
