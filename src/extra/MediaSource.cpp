@@ -189,5 +189,10 @@ SourceBufferList* MediaSource::activeSourceBuffers()
     return m_activeSourceBuffers;
 }
 
+void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
+{
+
+}
+
 }
 #endif

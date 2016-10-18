@@ -225,6 +225,11 @@ public:
         return true;
     }
 
+    virtual bool isFindedStreamInfo()
+    {
+        return m_isStreamFinded;
+    }
+
     mkvparser::Segment* m_headerSegment;
     bool m_isStreamFinded;
 };
