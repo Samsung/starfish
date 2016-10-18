@@ -217,6 +217,11 @@ public:
         return false;
     }
 
+    virtual bool isFindedStreamInfo()
+    {
+        return m_isStreamFinded;
+    }
+
     bool m_isStreamFinded;
     DemuxerSource* m_demuxerSource;
     AVFormatContext* m_formatContext;
@@ -224,6 +229,10 @@ public:
     uint8_t* m_bufferForIO;
 };
 
+Demuxer* Demuxer::createFFmpegDemuxer()
+{
+    return new DemuxerFFmpeg();
+}
 
 }
 

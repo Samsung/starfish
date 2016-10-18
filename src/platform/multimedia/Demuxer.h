@@ -40,10 +40,11 @@ public:
     virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& errorCode, uint8_t* buffer) = 0;
 };
 
-struct StreamInfo {
+struct StreamInfo : public gc {
     size_t m_streamIndex;
     const char* m_codecName;
     int m_bitRate;
+    uint64_t m_duration; // ms
 };
 
 struct VideoStreamInfo : public StreamInfo {
@@ -85,8 +86,10 @@ public:
 
 class Demuxer : public gc {
 public:
+    static Demuxer* createDemuxer(String* mimeTypeOfContainer);
     static Demuxer* createWebMDemuxer();
     static Demuxer* createMP4Demuxer();
+    static Demuxer* createFFmpegDemuxer();
     virtual bool findStreamPacket(DemuxerSource* source) = 0;
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint) = 0;
 
@@ -99,6 +102,13 @@ public:
     {
         m_demuxerClients.erase(std::find(m_demuxerClients.begin(), m_demuxerClients.end(), client));
     }
+
+    DemuxerClient* client(size_t idx)
+    {
+        return m_demuxerClients[idx];
+    }
+
+    virtual bool isFindedStreamInfo() { return false; }
 
 protected:
     Demuxer()

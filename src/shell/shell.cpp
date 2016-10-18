@@ -26,8 +26,32 @@
 #include <pthread.h>
 #include <Elementary.h>
 
-using namespace StarFish;
+/*
+#include <player.h>
 
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+}
+*/
+/*
+// mobile
+#include <media/player.h>
+#include <media/media_format.h>
+#include <media/media_packet.h>
+
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+}
+
+media_format_h mediaFormat;
+*/
+
+// player_h player;
+
+using namespace StarFish;
+/*
 class DemuxerMemorySource : public DemuxerSource {
 public:
     DemuxerMemorySource()
@@ -131,28 +155,6 @@ void copyFileContent(FILE* fp, int start, int end, std::vector<uint8_t>& data)
 
 void testDemuxer()
 {
-    /*
-    Demuxer* demuxer = Demuxer::create();
-    auto ptr = new DemuxerMemorySource();
-    FILE* fp = fopen("feelings.webm", "rb");
-
-    copyFileContent(fp, 0, 235, ptr->data);
-    if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/webm"))) {
-        puts("fail0");
-        // ptr->m_debug++;
-    }
-
-    auto ptr2 = new DemuxerMemorySource();
-    // 2785163-3019334
-    copyFileContent(fp, 2785163, 3019334 + 1, ptr2->data);
-    demuxer->findStreamPacket(ptr2);
-
-    auto ptr3 = new DemuxerMemorySource();
-    // 661985-880943
-    copyFileContent(fp, 661985, 880943 + 1, ptr3->data);
-    demuxer->findStreamPacket(ptr3);
-    fclose(fp);*/
-
     Demuxer* demuxer = Demuxer::createMP4Demuxer();
     auto ptr = new DemuxerMemorySource();
     FILE* fp = fopen("car.mp4", "rb");
@@ -181,7 +183,7 @@ void testDemuxer()
     demuxer->findStreamInfo(ptr4, String::fromUTF8("video/mp4"));
     demuxer->findStreamPacket(ptr4);
 }
-
+*/
 bool hasEnding(std::string const &fullString, std::string const &ending)
 {
     if (fullString.length() >= ending.length()) {
@@ -201,6 +203,40 @@ void test(size_t, void* data)
         return ECORE_CALLBACK_CANCEL;
     }, sf2);
 }
+/*
+static void printNativePlayerError(int errorCode)
+{
+    switch (errorCode) {
+#define GEN_ERROR_PRINTS(errorenum) \
+    case errorenum: \
+        printf("%s\n", #errorenum); \
+        return;
+        GEN_ERROR_PRINTS(PLAYER_ERROR_OUT_OF_MEMORY)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_PARAMETER)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NO_SUCH_FILE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_OPERATION)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_FILE_NO_SPACE_ON_DEVICE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_FEATURE_NOT_SUPPORTED_ON_DEVICE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SEEK_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_STATE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NOT_SUPPORTED_FILE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_URI)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SOUND_POLICY)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_CONNECTION_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_VIDEO_CAPTURE_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_EXPIRED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_NO_LICENSE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_FUTURE_USE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_NOT_PERMITTED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_RESOURCE_LIMIT)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_PERMISSION_DENIED)
+#undef GEN_ERROR_PRINTS
+    default:
+        printf("Unknown error\n");
+        return;
+    }
+}
+*/
 int main(int argc, char *argv[])
 {
     /*
@@ -247,6 +283,289 @@ int main(int argc, char *argv[])
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 #endif
+
+    // setenv("ELM_ENGINE", "gl", 1);
+    elm_init(0, 0);
+    elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+    // tv player test
+/*
+    Evas_Object* wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+    elm_win_title_set(wndObj, "StarFish");
+    elm_win_autodel_set(wndObj, EINA_TRUE);
+    evas_object_resize(wndObj, 1280, 720);
+    evas_object_show(wndObj);
+
+    Evas_Object* eo = evas_object_rectangle_add(evas_object_evas_get(wndObj));
+    evas_object_resize(eo, 1280, 720);
+    evas_object_render_op_set(eo, EVAS_RENDER_COPY);
+    evas_object_color_set(eo, 0, 0, 0, 0);
+    evas_object_show(eo);
+
+    player_create(&player);
+
+    player_set_error_cb(player, [](int error_code, void *user_data) {
+        printNativePlayerError(error_code);
+    },nullptr);
+    int ret;
+
+    player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get(wndObj));
+    player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
+    player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
+    player_display_roi_mode_e roi_mode = PLAYER_DISPLAY_ROI_MODE_LETTER_BOX;
+    player_set_display(player, (player_display_type_e) display_type, display_handle);
+    player_set_display_mode(player, display_mode);
+    player_set_x11_display_roi_mode(player, roi_mode);
+
+    // player_set_uri(player, "car.mp4");
+
+    player_set_uri(player, "external_demuxer://aaaa");
+
+    printf("avformat setting start\n");
+    av_register_all();
+    printf("av_register_all done\n");
+    avcodec_register_all();
+    printf("avcodec_register_all\n");
+    avformat_network_init();
+    printf("avformat_network_init done\n");
+
+    AVFormatContext* fc = avformat_alloc_context();
+    fc->iformat = av_find_input_format("mp4");
+    avformat_open_input(&fc, "car.mp4", nullptr, nullptr);
+
+    player_video_stream_info_s* videoInfo =
+        (player_video_stream_info_s*) malloc(sizeof(player_video_stream_info_s));
+    memset(videoInfo, 0, sizeof (player_video_stream_info_s));
+    videoInfo->mime = "video/x-h264";
+    videoInfo->width = 854;
+    videoInfo->height = 480;
+    // 23.976
+    videoInfo->framerate_den = 1000;
+    videoInfo->framerate_num = 23976;
+    videoInfo->codec_extradata = fc->streams[0]->codec->extradata;
+    videoInfo->extradata_size = fc->streams[0]->codec->extradata_size;
+
+    if(int ret = player_set_video_stream_info(player, videoInfo) != PLAYER_ERROR_NONE) {
+        printf(" *** ERROR %x\n", ret);
+        return 0;
+    }
+
+    player_set_buffer_need_video_data_cb(player, [](unsigned int size, void *d)
+    {
+        static bool once = false;
+        if (once)
+            return;
+        once = true;
+        puts("thread start");
+        Demuxer* demuxer = Demuxer::createMP4Demuxer();
+
+        class DemuxerClientTemp : public DemuxerClient {
+        public:
+            virtual void onDetectVideoStream(const VideoStreamInfo& info)
+            {
+
+            }
+            virtual void onDetectAudioStream(const AudioStreamInfo& info)
+            {
+
+            }
+            virtual void onDetectPacket(const MediaPacket& packet)
+            {
+                int ret = player_submit_packet(player, packet.m_data, packet.m_dataSize, packet.m_pts, PLAYER_TRACK_TYPE_VIDEO);
+                if (ret != PLAYER_ERROR_NONE) {
+                    printf("**ERROR: player_submit_packet %x", ret);
+                }
+                printf("push packet %d %p %d\n", (int)packet.m_pts, packet.m_data, (int)packet.m_dataSize);
+            }
+
+            DemuxerClientTemp()
+            {
+            }
+        };
+
+
+        demuxer->addClient(new DemuxerClientTemp());
+
+        auto ptr = new DemuxerMemorySource();
+        FILE* fp = fopen("car.mp4", "rb");
+
+        copyFileContent(fp, 0, 708, ptr->data);
+        if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/mp4"))) {
+            puts("fail0");
+            // ptr->m_debug++;
+        }
+
+
+        auto ptr2 = new DemuxerMemorySource();
+        // 1184-727646, 19723193
+        // copyFileContent(fp, 1184, 19723193, ptr2->data);
+        // 5931518-6320465
+        // 1450907
+        copyFileContent(fp, 1450907, 6320465 + 1, ptr2->data);
+        demuxer->findStreamPacket(ptr2);
+
+        puts("thread end");
+    }, nullptr);
+
+    int err = player_prepare_async(player, [](void *user_data) {
+        puts("prepared");
+        player_start(player);
+    }, nullptr);
+    if (err != PLAYER_ERROR_NONE) {
+        return 0;
+    }
+    player_set_x11_display_dst_roi(player, 0, 0, 512, 288);
+    // free(videoInfo);
+     */
+    /*
+    // mobile test
+    ret = player_set_display(player, PLAYER_DISPLAY_TYPE_OVERLAY, GET_DISPLAY(wndObj));
+    STARFISH_ASSERT(ret == 0);
+
+    // player_set_uri(player, "car.mp4");
+    puts("0");
+    media_format_create(&mediaFormat);
+    ret = media_format_set_video_mime(mediaFormat, media_format_mimetype_e::MEDIA_FORMAT_H264_MP);
+    STARFISH_ASSERT(ret == 0);
+    ret = media_format_set_video_width(mediaFormat, 854);
+    STARFISH_ASSERT(ret == 0);
+    ret = media_format_set_video_height(mediaFormat, 480);
+    STARFISH_ASSERT(ret == 0);
+    // ret = media_format_set_video_avg_bps(mediaFormat, 867 * 1024);
+    // STARFISH_ASSERT(ret == 0);
+
+    ret = player_set_media_stream_buffer_status_cb(player, PLAYER_STREAM_TYPE_VIDEO, [](player_media_stream_buffer_status_e status, void *user_data){}, nullptr);
+    STARFISH_ASSERT(ret == 0);
+    ret = player_set_media_stream_buffer_status_cb(player, PLAYER_STREAM_TYPE_AUDIO, [](player_media_stream_buffer_status_e status, void *user_data){}, nullptr);
+    STARFISH_ASSERT(ret == 0);
+    ret = player_set_media_stream_seek_cb(player, PLAYER_STREAM_TYPE_VIDEO, [](unsigned long long offset, void *user_data){}, nullptr);
+    STARFISH_ASSERT(ret == 0);
+    ret = player_set_media_stream_seek_cb(player, PLAYER_STREAM_TYPE_AUDIO, [](unsigned long long offset, void *user_data){}, nullptr);
+    STARFISH_ASSERT(ret == 0);
+
+    ret = player_set_media_packet_video_frame_decoded_cb(player, [](media_packet_h pkt, void *user_data) {
+        puts("decoded");
+    }, nullptr);
+    STARFISH_ASSERT(ret == 0);
+
+    puts("1");
+    ret = player_set_media_stream_info(player, PLAYER_STREAM_TYPE_VIDEO, mediaFormat);
+    STARFISH_ASSERT(ret == 0);
+
+    puts("2");
+    ret = player_prepare_async(player, [](void *user_data) {
+        puts("prepare");
+        player_h player = (player_h)user_data;
+        player_start(player);
+    }, player);
+    printNativePlayerError(ret);
+    STARFISH_ASSERT(ret == 0);
+
+    pthread_t thread;
+    pthread_create(&thread, nullptr, [](void* data) -> void* {
+        player_h player = (player_h)data;
+        puts("thread start");
+
+        Demuxer* demuxer = Demuxer::createMP4Demuxer();
+
+        class DemuxerClientTemp : public DemuxerClient {
+        public:
+            virtual void onDetectVideoStream(const VideoStreamInfo& info)
+            {
+
+            }
+            virtual void onDetectAudioStream(const AudioStreamInfo& info)
+            {
+
+            }
+            virtual void onDetectPacket(const MediaPacket& packet)
+            {
+                int got_picture;
+                AVPacket pkt;
+                av_init_packet(&pkt);
+                pkt.data = packet.m_data;
+                pkt.size = packet.m_dataSize;
+                auto ret2 = avcodec_decode_video2(fc->streams[0]->codec, frame, &got_picture, &pkt);
+                printf("avcodec_decode_video2 ret %d got %d\n", ret2, got_picture);
+
+                // char error[128];
+                // av_strerror(-1052488119, error, 128);
+                // puts(error);
+                if (!got_picture)
+                    return;
+                media_packet_h p = 0;
+                media_packet_create_alloc(mediaFormat, nullptr, nullptr, &p);
+
+                int ret;
+                ret = media_packet_set_pts(p, packet.m_pts / 1090);
+                STARFISH_ASSERT(ret == 0);
+                void* data;
+                ret = media_packet_get_buffer_data_ptr(p, &data);
+                STARFISH_ASSERT(ret == 0);
+                memcpy(data, packet.m_data, packet.m_dataSize);
+                ret = media_packet_set_buffer_size(p, packet.m_dataSize);
+                STARFISH_ASSERT(ret == 0);
+
+
+                ret = player_push_media_stream(player, p);
+                printf("push packet %d %p %d\n", (int)packet.m_pts, packet.m_data, (int)packet.m_dataSize);
+                STARFISH_ASSERT(ret == 0);
+                media_packet_destroy(p);
+            }
+
+            DemuxerClientTemp(player_h p)
+            {
+                player = p;
+
+                av_register_all();
+                avcodec_register_all();
+
+                avformat_open_input(&fc, "car.mp4", nullptr, nullptr);
+
+                avformat_find_stream_info(fc, nullptr);
+
+                avcodec_open2(fc->streams[0]->codec, avcodec_find_decoder(fc->streams[0]->codec->codec_id), nullptr);
+
+
+
+                frame = av_frame_alloc();
+            }
+            player_h player;
+            AVFormatContext* fc;
+            AVFrame *frame;
+        };
+
+
+        demuxer->addClient(new DemuxerClientTemp(player));
+        // demuxer->addClient(new DemuxerClientTemp());
+
+        auto ptr = new DemuxerMemorySource();
+        FILE* fp = fopen("car.mp4", "rb");
+
+        copyFileContent(fp, 0, 708, ptr->data);
+        if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/mp4"))) {
+            puts("fail0");
+            // ptr->m_debug++;
+        }
+
+
+        auto ptr2 = new DemuxerMemorySource();
+        // 1184-727646
+        copyFileContent(fp, 1184, 727646 + 1, ptr2->data);
+        demuxer->findStreamPacket(ptr2);
+
+        puts("thread end");
+        return nullptr;
+    }, player);
+
+    // player_start(player);
+
+
+    puts("elm_run");
+    elm_run();
+    return 0;
+    */
+    // -------------------------------------------------------------------
+
     // GC_disable();
     int flag = 0;
 

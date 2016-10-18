@@ -19,36 +19,46 @@
 
 #include "dom/binding/ScriptWrappable.h"
 #include "dom/EventTarget.h"
+#include "platform/multimedia/Demuxer.h"
+#include "platform/threading/Thread.h"
 
 namespace StarFish {
 
+class SourceBuffer;
 class AudioTrackList;
 class VideoTrackList;
 class TextTrackList;
 class TimeRanges;
 class MediaSource;
+class Demuxer;
 
 struct SourceBufferData : public gc {
+    SourceBuffer* m_sourceBuffer;
     bool m_isProcessed;
-    uint64_t m_groupStartTimestamp;
-    uint64_t m_groupEndTimestamp;
-
     const uint8_t* m_data;
     unsigned long m_length;
-    SourceBufferData(const uint8_t* data, unsigned long length)
-        : m_isProcessed(false)
-        , m_groupStartTimestamp(0)
-        , m_groupEndTimestamp(0)
+    std::vector<uint8_t> m_headerBuffer;
+    SourceBufferData(SourceBuffer* buf, const uint8_t* data, unsigned long length)
+        : m_sourceBuffer(buf)
+        , m_isProcessed(false)
         , m_data(data)
         , m_length(length)
     {
     }
 };
 
+struct MediaPacketGroup {
+    size_t m_streamIndex;
+    uint64_t m_groupTimestampStart;
+    uint64_t m_groupTimestampEnd;
+    std::vector<MediaPacket*> m_packets;
+};
+
 class SourceBuffer : public EventTarget {
 public:
     friend class MediaSource;
     friend class SourceBufferList;
+    friend class DemuxerClientSourceBuffer;
     enum UpdateState {
         Success,
         Error,
@@ -61,7 +71,7 @@ public:
     };
 
     enum AppendState {
-        WaitingForSegment,
+        WaitingForSegment, // not used
         ParsingInitSegment,
         ParsingMediaSegment
     };
@@ -162,6 +172,7 @@ protected:
     bool m_isAttachedToParent;
     bool m_updating;
     StarFish* m_starFish;
+    Demuxer* m_demuxer;
     TimeRanges* m_buffered;
     double m_timestampOffset;
     AudioTrackList* m_audioTracks;
@@ -173,7 +184,11 @@ protected:
     double m_groupEndTimestamp;
     String* m_type;
     MediaSource* m_parentMediaSource;
-    std::vector<SourceBufferData*, gc_allocator<SourceBufferData*>> m_sourceBufferDataList;
+    Thread* m_sourceBufferUpdateThread;
+    std::vector<uint8_t, gc_allocator<uint8_t>> m_bufferUnprocessed;
+    std::vector<uint8_t, gc_allocator<uint8_t>> m_bufferHeader;
+    std::vector<StreamInfo*, gc_allocator<StreamInfo*>> m_streamInfo;
+    std::vector<MediaPacketGroup*> m_packetGroup;
 };
 
 class SourceBufferList : public EventTarget {

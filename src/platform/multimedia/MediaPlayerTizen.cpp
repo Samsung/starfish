@@ -91,6 +91,8 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
+    player_set_volume(m_nativePlayer, 1, 1);
+    player_set_mute(m_nativePlayer, false);
     player_set_error_cb(m_nativePlayer, [](int errorCode, void* data) {
         PLAYER_LOGI("player_error_cb");
         MediaPlayerTizen* player = (MediaPlayerTizen*)data;
@@ -186,6 +188,7 @@ void MediaPlayerTizen::closePreparingMode()
 
 void MediaPlayerTizen::prepare(URL* url)
 {
+    setNativeOptions(url);
     if (url->isBlobURL()) {
         BlobURLStore store;
         if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
@@ -195,7 +198,12 @@ void MediaPlayerTizen::prepare(URL* url)
         if (m_starFish->isValidBlobURL(store)) {
             player_set_memory_buffer(m_nativePlayer, ((Blob *)store.m_blob)->data(), ((Blob *)store.m_blob)->size());
         } else if (m_starFish->isValidMediaSourceBlobURL(store)) {
-            // player_set_uri(m_nativePlayer, "demuxer://aaaa");
+            BlobURLStore store;
+            StarFish::stringToBlobURLString(url->urlString(), store);
+            MediaSource* ms = (MediaSource*)store.m_blob;
+            m_activeMediaSource = ms;
+            m_activeMediaSource->attach();
+            return;
         } else {
             // fire eror
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -203,8 +211,6 @@ void MediaPlayerTizen::prepare(URL* url)
     } else {
         player_set_uri(m_nativePlayer, url->urlString()->utf8Data());
     }
-
-    setNativeOptions(url);
 
     openPreparingMode();
     int nativeResult = player_prepare_async(m_nativePlayer, [](void *user_data) {
@@ -261,6 +267,8 @@ void MediaPlayerTizen::prepare(URL* url)
         STARFISH_ASSERT(m_inPrepare);
         closePreparingMode();
     }
+
+    return;
 }
 
 void MediaPlayerTizen::pauseOperation()
@@ -281,7 +289,7 @@ void MediaPlayerTizen::unprepareOperation()
         }
 
         if (m_activeMediaSource) {
-            // m_activeMediaSource->close();
+            m_activeMediaSource->detach();
         }
         m_activeMediaSource = nullptr;
 

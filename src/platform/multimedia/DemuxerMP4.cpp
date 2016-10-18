@@ -268,6 +268,9 @@ public:
                         // video
                         VideoStreamInfo info;
                         info.m_streamIndex = tkhd->track_id - 1;
+                        info.m_duration = tkhd->duration;
+                        info.m_timeBaseNum = 0;
+                        info.m_timeBaseDen = 1;
                         // info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
                         // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
                         // info.m_timeBaseNum = m_formatContext->streams[i]->codec->time_base.num;
@@ -281,6 +284,7 @@ public:
                     } else {
                         AudioStreamInfo info;
                         info.m_streamIndex = tkhd->track_id - 1;
+                        info.m_duration = tkhd->duration;
                         // info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
                         // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
                         // info.m_sampleFormat = (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
@@ -345,7 +349,7 @@ public:
                     dataPtr += trun->samples[i].size;
 
                     STARFISH_ASSERT(dataPtr <= (mdat->data + mdat->size));
-                    STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
+                    // STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
                     for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                         m_demuxerClients[j]->onDetectPacket(packet);
                     }
@@ -358,6 +362,11 @@ public:
         });
 
         return true;
+    }
+
+    virtual bool isFindedStreamInfo()
+    {
+        return m_isStreamFinded;
     }
 
     bool m_isStreamFinded;

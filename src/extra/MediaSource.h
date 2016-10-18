@@ -28,6 +28,7 @@ class VideoPlayer;
 class MediaSourceClient;
 
 class MediaSource : public EventTarget {
+    friend class SourceBuffer;
 public:
     enum ReadyState {
         Closed, // Indicates the source is not currently attached to a media element.
@@ -110,6 +111,7 @@ public:
     // TODO 2.4.4 SourceBuffer Monitoring
 
 protected:
+    void didSourceBufferUpdated(SourceBuffer* src);
     ReadyState m_readyState;
     StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;
