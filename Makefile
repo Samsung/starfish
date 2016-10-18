@@ -580,10 +580,10 @@ tizen_wearable_emulator.lib.release: $(OUTDIR)/$(LIB)
 
 tizen_obs_arm.lib.release: $(OUTDIR)/$(LIB)
 tizen_obs_emulator.lib.release: $(OUTDIR)/$(LIB)
-	cp -f $<.strip ./$(LIB)
+	cp -f $< .
 tizen_obs_arm.exe.debug: $(OUTDIR)/$(BIN)
 tizen_obs_emulator.exe.debug: $(OUTDIR)/$(BIN)
-	cp -f $<.strip ./$(LIB)
+	cp -f $< .
 
 tizen24_mobile_emulator.lib.debug: $(OUTDIR)/$(LIB)
 	cp -f $< .
