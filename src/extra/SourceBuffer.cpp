@@ -376,29 +376,26 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
     }, inputBuffer);
 }
 
-MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t knownPts)
+MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind)
 {
     Locker<Mutex> packetGroupLocker(m_packetGroupMutex);
-    MediaPacket* result = nullptr;
-
     // printf("SourceBuffer::findProperMediaPacket %d %d\n", (int)streamIdx, (int)knownPts);
 
     // TODO implement this method properly
     for (size_t i = 0; i < m_packetGroup.size(); i ++) {
         MediaPacketGroup* grp = m_packetGroup[i];
         if (grp->m_streamIndex == streamIdx) {
-            if (grp->m_groupTimestampStart <= knownPts && knownPts <= grp->m_groupTimestampEnd) {
+            if (grp->m_groupTimestampStart <= startPositionInPTSWantToFind && startPositionInPTSWantToFind <= grp->m_groupTimestampEnd) {
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
-                    if (v[j]->m_pts > knownPts) {
-                        result = v[j];
-                        return result;
+                    if (v[j]->m_pts >= startPositionInPTSWantToFind) {
+                        return v[j];
                     }
                 }
             }
         }
     }
-    return result;
+    return nullptr;
 }
 
 void SourceBuffer::setMode(AppendMode mode)
