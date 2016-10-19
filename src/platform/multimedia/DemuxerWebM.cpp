@@ -215,7 +215,7 @@ public:
                     theFrame.Read(&src, dataPtr);
 
                     MediaPacket packet;
-                    packet.m_streamIndex = tn;
+                    packet.m_streamIndex = tn - 1;
                     packet.m_data = dataPtr;
                     packet.m_dataSize = size;
                     packet.m_pts = pts;
