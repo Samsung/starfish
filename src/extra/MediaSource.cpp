@@ -237,10 +237,10 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
 
                     SourceBufferList* activeSourceBuffers = this->activeSourceBuffers();
                     for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
-                        std::vector<StreamInfo*, gc_allocator<StreamInfo*>>& streamInfo = m_sourceBuffers->at(i)->m_streamInfo;
+                        const std::vector<StreamInfo*, gc_allocator<StreamInfo*>>& streamInfo = m_sourceBuffers->at(i)->m_streamInfo;
                         bool thisBufferAdded = false;
                         for (size_t j = 0; j < streamInfo.size(); j ++) {
-                            if (streamInfo[i]->m_type == StreamInfo::Video) {
+                            if (streamInfo[j]->m_type == StreamInfo::Video) {
                                 if (m_activeVideoSourceBuffer == nullptr) {
                                     m_activeVideoSourceBuffer = m_sourceBuffers->at(i);
                                     m_activeVideoStreamInSourceBuffer = j;
@@ -250,7 +250,7 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                                         thisBufferAdded = true;
                                     }
                                 }
-                            } else if (streamInfo[i]->m_type == StreamInfo::Audio) {
+                            } else if (streamInfo[j]->m_type == StreamInfo::Audio) {
                                 if (m_activeAudioSourceBuffer == nullptr) {
                                     m_activeAudioSourceBuffer = m_sourceBuffers->at(i);
                                     m_activeAudioStreamInSourceBuffer = j;

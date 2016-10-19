@@ -225,7 +225,8 @@ public:
                 if (!packet) {
                     break;
                 }
-                ptsNow = self->m_lastVideoPts = packet->m_pts;
+                ptsNow = packet->m_pts;
+                self->m_lastVideoPts = packet->m_pts + 1;
                 int ret = player_submit_packet(self->m_nativePlayer, packet->m_data, packet->m_dataSize, packet->m_pts, PLAYER_TRACK_TYPE_VIDEO);
 
                 if (ret != PLAYER_ERROR_NONE) {
@@ -246,7 +247,8 @@ public:
                 if (!packet) {
                     break;
                 }
-                ptsNow = self->m_lastAudioPts = packet->m_pts;
+                ptsNow = packet->m_pts;
+                self->m_lastAudioPts = packet->m_pts + 1;
                 int ret = player_submit_packet(self->m_nativePlayer, packet->m_data, packet->m_dataSize, packet->m_pts, PLAYER_TRACK_TYPE_AUDIO);
 
                 if (ret != PLAYER_ERROR_NONE) {

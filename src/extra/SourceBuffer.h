@@ -124,7 +124,7 @@ public:
     }
 
     // this method thread-safe
-    MediaPacket* findProperMediaPacket(size_t streamIdx, uint64_t knownPts);
+    MediaPacket* findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind);
 
     TimeRanges* buffered()
     {
