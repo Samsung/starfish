@@ -30,7 +30,7 @@ class MediaPlayer;
 class MediaOperationQueueData : public gc {
 public:
     MediaOperationQueueData(HTMLMediaElement* p);
-    virtual void cancelOperation(DOMException* exception) { }
+    virtual void cancelOperation() { }
     virtual void processOperationQueue() = 0;
     virtual ~MediaOperationQueueData() { }
     virtual bool isPlayRequest()
@@ -61,7 +61,7 @@ public:
     }
 
     virtual void processOperationQueue();
-    virtual void cancelOperation(DOMException* exception);
+    virtual void cancelOperation();
 
     URL* m_url;
 };
@@ -84,7 +84,7 @@ public:
 #endif
     }
     virtual void processOperationQueue();
-    virtual void cancelOperation(DOMException* exception);
+    void cancelOperation(DOMException* exception);
     virtual bool isPlayRequest()
     {
         return true;
@@ -105,12 +105,27 @@ public:
     virtual void processOperationQueue();
 };
 
+class MediaOperationQueueDataRequestDispatchEvent : public MediaOperationQueueData {
+public:
+    MediaOperationQueueDataRequestDispatchEvent(HTMLMediaElement* p, EventTarget* target, Event* e)
+        : MediaOperationQueueData(p)
+        , m_target(target)
+        , m_event(e)
+    {
+    }
+
+    virtual void processOperationQueue();
+    EventTarget* m_target;
+    Event* m_event;
+};
+
 typedef std::list<MediaOperationQueueData*, gc_allocator<MediaOperationQueueData*>> MediaOperationQueue;
 
 class HTMLMediaElement : public HTMLElement {
     friend class MediaPlayer;
     friend class MediaOperationQueueDataRequestPause;
     friend class MediaOperationQueueDataRequestResourceSelection;
+    friend class MediaOperationQueueDataRequestDispatchEvent;
 public:
     enum NetworkState {
         NETWORK_EMPTY,
@@ -230,7 +245,7 @@ public:
     }
 
     void mediaPlayerNotifyUpdateReadyStateItsContainer(ReadyState state);
-
+    void addEventToOperationQueue(EventTarget* t, Event* e);
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow(); \
     void dispatch##Name##Event();
@@ -273,6 +288,7 @@ protected:
 
     MediaOperationQueueData* m_currentOperation;
     MediaOperationQueue m_operationQueue;
+    MediaOperationQueue m_playOperationQueue;
     size_t m_currentPendingOperationCount;
     size_t m_currentPendingOperationHandle;
 
@@ -298,6 +314,11 @@ protected:
     void appendToOperationQueue(MediaOperationQueueData* data)
     {
         m_operationQueue.push_back(data);
+    }
+
+    void appendToPlayOperationQueue(MediaOperationQueueData* data)
+    {
+        m_playOperationQueue.push_back(data);
     }
 
     void abortEveryPendingOperation(DOMException* exceptionForPlayPromise);

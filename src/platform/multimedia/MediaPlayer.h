@@ -69,6 +69,11 @@ public:
         return 0;
     }
 
+    virtual double duration()
+    {
+        return 0;
+    }
+
     PlaybackState playbackState()
     {
         return m_playbackState;

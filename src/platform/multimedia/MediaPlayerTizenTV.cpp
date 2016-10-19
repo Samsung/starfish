@@ -263,64 +263,33 @@ public:
         int nativeResult = player_prepare_async(m_nativePlayer, [](void *user_data) {
             STARFISH_LOG_INFO("MediaPlayerPlayerMSEprepared\n");
             MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
-            STARFISH_ASSERT(!isMainThread());
-            self->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* user_data) {
-                STARFISH_LOG_INFO("player_prepare_async_cb in MainThread");
-                MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
-
-                STARFISH_ASSERT(self->m_inPrepare);
-                self->closePreparingMode();
-
-                if (!self->m_alive) {
-                    self->close(); // unprepare() and destroy() to free data
-                    return;
-                }
-
-                char* videoCodec = nullptr;
-                char* audioCodec = nullptr;
-                player_get_codec_info(self->m_nativePlayer, &audioCodec, &videoCodec);
-
-                if (videoCodec) {
-                    self->m_hasVideo = true;
-                    int width = 1;
-                    int height = 1;
-                    player_get_video_size(self->m_nativePlayer, &width, &height);
-                    STARFISH_ASSERT(width > 0);
-                    STARFISH_ASSERT(height > 0);
-                    self->m_videoWidth = (unsigned long)width;
-                    self->m_videoHeight = (unsigned long)height;
-                    if (self->m_canvasSurface) {
-                        self->m_canvasSurface->resize(self->m_videoWidth, self->m_videoHeight);
-                    }
-                }
-
-                STARFISH_LOG_INFO("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec, audioCodec, (int)self->m_videoWidth, (int)self->m_videoHeight);
-
-                free(videoCodec);
-                free(audioCodec);
-
-                self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
-                self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
-
-                self->processNextOperationQueueInContainer();
-            }, self);
+            self->compleatePrepare();
         }, this);
 
         if (nativeResult != PLAYER_ERROR_NONE) {
-            STARFISH_LOG_ERROR("player_prepare_async return error !!!");
+            STARFISH_LOG_ERROR("player_prepare_async return error !!!\n");
             STARFISH_ASSERT_NOT_REACHED();
 
             STARFISH_ASSERT(m_inPrepare);
             closePreparingMode();
         }
 
-        STARFISH_LOG_INFO("prepareMediaSourceEnd");
+        STARFISH_LOG_INFO("prepareMediaSourceEnd\n");
     }
 
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
     {
         canvas->punchHole(Rect(videoRect.x(), videoRect.y(), videoRect.width(), videoRect.height()));
         player_set_x11_display_dst_roi(m_nativePlayer, absVideoRect.x(), absVideoRect.y(), absVideoRect.width(), absVideoRect.height());
+    }
+
+    virtual double currentTime()
+    {
+        int s;
+        int ret = player_get_position(m_nativePlayer, &s);
+        if (ret)
+            return 0;
+        return s / 1000.0;
     }
 
     uint64_t m_lastVideoPts;
