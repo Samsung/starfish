@@ -89,6 +89,7 @@ public:
 
     virtual double duration();
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
+    virtual TimeRanges* buffered();
 
     bool m_inPrepare;
     bool m_alive;
