@@ -128,6 +128,7 @@ public:
 
         MediaPacket* pkt = new MediaPacket();
         pkt->m_pts = packet.m_pts;
+        pkt->m_duration = packet.m_duration;
         pkt->m_streamIndex = packet.m_streamIndex;
         pkt->m_dataSize = packet.m_dataSize;
         pkt->m_data = new uint8_t[packet.m_dataSize];

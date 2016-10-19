@@ -202,6 +202,7 @@ public:
                 packet.m_streamIndex = avPacket.stream_index;
                 packet.m_data = avPacket.data;
                 packet.m_dataSize = avPacket.size;
+                packet.m_duration = 0; // TODO
                 packet.m_pts = pts;
                 m_demuxerClients[j]->onDetectPacket(packet);
             }

@@ -24,6 +24,7 @@ struct MediaPacket {
     uint8_t* m_data;
     size_t m_dataSize;
     uint64_t m_pts;
+    uint64_t m_duration;
 };
 
 

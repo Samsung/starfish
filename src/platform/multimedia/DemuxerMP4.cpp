@@ -349,9 +349,9 @@ public:
                     packet.m_pts = pts;
 
                     if (trun->has_sample_duration) {
-                        pts += trun->samples[i].duration * 1000.0 / (double)scale;
+                        packet.m_duration = trun->samples[i].duration * 1000.0 / (double)scale;
                     } else if (trun->has_sample_composition_time_offset) {
-                        pts += trun->samples[i].composition_time_offset * 1000.0 / (double)scale;
+                        packet.m_duration = trun->samples[i].composition_time_offset * 1000.0 / (double)scale;
                     } else {
                         STARFISH_RELEASE_ASSERT_NOT_REACHED();
                     }
@@ -362,6 +362,8 @@ public:
                     for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                         m_demuxerClients[j]->onDetectPacket(packet);
                     }
+
+                    pts += packet.m_duration;
                 }
 
                 trackID = SIZE_MAX;
