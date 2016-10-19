@@ -24,6 +24,7 @@
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "MediaSource.h"
+#include "dom/TextTrackCue.h"
 
 namespace StarFish {
 
@@ -508,6 +509,75 @@ void SourceBuffer::setAppendWindowEnd(double timeStamp)
 
     // Update the attribute to the new value.
     m_appendWindowEnd = timeStamp;
+}
+
+TimeRanges* SourceBuffer::buffered()
+{
+    if (m_streamInfo.size() == 0) {
+        // TODO
+        return new TimeRanges();
+    }
+
+    // https://www.w3.org/TR/media-source/#widl-SourceBuffer-buffered
+    // Collect tracks (Since current version of Starfish does not support videoTracks/audioTracks/textTracks)
+    std::unordered_map<size_t, std::map<uint64_t, uint64_t>, std::hash<size_t>, std::equal_to<size_t>> tracks;
+    for (auto i = m_streamInfo.begin(); i != m_streamInfo.end(); i++) {
+        STARFISH_ASSERT(tracks.find((*i)->m_streamIndex) == tracks.end());
+        tracks.insert(std::make_pair((*i)->m_streamIndex, std::map<uint64_t, uint64_t>()));
+    }
+
+    // https://www.w3.org/TR/media-source/#widl-SourceBuffer-buffered
+    // 2. Let highest end time be the largest track buffer ranges end time across all the track buffers managed by this SourceBuffer object.
+    uint64_t highestEndTime = 0;
+    for (auto i = m_packetGroup.begin(); i != m_packetGroup.end(); i++) {
+        MediaPacketGroup* packetGroup = (*i);
+        auto itr = tracks.find(packetGroup->m_streamIndex);
+        STARFISH_ASSERT(itr != tracks.end());
+
+        auto track = &(itr->second);
+        STARFISH_ASSERT(track->find(packetGroup->m_groupTimestampStart) == track->end());
+        track->insert(std::make_pair(packetGroup->m_groupTimestampStart, packetGroup->m_groupTimestampEnd));
+        if (packetGroup->m_groupTimestampEnd > highestEndTime) {
+            highestEndTime = packetGroup->m_groupTimestampEnd;
+        }
+    }
+
+    // 3. Let intersection ranges equal a TimeRange object containing a single range from 0 to highest end time.
+    std::map<uint64_t, uint64_t> intersection;
+    intersection.insert(std::make_pair(0, highestEndTime));
+
+    // 4. For each track buffer managed by this SourceBuffer, run the following steps:
+    for (auto i = tracks.begin(); i != tracks.end(); i++) {
+        // 4-1. Let track ranges equal the track buffer ranges for the current track buffer.
+        auto trackRanges = &(i->second);
+        if (trackRanges->size() == 0) {
+            return new TimeRanges();
+        }
+        // 4-2. If readyState is "ended", then set the end time on the last range in track ranges to highest end time.
+        if (parentMediaSource() && parentMediaSource()->readyState() == MediaSource::Ended) {
+            (--trackRanges->end())->second = highestEndTime;
+        }
+        // 4-3. Let new intersection ranges equal the intersection between the intersection ranges and the track ranges.
+        std::map<uint64_t, uint64_t> newIntersection;
+        for (auto j = intersection.begin(); j != intersection.end(); j++) {
+            for (auto t = trackRanges->begin(); t != trackRanges->end(); t++) {
+                if (t->second >= j->first && t->first <= j->second) {
+                    newIntersection.insert(std::make_pair(std::max(t->first, j->first), std::min(t->second, j->second)));
+                }
+            }
+        }
+        // 4-4. Replace the ranges in intersection ranges with the new intersection ranges.
+        intersection.clear();
+        intersection = newIntersection;
+    }
+
+    // TODO: 5. If intersection ranges does not contain the exact same range information as the current value of this attribute,
+    //          then update the current value of this attribute to intersection ranges.
+    TimeRanges* result = new TimeRanges();
+    for (auto i = intersection.begin(); i != intersection.end(); i++) {
+        result->push_back((double)(i->first) / 1000.0, (double)(i->second) / 1000.0);
+    }
+    return result;
 }
 
 void SourceBufferList::scheduleEvent(String* eventName)
