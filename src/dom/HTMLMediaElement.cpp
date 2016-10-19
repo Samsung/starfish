@@ -118,16 +118,13 @@ void HTMLMediaElement::load()
             m_isPaused = true;
 
             // Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
-            auto iter = m_operationQueue.begin();
-            while (iter != m_operationQueue.end()) {
-                if ((*iter)->isPlayRequest()) {
-                    DOMException* exception = new DOMException(document()->window()->scriptBindingInstance(), DOMException::ABORT_ERR, "play request is aborted by load operation");
+            auto iter = m_playOperationQueue.begin();
+            while (iter != m_playOperationQueue.end()) {
 #ifdef USE_ES6_FEATURE
-                    ((MediaOperationQueueDataRequestPlay*)(*iter))->m_promise->reject(exception->scriptValue());
+                DOMException* exception = new DOMException(document()->window()->scriptBindingInstance(), DOMException::ABORT_ERR, "play request is aborted by load operation");
+                ((MediaOperationQueueDataRequestPlay*)(*iter))->m_promise->reject(exception->scriptValue());
 #endif
-                    m_operationQueue.erase(iter++);
-                } else
-                    iter++;
+                m_playOperationQueue.erase(iter++);
             }
         }
 
@@ -229,8 +226,7 @@ void HTMLMediaElement::play()
 
     // Let promise be a new promise and append promise to the list of pending play promises.
     auto playRequest = new MediaOperationQueueDataRequestPlay(this);
-    appendToOperationQueue(playRequest);
-    startOperationQueueIfNeeded();
+    appendToPlayOperationQueue(playRequest);
 
     // If the media element's networkState attribute has the value NETWORK_EMPTY, invoke the media element's resource selection algorithm.
     if (m_networkState == NETWORK_EMPTY) {
@@ -249,12 +245,10 @@ void HTMLMediaElement::play()
         dispatchPlayEvent();
 
         // If the media element's readyState attribute has the value HAVE_NOTHING, HAVE_METADATA, or HAVE_CURRENT_DATA, queue a task to fire a simple event named waiting at the element.
-        if (m_readyState == HAVE_NOTHING || m_readyState == HAVE_METADATA || m_readyState != HAVE_CURRENT_DATA) {
+        if (m_readyState == HAVE_NOTHING || m_readyState == HAVE_METADATA || m_readyState == HAVE_CURRENT_DATA) {
             dispatchWaitingEvent();
-        }
-
-        // Otherwise, the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA: notify about playing for the element.
-        if (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
+        } else if  (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
+            // Otherwise, the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA: notify about playing for the element.
             dispatchPlayingEventNow();
         }
     }
@@ -262,15 +256,10 @@ void HTMLMediaElement::play()
     // Otherwise, if the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA,
     // take pending play promises and queue a task to resolve pending play promises with the result.
     if (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
-        auto iter = m_operationQueue.begin();
-        while (iter != m_operationQueue.end()) {
-            if ((*iter)->isPlayRequest()) {
-#ifdef USE_ES6_FEATURE
-                ((MediaOperationQueueDataRequestPlay*)(*iter))->m_promise->fulfill(ScriptValueUndefined);
-#endif
-                m_operationQueue.erase(iter++);
-            } else
-                iter++;
+        auto iter = m_playOperationQueue.begin();
+        while (iter != m_playOperationQueue.end()) {
+            ((MediaOperationQueueDataRequestPlay*)(*iter))->processOperationQueue();
+            m_playOperationQueue.erase(iter++);
         }
     }
 
@@ -393,7 +382,7 @@ double HTMLMediaElement::currentTime()
 
 double HTMLMediaElement::duration()
 {
-    return 0;
+    return m_mediaPlayer ? m_mediaPlayer->duration() : std::numeric_limits<double>::quiet_NaN();
 }
 
 bool HTMLMediaElement::paused()
@@ -575,6 +564,12 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
         }
         if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA && state >= HTMLMediaElement::HAVE_FUTURE_DATA) {
             dispatchCanplayEvent();
+
+            while (m_playOperationQueue.size()) {
+                ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())->processOperationQueue();
+                m_playOperationQueue.pop_front();
+            }
+
             if (m_mediaPlayer && m_mediaPlayer->playbackState() == MediaPlayer::PLAYBACK_STATE_PLAYING) {
                 dispatchPlayingEvent();
             }
@@ -592,6 +587,12 @@ HTMLMediaElement::NetworkState HTMLMediaElement::networkState()
     return m_networkState;
 }
 
+void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
+{
+    appendToOperationQueue(new MediaOperationQueueDataRequestDispatchEvent(this, t, e));
+    startOperationQueueIfNeeded();
+}
+
 #define ADD_DISPATCH_EVENT_DEF(name, Name) \
 void HTMLMediaElement::dispatch##Name##EventNow() \
 { \
@@ -601,11 +602,11 @@ void HTMLMediaElement::dispatch##Name##EventNow() \
 } \
 void HTMLMediaElement::dispatch##Name##Event() \
 { \
-    document()->window()->starFish()->messageLoop()->addIdler([](size_t handle, void* data) { \
-        HTMLMediaElement* element = (HTMLMediaElement*)data; \
-        element->dispatch##Name##EventNow(); \
-    }, this); \
+    String* eventType = document()->window()->starFish()->staticStrings()->m_##name.localName(); \
+    Event* e = new Event(eventType, EventInit(false, false)); \
+    addEventToOperationQueue(this, e); \
 }
+
 ADD_DISPATCH_EVENT_DEF(progress, Progress);
 ADD_DISPATCH_EVENT_DEF(suspend, Suspend);
 ADD_DISPATCH_EVENT_DEF(abort, Abort);
@@ -634,13 +635,18 @@ void HTMLMediaElement::abortEveryPendingOperation(DOMException* exceptionForPlay
 {
     STARFISH_LOG_INFO("HTMLMediaElement::abortEveryPendingOperation()\n");
     if (m_currentOperation) {
-        m_currentOperation->cancelOperation(exceptionForPlayPromise);
+        m_currentOperation->cancelOperation();
         m_currentOperation = nullptr;
     }
 
     while (m_operationQueue.size()) {
-        m_operationQueue.front()->cancelOperation(exceptionForPlayPromise);
+        m_operationQueue.front()->cancelOperation();
         m_operationQueue.pop_front();
+    }
+
+    while (m_playOperationQueue.size()) {
+        ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())->cancelOperation(exceptionForPlayPromise);
+        m_playOperationQueue.pop_front();
     }
 
     if (m_currentPendingOperationHandle != SIZE_MAX) {
@@ -758,7 +764,7 @@ void MediaOperationQueueDataRequestPrepare::processOperationQueue()
 }
 
 
-void MediaOperationQueueDataRequestPrepare::cancelOperation(DOMException* exception)
+void MediaOperationQueueDataRequestPrepare::cancelOperation()
 {
 
 }
@@ -767,25 +773,31 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestPause::processOperationQueue()\n");
     mediaPlayer()->pause();
+    m_mediaElement->processNextOperationQueue();
     // Fire a simple event named timeupdate at the element.
     m_mediaElement->dispatchTimeupdateEventNow();
     // Fire a simple event named pause at the element.
     m_mediaElement->dispatchPauseEventNow();
     // Reject pending play promises with promises and an "AbortError" DOMException.
-    auto iter = m_mediaElement->m_operationQueue.begin();
-    while (iter != m_mediaElement->m_operationQueue.end()) {
-        if ((*iter)->isPlayRequest()) {
-            DOMException* exception = new DOMException(m_mediaElement->document()->window()->scriptBindingInstance(), DOMException::ABORT_ERR, "play request is aborted by pause()");
+    auto iter = m_mediaElement->m_playOperationQueue.begin();
+    while (iter != m_mediaElement->m_playOperationQueue.end()) {
 #ifdef USE_ES6_FEATURE
-            ((MediaOperationQueueDataRequestPlay*)(*iter))->m_promise->reject(exception->scriptValue());
+        DOMException* exception = new DOMException(m_mediaElement->document()->window()->scriptBindingInstance(), DOMException::ABORT_ERR, "play request is aborted by pause()");
+        ((MediaOperationQueueDataRequestPlay*)(*iter))->m_promise->reject(exception->scriptValue());
 #endif
-            m_mediaElement->m_operationQueue.erase(iter++);
-        } else
-            iter++;
+        m_mediaElement->m_playOperationQueue.erase(iter++);
     }
     // Set the official playback position to the current playback position.
     m_mediaElement->m_officialPlaybackPosition = mediaPlayer()->currentTime();
 }
+
+void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
+{
+    STARFISH_LOG_INFO("MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() -> %s\n", m_event->eventType()->utf8Data());
+    m_mediaElement->processNextOperationQueue();
+    m_target->dispatchEvent(m_event);
+}
+
 
 void MediaOperationQueueDataRequestPlay::processOperationQueue()
 {

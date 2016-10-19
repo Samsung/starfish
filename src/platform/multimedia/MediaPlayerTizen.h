@@ -36,13 +36,11 @@ public:
     virtual void play()
     {
         player_start(m_nativePlayer);
-        processNextOperationQueueInContainer();
     }
 
     virtual void pause()
     {
         player_pause(m_nativePlayer);
-        processNextOperationQueueInContainer();
     }
 
     void setLoop(bool loop) { m_isLooping = true; }
@@ -60,6 +58,7 @@ public:
 
     void openPreparingMode();
     void closePreparingMode();
+    void compleatePrepare();
 
     void handlePlayerError(int error);
 
@@ -88,6 +87,7 @@ public:
         return s / 1000.0;
     }
 
+    virtual double duration();
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
 
     bool m_inPrepare;

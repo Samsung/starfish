@@ -38,12 +38,14 @@ class Demuxer;
 struct SourceBufferData : public gc {
     SourceBuffer* m_sourceBuffer;
     bool m_isProcessed;
+    bool m_foundInitSegmentHere;
     const uint8_t* m_data;
     unsigned long m_length;
     std::vector<uint8_t> m_headerBuffer;
     SourceBufferData(SourceBuffer* buf, const uint8_t* data, unsigned long length)
         : m_sourceBuffer(buf)
         , m_isProcessed(false)
+        , m_foundInitSegmentHere(false)
         , m_data(data)
         , m_length(length)
     {
@@ -207,14 +209,16 @@ protected:
     std::vector<uint8_t, gc_allocator<uint8_t>> m_bufferHeader;
     std::vector<StreamInfo*, gc_allocator<StreamInfo*>> m_streamInfo;
     std::vector<MediaPacketGroup*> m_packetGroup;
-    Mutex m_packetGroupMutex;
+    std::vector<std::pair<size_t, size_t>, gc_allocator<std::pair<size_t, size_t>>> m_packetAccessCachePerStream;
+    Mutex* m_packetGroupMutex;
 };
 
 class SourceBufferList : public EventTarget {
 public:
-    SourceBufferList(StarFish* starFish)
+    SourceBufferList(StarFish* starFish, MediaSource* sb)
         : EventTarget()
         , m_starFish(starFish)
+        , m_parentMediaSource(sb)
     {
     }
 
@@ -284,6 +288,7 @@ public:
 protected:
     std::vector<SourceBuffer*, gc_allocator<SourceBuffer*>> m_list;
     StarFish* m_starFish;
+    MediaSource* m_parentMediaSource;
 };
 
 }

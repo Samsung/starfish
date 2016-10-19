@@ -96,7 +96,6 @@ class DemuxerClientSourceBuffer : public DemuxerClient {
 public:
     DemuxerClientSourceBuffer()
     {
-
     }
 
     virtual void onDetectVideoStream(const VideoStreamInfo& info)
@@ -157,7 +156,7 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     , m_isAttachedToParent(false)
     , m_updating(false)
     , m_starFish(starFish)
-    , m_demuxer(Demuxer::createDemuxer(type))
+    , m_demuxer(nullptr)
     , m_buffered(nullptr)
     , m_timestampOffset(0)
     , m_audioTracks(nullptr)
@@ -170,9 +169,9 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     , m_type(type)
     , m_parentMediaSource(nullptr)
     , m_sourceBufferUpdateThread(nullptr)
+    , m_packetGroupMutex(new Mutex())
 {
-    m_demuxer->addClient(new DemuxerClientSourceBuffer());
-
+    abort();
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
         STARFISH_LOG_INFO("SourceBuffer::~SourceBuffer %p\n", obj);
         SourceBuffer* nr = (SourceBuffer*)obj;
@@ -200,9 +199,7 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
             eventName = m_parentMediaSource->starFish()->staticStrings()->m_updatestart.localName();
         else if (!m_updating) {
             if (state == SourceBuffer::Success) {
-                m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t, void* data, void* data2) {
-                    ((MediaSource*)data)->dispatchEvent((Event*)data2);
-                }, this, new Event(m_parentMediaSource->starFish()->staticStrings()->m_update.localName()));
+                m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(this, new Event(m_parentMediaSource->starFish()->staticStrings()->m_update.localName()));
                 eventName = m_parentMediaSource->starFish()->staticStrings()->m_updateend.localName();
             } else if (state == SourceBuffer::Error)
                 eventName = m_parentMediaSource->starFish()->staticStrings()->m_error.localName();
@@ -213,15 +210,20 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
         } else
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
 
-        m_parentMediaSource->starFish()->messageLoop()->addIdler([](size_t, void* data, void* data2) {
-            ((MediaSource*)data)->dispatchEvent((Event*)data2);
-        }, this, new Event(eventName));
+        m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(this, new Event(eventName));
 
         if (flag == false) {
             // propagate update state to mediaSource now.
             m_parentMediaSource->didSourceBufferUpdated(this);
         }
     }
+}
+
+void SourceBuffer::abort()
+{
+    // TODO in updating, stop update process
+    m_demuxer = Demuxer::createDemuxer(m_type);
+    m_demuxer->addClient(new DemuxerClientSourceBuffer());
 }
 
 void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length)
@@ -295,6 +297,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
         if (inputBuffer->m_sourceBuffer->m_state == AppendState::ParsingInitSegment) {
             int64_t before = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
             if (inputBuffer->m_sourceBuffer->m_demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->m_type)) {
+                inputBuffer->m_foundInitSegmentHere = true;
                 int64_t after = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
                 // copy buffer
                 inputBuffer->m_headerBuffer.resize(after - before);
@@ -344,15 +347,17 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
             for (size_t i = 0; i < cl->m_detectedVideoSteam.size(); i ++) {
                 StreamInfo* info = new VideoStreamInfo(cl->m_detectedVideoSteam[i]);
                 inputBuffer->m_sourceBuffer->m_streamInfo.push_back(info);
+                inputBuffer->m_sourceBuffer->m_packetAccessCachePerStream.push_back(std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
             }
 
             for (size_t i = 0; i < cl->m_detectedAudioSteam.size(); i ++) {
                 StreamInfo* info = new AudioStreamInfo(cl->m_detectedAudioSteam[i]);
                 inputBuffer->m_sourceBuffer->m_streamInfo.push_back(info);
+                inputBuffer->m_sourceBuffer->m_packetAccessCachePerStream.push_back(std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
             }
 
             {
-                Locker<Mutex> packetGroupLocker(inputBuffer->m_sourceBuffer->m_packetGroupMutex);
+                Locker<Mutex> packetGroupLocker(*inputBuffer->m_sourceBuffer->m_packetGroupMutex);
                 inputBuffer->m_sourceBuffer->m_packetGroup.insert(inputBuffer->m_sourceBuffer->m_packetGroup.end(),
                     cl->m_packetGroup.begin(), cl->m_packetGroup.end());
             }
@@ -380,10 +385,25 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
 MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind)
 {
-    Locker<Mutex> packetGroupLocker(m_packetGroupMutex);
-    // printf("SourceBuffer::findProperMediaPacket %d %d\n", (int)streamIdx, (int)knownPts);
+    Locker<Mutex> packetGroupLocker(*m_packetGroupMutex);
+    // printf("SourceBuffer::findProperMediaPacket %d %d\n", (int)streamIdx, (int)startPositionInPTSWantToFind);
 
-    // TODO implement this method properly
+    // test cache first
+    {
+        auto cache = m_packetAccessCachePerStream[streamIdx];
+        if (cache.first < m_packetGroup.size()) {
+            MediaPacketGroup* grp = m_packetGroup[cache.first];
+            if (grp->m_groupTimestampStart <= startPositionInPTSWantToFind && startPositionInPTSWantToFind <= grp->m_groupTimestampEnd) {
+                size_t idx = cache.second + 1;
+                if (idx < grp->m_packets.size()) {
+                    m_packetAccessCachePerStream[streamIdx] = std::make_pair(cache.first, idx);
+                    return grp->m_packets[idx];
+                }
+            }
+        }
+    }
+
+    STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket cache miss! streamIdx(%d)\n", (int)streamIdx);
     for (size_t i = 0; i < m_packetGroup.size(); i ++) {
         MediaPacketGroup* grp = m_packetGroup[i];
         if (grp->m_streamIndex == streamIdx) {
@@ -391,12 +411,14 @@ MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t star
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
                     if (v[j]->m_pts >= startPositionInPTSWantToFind) {
+                        m_packetAccessCachePerStream[streamIdx] = std::make_pair(i, j);
                         return v[j];
                     }
                 }
             }
         }
     }
+
     return nullptr;
 }
 
@@ -577,9 +599,7 @@ TimeRanges* SourceBuffer::buffered()
 
 void SourceBufferList::scheduleEvent(String* eventName)
 {
-    m_starFish->messageLoop()->addIdler([](size_t, void* data, void* data2) {
-        ((SourceBufferList*)data)->dispatchEvent((Event*)data2);
-    }, this, new Event(eventName));
+    m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(this, new Event(eventName));
 }
 
 }

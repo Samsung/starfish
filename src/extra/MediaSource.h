@@ -90,7 +90,7 @@ public:
 
     // https://www.w3.org/TR/media-source/
     // 2.4.1 Attaching to a media element
-    bool attach();
+    bool attach(HTMLMediaElement* e);
 
     // https://www.w3.org/TR/media-source/
     // 2.4.2 Detaching from a media element
@@ -153,10 +153,17 @@ public:
         return m_activeAudioStreamIndex;
     }
 
+    HTMLMediaElement* attachedMediaElement()
+    {
+        return m_attachedMediaElement;
+    }
+
 protected:
+    bool anySourceBufferInUpdatingState();
     void didSourceBufferUpdated(SourceBuffer* src);
     ReadyState m_readyState;
     bool m_isActiveBufferComputed;
+    HTMLMediaElement* m_attachedMediaElement;
     SourceBuffer* m_activeVideoSourceBuffer;
     size_t m_activeVideoStreamInSourceBuffer;
     size_t m_activeVideoStreamIndex;
