@@ -19,113 +19,12 @@
 
 #include "dom/EventTarget.h"
 // #include "dom/DocumentFragment.h"
+#include "extra/TimeRange.h"
 
 namespace StarFish {
 
 class TextTrack;
-
-class TimeRange {
-    friend class TimeRanges;
-public:
-    TimeRange(double start = 0, double end = 0)
-        : m_start(start)
-        , m_end(end)
-    { }
-
-    bool operator==(const TimeRange& c) const
-    {
-        return m_start == c.m_start && m_end == c.m_end;
-    }
-
-    bool operator!=(const TimeRange& c) const
-    {
-        return !this->operator==(c);
-    }
-
-    double start()
-    {
-        return m_start;
-    }
-
-    double end()
-    {
-        return m_end;
-    }
-
-    void setStart(double start)
-    {
-        m_start = start;
-    }
-
-    void setEnd(double end)
-    {
-        m_end = end;
-    }
-
-    void set(double start, double end)
-    {
-        setStart(start);
-        setEnd(end);
-    }
-
-    bool isInRange(double pivot)
-    {
-        return (m_start <= pivot && m_end >= pivot);
-    }
-
-private:
-    double m_start;
-    double m_end;
-};
-
-class TimeRanges : public ScriptWrappable {
-public:
-    TimeRanges()
-        : ScriptWrappable(this)
-    { }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::TimeRangesObject;
-    }
-
-    double start(unsigned long idx)
-    {
-        if (idx < m_list.size())
-            return m_list[idx].m_start;
-        return DBL_MAX;
-    }
-
-    double end(unsigned long idx)
-    {
-        if (idx < m_list.size())
-            return m_list[idx].m_end;
-        return DBL_MAX;
-    }
-
-    void push_back(TimeRange item)
-    {
-        m_list.push_back(item);
-    }
-
-    void push_back(double start, double end)
-    {
-        m_list.push_back(TimeRange(start, end));
-    }
-
-    unsigned long length()
-    {
-        return m_list.size();
-    }
-
-private:
-    std::vector<TimeRange, gc_allocator<TimeRange>> m_list;
-};
+class TimeRange;
 
 class TextTrackCue : public EventTarget {
 public:

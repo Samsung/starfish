@@ -24,7 +24,7 @@
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
 #include "MediaSource.h"
-#include "dom/TextTrackCue.h"
+#include "extra/TimeRanges.h"
 
 namespace StarFish {
 
@@ -567,19 +567,32 @@ TimeRanges* SourceBuffer::buffered()
     // 4. For each track buffer managed by this SourceBuffer, run the following steps:
     for (auto i = tracks.begin(); i != tracks.end(); i++) {
         // 4-1. Let track ranges equal the track buffer ranges for the current track buffer.
-        auto trackRanges = &(i->second);
-        STARFISH_ASSERT(trackRanges->size() != 0);
+        std::map<uint64_t, uint64_t>& trackRanges = i->second;
+        STARFISH_ASSERT(trackRanges.size() != 0);
 
         // 4-2. If readyState is "ended", then set the end time on the last range in track ranges to highest end time.
         if (parentMediaSource() && parentMediaSource()->readyState() == MediaSource::Ended) {
-            (--trackRanges->end())->second = highestEndTime;
+            (--trackRanges.end())->second = highestEndTime;
         }
         // 4-3. Let new intersection ranges equal the intersection between the intersection ranges and the track ranges.
         std::vector<std::pair<uint64_t, uint64_t>> newIntersection;
-        for (auto j = intersection.begin(); j != intersection.end(); j++) {
-            for (auto t = trackRanges->begin(); t != trackRanges->end(); t++) {
-                if (t->second >= j->first && t->first <= j->second) {
-                    newIntersection.push_back(std::make_pair(std::max(t->first, j->first), std::min(t->second, j->second)));
+        auto t = trackRanges.begin();
+        auto j = intersection.begin();
+        while (t != trackRanges.end() && j != intersection.end()) {
+            if (t->second < j->first) {
+                t++;
+            } else if (t->first > j->second) {
+                j++;
+            } else {
+                newIntersection.push_back(std::make_pair(std::max(t->first, j->first), std::min(t->second, j->second)));
+                if (t->first >= j->first && t->second <= j->second) {
+                    t++;
+                } else if (t->first <= j->first && t->second >= j->second) {
+                    j++;
+                } else if (t->first < j->first) {
+                    t++;
+                } else {
+                    j++;
                 }
             }
         }

@@ -41,6 +41,7 @@
 #endif
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+#include "extra/TimeRanges.h"
 #include "dom/TextTrack.h"
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"

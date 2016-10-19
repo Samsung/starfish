@@ -26,7 +26,9 @@
 #include "platform/canvas/Canvas.h"
 #include "platform/threading/Thread.h"
 #include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
 #include "extra/Blob.h"
+#include "extra/TimeRanges.h"
 
 #define PLAYER_DEBUG
 #ifdef PLAYER_DEBUG
@@ -345,6 +347,57 @@ void MediaPlayerTizen::drawVideo(Canvas* canvas, const LayoutRect& videoRect, co
 void MediaPlayerTizen::prepareMediaSource()
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+TimeRanges* MediaPlayerTizen::buffered()
+{
+    if (m_activeMediaSource) {
+        // CASE : MediaSource
+        SourceBufferList* bufferList = m_activeMediaSource->activeSourceBuffers();
+        unsigned nbuffer = bufferList->length();
+
+        if (nbuffer == 0)
+            return new TimeRanges();
+
+        if (nbuffer == 1)
+            return bufferList->at(0)->buffered();
+
+        TimeRanges* result = bufferList->at(0)->buffered();
+        for (unsigned i = 1; i < nbuffer; i++) {
+            TimeRanges* buffered = bufferList->at(i)->buffered();
+            unsigned bufferedSize = buffered->length();
+            unsigned resultSize = result->length();
+            TimeRanges* newResult = new TimeRanges();
+
+            unsigned t = 0, j = 0;
+            while (t != bufferedSize && j != resultSize) {
+                if (buffered->end(t) < result->start(j)) {
+                    t++;
+                } else if (buffered->start(t) > result->end(j)) {
+                    j++;
+                } else {
+                    newResult->push_back(std::max(buffered->start(t), result->start(j)), std::min(buffered->end(t), result->end(j)));
+                    if (buffered->start(t) >= result->start(j) && buffered->end(t) <= result->end(j)) {
+                        t++;
+                    } else if (buffered->start(t) <= result->start(j) && buffered->end(t) >= result->end(j)) {
+                        j++;
+                    } else if (buffered->start(t) < result->start(j)) {
+                        t++;
+                    } else {
+                        j++;
+                    }
+                }
+            }
+            result = newResult;
+            // delete prev result?
+        }
+        return result;
+
+    } else {
+        // CASE : load from URL
+        // TODO
+    }
+    return nullptr;
 }
 
 #if !defined(STARFISH_TIZEN_TV)

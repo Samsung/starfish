@@ -93,6 +93,10 @@ public:
         return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
     }
 
+    virtual TimeRanges* buffered()
+    {
+        return nullptr;
+    }
 protected:
     MediaPlayer(HTMLMediaElement* element);
     void updateElementReadyState(HTMLMediaElement::ReadyState state);

@@ -17,6 +17,7 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
 #include "StarFishConfig.h"
+#include "extra/TimeRanges.h"
 #include "dom/HTMLMediaElement.h"
 #include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
@@ -359,7 +360,9 @@ String* HTMLMediaElement::preload()
 
 TimeRanges* HTMLMediaElement::buffered()
 {
-    // TODO
+    if (m_mediaPlayer) {
+        return m_mediaPlayer->buffered();
+    }
     return nullptr;
 }
 
