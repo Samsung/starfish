@@ -221,6 +221,7 @@ public:
                     packet.m_data = dataPtr;
                     packet.m_dataSize = size;
                     packet.m_pts = pts;
+                    packet.m_duration = 0; // TODO
 
                     for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                         m_demuxerClients[j]->onDetectPacket(packet);
