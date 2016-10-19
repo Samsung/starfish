@@ -1956,10 +1956,9 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
                 escargot::ESArrayBufferView* v = firstArg.asESPointer()->asESArrayBufferView();
                 uint8_t* p = (uint8_t*)v->buffer()->data();
                 sourceBuffer->appendBuffer(p, v->bytelength());
-            } else {
-                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Failed to execute 'appendBuffer' on 'SourceBuffer': No function was found that matched the signature provided."))));
             }
 #endif
+            escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Failed to execute 'appendBuffer' on 'SourceBuffer': No function was found that matched the signature provided."))));
             return escargot::ESValue(escargot::ESValue::ESUndefined);
         }, escargot::ESString::create("appendBuffer"), 1, false)
     );

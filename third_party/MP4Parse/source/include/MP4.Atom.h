@@ -45,11 +45,9 @@ namespace MP4
             
         protected:
             
-            Atom * _parent;
             std::string _type;
             
         public:
-            
             virtual ~Atom( void );
             
             std::string getType( void );
