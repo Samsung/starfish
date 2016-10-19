@@ -24,7 +24,6 @@ namespace StarFish {
 
 class SourceBuffer;
 class SourceBufferList;
-class VideoPlayer;
 class MediaSourceClient;
 
 class MediaSource : public EventTarget {
@@ -99,6 +98,10 @@ public:
 
     SourceBufferList* sourceBuffers();
 
+    bool isActiveBufferComputed()
+    {
+        return m_isActiveBufferComputed;
+    }
     SourceBufferList* activeSourceBuffers();
 
     double duration()
@@ -110,15 +113,79 @@ public:
 
     // TODO 2.4.4 SourceBuffer Monitoring
 
+    void addClient(MediaSourceClient* c)
+    {
+        m_clients.push_back(c);
+    }
+
+    void removeClient(MediaSourceClient* c)
+    {
+        m_clients.erase(std::find(m_clients.begin(), m_clients.end(), c));
+    }
+
+    SourceBuffer* activeVideoSourceBuffer()
+    {
+        return m_activeVideoSourceBuffer;
+    }
+
+    size_t activeVideoStreamInSourceBuffer()
+    {
+        return m_activeVideoStreamInSourceBuffer;
+    }
+
+    size_t activeVideoStreamIndex()
+    {
+        return m_activeVideoStreamIndex;
+    }
+
+    SourceBuffer* activeAudioSourceBuffer()
+    {
+        return m_activeAudioSourceBuffer;
+    }
+
+    size_t activeAudioStreamInSourceBuffer()
+    {
+        return m_activeAudioStreamInSourceBuffer;
+    }
+
+    size_t activeAudioStreamIndex()
+    {
+        return m_activeAudioStreamIndex;
+    }
+
 protected:
     void didSourceBufferUpdated(SourceBuffer* src);
     ReadyState m_readyState;
+    bool m_isActiveBufferComputed;
+    SourceBuffer* m_activeVideoSourceBuffer;
+    size_t m_activeVideoStreamInSourceBuffer;
+    size_t m_activeVideoStreamIndex;
+    SourceBuffer* m_activeAudioSourceBuffer;
+    size_t m_activeAudioStreamInSourceBuffer;
+    size_t m_activeAudioStreamIndex;
     StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;
     SourceBufferList* m_activeSourceBuffers;
+    std::vector<MediaSourceClient*, gc_allocator<MediaSourceClient*>> m_clients;
     double m_duration;
-
 };
+
+class MediaSourceClient : public gc {
+public:
+    MediaSourceClient(MediaSource* ms)
+        : m_mediaSource(ms)
+    {
+    }
+
+    virtual void activeSourceComputed()
+    {
+
+    }
+
+protected:
+    MediaSource* m_mediaSource;
+};
+
 
 }
 

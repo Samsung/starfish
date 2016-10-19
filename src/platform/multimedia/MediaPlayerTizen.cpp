@@ -83,11 +83,29 @@ static void printNativePlayerError(int errorCode)
     }
 }
 
+class MediaPlayerTizenMediaSourceClient : public MediaSourceClient {
+public:
+    MediaPlayerTizenMediaSourceClient(MediaSource* ms, MediaPlayerTizen* player)
+        : MediaSourceClient(ms)
+        , m_player(player)
+    {
+
+    }
+
+    virtual void activeSourceComputed()
+    {
+        m_player->prepareMediaSource();
+    }
+
+    MediaPlayerTizen* m_player;
+};
+
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
     , m_alive(true)
     , m_activeMediaSource(nullptr)
+    , m_mseClient(nullptr)
     , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
@@ -161,7 +179,7 @@ void MediaPlayerTizen::initDisplay()
     m_canvasSurface->clear();
 }
 
-void MediaPlayerTizen::setNativeOptions(URL* url)
+void MediaPlayerTizen::setNativePlayerDefaultOptions(URL* url)
 {
     player_display_h displayHandle = GET_DISPLAY(m_canvasSurface->unwrap());
     player_display_type_e displayType = PLAYER_DISPLAY_TYPE_EVAS;
@@ -188,7 +206,7 @@ void MediaPlayerTizen::closePreparingMode()
 
 void MediaPlayerTizen::prepare(URL* url)
 {
-    setNativeOptions(url);
+    setNativePlayerDefaultOptions(url);
     if (url->isBlobURL()) {
         BlobURLStore store;
         if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
@@ -202,6 +220,8 @@ void MediaPlayerTizen::prepare(URL* url)
             StarFish::stringToBlobURLString(url->urlString(), store);
             MediaSource* ms = (MediaSource*)store.m_blob;
             m_activeMediaSource = ms;
+            m_mseClient = new MediaPlayerTizenMediaSourceClient(m_activeMediaSource, this);
+            m_activeMediaSource->addClient(m_mseClient);
             m_activeMediaSource->attach();
             return;
         } else {
@@ -289,6 +309,8 @@ void MediaPlayerTizen::unprepareOperation()
         }
 
         if (m_activeMediaSource) {
+            m_activeMediaSource->removeClient(m_mseClient);
+            m_mseClient = nullptr;
             m_activeMediaSource->detach();
         }
         m_activeMediaSource = nullptr;
@@ -302,6 +324,11 @@ void MediaPlayerTizen::drawVideo(Canvas* canvas, const LayoutRect& videoRect, co
     canvas->setColor(Color(0, 0, 0, 255));
     canvas->drawRect(videoRect);
     canvas->drawImage(m_canvasSurface, Rect(videoRect.x(), videoRect.y(), videoRect.width(), videoRect.height()));
+}
+
+void MediaPlayerTizen::prepareMediaSource()
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
 #if !defined(STARFISH_TIZEN_TV)

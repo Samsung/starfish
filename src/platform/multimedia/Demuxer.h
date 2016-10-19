@@ -40,7 +40,12 @@ public:
     virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& errorCode, uint8_t* buffer) = 0;
 };
 
+
 struct StreamInfo : public gc {
+    enum Type {
+        Video, Audio, Subtitle
+    };
+    Type m_type;
     size_t m_streamIndex;
     const char* m_codecName;
     int m_bitRate;
@@ -48,6 +53,10 @@ struct StreamInfo : public gc {
 };
 
 struct VideoStreamInfo : public StreamInfo {
+    VideoStreamInfo()
+    {
+        m_type = Video;
+    }
     int m_timeBaseNum;
     int m_timeBaseDen;
     int m_width;
@@ -70,6 +79,10 @@ enum AudioSampleFormat {
 };
 
 struct AudioStreamInfo : public StreamInfo {
+    AudioStreamInfo()
+    {
+        m_type = Audio;
+    }
     AudioSampleFormat m_sampleFormat;
     int m_channels;
     int m_sampleRate;

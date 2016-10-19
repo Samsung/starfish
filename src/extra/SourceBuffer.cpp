@@ -132,6 +132,7 @@ public:
         pkt->m_dataSize = packet.m_dataSize;
         pkt->m_data = new uint8_t[packet.m_dataSize];
         memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
+        // printf("pkt data pts %d len %d\n", (int)pkt->m_pts, (int)pkt->m_dataSize);
         group->m_packets.push_back(pkt);
 
         if (pkt->m_pts < group->m_groupTimestampStart) {
@@ -150,7 +151,7 @@ public:
 SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     : EventTarget()
     , m_mode(AppendMode::Segments)
-    , m_state(AppendState::ParsingInitSegment)
+    , m_state(AppendState::WaitingForSegment)
     , m_isAttachedToParent(false)
     , m_updating(false)
     , m_starFish(starFish)
@@ -278,16 +279,21 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
     STARFISH_ASSERT(inputBuffer->m_isProcessed == false);
     STARFISH_ASSERT(m_sourceBufferUpdateThread == nullptr);
 
+    if (m_state == AppendState::WaitingForSegment) {
+        m_state = AppendState::ParsingInitSegment;
+    }
+
     m_sourceBufferUpdateThread = new Thread();
     m_sourceBufferUpdateThread->run(m_starFish->messageLoop(), [](void* data) -> void* {
         SourceBufferData* inputBuffer = (SourceBufferData*)data;
+
+        STARFISH_LOG_INFO("SourceBuffer::bufferAppend start (size %d)\n", (int)inputBuffer->m_length);
 
         DemuxerSourceForSourceBuffer src(inputBuffer, &inputBuffer->m_sourceBuffer->m_bufferUnprocessed);
         if (inputBuffer->m_sourceBuffer->m_state == AppendState::ParsingInitSegment) {
             int64_t before = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
             if (inputBuffer->m_sourceBuffer->m_demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->m_type)) {
                 int64_t after = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
-
                 // copy buffer
                 inputBuffer->m_headerBuffer.resize(after - before);
                 src.onSeek(before, DemuxerSource::SeekWhenceSet);
@@ -296,10 +302,10 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 src.onRead(after - before, s, error, (uint8_t*)inputBuffer->m_headerBuffer.data());
 
                 inputBuffer->m_sourceBuffer->m_state = AppendState::ParsingMediaSegment;
-                STARFISH_LOG_INFO("SourceBuffer %p detect mediaSegment\n", inputBuffer->m_sourceBuffer);
+                STARFISH_LOG_INFO("SourceBuffer %p detect initSegment(%d->%d)\n", inputBuffer->m_sourceBuffer, (int)before, (int)after);
             } else {
                 src.onSeek(before, DemuxerSource::SeekWhenceSet);
-                STARFISH_LOG_INFO("SourceBuffer %p failed detect mediaSegment\n", inputBuffer->m_sourceBuffer);
+                STARFISH_LOG_INFO("SourceBuffer %p failed detect initSegment\n", inputBuffer->m_sourceBuffer);
             }
         }
 
@@ -343,8 +349,11 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 inputBuffer->m_sourceBuffer->m_streamInfo.push_back(info);
             }
 
-            inputBuffer->m_sourceBuffer->m_packetGroup.insert(inputBuffer->m_sourceBuffer->m_packetGroup.end(),
-                cl->m_packetGroup.begin(), cl->m_packetGroup.end());
+            {
+                Locker<Mutex> packetGroupLocker(inputBuffer->m_sourceBuffer->m_packetGroupMutex);
+                inputBuffer->m_sourceBuffer->m_packetGroup.insert(inputBuffer->m_sourceBuffer->m_packetGroup.end(),
+                    cl->m_packetGroup.begin(), cl->m_packetGroup.end());
+            }
 
             STARFISH_LOG_INFO("SourceBuffer update end : %p, findedVideoStream %d, findedAudioStream %d\n"
                 , inputBuffer->m_sourceBuffer, (int)cl->m_detectedVideoSteam.size(), (int)cl->m_detectedAudioSteam.size());
@@ -365,6 +374,31 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
         }, inputBuffer, (void*)src.m_readPos);
         return nullptr;
     }, inputBuffer);
+}
+
+MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t knownPts)
+{
+    Locker<Mutex> packetGroupLocker(m_packetGroupMutex);
+    MediaPacket* result = nullptr;
+
+    // printf("SourceBuffer::findProperMediaPacket %d %d\n", (int)streamIdx, (int)knownPts);
+
+    // TODO implement this method properly
+    for (size_t i = 0; i < m_packetGroup.size(); i ++) {
+        MediaPacketGroup* grp = m_packetGroup[i];
+        if (grp->m_streamIndex == streamIdx) {
+            if (grp->m_groupTimestampStart <= knownPts && knownPts <= grp->m_groupTimestampEnd) {
+                const std::vector<MediaPacket*>& v = grp->m_packets;
+                for (size_t j = 0; j < v.size(); j++) {
+                    if (v[j]->m_pts > knownPts) {
+                        result = v[j];
+                        return result;
+                    }
+                }
+            }
+        }
+    }
+    return result;
 }
 
 void SourceBuffer::setMode(AppendMode mode)

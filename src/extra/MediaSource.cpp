@@ -29,6 +29,13 @@ namespace StarFish {
 MediaSource::MediaSource(StarFish* starFish)
     : EventTarget()
     , m_readyState(Closed)
+    , m_isActiveBufferComputed(false)
+    , m_activeVideoSourceBuffer(nullptr)
+    , m_activeVideoStreamInSourceBuffer(SIZE_MAX)
+    , m_activeVideoStreamIndex(SIZE_MAX)
+    , m_activeAudioSourceBuffer(nullptr)
+    , m_activeAudioStreamInSourceBuffer(SIZE_MAX)
+    , m_activeAudioStreamIndex(SIZE_MAX)
     , m_starFish(starFish)
     , m_duration(std::numeric_limits<double>::quiet_NaN())
 {
@@ -47,6 +54,10 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     // If the readyState attribute is not in the "open" state then throw an InvalidStateError exception and abort these steps.
     if (m_readyState != Open)
         throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "When execute appendSourceBuffer, readyState of MediaSource must be 'open'");
+
+    if (m_isActiveBufferComputed) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::QUOTA_EXCEEDED_ERR, "This MediaSource has reached the limit of SourceBuffer objects it can handle. No additional SourceBuffer objects may be added.");
+    }
 
     STARFISH_ASSERT(isTypeSupported(type));
     STARFISH_ASSERT(m_readyState == Open);
@@ -173,6 +184,13 @@ void MediaSource::detach()
     // Set the readyState attribute to "closed".
     // Queue a task to fire a simple event named sourceclose at the MediaSource.
     setReadyState(Closed);
+
+    m_isActiveBufferComputed = false;
+    m_activeVideoSourceBuffer = nullptr;
+    m_activeVideoStreamIndex = m_activeVideoStreamInSourceBuffer = SIZE_MAX;
+
+    m_activeAudioSourceBuffer = nullptr;
+    m_activeAudioStreamIndex = m_activeAudioStreamInSourceBuffer = SIZE_MAX;
 }
 
 SourceBufferList* MediaSource::sourceBuffers()
@@ -191,7 +209,69 @@ SourceBufferList* MediaSource::activeSourceBuffers()
 
 void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
 {
+    if (m_readyState >= Open) {
+        if (!m_isActiveBufferComputed) {
+            // check every source buffer updating flsg is false
+            bool allFalse = true;
+            for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
+                if (m_sourceBuffers->at(i)->updating()) {
+                    allFalse = false;
+                    break;
+                }
+            }
 
+            if (allFalse) {
+                // check every source buffer has stream info
+                bool allHaveInfo = true;
+                for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
+                    if (m_sourceBuffers->at(i)->state() < SourceBuffer::AppendState::ParsingMediaSegment) {
+                        allHaveInfo = false;
+                        break;
+                    }
+                }
+
+                if (allHaveInfo) {
+                    // find proper stream
+                    // TODO implement this correctly
+                    // currently, we choose the first stream of each media
+
+                    SourceBufferList* activeSourceBuffers = this->activeSourceBuffers();
+                    for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
+                        std::vector<StreamInfo*, gc_allocator<StreamInfo*>>& streamInfo = m_sourceBuffers->at(i)->m_streamInfo;
+                        bool thisBufferAdded = false;
+                        for (size_t j = 0; j < streamInfo.size(); j ++) {
+                            if (streamInfo[i]->m_type == StreamInfo::Video) {
+                                if (m_activeVideoSourceBuffer == nullptr) {
+                                    m_activeVideoSourceBuffer = m_sourceBuffers->at(i);
+                                    m_activeVideoStreamInSourceBuffer = j;
+                                    m_activeVideoStreamIndex = streamInfo[j]->m_streamIndex;
+                                    if (!thisBufferAdded) {
+                                        activeSourceBuffers->addWithoutEvent(m_activeVideoSourceBuffer);
+                                        thisBufferAdded = true;
+                                    }
+                                }
+                            } else if (streamInfo[i]->m_type == StreamInfo::Audio) {
+                                if (m_activeAudioSourceBuffer == nullptr) {
+                                    m_activeAudioSourceBuffer = m_sourceBuffers->at(i);
+                                    m_activeAudioStreamInSourceBuffer = j;
+                                    m_activeAudioStreamIndex = streamInfo[j]->m_streamIndex;
+                                    if (!thisBufferAdded) {
+                                        activeSourceBuffers->addWithoutEvent(m_activeVideoSourceBuffer);
+                                        thisBufferAdded = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    m_isActiveBufferComputed = true;
+
+                    for (size_t i = 0; i < m_clients.size(); i ++) {
+                        m_clients[i]->activeSourceComputed();
+                    }
+                }
+            }
+        }
+    }
 }
 
 }

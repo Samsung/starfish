@@ -25,6 +25,7 @@ namespace StarFish {
 
 class CanvasSurface;
 class MediaSource;
+class MediaPlayerTizenMediaSourceClient;
 
 class MediaPlayerTizen : public MediaPlayer {
 public:
@@ -51,11 +52,9 @@ public:
     }
 
     virtual void prepare(URL* url);
-
     virtual void initDisplay();
-
-    virtual void setNativeOptions(URL* url);
-
+    virtual void setNativePlayerDefaultOptions(URL* url);
+    virtual void prepareMediaSource();
     void pauseOperation();
     void unprepareOperation();
 
@@ -94,6 +93,7 @@ public:
     bool m_inPrepare;
     bool m_alive;
     MediaSource* m_activeMediaSource;
+    MediaPlayerTizenMediaSourceClient* m_mseClient;
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;
     unsigned long m_videoWidth, m_videoHeight;

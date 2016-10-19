@@ -121,14 +121,15 @@ public:
 
                 const long long width = pVideoTrack->GetWidth();
                 const long long height = pVideoTrack->GetHeight();
-                // const double rate = pVideoTrack->GetFrameRate();
+                const double rate = pVideoTrack->GetFrameRate();
 
                 VideoStreamInfo info;
                 info.m_streamIndex = trackNum - 1;
-                // info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
+                // TODO read codec
+                info.m_codecName = "vp9";
                 // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                // info.m_timeBaseNum = m_formatContext->streams[i]->codec->time_base.num;
-                // info.m_timeBaseDen = m_formatContext->streams[i]->codec->time_base.den;
+                info.m_timeBaseNum = rate * 1000;
+                info.m_timeBaseDen = 1000;
                 info.m_width = width;
                 info.m_height = height;
                 for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
@@ -144,7 +145,8 @@ public:
                 const long long seekPreRoll = pAudioTrack->GetSeekPreRoll();
                 AudioStreamInfo info;
                 info.m_streamIndex = trackNum - 1;
-                // info.m_codecName = m_formatContext->streams[i]->codec->codec_name;
+                // TODO read codec
+                info.m_codecName = "vorbis";
                 // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
                 // info.m_sampleFormat = (AudioSampleFormat)m_formatContext->streams[i]->codec->sample_fmt;
                 // info.m_channels = m_formatContext->streams[i]->codec->channels;

@@ -21,6 +21,8 @@
 #include "dom/EventTarget.h"
 #include "platform/multimedia/Demuxer.h"
 #include "platform/threading/Thread.h"
+#include "platform/threading/Mutex.h"
+#include "platform/threading/Locker.h"
 
 namespace StarFish {
 
@@ -71,7 +73,7 @@ public:
     };
 
     enum AppendState {
-        WaitingForSegment, // not used
+        WaitingForSegment,
         ParsingInitSegment,
         ParsingMediaSegment
     };
@@ -105,6 +107,24 @@ public:
     {
         return m_updating;
     }
+
+    AppendState state()
+    {
+        return m_state;
+    }
+
+    const std::vector<StreamInfo*, gc_allocator<StreamInfo*>>& streamInfo()
+    {
+        return m_streamInfo;
+    }
+
+    std::vector<uint8_t, gc_allocator<uint8_t>>& bufferHeader()
+    {
+        return m_bufferHeader;
+    }
+
+    // this method thread-safe
+    MediaPacket* findProperMediaPacket(size_t streamIdx, uint64_t knownPts);
 
     TimeRanges* buffered()
     {
@@ -189,6 +209,7 @@ protected:
     std::vector<uint8_t, gc_allocator<uint8_t>> m_bufferHeader;
     std::vector<StreamInfo*, gc_allocator<StreamInfo*>> m_streamInfo;
     std::vector<MediaPacketGroup*> m_packetGroup;
+    Mutex m_packetGroupMutex;
 };
 
 class SourceBufferList : public EventTarget {
@@ -212,6 +233,11 @@ public:
     unsigned long length() const
     {
         return m_list.size();
+    }
+
+    void addWithoutEvent(SourceBuffer* buffer)
+    {
+        m_list.push_back(buffer);
     }
 
     void add(SourceBuffer* buffer, MediaSource* ms)
