@@ -92,9 +92,21 @@ public:
     size_t m_readPos;
 };
 
+struct StreamProcessInfo {
+    int64_t m_lastFrameDuration = -1;
+    int64_t m_lastDecodeTimestamp = -1;
+    int64_t m_highestEndTimestamp = -1;
+    bool m_needRandomAccess = false;
+};
+
 class DemuxerClientSourceBuffer : public DemuxerClient {
 public:
+
     DemuxerClientSourceBuffer()
+        : m_currentGroupLastTimestamp(-1)
+        , m_timestampOffset(0)
+        , m_appendWindowStart(0)
+        , m_appendWindowEnd(std::numeric_limits<double>::infinity())
     {
     }
 
@@ -108,45 +120,158 @@ public:
         m_detectedAudioSteam.push_back(info);
     }
 
-    virtual void onDetectPacket(const MediaPacket& packet)
+    MediaPacketGroup* findRecentPacketGroup(size_t streamIndex)
     {
-        MediaPacketGroup* group = nullptr;
-        for (size_t i = 0; i < m_packetGroup.size(); i ++) {
-            if (m_packetGroup[i]->m_streamIndex == packet.m_streamIndex) {
-                group = m_packetGroup[i];
-                break;
+        // printf("[DemuxerClinetSourceBuffer::findRecentPacketGroup] idx: %d groupSize: %d\n", (int)streamIndex, (int)m_packetGroup.size());
+        for (int i = m_packetGroup.size() - 1; i >= 0; i--) {
+            if (m_packetGroup[i]->m_streamIndex == streamIndex) {
+                return m_packetGroup[i];
             }
         }
+        MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex);
+        m_packetGroup.push_back(newgroup);
+        return newgroup;
+    }
 
-        if (group == nullptr) {
-            group = new MediaPacketGroup();
-            group->m_groupTimestampStart = std::numeric_limits<uint64_t>::max();
-            group->m_groupTimestampEnd = 0;
-            group->m_streamIndex = packet.m_streamIndex;
-            m_packetGroup.push_back(group);
+    void unsetAllStreamProcessInfo()
+    {
+        for (size_t i = 0; i < m_streamProcessInfo.size(); i++) {
+            m_streamProcessInfo[i].m_lastFrameDuration = -1;
+            m_streamProcessInfo[i].m_lastDecodeTimestamp = -1;
+            m_streamProcessInfo[i].m_highestEndTimestamp = -1;
+            m_streamProcessInfo[i].m_needRandomAccess = true;
         }
+    }
 
-        MediaPacket* pkt = new MediaPacket();
-        pkt->m_pts = packet.m_pts;
-        pkt->m_duration = packet.m_duration;
-        pkt->m_streamIndex = packet.m_streamIndex;
-        pkt->m_dataSize = packet.m_dataSize;
-        pkt->m_data = new uint8_t[packet.m_dataSize];
-        memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
-        // printf("pkt data pts %d len %d\n", (int)pkt->m_pts, (int)pkt->m_dataSize);
-        group->m_packets.push_back(pkt);
+    virtual void onDetectPacket(const MediaPacket& packet)
+    {
+        int streamIndex = packet.m_streamIndex;
+        if ((int)m_streamProcessInfo.size() <= streamIndex)
+            m_streamProcessInfo.resize(streamIndex + 1);
+        uint64_t groupTimestampEnd = 0;
 
-        if (pkt->m_pts < group->m_groupTimestampStart) {
-            group->m_groupTimestampStart = pkt->m_pts;
+        // Step 1 in Coded Frame Processing algorithm
+        // For each coded frame in the media segment run the following steps,
+        while (true) {
+            // 1. Loop Top:
+            // Otherwise:
+            // Let presentation timestamp be a double precision floating point representation
+            // of the coded frame's presentation timestamp in seconds.
+            // Let decode timestamp be a double precision floating point representation
+            // of the coded frame's decode timestamp in seconds.
+            // FIXME? Used pts instead of dts
+            uint64_t presentationTimestamp = packet.m_pts;
+            uint64_t decodeTimestamp = packet.m_pts;
+
+            // 2. Let frame duration be a double precision floating point representation of the coded frame's duration in seconds.
+            uint64_t frameDuration = packet.m_duration;
+
+            // TODO 3. If mode equals "sequence" and group start timestamp is set, then run the following steps:
+
+            // 4. If timestampOffset is not 0, then run the following steps:
+            if (m_timestampOffset != 0) {
+                presentationTimestamp += m_timestampOffset;
+                decodeTimestamp += m_timestampOffset;
+            }
+
+            // 5. Let track buffer equal the track buffer that the coded frame will be added to.
+            StreamProcessInfo& trackbufferInfo = m_streamProcessInfo[streamIndex];
+
+            // 6. If last decode timestamp for track buffer is set
+            //    and decode timestamp is less than last decode timestamp:
+            //    OR
+            //    If last decode timestamp for track buffer is set and the difference
+            //    between decode timestamp and last decode timestamp is greater than 2 times last frame duration:
+            if (trackbufferInfo.m_lastDecodeTimestamp != -1) {
+                int64_t decodedDiff = decodeTimestamp - trackbufferInfo.m_lastDecodeTimestamp;
+                // printf("[%d] diff: %d - %d = %d duration: %d\n", streamIndex, (int)decodeTimestamp, (int)trackbufferInfo.m_lastDecodeTimestamp, (int)decodedDiff, (int)trackbufferInfo.m_lastFrameDuration);
+                if (decodedDiff < 0 || decodedDiff > 2 * trackbufferInfo.m_lastFrameDuration) {
+                    // If mode equals "segments": Set group end timestamp to presentation timestamp.
+                    // TODO If mode equals "sequence": Set group start timestamp equal to the group end timestamp.
+                    groupTimestampEnd = presentationTimestamp;
+
+                    unsetAllStreamProcessInfo();
+                    m_currentGroupLastTimestamp = -1;
+                    continue;
+                }
+            }
+
+            // 7. Let frame end timestamp equal the sum of presentation timestamp and frame duration.
+            uint64_t frameEndTimestamp = presentationTimestamp + frameDuration;
+
+            // 8. If presentation timestamp is less than appendWindowStart, then set the need random access point flag to true, drop the coded frame, and jump to the top of the loop to start processing the next coded frame.
+            // 9. If frame end timestamp is greater than appendWindowEnd, then set the need random access point flag to true, drop the coded frame, and jump to the top of the loop to start processing the next coded frame.
+            if (presentationTimestamp < m_appendWindowStart || presentationTimestamp > m_appendWindowEnd) {
+                trackbufferInfo.m_needRandomAccess = true;
+                return;
+            }
+
+            // 10. If the need random access point flag on track buffer equals true, then run the following steps:
+            if (trackbufferInfo.m_needRandomAccess) {
+                // TODO If the coded frame is not a random access point, then drop the coded frame
+                //      and jump to the top of the loop to start processing the next coded frame.
+                // Set the need random access point flag on track buffer to false.
+                trackbufferInfo.m_needRandomAccess = false;
+            }
+
+            // NOTE: this packet should put to new group
+            MediaPacketGroup* group = nullptr;
+            if (m_currentGroupLastTimestamp == -1) {
+                MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex, decodeTimestamp);
+                m_packetGroup.push_back(newgroup);
+                group = newgroup;
+            } else {
+                group = findRecentPacketGroup((size_t) streamIndex);
+            }
+
+            MediaPacket* pkt = new MediaPacket();
+            pkt->m_pts = presentationTimestamp;
+            pkt->m_duration = frameDuration;
+            pkt->m_streamIndex = streamIndex;
+            pkt->m_dataSize = packet.m_dataSize;
+            pkt->m_data = new uint8_t[packet.m_dataSize];
+            memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
+            // printf("[%d] pkt data pts %d len %d %d\n",streamIndex, (int)pkt->m_pts, (int)pkt->m_dataSize, (int) m_packetGroup.size());
+            group->m_packets.push_back(pkt);
+
+            m_currentGroupLastTimestamp = decodeTimestamp;
+
+            // TODO(?) 11-16. Consider overlapped frames
+
+            // 17-19. Update TrackBufferInfo
+            trackbufferInfo.m_lastDecodeTimestamp = decodeTimestamp;
+            trackbufferInfo.m_lastFrameDuration = frameDuration;
+            if (trackbufferInfo.m_highestEndTimestamp < 0 || frameEndTimestamp > (uint64_t)trackbufferInfo.m_highestEndTimestamp)
+                trackbufferInfo.m_highestEndTimestamp = frameEndTimestamp;
+
+            // 20. If frame end timestamp is greater than group end timestamp,
+            //     then set group end timestamp equal to frame end timestamp.
+            if (frameEndTimestamp > groupTimestampEnd)
+                groupTimestampEnd = frameEndTimestamp;
+            group->m_groupTimestampEnd = groupTimestampEnd;
+            if (presentationTimestamp < group->m_groupTimestampStart)
+                group->m_groupTimestampStart = presentationTimestamp;
+
+            // TODO 21. If generate timestamps flag equals true, then set timestampOffset equal to frame end timestamp.
+            return;
         }
-        if (pkt->m_pts > group->m_groupTimestampEnd) {
-            group->m_groupTimestampEnd = pkt->m_pts;
-        }
+    }
+
+    void setTimestampInfo(double timestampOffset, double appendWindowStart, double appendWindowEnd)
+    {
+        m_timestampOffset = timestampOffset;
+        m_appendWindowStart = appendWindowStart;
+        m_appendWindowEnd = appendWindowEnd;
     }
 
     std::vector<VideoStreamInfo> m_detectedVideoSteam;
     std::vector<AudioStreamInfo> m_detectedAudioSteam;
     std::vector<MediaPacketGroup*> m_packetGroup;
+    std::vector<StreamProcessInfo> m_streamProcessInfo;
+    int64_t m_currentGroupLastTimestamp;
+    double m_timestampOffset;
+    double m_appendWindowStart;
+    double m_appendWindowEnd;
 };
 
 SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
@@ -315,6 +440,11 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
         }
 
         if (inputBuffer->m_sourceBuffer->m_state == AppendState::ParsingMediaSegment) {
+            double timestampOffset = inputBuffer->m_sourceBuffer->timestampOffset();
+            double appendWindowStart = inputBuffer->m_sourceBuffer->appendWindowStart();
+            double appendWindowEnd = inputBuffer->m_sourceBuffer->appendWindowEnd();
+            DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
+            cl->setTimestampInfo(timestampOffset, appendWindowStart, appendWindowEnd);
             inputBuffer->m_sourceBuffer->m_demuxer->findStreamPacket(&src);
         }
 
@@ -374,6 +504,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
             std::vector<VideoStreamInfo>().swap(cl->m_detectedVideoSteam);
             std::vector<AudioStreamInfo>().swap(cl->m_detectedAudioSteam);
             std::vector<MediaPacketGroup*>().swap(cl->m_packetGroup);
+            std::vector<StreamProcessInfo>().swap(cl->m_streamProcessInfo);
 
             inputBuffer->m_sourceBuffer->m_sourceBufferUpdateThread = nullptr;
             inputBuffer->m_isProcessed = true;
@@ -404,9 +535,14 @@ MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t star
     }
 
     STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket cache miss! streamIdx(%d)\n", (int)streamIdx);
+
+    // FIXME: [tmp] no proper packet in all ranges?
+    bool forceFeed = false;
     for (size_t i = 0; i < m_packetGroup.size(); i ++) {
         MediaPacketGroup* grp = m_packetGroup[i];
         if (grp->m_streamIndex == streamIdx) {
+            if (forceFeed)
+                return grp->m_packets[0];
             if (grp->m_groupTimestampStart <= startPositionInPTSWantToFind && startPositionInPTSWantToFind <= grp->m_groupTimestampEnd) {
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
@@ -415,6 +551,7 @@ MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t star
                         return v[j];
                     }
                 }
+                forceFeed = true;
             }
         }
     }

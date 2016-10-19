@@ -57,6 +57,12 @@ struct MediaPacketGroup {
     uint64_t m_groupTimestampStart;
     uint64_t m_groupTimestampEnd;
     std::vector<MediaPacket*> m_packets;
+    MediaPacketGroup(size_t idx, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
+        : m_streamIndex(idx)
+        , m_groupTimestampStart(start)
+        , m_groupTimestampEnd(end)
+    {
+    }
 };
 
 class SourceBuffer : public EventTarget {
