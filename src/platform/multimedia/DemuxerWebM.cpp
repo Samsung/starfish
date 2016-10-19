@@ -175,6 +175,7 @@ public:
             return false;
         }
 
+
         const unsigned long clusterCount = segment->GetCount();
         const mkvparser::Cluster* pCluster = segment->GetFirst();
 
@@ -197,7 +198,7 @@ public:
             while ((pBlockEntry != NULL) && !pBlockEntry->EOS()) {
                 const mkvparser::Block* const pBlock = pBlockEntry->GetBlock();
                 const long long trackNum = pBlock->GetTrackNumber();
-                const unsigned long tn = static_cast<unsigned long>(trackNum);
+                const size_t tn = static_cast<size_t>(trackNum);
 
                 const int frameCount = pBlock->GetFrameCount();
                 const long long time_ns = pBlock->GetTime(pCluster);
@@ -208,6 +209,21 @@ public:
                     const long size = theFrame.len;
                     const long long offset = theFrame.pos;
                     // printf("\t\t\t %15ld,%15llx\n", size, offset);
+
+                    uint64_t pts = pBlock->GetTimeCode(pCluster);
+                    uint8_t* dataPtr = (unsigned char*)malloc((size_t)size);
+                    theFrame.Read(&src, dataPtr);
+
+                    MediaPacket packet;
+                    packet.m_streamIndex = tn;
+                    packet.m_data = dataPtr;
+                    packet.m_dataSize = size;
+                    packet.m_pts = pts;
+
+                    for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                        m_demuxerClients[j]->onDetectPacket(packet);
+                    }
+                    free(dataPtr);
                 }
 
                 status = pCluster->GetNext(pBlockEntry, pBlockEntry);
