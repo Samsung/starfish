@@ -108,6 +108,16 @@ public:
         return DBL_MAX;
     }
 
+    void push_back(TimeRange item)
+    {
+        m_list.push_back(item);
+    }
+
+    void push_back(double start, double end)
+    {
+        m_list.push_back(TimeRange(start, end));
+    }
+
     unsigned long length()
     {
         return m_list.size();

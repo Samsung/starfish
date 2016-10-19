@@ -1802,6 +1802,14 @@ escargot::ESFunctionObject* bindingTimeRanges(ScriptBindingInstance* scriptBindi
         }, escargot::ESString::create("end"), 0, false)
     );
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        TimeRangesFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::TimeRangesObject, TimeRanges);
+        return escargot::ESValue(originalObj->length());
+    }, nullptr);
+
+
     return TimeRangesFunction;
 }
 

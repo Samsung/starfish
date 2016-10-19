@@ -30,6 +30,7 @@ class SourceBuffer;
 class AudioTrackList;
 class VideoTrackList;
 class TextTrackList;
+class TimeRange;
 class TimeRanges;
 class MediaSource;
 class Demuxer;
@@ -126,10 +127,7 @@ public:
     // this method thread-safe
     MediaPacket* findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind);
 
-    TimeRanges* buffered()
-    {
-        return m_buffered;
-    }
+    TimeRanges* buffered();
 
     double timestampOffset()
     {
