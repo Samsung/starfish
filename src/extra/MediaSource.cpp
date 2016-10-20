@@ -313,6 +313,17 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                     }
                 }
             }
+        } else {
+            if (src == m_activeVideoSourceBuffer) {
+                for (size_t i = 0; i < m_clients.size(); i ++) {
+                    m_clients[i]->activeVideoSourceBufferUpdated(src);
+                }
+            }
+            if (src == m_activeAudioSourceBuffer) {
+                for (size_t i = 0; i < m_clients.size(); i ++) {
+                    m_clients[i]->activeAudioSourceBufferUpdated(src);
+                }
+            }
         }
     }
 }

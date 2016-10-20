@@ -333,37 +333,35 @@ public:
                 trun = (MP4::TRUN*)atom;
             } else if (atom->getType() == "MDAT") {
                 MP4::MDAT* mdat = (MP4::MDAT*)atom;
-                STARFISH_ASSERT(trackID != SIZE_MAX);
-                STARFISH_ASSERT(dts != SIZE_MAX);
-                STARFISH_ASSERT(trun != nullptr);
+                if (trackID != SIZE_MAX && dts != SIZE_MAX && trun != nullptr) {
+                    MediaPacket packet;
+                    packet.m_streamIndex = trackID;
+                    size_t scale = m_defaultTimescale[trackID];
+                    uint8_t* dataPtr = mdat->data;
+                    uint64_t pts = dts * 1000 / scale;
+                    STARFISH_ASSERT(trun->has_sample_size);
+                    for (size_t i = 0; i < trun->samples.size(); i ++) {
+                        packet.m_data = dataPtr;
+                        packet.m_dataSize = trun->samples[i].size;
+                        packet.m_pts = pts;
 
-                MediaPacket packet;
-                packet.m_streamIndex = trackID;
-                size_t scale = m_defaultTimescale[trackID];
-                uint8_t* dataPtr = mdat->data;
-                uint64_t pts = dts * 1000 / scale;
-                STARFISH_ASSERT(trun->has_sample_size);
-                for (size_t i = 0; i < trun->samples.size(); i ++) {
-                    packet.m_data = dataPtr;
-                    packet.m_dataSize = trun->samples[i].size;
-                    packet.m_pts = pts;
+                        if (trun->has_sample_duration) {
+                            packet.m_duration = trun->samples[i].duration * 1000.0 / (double)scale;
+                        } else if (trun->has_sample_composition_time_offset) {
+                            packet.m_duration = trun->samples[i].composition_time_offset * 1000.0 / (double)scale;
+                        } else {
+                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        }
+                        dataPtr += trun->samples[i].size;
 
-                    if (trun->has_sample_duration) {
-                        packet.m_duration = trun->samples[i].duration * 1000.0 / (double)scale;
-                    } else if (trun->has_sample_composition_time_offset) {
-                        packet.m_duration = trun->samples[i].composition_time_offset * 1000.0 / (double)scale;
-                    } else {
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        STARFISH_ASSERT(dataPtr <= (mdat->data + mdat->size));
+                        // STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
+                        for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                            m_demuxerClients[j]->onDetectPacket(packet);
+                        }
+
+                        pts += packet.m_duration;
                     }
-                    dataPtr += trun->samples[i].size;
-
-                    STARFISH_ASSERT(dataPtr <= (mdat->data + mdat->size));
-                    // STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
-                    for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                        m_demuxerClients[j]->onDetectPacket(packet);
-                    }
-
-                    pts += packet.m_duration;
                 }
 
                 trackID = SIZE_MAX;

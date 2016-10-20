@@ -29,6 +29,7 @@ class MediaPlayerTizenMediaSourceClient;
 
 class MediaPlayerTizen : public MediaPlayer {
 public:
+    friend class MediaPlayerTizenMediaSourceClient;
     MediaPlayerTizen(HTMLMediaElement* element);
 
     virtual void close();
@@ -53,6 +54,8 @@ public:
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(URL* url);
     virtual void prepareMediaSource();
+    virtual void fillVideoBuffer();
+    virtual void fillAudioBuffer();
     void pauseOperation();
     void unprepareOperation();
 
@@ -93,8 +96,13 @@ public:
 
     bool m_inPrepare;
     bool m_alive;
+    bool m_isVideoBufferUnderrunState;
+    bool m_isAudioBufferUnderrunState;
     MediaSource* m_activeMediaSource;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
+    Mutex* m_videoBufferMutex;
+    Mutex* m_audioBufferMutex;
+    void (*m_preparedCallback)(void*);
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;
     unsigned long m_videoWidth, m_videoHeight;
