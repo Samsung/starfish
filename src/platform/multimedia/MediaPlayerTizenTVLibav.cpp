@@ -182,7 +182,6 @@ void MediaPlayerTizenTV::prepareMediaSource()
         STARFISH_LOG_INFO("videoPlayerBufferNeedVideoDataCB called\n");
         MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
         self->fillVideoBuffer();
-        // STARFISH_LOG_INFO("videoPlayerBufferNeedVideoDataCB called end\n");
     }, this);
     player_set_buffer_need_audio_data_cb(m_nativePlayer, [](unsigned int size, void *user_data)
     {

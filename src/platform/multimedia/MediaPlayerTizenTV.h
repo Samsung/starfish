@@ -42,9 +42,15 @@ public:
     virtual void setNativePlayerDefaultOptions(URL* url);
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
     virtual double currentTime();
-    virtual void fillVideoBuffer();
-    virtual void fillAudioBuffer();
+    virtual void fillVideoBuffer(bool useLock = true);
+    virtual void fillAudioBuffer(bool useLock = true);
     virtual void prepareMediaSource();
+    virtual void mediaEndOperation()
+    {
+        m_lastAudioPts = m_lastVideoPts = 0;
+        player_set_position(m_nativePlayer, 0, 0, 0);
+        // player_set_play_position(m_nativePlayer, 0, 0, 0);
+    }
 
     uint64_t m_lastVideoPts;
     uint64_t m_lastAudioPts;

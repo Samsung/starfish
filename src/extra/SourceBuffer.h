@@ -132,8 +132,9 @@ public:
         return m_bufferHeader;
     }
 
-    // this method thread-safe
+    // these methods are thread-safe
     MediaPacket* findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind);
+    uint64_t lastBufferedTimestamp(size_t streamIdx);
 
     TimeRanges* buffered();
 

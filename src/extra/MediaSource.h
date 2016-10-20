@@ -109,6 +109,11 @@ public:
         return m_duration;
     }
 
+    uint64_t shortestMediaDuration()
+    {
+        return m_shortestMediaDuration;
+    }
+
     void setDuration(double d);
 
     // TODO 2.4.4 SourceBuffer Monitoring
@@ -175,6 +180,7 @@ protected:
     SourceBufferList* m_activeSourceBuffers;
     std::vector<MediaSourceClient*, gc_allocator<MediaSourceClient*>> m_clients;
     double m_duration;
+    uint64_t m_shortestMediaDuration;
 };
 
 class MediaSourceClient : public gc {
