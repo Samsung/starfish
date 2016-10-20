@@ -30,6 +30,9 @@ class NetworkWorkerHelper;
 
 typedef std::vector<char> NetworkRequestResponse;
 typedef std::string NetworkRequestResponseHeader;
+// <index, length>
+typedef std::pair<unsigned, unsigned> SubstringRange;
+typedef std::unordered_map<std::string, std::string> KeyValuePairs;
 
 class NetworkRequestClient : public gc {
 public:
@@ -243,6 +246,22 @@ protected:
     void removeIdlerHandle(size_t handle)
     {
         m_requstedIdlers.erase(std::find(m_requstedIdlers.begin(), m_requstedIdlers.end(), handle));
+    }
+
+    KeyValuePairs m_parameters;
+    std::string parameterValueForName(const std::string& name) const
+    {
+        return m_parameters.find(name)->second;
+    }
+
+    size_t parameterCount() const
+    {
+        return m_parameters.size();
+    }
+
+    void setContentTypeParameter(const std::string contentType, const SubstringRange& key, const SubstringRange& value)
+    {
+        m_parameters[contentType.substr(key.first, key.second)] = contentType.substr(value.first, value.second);
     }
 
     volatile size_t m_pendingOnHeaderReceivedEventIdlerHandle;
