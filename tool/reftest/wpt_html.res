@@ -1,3 +1,4 @@
+test/reftest/web-platform-tests/html/browsers/the-window-object/Document-defaultView.html
 test/reftest/web-platform-tests/html/browsers/the-window-object/window-aliases.html
 test/reftest/web-platform-tests/html/browsers/the-window-object/window-indexed-properties.html
 test/reftest/web-platform-tests/html/browsers/the-window-object/window-indexed-properties-strict.html

@@ -2737,6 +2737,19 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         return escargot::ESValue();
     });
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("defaultView"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            Document* document = nd->asDocument();
+            Window* window = document->window();
+            return window->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
+
     return DocumentFunction;
 }
 
