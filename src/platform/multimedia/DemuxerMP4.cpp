@@ -322,9 +322,10 @@ public:
         size_t trackID = SIZE_MAX;
         uint64_t dts = SIZE_MAX;
         MP4::TRUN* trun = nullptr;
+        MP4::TFHD* tfhd = nullptr;
         pFile->traverse([&](MP4::Atom* atom, MP4::ContainerAtom* container) {
             if (atom->getType() == "TFHD") {
-                MP4::TFHD* tfhd = (MP4::TFHD*)atom;
+                tfhd = (MP4::TFHD*)atom;
                 trackID = tfhd->track_id - 1;
             } else if (atom->getType() == "TFDT") {
                 MP4::TFDT* tfdt = (MP4::TFDT*)atom;
@@ -333,22 +334,27 @@ public:
                 trun = (MP4::TRUN*)atom;
             } else if (atom->getType() == "MDAT") {
                 MP4::MDAT* mdat = (MP4::MDAT*)atom;
-                if (trackID != SIZE_MAX && dts != SIZE_MAX && trun != nullptr) {
+                if (trackID != SIZE_MAX && dts != SIZE_MAX && trun != nullptr && tfhd != nullptr) {
                     MediaPacket packet;
                     packet.m_streamIndex = trackID;
                     size_t scale = m_defaultTimescale[trackID];
                     uint8_t* dataPtr = mdat->data;
                     uint64_t pts = dts * 1000 / scale;
-                    STARFISH_ASSERT(trun->has_sample_size);
+                    STARFISH_RELEASE_ASSERT(trun->has_sample_size || tfhd->has_default_sample_size);
                     for (size_t i = 0; i < trun->samples.size(); i ++) {
                         packet.m_data = dataPtr;
-                        packet.m_dataSize = trun->samples[i].size;
+                        if (trun->has_sample_size)
+                            packet.m_dataSize = trun->samples[i].size;
+                        else
+                            packet.m_dataSize = tfhd->default_sample_size;
                         packet.m_pts = pts;
 
                         if (trun->has_sample_duration) {
                             packet.m_duration = trun->samples[i].duration * 1000.0 / (double)scale;
                         } else if (trun->has_sample_composition_time_offset) {
                             packet.m_duration = trun->samples[i].composition_time_offset * 1000.0 / (double)scale;
+                        } else if (tfhd->has_default_sample_duration) {
+                            packet.m_duration = tfhd->default_sample_duration * 1000.0 / (double)scale;
                         } else {
                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                         }
@@ -367,6 +373,7 @@ public:
                 trackID = SIZE_MAX;
                 dts = SIZE_MAX;
                 trun = nullptr;
+                tfhd = nullptr;
             }
         });
 

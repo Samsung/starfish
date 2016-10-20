@@ -53,8 +53,11 @@ namespace MP4
             std::string description( void );
             void processData( MP4::BinaryStream * stream, size_t length );
 
+            bool has_default_sample_duration;
+            bool has_default_sample_size;
             uint32_t track_id;
             uint32_t default_sample_duration;
+            uint32_t default_sample_size;
     };
 }
 

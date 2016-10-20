@@ -305,6 +305,10 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                         }
                     }
 
+                    if (newDuration == 0) {
+                        newDuration = std::numeric_limits<double>::infinity();
+                    }
+
                     setDuration(newDuration);
                     m_isActiveBufferComputed = true;
 
