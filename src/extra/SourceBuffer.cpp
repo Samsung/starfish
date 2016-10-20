@@ -565,6 +565,21 @@ MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t star
     return nullptr;
 }
 
+uint64_t SourceBuffer::lastBufferedTimestamp(size_t streamIdx)
+{
+    Locker<Mutex> packetGroupLocker(*m_packetGroupMutex);
+    uint64_t timestamp = 0;
+    for (size_t i = 0; i < m_packetGroup.size(); i ++) {
+        MediaPacketGroup* grp = m_packetGroup[i];
+        if (grp->m_streamIndex == streamIdx) {
+            if (timestamp < grp->m_groupTimestampEnd) {
+                timestamp = grp->m_groupTimestampEnd;
+            }
+        }
+    }
+    return timestamp;
+}
+
 void SourceBuffer::setMode(AppendMode mode)
 {
     // If this object has been removed from the sourceBuffers attribute of the parent media source, then throw an InvalidStateError exception and abort these steps.

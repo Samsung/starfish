@@ -40,6 +40,7 @@ MediaSource::MediaSource(StarFish* starFish)
     , m_activeAudioStreamIndex(SIZE_MAX)
     , m_starFish(starFish)
     , m_duration(std::numeric_limits<double>::quiet_NaN())
+    , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
 {
 }
 
@@ -96,7 +97,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
 
 void MediaSource::removeSourceBuffer(SourceBuffer* buffer)
 {
-    // TODO
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
 void MediaSource::endOfStream()
@@ -116,26 +117,50 @@ void MediaSource::endOfStream(EndOfStreamError error)
         throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "When execute endOfStream, updating state of child SourceBuffer must be false");
     }
     // Run the end of stream algorithm with the error parameter set to error.
+    if (error == None) {
+        // Run the duration change algorithm with new duration set to the largest track buffer ranges end time across all the track buffers across all SourceBuffer objects in sourceBuffers.
+        uint64_t lastTimeStamp = 0;
+        if (activeVideoSourceBuffer()) {
+            lastTimeStamp = activeVideoSourceBuffer()->lastBufferedTimestamp(activeVideoStreamIndex());
+        }
+        if (activeAudioSourceBuffer()) {
+            uint64_t temp = activeAudioSourceBuffer()->lastBufferedTimestamp(activeAudioStreamIndex());
+            if (temp > lastTimeStamp) {
+                lastTimeStamp = temp;
+            }
+        }
+        setDuration(lastTimeStamp / 1000.0);
+    } else if (error == Network) {
+        // If the HTMLMediaElement.readyState attribute equals HAVE_NOTHING
+        if (attachedMediaElement()->readyState() == HTMLMediaElement::HAVE_NOTHING) {
+            // Run the "If the media data cannot be fetched at all, due to network errors, causing the user agent to give up trying to fetch the resource" steps of the resource fetch algorithm's media data processing steps list.
+            attachedMediaElement()->giveupFetchingResource(false);
+        } else {
+            // If the HTMLMediaElement.readyState attribute is greater than HAVE_NOTHING
+            // Run the "If the connection is interrupted after some media data has been received, causing the user agent to give up trying to fetch the resource" steps of the resource fetch algorithm's media data processing steps list.
+            // TODO add error
+            attachedMediaElement()->giveupFetchingResource();
+        }
+    } else if (error == Decode) {
+        // If the HTMLMediaElement.readyState attribute equals HAVE_NOTHING
+        if (attachedMediaElement()->readyState() == HTMLMediaElement::HAVE_NOTHING) {
+            // Run the "If the media data can be fetched but is found by inspection to be in an unsupported format, or can otherwise not be rendered at all" steps of the resource fetch algorithm's media data processing steps list.
+            attachedMediaElement()->giveupFetchingResource(false);
+        } else {
+            // If the HTMLMediaElement.readyState attribute is greater than HAVE_NOTHING
+            // Run the media data is corrupted steps of the resource fetch algorithm's media data processing steps list.
+            // TODO add error
+            attachedMediaElement()->giveupFetchingResource();
+        }
+    }
 
     // Change the readyState attribute value to "ended".
     // Queue a task to fire a simple event named sourceended at the MediaSource.
     setReadyState(Ended);
-
-    if (error == None) {
-        // Run the duration change algorithm with new duration set to the largest track buffer ranges end time across all the track buffers across all SourceBuffer objects in sourceBuffers.
-
-    } else if (error == Network) {
-
-    } else if (error == Decode) {
-
-    }
 }
 
 void MediaSource::setDuration(double d)
 {
-    if (m_duration == d) {
-        return;
-    }
     // If the value being set is negative or NaN then throw a TypeError exception and abort these steps.
     if (d < 0 || std::isnan(d)) {
         throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::TYPE_ERR, "duration must be postive and not NaN.");
@@ -151,10 +176,34 @@ void MediaSource::setDuration(double d)
         throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "when updating duration of MediaSource, every SourceBuffer must has non-updating state");
     }
 
-    if (d < m_duration) {
-        // TODO remove packets
+    // 2.4.6 Duration change
+    // If the current value of duration is equal to new duration, then return.
+    if (m_duration == d) {
+        return;
     }
+
+    // If new duration is less than the highest presentation timestamp of any buffered coded frames for all SourceBuffer objects in sourceBuffers, then throw an InvalidStateError exception and abort these steps.
+    uint64_t lastTimeStamp = 0;
+    uint64_t shorest = 0;
+    if (activeVideoSourceBuffer()) {
+        shorest = lastTimeStamp = activeVideoSourceBuffer()->lastBufferedTimestamp(activeVideoStreamIndex());
+    }
+    if (activeAudioSourceBuffer()) {
+        uint64_t temp = activeAudioSourceBuffer()->lastBufferedTimestamp(activeAudioStreamIndex());
+        if (temp > lastTimeStamp) {
+            lastTimeStamp = temp;
+        }
+        if (temp < shorest) {
+            shorest = temp;
+        }
+    }
+    if (d < (lastTimeStamp / 1000.0)) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "when updating duration of MediaSource, new duration value should be larger than the lagest value of current buffer stream.");
+    }
+
+    STARFISH_LOG_INFO("MediaSource got new duration -> %lf\n", d);
     m_duration = d;
+    m_shortestMediaDuration = shorest;
     m_attachedMediaElement->dispatchDurationchangeEvent();
 
 }
@@ -196,6 +245,7 @@ void MediaSource::detach()
 {
     // Update duration to NaN.
     m_duration = std::numeric_limits<double>::quiet_NaN(); // update duration directly for avoiding exception
+    m_shortestMediaDuration = std::numeric_limits<uint64_t>::max();
 
     // Remove all the SourceBuffer objects from activeSourceBuffers.
     // Queue a task to fire a simple event named removesourcebuffer at activeSourceBuffers.

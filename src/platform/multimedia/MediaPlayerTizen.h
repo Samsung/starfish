@@ -54,14 +54,16 @@ public:
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(URL* url);
     virtual void prepareMediaSource();
-    virtual void fillVideoBuffer();
-    virtual void fillAudioBuffer();
+    virtual void fillVideoBuffer(bool useLock = true);
+    virtual void fillAudioBuffer(bool useLock = true);
+    virtual void mediaEndOperation() { }
     void pauseOperation();
     void unprepareOperation();
 
     void openPreparingMode();
     void closePreparingMode();
     void compleatePrepare();
+    void endOfStream();
 
     void handlePlayerError(int error);
 
