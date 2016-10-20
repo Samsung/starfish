@@ -536,13 +536,11 @@ MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t star
 
     STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket cache miss! streamIdx(%d)\n", (int)streamIdx);
 
-    // FIXME: [tmp] no proper packet in all ranges?
-    bool forceFeed = false;
+    std::pair<size_t, uint64_t> nearestPacketGroupInfo = std::make_pair(SIZE_MAX, std::numeric_limits<uint64_t>::max());
+
     for (size_t i = 0; i < m_packetGroup.size(); i ++) {
         MediaPacketGroup* grp = m_packetGroup[i];
         if (grp->m_streamIndex == streamIdx) {
-            if (forceFeed)
-                return grp->m_packets[0];
             if (grp->m_groupTimestampStart <= startPositionInPTSWantToFind && startPositionInPTSWantToFind <= grp->m_groupTimestampEnd) {
                 const std::vector<MediaPacket*>& v = grp->m_packets;
                 for (size_t j = 0; j < v.size(); j++) {
@@ -551,9 +549,17 @@ MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t star
                         return v[j];
                     }
                 }
-                forceFeed = true;
+            } else if (grp->m_groupTimestampStart > startPositionInPTSWantToFind) {
+                if (grp->m_groupTimestampStart < nearestPacketGroupInfo.second) {
+                    nearestPacketGroupInfo = std::make_pair(i, grp->m_groupTimestampStart);
+                }
             }
         }
+    }
+
+    if (nearestPacketGroupInfo.first != SIZE_MAX) {
+        m_packetAccessCachePerStream[streamIdx] = std::make_pair(nearestPacketGroupInfo.first, 0);
+        return m_packetGroup[nearestPacketGroupInfo.first]->m_packets[0];
     }
 
     return nullptr;
