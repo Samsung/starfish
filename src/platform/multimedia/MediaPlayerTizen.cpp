@@ -99,6 +99,36 @@ public:
         m_player->prepareMediaSource();
     }
 
+    virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
+    {
+        if (m_player->m_activeMediaSource->activeVideoSourceBuffer() == s) {
+            bool state = false;
+            {
+                Locker<Mutex> locker(*m_player->m_videoBufferMutex);
+                state = m_player->m_isVideoBufferUnderrunState;
+            }
+            // FIXME this code can be occur sync problem with buffer fill thread
+            if (state) {
+                m_player->fillVideoBuffer();
+            }
+        }
+    }
+
+    virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
+    {
+        if (m_player->m_activeMediaSource->activeAudioSourceBuffer() == s) {
+            bool state = false;
+            {
+                Locker<Mutex> locker(*m_player->m_audioBufferMutex);
+                state = m_player->m_isAudioBufferUnderrunState;
+            }
+            // FIXME this code can be occur sync problem with buffer fill thread
+            if (state) {
+                m_player->fillAudioBuffer();
+            }
+        }
+    }
+
     MediaPlayerTizen* m_player;
 };
 
@@ -106,33 +136,16 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
     , m_alive(true)
+    , m_isVideoBufferUnderrunState(false)
+    , m_isAudioBufferUnderrunState(false)
     , m_activeMediaSource(nullptr)
     , m_mseClient(nullptr)
+    , m_videoBufferMutex(new Mutex())
+    , m_audioBufferMutex(new Mutex())
+    , m_preparedCallback(nullptr)
     , m_canvasSurface(nullptr)
 {
     player_create(&m_nativePlayer);
-    player_set_volume(m_nativePlayer, 1, 1);
-    player_set_mute(m_nativePlayer, false);
-    player_set_error_cb(m_nativePlayer, [](int errorCode, void* data) {
-        PLAYER_LOGI("player_error_cb");
-        MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-        player->handlePlayerError(errorCode);
-    }, this);
-    player_set_completed_cb(m_nativePlayer, [](void* data) {
-        PLAYER_LOGI("player_completed_cb");
-        MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-        player->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-            MediaPlayerTizen* player = (MediaPlayerTizen*)data;
-            player->m_starFish->removePointerFromRootSet(player);
-            player_stop(player->m_nativePlayer);
-            player->m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
-            if (player->m_container) {
-                player->m_container->dispatchPauseEventNow();
-                player->m_container->dispatchEndedEventNow();
-            }
-        }, data);
-    }, this);
-
     initDisplay();
 
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
@@ -198,6 +211,28 @@ void MediaPlayerTizen::setNativePlayerDefaultOptions(URL* url)
     player_display_type_e displayType = PLAYER_DISPLAY_TYPE_EVAS;
     player_display_mode_e displayMode = PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER;
 
+    player_set_volume(m_nativePlayer, 1, 1);
+    player_set_mute(m_nativePlayer, false);
+    player_set_error_cb(m_nativePlayer, [](int errorCode, void* data) {
+        PLAYER_LOGI("player_error_cb");
+        MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+        player->handlePlayerError(errorCode);
+    }, this);
+    player_set_completed_cb(m_nativePlayer, [](void* data) {
+        PLAYER_LOGI("player_completed_cb");
+        MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+        player->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+            player->m_starFish->removePointerFromRootSet(player);
+            player_stop(player->m_nativePlayer);
+            player->m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
+            if (player->m_container) {
+                player->m_container->dispatchPauseEventNow();
+                player->m_container->dispatchEndedEventNow();
+            }
+        }, data);
+    }, this);
+
     player_set_display(m_nativePlayer, displayType, displayHandle);
     player_set_display_mode(m_nativePlayer, displayMode);
 }
@@ -229,6 +264,8 @@ void MediaPlayerTizen::prepare(URL* url)
         if (m_starFish->isValidBlobURL(store)) {
             player_set_memory_buffer(m_nativePlayer, ((Blob *)store.m_blob)->data(), ((Blob *)store.m_blob)->size());
         } else if (m_starFish->isValidMediaSourceBlobURL(store)) {
+            openPreparingMode();
+
             BlobURLStore store;
             StarFish::stringToBlobURLString(url->urlString(), store);
             MediaSource* ms = (MediaSource*)store.m_blob;
@@ -246,11 +283,13 @@ void MediaPlayerTizen::prepare(URL* url)
     }
 
     openPreparingMode();
-    int nativeResult = player_prepare_async(m_nativePlayer, [](void *user_data) {
+    m_preparedCallback = [](void *user_data)
+    {
         PLAYER_LOGI("player_prepare_async_cb");
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
         self->compleatePrepare();
-    }, this);
+    };
+    int nativeResult = player_prepare_async(m_nativePlayer, m_preparedCallback, this);
 
     if (nativeResult != PLAYER_ERROR_NONE) {
         PLAYER_LOGE("player_prepare_async return error !!!");
@@ -349,6 +388,16 @@ void MediaPlayerTizen::prepareMediaSource()
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
+void MediaPlayerTizen::fillVideoBuffer()
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
+void MediaPlayerTizen::fillAudioBuffer()
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
 TimeRanges* MediaPlayerTizen::buffered()
 {
     if (m_activeMediaSource) {
@@ -396,6 +445,7 @@ TimeRanges* MediaPlayerTizen::buffered()
     } else {
         // CASE : load from URL
         // TODO
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     return nullptr;
 }

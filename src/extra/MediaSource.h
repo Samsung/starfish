@@ -189,6 +189,16 @@ public:
 
     }
 
+    virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
+    {
+
+    }
+
+    virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
+    {
+
+    }
+
 protected:
     MediaSource* m_mediaSource;
 };
