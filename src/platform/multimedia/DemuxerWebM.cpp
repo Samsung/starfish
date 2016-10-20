@@ -163,6 +163,11 @@ public:
 
         m_isStreamFinded = true;
         m_headerSegment = pSegment.release();
+
+        if (source->onSeek(m_headerSegment->getPos(), DemuxerSource::SeekWhence::SeekWhenceSet) != pos) {
+            // return false;
+        }
+
         return true;
     }
 
@@ -171,6 +176,9 @@ public:
         STARFISH_ASSERT(m_isStreamFinded);
         MkvReaderAdapter src(source);
         mkvparser::Segment* segment = mkvparser::Segment::CreateInstance(&src, m_headerSegment);
+
+        segment->setPos(source->onSeek(0, DemuxerSource::SeekWhenceCurrent));
+
         int ret = segment->LoadCluster();
         if (ret < 0) {
             // printf("\n Segment::LoadCluster() failed.");
@@ -221,7 +229,8 @@ public:
                     packet.m_data = dataPtr;
                     packet.m_dataSize = size;
                     packet.m_pts = pts;
-                    packet.m_duration = 0; // TODO
+                    // TODO : find duration.
+                    packet.m_duration = 33; // temp soluation
 
                     for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                         m_demuxerClients[j]->onDetectPacket(packet);
@@ -237,7 +246,10 @@ public:
                     return false;
                 }
             }
-
+            ret = segment->LoadCluster();
+            // if (ret < 0) {
+            //     return false;
+            // }
             pCluster = segment->GetNext(pCluster);
         }
 

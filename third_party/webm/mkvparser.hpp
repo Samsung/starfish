@@ -993,6 +993,14 @@ class Segment {
   long ParseCues(long long cues_off,  // offset relative to start of segment
                  long long& parse_pos, long& parse_len);
 
+  void setPos(long long pos){
+    m_pos = pos;
+  }
+
+  long long getPos(){
+    return m_pos;
+  }
+
  private:
   long long m_pos;  // absolute file posn; what has been consumed so far
   Cluster* m_pUnknownSize;
