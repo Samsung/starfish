@@ -34,6 +34,48 @@
 
 namespace StarFish {
 
+void MediaPlayerTizenTV::printNativePlayerError(int errorCode)
+{
+    switch (errorCode) {
+#define GEN_ERROR_PRINTS(errorenum) \
+    case errorenum: \
+        STARFISH_LOG_ERROR("%s\n", #errorenum); \
+        return;
+        GEN_ERROR_PRINTS(PLAYER_ERROR_OUT_OF_MEMORY)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_PARAMETER)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NO_SUCH_FILE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_OPERATION)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_FILE_NO_SPACE_ON_DEVICE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_FEATURE_NOT_SUPPORTED_ON_DEVICE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SEEK_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_STATE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NOT_SUPPORTED_FILE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_INVALID_URI)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SOUND_POLICY)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_CONNECTION_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_VIDEO_CAPTURE_FAILED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_EXPIRED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_NO_LICENSE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_FUTURE_USE)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_NOT_PERMITTED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_RESOURCE_LIMIT)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_PERMISSION_DENIED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_STREAMING_PLAYER)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_AUDIO_CODEC_NOT_SUPPORTED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_VIDEO_CODEC_NOT_SUPPORTED)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NO_AUTH)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_GENEREIC)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_DRM_INFO)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SYNC_PLAY_NETWORK_EXCEPTION)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_SYNC_PLAY_SERVER_DOWN)
+        GEN_ERROR_PRINTS(PLAYER_ERROR_NOT_SUPPORTED_FORMAT)
+#undef GEN_ERROR_PRINTS
+    default:
+        STARFISH_LOG_ERROR("Unknown error\n");
+        return;
+    }
+}
+
 
 void MediaPlayerTizenTV::setNativePlayerDefaultOptions(URL* url)
 {
@@ -81,8 +123,8 @@ void MediaPlayerTizenTV::seek(double time)
     }
     // FIXME status: player_set_position_cb is NOT called and playing is stop. why?
     int ret = player_set_position(m_nativePlayer, time, [](void* data) {
-         STARFISH_LOG_INFO("player_set_position_cb\n");
-         MediaPlayerTizenTV* player = (MediaPlayerTizenTV*)data;
+        STARFISH_LOG_INFO("player_set_position_cb\n");
+        MediaPlayerTizenTV* player = (MediaPlayerTizenTV*)data;
     }, this);
     if (ret != PLAYER_ERROR_NONE) {
         STARFISH_LOG_ERROR("**ERROR: player_set_position %x", ret);
@@ -96,13 +138,12 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
         m_videoBufferMutex->lock();
 
     uint64_t ptsStart = m_lastVideoPts;
-    uint64_t ptsNow = m_lastVideoPts;
-    while (ptsNow - ptsStart < 1000) {
-        MediaPacket* packet = m_activeMediaSource->activeVideoSourceBuffer()->findProperMediaPacket(m_activeMediaSource->activeVideoStreamIndex(), ptsNow);
+    while (m_lastVideoPts - ptsStart < 1000) {
+        MediaPacket* packet = m_activeMediaSource->activeVideoSourceBuffer()->findProperMediaPacket(m_activeMediaSource->activeVideoStreamIndex(), m_lastVideoPts);
         if (!packet) {
             uint64_t endTime = m_activeMediaSource->duration() * 1000;
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer detect end of Video -> %d %d\n", (int)endTime, (int)ptsNow);
-            if ((endTime - ptsNow) < 10) {
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer detect end of Video -> %d %d\n", (int)endTime, (int)m_lastVideoPts);
+            if ((endTime - m_lastVideoPts) < 10) {
                 player_submit_packet(m_nativePlayer, 0, 0, 0, PLAYER_TRACK_TYPE_VIDEO);
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer detect end of Video!!\n");
                 if (useLock)
@@ -116,18 +157,20 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
                 m_videoBufferMutex->unlock();
             return;
         }
+/*
         if (packet->m_pts > m_lastVideoPts && packet->m_pts - m_lastVideoPts > 500) {
             m_isVideoBufferUnderrunState = true;
             break;
         }
-        ptsNow = m_lastVideoPts = packet->m_pts + packet->m_duration;
+*/
+        m_lastVideoPts = packet->m_pts + packet->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet->m_data, packet->m_dataSize, packet->m_pts, PLAYER_TRACK_TYPE_VIDEO);
 
         if (ret != PLAYER_ERROR_NONE) {
             STARFISH_LOG_ERROR("**ERROR: player_submit_packet %x", ret);
         }
         m_isVideoBufferUnderrunState = false;
-        // printf("push packet %d %p %d\n", (int)packet->m_pts, packet->m_data, (int)packet->m_dataSize);
+        // printf("push packet(video) %d %p %d\n", (int)packet->m_pts, packet->m_data, (int)packet->m_dataSize);
     }
 
     if (useLock)
@@ -141,13 +184,12 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
         m_audioBufferMutex->lock();
 
     uint64_t ptsStart = m_lastAudioPts;
-    uint64_t ptsNow = m_lastAudioPts;
-    while (ptsNow - ptsStart < 1000) {
-        MediaPacket* packet = m_activeMediaSource->activeAudioSourceBuffer()->findProperMediaPacket(m_activeMediaSource->activeAudioStreamIndex(), ptsNow);
+    while (m_lastAudioPts - ptsStart < 1000) {
+        MediaPacket* packet = m_activeMediaSource->activeAudioSourceBuffer()->findProperMediaPacket(m_activeMediaSource->activeAudioStreamIndex(), m_lastAudioPts);
         if (!packet) {
             uint64_t endTime = m_activeMediaSource->duration() * 1000;
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer detect end of Audio -> %d %d\n", (int)endTime, (int)ptsNow);
-            if ((endTime - ptsNow) < 10) {
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer detect end of Audio -> %d %d\n", (int)endTime, (int)m_lastAudioPts);
+            if ((endTime - m_lastAudioPts) < 10) {
                 player_submit_packet(m_nativePlayer, 0, 0, 0, PLAYER_TRACK_TYPE_AUDIO);
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer detect end of Audio!!\n");
                 if (useLock)
@@ -161,14 +203,14 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
                 m_audioBufferMutex->unlock();
             return;
         }
-        ptsNow = m_lastAudioPts = packet->m_pts + packet->m_duration;
+        m_lastAudioPts = packet->m_pts + packet->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet->m_data, packet->m_dataSize, packet->m_pts, PLAYER_TRACK_TYPE_AUDIO);
 
         if (ret != PLAYER_ERROR_NONE) {
             STARFISH_LOG_ERROR("**ERROR: player_submit_packet %x", ret);
         }
         m_isAudioBufferUnderrunState = false;
-        // printf("push packet %d %p %d\n", (int)packet->m_pts, packet->m_data, (int)packet->m_dataSize);
+        // printf("push packet(audio) %d %p %d\n", (int)packet->m_pts, packet->m_data, (int)packet->m_dataSize);
     }
 
     if (useLock)

@@ -52,7 +52,7 @@
 
 namespace StarFish {
 
-static void printNativePlayerError(int errorCode)
+void MediaPlayerTizen::printNativePlayerError(int errorCode)
 {
     switch (errorCode) {
 #define GEN_ERROR_PRINTS(errorenum) \
@@ -128,6 +128,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_alive(true)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)
+    , m_needsPlayAfterPrepare(false)
     , m_activeMediaSource(nullptr)
     , m_mseClient(nullptr)
     , m_videoBufferMutex(new Mutex())
@@ -224,7 +225,6 @@ void MediaPlayerTizen::endOfStream()
 {
     mediaEndOperation();
     m_starFish->removePointerFromRootSet(this);
-    player_stop(m_nativePlayer);
     m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
     if (m_container) {
         m_container->dispatchPauseEventNow();
@@ -234,6 +234,7 @@ void MediaPlayerTizen::endOfStream()
 
 void MediaPlayerTizen::prepare(URL* url)
 {
+    m_currentURL = url;
     STARFISH_LOG_INFO("MediaPlayerTizen::prepare\n");
     player_set_volume(m_nativePlayer, 1, 1);
     player_set_mute(m_nativePlayer, false);
@@ -343,6 +344,11 @@ void MediaPlayerTizen::compleatePrepare()
         free(videoCodec);
         free(audioCodec);
 
+        if (self->m_needsPlayAfterPrepare) {
+            player_start(self->m_nativePlayer);
+            self->m_needsPlayAfterPrepare = false;
+        }
+
         self->processNextOperationQueueInContainer();
         if (self->m_activeMediaSource) {
             double seekTime = self->m_activeMediaSource->attachedMediaElement()->defaultPlaybackStartPosition();
@@ -366,6 +372,7 @@ void MediaPlayerTizen::pauseOperation()
 
 void MediaPlayerTizen::unprepareOperation()
 {
+    STARFISH_LOG_INFO("MediaPlayerTizen::unprepareOperation\n");
     if (m_nativePlayer) {
         player_unprepare(m_nativePlayer);
         if (m_container->isHTMLVideoElement() && m_container->frame()) {
