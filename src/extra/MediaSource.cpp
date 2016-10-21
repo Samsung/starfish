@@ -159,7 +159,7 @@ void MediaSource::endOfStream(EndOfStreamError error)
     setReadyState(Ended);
 }
 
-void MediaSource::setDuration(double d)
+void MediaSource::setDuration(double d, bool checkCurrentDuration)
 {
     // If the value being set is negative or NaN then throw a TypeError exception and abort these steps.
     if (d < 0 || std::isnan(d)) {
@@ -197,11 +197,12 @@ void MediaSource::setDuration(double d)
             shorest = temp;
         }
     }
-    if (d < (lastTimeStamp / 1000.0)) {
+
+    STARFISH_LOG_INFO("MediaSource got new duration -> %lf %lf\n", d, (lastTimeStamp / 1000.0));
+    if (checkCurrentDuration && (d < (lastTimeStamp / 1000.0))) {
         throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "when updating duration of MediaSource, new duration value should be larger than the lagest value of current buffer stream.");
     }
 
-    STARFISH_LOG_INFO("MediaSource got new duration -> %lf\n", d);
     m_duration = d;
     m_shortestMediaDuration = shorest;
     m_attachedMediaElement->dispatchDurationchangeEvent();
@@ -235,6 +236,12 @@ bool MediaSource::attach(HTMLMediaElement* e)
     }
     m_attachedMediaElement = e;
     setReadyState(Open);
+
+    if (m_isActiveBufferComputed) {
+        for (size_t i = 0; i < m_clients.size(); i ++) {
+            m_clients[i]->activeSourceComputed();
+        }
+    }
     return true;
 }
 
@@ -359,7 +366,7 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                         newDuration = std::numeric_limits<double>::infinity();
                     }
 
-                    setDuration(newDuration);
+                    setDuration(newDuration, false);
                     m_isActiveBufferComputed = true;
 
                     for (size_t i = 0; i < m_clients.size(); i ++) {

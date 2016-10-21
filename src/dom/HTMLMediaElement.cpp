@@ -477,7 +477,8 @@ void HTMLMediaElement::setSeeking(bool seeking)
     // TODO
 }
 
-double HTMLMediaElement::defaultPlaybackStartPosition() {
+double HTMLMediaElement::defaultPlaybackStartPosition()
+{
     return m_defaultPlaybackStartPosition;
 }
 

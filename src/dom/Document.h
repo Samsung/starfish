@@ -50,7 +50,7 @@ class Document : public Node {
     friend class HTMLMetaElement;
     friend class DOMParser;
 protected:
-    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet, bool doesParticipateInRendering);
+    Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* url, String* charSet, bool isXMLDocument, bool doesParticipateInRendering);
 public:
     enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
     void setCompatibilityMode(CompatibilityMode m)
@@ -99,6 +99,7 @@ public:
     // HTMLCollection* getElementsByTagName(String* qualifiedName);
     // HTMLCollection* getElementsByClassName(String* classNames);
     Attr* createAttribute(QualifiedName localName);
+    QualifiedName createAttributeName(String* name);
 
 #ifdef STARFISH_EXP
     DOMImplementation* domImplementation()
@@ -213,6 +214,11 @@ public:
         return String::createASCIIString("text/html");
     }
 
+    bool isXMLDocument()
+    {
+        return m_isXMLDocument;
+    }
+
 protected:
     // only used in html document builder
     friend class HTMLResourceClient;
@@ -222,6 +228,7 @@ protected:
     }
     bool m_inParsing : 1;
     bool m_didLoadBrokenImage : 1;
+    bool m_isXMLDocument : 1;
     bool m_doesParticipateInRendering : 1;
 
     CompatibilityMode m_compatibilityMode;

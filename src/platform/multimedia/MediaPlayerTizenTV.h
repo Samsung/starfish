@@ -45,11 +45,11 @@ public:
     virtual void fillVideoBuffer(bool useLock = true);
     virtual void fillAudioBuffer(bool useLock = true);
     virtual void prepareMediaSource();
+    virtual void printNativePlayerError(int errorCode);
     virtual void mediaEndOperation()
     {
+        player_stop(m_nativePlayer);
         m_lastAudioPts = m_lastVideoPts = 0;
-        player_set_position(m_nativePlayer, 0, 0, 0);
-        // player_set_play_position(m_nativePlayer, 0, 0, 0);
     }
     virtual void seek(double time);
 

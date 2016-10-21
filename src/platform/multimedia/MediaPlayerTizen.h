@@ -36,7 +36,24 @@ public:
 
     virtual void play()
     {
-        player_start(m_nativePlayer);
+        player_state_e state;
+        player_get_state(m_nativePlayer, &state);
+        STARFISH_LOG_INFO("MediaPlayerTizen::play() state : %d state2: %d ms: %p\n", (int)state, (int)m_playbackState, m_activeMediaSource);
+        if (m_activeMediaSource && m_playbackState == PlaybackState::PLAYBACK_STATE_END) {
+            STARFISH_LOG_INFO("MediaPlayerTizen::play() meets mse && playback end\n");
+            int ret;
+            unprepareOperation();
+            STARFISH_LOG_INFO("MediaPlayerTizen::play() unprepare end %d\n", (int)ret);
+            ret = player_destroy(m_nativePlayer);
+            STARFISH_LOG_INFO("MediaPlayerTizen::play() destory end %d\n", (int)ret);
+            ret = player_create(&m_nativePlayer);
+            STARFISH_LOG_INFO("MediaPlayerTizen::play() create end %d\n", (int)ret);
+            m_playbackState = PLAYBACK_STATE_NONE;
+            m_needsPlayAfterPrepare = true;
+            prepare(m_currentURL);
+        } else {
+            player_start(m_nativePlayer);
+        }
     }
 
     virtual void pause()
@@ -54,9 +71,13 @@ public:
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(URL* url);
     virtual void prepareMediaSource();
+    virtual void printNativePlayerError(int errorCode);
     virtual void fillVideoBuffer(bool useLock = true);
     virtual void fillAudioBuffer(bool useLock = true);
-    virtual void mediaEndOperation() { }
+    virtual void mediaEndOperation()
+    {
+        player_stop(m_nativePlayer);
+    }
     void pauseOperation();
     void unprepareOperation();
 
@@ -100,10 +121,12 @@ public:
     bool m_alive;
     bool m_isVideoBufferUnderrunState;
     bool m_isAudioBufferUnderrunState;
+    bool m_needsPlayAfterPrepare;
     MediaSource* m_activeMediaSource;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;
     Mutex* m_audioBufferMutex;
+    URL* m_currentURL;
     void (*m_preparedCallback)(void*);
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;

@@ -30,10 +30,11 @@
 
 namespace StarFish {
 
-Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* uri, String* charSet, bool doesParticipateInRendering)
+Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance, URL* uri, String* charSet, bool isXMLDocument, bool doesParticipateInRendering)
     : Node(this, scriptBindingInstance)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
+    , m_isXMLDocument(isXMLDocument)
     , m_doesParticipateInRendering(doesParticipateInRendering)
     , m_compatibilityMode(Document::NoQuirksMode)
     , m_window(window)
@@ -520,6 +521,15 @@ ImageData* Document::brokenImage()
         m_brokenImage = res->imageData();
         m_didLoadBrokenImage = true;
         return m_brokenImage;
+    }
+}
+
+QualifiedName Document::createAttributeName(String* name)
+{
+    if (isXMLDocument()) {
+        return QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(window()->starFish(), name));
+    } else {
+        return QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(window()->starFish(), name));
     }
 }
 

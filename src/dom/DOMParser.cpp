@@ -107,7 +107,7 @@ Document* DOMParser::parseFromString(String* str, String* type)
         char* cStr = (char*)str->utf8Data();
         try {
             doc.parse<rapidxml::parse_doctype_node | rapidxml::parse_comment_nodes>(cStr);
-            Document* document = new Document(starFish()->window(), starFish()->window()->scriptBindingInstance(), starFish()->window()->document()->documentURI(), String::createASCIIString("UTF-8"), false);
+            Document* document = new Document(starFish()->window(), starFish()->window()->scriptBindingInstance(), starFish()->window()->document()->documentURI(), String::createASCIIString("UTF-8"), true, false);
 
             rapidxml::xml_node<char>* n = doc.first_node();
             while (n) {

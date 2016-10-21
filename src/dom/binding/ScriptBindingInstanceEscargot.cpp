@@ -1129,9 +1129,9 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
 
             if (argValue.isESString()) {
-                QualifiedName name = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(sf, argValue.asESString()->utf8Data()));
+                String* keyStr = toBrowserString(argValue);
                 Element* elem = ((Node*)thisValue.asESPointer()->asESObject()->extraPointerData())->asElement();
-                size_t idx = elem->hasAttribute(name);
+                size_t idx = elem->hasAttribute(elem->document()->createAttributeName(keyStr));
                 if (idx == SIZE_MAX)
                     return escargot::ESValue(escargot::ESValue::ESNull);
                 else
@@ -1157,13 +1157,13 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                 if (key.isESString()) {
                     auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
                     // Validate key string
-                    QualifiedName attrKey = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(sf, key.asESString()->utf8Data()));
-                    if (!QualifiedName::checkNameProductionRule(attrKey.localName(), attrKey.localName()->length()))
+                    String* keyStr = toBrowserString(key);
+                    if (!QualifiedName::checkNameProductionRule(keyStr, keyStr->length()))
                         throw new DOMException(sf->window()->scriptBindingInstance(), DOMException::Code::INVALID_CHARACTER_ERR, nullptr);
 
                     String* attrVal = toBrowserString(val);
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
-                    elem->setAttribute(attrKey, attrVal);
+                    elem->setAttribute(elem->document()->createAttributeName(keyStr), attrVal);
                 }
                 return escargot::ESValue(escargot::ESValue::ESNull);
             } catch(DOMException* e) {
@@ -1185,9 +1185,9 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
 
                 if (key.isESString()) {
                     auto sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
-                    QualifiedName attrKey = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(sf, key.asESString()->utf8Data()));
                     Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
-                    elem->removeAttribute(attrKey);
+                    String* keyStr = toBrowserString(key);
+                    elem->removeAttribute(elem->document()->createAttributeName(keyStr));
                 }
                 return escargot::ESValue();
             } catch(DOMException* e) {

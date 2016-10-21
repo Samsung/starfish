@@ -114,7 +114,7 @@ public:
         return m_shortestMediaDuration;
     }
 
-    void setDuration(double d);
+    void setDuration(double d, bool checkCurrentDuration = true);
 
     // TODO 2.4.4 SourceBuffer Monitoring
 
