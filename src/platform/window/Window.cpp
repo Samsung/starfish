@@ -390,6 +390,10 @@ Window::Window(StarFish* starFish)
     , m_document(nullptr)
     , m_rootStackingContext(nullptr)
     , m_touchDownPoint(0, 0)
+    , m_ctrlKeyDown(0)
+    , m_shiftKeyDown(0)
+    , m_altKeyDown(0)
+    , m_metaKeyDown(0)
 {
     initFlags();
 }
@@ -1201,6 +1205,43 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 
 void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
 {
+    String* eventType = String::emptyString;
+    if (kind == KeyEventKind::KeyEventUp) {
+        eventType = starFish()->staticStrings()->m_keyup.localName();
+    } else {
+        // kind == KeyEventKind::KeyEventDown
+        eventType = starFish()->staticStrings()->m_keydown.localName();
+    }
+    KeyboardEvent* e = new KeyboardEvent(eventType, key, EventInit(true, true));
+
+    if (e->ctrlKey()) {
+        m_ctrlKeyDown = kind == KeyEventKind::KeyEventDown ? m_ctrlKeyDown + 1 : m_ctrlKeyDown - 1;
+        STARFISH_ASSERT(m_ctrlKeyDown >= 0);
+    } else if (e->altKey()) {
+        m_altKeyDown = kind == KeyEventKind::KeyEventDown ? m_altKeyDown + 1 : m_altKeyDown - 1;
+        STARFISH_ASSERT(m_altKeyDown >= 0);
+    } else if (e->shiftKey()) {
+        m_shiftKeyDown = kind == KeyEventKind::KeyEventDown ? m_shiftKeyDown + 1 : m_shiftKeyDown - 1;
+        STARFISH_ASSERT(m_shiftKeyDown >= 0);
+    } else if (e->shiftKey()) {
+        m_metaKeyDown = kind == KeyEventKind::KeyEventDown ? m_metaKeyDown + 1 : m_metaKeyDown - 1;
+        STARFISH_ASSERT(m_metaKeyDown >= 0);
+    }
+    if (m_ctrlKeyDown > 0)
+        e->setCtrlKey();
+    if (m_altKeyDown > 0)
+        e->setAltKey();
+    if (m_shiftKeyDown > 0)
+        e->setShiftKey();
+    if (m_metaKeyDown > 0)
+        e->setMetaKey();
+    STARFISH_ASSERT(document()->rootElement());
+
+    // [Target]
+    // 1) currently focused element if possible -> no focus concept
+    // or 2) body element if possible
+    // or 3) root element
+    EventTarget::dispatchEvent((document()->bodyElement() ? document()->bodyElement()->asNode() : document()->rootElement()->asNode()), e);
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object

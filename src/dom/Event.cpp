@@ -86,4 +86,40 @@ ProgressEvent::ProgressEvent(String* eventType, const ProgressEventInit& init)
     initScriptWrappable(this);
 }
 
+unsigned long KeyboardEvent::convertKeyCodeFromEcore(String* key)
+{
+    if (key->length() == 1) {
+        const char* rawdata = key->utf8Data();
+        if (rawdata[0] >= '0' && rawdata[0] <= '9') {
+            return (unsigned)(rawdata[0] - '0') + (unsigned)KEYBOARD_KEYCODE_0;
+        } else if (rawdata[0] >= 'a' && rawdata[0] <= 'z') {
+            return (unsigned)(rawdata[0] - 'a') + (unsigned)KEYBOARD_KEYCODE_a;
+        }
+        // Note: No upper case -> expressed with shift key
+    } else if (key->equals("Left")) {
+        return KEYBOARD_KEYCODE_LEFT;
+    } else if (key->equals("Up")) {
+        return KEYBOARD_KEYCODE_UP;
+    } else if (key->equals("Right")) {
+        return KEYBOARD_KEYCODE_RIGHT;
+    } else if (key->equals("Down")) {
+        return KEYBOARD_KEYCODE_DOWN;
+    } else if (key->equals("Return")) {
+        return KEYBOARD_KEYCODE_RETURN;
+    } else if (key->equals("BackSpace")) {
+        return KEYBOARD_KEYCODE_BACKSPACE;
+    } else if (key->equals("XF86Back")) {
+        return KEYBOARD_KEYCODE_ESC;
+    } else if (key->equals("space")) {
+        return KEYBOARD_KEYCODE_SPACE;
+    } else if (key->equals("Shift_L")) {
+        return KEYBOARD_KEYCODE_SHIFT;
+    } else if (key->equals("Control_L")) {
+        return KEYBOARD_KEYCODE_CTRL_L;
+    } else if (key->equals("Alt_L")) {
+        return KEYBOARD_KEYCODE_ALT_L;
+    }
+    return KEYBOARD_KEYCODE_NONE;
+}
+
 }

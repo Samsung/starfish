@@ -265,6 +265,8 @@ public:
     QualifiedName m_ratechange;
     QualifiedName m_volumechange;
 #endif
+    QualifiedName m_keydown;
+    QualifiedName m_keyup;
 protected:
 };
 

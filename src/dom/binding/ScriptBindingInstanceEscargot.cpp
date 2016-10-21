@@ -2874,6 +2874,62 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         return escargot::ESValue();
     });
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onkeydown"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->attributeEventListener(element->document()->window()->starFish()->staticStrings()->m_keydown);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_keydown;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                element->setAttributeEventListener(eventType, v);
+            } else {
+                element->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onkeyup"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->attributeEventListener(element->document()->window()->starFish()->staticStrings()->m_keyup);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_keyup;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                element->setAttributeEventListener(eventType, v);
+            } else {
+                element->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
     return HTMLElementFunction;
 }
 
@@ -3804,6 +3860,58 @@ escargot::ESFunctionObject* bindingMouseEvent(ScriptBindingInstance* scriptBindi
     /* Mouse Events */
     DEFINE_FUNCTION_WITH_PARENTFUNC(MouseEvent, fetchData(scriptBindingInstance)->uiEvent());
     return MouseEventFunction;
+}
+
+escargot::ESFunctionObject* bindingKeyboardEvent(ScriptBindingInstance* scriptBindingInstance)
+{
+    /* Keyboard Events */
+    DEFINE_FUNCTION_WITH_PARENTFUNC(KeyboardEvent, fetchData(scriptBindingInstance)->uiEvent());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        KeyboardEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("keyCode"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        if (originalObj->isUIEvent() && originalObj->asUIEvent()->isKeyboardEvent()) {
+            return escargot::ESValue(originalObj->asUIEvent()->asKeyboardEvent()->keyCode());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        KeyboardEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("ctrlKey"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        if (originalObj->isUIEvent() && originalObj->asUIEvent()->isKeyboardEvent()) {
+            return escargot::ESValue(originalObj->asUIEvent()->asKeyboardEvent()->ctrlKey());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        KeyboardEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("altKey"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        if (originalObj->isUIEvent() && originalObj->asUIEvent()->isKeyboardEvent()) {
+            return escargot::ESValue(originalObj->asUIEvent()->asKeyboardEvent()->altKey());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        KeyboardEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("shiftKey"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        if (originalObj->isUIEvent() && originalObj->asUIEvent()->isKeyboardEvent()) {
+            return escargot::ESValue(originalObj->asUIEvent()->asKeyboardEvent()->shiftKey());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        KeyboardEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("metaKey"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        if (originalObj->isUIEvent() && originalObj->asUIEvent()->isKeyboardEvent()) {
+            return escargot::ESValue(originalObj->asUIEvent()->asKeyboardEvent()->metaKey());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+    return KeyboardEventFunction;
 }
 
 escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBindingInstance)

@@ -257,6 +257,10 @@ protected:
     std::vector<CanvasSurface*, gc_allocator<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;
     Node* m_activeNodeWithTouchDown;
     Location m_touchDownPoint;
+    int m_ctrlKeyDown;
+    int m_shiftKeyDown;
+    int m_altKeyDown;
+    int m_metaKeyDown;
 
     uint32_t m_timeoutCounter;
     std::unordered_map<uint32_t, void*, std::hash<uint32_t>, std::equal_to<uint32_t>,

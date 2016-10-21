@@ -676,6 +676,8 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_ratechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "ratechange"));
     m_volumechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "volumechange"));
 #endif
+    m_keydown = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "keydown"));
+    m_keyup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "keyup"));
 }
 
 }
