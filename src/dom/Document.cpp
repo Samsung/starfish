@@ -337,13 +337,21 @@ HTMLHtmlElement* Document::rootElement()
         }
         n = n->nextSibling();
     }
-
     return nullptr;
 }
 
 Element* Document::documentElement()
 {
-    return rootElement();
+    Element* element = rootElement();
+    if (element) {
+        return element;
+    } else {
+        Node* n = firstChild();
+        if (n && n->isElement()) {
+            element = n->asElement();
+        }
+    }
+    return element;
 }
 
 HTMLHeadElement* Document::headElement()
