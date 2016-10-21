@@ -198,6 +198,7 @@ public:
     bool paused();
     double defaultPlaybackRate();
     double playbackRate();
+    double defaultPlaybackStartPosition();
     TimeRanges* played();
     TimeRanges* seekable();
 
@@ -280,6 +281,7 @@ protected:
     bool m_isSeeking;
     bool m_delayingTheLoadEvent;
     double m_officialPlaybackPosition;
+    double m_defaultPlaybackStartPosition;
     MediaPlayer* m_mediaPlayer;
     String* m_currentSrc;
     TextTrackList* m_textTracks;

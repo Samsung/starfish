@@ -32,7 +32,7 @@ public:
     MediaPlayerTizenTV(HTMLMediaElement* element)
         : MediaPlayerTizen(element)
     {
-        m_lastVideoPts = m_lastAudioPts = 0;
+        m_lastVideoPts = m_lastAudioPts = element->defaultPlaybackStartPosition() * 1000;
     }
 
     virtual void initDisplay()
@@ -51,6 +51,7 @@ public:
         player_set_position(m_nativePlayer, 0, 0, 0);
         // player_set_play_position(m_nativePlayer, 0, 0, 0);
     }
+    virtual void seek(double time);
 
     uint64_t m_lastVideoPts;
     uint64_t m_lastAudioPts;

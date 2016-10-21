@@ -34,6 +34,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_isSeeking(false)
     , m_delayingTheLoadEvent(false)
     , m_officialPlaybackPosition(0)
+    , m_defaultPlaybackStartPosition(0)
     , m_mediaPlayer(nullptr)
     , m_currentSrc(String::emptyString)
     , m_textTracks(new TextTrackList())
@@ -476,9 +477,24 @@ void HTMLMediaElement::setSeeking(bool seeking)
     // TODO
 }
 
+double HTMLMediaElement::defaultPlaybackStartPosition() {
+    return m_defaultPlaybackStartPosition;
+}
+
 void HTMLMediaElement::setCurrentTime(double currentTime)
 {
-    // TODO
+    // On setting, if the media element’s readyState is HAVE_NOTHING,
+    // then it must set the media element’s default playback start position
+    // to the new value; otherwise, it must set the official playback position
+    // to the new value and then seek to the new value.
+    printf(" set CurrentTime !!!!! %f \n", (float) currentTime);
+    if (m_readyState == HAVE_NOTHING) {
+        m_defaultPlaybackStartPosition = currentTime;
+        printf(" HAVE_NOTHING? \n");
+    } else {
+        m_officialPlaybackPosition = currentTime;
+        m_mediaPlayer->seek(currentTime);
+    }
 }
 
 void HTMLMediaElement::setDefaultPlaybackRate(double defaultPlaybackRate)
