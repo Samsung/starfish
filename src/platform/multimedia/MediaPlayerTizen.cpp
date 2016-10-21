@@ -344,6 +344,11 @@ void MediaPlayerTizen::compleatePrepare()
         free(audioCodec);
 
         self->processNextOperationQueueInContainer();
+        if (self->m_activeMediaSource) {
+            double seekTime = self->m_activeMediaSource->attachedMediaElement()->defaultPlaybackStartPosition();
+            if (seekTime != 0)
+                self->seek(seekTime);
+        }
 
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);

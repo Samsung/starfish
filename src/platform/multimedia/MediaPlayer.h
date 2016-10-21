@@ -54,6 +54,10 @@ public:
     {
     }
 
+    virtual void seek(double time)
+    {
+    }
+
     void setLoop(bool loop) { m_isLooping = true; }
     bool loop()
     {
