@@ -166,6 +166,15 @@ void MediaPlayerTizen::handlePlayerError(int error)
     }
 }
 
+void MediaPlayerTizen::seekIfNeeded()
+{
+    double seekTime = m_activeMediaSource->attachedMediaElement()->defaultPlaybackStartPosition();
+    if (seekTime > 0) {
+        seek(seekTime);
+        m_activeMediaSource->attachedMediaElement()->setDefaultPlaybackStartPosition(0);
+    }
+}
+
 void MediaPlayerTizen::close()
 {
     m_alive = false;
@@ -350,11 +359,6 @@ void MediaPlayerTizen::compleatePrepare()
         }
 
         self->processNextOperationQueueInContainer();
-        if (self->m_activeMediaSource) {
-            double seekTime = self->m_activeMediaSource->attachedMediaElement()->defaultPlaybackStartPosition();
-            if (seekTime != 0)
-                self->seek(seekTime);
-        }
 
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);

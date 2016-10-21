@@ -53,8 +53,13 @@ public:
             prepare(m_currentURL);
         } else {
             player_start(m_nativePlayer);
+            if (m_activeMediaSource) {
+                seekIfNeeded();
+            }
         }
     }
+
+    void seekIfNeeded();
 
     virtual void pause()
     {

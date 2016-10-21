@@ -482,6 +482,11 @@ double HTMLMediaElement::defaultPlaybackStartPosition()
     return m_defaultPlaybackStartPosition;
 }
 
+void HTMLMediaElement::setDefaultPlaybackStartPosition(double position)
+{
+    m_defaultPlaybackStartPosition = position;
+}
+
 void HTMLMediaElement::setCurrentTime(double currentTime)
 {
     // On setting, if the media element’s readyState is HAVE_NOTHING,
