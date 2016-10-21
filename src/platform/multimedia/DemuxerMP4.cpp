@@ -339,7 +339,8 @@ public:
                     packet.m_streamIndex = trackID;
                     size_t scale = m_defaultTimescale[trackID];
                     uint8_t* dataPtr = mdat->data;
-                    uint64_t pts = dts * 1000 / scale;
+                    uint64_t ptsInMP4 = dts;
+
                     STARFISH_RELEASE_ASSERT(trun->has_sample_size || tfhd->has_default_sample_size);
                     for (size_t i = 0; i < trun->samples.size(); i ++) {
                         packet.m_data = dataPtr;
@@ -347,26 +348,26 @@ public:
                             packet.m_dataSize = trun->samples[i].size;
                         else
                             packet.m_dataSize = tfhd->default_sample_size;
-                        packet.m_pts = pts;
+                        packet.m_pts = ptsInMP4 * 1000LL / scale;
 
                         if (trun->has_sample_duration) {
-                            packet.m_duration = trun->samples[i].duration * 1000.0 / (double)scale;
-                        } else if (trun->has_sample_composition_time_offset) {
-                            packet.m_duration = trun->samples[i].composition_time_offset * 1000.0 / (double)scale;
+                            ptsInMP4 += trun->samples[i].duration;
+                            packet.m_duration = trun->samples[i].duration * 1000LL / scale;
                         } else if (tfhd->has_default_sample_duration) {
-                            packet.m_duration = tfhd->default_sample_duration * 1000.0 / (double)scale;
+                            ptsInMP4 += tfhd->default_sample_duration;
+                            packet.m_duration = tfhd->default_sample_duration * 1000LL / scale;
                         } else {
                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                         }
                         dataPtr += trun->samples[i].size;
 
                         STARFISH_ASSERT(dataPtr <= (mdat->data + mdat->size));
-                        // STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
+                        /*
+                        STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
+                        */
                         for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                             m_demuxerClients[j]->onDetectPacket(packet);
                         }
-
-                        pts += packet.m_duration;
                     }
                 }
 

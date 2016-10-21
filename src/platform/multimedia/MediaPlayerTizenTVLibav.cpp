@@ -120,6 +120,8 @@ void MediaPlayerTizenTV::prepareMediaSource()
         videoInfo.codec_extradata = fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->extradata;
         videoInfo.extradata_size = fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->extradata_size;
 
+        STARFISH_LOG_INFO("video Info.. %d %d %d %d\n", info->m_width, info->m_height, (int)videoInfo.framerate_den, (int)videoInfo.framerate_num);
+
         int ret = player_set_video_stream_info(m_nativePlayer, &videoInfo);
         STARFISH_RELEASE_ASSERT(ret == 0);
 
