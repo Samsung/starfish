@@ -35,7 +35,7 @@ public:
         , m_bufferRemain(bufferRemain)
         , m_readPos(0)
     {
-
+        STARFISH_LOG_INFO("start demux %d %d\n", (int)m_bufferRemain->size(), (int)m_inputBuffer->m_length);
     }
 
     virtual int64_t onSeek(int64_t position, SeekWhence whence)
@@ -45,14 +45,22 @@ public:
         } else if (whence == DemuxerSource::SeekWhenceSet) {
             // STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
             STARFISH_ASSERT(position >= 0);
-            STARFISH_ASSERT((int64_t)position <= (int64_t)(m_bufferRemain->size() + m_inputBuffer->m_length));
-            m_readPos = position;
-            return m_readPos;
+            if ((int64_t)position <= (int64_t)(m_bufferRemain->size() + m_inputBuffer->m_length)) {
+                m_readPos = position;
+                return m_readPos;
+            } else {
+                m_readPos = m_bufferRemain->size() + m_inputBuffer->m_length;
+                return m_readPos;
+            }
         } else if (whence == DemuxerSource::SeekWhenceCurrent) {
             m_readPos = m_readPos + position;
             STARFISH_ASSERT(m_readPos >= 0);
-            STARFISH_ASSERT(m_readPos <= (m_bufferRemain->size() + m_inputBuffer->m_length));
-            return m_readPos;
+            if (m_readPos <= (m_bufferRemain->size() + m_inputBuffer->m_length)) {
+                return m_readPos;
+            } else {
+                m_readPos = m_bufferRemain->size() + m_inputBuffer->m_length;
+                return m_readPos;
+            }
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
