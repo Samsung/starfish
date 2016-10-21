@@ -219,6 +219,7 @@ public:
     void setPreload(String* preload);
     void setSeeking(bool seeking);
     void setCurrentTime(double currentTime);
+    void setDefaultPlaybackStartPosition(double position);
     void setDefaultPlaybackRate(double defaultPlaybackRate);
     void setPlaybackRate(double playbackRate);
     void setAutoplay(bool autoplay);

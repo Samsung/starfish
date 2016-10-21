@@ -116,15 +116,13 @@ double MediaPlayerTizenTV::currentTime()
 
 void MediaPlayerTizenTV::seek(double time)
 {
-    printf(" seek !!!!! %f \n", (float) time);
+    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek %f \n", (float) time);
     time = time * 1000;
     if (m_activeMediaSource) {
         m_lastVideoPts = m_lastAudioPts = time;
     }
-    // FIXME status: player_set_position_cb is NOT called and playing is stop. why?
     int ret = player_set_position(m_nativePlayer, time, [](void* data) {
         STARFISH_LOG_INFO("player_set_position_cb\n");
-        MediaPlayerTizenTV* player = (MediaPlayerTizenTV*)data;
     }, this);
     if (ret != PLAYER_ERROR_NONE) {
         STARFISH_LOG_ERROR("**ERROR: player_set_position %x", ret);
@@ -157,12 +155,10 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
                 m_videoBufferMutex->unlock();
             return;
         }
-/*
         if (packet->m_pts > m_lastVideoPts && packet->m_pts - m_lastVideoPts > 500) {
             m_isVideoBufferUnderrunState = true;
             break;
         }
-*/
         m_lastVideoPts = packet->m_pts + packet->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet->m_data, packet->m_dataSize, packet->m_pts, PLAYER_TRACK_TYPE_VIDEO);
 
