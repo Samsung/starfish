@@ -196,7 +196,7 @@ public:
 
         while ((ret = av_read_frame(m_formatContext, &avPacket)) == 0) {
             uint64_t pts = av_q2d(m_formatContext->streams[avPacket.stream_index]->time_base) * avPacket.pts * 1000;
-            STARFISH_LOG_ERROR("DemuxerFFmpeg::process av_read_frame streamIndex(%d, %dbyte, %dms)\n", (int)avPacket.stream_index, (int)avPacket.size, (int)pts);
+            // STARFISH_LOG_INFO("DemuxerFFmpeg::process av_read_frame streamIndex(%d, %dbyte, %dms)\n", (int)avPacket.stream_index, (int)avPacket.size, (int)pts);
             for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                 MediaPacket packet;
                 packet.m_streamIndex = avPacket.stream_index;
