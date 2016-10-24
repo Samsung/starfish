@@ -446,7 +446,7 @@ void URL::setPathname(String* newPath, bool needRemovingDots)
         if (tmp != newPath)
             newPath = tmp;
     }
-    m_urlString = m_urlString->substring(0, m_portEnd)->concat(newPath)->concat(m_urlString->substring(m_pathEnd, m_urlString->length() - m_pathEnd));
+    m_urlString = m_urlString->substring(0, m_portEnd)->concat(newPath);
     resolvePositions();
 }
 
@@ -458,6 +458,15 @@ String* URL::getSearch()
         return String::emptyString;
 }
 
+void URL::setSearch(String* newPath)
+{
+    if (newPath->length() && newPath->charAt(0) != '?') {
+        newPath = String::createASCIIString("?")->concat(newPath);
+    }
+    m_urlString = m_urlString->substring(0, m_pathEnd)->concat(newPath)->concat(m_urlString->substring(m_queryEnd, m_urlString->length() - m_queryEnd));
+    resolvePositions();
+}
+
 String* URL::getHash()
 {
     if (m_queryEnd != m_fragmentEnd)
@@ -466,5 +475,13 @@ String* URL::getHash()
         return String::emptyString;
 }
 
+void URL::setHash(String* newPath)
+{
+    if (newPath->length() && newPath->charAt(0) != '#') {
+        newPath = String::createASCIIString("#")->concat(newPath);
+    }
+    m_urlString = m_urlString->substring(0, m_queryEnd)->concat(newPath);
+    resolvePositions();
+}
 
 }

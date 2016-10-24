@@ -109,7 +109,9 @@ public:
     String* getPathname();
     void setPathname(String* newPath, bool needRemovingDots = true);
     String* getSearch();
+    void setSearch(String* newPath);
     String* getHash();
+    void setHash(String* newPath);
 
 protected:
     void resolvePositions();

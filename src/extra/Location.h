@@ -53,6 +53,16 @@ public:
         return url()->getPathname();
     }
 
+    String* getSearch()
+    {
+        return url()->getSearch();
+    }
+
+    String* getHash()
+    {
+        return url()->getHash();
+    }
+
     void setHref(String* newURL)
     {
         setLocation(newURL);
@@ -61,6 +71,18 @@ public:
     void setPathname(String* newPath, bool needRemovingDots = true)
     {
         url()->setPathname(newPath, needRemovingDots);
+        setLocation(url()->urlString());
+    }
+
+    void setSearch(String* search)
+    {
+        url()->setSearch(search);
+        setLocation(url()->urlString());
+    }
+
+    void setHash(String* search)
+    {
+        url()->setHash(search);
         setLocation(url()->urlString());
     }
 
