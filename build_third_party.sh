@@ -324,6 +324,11 @@ if [ -z "$TIZEN_SDK_HOME" ]; then
 else
     echo "TIZEN_SDK_HOME env is ...""$TIZEN_SDK_HOME"
     build_gc_for_tizen
+    #cd $CU
+    #mkdir -p third_party/zeromq/out/tizen_2.4_tv/i386/release.shared/.libs/
+    #cp third_party/zeromq/out/tizen_2.4_mobile/i386/release.shared/.libs/*  third_party/zeromq/out/tizen_2.4_tv/i386/release.shared/.libs/
+    #mkdir -p third_party/zeromq/out/tizen_2.4_tv/i386/debug.shared/.libs/
+    #cp third_party/zeromq/out/tizen_2.4_mobile/i386/debug.shared/.libs/*  third_party/zeromq/out/tizen_2.4_tv/i386/debug.shared/.libs/
 fi
 fi
 

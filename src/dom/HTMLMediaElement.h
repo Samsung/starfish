@@ -248,6 +248,11 @@ public:
 
     void mediaPlayerNotifyUpdateReadyStateItsContainer(ReadyState state);
     void addEventToOperationQueue(EventTarget* t, Event* e);
+    void addOperation(MediaOperationQueueData* data)
+    {
+        appendToOperationQueue(data);
+        startOperationQueueIfNeeded();
+    }
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow(); \
     void dispatch##Name##Event();

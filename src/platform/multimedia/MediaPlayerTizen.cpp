@@ -200,6 +200,28 @@ double MediaPlayerTizen::duration()
     return duration / 1000.0;
 }
 
+void MediaPlayerTizen::play()
+{
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+    STARFISH_LOG_INFO("MediaPlayerTizen::play() state : %d state2: %d ms: %p\n", (int)state, (int)m_playbackState, m_activeMediaSource);
+    if (m_activeMediaSource && m_playbackState == PlaybackState::PLAYBACK_STATE_END) {
+        STARFISH_LOG_INFO("MediaPlayerTizen::play() meets mse && playback end\n");
+        int ret;
+        unprepareOperation();
+        STARFISH_LOG_INFO("MediaPlayerTizen::play() unprepare end %d\n", (int)ret);
+        ret = player_destroy(m_nativePlayer);
+        STARFISH_LOG_INFO("MediaPlayerTizen::play() destory end %d\n", (int)ret);
+        ret = player_create(&m_nativePlayer);
+        STARFISH_LOG_INFO("MediaPlayerTizen::play() create end %d\n", (int)ret);
+        m_playbackState = PLAYBACK_STATE_NONE;
+        m_needsPlayAfterPrepare = true;
+        m_container->addOperation(new MediaOperationQueueDataRequestPrepare(m_container, m_currentURL));
+    } else {
+        player_start(m_nativePlayer);
+        seekIfNeeded();
+    }
+}
 
 void MediaPlayerTizen::initDisplay()
 {
