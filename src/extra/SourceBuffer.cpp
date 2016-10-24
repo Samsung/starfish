@@ -267,9 +267,9 @@ public:
 
     void setTimestampInfo(double timestampOffset, double appendWindowStart, double appendWindowEnd)
     {
-        m_timestampOffset = timestampOffset;
-        m_appendWindowStart = appendWindowStart;
-        m_appendWindowEnd = appendWindowEnd;
+        m_timestampOffset = timestampOffset * 1000;
+        m_appendWindowStart = appendWindowStart * 1000;
+        m_appendWindowEnd = appendWindowEnd * 1000;
     }
 
     std::vector<VideoStreamInfo> m_detectedVideoSteam;
