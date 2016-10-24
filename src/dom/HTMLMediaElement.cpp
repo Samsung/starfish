@@ -493,10 +493,10 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
     // then it must set the media element’s default playback start position
     // to the new value; otherwise, it must set the official playback position
     // to the new value and then seek to the new value.
-    printf(" set CurrentTime !!!!! %f \n", (float) currentTime);
+    STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() %f \n", (float) currentTime);
     if (m_readyState == HAVE_NOTHING) {
         m_defaultPlaybackStartPosition = currentTime;
-        printf(" HAVE_NOTHING? \n");
+        STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
         m_officialPlaybackPosition = currentTime;
         m_mediaPlayer->seek(currentTime);
