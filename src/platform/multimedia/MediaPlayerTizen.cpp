@@ -168,6 +168,8 @@ void MediaPlayerTizen::handlePlayerError(int error)
 
 void MediaPlayerTizen::seekIfNeeded()
 {
+    if (!m_activeMediaSource)
+        return;
     double seekTime = m_activeMediaSource->attachedMediaElement()->defaultPlaybackStartPosition();
     if (seekTime > 0) {
         seek(seekTime);
@@ -355,6 +357,7 @@ void MediaPlayerTizen::compleatePrepare()
 
         if (self->m_needsPlayAfterPrepare) {
             player_start(self->m_nativePlayer);
+            self->seekIfNeeded();
             self->m_needsPlayAfterPrepare = false;
         }
 
