@@ -38,6 +38,7 @@
 #endif
 
 #include "extra/Navigator.h"
+#include "extra/Location.h"
 #include "platform/location/Geolocation.h"
 
 #include "StarFish.h"
@@ -701,6 +702,13 @@ void ScriptWrappable::initScriptWrappable(DOMImplementation* ptr, ScriptBindingI
     scriptObject()->set__proto__(data->m_domImplementation()->protoType());
 }
 #endif
+
+void ScriptWrappable::initScriptWrappable(LocationObj* ptr)
+{
+    LocationObj* nav = (LocationObj*)this;
+    auto data = fetchData(nav->starFish()->window()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->location()->protoType());
+}
 
 void ScriptWrappable::initScriptWrappable(Navigator* ptr)
 {
