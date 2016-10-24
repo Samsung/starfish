@@ -5249,6 +5249,38 @@ escargot::ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBinding
         return escargot::ESValue();
     });
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        LocationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("search"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        return toJSString(originalObj->getSearch());
+    },  [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount < 1) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        } else {
+            originalObj->setSearch(String::fromUTF8(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()));
+        }
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        LocationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("hash"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        return toJSString(originalObj->getHash());
+    },  [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount < 1) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        } else {
+            originalObj->setHash(String::fromUTF8(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()));
+        }
+        return escargot::ESValue();
+    });
+
     return LocationFunction;
 }
 
