@@ -153,35 +153,72 @@ void copyFileContent(FILE* fp, int start, int end, std::vector<uint8_t>& data)
     delete[] buf;
 }
 
+class DemuxerTestClient : public DemuxerClient {
+public:
+
+    virtual void onDetectPacket(const MediaPacket& packet)
+    {
+        if (packet.m_streamIndex == 0) {
+            MediaPacket newPacket = packet;
+            newPacket.m_data = new uint8_t[newPacket.m_dataSize];
+            memcpy(newPacket.m_data, packet.m_data, newPacket.m_dataSize);
+
+            packets.push_back(newPacket);
+        }
+    }
+
+    std::vector<MediaPacket> packets;
+};
+
 void testDemuxer()
 {
     Demuxer* demuxer = Demuxer::createMP4Demuxer();
-    auto ptr = new DemuxerMemorySource();
-    FILE* fp = fopen("car.mp4", "rb");
+    DemuxerTestClient* c1 = new DemuxerTestClient();
 
-    copyFileContent(fp, 0, 708, ptr->data);
+    demuxer->addClient(c1);
+
+    Demuxer* demuxer2 = Demuxer::createFFmpegDemuxer();
+    DemuxerTestClient* c2 = new DemuxerTestClient();
+
+    demuxer2->addClient(c2);
+
+    auto ptr = new DemuxerMemorySource();
+    auto ptr2 = new DemuxerMemorySource();
+
+    FILE* fp = fopen("frag_bunny.mp4", "rb");
+
+    copyFileContent(fp, 0, 5524488, ptr->data);
+    copyFileContent(fp, 0, 5524488, ptr2->data);
+
     if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/mp4"))) {
         puts("fail0");
         // ptr->m_debug++;
     }
+    demuxer->findStreamPacket(ptr);
 
-    auto ptr2 = new DemuxerMemorySource();
-    // 5931518-6320465
-    copyFileContent(fp, 5931518, 6320465 + 1, ptr2->data);
-    demuxer->findStreamPacket(ptr2);
+    if (!demuxer2->findStreamInfo(ptr2, String::fromUTF8("video/mp4"))) {
+        puts("fail0");
+        // ptr->m_debug++;
+    }
+    demuxer2->findStreamPacket(ptr2);
 
-    auto ptr3 = new DemuxerMemorySource();
-    // 1450907-2164184
-    copyFileContent(fp, 1450907, 2164184 + 1, ptr3->data);
-    demuxer->findStreamPacket(ptr3);
+    printf("------------packet count %d %d\n", (int)c1->packets.size(), (int)c2->packets.size());
 
-    auto ptr4 = new DemuxerMemorySource();
-    FILE* fp2 = fopen("toystory_frag.mp4", "rb");
-    copyFileContent(fp2, 0, 33517761, ptr4->data);
-
-    demuxer = Demuxer::createMP4Demuxer();
-    demuxer->findStreamInfo(ptr4, String::fromUTF8("video/mp4"));
-    demuxer->findStreamPacket(ptr4);
+    if (c1->packets.size() == c2->packets.size()) {
+        for (size_t i = 0; i < c1->packets.size(); i ++) {
+            size_t i2 = i;
+            if (c1->packets[i2].m_pts != c2->packets[i].m_pts) {
+                printf("pts wrong idx: %d %d %d\n", (int)i, (int)c1->packets[i2].m_pts, (int)c2->packets[i].m_pts);
+            }
+            if (c1->packets[i2].m_dataSize != c2->packets[i].m_dataSize) {
+                printf("data size wrong idx: %d %d %d\n", (int)i, (int)c1->packets[i2].m_dataSize, (int)c2->packets[i].m_dataSize);
+            } else {
+                if (memcmp(c1->packets[i2].m_data, c2->packets[i].m_data, c1->packets[i2].m_dataSize) != 0) {
+                    printf("data wrong idx: %d\n", (int)i);
+                }
+            }
+        }
+    }
 }
 */
 bool hasEnding(std::string const &fullString, std::string const &ending)
