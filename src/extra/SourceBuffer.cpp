@@ -35,7 +35,7 @@ public:
         , m_bufferRemain(bufferRemain)
         , m_readPos(0)
     {
-        STARFISH_LOG_INFO("start demux %d %d\n", (int)m_bufferRemain->size(), (int)m_inputBuffer->m_length);
+        // STARFISH_LOG_INFO("start demux %d %d\n", (int)m_bufferRemain->size(), (int)m_inputBuffer->m_length);
     }
 
     virtual int64_t onSeek(int64_t position, SeekWhence whence)
@@ -315,6 +315,7 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
                 delete p[j];
             }
             std::vector<MediaPacket*>().swap(p);
+            delete nr->m_packetGroup[i];
         }
         std::vector<MediaPacketGroup*>().swap(nr->m_packetGroup);
 
@@ -403,6 +404,172 @@ void SourceBuffer::prepareAppend()
     codedFrameEviction();
 
     // TODO If the buffer full flag equals true, then throw a QuotaExceededError exception and abort these step.
+}
+
+void SourceBuffer::remove(double start, double end)
+{
+    // If this object has been removed from the sourceBuffers attribute of the parent media source then throw an InvalidStateError exception and abort these steps.
+    if (!m_isAttachedToParent) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "SourceBuffer has been removed from from parernt MediaSource");
+    }
+
+    // If the updating attribute equals true, then throw an InvalidStateError exception and abort these steps.
+    if (m_updating) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "SourceBuffer is now updating");
+    }
+
+    // If duration equals NaN, then throw a TypeError exception and abort these steps.
+    double duration = m_parentMediaSource->duration();
+    if (std::isnan(duration)) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::TYPE_ERR, "If Duration is NaN, can not execute remove method");
+    }
+
+    // If start is negative or greater than duration, then throw a TypeError exception and abort these steps.
+    if (start < 0 || start > duration) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::TYPE_ERR, "when executing remove, start must be greater than zero and smaller than duration");
+    }
+
+    // If end is less than or equal to start or end equals NaN, then throw a TypeError exception and abort these steps.
+    if (end <= start || std::isnan(end)) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::TYPE_ERR, "when executing remove, end must be greater than start and not NaN");
+    }
+
+    // If the readyState attribute of the parent media source is in the "ended" state then run the following steps:
+    if (parentMediaSource()->readyState() == MediaSource::ReadyState::Ended) {
+        // Set the readyState attribute of the parent media source to "open"
+        // Queue a task to fire a simple event named sourceopen at the parent media source.
+        parentMediaSource()->setReadyState(MediaSource::ReadyState::Open);
+    }
+
+    // 3.5.6 Range Removal
+    {
+        uint64_t startTimestamp = start * 1000;
+        uint64_t endTimestamp = end * 1000;
+
+        Locker<Mutex> lock(*m_packetGroupMutex);
+        setUpdating(true, UpdateState::Success);
+
+        size_t groupIndex = 0;
+        while (groupIndex < m_packetGroup.size()) {
+            MediaPacketGroup* grp = m_packetGroup[groupIndex];
+            if (startTimestamp <= grp->m_groupTimestampStart && grp->m_groupTimestampEnd <= endTimestamp) {
+                // STARFISH_LOG_INFO("SourceBuffer::remove all %d was(%d->%d)\n", (int)groupIndex, (int)grp->m_groupTimestampStart, (int)grp->m_groupTimestampEnd);
+
+                for (size_t i = 0; i < grp->m_packets.size(); i ++) {
+                    delete [] grp->m_packets[i]->m_data;
+                    delete grp->m_packets[i];
+                }
+
+                std::vector<MediaPacket*>().swap(grp->m_packets);
+                delete grp;
+                m_packetGroup.erase(m_packetGroup.begin() + groupIndex);
+            } else if ((startTimestamp <= grp->m_groupTimestampStart && endTimestamp < grp->m_groupTimestampEnd) || (grp->m_groupTimestampStart < startTimestamp && grp->m_groupTimestampEnd <= endTimestamp)) {
+                // remove head or tail
+                size_t eraseStart = 0;
+                size_t eraseEnd = grp->m_packets.size();
+
+                if ((startTimestamp <= grp->m_groupTimestampStart && endTimestamp < grp->m_groupTimestampEnd)) {
+                    // remove head
+                    for (size_t i = 0; i < grp->m_packets.size(); i ++) {
+                        MediaPacket* pkt = grp->m_packets[i];
+                        if (endTimestamp > (pkt->m_pts + pkt->m_duration)) {
+                            eraseEnd = i;
+                        } else {
+                            break;
+                        }
+                    }
+                } else {
+                    // remove tail
+                    for (size_t i = grp->m_packets.size(); i > 0; i --) {
+                        MediaPacket* pkt = grp->m_packets[i - 1];
+                        if (startTimestamp < pkt->m_pts) {
+                            eraseStart = i;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                // STARFISH_LOG_INFO("SourceBuffer::remove %d %d %d\n", (int)groupIndex, (int)eraseStart, (int)eraseEnd);
+
+                for (size_t i = eraseStart; i < eraseEnd; i ++) {
+                    delete [] grp->m_packets[i]->m_data;
+                    delete grp->m_packets[i];
+                }
+
+                grp->m_packets.erase(grp->m_packets.begin() + eraseStart, grp->m_packets.begin() + eraseEnd);
+                if (grp->m_packets.size()) {
+                    grp->m_groupTimestampStart = (*grp->m_packets.begin())->m_pts;
+                    grp->m_groupTimestampEnd = (*(grp->m_packets.end() - 1))->m_pts + (*(grp->m_packets.end() - 1))->m_duration;
+                    groupIndex++;
+                } else {
+                    delete grp;
+                    m_packetGroup.erase(m_packetGroup.begin() + groupIndex);
+                }
+            } else if (grp->m_groupTimestampStart < startTimestamp && endTimestamp < grp->m_groupTimestampEnd) {
+                // remove center
+                size_t holeStart = 0;
+                size_t holeEnd = grp->m_packets.size();
+
+                for (size_t i = 0; i < grp->m_packets.size(); i ++) {
+                    MediaPacket* pkt = grp->m_packets[i];
+                    if (pkt->m_pts < startTimestamp) {
+                        holeStart = i;
+                    } else {
+                        break;
+                    }
+                }
+
+                for (size_t i = grp->m_packets.size(); i > 0; i --) {
+                    MediaPacket* pkt = grp->m_packets[i - 1];
+                    if ((pkt->m_pts + pkt->m_duration) > endTimestamp) {
+                        holeEnd = i;
+                    } else {
+                        break;
+                    }
+                }
+
+                // STARFISH_LOG_INFO("SourceBuffer::remove hole %d %d %d\n", (int)groupIndex, (int)holeStart, (int)holeEnd);
+
+                MediaPacketGroup* newGroup = new MediaPacketGroup(grp->m_streamIndex);
+                for (size_t i = holeEnd; i < grp->m_packets.size(); i ++) {
+                    newGroup->m_packets.push_back(grp->m_packets[i]);
+                }
+
+                if (newGroup->m_packets.size()) {
+                    grp->m_packets.erase(grp->m_packets.begin() + holeEnd, grp->m_packets.end());
+                    newGroup->m_groupTimestampStart = (*newGroup->m_packets.begin())->m_pts;
+                    newGroup->m_groupTimestampEnd = (*(newGroup->m_packets.end() - 1))->m_pts + (*(newGroup->m_packets.end() - 1))->m_duration;
+                    m_packetGroup.insert(m_packetGroup.begin() + groupIndex, newGroup);
+                    groupIndex++;
+                } else {
+                    delete newGroup;
+                }
+                for (size_t i = holeStart; i < holeEnd; i ++) {
+                    delete [] grp->m_packets[i]->m_data;
+                    delete grp->m_packets[i];
+                }
+                grp->m_packets.erase(grp->m_packets.begin() + holeStart, grp->m_packets.begin() + holeEnd);
+
+                if (grp->m_packets.size()) {
+                    grp->m_groupTimestampStart = (*grp->m_packets.begin())->m_pts;
+                    grp->m_groupTimestampEnd = (*(grp->m_packets.end() - 1))->m_pts + (*(grp->m_packets.end() - 1))->m_duration;
+                    groupIndex++;
+                } else {
+                    delete grp;
+                    m_packetGroup.erase(std::find(m_packetGroup.begin(), m_packetGroup.end(), grp));
+                }
+            } else {
+                groupIndex++;
+            }
+        }
+        auto iter2 = m_packetAccessCachePerStream.begin();
+        while (iter2 != m_packetAccessCachePerStream.end()) {
+            *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
+            iter2++;
+        }
+    }
+    setUpdating(false, UpdateState::Success);
 }
 
 void SourceBuffer::codedFrameEviction()
@@ -542,7 +709,7 @@ MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t star
         }
     }
 
-    STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket cache miss! streamIdx(%d)\n", (int)streamIdx);
+    // STARFISH_LOG_INFO("SourceBuffer::findProperMediaPacket cache miss! streamIdx(%d)\n", (int)streamIdx);
 
     std::pair<size_t, uint64_t> nearestPacketGroupInfo = std::make_pair(SIZE_MAX, std::numeric_limits<uint64_t>::max());
 

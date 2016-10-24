@@ -148,18 +148,42 @@ for(var i = 0; i < 1000; i ++)
 scrollDownConsoleOutoutWindow()
 */
 
+var userCommandList = []
+var userCommandListFocus = undefined;
+
 document.getElementById("console-input").onkeyup = function(e)
 {
     if (e.keyCode == 13 && this.value.trim().length) {
         addConsoleUserInput(this.value)
         scrollDownConsoleOutoutWindow()
         var content = this.value;
+        if (userCommandList[userCommandList.length - 1] != content)
+            userCommandList.push(content);
+        userCommandListFocus = undefined;
         this.value ="";
 
         var obj = {}
         obj.command = "eval"
         obj.content = content;
         sock.send(JSON.stringify(obj))
+    } else if (e.keyCode == 38) {
+        if (!userCommandListFocus) {
+            userCommandListFocus = userCommandList.length;
+        }
+        userCommandListFocus--;
+        if (userCommandListFocus < 0) {
+            userCommandListFocus = 0;
+        }
+        this.value = userCommandList[userCommandListFocus];
+    } else if (e.keyCode == 40) {
+        if (userCommandListFocus) {
+            userCommandListFocus++;
+            if (userCommandListFocus >= userCommandList.length) {
+                userCommandListFocus = undefined;
+            } else {
+                this.value = userCommandList[userCommandListFocus];
+            }
+        }
     }
 }
 

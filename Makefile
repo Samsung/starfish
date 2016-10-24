@@ -103,9 +103,11 @@ else ifneq (,$(findstring tizen24_mobile_arm,$(MAKECMDGOALS)))
   TIZEN_DEVICE=device
 else ifneq (,$(findstring tizen_obs_arm,$(MAKECMDGOALS)))
   HOST=tizen_obs
+  TIZEN_ARCH=arm
 else ifneq (,$(findstring tizen_obs_emulator,$(MAKECMDGOALS)))
   HOST=tizen_obs
   ARCH=x86
+  TIZEN_ARCH=i386
 endif
 
 ifneq (,$(findstring exe,$(MAKECMDGOALS)))

@@ -1941,26 +1941,71 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
             SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()->asESObject()->extraPointerData();
             escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
 
-            if (false) {
+            try {
+                if (false) {
 
-            }
+                }
 #ifdef USE_ES6_FEATURE
-            else if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferObject()) {
-                escargot::ESArrayBufferObject* v = firstArg.asESPointer()->asESArrayBufferObject();
-                sourceBuffer->appendBuffer((uint8_t*)v->data(), v->bytelength());
-            } else if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferView()) {
-                escargot::ESArrayBufferView* v = firstArg.asESPointer()->asESArrayBufferView();
-                uint8_t* p = (uint8_t*)v->buffer()->data();
-                sourceBuffer->appendBuffer(p, v->bytelength());
-            }
+                else if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferObject()) {
+                    escargot::ESArrayBufferObject* v = firstArg.asESPointer()->asESArrayBufferObject();
+                    sourceBuffer->appendBuffer((uint8_t*)v->data(), v->bytelength());
+                } else if (firstArg.isESPointer() && firstArg.asESPointer()->isESArrayBufferView()) {
+                    escargot::ESArrayBufferView* v = firstArg.asESPointer()->asESArrayBufferView();
+                    uint8_t* p = (uint8_t*)v->buffer()->data();
+                    sourceBuffer->appendBuffer(p, v->bytelength());
+                }
 #endif
-            else {
-                escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Failed to execute 'appendBuffer' on 'SourceBuffer': No function was found that matched the signature provided."))));
+                else {
+                    escargot::ESVMInstance::currentInstance()->throwError(escargot::ESValue(escargot::TypeError::create(escargot::ESString::create("Failed to execute 'appendBuffer' on 'SourceBuffer': No function was found that matched the signature provided."))));
+                }
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
+
             return escargot::ESValue(escargot::ESValue::ESUndefined);
         }, escargot::ESString::create("appendBuffer"), 1, false)
     );
-    // TODO: appendStream, abort, remove
+
+    SourceBufferFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("remove"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::SourceBufferObject);
+            SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()->asESObject()->extraPointerData();
+            escargot::ESValue arg0 = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue arg1 = instance->currentExecutionContext()->readArgument(1);
+
+            try {
+                sourceBuffer->remove(arg0.toNumber(), arg1.toNumber());
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("remove"), 2, false)
+    );
+
+    SourceBufferFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("abort"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::SourceBufferObject);
+            SourceBuffer* sourceBuffer = (SourceBuffer*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            try {
+                sourceBuffer->abort();
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("abort"), 0, false)
+    );
+
+    // TODO: appendStream
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("mode"),
@@ -4367,9 +4412,12 @@ escargot::ESFunctionObject* bindingNamedNodeMap(ScriptBindingInstance* scriptBin
 
         escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
         if (argValue.isESString()) {
-            Attr* elem = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData())->getNamedItem(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(((Window*)instance->globalObject()->extraPointerData())->starFish(), argValue.asESString()->utf8Data())));
-        if (elem != nullptr)
-            return elem->scriptValue();
+            NamedNodeMap* t = ((NamedNodeMap*) thisValue.asESPointer()->asESObject()->extraPointerData());
+            String* key = toBrowserString(argValue);
+            auto attrName = t->element()->document()->createAttributeName(key);
+            Attr* elem = t->getNamedItem(attrName);
+            if (elem != nullptr)
+                return elem->scriptValue();
         } else {
             THROW_ILLEGAL_INVOCATION()
         }
