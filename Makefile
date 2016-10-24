@@ -233,7 +233,9 @@ ifneq (,$(findstring tizen,$(HOST)))
   ifeq ($(TIZEN_PROFILE),tv)
     MEDIA_SUPPORT=true
     DOMPARSER_SUPPORT=true
+    MULTIPAGE_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_TV
+    CXXFLAGS += -DSTARFISH_ENABLE_TEST
   endif
   ifeq ($(TIZEN_PROFILE),mobile)
     MEDIA_SUPPORT=true

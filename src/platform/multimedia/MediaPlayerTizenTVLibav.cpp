@@ -104,6 +104,7 @@ void MediaPlayerTizenTV::prepareMediaSource()
             // TODO
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+
         videoInfo.width = info->m_width;
         videoInfo.height = info->m_height;
         videoInfo.framerate_den = info->m_timeBaseDen;
@@ -117,10 +118,11 @@ void MediaPlayerTizenTV::prepareMediaSource()
         fc->pb = ioContext;
         fc->iformat = av_find_input_format(mediaFormat);
         STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) == 0);
-        videoInfo.codec_extradata = fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->extradata;
-        videoInfo.extradata_size = fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->extradata_size;
-
-        STARFISH_LOG_INFO("video Info.. %d %d %d %d\n", info->m_width, info->m_height, (int)videoInfo.framerate_den, (int)videoInfo.framerate_num);
+        videoInfo.codec_extradata = fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->extradata;
+        videoInfo.extradata_size = fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->extradata_size;
+        STARFISH_LOG_INFO("ffmpegVideo Info[%d].. %d %d\n", (int)m_activeMediaSource->activeVideoStreamIndex(), (int)fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->width,
+            (int)fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->height);
+        STARFISH_LOG_INFO("tizen video Info.. %d %d %d %d\n", info->m_width, info->m_height, (int)videoInfo.framerate_den, (int)videoInfo.framerate_num);
 
         int ret = player_set_video_stream_info(m_nativePlayer, &videoInfo);
         STARFISH_RELEASE_ASSERT(ret == 0);
@@ -131,6 +133,7 @@ void MediaPlayerTizenTV::prepareMediaSource()
     }
 
     // set audio options
+
     player_audio_stream_info_s audioInfo;
     if (m_activeMediaSource->activeAudioSourceBuffer()) {
         STARFISH_LOG_INFO("MSE set Audio\n");
@@ -161,8 +164,8 @@ void MediaPlayerTizenTV::prepareMediaSource()
         fc->iformat = av_find_input_format(mediaFormat);
         STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) == 0);
 
-        AVStream* audioStream = fc->streams[m_activeMediaSource->activeAudioStreamInSourceBuffer()];
-        AVCodecContext* audioCodecCtx = fc->streams[m_activeMediaSource->activeAudioStreamInSourceBuffer()]->codec;
+        AVStream* audioStream = fc->streams[m_activeMediaSource->activeAudioStreamIndex()];
+        AVCodecContext* audioCodecCtx = fc->streams[m_activeMediaSource->activeAudioStreamIndex()]->codec;
         audioInfo.channels = audioCodecCtx->channels;
         audioInfo.sample_rate = audioCodecCtx->sample_rate;
         audioInfo.bit_rate = audioCodecCtx->bit_rate;
