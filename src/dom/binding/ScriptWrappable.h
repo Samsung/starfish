@@ -86,6 +86,7 @@ class DOMException;
 #ifdef STARFISH_EXP
 class DOMImplementation;
 #endif
+class LocationObj;
 class Navigator;
 class ScriptBindingInstance;
 class Geolocation;
@@ -139,6 +140,7 @@ public:
         PositionErrorObject = 1 << 28,
         CoordinatesObject = 1 << 29,
         DOMParserObject = 1 << 30,
+        LocationObject = 1 << 31,
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -224,6 +226,7 @@ public:
     void initScriptWrappable(Blob* ptr);
     void initScriptWrappable(URL* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance);
+    void initScriptWrappable(LocationObj* ptr);
     void initScriptWrappable(Navigator* ptr);
     void initScriptWrappable(Geolocation* ptr);
     void initScriptWrappable(Geoposition* ptr);

@@ -180,6 +180,11 @@ public:
         return m_documentURI;
     }
 
+    LocationObj* location()
+    {
+        return window()->location();
+    }
+
     void open();
 
     // method for script element

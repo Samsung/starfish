@@ -61,6 +61,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(xhrElement, XMLHttpRequest) \
     F(blobElement, Blob) \
     F(url, URL) \
+    F(location, Location) \
     F(domException, DOMException) \
     F(navigator, Navigator) \
     F(geolocation, Geolocation) \
@@ -215,6 +216,7 @@ private:
     escargot::ESFunctionObject* m_xhrElement;
     escargot::ESFunctionObject* m_blobElement;
     escargot::ESFunctionObject* m_url;
+    escargot::ESFunctionObject* m_location;
     escargot::ESFunctionObject* m_domException;
     escargot::ESFunctionObject* m_navigator;
     escargot::ESFunctionObject* m_geolocation;

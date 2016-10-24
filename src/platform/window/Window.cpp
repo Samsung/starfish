@@ -24,6 +24,7 @@
 #include "platform/message_loop/MessageLoop.h"
 
 #include "extra/Navigator.h"
+#include "extra/Location.h"
 
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
@@ -387,6 +388,7 @@ Window::Window(StarFish* starFish)
     : m_starFish(starFish)
     , m_scriptBindingInstance(nullptr)
     , m_navigator(nullptr)
+    , m_location(nullptr)
     , m_document(nullptr)
     , m_rootStackingContext(nullptr)
     , m_touchDownPoint(0, 0)
@@ -475,6 +477,7 @@ void Window::navigate(URL* url)
     initScriptWrappable(this);
 
     m_navigator = new Navigator(m_starFish);
+    m_location = new LocationObj(m_starFish);
 
     m_document = new HTMLDocument(this, scriptBindingInstance(), url, String::createASCIIString("UTF-8"), true);
     m_document->open();
@@ -1296,6 +1299,10 @@ void Window::close()
 
     if (m_navigator) {
         m_navigator->close();
+    }
+
+    if (m_location) {
+        m_location->close();
     }
 
     if (m_document) {

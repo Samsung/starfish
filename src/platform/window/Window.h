@@ -130,6 +130,11 @@ public:
         return m_navigator;
     }
 
+    LocationObj* location()
+    {
+        return m_location;
+    }
+
     StarFish* starFish()
     {
         return m_starFish;
@@ -252,6 +257,7 @@ protected:
     StarFish* m_starFish;
     ScriptBindingInstance* m_scriptBindingInstance;
     Navigator* m_navigator;
+    LocationObj* m_location;
     Document* m_document;
     StackingContext* m_rootStackingContext;
     std::vector<CanvasSurface*, gc_allocator<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;

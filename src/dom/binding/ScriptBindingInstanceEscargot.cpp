@@ -26,6 +26,7 @@
 #include "style/CSSStyleLookupTrie.h"
 #include "extra/Console.h"
 #include "extra/Navigator.h"
+#include "extra/Location.h"
 #include "platform/location/Geolocation.h"
 
 #include <Escargot.h>
@@ -285,28 +286,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
     fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("console"), false, false, false, console);
 
 #ifdef STARFISH_ENABLE_MULTI_PAGE
-    // Location
-    escargot::ESFunctionObject* locationFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        escargot::ESString* msg = escargot::ESString::create("Illegal constructor");
-        instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }, escargot::ESString::create("location"), 0, true, true);
-
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        locationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("href"),
+        fetchData(this)->m_instance->globalObject(), escargot::ESString::create("location"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
-        return toJSString(wnd->document()->documentURI()->urlString());
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
-        wnd->navigateAsync(URL::createURL(wnd->document()->documentURI()->urlString(), toBrowserString(instance->currentExecutionContext()->readArgument(0).toString())));
-        return escargot::ESValue();
-    });
-
-    escargot::ESObject* location = escargot::ESObject::create();
-    location->set__proto__(locationFunction->protoType());
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("location"), true, true, true, location);
-    fetchData(this)->m_instance->globalObject()->defineDataProperty(escargot::ESString::create("Location"), true, true, true, locationFunction);
+        return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->location()->scriptObject();
+    }, nullptr, true, false);
 #endif
 
     escargot::ESFunctionObject* toStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -2746,6 +2730,18 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
             Document* document = nd->asDocument();
             Window* window = document->window();
             return window->scriptValue();
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("location"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            LocationObj* location = nd->asDocument()->location();
+            return location->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, nullptr);
@@ -5217,10 +5213,48 @@ escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBin
 
     return DOMExceptionFunction;
 }
+escargot::ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Location, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        LocationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("href"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        return toJSString(originalObj->getHref());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount < 1) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        } else {
+            originalObj->setHref(String::fromUTF8(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()));
+        }
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        LocationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("pathname"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        return toJSString(originalObj->getPathname());
+    },  [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount < 1) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        } else {
+            originalObj->setPathname(String::fromUTF8(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()));
+        }
+        return escargot::ESValue();
+    });
+
+    return LocationFunction;
+}
 
 escargot::ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)
 {
-    DEFINE_FUNCTION(Navigator, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(Navigator, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         NavigatorFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("appCodeName"),
