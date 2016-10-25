@@ -148,6 +148,11 @@ public:
         return false;
     }
 
+    virtual bool isFocusEvent()
+    {
+        return false;
+    }
+
     virtual bool isKeyboardEvent()
     {
         return false;
@@ -157,6 +162,12 @@ public:
     {
         STARFISH_ASSERT(isMouseEvent());
         return (MouseEvent*)this;
+    }
+
+    FocusEvent* asFocusEvent()
+    {
+        STARFISH_ASSERT(isFocusEvent());
+        return (FocusEvent*)this;
     }
 
     KeyboardEvent* asKeyboardEvent()
@@ -174,6 +185,19 @@ public:
     }
 
     virtual bool isMouseEvent()
+    {
+        return true;
+    }
+};
+
+class FocusEvent : public UIEvent {
+public:
+    FocusEvent(String* eventType, const EventInit& init = EventInit(false, false))
+        : UIEvent(eventType, init)
+    {
+    }
+
+    virtual bool isFocusEvent()
     {
         return true;
     }

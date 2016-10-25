@@ -234,6 +234,14 @@ public:
     QualifiedName m_loadstart;
     QualifiedName m_enter;
     QualifiedName m_exit;
+    QualifiedName m_blur;
+    QualifiedName m_onblur;
+    QualifiedName m_focus;
+    QualifiedName m_onfocus;
+    QualifiedName m_focusin;
+    QualifiedName m_onfocusin;
+    QualifiedName m_focusout;
+    QualifiedName m_onfocusout;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;
