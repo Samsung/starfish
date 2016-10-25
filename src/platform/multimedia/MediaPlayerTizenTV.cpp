@@ -125,6 +125,7 @@ void MediaPlayerTizenTV::seek(double time)
         Locker<Mutex> videoLock(*m_videoBufferMutex);
         Locker<Mutex> audioLock(*m_audioBufferMutex);
         m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
+        m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
         m_lastVideoPts = m_lastAudioPts = time;
         ret = player_set_position(m_nativePlayer, time, [](void* data) {
             STARFISH_LOG_INFO("player_set_position_cb\n");
