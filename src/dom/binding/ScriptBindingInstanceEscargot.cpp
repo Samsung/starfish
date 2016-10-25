@@ -2046,12 +2046,17 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         SourceBufferFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("buffered"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
-        TimeRanges* timeRanges = originalObj->buffered();
-        if (timeRanges) {
-            return timeRanges->scriptValue();
+        try {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::SourceBufferObject, SourceBuffer);
+            TimeRanges* timeRanges = originalObj->buffered();
+            if (timeRanges) {
+                return timeRanges->scriptValue();
+            }
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
-        return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
