@@ -1131,6 +1131,14 @@ void ScriptWrappable::initScriptWrappable(KeyboardEvent* ptr)
     scriptObject()->set__proto__(data->keyboardEvent()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(FocusEvent* ptr)
+{
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->scriptBindingInstance();
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->focusEvent()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(ProgressEvent* ptr)
 {
     Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();

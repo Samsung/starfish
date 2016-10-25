@@ -214,6 +214,7 @@ public:
     void initScriptWrappable(UIEvent* ptr);
     void initScriptWrappable(MouseEvent* ptr);
     void initScriptWrappable(KeyboardEvent* ptr);
+    void initScriptWrappable(FocusEvent* ptr);
     void initScriptWrappable(ProgressEvent* ptr);
     void initScriptWrappable(HTMLCollection* ptr, ScriptBindingInstance*);
     void initScriptWrappable(NodeList* ptr, ScriptBindingInstance*);

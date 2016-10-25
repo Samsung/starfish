@@ -201,6 +201,11 @@ public:
     {
         return true;
     }
+
+    int relatedTarget()
+    {
+        return 0;
+    }
 };
 
 #define KEYBOARD_KEYCODE_NONE 0
