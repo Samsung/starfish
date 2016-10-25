@@ -563,6 +563,7 @@ void SourceBuffer::remove(double start, double end)
                 groupIndex++;
             }
         }
+
         auto iter2 = m_packetAccessCachePerStream.begin();
         while (iter2 != m_packetAccessCachePerStream.end()) {
             *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
@@ -691,6 +692,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
 void SourceBuffer::clearPacketAccessCache()
 {
+    Locker<Mutex> packetGroupLocker(*m_packetGroupMutex);
     auto iter = m_packetAccessCachePerStream.begin();
     while (iter != m_packetAccessCachePerStream.end()) {
         *iter = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);

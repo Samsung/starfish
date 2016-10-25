@@ -120,13 +120,20 @@ void MediaPlayerTizenTV::seek(double time)
     player_get_state(m_nativePlayer, &state);
     STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
     time = time * 1000;
+    int ret;
     if (m_activeMediaSource) {
+        Locker<Mutex> videoLock(*m_videoBufferMutex);
+        Locker<Mutex> audioLock(*m_audioBufferMutex);
         m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
         m_lastVideoPts = m_lastAudioPts = time;
+        ret = player_set_position(m_nativePlayer, time, [](void* data) {
+            STARFISH_LOG_INFO("player_set_position_cb\n");
+        }, this);
+    } else {
+        ret = player_set_position(m_nativePlayer, time, [](void* data) {
+            STARFISH_LOG_INFO("player_set_position_cb\n");
+        }, this);
     }
-    int ret = player_set_position(m_nativePlayer, time, [](void* data) {
-        STARFISH_LOG_INFO("player_set_position_cb\n");
-    }, this);
     if (ret != PLAYER_ERROR_NONE) {
         STARFISH_LOG_ERROR("**ERROR: player_set_position %x", ret);
     }
@@ -134,12 +141,13 @@ void MediaPlayerTizenTV::seek(double time)
 
 void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
 {
-    STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer\n");
     if (useLock)
         m_videoBufferMutex->lock();
 
+    STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer -> %dms\n", (int)m_lastVideoPts);
     uint64_t ptsStart = m_lastVideoPts;
     uint64_t streamIdx = m_activeMediaSource->activeVideoStreamIndex();
+
     while (m_lastVideoPts - ptsStart < 1000) {
         MediaPacket* packet = m_activeMediaSource->activeVideoSourceBuffer()->findProperMediaPacket(streamIdx, m_lastVideoPts);
         if (!packet) {
@@ -184,9 +192,10 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
 
 void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
 {
-    STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer\n");
     if (useLock)
         m_audioBufferMutex->lock();
+
+    STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer -> %dms\n", (int)m_lastAudioPts);
 
     uint64_t ptsStart = m_lastAudioPts;
     uint64_t streamIdx = m_activeMediaSource->activeAudioStreamIndex();
