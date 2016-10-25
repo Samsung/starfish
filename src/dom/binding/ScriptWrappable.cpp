@@ -1256,7 +1256,9 @@ void ScriptWrappable::initScriptWrappable(NamedNodeMap* ptr, ScriptBindingInstan
         STARFISH_ASSERT(self->type() == ScriptWrappable::Type::NamedNodeMapObject);
         uint32_t idx = key.toIndex();
         if (idx == escargot::ESValue::ESInvalidIndexValue) {
-            Attr* e = self->getNamedItem(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAttrAtomicString(((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData())->starFish(), key.asESString()->utf8Data())));
+            String* str = toBrowserString(key);
+            auto attrName = self->element()->document()->createAttributeName(str);
+            Attr* e = self->getNamedItem(attrName);
             if (e != nullptr)
                 return e->scriptValue();
         } else if (idx < self->length()) {

@@ -125,6 +125,7 @@ public:
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
+    , m_inPlaying(false)
     , m_alive(true)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)

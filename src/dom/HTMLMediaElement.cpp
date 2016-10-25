@@ -689,8 +689,10 @@ void HTMLMediaElement::abortEveryPendingOperation(DOMException* exceptionForPlay
 void HTMLMediaElement::processNextOperationQueue()
 {
     STARFISH_ASSERT(m_currentPendingOperationCount == 1 || m_currentPendingOperationCount == 0);
-    if (m_currentPendingOperationCount == 1)
+    if (m_currentPendingOperationCount == 1) {
         m_currentPendingOperationCount--;
+        m_currentOperation = nullptr;
+    }
 
     if (m_operationQueue.size()) {
         STARFISH_ASSERT(m_currentPendingOperationCount == 0);
@@ -705,12 +707,13 @@ void HTMLMediaElement::processNextOperationQueue()
         m_currentPendingOperationHandle = document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data) {
             MediaOperationQueueData* queueData = (MediaOperationQueueData*)data;
             STARFISH_LOG_INFO("HTMLMediaElement::processNextOperationQueue::process %d\n", (int)queueData->m_mediaElement->m_operationQueue.size());
-            queueData->m_mediaElement->m_currentOperation = nullptr;
             queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
             queueData->processOperationQueue();
             STARFISH_ASSERT(queueData->m_mediaElement->m_currentPendingOperationCount == 1 || queueData->m_mediaElement->m_currentPendingOperationCount == 0);
-            if (queueData->m_mediaElement->m_currentPendingOperationCount == 1)
+            if (queueData->m_mediaElement->m_currentPendingOperationCount == 1) {
                 queueData->m_mediaElement->m_currentPendingOperationCount--;
+                queueData->m_mediaElement->m_currentOperation = nullptr;
+            }
         }, m_currentOperation);
     }
 }
