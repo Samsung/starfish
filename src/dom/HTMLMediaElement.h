@@ -219,6 +219,7 @@ public:
     void setPreload(String* preload);
     void setSeeking(bool seeking);
     void setCurrentTime(double currentTime);
+    void setOfficialPlaybackPosition(double time);
     void setDefaultPlaybackStartPosition(double position);
     void setDefaultPlaybackRate(double defaultPlaybackRate);
     void setPlaybackRate(double playbackRate);
@@ -282,7 +283,7 @@ public:
 #undef ADD_DISPATCH_EVENT_DECL
 
     void giveupFetchingResource(bool shouldSetError = true);
-
+    void setNetworkStateAsHaveNothing();
 protected:
     bool m_isPaused;
     bool m_isSeeking;
@@ -303,7 +304,6 @@ protected:
 
     void initMediaPlayer();
     void closeMediaPlayer();
-
 
     void resourceSelection();
     void dedicatedMediaSourceFailure();

@@ -66,6 +66,9 @@ public:
     void compleatePrepare();
     void endOfStream();
 
+    void startPlaying();
+    void stopPlaying();
+
     void handlePlayerError(int error);
 
     virtual unsigned long videoWidth()
@@ -111,6 +114,7 @@ public:
     void (*m_preparedCallback)(void*);
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;
+    size_t m_currentTimeUpdateTimer;
     unsigned long m_videoWidth, m_videoHeight;
 };
 }
