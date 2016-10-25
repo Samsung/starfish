@@ -219,6 +219,16 @@ public:
     // Event Names
     QualifiedName m_click;
     QualifiedName m_onclick;
+    QualifiedName m_mousedown;
+    QualifiedName m_onmousedown;
+    QualifiedName m_mousemove;
+    QualifiedName m_onmousemove;
+    QualifiedName m_mouseout;
+    QualifiedName m_onmouseout;
+    QualifiedName m_mouseover;
+    QualifiedName m_onmouseover;
+    QualifiedName m_mouseup;
+    QualifiedName m_onmouseup;
     QualifiedName m_load;
     QualifiedName m_error;
     QualifiedName m_onload;
