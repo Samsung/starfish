@@ -62,11 +62,22 @@ web-widget-engine development headers
 %setup -q
 
 %build
-
 %ifarch %{arm}
-make tizen_obs_arm.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
+export MAKE_TARGET=tizen_obs_arm
 %else
-make tizen_obs_emulator.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
+export MAKE_TARGET=tizen_obs_emulator
+%endif
+
+%if 0%{?only_devel}
+%ifarch %{arm}
+mkdir -p out/tizen_obs/arm/lib/release
+touch    out/tizen_obs/arm/lib/release/libWebWidgetEngine.so
+%else
+mkdir -p out/tizen_obs/x86/lib/release
+touch    out/tizen_obs/x86/lib/release/libWebWidgetEngine.so
+%endif
+%else
+make ${MAKE_TARGET}.lib.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
 %endif
 
 %if 0%{?only_release}
@@ -78,10 +89,11 @@ mkdir -p out/tizen_obs/x86/exe/debug
 touch    out/tizen_obs/x86/exe/debug/StarFish
 %endif
 %else
-%ifarch %{arm}
-make tizen_obs_arm.exe.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
+
+%if "%{mode}" == "release"
+make ${MAKE_TARGET}.exe.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
 %else
-make tizen_obs_emulator.exe.debug %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
+make ${MAKE_TARGET}.exe.debug %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
 %endif
 %endif
 
@@ -101,7 +113,12 @@ cat LICENSE* > %{buildroot}%{_datadir}/license/%{name}
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
 cp out/tizen_obs/${STARFISH_ARCH}/lib/release/libWebWidgetEngine.so %{buildroot}%{_libdir}
+
+%if "%{mode}" == "release"
+cp out/tizen_obs/${STARFISH_ARCH}/exe/release/StarFish %{buildroot}%{_bindir}
+%else
 cp out/tizen_obs/${STARFISH_ARCH}/exe/debug/StarFish %{buildroot}%{_bindir}
+%endif
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
 cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
