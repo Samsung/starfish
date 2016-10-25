@@ -689,6 +689,15 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
     }, inputBuffer);
 }
 
+void SourceBuffer::clearPacketAccessCache()
+{
+    auto iter = m_packetAccessCachePerStream.begin();
+    while (iter != m_packetAccessCachePerStream.end()) {
+        *iter = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
+        iter++;
+    }
+}
+
 MediaPacket* SourceBuffer::findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind)
 {
     Locker<Mutex> packetGroupLocker(*m_packetGroupMutex);

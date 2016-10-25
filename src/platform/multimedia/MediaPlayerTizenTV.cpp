@@ -116,9 +116,12 @@ double MediaPlayerTizenTV::currentTime()
 
 void MediaPlayerTizenTV::seek(double time)
 {
-    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek %f \n", (float) time);
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
     time = time * 1000;
     if (m_activeMediaSource) {
+        m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
         m_lastVideoPts = m_lastAudioPts = time;
     }
     int ret = player_set_position(m_nativePlayer, time, [](void* data) {
