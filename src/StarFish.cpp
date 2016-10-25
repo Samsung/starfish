@@ -645,6 +645,14 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_loadstart = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loadstart"));
     m_enter = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "enter"));
     m_exit = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "exit"));
+    m_blur = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "blur"));
+    m_onblur = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onblur"));
+    m_focus = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "focus"));
+    m_onfocus = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onfocus"));
+    m_focusin = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "focusin"));
+    m_onfocusin = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onfocusin"));
+    m_focusout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "focusout"));
+    m_onfocusout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onfocusout"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "cuechange"));
     m_sourceopen = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "sourceopen"));

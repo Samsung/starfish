@@ -69,6 +69,7 @@ class HTMLUnknownElement;
 class Event;
 class UIEvent;
 class MouseEvent;
+class FocusEvent;
 class KeyboardEvent;
 class ProgressEvent;
 class HTMLCollection;
