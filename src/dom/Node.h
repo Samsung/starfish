@@ -115,6 +115,7 @@ protected:
         m_lastChild = nullptr;
 
         m_state = NodeStateNormal;
+        m_focusState = NodeFocusOutState;
 
         m_inParsing = false;
         m_needsStyleRecalc = true;
@@ -312,6 +313,11 @@ public:
         NodeStateActive,
     };
 
+    enum NodeFocusState {
+        NodeFocusInState,
+        NodeFocusOutState,
+    };
+
     virtual bool isNode() const
     {
         return true;
@@ -452,6 +458,19 @@ public:
     NodeState state()
     {
         return m_state;
+    }
+
+    void setFocusState(NodeFocusState focusState)
+    {
+        if (focusState != m_focusState) {
+            m_focusState = focusState;
+            setNeedsStyleRecalc();
+        }
+    }
+
+    NodeFocusState focusState()
+    {
+        return m_focusState;
     }
 
     inline void setNeedsStyleRecalc();
@@ -608,6 +627,7 @@ protected:
     bool m_hasDirAttribute : 1;
 
     NodeState m_state : 1;
+    NodeFocusState m_focusState : 1;
 
     RareNodeMembers* m_rareNodeMembers;
 private:
