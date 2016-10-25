@@ -98,6 +98,7 @@ public:
     virtual TimeRanges* buffered();
 
     bool m_inPrepare;
+    bool m_inPlaying;
     bool m_alive;
     bool m_isVideoBufferUnderrunState;
     bool m_isAudioBufferUnderrunState;
