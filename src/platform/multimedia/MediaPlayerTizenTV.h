@@ -49,7 +49,11 @@ public:
     virtual void mediaEndOperation()
     {
         player_stop(m_nativePlayer);
-        m_lastAudioPts = m_lastVideoPts = 0;
+        if (m_activeMediaSource) {
+            Locker<Mutex> videoLock(*m_videoBufferMutex);
+            Locker<Mutex> audioLock(*m_audioBufferMutex);
+            m_lastAudioPts = m_lastVideoPts = 0;
+        }
     }
     virtual void seek(double time);
 
