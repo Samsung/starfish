@@ -109,9 +109,9 @@ struct StreamProcessInfo {
 
 class DemuxerClientSourceBuffer : public DemuxerClient {
 public:
-
     DemuxerClientSourceBuffer()
-        : m_currentGroupLastTimestamp(-1)
+        : m_isAborted(false)
+        , m_currentGroupLastTimestamp(-1)
         , m_timestampOffset(0)
         , m_appendWindowStart(0)
         , m_appendWindowEnd(std::numeric_limits<double>::infinity())
@@ -272,6 +272,7 @@ public:
         m_appendWindowEnd = appendWindowEnd * 1000;
     }
 
+    bool m_isAborted;
     std::vector<VideoStreamInfo> m_detectedVideoStream;
     std::vector<AudioStreamInfo> m_detectedAudioStream;
     std::vector<MediaPacketGroup*> m_packetGroup;
@@ -284,27 +285,30 @@ public:
 
 SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     : EventTarget()
-    , m_mode(AppendMode::Segments)
-    , m_state(AppendState::WaitingForSegment)
     , m_isAttachedToParent(false)
-    , m_updating(false)
     , m_starFish(starFish)
     , m_demuxer(nullptr)
-    , m_buffered(nullptr)
-    , m_timestampOffset(0)
-    , m_audioTracks(nullptr)
-    , m_videoTracks(nullptr)
-    , m_textTracks(nullptr)
-    , m_appendWindowStart(0)
-    , m_appendWindowEnd(std::numeric_limits<double>::infinity())
-    , m_groupStartTimestamp(std::numeric_limits<double>::quiet_NaN())
-    , m_groupEndTimestamp(0)
     , m_type(type)
     , m_parentMediaSource(nullptr)
     , m_sourceBufferUpdateThread(nullptr)
     , m_packetGroupMutex(new Mutex())
 {
-    abort();
+    m_mode = AppendMode::Segments;
+    m_state = AppendState::WaitingForSegment;
+    m_updating = false;
+    m_buffered = nullptr;
+    m_timestampOffset = 0;
+    m_audioTracks = nullptr;
+    m_videoTracks = nullptr;
+    m_textTracks = nullptr;
+    m_appendWindowStart = 0;
+    m_appendWindowEnd = std::numeric_limits<double>::infinity();
+    m_groupStartTimestamp = std::numeric_limits<double>::quiet_NaN();
+    m_groupEndTimestamp = 0;
+
+    m_demuxer = Demuxer::createDemuxer(m_type);
+    m_demuxer->addClient(new DemuxerClientSourceBuffer());
+
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
         STARFISH_LOG_INFO("SourceBuffer::~SourceBuffer %p\n", obj);
         SourceBuffer* nr = (SourceBuffer*)obj;
@@ -355,9 +359,54 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
 
 void SourceBuffer::abort()
 {
-    // TODO in updating, stop update process
+    // If this object has been removed from the sourceBuffers attribute of the parent media source then throw an InvalidStateError exception and abort these steps.
+    if (!m_isAttachedToParent) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "SourceBuffer has been removed from from parent MediaSource, when executing 'abort' of SourceBuffer");
+    }
+
+    // If the readyState attribute of the parent media source is not in the "open" state then throw an InvalidStateError exception and abort these steps.
+    if (m_parentMediaSource->readyState() != MediaSource::Open) {
+        throw new DOMException(m_starFish->window()->scriptBindingInstance(), DOMException::INVALID_STATE_ERR, "readyState of parentMediaSource is not open, when executing 'abort' of SourceBuffer");
+    }
+
+    // TODO If the range removal algorithm is running, then throw an InvalidStateError exception and abort these steps.
+    // we are running removal algorithm in main thread now.
+
+    // If the updating attribute equals true, then run the following steps:
+    if (m_updating) {
+        // Queue a task to fire a simple event named abort at this SourceBuffer object.
+        m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(this, new Event(m_parentMediaSource->starFish()->staticStrings()->m_abort.localName()));
+        // Queue a task to fire a simple event named updateend at this SourceBuffer object.
+        m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(this, new Event(m_parentMediaSource->starFish()->staticStrings()->m_updateend.localName()));
+
+        m_updating = false;
+    }
+
+    DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)m_demuxer->client(0);
+    cl->m_isAborted = true;
+
     m_demuxer = Demuxer::createDemuxer(m_type);
     m_demuxer->addClient(new DemuxerClientSourceBuffer());
+
+    // Run the reset parser state algorithm.
+    // TODO If the append state equals PARSING_MEDIA_SEGMENT and the input buffer contains some complete coded frames, then run the coded frame processing algorithm until all of these complete coded frames have been processed.
+    // TODO Unset the last decode timestamp on all track buffers.
+    // TODO Unset the last frame duration on all track buffers.
+    // TODO Unset the highest end timestamp on all track buffers.
+    // TODO Set the need random access point flag on all track buffers to true.
+    // TODO If the mode attribute equals "sequence", then set the group start timestamp to the group end timestamp
+    // Remove all bytes from the input buffer.
+    // Set append state to WAITING_FOR_SEGMENT.
+    m_state = AppendState::WaitingForSegment;
+    m_bufferUnprocessed.clear();
+    m_bufferUnprocessed.shrink_to_fit();
+    m_bufferHeader.clear();
+    m_bufferHeader.shrink_to_fit();
+
+    // Set appendWindowStart to the presentation start time.
+    // Set appendWindowEnd to positive Infinity.
+    m_appendWindowStart = 0;
+    m_appendWindowEnd = std::numeric_limits<double>::infinity();
 }
 
 void SourceBuffer::appendBuffer(const uint8_t* data, unsigned long length)
@@ -626,6 +675,23 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
         inputBuffer->m_sourceBuffer->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data, void* data2) {
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
+            DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
+            if (cl->m_isAborted) {
+                for (size_t i = 0; i < cl->m_packetGroup.size(); i ++) {
+                    MediaPacketGroup* grp = cl->m_packetGroup[i];
+                    for (size_t j = 0; j < grp->m_packets.size(); j ++) {
+                        delete[] grp->m_packets[j]->m_data;
+                        delete grp->m_packets[j];
+                    }
+                    std::vector<MediaPacket*>().swap(grp->m_packets);
+                }
+
+                std::vector<VideoStreamInfo>().swap(cl->m_detectedVideoStream);
+                std::vector<AudioStreamInfo>().swap(cl->m_detectedAudioStream);
+                std::vector<MediaPacketGroup*>().swap(cl->m_packetGroup);
+                std::vector<StreamProcessInfo>().swap(cl->m_streamProcessInfo);
+                return;
+            }
             size_t readPos = (size_t)data2;
 
             size_t unprocessSizeBefore = inputBuffer->m_sourceBuffer->m_bufferUnprocessed.size();
@@ -646,9 +712,6 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 inputBuffer->m_sourceBuffer->m_bufferHeader.insert(inputBuffer->m_sourceBuffer->m_bufferHeader.end(), inputBuffer->m_headerBuffer.begin(), inputBuffer->m_headerBuffer.end());
                 std::vector<uint8_t>().swap(inputBuffer->m_headerBuffer);
             }
-
-
-            DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
 
             {
                 Locker<Mutex> packetGroupLocker(*inputBuffer->m_sourceBuffer->m_packetGroupMutex);

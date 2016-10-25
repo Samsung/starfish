@@ -253,6 +253,7 @@ public:
         appendToOperationQueue(data);
         startOperationQueueIfNeeded();
     }
+    void processNextOperationQueue();
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow(); \
     void dispatch##Name##Event();
@@ -307,7 +308,6 @@ protected:
     void resourceSelection();
     void dedicatedMediaSourceFailure();
 
-    void processNextOperationQueue();
     void startOperationQueueIfNeeded()
     {
         if (m_currentPendingOperationCount == 0) {
