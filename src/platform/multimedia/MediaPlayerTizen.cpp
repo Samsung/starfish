@@ -25,6 +25,7 @@
 #include "platform/message_loop/MessageLoop.h"
 #include "platform/canvas/Canvas.h"
 #include "platform/threading/Thread.h"
+#include "platform/window/Window.h"
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
 #include "extra/Blob.h"
@@ -136,6 +137,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_audioBufferMutex(new Mutex())
     , m_preparedCallback(nullptr)
     , m_canvasSurface(nullptr)
+    , m_currentTimeUpdateTimer(SIZE_MAX)
 {
     player_create(&m_nativePlayer);
     initDisplay();
@@ -178,6 +180,31 @@ void MediaPlayerTizen::seekIfNeeded()
     }
 }
 
+void MediaPlayerTizen::startPlaying()
+{
+    if (!m_inPlaying) {
+        m_inPlaying = true;
+        player_start(m_nativePlayer);
+        m_starFish->addPointerInRootSet(this);
+        m_currentTimeUpdateTimer = m_starFish->window()->setInterval([](Window* window, void* data) {
+            MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+            self->m_container->setOfficialPlaybackPosition(self->currentTime());
+        }, 250, this);
+    }
+    seekIfNeeded();
+}
+
+void MediaPlayerTizen::stopPlaying()
+{
+    if (m_inPlaying) {
+        m_inPlaying = false;
+        m_starFish->removePointerFromRootSet(this);
+        m_starFish->window()->clearInterval(m_currentTimeUpdateTimer);
+        m_currentTimeUpdateTimer = SIZE_MAX;
+    }
+}
+
+
 void MediaPlayerTizen::close()
 {
     m_alive = false;
@@ -219,8 +246,7 @@ void MediaPlayerTizen::play()
         m_needsPlayAfterPrepare = true;
         m_container->addOperation(new MediaOperationQueueDataRequestPrepare(m_container, m_currentURL));
     } else {
-        player_start(m_nativePlayer);
-        seekIfNeeded();
+        startPlaying();
     }
 }
 
@@ -258,7 +284,7 @@ void MediaPlayerTizen::closePreparingMode()
 void MediaPlayerTizen::endOfStream()
 {
     mediaEndOperation();
-    m_starFish->removePointerFromRootSet(this);
+    stopPlaying();
     m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
     if (m_container) {
         m_container->dispatchPauseEventNow();
@@ -379,8 +405,7 @@ void MediaPlayerTizen::compleatePrepare()
         free(audioCodec);
 
         if (self->m_needsPlayAfterPrepare) {
-            player_start(self->m_nativePlayer);
-            self->seekIfNeeded();
+            self->startPlaying();
             self->m_needsPlayAfterPrepare = false;
         }
 
@@ -393,8 +418,8 @@ void MediaPlayerTizen::compleatePrepare()
 
 void MediaPlayerTizen::pauseOperation()
 {
-    m_starFish->removePointerFromRootSet(this);
     player_pause(m_nativePlayer);
+    stopPlaying();
     if (m_container) {
         m_container->dispatchPauseEvent();
     }
@@ -404,6 +429,8 @@ void MediaPlayerTizen::unprepareOperation()
 {
     STARFISH_LOG_INFO("MediaPlayerTizen::unprepareOperation\n");
     if (m_nativePlayer) {
+        stopPlaying();
+
         player_unprepare(m_nativePlayer);
         if (m_container->isHTMLVideoElement() && m_container->frame()) {
             m_container->setNeedsLayout();

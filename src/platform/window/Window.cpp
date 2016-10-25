@@ -440,7 +440,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     wnd->m_mobileFocusEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
         sf->starFish()->messageLoop()->addIdler([](size_t a, void* data) {
-            ((Window*)data)->dispatchFocusEvent(0, 0, Window::FocusEvent);
+            ((Window*)data)->dispatchFocusEvent(0, 0, Window::Focus_Event);
         }, sf);
         return;
     };

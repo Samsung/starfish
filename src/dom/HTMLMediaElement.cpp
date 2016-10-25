@@ -136,8 +136,7 @@ void HTMLMediaElement::load()
         // TODO Set the current playback position to 0.
         // Set the official playback position to 0.
         if (m_officialPlaybackPosition != 0) {
-            m_officialPlaybackPosition = 0;
-            dispatchTimeupdateEvent();
+            setOfficialPlaybackPosition(0);
         }
 
         // TODO Set the timeline offset to Not-a-Number (NaN).
@@ -158,7 +157,6 @@ void HTMLMediaElement::closeMediaPlayer()
         m_mediaPlayer->close();
         m_mediaPlayer = nullptr;
     }
-    m_readyState = HAVE_NOTHING;
 }
 
 void HTMLMediaElement::initMediaPlayer()
@@ -383,7 +381,7 @@ bool HTMLMediaElement::seeking()
 
 double HTMLMediaElement::currentTime()
 {
-    return m_mediaPlayer ? m_mediaPlayer->currentTime() : 0;
+    return m_mediaPlayer ? m_officialPlaybackPosition : 0;
 }
 
 double HTMLMediaElement::duration()
@@ -498,8 +496,16 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
         m_defaultPlaybackStartPosition = currentTime;
         STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
-        m_officialPlaybackPosition = currentTime;
+        setOfficialPlaybackPosition(currentTime);
         m_mediaPlayer->seek(currentTime);
+    }
+}
+
+void HTMLMediaElement::setOfficialPlaybackPosition(double time)
+{
+    if (m_officialPlaybackPosition != time) {
+        m_officialPlaybackPosition = time;
+        dispatchTimeupdateEvent();
     }
 }
 
@@ -605,6 +611,7 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
             dispatchCanplaythroughEvent();
             // if(autoplay() && m_mediaPlayer && m_mediaPlayer->isState(MediaPlayer::STATE_PAUSED)
         }
+    } else {
     }
     m_readyState = state;
 }
@@ -692,6 +699,7 @@ void HTMLMediaElement::processNextOperationQueue()
     if (m_currentPendingOperationCount == 1) {
         m_currentPendingOperationCount--;
         m_currentOperation = nullptr;
+        m_currentPendingOperationHandle = SIZE_MAX;
     }
 
     if (m_operationQueue.size()) {
@@ -706,13 +714,13 @@ void HTMLMediaElement::processNextOperationQueue()
 
         m_currentPendingOperationHandle = document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data) {
             MediaOperationQueueData* queueData = (MediaOperationQueueData*)data;
-            STARFISH_LOG_INFO("HTMLMediaElement::processNextOperationQueue::process %d\n", (int)queueData->m_mediaElement->m_operationQueue.size());
-            queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
+            // STARFISH_LOG_INFO("HTMLMediaElement::processNextOperationQueue::process %d\n", (int)queueData->m_mediaElement->m_operationQueue.size());
             queueData->processOperationQueue();
             STARFISH_ASSERT(queueData->m_mediaElement->m_currentPendingOperationCount == 1 || queueData->m_mediaElement->m_currentPendingOperationCount == 0);
             if (queueData->m_mediaElement->m_currentPendingOperationCount == 1) {
                 queueData->m_mediaElement->m_currentPendingOperationCount--;
                 queueData->m_mediaElement->m_currentOperation = nullptr;
+                queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
             }
         }, m_currentOperation);
     }
@@ -806,7 +814,7 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
         m_mediaElement->m_playOperationQueue.erase(iter++);
     }
     // Set the official playback position to the current playback position.
-    m_mediaElement->m_officialPlaybackPosition = mediaPlayer()->currentTime();
+    m_mediaElement->setOfficialPlaybackPosition(mediaPlayer()->currentTime());
 }
 
 void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
