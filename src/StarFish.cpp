@@ -630,6 +630,16 @@ StaticStrings::StaticStrings(StarFish* sf)
 
     m_click = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "click"));
     m_onclick = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onclick"));
+    m_mousedown = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mousedown"));
+    m_onmousedown = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmousedown"));
+    m_mousemove = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mousemove"));
+    m_onmousemove = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmousemove"));
+    m_mouseout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mouseout"));
+    m_onmouseout = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmouseout"));
+    m_mouseover = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mouseover"));
+    m_onmouseover = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmouseover"));
+    m_mouseup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mouseup"));
+    m_onmouseup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmouseup"));
     m_load = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "load"));
     m_error = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "error"));
     m_onload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onload"));
