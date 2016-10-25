@@ -79,7 +79,7 @@ touch    out/tizen_obs/x86/exe/debug/StarFish
 %endif
 %else
 %ifarch %{arm}
-make tizen_obs_arm.exe.debug %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
+make tizen_obs_arm.exe.release %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
 %else
 make tizen_obs_emulator.exe.debug %{?tizen_version:TIZEN_VERSION=%tizen_version} %{?tizen_profile_name:TIZEN_PROFILE=%tizen_profile_name} %{?jobs:-j%jobs}
 %endif

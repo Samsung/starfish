@@ -586,6 +586,9 @@ tizen_obs_arm.lib.release: $(OUTDIR)/$(LIB)
 tizen_obs_emulator.lib.release: $(OUTDIR)/$(LIB)
 	cp -f $< .
 tizen_obs_arm.exe.debug: $(OUTDIR)/$(BIN)
+	cp -f $< .
+tizen_obs_arm.exe.release: $(OUTDIR)/$(BIN)
+	cp -f $< .
 tizen_obs_emulator.exe.debug: $(OUTDIR)/$(BIN)
 	cp -f $< .
 
