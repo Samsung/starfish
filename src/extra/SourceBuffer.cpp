@@ -225,7 +225,7 @@ public:
             // NOTE: this packet should put to new group
             MediaPacketGroup* group = nullptr;
             if (m_currentGroupLastTimestamp == -1) {
-                MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex, decodeTimestamp);
+                MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex, frameDuration, decodeTimestamp);
                 m_packetGroup.push_back(newgroup);
                 group = newgroup;
             } else {
@@ -240,7 +240,7 @@ public:
             pkt->m_data = new uint8_t[packet.m_dataSize];
             memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
             // printf("[%d] pkt data pts %d len %d %d\n",streamIndex, (int)pkt->m_pts, (int)pkt->m_dataSize, (int) m_packetGroup.size());
-            group->m_packets.push_back(pkt);
+            group->pushMediaPacket(pkt);
 
             m_currentGroupLastTimestamp = decodeTimestamp;
 

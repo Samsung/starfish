@@ -54,14 +54,28 @@ struct SourceBufferData : public gc {
 
 struct MediaPacketGroup {
     size_t m_streamIndex;
+    uint64_t m_maxFrameDuration;
     uint64_t m_groupTimestampStart;
     uint64_t m_groupTimestampEnd;
     std::vector<MediaPacket*> m_packets;
-    MediaPacketGroup(size_t idx, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
+    MediaPacketGroup(size_t idx, uint64_t duration = 0, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
         : m_streamIndex(idx)
+        , m_maxFrameDuration(duration)
         , m_groupTimestampStart(start)
         , m_groupTimestampEnd(end)
     {
+    }
+
+    void updateMaxDurationIfNeeded(uint64_t newDuration)
+    {
+        if (m_maxFrameDuration < newDuration)
+            m_maxFrameDuration = newDuration;
+    }
+
+    void pushMediaPacket(MediaPacket* packet)
+    {
+        m_packets.push_back(packet);
+        updateMaxDurationIfNeeded(packet->m_duration);
     }
 };
 

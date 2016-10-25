@@ -1862,8 +1862,12 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
             String* error = String::emptyString;
             if (!firstArg.isUndefinedOrNull())
                 error = toBrowserString(firstArg.toString());
-            if (!mediaSource->endOfStream(error))
-                THROW_ILLEGAL_INVOCATION()
+            try {
+                mediaSource->endOfStream(error);
+            } catch(DOMException* e) {
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
             return escargot::ESValue(escargot::ESValue::ESUndefined);
         }, escargot::ESString::create("endOfStream"), 1, false)
     );
@@ -1923,7 +1927,12 @@ escargot::ESFunctionObject* bindingMediaSource(ScriptBindingInstance* scriptBind
         if (std::isnan(duration)) {
             THROW_ILLEGAL_INVOCATION();
         }
-        originalObj->setDuration(duration);
+        try {
+            originalObj->setDuration(duration);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     });
 
