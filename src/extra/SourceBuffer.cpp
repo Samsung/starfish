@@ -650,40 +650,39 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 
             DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
 
-            for (size_t i = 0; i < cl->m_detectedVideoStream.size(); i ++) {
-                StreamInfo* info = new VideoStreamInfo(cl->m_detectedVideoStream[i]);
-                inputBuffer->m_sourceBuffer->m_streamInfo.push_back(info);
-                inputBuffer->m_sourceBuffer->m_packetAccessCachePerStream.push_back(std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
-            }
-
-            for (size_t i = 0; i < cl->m_detectedAudioStream.size(); i ++) {
-                StreamInfo* info = new AudioStreamInfo(cl->m_detectedAudioStream[i]);
-                inputBuffer->m_sourceBuffer->m_streamInfo.push_back(info);
-                inputBuffer->m_sourceBuffer->m_packetAccessCachePerStream.push_back(std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
-            }
-
             {
                 Locker<Mutex> packetGroupLocker(*inputBuffer->m_sourceBuffer->m_packetGroupMutex);
+                for (size_t i = 0; i < cl->m_detectedVideoStream.size(); i ++) {
+                    StreamInfo* info = new VideoStreamInfo(cl->m_detectedVideoStream[i]);
+                    inputBuffer->m_sourceBuffer->m_streamInfo.push_back(info);
+                    inputBuffer->m_sourceBuffer->m_packetAccessCachePerStream.push_back(std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
+                }
+
+                for (size_t i = 0; i < cl->m_detectedAudioStream.size(); i ++) {
+                    StreamInfo* info = new AudioStreamInfo(cl->m_detectedAudioStream[i]);
+                    inputBuffer->m_sourceBuffer->m_streamInfo.push_back(info);
+                    inputBuffer->m_sourceBuffer->m_packetAccessCachePerStream.push_back(std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX));
+                }
+
                 inputBuffer->m_sourceBuffer->m_packetGroup.insert(inputBuffer->m_sourceBuffer->m_packetGroup.end(),
                     cl->m_packetGroup.begin(), cl->m_packetGroup.end());
+
+                STARFISH_LOG_INFO("SourceBuffer update end : %p, findedVideoStream %d, findedAudioStream %d\n"
+                    , inputBuffer->m_sourceBuffer, (int)cl->m_detectedVideoStream.size(), (int)cl->m_detectedAudioStream.size());
+
+                for (size_t i = 0; i < cl->m_packetGroup.size(); i ++) {
+                    STARFISH_LOG_INFO("packetGroupInfo streamIndex:%d, packetCount: %d(%dms->%dms)\n"
+                    , (int)cl->m_packetGroup[i]->m_streamIndex, (int)cl->m_packetGroup[i]->m_packets.size(), (int)cl->m_packetGroup[i]->m_groupTimestampStart, (int)cl->m_packetGroup[i]->m_groupTimestampEnd);
+                }
+
+                std::vector<VideoStreamInfo>().swap(cl->m_detectedVideoStream);
+                std::vector<AudioStreamInfo>().swap(cl->m_detectedAudioStream);
+                std::vector<MediaPacketGroup*>().swap(cl->m_packetGroup);
+                std::vector<StreamProcessInfo>().swap(cl->m_streamProcessInfo);
+
+                inputBuffer->m_sourceBuffer->m_sourceBufferUpdateThread = nullptr;
+                inputBuffer->m_isProcessed = true;
             }
-
-            STARFISH_LOG_INFO("SourceBuffer update end : %p, findedVideoStream %d, findedAudioStream %d\n"
-                , inputBuffer->m_sourceBuffer, (int)cl->m_detectedVideoStream.size(), (int)cl->m_detectedAudioStream.size());
-
-            STARFISH_LOG_INFO("SourceBuffer update end packetGroupInfo\n");
-            for (size_t i = 0; i < cl->m_packetGroup.size(); i ++) {
-                STARFISH_LOG_INFO("packetGroupInfo streamIndex:%d, packetCount: %d(%dms->%dms)\n"
-                , (int)cl->m_packetGroup[i]->m_streamIndex, (int)cl->m_packetGroup[i]->m_packets.size(), (int)cl->m_packetGroup[i]->m_groupTimestampStart, (int)cl->m_packetGroup[i]->m_groupTimestampEnd);
-            }
-
-            std::vector<VideoStreamInfo>().swap(cl->m_detectedVideoStream);
-            std::vector<AudioStreamInfo>().swap(cl->m_detectedAudioStream);
-            std::vector<MediaPacketGroup*>().swap(cl->m_packetGroup);
-            std::vector<StreamProcessInfo>().swap(cl->m_streamProcessInfo);
-
-            inputBuffer->m_sourceBuffer->m_sourceBufferUpdateThread = nullptr;
-            inputBuffer->m_isProcessed = true;
             inputBuffer->m_sourceBuffer->setUpdating(false, UpdateState::Success);
         }, inputBuffer, (void*)src.m_readPos);
         return nullptr;
