@@ -517,8 +517,7 @@ void SourceBuffer::remove(double start, double end)
                 m_packetGroup.erase(m_packetGroup.begin() + groupIndex);
             } else if ((startTimestamp <= grp->m_groupTimestampStart && endTimestamp < grp->m_groupTimestampEnd) || (grp->m_groupTimestampStart < startTimestamp && grp->m_groupTimestampEnd <= endTimestamp)) {
                 // remove head or tail
-                size_t eraseStart = 0;
-                size_t eraseEnd = grp->m_packets.size();
+                size_t eraseStart = 0 , eraseEnd = 0;
 
                 if ((startTimestamp <= grp->m_groupTimestampStart && endTimestamp < grp->m_groupTimestampEnd)) {
                     // remove head
