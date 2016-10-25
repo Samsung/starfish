@@ -688,42 +688,29 @@ void HTMLMediaElement::abortEveryPendingOperation(DOMException* exceptionForPlay
 
 void HTMLMediaElement::processNextOperationQueue()
 {
+    STARFISH_ASSERT(m_currentPendingOperationCount == 1 || m_currentPendingOperationCount == 0);
+    if (m_currentPendingOperationCount == 1)
+        m_currentPendingOperationCount--;
+
     if (m_operationQueue.size()) {
         STARFISH_ASSERT(m_currentPendingOperationCount == 0);
         STARFISH_ASSERT(m_currentOperation == nullptr);
         STARFISH_ASSERT(m_currentPendingOperationHandle == SIZE_MAX);
 
         m_currentPendingOperationCount++;
-
-        if (m_operationQueue.front()->isPlayRequest()) {
-            bool isAllOfRequestsArePlay = true;
-            auto iter = m_operationQueue.begin();
-            while (iter != m_operationQueue.end()) {
-                if (!(*iter)->isPlayRequest()) {
-                    isAllOfRequestsArePlay = false;
-                    break;
-                }
-                iter++;
-            }
-            if (isAllOfRequestsArePlay) {
-                m_currentOperation = m_operationQueue.front();
-                m_operationQueue.pop_front();
-            } else {
-                m_currentOperation = *iter;
-                m_operationQueue.erase(iter);
-            }
-        } else {
-            m_currentOperation = m_operationQueue.front();
-            m_operationQueue.pop_front();
-        }
+        m_currentOperation = m_operationQueue.front();
+        STARFISH_ASSERT(!m_currentOperation->isPlayRequest());
+        m_operationQueue.pop_front();
 
         m_currentPendingOperationHandle = document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data) {
             MediaOperationQueueData* queueData = (MediaOperationQueueData*)data;
             STARFISH_LOG_INFO("HTMLMediaElement::processNextOperationQueue::process %d\n", (int)queueData->m_mediaElement->m_operationQueue.size());
-            queueData->m_mediaElement->m_currentPendingOperationCount--;
             queueData->m_mediaElement->m_currentOperation = nullptr;
             queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
             queueData->processOperationQueue();
+            STARFISH_ASSERT(queueData->m_mediaElement->m_currentPendingOperationCount == 1 || queueData->m_mediaElement->m_currentPendingOperationCount == 0);
+            if (queueData->m_mediaElement->m_currentPendingOperationCount == 1)
+                queueData->m_mediaElement->m_currentPendingOperationCount--;
         }, m_currentOperation);
     }
 }
@@ -775,6 +762,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in parallel.
         self->initMediaPlayer();
+        self->processNextOperationQueue();
         STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection::resourceSelectionTask() - request prepare task\n");
         self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
         self->startOperationQueueIfNeeded();
