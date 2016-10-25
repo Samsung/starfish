@@ -38,6 +38,7 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_hasVideo(false)
     , m_playbackState(PLAYBACK_STATE_NONE)
     , m_container(element)
+    , m_activeMediaSource(nullptr)
     , m_starFish(element->document()->window()->starFish())
 {
 }

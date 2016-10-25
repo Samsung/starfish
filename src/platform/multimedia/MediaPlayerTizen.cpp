@@ -131,7 +131,6 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)
     , m_needsPlayAfterPrepare(false)
-    , m_activeMediaSource(nullptr)
     , m_mseClient(nullptr)
     , m_videoBufferMutex(new Mutex())
     , m_audioBufferMutex(new Mutex())
@@ -177,6 +176,35 @@ void MediaPlayerTizen::seekIfNeeded()
     if (seekTime > 0) {
         seek(seekTime);
         m_activeMediaSource->attachedMediaElement()->setDefaultPlaybackStartPosition(0);
+    }
+}
+
+void MediaPlayerTizen::handleSeekend()
+{
+    if (isMainThread()) {
+        if (m_nativePlayer) {
+            m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
+        }
+    } else {
+        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+            self->handleSeekend();
+        }, this);
+    }
+}
+
+void MediaPlayerTizen::handleEnded()
+{
+    if (isMainThread()) {
+        if (m_nativePlayer) {
+            m_container->dispatchPauseEventNow();
+            m_container->mediaPlayerNotifyEndedItsContainer();
+        }
+    } else {
+        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+            self->handleEnded();
+        }, this);
     }
 }
 
@@ -286,10 +314,7 @@ void MediaPlayerTizen::endOfStream()
     mediaEndOperation();
     stopPlaying();
     m_playbackState = MediaPlayer::PLAYBACK_STATE_END;
-    if (m_container) {
-        m_container->dispatchPauseEventNow();
-        m_container->dispatchEndedEventNow();
-    }
+    handleEnded();
 }
 
 void MediaPlayerTizen::prepare(URL* url)
@@ -306,7 +331,6 @@ void MediaPlayerTizen::prepare(URL* url)
     }, this);
     STARFISH_ASSERT(ret == 0);
     ret = player_set_completed_cb(m_nativePlayer, [](void* data) {
-        PLAYER_LOGI("player_completed_cb");
         MediaPlayerTizen* player = (MediaPlayerTizen*)data;
         player->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             MediaPlayerTizen* player = (MediaPlayerTizen*)data;
@@ -467,58 +491,6 @@ void MediaPlayerTizen::fillVideoBuffer(bool useLock)
 void MediaPlayerTizen::fillAudioBuffer(bool useLock)
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-}
-
-TimeRanges* MediaPlayerTizen::buffered()
-{
-    if (m_activeMediaSource) {
-        // CASE : MediaSource
-        SourceBufferList* bufferList = m_activeMediaSource->activeSourceBuffers();
-        unsigned nbuffer = bufferList->length();
-
-        if (nbuffer == 0)
-            return new TimeRanges();
-
-        if (nbuffer == 1)
-            return bufferList->at(0)->buffered();
-
-        TimeRanges* result = bufferList->at(0)->buffered();
-        for (unsigned i = 1; i < nbuffer; i++) {
-            TimeRanges* buffered = bufferList->at(i)->buffered();
-            unsigned bufferedSize = buffered->length();
-            unsigned resultSize = result->length();
-            TimeRanges* newResult = new TimeRanges();
-
-            unsigned t = 0, j = 0;
-            while (t != bufferedSize && j != resultSize) {
-                if (buffered->end(t) < result->start(j)) {
-                    t++;
-                } else if (buffered->start(t) > result->end(j)) {
-                    j++;
-                } else {
-                    newResult->push_back(std::max(buffered->start(t), result->start(j)), std::min(buffered->end(t), result->end(j)));
-                    if (buffered->start(t) >= result->start(j) && buffered->end(t) <= result->end(j)) {
-                        t++;
-                    } else if (buffered->start(t) <= result->start(j) && buffered->end(t) >= result->end(j)) {
-                        j++;
-                    } else if (buffered->start(t) < result->start(j)) {
-                        t++;
-                    } else {
-                        j++;
-                    }
-                }
-            }
-            result = newResult;
-            // delete prev result?
-        }
-        return result;
-
-    } else {
-        // CASE : load from URL
-        // TODO
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return nullptr;
 }
 
 #if !defined(STARFISH_TIZEN_TV)
