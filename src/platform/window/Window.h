@@ -169,14 +169,6 @@ public:
     };
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
-    enum FocusEventKind {
-        Focus_Event,
-        Blur_Event,
-        FocusIn_Event,
-        FocusOut_Event
-    };
-    void dispatchFocusEvent(float x, float y, FocusEventKind kind);
-
     Node* hitTest(float x, float y);
     Node* activeNodeWithTouchDown()
     {
@@ -185,6 +177,9 @@ public:
 
     void setActiveNode(Node* n);
     void releaseActiveNode();
+
+    bool setFocusedNode(Node* n);
+    void releaseFocusedNode();
 
     void pause();
     void resume();
@@ -272,6 +267,8 @@ protected:
     StackingContext* m_rootStackingContext;
     std::vector<CanvasSurface*, gc_allocator<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;
     Node* m_activeNodeWithTouchDown;
+    Node* m_focusedNodeWithTouchDown;
+    Node* m_relatedTargetOfFocusedNode;
     Location m_touchDownPoint;
     int m_ctrlKeyDown;
     int m_shiftKeyDown;

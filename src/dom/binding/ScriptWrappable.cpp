@@ -565,6 +565,31 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         },
         true, true, true);
 
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("onfocus"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject() == escargot::ESVMInstance::currentInstance()->globalObject()) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            auto eventType = wnd->starFish()->staticStrings()->m_focus;
+            return wnd->attributeEventListener(eventType);
+        }
+        return escargot::ESValue();
+        },
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, ::escargot::ESString* propertyName, const escargot::ESValue& value)
+        {
+        escargot::ESValue v = originalObj;
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject() == escargot::ESVMInstance::currentInstance()->globalObject()) {
+            Window* wnd = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+            auto eventType = wnd->starFish()->staticStrings()->m_focus;
+            if (value.isObject() || (value.isESPointer() && value.asESPointer()->isESFunctionObject())) {
+                wnd->setAttributeEventListener(eventType, value);
+            } else {
+                wnd->clearAttributeEventListener(eventType);
+            }
+        }
+        },
+        true, true, true);
+
     ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("onload"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         escargot::ESValue v = originalObj;

@@ -2781,6 +2781,33 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
     });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onfocus"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return nd->attributeEventListener(nd->document()->window()->starFish()->staticStrings()->m_focus);
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            auto eventType = nd->document()->window()->starFish()->staticStrings()->m_focus;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                nd->setAttributeEventListener(eventType, v);
+            } else {
+                nd->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
+
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("defaultView"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
