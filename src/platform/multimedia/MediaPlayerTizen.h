@@ -69,6 +69,8 @@ public:
     void startPlaying();
     void stopPlaying();
 
+    void handleEnded();
+    void handleSeekend();
     void handlePlayerError(int error);
 
     virtual unsigned long videoWidth()
@@ -98,7 +100,6 @@ public:
 
     virtual double duration();
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
-    virtual TimeRanges* buffered();
 
     bool m_inPrepare;
     bool m_inPlaying;
@@ -106,7 +107,6 @@ public:
     bool m_isVideoBufferUnderrunState;
     bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
-    MediaSource* m_activeMediaSource;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;
     Mutex* m_audioBufferMutex;

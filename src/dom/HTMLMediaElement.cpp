@@ -25,6 +25,8 @@
 #include "util/URL.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
 
 namespace StarFish {
 
@@ -32,6 +34,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     : HTMLElement(document)
     , m_isPaused(true)
     , m_isSeeking(false)
+    , m_isEnded(false)
     , m_delayingTheLoadEvent(false)
     , m_officialPlaybackPosition(0)
     , m_defaultPlaybackStartPosition(0)
@@ -164,11 +167,12 @@ void HTMLMediaElement::initMediaPlayer()
     closeMediaPlayer();
     m_mediaPlayer = MediaPlayer::create(this);
     m_mediaPlayer->setLoop(loop());
+    m_isSeeking = false;
 }
 
 void HTMLMediaElement::resourceSelection()
 {
-    STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection()\n");
+    // STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection()\n");
     closeMediaPlayer();
     m_networkState = NETWORK_NO_SOURCE;
     // Set the element's show poster flag to true.
@@ -361,10 +365,7 @@ String* HTMLMediaElement::preload()
 
 TimeRanges* HTMLMediaElement::buffered()
 {
-    if (m_mediaPlayer) {
-        return m_mediaPlayer->buffered();
-    }
-    return nullptr;
+    return seekable();
 }
 
 String* HTMLMediaElement::canPlayType(String* type)
@@ -375,8 +376,7 @@ String* HTMLMediaElement::canPlayType(String* type)
 
 bool HTMLMediaElement::seeking()
 {
-    // TODO
-    return false;
+    return m_mediaPlayer ? m_isSeeking : false;
 }
 
 double HTMLMediaElement::currentTime()
@@ -414,14 +414,58 @@ TimeRanges* HTMLMediaElement::played()
 
 TimeRanges* HTMLMediaElement::seekable()
 {
-    // TODO
-    return nullptr;
+    if (!m_mediaPlayer) {
+        return new TimeRanges();
+    }
+    if (m_mediaPlayer->activeMediaSource()) {
+        SourceBufferList* bufferList = m_mediaPlayer->activeMediaSource()->activeSourceBuffers();
+        unsigned nbuffer = bufferList->length();
+
+        if (nbuffer == 0)
+            return new TimeRanges();
+
+        if (nbuffer == 1)
+            return bufferList->at(0)->buffered();
+
+        TimeRanges* result = bufferList->at(0)->buffered();
+        for (unsigned i = 1; i < nbuffer; i++) {
+            TimeRanges* buffered = bufferList->at(i)->buffered();
+            unsigned bufferedSize = buffered->length();
+            unsigned resultSize = result->length();
+            TimeRanges* newResult = new TimeRanges();
+
+            unsigned t = 0, j = 0;
+            while (t != bufferedSize && j != resultSize) {
+                if (buffered->end(t) < result->start(j)) {
+                    t++;
+                } else if (buffered->start(t) > result->end(j)) {
+                    j++;
+                } else {
+                    newResult->push_back(std::max(buffered->start(t), result->start(j)), std::min(buffered->end(t), result->end(j)));
+                    if (buffered->start(t) >= result->start(j) && buffered->end(t) <= result->end(j)) {
+                        t++;
+                    } else if (buffered->start(t) <= result->start(j) && buffered->end(t) >= result->end(j)) {
+                        j++;
+                    } else if (buffered->start(t) < result->start(j)) {
+                        t++;
+                    } else {
+                        j++;
+                    }
+                }
+            }
+            result = newResult;
+        }
+        return result;
+    } else {
+        TimeRanges* r = new TimeRanges();
+        r->push_back(0, m_mediaPlayer->duration());
+        return r;
+    }
 }
 
 bool HTMLMediaElement::ended()
 {
-    // TODO
-    return false;
+    return m_isEnded;
 }
 
 bool HTMLMediaElement::autoplay()
@@ -470,11 +514,6 @@ void HTMLMediaElement::setPreload(String* preload)
     setAttribute(document()->window()->starFish()->staticStrings()->m_preload, preload);
 }
 
-void HTMLMediaElement::setSeeking(bool seeking)
-{
-    // TODO
-}
-
 double HTMLMediaElement::defaultPlaybackStartPosition()
 {
     return m_defaultPlaybackStartPosition;
@@ -491,13 +530,15 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
     // then it must set the media element’s default playback start position
     // to the new value; otherwise, it must set the official playback position
     // to the new value and then seek to the new value.
-    STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() %f \n", (float) currentTime);
+    STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() %lf \n", currentTime);
     if (m_readyState == HAVE_NOTHING) {
         m_defaultPlaybackStartPosition = currentTime;
         STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
         setOfficialPlaybackPosition(currentTime);
         m_mediaPlayer->seek(currentTime);
+        dispatchSeekingEvent();
+        m_isSeeking = true;
     }
 }
 
@@ -614,6 +655,22 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
     } else {
     }
     m_readyState = state;
+}
+
+void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
+{
+    m_isSeeking = false;
+    m_officialPlaybackPosition = currentTime;
+    dispatchTimeupdateEvent();
+    dispatchSeekedEvent();
+}
+
+void HTMLMediaElement::mediaPlayerNotifyEndedItsContainer()
+{
+    m_isEnded = true;
+    m_officialPlaybackPosition = duration();
+    dispatchTimeupdateEvent();
+    dispatchEndedEvent();
 }
 
 HTMLMediaElement::NetworkState HTMLMediaElement::networkState()

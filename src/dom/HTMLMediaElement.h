@@ -217,7 +217,6 @@ public:
     bool muted();
 
     void setPreload(String* preload);
-    void setSeeking(bool seeking);
     void setCurrentTime(double currentTime);
     void setOfficialPlaybackPosition(double time);
     void setDefaultPlaybackStartPosition(double position);
@@ -248,6 +247,8 @@ public:
     }
 
     void mediaPlayerNotifyUpdateReadyStateItsContainer(ReadyState state);
+    void mediaPlayerNotifySeekedItsContainer(double currentTime);
+    void mediaPlayerNotifyEndedItsContainer();
     void addEventToOperationQueue(EventTarget* t, Event* e);
     void addOperation(MediaOperationQueueData* data)
     {
@@ -287,6 +288,7 @@ public:
 protected:
     bool m_isPaused;
     bool m_isSeeking;
+    bool m_isEnded;
     bool m_delayingTheLoadEvent;
     double m_officialPlaybackPosition;
     double m_defaultPlaybackStartPosition;
