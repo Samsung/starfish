@@ -139,12 +139,22 @@ public:
     Ecore_Event_Handler* m_desktopKeyDownEventHandler;
     Ecore_Event_Handler* m_desktopKeyUpEventHandler;
 
+    Ecore_Event_Handler* m_desktopFocusEventHandler;
+    Ecore_Event_Handler* m_desktopBlurEventHandler;
+    Ecore_Event_Handler* m_desktopFocusInEventHandler;
+    Ecore_Event_Handler* m_desktopFocusOutEventHandler;
+
     void (*m_mobileMouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseMoveEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseUpEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseInEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseOutEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileClickEventHandler)(void* data, Evas_Object* obj, void* event_info);
+
+    void (*m_mobileFocusEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
+    void (*m_mobileBlurEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
+    void (*m_mobileFocusInEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
+    void (*m_mobileFocusOutEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
 
     Ecore_Animator* m_renderingAnimator;
     IdlerData* m_renderingIdlerData;
@@ -341,6 +351,14 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         return EINA_TRUE;
     }, wnd);
 
+    wnd->m_desktopFocusEventHandler = ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, [](void* data, int type, void* event) -> Eina_Bool {
+        Window* sf = (Window*)data;
+        Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
+        StarFishEnterer enter(sf->m_starFish);
+        sf->dispatchFocusEvent(d->x, d->y, Window::Focus_Event);
+        return EINA_TRUE;
+    }, wnd);
+
 #else
     Evas* e = evas_object_evas_get(wnd->m_window);
     wnd->m_mainBox = elm_box_add(wnd->m_window);
@@ -418,6 +436,15 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         sf->dispatchTouchEvent(sf->m_lastMouseX, sf->m_lastMouseY, Window::TouchEventUp);
     };
     evas_object_smart_callback_add(wnd->m_dummyBox, "clicked", wnd->m_mobileClickEventHandler, wnd);
+
+    wnd->m_mobileFocusEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
+        WindowImplEFL* sf = (WindowImplEFL*)data;
+        sf->starFish()->messageLoop()->addIdler([](size_t a, void* data) {
+            ((Window*)data)->dispatchFocusEvent(0, 0, Window::FocusEvent);
+        }, sf);
+        return;
+    };
+    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_FOCUS_IN, wnd->m_mobileFocusEventHandler, wnd);
 #endif
     return wnd;
 }
@@ -491,6 +518,11 @@ Window::~Window()
     ecore_event_handler_del(eflWindow->m_desktopMouseOutEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopKeyDownEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopKeyUpEventHandler);
+
+    ecore_event_handler_del(eflWindow->m_desktopFocusEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopBlurEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopFocusInEventHandler);
+    ecore_event_handler_del(eflWindow->m_desktopFocusOutEventHandler);
 #endif
 
 #ifdef STARFISH_TIZEN_WEARABLE
@@ -498,6 +530,9 @@ Window::~Window()
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE, eflWindow->m_mobileMouseMoveEventHandler);
     evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, eflWindow->m_mobileMouseUpEventHandler);
     evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked", eflWindow->m_mobileClickEventHandler);
+
+    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_FOCUS_IN , eflWindow->m_mobileFocusEventHandler);
+    evas_object_event_callback_del(eflWindow->m_dummyBox, EVAS_CALLBACK_FOCUS_OUT , eflWindow->m_mobileBlurEventHandler);
 #endif
 
 }
@@ -1295,6 +1330,62 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
     // or 2) body element if possible
     // or 3) root element
     EventTarget::dispatchEvent((document()->bodyElement() ? document()->bodyElement()->asNode() : document()->rootElement()->asNode()), e);
+}
+
+void Window::dispatchFocusEvent(float x, float y, FocusEventKind kind)
+{
+    // STARFISH_LOG_INFO("Window::dispatchFocusEvent %f %f kind %d\n", x, y, (int)kind);
+    if (!m_isRunning)
+        return;
+
+    if (kind == Focus_Event) {
+        Node* node = hitTest(x, y);
+        m_touchDownPoint = Location(x, y);
+        setActiveNode(node);
+
+        Node* t = m_activeNodeWithTouchDown;
+
+        String* eventType = starFish()->staticStrings()->m_focus.localName();
+        Event* e = new FocusEvent(eventType, EventInit(false, false));
+        EventTarget::dispatchEvent(t->asNode(), e);
+    } else if (kind == Blur_Event) {
+    } else if (kind == FocusIn_Event) {
+    } else {
+        STARFISH_ASSERT(kind == FocusOut_Event);
+        /*bool shouldCallOnClick = false;
+        Node* node = hitTest(x, y);
+        if (m_activeNodeWithTouchDown == node) {
+            shouldCallOnClick = true;
+        }
+
+        Node* t = m_activeNodeWithTouchDown;
+
+        bool shouldDispatchEvent = shouldCallOnClick;
+        while (t) {
+            if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
+                String* eventType = starFish()->staticStrings()->m_click.localName();
+                Event* e = new MouseEvent(eventType, EventInit(true, true));
+                EventTarget::dispatchEvent(t->asNode(), e);
+                shouldDispatchEvent = false;
+                break;
+            }
+            t = t->parentNode();
+        }
+
+        if (shouldDispatchEvent) {
+            if (t == nullptr) {
+                t = m_document;
+            }
+            String* eventType = starFish()->staticStrings()->m_click.localName();
+            Event* e = new MouseEvent(eventType, EventInit(true, true));
+            EventTarget::dispatchEvent(t->asDocument(), e);
+        }
+
+        releaseActiveNode();
+
+        m_activeNodeWithTouchDown = nullptr;
+        */
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object

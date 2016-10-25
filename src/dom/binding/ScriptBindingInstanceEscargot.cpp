@@ -2980,6 +2980,44 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         return escargot::ESValue();
     });
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onfocus"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->attributeEventListener(element->document()->window()->starFish()->staticStrings()->m_focus);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_focus;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                element->setAttributeEventListener(eventType, v);
+            } else {
+                element->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
+    escargot::ESFunctionObject* focusFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* obj = originalObj;
+        String* eventType = obj->document()->window()->starFish()->staticStrings()->m_focus.localName();
+        Event* e = new Event(eventType, EventInit(false, false));
+        obj->dispatchEvent(e);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("focus"), 1, false);
+    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("focus"), true, true, true, focusFunction);
+
     return HTMLElementFunction;
 }
 
@@ -3962,6 +4000,22 @@ escargot::ESFunctionObject* bindingKeyboardEvent(ScriptBindingInstance* scriptBi
         THROW_ILLEGAL_INVOCATION();
     }, nullptr);
     return KeyboardEventFunction;
+}
+
+escargot::ESFunctionObject* bindingFocusEvent(ScriptBindingInstance* scriptBindingInstance)
+{
+    /* Focus Events */
+    DEFINE_FUNCTION_WITH_PARENTFUNC(FocusEvent, fetchData(scriptBindingInstance)->uiEvent());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        FocusEventFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("relatedTarget"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::EventObject, Event);
+        if (originalObj->isUIEvent() && originalObj->asUIEvent()->isFocusEvent()) {
+            return escargot::ESValue(originalObj->asUIEvent()->asFocusEvent()->relatedTarget());
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, nullptr);
+    return FocusEventFunction;
 }
 
 escargot::ESFunctionObject* bindingProgressEvent(ScriptBindingInstance* scriptBindingInstance)

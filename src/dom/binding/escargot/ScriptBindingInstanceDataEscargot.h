@@ -50,6 +50,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(uiEvent, UIEvent) \
     F(mouseEvent, MouseEvent) \
     F(keyboardEvent, KeyboardEvent) \
+    F(focusEvent, FocusEvent) \
     F(progressEvent, ProgressEvent) \
     F(nodeList, NodeList) \
     F(domTokenList, DOMTokenList) \
@@ -205,6 +206,7 @@ private:
     escargot::ESFunctionObject* m_uiEvent;
     escargot::ESFunctionObject* m_mouseEvent;
     escargot::ESFunctionObject* m_keyboardEvent;
+    escargot::ESFunctionObject* m_focusEvent;
     escargot::ESFunctionObject* m_progressEvent;
     escargot::ESFunctionObject* m_nodeList;
     escargot::ESFunctionObject* m_domTokenList;

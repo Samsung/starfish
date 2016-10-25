@@ -169,6 +169,14 @@ public:
     };
     void dispatchKeyEvent(String* key, KeyEventKind kind);
 
+    enum FocusEventKind {
+        Focus_Event,
+        Blur_Event,
+        FocusIn_Event,
+        FocusOut_Event
+    };
+    void dispatchFocusEvent(float x, float y, FocusEventKind kind);
+
     Node* hitTest(float x, float y);
     Node* activeNodeWithTouchDown()
     {
