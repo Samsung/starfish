@@ -148,6 +148,11 @@ public:
         return false;
     }
 
+    virtual bool isTouchEvent()
+    {
+        return false;
+    }
+
     virtual bool isFocusEvent()
     {
         return false;
@@ -162,6 +167,12 @@ public:
     {
         STARFISH_ASSERT(isMouseEvent());
         return (MouseEvent*)this;
+    }
+
+    TouchEvent* asTouchEvent()
+    {
+        STARFISH_ASSERT(isTouchEvent());
+        return (TouchEvent*)this;
     }
 
     FocusEvent* asFocusEvent()
@@ -185,6 +196,19 @@ public:
     }
 
     virtual bool isMouseEvent()
+    {
+        return true;
+    }
+};
+
+class TouchEvent : public UIEvent {
+public:
+    TouchEvent(String* eventType, const EventInit& init = EventInit(false, false))
+        : UIEvent(eventType, init)
+    {
+    }
+
+    virtual bool isTouchEvent()
     {
         return true;
     }
