@@ -175,6 +175,16 @@ public:
         return m_activeNodeWithTouchDown;
     }
 
+    enum MouseEventKind {
+        MouseEventDown,
+        MouseEventMove,
+        MouseEventUp,
+        MouseEventCancel,
+        MouseEventIn,
+        MouseEventOut
+    };
+    void dispatchMouseEvent(float x, float y, MouseEventKind kind);
+
     void setActiveNode(Node* n);
     void releaseActiveNode();
 

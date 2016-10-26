@@ -134,16 +134,12 @@ public:
     Ecore_Event_Handler* m_desktopMouseDownEventHandler;
     Ecore_Event_Handler* m_desktopMouseMoveEventHandler;
     Ecore_Event_Handler* m_desktopMouseUpEventHandler;
-    Ecore_Event_Handler* m_desktopMouseInEventHandler;
-    Ecore_Event_Handler* m_desktopMouseOutEventHandler;
     Ecore_Event_Handler* m_desktopKeyDownEventHandler;
     Ecore_Event_Handler* m_desktopKeyUpEventHandler;
 
     void (*m_mobileMouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseMoveEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileMouseUpEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
-    void (*m_mobileMouseInEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
-    void (*m_mobileMouseOutEventHandler)(void* data, Evas* evas, Evas_Object* obj, void* event_info);
     void (*m_mobileClickEventHandler)(void* data, Evas_Object* obj, void* event_info);
 
     Ecore_Animator* m_renderingAnimator;
@@ -287,7 +283,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
         StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventDown);
+        sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventDown);
         return EINA_TRUE;
     }, wnd);
 
@@ -295,7 +291,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Button* d = (Ecore_Event_Mouse_Button*)event;
         StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventUp);
+        sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventUp);
         return EINA_TRUE;
     }, wnd);
 
@@ -303,7 +299,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         Window* sf = (Window*)data;
         Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
         StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventMove);
+        sf->dispatchMouseEvent(d->x, d->y, Window::MouseEventMove);
         return EINA_TRUE;
     }, wnd);
 
@@ -320,24 +316,6 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
         Ecore_Event_Key* d = (Ecore_Event_Key*)event;
         StarFishEnterer enter(sf->m_starFish);
         sf->dispatchKeyEvent(String::createASCIIString(d->keyname), Window::KeyEventUp);
-        return EINA_TRUE;
-    }, wnd);
-
-    wnd->m_desktopMouseInEventHandler = ecore_event_handler_add(ECORE_EVENT_MOUSE_IN, [](void* data, int type, void* event) -> Eina_Bool {
-        STARFISH_LOG_INFO("ECORE_EVENT_MOUSE_IN\n");
-        Window* sf = (Window*)data;
-        Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventIn);
-        return EINA_TRUE;
-    }, wnd);
-
-    wnd->m_desktopMouseOutEventHandler = ecore_event_handler_add(ECORE_EVENT_MOUSE_OUT, [](void* data, int type, void* event) -> Eina_Bool {
-        STARFISH_LOG_INFO("ECORE_EVENT_MOUSE_OUT\n");
-        Window* sf = (Window*)data;
-        Ecore_Event_Mouse_Move* d = (Ecore_Event_Mouse_Move*)event;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(d->x, d->y, Window::TouchEventOut);
         return EINA_TRUE;
     }, wnd);
 
@@ -487,8 +465,6 @@ Window::~Window()
     ecore_event_handler_del(eflWindow->m_desktopMouseDownEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopMouseUpEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopMouseMoveEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseInEventHandler);
-    ecore_event_handler_del(eflWindow->m_desktopMouseOutEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopKeyDownEventHandler);
     ecore_event_handler_del(eflWindow->m_desktopKeyUpEventHandler);
 #endif
@@ -1273,6 +1249,64 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         }
     } else {
         STARFISH_ASSERT(kind == TouchEventUp);
+        bool shouldCallOnClick = false;
+        Node* node = hitTest(x, y);
+        if (m_activeNodeWithTouchDown == node) {
+            shouldCallOnClick = true;
+        }
+
+        Node* t = m_activeNodeWithTouchDown;
+
+        bool shouldDispatchEvent = shouldCallOnClick;
+        while (t) {
+            if (shouldDispatchEvent && (t->isElement() && t->asElement()->isHTMLElement())) {
+                String* eventType = starFish()->staticStrings()->m_click.localName();
+                Event* e = new MouseEvent(eventType, EventInit(true, true));
+                EventTarget::dispatchEvent(t->asNode(), e);
+                shouldDispatchEvent = false;
+                break;
+            }
+            t = t->parentNode();
+        }
+
+        if (shouldDispatchEvent) {
+            if (t == nullptr) {
+                t = m_document;
+            }
+            String* eventType = starFish()->staticStrings()->m_click.localName();
+            Event* e = new MouseEvent(eventType, EventInit(true, true));
+            EventTarget::dispatchEvent(t->asDocument(), e);
+        }
+
+        releaseActiveNode();
+
+        m_activeNodeWithTouchDown = nullptr;
+    }
+}
+
+void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
+{
+    STARFISH_LOG_INFO("Window::dispatchMouseEvent %f %f kind %d\n", x, y, (int)kind);
+    if (!m_isRunning)
+        return;
+
+    if (kind == MouseEventDown) {
+        Node* node = hitTest(x, y);
+        m_touchDownPoint = Location(x, y);
+        setActiveNode(node);
+
+    } else if (kind == MouseEventMove) {
+        if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
+            releaseActiveNode();
+            m_activeNodeWithTouchDown = nullptr;
+        }
+    } else if (kind == MouseEventCancel) {
+        if (m_activeNodeWithTouchDown) {
+            releaseActiveNode();
+            m_activeNodeWithTouchDown = nullptr;
+        }
+    } else {
+        STARFISH_ASSERT(kind == MouseEventUp);
         bool shouldCallOnClick = false;
         Node* node = hitTest(x, y);
         if (m_activeNodeWithTouchDown == node) {
