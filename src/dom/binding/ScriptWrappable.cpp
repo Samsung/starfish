@@ -1148,6 +1148,14 @@ void ScriptWrappable::initScriptWrappable(MouseEvent* ptr)
     scriptObject()->set__proto__(data->mouseEvent()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(TouchEvent* ptr)
+{
+    Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();
+    ScriptBindingInstance* instance = window->scriptBindingInstance();
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->touchEvent()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(KeyboardEvent* ptr)
 {
     Window* window = (Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData();

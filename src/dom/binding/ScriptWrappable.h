@@ -69,6 +69,7 @@ class HTMLUnknownElement;
 class Event;
 class UIEvent;
 class MouseEvent;
+class TouchEvent;
 class FocusEvent;
 class KeyboardEvent;
 class ProgressEvent;
@@ -213,6 +214,7 @@ public:
     void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr);
     void initScriptWrappable(MouseEvent* ptr);
+    void initScriptWrappable(TouchEvent* ptr);
     void initScriptWrappable(KeyboardEvent* ptr);
     void initScriptWrappable(FocusEvent* ptr);
     void initScriptWrappable(ProgressEvent* ptr);

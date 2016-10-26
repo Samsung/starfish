@@ -4002,6 +4002,13 @@ escargot::ESFunctionObject* bindingMouseEvent(ScriptBindingInstance* scriptBindi
     return MouseEventFunction;
 }
 
+escargot::ESFunctionObject* bindingTouchEvent(ScriptBindingInstance* scriptBindingInstance)
+{
+    /* Touch Events */
+    DEFINE_FUNCTION_WITH_PARENTFUNC(TouchEvent, fetchData(scriptBindingInstance)->uiEvent());
+    return TouchEventFunction;
+}
+
 escargot::ESFunctionObject* bindingKeyboardEvent(ScriptBindingInstance* scriptBindingInstance)
 {
     /* Keyboard Events */
