@@ -113,6 +113,11 @@ public:
         return false;
     }
 
+    virtual bool isFocusable() const
+    {
+        return false;
+    }
+
     HTMLElement* asHTMLElement()
     {
         STARFISH_ASSERT(isHTMLElement());

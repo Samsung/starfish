@@ -115,7 +115,6 @@ protected:
         m_lastChild = nullptr;
 
         m_state = NodeStateNormal;
-        m_focusState = NodeFocusOutState;
 
         m_inParsing = false;
         m_needsStyleRecalc = true;
@@ -309,13 +308,9 @@ public:
 
     /* Other methods (not in Node Interface) */
     enum NodeState {
-        NodeStateNormal,
-        NodeStateActive,
-    };
-
-    enum NodeFocusState {
-        NodeFocusInState,
-        NodeFocusOutState,
+        NodeStateNormal = 0,
+        NodeStateActive = 1 << 0,
+        NodeStateFocused = 1 << 1,
     };
 
     virtual bool isNode() const
@@ -449,28 +444,26 @@ public:
 
     void setState(NodeState state)
     {
-        if (state != m_state) {
+        /*if (state != m_state) {
             m_state = state;
             setNeedsStyleRecalc();
         }
-    }
+        */
+        if (state != m_state) {
+            if (state == NodeStateNormal)
+                m_state =  0;
+            else if (state == NodeStateActive)
+                m_state = 1 << 0;
+            else if (state == NodeStateFocused)
+                m_state ^= 1 << 1;
 
-    NodeState state()
-    {
-        return m_state;
-    }
-
-    void setFocusState(NodeFocusState focusState)
-    {
-        if (focusState != m_focusState) {
-            m_focusState = focusState;
             setNeedsStyleRecalc();
         }
     }
 
-    NodeFocusState focusState()
+    int state()
     {
-        return m_focusState;
+        return m_state;
     }
 
     inline void setNeedsStyleRecalc();
@@ -626,8 +619,7 @@ protected:
     // for HTMLElelement
     bool m_hasDirAttribute : 1;
 
-    NodeState m_state : 1;
-    NodeFocusState m_focusState : 1;
+    int m_state;
 
     RareNodeMembers* m_rareNodeMembers;
 private:
