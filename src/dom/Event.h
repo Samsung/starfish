@@ -29,6 +29,14 @@ struct EventInit {
     bool cancelable;
 };
 
+struct FocusEventInit : EventInit {
+    FocusEventInit(bool bubbles, bool cancelable, Node* relatedTarget = nullptr);
+
+    bool bubbles;
+    bool cancelable;
+    Node* relatedTarget;
+};
+
 class Event : public ScriptWrappable {
 protected:
 

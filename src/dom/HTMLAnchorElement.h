@@ -52,6 +52,11 @@ public:
         return true;
     }
 
+    virtual bool isFocusable() const
+    {
+        return true;
+    }
+
     virtual void handleDefaultEvent(Event* event)
     {
         if (event->isUIEvent() && event->asUIEvent()->isMouseEvent()) {

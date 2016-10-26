@@ -52,6 +52,11 @@ public:
         return true;
     }
 
+    virtual bool isFocuable() const
+    {
+        return true;
+    }
+
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle, ComputedStyle* newStyle)
     {
         HTMLElement::didComputedStyleChanged(oldStyle, newStyle);

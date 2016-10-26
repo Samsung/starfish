@@ -186,7 +186,7 @@ public:
     void setActiveNode(Node* n);
     void releaseActiveNode();
 
-    bool setFocusedNode(Node* n);
+    void setFocusedNode(Node* n);
     void releaseFocusedNode();
 
     void setActiveNodeWithMouseMove(Node *n);
@@ -278,9 +278,10 @@ protected:
     StackingContext* m_rootStackingContext;
     std::vector<CanvasSurface*, gc_allocator<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;
     Node* m_activeNodeWithTouchDown;
+
     Node* m_activeNodeWithTouchMove;
-    Node* m_focusedNodeWithTouchDown;
-    Node* m_relatedTargetOfFocusedNode;
+    Node* m_focusedNode;
+    Node* m_relatedTarget;
     Location m_touchDownPoint;
     int m_ctrlKeyDown;
     int m_shiftKeyDown;

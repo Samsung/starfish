@@ -1149,24 +1149,87 @@ void Window::releaseActiveNode()
     m_activeNodeWithTouchDown = nullptr;
 }
 
-bool Window::setFocusedNode(Node* n)
+void Window::setFocusedNode(Node* n)
 {
-    Node* t = n;
-    t->setFocusState(Node::NodeFocusInState);
-
-    if (m_focusedNodeWithTouchDown == t) {
-        return false;
+    Node* a = n;
+    while (!a->isElement()) {
+        if (a->asElement()->isFocusable() || a->isDocument())
+            break;
+        a = a->parentNode();
     }
 
-    m_relatedTargetOfFocusedNode = m_focusedNodeWithTouchDown;
-    m_focusedNodeWithTouchDown = t;
+    if (a == nullptr)
+        a = this->document()->bodyElement()->asNode();
 
-    return true;
+    if (a->isDocument()) {
+        a = a->asDocument()->bodyElement()->asNode();
+    }
+    if (m_focusedNode == a) {
+        return;
+    }
+
+    a->setState(Node::NodeStateFocused);
+
+    if (a->asElement()->isFocusable()) {
+        Node* t = m_focusedNode;
+        String* eventType;
+        Event* e;
+        if (t) {
+            if (t->isElement() && t->asElement()->isHTMLElement()) {
+                eventType = starFish()->staticStrings()->m_blur.localName();
+                e = new FocusEvent(eventType, EventInit(false, false));
+                EventTarget::dispatchEvent(t->asNode(), e);
+            }
+            if (t->isElement() && t->asElement()->isHTMLElement() /* && !isBodyElement*/) {
+                eventType = starFish()->staticStrings()->m_focusout.localName();
+                e = new FocusEvent(eventType, EventInit(true, false));
+                EventTarget::dispatchEvent(t->asNode(), e);
+            }
+        }
+        m_relatedTarget = t;
+        releaseFocusedNode();
+
+        t = a;
+        if (t) {
+            if (t->isElement() && t->asElement()->isHTMLElement()) {
+                eventType = starFish()->staticStrings()->m_focus.localName();
+                e = new FocusEvent(eventType, EventInit(false, false));
+                EventTarget::dispatchEvent(t->asNode(), e);
+            }
+            if (t->isElement() && t->asElement()->isHTMLElement() /* && !isBodyElement*/) {
+                eventType = starFish()->staticStrings()->m_focusin.localName();
+                e = new FocusEvent(eventType, EventInit(true, false));
+                EventTarget::dispatchEvent(t->asNode(), e);
+            }
+        }
+        m_focusedNode = t;
+    } else {
+        Node* t = m_focusedNode;
+        String* eventType;
+        Event* e;
+        if (t) {
+            if (t->isElement() && t->asElement()->isHTMLElement()) {
+                eventType = starFish()->staticStrings()->m_blur.localName();
+                e = new FocusEvent(eventType, EventInit(false, false));
+                EventTarget::dispatchEvent(t->asNode(), e);
+            }
+            if (t->isElement() && t->asElement()->isHTMLElement()) {
+                eventType = starFish()->staticStrings()->m_focusout.localName();
+                e = new FocusEvent(eventType, EventInit(true, false));
+                EventTarget::dispatchEvent(t->asNode(), e);
+            }
+            m_relatedTarget = t;
+            releaseFocusedNode();
+        }
+        m_focusedNode = nullptr;
+    }
+
 }
 
 void Window::releaseFocusedNode()
 {
-    m_relatedTargetOfFocusedNode->setFocusState(Node::NodeFocusOutState);
+    if (m_relatedTarget)
+        m_relatedTarget->setState(Node::NodeStateFocused);
 }
 
 void Window::setActiveNodeWithMouseMove(Node *n)
@@ -1191,36 +1254,8 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
         setActiveNode(node);
 
         // Check FocusEvent (in case of focus and blur)
-        bool isFocused = setFocusedNode(node);
-        if (isFocused) {
-            Node* t = m_relatedTargetOfFocusedNode;
-            if (t) {
-                if (t->isElement() && t->asElement()->isHTMLElement()) {
-                    String* eventType = starFish()->staticStrings()->m_blur.localName();
-                    Event* e = new FocusEvent(eventType, EventInit(false, false));
-                    EventTarget::dispatchEvent(t->asNode(), e);
-                    releaseFocusedNode();
-                } else if (t->isDocument()) {
-                    String* eventType = starFish()->staticStrings()->m_blur.localName();
-                    Event* e = new FocusEvent(eventType, EventInit(false, false));
-                    EventTarget::dispatchEvent(t->asDocument(), e);
-                    releaseFocusedNode();
-                }
-            }
+        setFocusedNode(node);
 
-            t = m_focusedNodeWithTouchDown;
-            if (t) {
-                if (t->isElement() && t->asElement()->isHTMLElement()) {
-                    String* eventType = starFish()->staticStrings()->m_focus.localName();
-                    Event* e = new FocusEvent(eventType, EventInit(false, false));
-                    EventTarget::dispatchEvent(t->asNode(), e);
-                } else if (t->isDocument()) {
-                    String* eventType = starFish()->staticStrings()->m_focus.localName();
-                    Event* e = new FocusEvent(eventType, EventInit(false, false));
-                    EventTarget::dispatchEvent(t->asDocument(), e);
-                }
-            }
-        }
     } else if (kind == TouchEventMove) {
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
