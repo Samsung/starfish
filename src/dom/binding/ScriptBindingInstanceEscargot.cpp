@@ -2028,10 +2028,15 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
         if (std::isnan(mode)) {
             THROW_ILLEGAL_INVOCATION();
         }
-        if (mode == SourceBuffer::AppendMode::Segments) {
-            originalObj->setMode(SourceBuffer::AppendMode::Segments);
-        } else if (mode == SourceBuffer::AppendMode::Sequence) {
-            originalObj->setMode(SourceBuffer::AppendMode::Sequence);
+        try {
+            if (mode == SourceBuffer::AppendMode::Segments) {
+                originalObj->setMode(SourceBuffer::AppendMode::Segments);
+            } else if (mode == SourceBuffer::AppendMode::Sequence) {
+                originalObj->setMode(SourceBuffer::AppendMode::Sequence);
+            }
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     });
@@ -2071,7 +2076,12 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
         if (std::isnan(timeStampOffset)) {
             THROW_ILLEGAL_INVOCATION();
         }
-        originalObj->setTimestampOffset(timeStampOffset);
+        try {
+            originalObj->setTimestampOffset(timeStampOffset);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     });
 
@@ -2121,7 +2131,12 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
         if (std::isnan(timeStamp)) {
             THROW_ILLEGAL_INVOCATION();
         }
-        originalObj->setAppendWindowStart(timeStamp);
+        try {
+            originalObj->setAppendWindowStart(timeStamp);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     });
 
@@ -2137,7 +2152,12 @@ escargot::ESFunctionObject* bindingSourceBuffer(ScriptBindingInstance* scriptBin
         if (std::isnan(timeStamp)) {
             THROW_ILLEGAL_INVOCATION();
         }
-        originalObj->setAppendWindowEnd(timeStamp);
+        try {
+            originalObj->setAppendWindowEnd(timeStamp);
+        } catch(DOMException* e) {
+            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     });
 
