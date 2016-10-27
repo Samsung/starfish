@@ -1221,16 +1221,6 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
             releaseActiveNode();
             m_activeNodeWithTouchDown = nullptr;
         }
-    } else if (kind == TouchEventIn) {
-        if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
-            releaseActiveNode();
-            m_activeNodeWithTouchDown = nullptr;
-        }
-    } else if (kind == TouchEventOut) {
-        if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
-            releaseActiveNode();
-            m_activeNodeWithTouchDown = nullptr;
-        }
     } else {
         STARFISH_ASSERT(kind == TouchEventUp);
         bool shouldCallOnClick = false;
