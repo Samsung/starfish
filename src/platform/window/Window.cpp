@@ -1492,6 +1492,7 @@ void Window::close()
     eflWindow->m_surfaceList.shrink_to_fit();
 
     m_starFish->messageLoop()->clearPendingIdlers();
+    m_starFish->clearBlobURLStore();
 }
 
 }

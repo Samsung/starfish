@@ -584,6 +584,13 @@ BlobURLStore StarFish::findMediaSourceBlobURL(MediaSource* ptr)
     auto iter = m_urlMediaSourceBlobStore.find(s);
     return *iter;
 }
+
+void StarFish::clearBlobURLStore()
+{
+    m_urlMediaSourceBlobStore.clear();
+    m_urlBlobStore.clear();
+}
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
 void StarFish::setupInspector(uint32_t portNumber)
 {
