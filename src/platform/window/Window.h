@@ -157,9 +157,7 @@ public:
         TouchEventDown,
         TouchEventMove,
         TouchEventUp,
-        TouchEventCancel,
-        TouchEventIn,
-        TouchEventOut
+        TouchEventCancel
     };
     void dispatchTouchEvent(float x, float y, TouchEventKind kind);
 
