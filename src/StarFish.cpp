@@ -548,6 +548,7 @@ BlobURLStore StarFish::addMediaSourceInBlobURLStore(MediaSource* ptr)
 void StarFish::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
 {
 #ifndef NDEBUG
+    STARFISH_LOG_INFO("[TRACKMSEGC] StarFish::removeMediaSourceFromBlobURLStore\n");
     {
         BlobURLStore s;
         s.m_blob = ptr;

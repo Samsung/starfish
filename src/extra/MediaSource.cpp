@@ -42,6 +42,12 @@ MediaSource::MediaSource(StarFish* starFish)
     , m_duration(std::numeric_limits<double>::quiet_NaN())
     , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
 {
+#ifndef NDEBUG
+    STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaSource::MediaSource (%p)\n", this);
+    GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+        STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaSource::~MediaSource (%p)\n", obj);
+    }, NULL, NULL, NULL);
+#endif
 }
 
 SourceBuffer* MediaSource::addSourceBuffer(String* type)
@@ -250,6 +256,7 @@ bool MediaSource::attach(HTMLMediaElement* e)
 // 2.4.2 Detaching from a media element
 void MediaSource::detach()
 {
+    STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaSource::detach()\n");
     // Update duration to NaN.
     m_duration = std::numeric_limits<double>::quiet_NaN(); // update duration directly for avoiding exception
     m_shortestMediaDuration = std::numeric_limits<uint64_t>::max();
@@ -265,7 +272,11 @@ void MediaSource::detach()
         for (unsigned i = 0; i < m_sourceBuffers->length(); i++)
             m_sourceBuffers->at(i)->detachFromParent();
         m_sourceBuffers->clear();
+        m_sourceBuffers->detachFromParent();
     }
+
+    m_clients.clear();
+    m_clients.shrink_to_fit();
 
     // Set the readyState attribute to "closed".
     // Queue a task to fire a simple event named sourceclose at the MediaSource.
@@ -279,6 +290,9 @@ void MediaSource::detach()
 
     m_activeAudioSourceBuffer = nullptr;
     m_activeAudioStreamIndex = m_activeAudioStreamInSourceBuffer = SIZE_MAX;
+
+    m_sourceBuffers = nullptr;
+    m_activeSourceBuffers = nullptr;
 }
 
 SourceBufferList* MediaSource::sourceBuffers()
@@ -387,6 +401,18 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
             }
         }
     }
+}
+
+void MediaSource::addClient(MediaSourceClient* c)
+{
+    c->setMediaSource(this);
+    m_clients.push_back(c);
+}
+
+void MediaSource::removeClient(MediaSourceClient* c)
+{
+    c->removeMediaSource();
+    m_clients.erase(std::find(m_clients.begin(), m_clients.end(), c));
 }
 
 }

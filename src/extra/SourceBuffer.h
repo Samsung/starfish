@@ -201,10 +201,12 @@ protected:
 
     void detachFromParent()
     {
+        clearAll();
         m_parentMediaSource = nullptr;
         m_isAttachedToParent = false;
     }
 
+    void clearAll();
     void prepareAppend();
     void codedFrameEviction();
     void bufferAppend(SourceBufferData* data);
@@ -295,7 +297,13 @@ public:
     void clear()
     {
         m_list.clear();
+        m_list.shrink_to_fit();
         scheduleEvent(m_starFish->staticStrings()->m_removesourcebuffer.localName());
+    }
+
+    void detachFromParent()
+    {
+        m_parentMediaSource = nullptr;
     }
 
     SourceBuffer* at(unsigned long index)
