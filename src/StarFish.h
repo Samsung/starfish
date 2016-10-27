@@ -427,6 +427,7 @@ public:
     bool isValidMediaSourceBlobURL(BlobURLStore ptr);
     bool isValidMediaSourceBlobURL(MediaSource* ptr);
     BlobURLStore findMediaSourceBlobURL(MediaSource* ptr);
+    void clearBlobURLStore();
 
     Console* console()
     {
