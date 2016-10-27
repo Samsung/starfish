@@ -278,6 +278,17 @@ void MediaPlayerTizen::play()
     }
 }
 
+void MediaPlayerTizen::pause()
+{
+    if (m_inPlaying) {
+        m_inPlaying = false;
+        m_starFish->removePointerFromRootSet(this);
+        m_starFish->window()->clearInterval(m_currentTimeUpdateTimer);
+        player_pause(m_nativePlayer);
+        m_currentTimeUpdateTimer = SIZE_MAX;
+    }
+}
+
 void MediaPlayerTizen::initDisplay()
 {
     m_canvasSurface = CanvasSurface::create(m_container->document()->window(), 1, 1);
@@ -438,15 +449,6 @@ void MediaPlayerTizen::compleatePrepare()
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
     }, this);
-}
-
-void MediaPlayerTizen::pauseOperation()
-{
-    player_pause(m_nativePlayer);
-    stopPlaying();
-    if (m_container) {
-        m_container->dispatchPauseEvent();
-    }
 }
 
 void MediaPlayerTizen::unprepareOperation()

@@ -34,12 +34,8 @@ public:
 
     virtual void close();
     virtual void play();
+    virtual void pause();
     void seekIfNeeded();
-
-    virtual void pause()
-    {
-        player_pause(m_nativePlayer);
-    }
 
     void setLoop(bool loop) { m_isLooping = true; }
     bool loop()
@@ -58,7 +54,6 @@ public:
     {
         player_stop(m_nativePlayer);
     }
-    void pauseOperation();
     void unprepareOperation();
 
     void openPreparingMode();
