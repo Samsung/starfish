@@ -374,22 +374,6 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
     };
     evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_UP, wnd->m_mobileMouseUpEventHandler, wnd);
 
-    wnd->m_mobileMouseInEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(sf->m_lastMouseX, sf->m_lastMouseY, Window::TouchEventIn);
-        return;
-    };
-    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_IN, wnd->m_mobileMouseInEventHandler, wnd);
-
-    wnd->m_mobileMouseOutEventHandler = [](void* data, Evas* evas, Evas_Object* obj, void* event_info) -> void {
-        WindowImplEFL* sf = (WindowImplEFL*)data;
-        StarFishEnterer enter(sf->m_starFish);
-        sf->dispatchTouchEvent(sf->m_lastMouseX, sf->m_lastMouseY, Window::TouchEventOut);
-        return;
-    };
-    evas_object_event_callback_add(wnd->m_dummyBox, EVAS_CALLBACK_MOUSE_OUT, wnd->m_mobileMouseOutEventHandler, wnd);
-
     wnd->m_mobileClickEventHandler = [](void* data, Evas_Object* obj, void* event_info) -> void {
         WindowImplEFL* sf = (WindowImplEFL*)data;
         StarFishEnterer enter(sf->m_starFish);
@@ -1286,7 +1270,7 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 
 void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
 {
-    STARFISH_LOG_INFO("Window::dispatchMouseEvent %f %f kind %d\n", x, y, (int)kind);
+    // STARFISH_LOG_INFO("Window::dispatchMouseEvent %f %f kind %d\n", x, y, (int)kind);
     if (!m_isRunning)
         return;
 
