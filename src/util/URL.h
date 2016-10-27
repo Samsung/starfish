@@ -39,6 +39,7 @@ class URL : public ScriptWrappable {
 public:
     static String* getURLString(String* baseURL, String* url);
     static String* createObjectURL(Blob* blob);
+    static void revokeObjectURL(StarFish* sf, String* blobURLRef);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     static String* createObjectURL(MediaSource* blob);
 #endif

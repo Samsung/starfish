@@ -110,6 +110,7 @@ void HTMLMediaElement::load()
 
         // If a fetching process is in progress for the media element, the user agent should stop it.
         // If the media element's assigned media provider object is a MediaSource object, then detach it.
+        // NOTE: MediaSource object be detached in closeMediaPlayer()
         closeMediaPlayer();
 
         // TODO Forget the media element's media-resource-specific tracks.
@@ -808,8 +809,10 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
     if (self->src()->length()) {
         mediaProviderObjectMode = 1;
     } else {
-        //  Otherwise the media element has no assigned media provider object and has neither a src attribute nor a source element child: set the networkState to NETWORK_EMPTY, and abort these steps; the synchronous section ends.
+        // Otherwise the media element has no assigned media provider object and has neither a src attribute nor a source element child: set the networkState to NETWORK_EMPTY, and abort these steps; the synchronous section ends.
         self->m_networkState = HTMLMediaElement::NETWORK_EMPTY;
+        // NOTE: Firing emptied event and Detaching MediaSource must have done in "load()"
+        //       (or does not have to consider if m_networkState were already NETWORK_EMPTY)
         return;
     }
 
