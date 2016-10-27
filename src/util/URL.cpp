@@ -336,6 +336,21 @@ String* URL::createObjectURL(Blob* blob)
     return StarFish::blobURLStoreToString(store, blob->starFish()->window()->document()->documentURI()->urlString());
 }
 
+void URL::revokeObjectURL(StarFish* sf, String* blobURLRef)
+{
+    BlobURLStore store;
+    if (StarFish::stringToBlobURLString(blobURLRef, store)) {
+        if (sf->isValidBlobURL(store)) {
+            sf->removeBlobFromBlobURLStore((Blob*)store.m_blob);
+        }
+#ifdef STARFISH_ENABLE_MULTIMEDIA
+        else if (sf->isValidMediaSourceBlobURL(store)) {
+            sf->removeMediaSourceFromBlobURLStore((MediaSource*)store.m_blob);
+        }
+#endif
+    }
+}
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 String* URL::createObjectURL(MediaSource* mediaSource)
 {

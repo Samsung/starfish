@@ -5255,6 +5255,14 @@ escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInsta
     }, escargot::ESString::create("createObjectURL"), 1, false);
     URLFunction->defineDataProperty(escargot::ESString::create("createObjectURL"), false, false, false, URLCreateObjectURLFunction);
 
+    escargot::ESFunctionObject* URLRevokeObjectURLFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        String* arg0 = toBrowserString(instance->currentExecutionContext()->readArgument(0).toString());
+        StarFish* sf = ((Window*)instance->globalObject()->extraPointerData())->starFish();
+        URL::revokeObjectURL(sf, arg0);
+        return escargot::ESValue();
+    }, escargot::ESString::create("revokeObjectURL"), 1, false);
+    URLFunction->defineDataProperty(escargot::ESString::create("revokeObjectURL"), false, false, false, URLRevokeObjectURLFunction);
+
 #ifdef STARFISH_ENABLE_TEST
     // FIXME setters below should not be null
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
