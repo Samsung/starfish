@@ -28,6 +28,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
     StaticStrings* ss = document()->window()->starFish()->staticStrings();
     if (name == ss->m_onclick) {
         setAttributeEventListener(ss->m_click, value, this);
+    } else if (name == ss->m_onmouseover) {
+        setAttributeEventListener(ss->m_mouseover, value, this);
     } else if (name == ss->m_onload) {
         setAttributeEventListener(ss->m_load, value, this);
     } else if (name == ss->m_onunload) {

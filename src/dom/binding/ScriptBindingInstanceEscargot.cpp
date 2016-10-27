@@ -2801,6 +2801,31 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
     });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onmouseover"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            return nd->attributeEventListener(nd->document()->window()->starFish()->staticStrings()->m_mouseover);
+        }
+        THROW_ILLEGAL_INVOCATION();
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            auto eventType = nd->document()->window()->starFish()->staticStrings()->m_mouseover;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                nd->setAttributeEventListener(eventType, v);
+            } else {
+                nd->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onfocus"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
@@ -2917,6 +2942,44 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
         return escargot::ESValue(escargot::ESValue::ESUndefined);
     }, escargot::ESString::create("click"), 1, false);
     HTMLElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("click"), true, true, true, clickFunction);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onmouseover"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->attributeEventListener(element->document()->window()->starFish()->staticStrings()->m_mouseover);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_mouseover;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                element->setAttributeEventListener(eventType, v);
+            } else {
+                element->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
+    escargot::ESFunctionObject* mouseoverFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* obj = originalObj;
+        String* eventType = obj->document()->window()->starFish()->staticStrings()->m_mouseover.localName();
+        Event* e = new Event(eventType, EventInit(true, true));
+        obj->dispatchEvent(e);
+        return escargot::ESValue(escargot::ESValue::ESUndefined);
+    }, escargot::ESString::create("mouseover"), 1, false);
+    HTMLElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("mouseover"), true, true, true, mouseoverFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onload"),
