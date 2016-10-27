@@ -1169,6 +1169,16 @@ void Window::releaseFocusedNode()
     m_relatedTargetOfFocusedNode->setFocusState(Node::NodeFocusOutState);
 }
 
+void Window::setActiveNodeWithMouseMove(Node *n)
+{
+    m_activeNodeWithTouchMove = n;
+}
+
+void Window::releaseActiveNodeWithMouseMove()
+{
+    m_activeNodeWithTouchMove = nullptr;
+}
+
 void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 {
     // STARFISH_LOG_INFO("Window::dispatchTouchEvent %f %f kind %d\n", x, y, (int)kind);
@@ -1273,6 +1283,34 @@ void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
             m_activeNodeWithTouchDown = nullptr;
+        }
+        Node* node = hitTest(x, y);
+        if (m_activeNodeWithTouchMove == nullptr || node != m_activeNodeWithTouchMove) {
+            releaseActiveNodeWithMouseMove();
+            setActiveNodeWithMouseMove(node);
+            if (m_activeNodeWithTouchMove && node == m_activeNodeWithTouchMove) {
+                bool shouldDispatchEvent = true;
+                Node* t = m_activeNodeWithTouchMove;
+                while (t) {
+                    if ((t->isElement() && t->asElement()->isHTMLElement())) {
+                        String* eventType = starFish()->staticStrings()->m_mouseover.localName();
+                        Event* e = new MouseEvent(eventType, EventInit(true, true));
+                        EventTarget::dispatchEvent(t->asNode(), e);
+                        shouldDispatchEvent = false;
+                        break;
+                    }
+                    t = t->parentNode();
+                }
+                if (shouldDispatchEvent) {
+                    if (t == nullptr) {
+                        t = m_document;
+                    }
+                    String* eventType = starFish()->staticStrings()->m_mouseover.localName();
+                    Event* e = new MouseEvent(eventType, EventInit(true, true));
+                    EventTarget::dispatchEvent(t->asDocument(), e);
+                    shouldDispatchEvent = false;
+                }
+            }
         }
     } else if (kind == MouseEventCancel) {
         if (m_activeNodeWithTouchDown) {
