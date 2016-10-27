@@ -202,8 +202,8 @@ void MediaPlayerTizenTV::prepareMediaSource()
         self->compleatePrepare();
     };
 
+    openPreparingMode();
     int nativeResult = player_prepare_async(m_nativePlayer, m_preparedCallback, this);
-
     if (nativeResult != PLAYER_ERROR_NONE) {
         STARFISH_LOG_ERROR("player_prepare_async return error !!!\n");
         STARFISH_ASSERT_NOT_REACHED();

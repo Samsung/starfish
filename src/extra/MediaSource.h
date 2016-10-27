@@ -118,15 +118,8 @@ public:
 
     // TODO 2.4.4 SourceBuffer Monitoring
 
-    void addClient(MediaSourceClient* c)
-    {
-        m_clients.push_back(c);
-    }
-
-    void removeClient(MediaSourceClient* c)
-    {
-        m_clients.erase(std::find(m_clients.begin(), m_clients.end(), c));
-    }
+    void addClient(MediaSourceClient* c);
+    void removeClient(MediaSourceClient* c);
 
     SourceBuffer* activeVideoSourceBuffer()
     {
@@ -185,8 +178,8 @@ protected:
 
 class MediaSourceClient : public gc {
 public:
-    MediaSourceClient(MediaSource* ms)
-        : m_mediaSource(ms)
+    MediaSourceClient()
+        : m_mediaSource(nullptr)
     {
     }
 
@@ -203,6 +196,16 @@ public:
     virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
     {
 
+    }
+
+    void setMediaSource(MediaSource* ms)
+    {
+        m_mediaSource = ms;
+    }
+
+    void removeMediaSource()
+    {
+        m_mediaSource = nullptr;
     }
 
 protected:

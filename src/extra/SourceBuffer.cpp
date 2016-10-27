@@ -309,21 +309,26 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     m_demuxer = Demuxer::createDemuxer(m_type);
     m_demuxer->addClient(new DemuxerClientSourceBuffer());
 
+    STARFISH_LOG_INFO("[TRACK_MSE_GC] SourceBuffer::SourceBuffer (%p)\n", this);
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        STARFISH_LOG_INFO("SourceBuffer::~SourceBuffer %p\n", obj);
+        STARFISH_LOG_INFO("[TRACK_MSE_GC] SourceBuffer::~SourceBuffer (%p)\n", obj);
         SourceBuffer* nr = (SourceBuffer*)obj;
-        for (size_t i = 0; i < nr->m_packetGroup.size(); i ++) {
-            std::vector<MediaPacket*>& p = nr->m_packetGroup[i]->m_packets;
-            for (size_t j = 0; j < p.size(); j ++) {
-                delete[] p[j]->m_data;
-                delete p[j];
-            }
-            std::vector<MediaPacket*>().swap(p);
-            delete nr->m_packetGroup[i];
-        }
-        std::vector<MediaPacketGroup*>().swap(nr->m_packetGroup);
-
+        nr->clearAll();
     }, NULL, NULL, NULL);
+}
+
+void SourceBuffer::clearAll()
+{
+    for (size_t i = 0; i < m_packetGroup.size(); i ++) {
+        std::vector<MediaPacket*>& p = m_packetGroup[i]->m_packets;
+        for (size_t j = 0; j < p.size(); j ++) {
+            delete[] p[j]->m_data;
+            delete p[j];
+        }
+        std::vector<MediaPacket*>().swap(p);
+        delete m_packetGroup[i];
+    }
+    std::vector<MediaPacketGroup*>().swap(m_packetGroup);
 }
 
 void SourceBuffer::setUpdating(bool flag, UpdateState state)

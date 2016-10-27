@@ -88,11 +88,10 @@ void MediaPlayerTizen::printNativePlayerError(int errorCode)
 
 class MediaPlayerTizenMediaSourceClient : public MediaSourceClient {
 public:
-    MediaPlayerTizenMediaSourceClient(MediaSource* ms, MediaPlayerTizen* player)
-        : MediaSourceClient(ms)
+    MediaPlayerTizenMediaSourceClient(MediaPlayerTizen* player)
+        : MediaSourceClient()
         , m_player(player)
     {
-
     }
 
     virtual void activeSourceComputed()
@@ -244,6 +243,7 @@ void MediaPlayerTizen::close()
         player_destroy(m_nativePlayer);
 
     m_nativePlayer = nullptr;
+    m_container = nullptr;
 }
 
 double MediaPlayerTizen::duration()
@@ -362,13 +362,11 @@ void MediaPlayerTizen::prepare(URL* url)
         if (m_starFish->isValidBlobURL(store)) {
             player_set_memory_buffer(m_nativePlayer, ((Blob *)store.m_blob)->data(), ((Blob *)store.m_blob)->size());
         } else if (m_starFish->isValidMediaSourceBlobURL(store)) {
-            openPreparingMode();
-
             BlobURLStore store;
             StarFish::stringToBlobURLString(url->urlString(), store);
             MediaSource* ms = (MediaSource*)store.m_blob;
             m_activeMediaSource = ms;
-            m_mseClient = new MediaPlayerTizenMediaSourceClient(m_activeMediaSource, this);
+            m_mseClient = new MediaPlayerTizenMediaSourceClient(this);
             m_activeMediaSource->addClient(m_mseClient);
             m_activeMediaSource->attach(m_container);
             return;
@@ -453,8 +451,8 @@ void MediaPlayerTizen::compleatePrepare()
 
 void MediaPlayerTizen::unprepareOperation()
 {
-    STARFISH_LOG_INFO("MediaPlayerTizen::unprepareOperation\n");
     if (m_nativePlayer) {
+        STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaPlayerTizen::unprepareOperation (%p)\n", this);
         stopPlaying();
 
         player_unprepare(m_nativePlayer);
@@ -464,11 +462,12 @@ void MediaPlayerTizen::unprepareOperation()
 
         if (m_activeMediaSource) {
             m_activeMediaSource->removeClient(m_mseClient);
-            m_mseClient = nullptr;
             m_activeMediaSource->detach();
+            m_activeMediaSource = nullptr;
         }
-        m_activeMediaSource = nullptr;
-
+        if (m_mseClient) {
+            m_mseClient = nullptr;
+        }
         m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_NOTHING);
     }
 }
