@@ -1224,19 +1224,13 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 
     if (kind == TouchEventDown) {
         Node* node = hitTest(x, y);
-
-        // FIXME: node received from hitTest() can not be NULL.
-        // If the node is NULL, this will appears by wrong logic.
         if (!node) {
-            STARFISH_LOG_INFO("dispatchMouseEvent: hitTest is NULL\n");
+            // STARFISH_LOG_INFO("dispatchTouchEvent: hitTest is NULL\n");
             return;
         }
         m_touchDownPoint = Location(x, y);
         setActiveNode(node);
-
-        // Check FocusEvent (in case of focus and blur)
         setFocusedNode(node);
-
     } else if (kind == TouchEventMove) {
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
@@ -1292,16 +1286,12 @@ void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
 
     if (kind == MouseEventDown) {
         Node* node = hitTest(x, y);
-
-        // FIXME: node received from hitTest() can not be NULL.
-        // If the node is NULL, this will appears by wrong logic.
         if (!node) {
-            STARFISH_LOG_INFO("dispatchMouseEvent: hitTest is NULL\n");
+            // STARFISH_LOG_INFO("MouseEventDown: hitTest is NULL\n");
             return;
         }
         m_touchDownPoint = Location(x, y);
         setActiveNode(node);
-
         setFocusedNode(node);
     } else if (kind == MouseEventMove) {
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
