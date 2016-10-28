@@ -75,11 +75,10 @@ static int64_t FFMpegIOContextSeekCallback(void *opaque, int64_t offset, int whe
     return self->m_readPos;
 }
 
-void MediaPlayerTizenTV::prepareMediaSource()
-{
-    STARFISH_LOG_INFO("prepareMediaSource\n");
-    player_set_uri(m_nativePlayer, "external_demuxer://aaaa");
+extern bool g_ffmpegInited;
 
+void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
+{
     av_register_all();
     avcodec_register_all();
     avformat_network_init();
@@ -87,8 +86,8 @@ void MediaPlayerTizenTV::prepareMediaSource()
     // set video options
     player_video_stream_info_s videoInfo;
     if (m_activeMediaSource->activeVideoSourceBuffer()) {
-        STARFISH_LOG_INFO("MSE set Video\n");
-        VideoStreamInfo* info = (VideoStreamInfo*)(m_activeMediaSource->activeVideoSourceBuffer()->streamInfo()[m_activeMediaSource->activeVideoStreamInSourceBuffer()]);
+        STARFISH_LOG_INFO("MediaPlayerTizenTV::setVideoStreamInfo\n");
+        VideoStreamInfo* info = (VideoStreamInfo*)(m_activeMediaSource->activeVideoSourceBuffer()->streamInfo(0, m_activeMediaSource->activeVideoStreamIndex()));
         memset(&videoInfo, 0, sizeof(player_video_stream_info_s));
 
         const char* mediaFormat = "";
@@ -111,7 +110,7 @@ void MediaPlayerTizenTV::prepareMediaSource()
         videoInfo.framerate_num = info->m_timeBaseNum;
 
         uint8_t* bufferForIO = (uint8_t*)av_malloc(4096);
-        FFMpegIOContext ctx(m_activeMediaSource->activeVideoSourceBuffer()->bufferHeader());
+        FFMpegIOContext ctx(m_activeMediaSource->activeVideoSourceBuffer()->bufferHeader(0));
         AVIOContext* ioContext = avio_alloc_context(bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr, FFMpegIOContextSeekCallback);
         AVFormatContext* fc = avformat_alloc_context();
         fc->flags = AVFMT_FLAG_CUSTOM_IO;
@@ -120,8 +119,8 @@ void MediaPlayerTizenTV::prepareMediaSource()
         STARFISH_RELEASE_ASSERT(avformat_open_input(&fc, NULL, NULL, NULL) == 0);
         videoInfo.codec_extradata = fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->extradata;
         videoInfo.extradata_size = fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->extradata_size;
-        STARFISH_LOG_INFO("ffmpegVideo Info[%d].. %d %d\n", (int)m_activeMediaSource->activeVideoStreamIndex(), (int)fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->width,
-            (int)fc->streams[m_activeMediaSource->activeVideoStreamInSourceBuffer()]->codec->height);
+        STARFISH_LOG_INFO("ffmpegVideo Info[%d].. %d %d\n", (int)m_activeMediaSource->activeVideoStreamIndex(), (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->width,
+            (int)fc->streams[m_activeMediaSource->activeVideoStreamIndex()]->codec->height);
         STARFISH_LOG_INFO("tizen video Info.. %d %d %d %d\n", info->m_width, info->m_height, (int)videoInfo.framerate_den, (int)videoInfo.framerate_num);
 
         int ret = player_set_video_stream_info(m_nativePlayer, &videoInfo);
@@ -130,16 +129,24 @@ void MediaPlayerTizenTV::prepareMediaSource()
         avformat_close_input(&fc);
         av_free(bufferForIO);
         av_free(ioContext);
+
+        m_videoInitSegmentIndex = initSegmentIndex;
     }
+}
+
+void MediaPlayerTizenTV::setAudioStreamInfo(size_t initSegmentIndex)
+{
+    av_register_all();
+    avcodec_register_all();
+    avformat_network_init();
 
     // set audio options
-
     player_audio_stream_info_s audioInfo;
     if (m_activeMediaSource->activeAudioSourceBuffer()) {
         STARFISH_LOG_INFO("MSE set Audio\n");
         memset(&audioInfo, 0, sizeof(player_audio_stream_info_s));
 
-        StreamInfo* info = (m_activeMediaSource->activeAudioSourceBuffer()->streamInfo()[m_activeMediaSource->activeAudioStreamInSourceBuffer()]);
+        StreamInfo* info = (m_activeMediaSource->activeAudioSourceBuffer()->streamInfo(initSegmentIndex, m_activeMediaSource->activeAudioStreamIndex()));
 
         const char* mediaFormat = "";
         if (strstr(info->m_codecName, "aac")) {
@@ -156,7 +163,7 @@ void MediaPlayerTizenTV::prepareMediaSource()
         }
 
         uint8_t* bufferForIO = (uint8_t*)av_malloc(4096);
-        FFMpegIOContext ctx(m_activeMediaSource->activeAudioSourceBuffer()->bufferHeader());
+        FFMpegIOContext ctx(m_activeMediaSource->activeAudioSourceBuffer()->bufferHeader(initSegmentIndex));
         AVIOContext* ioContext = avio_alloc_context(bufferForIO, 4096, 0, &ctx, FFMpegIOContextReadCallback, nullptr, FFMpegIOContextSeekCallback);
         AVFormatContext* fc = avformat_alloc_context();
         fc->flags = AVFMT_FLAG_CUSTOM_IO;
@@ -180,40 +187,11 @@ void MediaPlayerTizenTV::prepareMediaSource()
         avformat_close_input(&fc);
         av_free(bufferForIO);
         av_free(ioContext);
+
+        m_audioInitSegmentIndex = initSegmentIndex;
     }
-
-    player_set_buffer_need_video_data_cb(m_nativePlayer, [](unsigned int size, void *user_data)
-    {
-        STARFISH_LOG_INFO("videoPlayerBufferNeedVideoDataCB called\n");
-        MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
-        self->fillVideoBuffer();
-    }, this);
-    player_set_buffer_need_audio_data_cb(m_nativePlayer, [](unsigned int size, void *user_data)
-    {
-        STARFISH_LOG_INFO("videoPlayerBufferNeedAudioDataCB called\n");
-        MediaPlayerTizenTV* self = (MediaPlayerTizenTV*)user_data;
-        self->fillAudioBuffer();
-    }, this);
-
-    m_preparedCallback = [](void *user_data)
-    {
-        STARFISH_LOG_INFO("MediaPlayerTizenTV MSE Prepare ok");
-        MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
-        self->compleatePrepare();
-    };
-
-    openPreparingMode();
-    int nativeResult = player_prepare_async(m_nativePlayer, m_preparedCallback, this);
-    if (nativeResult != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("player_prepare_async return error !!!\n");
-        STARFISH_ASSERT_NOT_REACHED();
-
-        STARFISH_ASSERT(m_inPrepare);
-        closePreparingMode();
-    }
-
-    STARFISH_LOG_INFO("prepareMediaSourceEnd\n");
 }
+
 }
 
 #endif

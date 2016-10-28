@@ -144,6 +144,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
         MediaPlayerTizen* player = (MediaPlayerTizen*)obj;
         player->unprepareOperation();
     }, NULL, NULL, NULL);
+
 }
 
 void MediaPlayerTizen::handlePlayerError(int error)

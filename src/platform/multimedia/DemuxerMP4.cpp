@@ -104,10 +104,22 @@ static MP4::File* parseMP4(DemuxerSource* source, bool findStream)
             dataLength = length - 8;
         }
 
+        if (strcmp(type, "meta") == 0) {
+            source->onSeek(orgLength, DemuxerSource::SeekWhenceCurrent);
+            continue;
+        }
+
         if (strcmp(type, "moov") == 0) {
             if (!findStream) {
                 maxPos = orgPos + orgLength;
                 printf("found movv. (endpos %d)\n", (int)maxPos);
+            }
+        }
+
+        if (!findStream) {
+            if ((strcmp(type, "moof") == 0)
+                || (strcmp(type, "mdat") == 0)) {
+                break;
             }
         }
 
@@ -264,8 +276,8 @@ public:
 
     virtual bool findStreamInfo(DemuxerSource* source, String* formatHint)
     {
-        STARFISH_ASSERT(!m_isStreamFinded);
         bool seenTrack = false;
+        int64_t before = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
         std::unique_ptr<MP4::File> pFile(parseMP4(source, false));
         pFile->traverse([&](MP4::Atom* atom, MP4::ContainerAtom* container) {
             if (atom->getType() == "TKHD") {
@@ -287,7 +299,7 @@ public:
                         // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
                         info.m_width = tkhd->track_width;
                         info.m_height = tkhd->track_height;
-                        // STARFISH_LOG_INFO("DemuxerMP4::findStreamInfo finded video. %d %d %d\n", (int)info.m_streamIndex, (int)info.m_width, (int)info.m_height);
+                        STARFISH_LOG_INFO("DemuxerMP4::findStreamInfo finded video. %d %d %d\n", (int)info.m_streamIndex, (int)info.m_width, (int)info.m_height);
                         for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                             m_demuxerClients[j]->onDetectVideoStream(info);
                         }
@@ -310,13 +322,18 @@ public:
             }
         });
 
-        m_isStreamFinded = seenTrack;
+        if (seenTrack) {
+            if (!m_isStreamFinded)
+                m_isStreamFinded = seenTrack;
+        } else {
+            source->onSeek(before, DemuxerSource::SeekWhenceSet);
+        }
+
         return seenTrack;
     }
 
     virtual bool findStreamPacket(DemuxerSource* source)
     {
-        STARFISH_ASSERT(m_isStreamFinded);
         std::unique_ptr<MP4::File> pFile(parseMP4(source, true));
 
         size_t trackID = SIZE_MAX;

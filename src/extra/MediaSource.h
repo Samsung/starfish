@@ -126,11 +126,6 @@ public:
         return m_activeVideoSourceBuffer;
     }
 
-    size_t activeVideoStreamInSourceBuffer()
-    {
-        return m_activeVideoStreamInSourceBuffer;
-    }
-
     size_t activeVideoStreamIndex()
     {
         return m_activeVideoStreamIndex;
@@ -139,11 +134,6 @@ public:
     SourceBuffer* activeAudioSourceBuffer()
     {
         return m_activeAudioSourceBuffer;
-    }
-
-    size_t activeAudioStreamInSourceBuffer()
-    {
-        return m_activeAudioStreamInSourceBuffer;
     }
 
     size_t activeAudioStreamIndex()
@@ -163,10 +153,8 @@ protected:
     bool m_isActiveBufferComputed;
     HTMLMediaElement* m_attachedMediaElement;
     SourceBuffer* m_activeVideoSourceBuffer;
-    size_t m_activeVideoStreamInSourceBuffer;
     size_t m_activeVideoStreamIndex;
     SourceBuffer* m_activeAudioSourceBuffer;
-    size_t m_activeAudioStreamInSourceBuffer;
     size_t m_activeAudioStreamIndex;
     StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;
