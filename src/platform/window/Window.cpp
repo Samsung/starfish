@@ -1151,79 +1151,53 @@ void Window::releaseActiveNode()
 
 void Window::setFocusedNode(Node* n)
 {
-    Node* a = n;
-    while (!a->isElement()) {
-        if (a->asElement()->isFocusable() || a->isDocument())
-            break;
-        a = a->parentNode();
+    Node* m = n;
+    while (!(m->isElement() && m->asElement()->isFocusable()) && !m->isDocument()) {
+        m = m->parentNode();
     }
 
-    if (a == nullptr)
-        a = this->document()->bodyElement()->asNode();
-
-    if (a->isDocument()) {
-        a = a->asDocument()->bodyElement()->asNode();
+    if (m == nullptr || m->isDocument()) {
+        m = this->document()->bodyElement()->asNode();
     }
-    if (m_focusedNode == a) {
+
+    if (m_focusedNode == m) {
         return;
     }
 
-    a->setState(Node::NodeStateFocused);
+    m->setState(Node::NodeStateFocused);
 
-    if (a->asElement()->isFocusable()) {
-        Node* t = m_focusedNode;
-        String* eventType;
-        Event* e;
-        if (t) {
-            if (t->isElement() && t->asElement()->isHTMLElement()) {
-                eventType = starFish()->staticStrings()->m_blur.localName();
-                e = new FocusEvent(eventType, EventInit(false, false));
-                EventTarget::dispatchEvent(t->asNode(), e);
-            }
-            if (t->isElement() && t->asElement()->isHTMLElement() /* && !isBodyElement*/) {
-                eventType = starFish()->staticStrings()->m_focusout.localName();
-                e = new FocusEvent(eventType, EventInit(true, false));
-                EventTarget::dispatchEvent(t->asNode(), e);
-            }
+    Node* t = m_focusedNode;
+    String* eventType;
+    Event* e;
+    if (t) {
+        if (t->isElement() && t->asElement()->isHTMLElement()) {
+            eventType = starFish()->staticStrings()->m_blur.localName();
+            e = new FocusEvent(eventType, EventInit(false, false));
+            EventTarget::dispatchEvent(t->asNode(), e);
         }
-        m_relatedTarget = t;
-        releaseFocusedNode();
-
-        t = a;
-        if (t) {
-            if (t->isElement() && t->asElement()->isHTMLElement()) {
-                eventType = starFish()->staticStrings()->m_focus.localName();
-                e = new FocusEvent(eventType, EventInit(false, false));
-                EventTarget::dispatchEvent(t->asNode(), e);
-            }
-            if (t->isElement() && t->asElement()->isHTMLElement() /* && !isBodyElement*/) {
-                eventType = starFish()->staticStrings()->m_focusin.localName();
-                e = new FocusEvent(eventType, EventInit(true, false));
-                EventTarget::dispatchEvent(t->asNode(), e);
-            }
+        if (t->isElement() && t->asElement()->isHTMLElement() && !t->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            eventType = starFish()->staticStrings()->m_focusout.localName();
+            e = new FocusEvent(eventType, EventInit(true, false));
+            EventTarget::dispatchEvent(t->asNode(), e);
         }
-        m_focusedNode = t;
-    } else {
-        Node* t = m_focusedNode;
-        String* eventType;
-        Event* e;
-        if (t) {
-            if (t->isElement() && t->asElement()->isHTMLElement()) {
-                eventType = starFish()->staticStrings()->m_blur.localName();
-                e = new FocusEvent(eventType, EventInit(false, false));
-                EventTarget::dispatchEvent(t->asNode(), e);
-            }
-            if (t->isElement() && t->asElement()->isHTMLElement()) {
-                eventType = starFish()->staticStrings()->m_focusout.localName();
-                e = new FocusEvent(eventType, EventInit(true, false));
-                EventTarget::dispatchEvent(t->asNode(), e);
-            }
-            m_relatedTarget = t;
-            releaseFocusedNode();
-        }
-        m_focusedNode = nullptr;
     }
+    m_relatedTarget = t;
+    releaseFocusedNode();
 
+    t = m;
+    if (t) {
+        if (t->isElement() && t->asElement()->isHTMLElement()) {
+            eventType = starFish()->staticStrings()->m_focus.localName();
+            e = new FocusEvent(eventType, EventInit(false, false));
+            EventTarget::dispatchEvent(t->asNode(), e);
+        }
+        if (t->isElement() && t->asElement()->isHTMLElement() && !t->asElement()->asHTMLElement()->isHTMLBodyElement()) {
+            eventType = starFish()->staticStrings()->m_focusin.localName();
+            e = new FocusEvent(eventType, EventInit(true, false));
+            EventTarget::dispatchEvent(t->asNode(), e);
+        }
+    }
+    m_focusedNode = t;
 }
 
 void Window::releaseFocusedNode()
@@ -1250,6 +1224,13 @@ void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 
     if (kind == TouchEventDown) {
         Node* node = hitTest(x, y);
+
+        // FIXME: node received from hitTest() can not be NULL.
+        // If the node is NULL, this will appears by wrong logic.
+        if (!node) {
+            STARFISH_LOG_INFO("dispatchMouseEvent: hitTest is NULL\n");
+            return;
+        }
         m_touchDownPoint = Location(x, y);
         setActiveNode(node);
 
@@ -1311,9 +1292,17 @@ void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
 
     if (kind == MouseEventDown) {
         Node* node = hitTest(x, y);
+
+        // FIXME: node received from hitTest() can not be NULL.
+        // If the node is NULL, this will appears by wrong logic.
+        if (!node) {
+            STARFISH_LOG_INFO("dispatchMouseEvent: hitTest is NULL\n");
+            return;
+        }
         m_touchDownPoint = Location(x, y);
         setActiveNode(node);
 
+        setFocusedNode(node);
     } else if (kind == MouseEventMove) {
         if ((starFish()->deviceKind() & deviceKindUseTouchScreen) && m_activeNodeWithTouchDown && ((abs(m_touchDownPoint.x() - x) > 30) || (abs(m_touchDownPoint.y() - y) > 30))) {
             releaseActiveNode();
@@ -1483,6 +1472,9 @@ void Window::close()
     if (m_navigator) {
         m_navigator->close();
     }
+
+    m_focusedNode = nullptr;
+    m_relatedTarget = nullptr;
 
     if (m_location) {
         m_location->close();

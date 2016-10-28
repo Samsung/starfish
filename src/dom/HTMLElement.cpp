@@ -50,6 +50,14 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
         } else {
             setAttribute(ss->m_dir, String::emptyString);
         }
+    } else if (name == ss->m_onfocus) {
+        setAttributeEventListener(ss->m_focus, value, this);
+    } else if (name == ss->m_onblur) {
+        setAttributeEventListener(ss->m_blur, value, this);
+    } else if (name == ss->m_onfocusin) {
+        setAttributeEventListener(ss->m_focusin, value, this);
+    } else if (name == ss->m_onfocusout) {
+        setAttributeEventListener(ss->m_focusout, value, this);
     }
 }
 

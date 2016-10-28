@@ -451,9 +451,9 @@ public:
         */
         if (state != m_state) {
             if (state == NodeStateNormal)
-                m_state =  0;
+                m_state &= ~(1 << 0);
             else if (state == NodeStateActive)
-                m_state = 1 << 0;
+                m_state |= (1 << 0);
             else if (state == NodeStateFocused)
                 m_state ^= 1 << 1;
 
