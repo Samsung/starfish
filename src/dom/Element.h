@@ -49,6 +49,9 @@ public:
     Element(Document* document, ScriptBindingInstance* instance)
         : Node(document, instance)
         , m_inlineStyle(nullptr)
+        , m_focused(false)
+        , m_tabIndex(0)
+        , m_tabIndexWasSetExplicitly(false)
     {
         m_id = String::emptyString;
         m_className = String::emptyString;
@@ -57,6 +60,9 @@ public:
     Element(Document* document)
         : Node(document)
         , m_inlineStyle(nullptr)
+        , m_focused(false)
+        , m_tabIndex(0)
+        , m_tabIndexWasSetExplicitly(false)
     {
         m_id = String::emptyString;
         m_className = String::emptyString;
@@ -109,11 +115,6 @@ public:
     }
 
     virtual bool isHTMLElement() const
-    {
-        return false;
-    }
-
-    virtual bool isFocusable() const
     {
         return false;
     }
@@ -237,6 +238,23 @@ public:
         m_didInlineStyleModifiedAfterAttributeSet = true;
     }
 
+    // FIXME: Use NodeState instead of this flag.
+    bool focused() const { return m_focused; }
+    void setFocused(bool flag) { m_focused = flag; }
+    virtual void setFocus(bool flag);
+
+    virtual bool supportsFocus();
+    virtual bool isFocusable();
+
+    virtual int tabIndex() { return m_tabIndex; }
+    void setTabIndex(int index) { m_tabIndex = index; }
+    bool tabIndexSetExplicitly() const { return m_tabIndexWasSetExplicitly; };
+    void setTabIndexExplicitly(int index) { m_tabIndex = index; m_tabIndexWasSetExplicitly = true; }
+
+    /* Element-level focus APIs */
+    virtual void focus();
+    virtual void blur();
+
 protected:
     // clientRect is differ with clientBoundingRect.
     // this function is only for client{Left, Top, Width, Top}
@@ -247,6 +265,11 @@ protected:
     virtual Node* clone();
 
     CSSStyleDeclaration* m_inlineStyle;
+
+    bool m_focused;
+    int m_tabIndex;
+    bool m_tabIndexWasSetExplicitly;
+
 private:
     String* m_id;
     String* m_className;

@@ -26,6 +26,7 @@ public:
     HTMLAnchorElement(Document* document)
         : HTMLElement(document)
     {
+        setTabIndex(0);
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -52,11 +53,6 @@ public:
         return true;
     }
 
-    virtual bool isFocusable() const
-    {
-        return true;
-    }
-
     virtual void handleDefaultEvent(Event* event)
     {
         if (event->isUIEvent() && event->asUIEvent()->isMouseEvent()) {
@@ -73,6 +69,17 @@ public:
                 }
             }
         }
+    }
+
+    bool supportsFocus()
+    {
+        auto href = document()->window()->starFish()->staticStrings()->m_href;
+        return hasAttribute(href) != SIZE_MAX ? true : false;
+    }
+
+    int tabIndex()
+    {
+        return Element::tabIndex();
     }
 
 protected:

@@ -61,4 +61,16 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
     }
 }
 
+int HTMLElement::tabIndex()
+{
+    if (supportsFocus())
+        return Element::tabIndex();
+    return -1;
+}
+
+bool HTMLElement::supportsFocus()
+{
+    return Element::supportsFocus();
+}
+
 }
