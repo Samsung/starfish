@@ -343,16 +343,16 @@ HTMLHtmlElement* Document::rootElement()
 
 Element* Document::documentElement()
 {
-    Element* element = rootElement();
-    if (element) {
-        return element;
-    } else {
+    if (isXMLDocument()) {
         Node* n = firstChild();
-        if (n && n->isElement()) {
-            element = n->asElement();
+        while (n) {
+            if (n && n->isElement() && !n->isComment()) {
+                return n->asElement();
+            }
+            n = n->nextSibling();
         }
     }
-    return element;
+    return rootElement();
 }
 
 HTMLHeadElement* Document::headElement()
