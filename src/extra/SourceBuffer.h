@@ -54,12 +54,14 @@ struct SourceBufferData : public gc {
 
 struct MediaPacketGroup {
     size_t m_streamIndex;
+    size_t m_initSegmentIndex;
     uint64_t m_maxFrameDuration;
     uint64_t m_groupTimestampStart;
     uint64_t m_groupTimestampEnd;
     std::vector<MediaPacket*> m_packets;
-    MediaPacketGroup(size_t idx, uint64_t duration = 0, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
+    MediaPacketGroup(size_t idx, size_t initSegmentIdx, uint64_t duration = 0, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
         : m_streamIndex(idx)
+        , m_initSegmentIndex(initSegmentIdx)
         , m_maxFrameDuration(duration)
         , m_groupTimestampStart(start)
         , m_groupTimestampEnd(end)
@@ -79,6 +81,8 @@ struct MediaPacketGroup {
     }
 };
 
+typedef std::vector<uint8_t, gc_allocator<uint8_t>> SourceBufferDataVector;
+typedef std::vector<StreamInfo*, gc_allocator<StreamInfo*>> StreamInfoVector;
 class SourceBuffer : public EventTarget {
 public:
     friend class MediaSource;
@@ -131,23 +135,13 @@ public:
         return m_updating;
     }
 
-    AppendState state()
+    const SourceBufferDataVector& bufferHeader(size_t initSegmentIndex)
     {
-        return m_state;
-    }
-
-    const std::vector<StreamInfo*, gc_allocator<StreamInfo*>>& streamInfo()
-    {
-        return m_streamInfo;
-    }
-
-    std::vector<uint8_t, gc_allocator<uint8_t>>& bufferHeader()
-    {
-        return m_bufferHeader;
+        return m_bufferHeader[initSegmentIndex];
     }
 
     // these methods are thread-safe
-    MediaPacket* findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind);
+    std::pair<MediaPacket*, size_t> findProperMediaPacket(size_t streamIdx, uint64_t startPositionInPTSWantToFind);
     uint64_t lastBufferedTimestamp(size_t streamIdx);
     void clearPacketAccessCache();
 
@@ -189,6 +183,8 @@ public:
 
     void setAppendWindowEnd(double timeStamp);
 
+    StreamInfo* streamInfo(size_t initSegmentIndex, size_t streamIndex);
+
 protected:
     void setUpdating(bool flag, UpdateState state);
 
@@ -212,9 +208,9 @@ protected:
     void bufferAppend(SourceBufferData* data);
 
     AppendMode m_mode;
-    AppendState m_state;
     bool m_isAttachedToParent;
     bool m_updating;
+    size_t m_indexPerInitSegment;
     StarFish* m_starFish;
     Demuxer* m_demuxer;
     TimeRanges* m_buffered;
@@ -229,9 +225,9 @@ protected:
     String* m_type;
     MediaSource* m_parentMediaSource;
     Thread* m_sourceBufferUpdateThread;
-    std::vector<uint8_t, gc_allocator<uint8_t>> m_bufferUnprocessed;
-    std::vector<uint8_t, gc_allocator<uint8_t>> m_bufferHeader;
-    std::vector<StreamInfo*, gc_allocator<StreamInfo*>> m_streamInfo;
+    SourceBufferDataVector m_bufferUnprocessed;
+    std::vector<SourceBufferDataVector, gc_allocator<SourceBufferDataVector>> m_bufferHeader;
+    std::vector<StreamInfoVector, gc_allocator<StreamInfoVector>> m_streamInfo;
     std::vector<MediaPacketGroup*> m_packetGroup;
     std::vector<std::pair<size_t, size_t>, gc_allocator<std::pair<size_t, size_t>>> m_packetAccessCachePerStream;
     Mutex* m_packetGroupMutex;
