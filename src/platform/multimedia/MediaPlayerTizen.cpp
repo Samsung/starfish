@@ -102,20 +102,14 @@ public:
     virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
     {
         if (m_player->m_activeMediaSource->activeVideoSourceBuffer() == s) {
-            Locker<Mutex> locker(*m_player->m_videoBufferMutex);
-            if (m_player->m_isVideoBufferUnderrunState) {
-                m_player->fillVideoBuffer(false);
-            }
+            m_player->fillVideoBufferIfNeeded();
         }
     }
 
     virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
     {
         if (m_player->m_activeMediaSource->activeAudioSourceBuffer() == s) {
-            Locker<Mutex> locker(*m_player->m_audioBufferMutex);
-            if (m_player->m_isAudioBufferUnderrunState) {
-                m_player->fillAudioBuffer(false);
-            }
+            m_player->fillAudioBufferIfNeeded();
         }
     }
 
@@ -130,6 +124,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)
     , m_needsPlayAfterPrepare(false)
+    , m_seekTimeAfterPrepare(std::numeric_limits<double>::quiet_NaN())
     , m_mseClient(nullptr)
     , m_videoBufferMutex(new Mutex())
     , m_audioBufferMutex(new Mutex())
@@ -165,6 +160,22 @@ void MediaPlayerTizen::handlePlayerError(int error)
         } else {
             close();
         }
+    }
+}
+
+void MediaPlayerTizen::fillVideoBufferIfNeeded()
+{
+    Locker<Mutex> locker(*m_videoBufferMutex);
+    if (m_isVideoBufferUnderrunState) {
+        fillVideoBuffer(false);
+    }
+}
+
+void MediaPlayerTizen::fillAudioBufferIfNeeded()
+{
+    Locker<Mutex> locker(*m_audioBufferMutex);
+    if (m_isAudioBufferUnderrunState) {
+        fillAudioBuffer(false);
     }
 }
 
@@ -404,7 +415,7 @@ void MediaPlayerTizen::compleatePrepare()
 {
     STARFISH_ASSERT(!isMainThread());
     m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* user_data) {
-        PLAYER_LOGI("MediaPlayerTizen::compleatePrepare in MainThread");
+        STARFISH_LOG_INFO("MediaPlayerTizen::compleatePrepare in MainThread");
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
 
         STARFISH_ASSERT(self->m_inPrepare);
@@ -433,10 +444,15 @@ void MediaPlayerTizen::compleatePrepare()
             }
         }
 
-        PLAYER_LOGI("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec, audioCodec, (int)self->m_videoWidth, (int)self->m_videoHeight);
+        STARFISH_LOG_INFO("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec, audioCodec, (int)self->m_videoWidth, (int)self->m_videoHeight);
 
         free(videoCodec);
         free(audioCodec);
+
+        if (!std::isnan(self->m_seekTimeAfterPrepare)) {
+            self->seek(self->m_seekTimeAfterPrepare);
+            self->m_seekTimeAfterPrepare = std::numeric_limits<double>::quiet_NaN();
+        }
 
         if (self->m_needsPlayAfterPrepare) {
             self->startPlaying();
@@ -444,8 +460,8 @@ void MediaPlayerTizen::compleatePrepare()
         }
 
         self->processNextOperationQueueInContainer();
-
-        self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
+        if (!self->m_activeMediaSource)
+            self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
     }, this);
 }
