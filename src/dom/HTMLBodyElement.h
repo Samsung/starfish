@@ -52,7 +52,7 @@ public:
         return true;
     }
 
-    virtual bool isFocuable() const
+    virtual bool isFocusable() const
     {
         return true;
     }
