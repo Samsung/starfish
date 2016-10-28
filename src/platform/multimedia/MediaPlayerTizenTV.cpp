@@ -118,22 +118,36 @@ void MediaPlayerTizenTV::seek(double time)
 {
     player_state_e state;
     player_get_state(m_nativePlayer, &state);
-    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
-    time = time * 1000;
+    uint64_t timestamp = time * 1000;
     int ret;
     if (m_activeMediaSource) {
-        Locker<Mutex> videoLock(*m_videoBufferMutex);
-        Locker<Mutex> audioLock(*m_audioBufferMutex);
+        STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
+        {
+            Locker<Mutex> videoLock(*m_videoBufferMutex);
+            Locker<Mutex> audioLock(*m_audioBufferMutex);
+            if (m_activeMediaSource->activeVideoSourceBuffer())
+                m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
+            if (m_activeMediaSource->activeAudioSourceBuffer())
+                m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
+            m_lastVideoPts = m_lastAudioPts = timestamp;
+
+            ret = player_set_position(m_nativePlayer, time, [](void* data) {
+                // STARFISH_LOG_INFO("player_set_position_cb\n");
+                MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+                self->handleSeekend();
+            }, this);
+
+            if (m_inPrepare) {
+                m_seekTimeAfterPrepare = time;
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek -> seeking in prepare.. saving time %lf\n", m_seekTimeAfterPrepare);
+            } else {
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %f state: %d \n", (float) time, (int)state);
+            }
+        }
         if (m_activeMediaSource->activeVideoSourceBuffer())
-            m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
+            fillVideoBufferIfNeeded();
         if (m_activeMediaSource->activeAudioSourceBuffer())
-            m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
-        m_lastVideoPts = m_lastAudioPts = time;
-        ret = player_set_position(m_nativePlayer, time, [](void* data) {
-            // STARFISH_LOG_INFO("player_set_position_cb\n");
-            MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-            self->handleSeekend();
-        }, this);
+            fillAudioBufferIfNeeded();
     } else {
         ret = player_set_position(m_nativePlayer, time, [](void* data) {
             // STARFISH_LOG_INFO("player_set_position_cb\n");
@@ -142,12 +156,15 @@ void MediaPlayerTizenTV::seek(double time)
         }, this);
     }
     if (ret != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("**ERROR: player_set_position %x", ret);
+        STARFISH_LOG_ERROR("**ERROR: player_set_position %x -> ", ret);
+        printNativePlayerError(ret);
     }
 }
 
 void MediaPlayerTizenTV::prepareMediaSource()
 {
+    m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
+
     STARFISH_LOG_INFO("MediaPlayerTizenTV::prepareMediaSource\n");
     player_set_uri(m_nativePlayer, "external_demuxer://aaaa");
 
@@ -181,6 +198,7 @@ void MediaPlayerTizenTV::prepareMediaSource()
         self->compleatePrepare();
     };
 
+    openPreparingMode();
     int nativeResult = player_prepare_async(m_nativePlayer, m_preparedCallback, this);
 
     if (nativeResult != PLAYER_ERROR_NONE) {
@@ -243,7 +261,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
             STARFISH_LOG_ERROR("**ERROR: player_submit_packet %x", ret);
         }
         m_isVideoBufferUnderrunState = false;
-        // printf("push packet(video) %d %p %d\n", (int)packet->m_pts, packet->m_data, (int)packet->m_dataSize);
+        // printf("push packet(video) %d %p %d\n", (int)packet.first->m_pts, packet.first->m_data, (int)packet.first->m_dataSize);
     }
 
     if (useLock)
