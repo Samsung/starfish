@@ -533,4 +533,16 @@ QualifiedName Document::createAttributeName(String* name)
     }
 }
 
+Element* Document::activeElement()
+{
+    // TODO
+    return this->bodyElement()->asElement();
+}
+
+bool Document::hasFocus() const
+{
+    // TODO
+    return true;
+}
+
 }

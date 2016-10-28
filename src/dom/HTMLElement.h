@@ -100,6 +100,9 @@ public:
         return m_hasDirAttribute;
     }
 
+    int tabIndex() override;
+    bool supportsFocus() override;
+
 protected:
 
 };

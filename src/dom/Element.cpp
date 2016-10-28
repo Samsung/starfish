@@ -263,7 +263,7 @@ RareNodeMembers* Element::ensureRareMembers()
 
 RareElementMembers* Element::ensureRareElementMembers()
 {
-    RareNodeMembers* rareMembers =  ensureRareMembers();
+    RareNodeMembers* rareMembers = ensureRareMembers();
     STARFISH_ASSERT(rareMembers->isRareElementMembers());
     return rareMembers->asRareElementMembers();
 }
@@ -306,6 +306,41 @@ Attr* Element::ensureAttr(QualifiedName name)
         rareMembers->m_attrList->push_back(returnAttr);
     }
     return returnAttr;
+}
+
+void Element::setFocus(bool flag)
+{
+    if (flag == focused())
+        return;
+
+    setFocused(flag);
+    // TODO: Style should be recalculated when we implement :focus selector or apply visual effects for focusable elements.
+    // setNeedsStyleRecalc();
+}
+
+bool Element::supportsFocus()
+{
+    if (!tabIndexSetExplicitly())
+        return false;
+    return true;
+}
+
+bool Element::isFocusable()
+{
+    // TODO: https://www.w3.org/TR/html5/editing.html#focus-management
+    if (!supportsFocus())
+        return false;
+    return true;
+}
+
+void Element::focus()
+{
+    // TODO
+}
+
+void Element::blur()
+{
+    // TODO
 }
 
 }

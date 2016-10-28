@@ -224,6 +224,10 @@ public:
         return m_isXMLDocument;
     }
 
+    /* Document-level focus APIs */
+    Element* activeElement();
+    bool hasFocus() const;
+
 protected:
     // only used in html document builder
     friend class HTMLResourceClient;
