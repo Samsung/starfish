@@ -38,7 +38,7 @@
 
 namespace MP4
 {
-    class MDAT : DataAtom
+    class MDAT : public DataAtom
     {
         private:
             
@@ -51,13 +51,15 @@ namespace MP4
             MDAT( void );
             ~MDAT()
             {
-                delete[] data;
             }
-            uint8_t* data;
+            size_t dataPos;
             uint64_t size;
             
-            std::string description( void );
             void processData( MP4::BinaryStream * stream, size_t length );
+            virtual uint32_t getType( void )
+            {
+                return MP4_PARSER_DEFINE_TYPE_STRING("mdat");
+            }
     };
 }
 

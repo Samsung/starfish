@@ -35,16 +35,6 @@ using namespace MP4;
           
 ELST::ELST( void )
 {
-    this->_type.append( "ELST" );
-}
-
-std::string ELST::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void ELST::processData( MP4::BinaryStream * stream, size_t length )

@@ -108,6 +108,10 @@ namespace MP4
             virtual void ignore( std::streamsize n = 1);
             virtual void read( char * s, std::streamsize n );
             virtual bool eof( void ) const;
+            virtual size_t pos( )
+            {
+                return (size_t)stream.tellg ();
+            }
         private:
             virtual void get( char & c );
             virtual void get( char * s, std::streamsize n );

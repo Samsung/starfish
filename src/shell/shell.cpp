@@ -156,7 +156,7 @@ void copyFileContent(FILE* fp, int start, int end, std::vector<uint8_t>& data)
 class DemuxerTestClient : public DemuxerClient {
 public:
 
-    virtual void onDetectPacket(const MediaPacket& packet)
+    virtual bool onDetectPacket(const MediaPacket& packet)
     {
         if (packet.m_streamIndex == 0) {
             MediaPacket newPacket = packet;
@@ -165,6 +165,7 @@ public:
 
             packets.push_back(newPacket);
         }
+        return false;
     }
 
     std::vector<MediaPacket> packets;
@@ -173,54 +174,24 @@ public:
 void testDemuxer()
 {
     Demuxer* demuxer = Demuxer::createMP4Demuxer();
-    DemuxerTestClient* c1 = new DemuxerTestClient();
+    // DemuxerTestClient* c1 = new DemuxerTestClient();
 
-    demuxer->addClient(c1);
-
-    Demuxer* demuxer2 = Demuxer::createFFmpegDemuxer();
-    DemuxerTestClient* c2 = new DemuxerTestClient();
-
-    demuxer2->addClient(c2);
+    // demuxer->addClient(c1);
 
     auto ptr = new DemuxerMemorySource();
-    auto ptr2 = new DemuxerMemorySource();
 
     FILE* fp = fopen("frag_bunny.mp4", "rb");
 
     copyFileContent(fp, 0, 5524488, ptr->data);
-    copyFileContent(fp, 0, 5524488, ptr2->data);
 
     if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/mp4"))) {
         puts("fail0");
         // ptr->m_debug++;
     }
     demuxer->findStreamPacket(ptr);
-
-    if (!demuxer2->findStreamInfo(ptr2, String::fromUTF8("video/mp4"))) {
-        puts("fail0");
-        // ptr->m_debug++;
-    }
-    demuxer2->findStreamPacket(ptr2);
-
-    printf("------------packet count %d %d\n", (int)c1->packets.size(), (int)c2->packets.size());
-
-    if (c1->packets.size() == c2->packets.size()) {
-        for (size_t i = 0; i < c1->packets.size(); i ++) {
-            size_t i2 = i;
-            if (c1->packets[i2].m_pts != c2->packets[i].m_pts) {
-                printf("pts wrong idx: %d %d %d\n", (int)i, (int)c1->packets[i2].m_pts, (int)c2->packets[i].m_pts);
-            }
-            if (c1->packets[i2].m_dataSize != c2->packets[i].m_dataSize) {
-                printf("data size wrong idx: %d %d %d\n", (int)i, (int)c1->packets[i2].m_dataSize, (int)c2->packets[i].m_dataSize);
-            } else {
-                if (memcmp(c1->packets[i2].m_data, c2->packets[i].m_data, c1->packets[i2].m_dataSize) != 0) {
-                    printf("data wrong idx: %d\n", (int)i);
-                }
-            }
-        }
-    }
 }
 */
+
 bool hasEnding(std::string const &fullString, std::string const &ending)
 {
     if (fullString.length() >= ending.length()) {

@@ -35,23 +35,12 @@ using namespace MP4;
           
 MDAT::MDAT( void )
 {
-    this->_type.append( "MDAT" );
-    data = nullptr;
     size = 0;
-}
-
-std::string MDAT::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void MDAT::processData( MP4::BinaryStream * stream, size_t length )
 {
-    data = new uint8_t[length];
+    dataPos = stream->pos();
     size = length;
-    stream->read((char*)data, length);
+    stream->ignore(length);
 }

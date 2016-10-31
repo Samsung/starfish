@@ -35,16 +35,6 @@ using namespace MP4;
           
 PITM::PITM( void )
 {
-    this->_type.append( "PITM" );
-}
-
-std::string PITM::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void PITM::processData( MP4::BinaryStream * stream, size_t length )

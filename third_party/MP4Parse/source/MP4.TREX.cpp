@@ -35,16 +35,6 @@ using namespace MP4;
           
 TREX::TREX( void )
 {
-    this->_type.append( "TREX" );
-}
-
-std::string TREX::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void TREX::processData( MP4::BinaryStream * stream, size_t length )

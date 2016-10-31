@@ -35,6 +35,12 @@
 
 #include "mp4.h"
 
+#define MP4_PARSER_DEFINE_TYPE(a, b, c, d) \
+    ((a) | ((b) << 8) | ((c) << 16) | ((unsigned)(d) << 24))
+
+#define MP4_PARSER_DEFINE_TYPE_STRING(str) \
+    MP4_PARSER_DEFINE_TYPE(str[0], str[1], str[2], str[3])
+
 namespace MP4
 {
     class Atom
@@ -45,14 +51,11 @@ namespace MP4
             
         protected:
             
-            std::string _type;
-            
         public:
             virtual ~Atom( void );
             
-            std::string getType( void );
+            virtual uint32_t getType( void ) = 0;
             virtual bool isContainerAtom() { return false; } 
-            virtual std::string description( void ) = 0;
     };
 }
 

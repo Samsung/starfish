@@ -35,16 +35,6 @@ using namespace MP4;
           
 SUBS::SUBS( void )
 {
-    this->_type.append( "SUBS" );
-}
-
-std::string SUBS::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void SUBS::processData( MP4::BinaryStream * stream, size_t length )

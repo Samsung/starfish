@@ -35,16 +35,6 @@ using namespace MP4;
           
 TFRA::TFRA( void )
 {
-    this->_type.append( "TFRA" );
-}
-
-std::string TFRA::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void TFRA::processData( MP4::BinaryStream * stream, size_t length )

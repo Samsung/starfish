@@ -35,13 +35,6 @@ using namespace MP4;
           
 TFDT::TFDT( void )
 {
-    this->_type.append( "TFDT" );
-}
-
-std::string TFDT::description( void )
-{
-    std::ostringstream o;
-    return o.str();
 }
 
 void TFDT::processData( MP4::BinaryStream * stream, size_t length )

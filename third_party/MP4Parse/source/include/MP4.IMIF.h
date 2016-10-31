@@ -38,7 +38,7 @@
 
 namespace MP4
 {
-    class IMIF : DataAtom
+    class IMIF : public DataAtom
     {
         private:
             
@@ -50,8 +50,11 @@ namespace MP4
             
             IMIF( void );
             
-            std::string description( void );
             void processData( MP4::BinaryStream * stream, size_t length );
+            virtual uint32_t getType( void )
+            {
+                return MP4_PARSER_DEFINE_TYPE_STRING("imif");
+            }
     };
 }
 

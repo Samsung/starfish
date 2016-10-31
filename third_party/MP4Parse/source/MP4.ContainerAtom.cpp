@@ -33,11 +33,9 @@
 
 using namespace MP4;
 
-ContainerAtom::ContainerAtom( char * type )
+ContainerAtom::ContainerAtom( const uint32_t type )
 {
-    this->_type = type;
-    
-    std::transform( this->_type.begin(), this->_type.end(), this->_type.begin(), ::toupper );
+    _type = type;
 }
 
 ContainerAtom::~ContainerAtom( void )
@@ -71,24 +69,9 @@ unsigned int ContainerAtom::numberOfChildren( void )
     return _children.size();
 }
 
-std::string ContainerAtom::description( void )
+Atom* ContainerAtom::findChild( const uint32_t type )
 {
-    std::string s;
-    std::list< Atom * >::iterator it;
-    
-    s += "MP4 Container Atom: " + this->_type + "\n";
-    
-    for( it = this->_children.begin(); it != this->_children.end(); ++it )
-    {
-        s.append( ( ( Atom * )( *it ) )->description() );
-    }
-    
-    return s;
-}
-
-Atom* ContainerAtom::findChild( const std::string &type )
-{
-    if ( this->_type == type )
+    if ( this->getType() == type )
     {
       return this;
     }

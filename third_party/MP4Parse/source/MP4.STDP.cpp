@@ -35,16 +35,6 @@ using namespace MP4;
           
 STDP::STDP( void )
 {
-    this->_type.append( "STDP" );
-}
-
-std::string STDP::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void STDP::processData( MP4::BinaryStream * stream, size_t length )

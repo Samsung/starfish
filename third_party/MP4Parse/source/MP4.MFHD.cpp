@@ -35,16 +35,6 @@ using namespace MP4;
           
 MFHD::MFHD( void )
 {
-    this->_type.append( "MFHD" );
-}
-
-std::string MFHD::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void MFHD::processData( MP4::BinaryStream * stream, size_t length )

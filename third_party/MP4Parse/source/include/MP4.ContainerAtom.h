@@ -42,7 +42,7 @@ namespace MP4
     {
         private:
             
-            
+            uint32_t _type;
             
         protected:
             
@@ -50,14 +50,18 @@ namespace MP4
             
         public:
             
-            ContainerAtom( char * type );
+            ContainerAtom( const uint32_t type );
             ~ContainerAtom( void );
             
+            virtual uint32_t getType( void )
+            {
+                return _type;
+            }
+
             void addChild( Atom * a );
-            Atom* findChild( const std::string &type );
+            Atom* findChild( const uint32_t type );
             bool hasChildren( void );
             unsigned int numberOfChildren( void );
-            std::string description( void );
             virtual bool isContainerAtom() { return true; }
             void traverse(const std::function<void (Atom* atom, ContainerAtom* container)>& callback);
     };

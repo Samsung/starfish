@@ -78,6 +78,8 @@ namespace MP4
             Parser( char * filename );
             ~Parser( void );
     };
+
+    Atom* atomFactory(const uint32_t type);
 }
 
 #endif /* _MP4_PARSER_ */
