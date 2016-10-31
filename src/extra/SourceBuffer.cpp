@@ -28,6 +28,33 @@
 
 namespace StarFish {
 
+#define STARFISH_ENABLE_TIMER
+
+class Timer {
+public:
+    Timer(const char* msg)
+    {
+#ifdef STARFISH_ENABLE_TIMER
+        m_start = tickCount();
+        m_msg = msg;
+#endif
+    }
+    ~Timer()
+    {
+#ifdef STARFISH_ENABLE_TIMER
+        unsigned long end = tickCount();
+        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (float)(end - m_start));
+        fflush(stdout);
+#endif
+    }
+
+protected:
+#ifdef STARFISH_ENABLE_TIMER
+    unsigned long m_start;
+    const char* m_msg;
+#endif
+};
+
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
     DemuxerSourceForSourceBuffer(SourceBufferData* inputBuffer, std::vector<uint8_t, gc_allocator<uint8_t>>* bufferRemain)
@@ -645,34 +672,43 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
     m_sourceBufferUpdateThread->run(m_starFish->messageLoop(), [](void* data) -> void* {
         SourceBufferData* inputBuffer = (SourceBufferData*)data;
 
+        Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
+
         STARFISH_LOG_INFO("SourceBuffer::bufferAppend start (size %d)\n", (int)inputBuffer->m_length);
         DemuxerSourceForSourceBuffer src(inputBuffer, &inputBuffer->m_sourceBuffer->m_bufferUnprocessed);
 
         int64_t before = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
 
-        if (inputBuffer->m_sourceBuffer->m_demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->m_type)) {
-            inputBuffer->m_foundInitSegmentHere = true;
-            int64_t after = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
-            // copy buffer
-            inputBuffer->m_headerBuffer.resize(after - before);
-            src.onSeek(before, DemuxerSource::SeekWhenceSet);
-            size_t s;
-            int error;
-            src.onRead(after - before, s, error, (uint8_t*)inputBuffer->m_headerBuffer.data());
+        {
+            Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend::findSteramInfo");
+            if (inputBuffer->m_sourceBuffer->m_demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->m_type)) {
+                inputBuffer->m_foundInitSegmentHere = true;
+                int64_t after = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                // copy buffer
+                inputBuffer->m_headerBuffer.resize(after - before);
+                src.onSeek(before, DemuxerSource::SeekWhenceSet);
+                size_t s;
+                int error;
+                src.onRead(after - before, s, error, (uint8_t*)inputBuffer->m_headerBuffer.data());
 
-            STARFISH_LOG_INFO("SourceBuffer %p detect initSegment(%d->%d)\n", inputBuffer->m_sourceBuffer, (int)before, (int)after);
+                STARFISH_LOG_INFO("SourceBuffer %p detect initSegment(%d->%d)\n", inputBuffer->m_sourceBuffer, (int)before, (int)after);
+            }
         }
 
-        double timestampOffset = inputBuffer->m_sourceBuffer->timestampOffset();
-        double appendWindowStart = inputBuffer->m_sourceBuffer->appendWindowStart();
-        double appendWindowEnd = inputBuffer->m_sourceBuffer->appendWindowEnd();
-        DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
-        cl->setTimestampInfo(timestampOffset, appendWindowStart, appendWindowEnd);
-        inputBuffer->m_sourceBuffer->m_demuxer->findStreamPacket(&src);
+        {
+            Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend::findSteramPacket");
+            double timestampOffset = inputBuffer->m_sourceBuffer->timestampOffset();
+            double appendWindowStart = inputBuffer->m_sourceBuffer->appendWindowStart();
+            double appendWindowEnd = inputBuffer->m_sourceBuffer->appendWindowEnd();
+            DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
+            cl->setTimestampInfo(timestampOffset, appendWindowStart, appendWindowEnd);
+            inputBuffer->m_sourceBuffer->m_demuxer->findStreamPacket(&src);
+        }
 
         inputBuffer->m_sourceBuffer->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data, void* data2) {
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
             DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
+            Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend::deliverResult");
             if (cl->m_isAborted) {
                 for (size_t i = 0; i < cl->m_packetGroup.size(); i ++) {
                     MediaPacketGroup* grp = cl->m_packetGroup[i];
