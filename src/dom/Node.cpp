@@ -894,8 +894,8 @@ void Node::setNeedsFrameTreeBuild()
     if (old) {
         Frame* parent = old->parent();
         if (!parent) {
-            STARFISH_ASSERT(old->isFrameDocument());
-            parent = old;
+            // STARFISH_ASSERT(old->isFrameDocument());
+            parent = document()->frame();
         } else {
             while (parent) {
                 if (parent->isFrameBlockBox() && parent->node()) {
