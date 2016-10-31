@@ -124,7 +124,6 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)
     , m_needsPlayAfterPrepare(false)
-    , m_seekTimeAfterPrepare(std::numeric_limits<double>::quiet_NaN())
     , m_mseClient(nullptr)
     , m_videoBufferMutex(new Mutex())
     , m_audioBufferMutex(new Mutex())
@@ -184,6 +183,7 @@ void MediaPlayerTizen::seekIfNeeded()
     if (!m_activeMediaSource)
         return;
     double seekTime = m_activeMediaSource->attachedMediaElement()->defaultPlaybackStartPosition();
+    STARFISH_LOG_INFO("MediaPlayerTizen::seekIfNeeded() %lf\n", seekTime);
     if (seekTime > 0) {
         seek(seekTime);
         m_activeMediaSource->attachedMediaElement()->setDefaultPlaybackStartPosition(0);
@@ -229,8 +229,8 @@ void MediaPlayerTizen::startPlaying()
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             self->m_container->setOfficialPlaybackPosition(self->currentTime());
         }, 250, this);
+        seekIfNeeded();
     }
-    seekIfNeeded();
 }
 
 void MediaPlayerTizen::stopPlaying()
@@ -448,11 +448,6 @@ void MediaPlayerTizen::compleatePrepare()
 
         free(videoCodec);
         free(audioCodec);
-
-        if (!std::isnan(self->m_seekTimeAfterPrepare)) {
-            self->seek(self->m_seekTimeAfterPrepare);
-            self->m_seekTimeAfterPrepare = std::numeric_limits<double>::quiet_NaN();
-        }
 
         if (self->m_needsPlayAfterPrepare) {
             self->startPlaying();

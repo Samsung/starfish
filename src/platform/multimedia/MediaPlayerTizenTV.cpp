@@ -137,17 +137,20 @@ void MediaPlayerTizenTV::seek(double time)
                 self->handleSeekend();
             }, this);
 
-            if (m_inPrepare) {
-                m_seekTimeAfterPrepare = time;
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek -> seeking in prepare.. saving time %lf\n", m_seekTimeAfterPrepare);
-            } else {
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %f state: %d \n", (float) time, (int)state);
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %f state: %d \n", (float) time, (int)state);
+
+            if (ret && m_inPrepare) {
+                // failed
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek -> seeking failed saving time %lf\n", time);
+                m_container->setDefaultPlaybackStartPosition(time);
             }
         }
+
         if (m_activeMediaSource->activeVideoSourceBuffer())
             fillVideoBufferIfNeeded();
         if (m_activeMediaSource->activeAudioSourceBuffer())
             fillAudioBufferIfNeeded();
+
     } else {
         ret = player_set_position(m_nativePlayer, time, [](void* data) {
             // STARFISH_LOG_INFO("player_set_position_cb\n");
