@@ -35,16 +35,6 @@ using namespace MP4;
           
 CO64::CO64( void )
 {
-    this->_type.append( "CO64" );
-}
-
-std::string CO64::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void CO64::processData( MP4::BinaryStream * stream, size_t length )

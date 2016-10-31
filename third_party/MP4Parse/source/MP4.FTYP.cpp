@@ -36,7 +36,6 @@ using namespace MP4;
           
 FTYP::FTYP( void )
 {
-    this->_type.append( "FTYP" );
 }
 
 FTYP::~FTYP( void )
@@ -47,30 +46,6 @@ FTYP::~FTYP( void )
     {
         delete *( it );
     }
-}
-
-std::string FTYP::description( void )
-{
-    std::string s;
-    std::string * brand;
-    std::vector< std::string * >::iterator it;
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    o << "                      - Major brand:       " << _majorBrand << "\n";
-    o << "                      - Minor version:     " << _minorVersion << "\n";
-    o << "                      - Compatible brands: \n";
-    
-    s = o.str();
-    
-    for( it = _compatibleBrands.begin(); it != _compatibleBrands.end(); ++it )
-    {
-        brand = *( it );
-        
-        o << "                          - " << *( brand ) << "\n";
-    }
-    
-    return o.str();
 }
 
 void FTYP::processData( MP4::BinaryStream * stream, size_t length )

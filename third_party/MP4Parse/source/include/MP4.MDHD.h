@@ -39,7 +39,7 @@
 
 namespace MP4
 {
-    class MDHD : FullBox
+    class MDHD : public FullBox
     {
         private:
             
@@ -55,9 +55,16 @@ namespace MP4
         public:
 
             MDHD( void );
+            ~MDHD()
+            {
+                delete _language;
+            }
             
-            std::string description( void );
             void processData( MP4::BinaryStream * stream, size_t length );
+            virtual uint32_t getType( void )
+            {
+                return MP4_PARSER_DEFINE_TYPE_STRING("mdhd");
+            }
     };
 }
 

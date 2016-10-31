@@ -35,23 +35,8 @@ using namespace MP4;
           
 MDHD::MDHD( void )
 {
-    this->_type.append( "MDHD" );
+    _language = nullptr;
 }
-
-std::string MDHD::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    o << "                      - Creation time:     " << this->_creationTime     << "\n";
-    o << "                      - Modification time: " << this->_modificationTime << "\n";
-    o << "                      - Time scale:        " << this->_timeScale        << "\n";
-    o << "                      - Duration:          " << this->_duration         << "\n";
-    o << "                      - Language:          " << *( this->_language )    << "\n";
-    
-    return o.str();
-}
-
 void MDHD::processData( MP4::BinaryStream * stream, size_t length )
 {
     size_t parsedLength;

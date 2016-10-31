@@ -26,34 +26,9 @@
 #include "MediaSource.h"
 #include "extra/TimeRanges.h"
 
-namespace StarFish {
-
 #define STARFISH_ENABLE_TIMER
 
-class Timer {
-public:
-    Timer(const char* msg)
-    {
-#ifdef STARFISH_ENABLE_TIMER
-        m_start = tickCount();
-        m_msg = msg;
-#endif
-    }
-    ~Timer()
-    {
-#ifdef STARFISH_ENABLE_TIMER
-        unsigned long end = tickCount();
-        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (float)(end - m_start));
-        fflush(stdout);
-#endif
-    }
-
-protected:
-#ifdef STARFISH_ENABLE_TIMER
-    unsigned long m_start;
-    const char* m_msg;
-#endif
-};
+namespace StarFish {
 
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
@@ -178,12 +153,13 @@ public:
         }
     }
 
-    virtual void onDetectPacket(const MediaPacket& packet)
+    virtual bool onDetectPacket(const MediaPacket& packet)
     {
         int streamIndex = packet.m_streamIndex;
         if ((int)m_streamProcessInfo.size() <= streamIndex)
             m_streamProcessInfo.resize(streamIndex + 1);
         uint64_t groupTimestampEnd = 0;
+        bool ret = false;
 
         // Step 1 in Coded Frame Processing algorithm
         // For each coded frame in the media segment run the following steps,
@@ -238,7 +214,7 @@ public:
             // 9. If frame end timestamp is greater than appendWindowEnd, then set the need random access point flag to true, drop the coded frame, and jump to the top of the loop to start processing the next coded frame.
             if (presentationTimestamp < m_appendWindowStart || presentationTimestamp > m_appendWindowEnd) {
                 trackbufferInfo.m_needRandomAccess = true;
-                return;
+                return ret;
             }
 
             // 10. If the need random access point flag on track buffer equals true, then run the following steps:
@@ -264,7 +240,8 @@ public:
             pkt->m_duration = frameDuration;
             pkt->m_streamIndex = streamIndex;
             pkt->m_dataSize = packet.m_dataSize;
-            pkt->m_data = new uint8_t[packet.m_dataSize];
+            pkt->m_data = packet.m_data;
+            ret = true;
             memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
             // printf("[%d] pkt data pts %d len %d %d\n",streamIndex, (int)pkt->m_pts, (int)pkt->m_dataSize, (int) m_packetGroup.size());
             group->pushMediaPacket(pkt);
@@ -288,7 +265,7 @@ public:
                 group->m_groupTimestampStart = presentationTimestamp;
 
             // TODO 21. If generate timestamps flag equals true, then set timestampOffset equal to frame end timestamp.
-            return;
+            return ret;
         }
     }
 
@@ -671,16 +648,18 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
     m_sourceBufferUpdateThread = new Thread();
     m_sourceBufferUpdateThread->run(m_starFish->messageLoop(), [](void* data) -> void* {
         SourceBufferData* inputBuffer = (SourceBufferData*)data;
-
+#ifdef STARFISH_ENABLE_TIMER
         Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
-
+#endif
         STARFISH_LOG_INFO("SourceBuffer::bufferAppend start (size %d)\n", (int)inputBuffer->m_length);
         DemuxerSourceForSourceBuffer src(inputBuffer, &inputBuffer->m_sourceBuffer->m_bufferUnprocessed);
 
         int64_t before = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
 
         {
+#ifdef STARFISH_ENABLE_TIMER
             Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend::findSteramInfo");
+#endif
             if (inputBuffer->m_sourceBuffer->m_demuxer->findStreamInfo(&src, inputBuffer->m_sourceBuffer->m_type)) {
                 inputBuffer->m_foundInitSegmentHere = true;
                 int64_t after = src.onSeek(0, DemuxerSource::SeekWhenceCurrent);
@@ -696,7 +675,9 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
         }
 
         {
-            Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend::findSteramPacket");
+#ifdef STARFISH_ENABLE_TIMER
+            Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend::findStreamPacket");
+#endif
             double timestampOffset = inputBuffer->m_sourceBuffer->timestampOffset();
             double appendWindowStart = inputBuffer->m_sourceBuffer->appendWindowStart();
             double appendWindowEnd = inputBuffer->m_sourceBuffer->appendWindowEnd();
@@ -708,7 +689,9 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
         inputBuffer->m_sourceBuffer->m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data, void* data2) {
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
             DemuxerClientSourceBuffer* cl = (DemuxerClientSourceBuffer*)inputBuffer->m_sourceBuffer->m_demuxer->client(0);
+#ifdef STARFISH_ENABLE_TIMER
             Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend::deliverResult");
+#endif
             if (cl->m_isAborted) {
                 for (size_t i = 0; i < cl->m_packetGroup.size(); i ++) {
                     MediaPacketGroup* grp = cl->m_packetGroup[i];
@@ -739,6 +722,7 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 }
 
                 inputBuffer->m_sourceBuffer->m_bufferUnprocessed.insert(inputBuffer->m_sourceBuffer->m_bufferUnprocessed.end(), inputBuffer->m_data + copyStart, inputBuffer->m_data + copyEnd);
+                STARFISH_LOG_INFO("SourceBuffer::bufferAppend got unprocessed (size %d)\n", (int)(copyEnd - copyStart));
             }
 
             {

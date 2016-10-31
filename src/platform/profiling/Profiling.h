@@ -22,6 +22,25 @@ namespace StarFish {
 uint64_t tickCount(); // increase 1000 by 1 second
 uint64_t timestamp(); // increase 1000 by 1 second
 
+class Timer {
+public:
+    Timer(const char* msg)
+    {
+        m_start = tickCount();
+        m_msg = msg;
+    }
+    ~Timer()
+    {
+        unsigned long end = tickCount();
+        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (float)(end - m_start));
+        fflush(stdout);
+    }
+
+protected:
+    unsigned long m_start;
+    const char* m_msg;
+};
+
 }
 
 #endif

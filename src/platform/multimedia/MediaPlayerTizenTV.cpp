@@ -255,7 +255,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
         }
         if (packet.second != m_videoInitSegmentIndex) {
             m_videoInitSegmentIndex = packet.second;
-            setVideoStreamInfo(packet.second);
+            // setVideoStreamInfo(packet.second);
         }
         m_lastVideoPts = packet.first->m_pts + packet.first->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet.first->m_data, packet.first->m_dataSize, packet.first->m_pts, PLAYER_TRACK_TYPE_VIDEO);
@@ -311,7 +311,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
         }
         if (packet.second != m_audioInitSegmentIndex) {
             m_audioInitSegmentIndex = packet.second;
-            setAudioStreamInfo(packet.second);
+            // setAudioStreamInfo(packet.second);
         }
         m_lastAudioPts = packet.first->m_pts + packet.first->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet.first->m_data, packet.first->m_dataSize, packet.first->m_pts, PLAYER_TRACK_TYPE_AUDIO);

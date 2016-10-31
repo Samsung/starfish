@@ -57,6 +57,8 @@ extern "C" Ecore_Evas* ecore_evas_ecore_evas_get(const Evas* e);
 extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
 #endif
 
+// #define STARFISH_ENABLE_TIMER
+
 namespace StarFish {
 
 struct IdlerData {
@@ -490,33 +492,6 @@ void Window::navigateAsync(URL* url)
     }, url, this);
 }
 
-// #define STARFISH_ENABLE_TIMER
-
-class Timer {
-public:
-    Timer(const char* msg)
-    {
-#ifdef STARFISH_ENABLE_TIMER
-        m_start = tickCount();
-        m_msg = msg;
-#endif
-    }
-    ~Timer()
-    {
-#ifdef STARFISH_ENABLE_TIMER
-        unsigned long end = tickCount();
-        STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, (float)(end - m_start));
-        fflush(stdout);
-#endif
-    }
-
-protected:
-#ifdef STARFISH_ENABLE_TIMER
-    unsigned long m_start;
-    const char* m_msg;
-#endif
-};
-
 #ifdef STARFISH_ENABLE_TEST
 static Evas_Object* g_imgBufferForScreehShot;
 static CanvasSurface* g_surfaceForScreehShot;
@@ -620,7 +595,9 @@ void Window::layoutIfNeeds()
         }
 
         // resolve style
+#ifdef STARFISH_ENABLE_TIMER
         Timer t("resolve style");
+#endif
         document()->styleResolver()->resolveDOMStyle(m_document, m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
@@ -640,7 +617,9 @@ void Window::layoutIfNeeds()
             clearStackingContext(true);
 
             // create frame tree
+#ifdef STARFISH_ENABLE_TIMER
             Timer t("create frame tree");
+#endif
             FrameTreeBuilder::buildFrameTree(m_document);
             m_needsFrameTreeBuild = false;
         }
@@ -648,8 +627,9 @@ void Window::layoutIfNeeds()
 
     if (m_needsLayout) {
         // lay out frame tree
+#ifdef STARFISH_ENABLE_TIMER
         Timer t("lay out frame tree");
-
+#endif
         clearStackingContext(true);
 
         LayoutContext ctx(starFish(), m_document->frame()->asFrameBox()->asFrameBlockBox()->asFrameDocument());
@@ -662,7 +642,9 @@ void Window::layoutIfNeeds()
         }
 #endif
         {
+#ifdef STARFISH_ENABLE_TIMER
             Timer t("computeStackingContextProperties");
+#endif
             m_document->frame()->asFrameBox()->iterateChildBoxes([](FrameBox* box) -> bool
             {
                 box->establishesStackingContextIfNeeds();
@@ -723,9 +705,9 @@ void Window::rendering()
     m_lastRenderingTime = currentTick;
     m_inRendering = true;
     STARFISH_RELEASE_ASSERT(eflWindow->m_isActive);
-
+#ifdef STARFISH_ENABLE_TIMER
     Timer renderingTimer("Window::rendering");
-
+#endif
     layoutIfNeeds();
 
     {
@@ -737,8 +719,9 @@ void Window::rendering()
     }
 
     if (m_needsPainting) {
+#ifdef STARFISH_ENABLE_TIMER
         Timer t("painting");
-
+#endif
         // painting
         Canvas* canvas = preparePainting(eflWindow, true);
 
@@ -816,7 +799,9 @@ void Window::rendering()
 
 
     if (m_needsComposite) {
+#ifdef STARFISH_ENABLE_TIMER
         Timer t("composite");
+#endif
         if (m_document->frame()->firstChild() && m_rootStackingContext->needsOwnBuffer()) {
             Canvas* canvas = preparePainting(eflWindow, false);
             paintWindowBackground(canvas);

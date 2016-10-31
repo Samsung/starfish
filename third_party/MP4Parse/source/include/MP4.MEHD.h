@@ -38,7 +38,7 @@
 
 namespace MP4
 {
-    class MEHD : DataAtom
+    class MEHD : public DataAtom
     {
         private:
             
@@ -52,6 +52,10 @@ namespace MP4
             
             std::string description( void );
             void processData( MP4::BinaryStream * stream, size_t length );
+            virtual uint32_t getType( void )
+            {
+                return MP4_PARSER_DEFINE_TYPE_STRING("mehd");
+            }
     };
 }
 

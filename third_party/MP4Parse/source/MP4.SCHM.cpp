@@ -35,16 +35,6 @@ using namespace MP4;
           
 SCHM::SCHM( void )
 {
-    this->_type.append( "SCHM" );
-}
-
-std::string SCHM::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void SCHM::processData( MP4::BinaryStream * stream, size_t length )

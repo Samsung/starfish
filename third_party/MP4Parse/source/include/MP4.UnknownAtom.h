@@ -68,15 +68,18 @@ namespace MP4
             
         protected:
             
-            
+            uint32_t _type;
             
         public:
             
             UnknownAtom( void );
-            UnknownAtom( char * t );
+            UnknownAtom( uint32_t t );
             
-            std::string description( void );
             void processData( MP4::BinaryStream * stream, size_t length );
+            virtual uint32_t getType( void )
+            {
+                return _type;
+            }
     };
 }
 

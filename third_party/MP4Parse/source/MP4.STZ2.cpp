@@ -35,16 +35,6 @@ using namespace MP4;
           
 STZ2::STZ2( void )
 {
-    this->_type.append( "STZ2" );
-}
-
-std::string STZ2::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void STZ2::processData( MP4::BinaryStream * stream, size_t length )

@@ -35,16 +35,6 @@ using namespace MP4;
           
 TKHD::TKHD( void )
 {
-    this->_type.append( "TKHD" );
-}
-
-std::string TKHD::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void TKHD::processData( MP4::BinaryStream * stream, size_t length )

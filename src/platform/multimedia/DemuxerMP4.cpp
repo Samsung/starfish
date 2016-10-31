@@ -21,6 +21,7 @@
 #include "mp4.h"
 #include "atoms.h"
 #include "MP4.BinaryStream.h"
+#include "MP4.Parser.h"
 
 class MP4BinaryStreamAdapter : public MP4::BinaryStream {
 public:
@@ -45,6 +46,11 @@ public:
     virtual bool eof() const
     {
         return m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceLookSize) != m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceCurrent);
+    }
+
+    virtual size_t pos()
+    {
+        return m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceCurrent);
     }
 private:
     virtual void get(char& c)
@@ -74,17 +80,14 @@ static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source)
     return n;
 }
 
-static MP4::File* parseMP4(DemuxerSource* source, bool findStream)
+static void parseMP4(DemuxerSource* source, bool findStream, const std::function<void(MP4::Atom* atom)>& fn)
 {
     bool container = false;
     uint32_t length;
     uint64_t dataLength;
     char type[ 5 ];
     char* data = NULL;
-    MP4::File* file = new MP4::File();
     MP4::Atom* atom = NULL;
-    MP4::ContainerAtom* containerAtom = NULL;
-    MP4::ContainerAtom* parentAtom = file;
     MP4BinaryStreamAdapter src(source);
     memset(type, 0, 5);
 
@@ -104,12 +107,15 @@ static MP4::File* parseMP4(DemuxerSource* source, bool findStream)
             dataLength = length - 8;
         }
 
-        if (strcmp(type, "meta") == 0) {
+        // printf("found %x %s\n", (int)orgPos, type);
+        uint32_t typeInt = MP4_PARSER_DEFINE_TYPE_STRING(type);
+
+        if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("meta")) {
             source->onSeek(orgLength, DemuxerSource::SeekWhenceCurrent);
             continue;
         }
 
-        if (strcmp(type, "moov") == 0) {
+        if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moov")) {
             if (!findStream) {
                 maxPos = orgPos + orgLength;
                 printf("found movv. (endpos %d)\n", (int)maxPos);
@@ -117,148 +123,23 @@ static MP4::File* parseMP4(DemuxerSource* source, bool findStream)
         }
 
         if (!findStream) {
-            if ((strcmp(type, "moof") == 0)
-                || (strcmp(type, "mdat") == 0)) {
+            if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("mdat") || typeInt == MP4_PARSER_DEFINE_TYPE_STRING("moof")) {
+                source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
                 break;
             }
         }
 
-        // printf("found %x %s\n", (int)orgPos, type);
+        MP4::Atom* atom = MP4::atomFactory(typeInt);
 
-        /* Container atoms */
-        if (strcmp(type, "dinf") == 0
-            || strcmp(type, "edts") == 0
-            || strcmp(type, "ipro") == 0
-            || strcmp(type, "mdia") == 0
-            || strcmp(type, "meta") == 0
-            || strcmp(type, "mfra") == 0
-            || strcmp(type, "minf") == 0
-            || strcmp(type, "moof") == 0
-            || strcmp(type, "moov") == 0
-            || strcmp(type, "mvex") == 0
-            || strcmp(type, "sinf") == 0
-            || strcmp(type, "skip") == 0
-            || strcmp(type, "stbl") == 0
-            || strcmp(type, "traf") == 0
-            || strcmp(type, "trak") == 0) {
-            containerAtom = new MP4::ContainerAtom( type );
-
-            parentAtom->addChild(containerAtom);
-            parentAtom = containerAtom;
+        if (atom->isContainerAtom()) {
+            fn(atom);
+            delete atom;
             continue;
         }
-
-        /* Data atoms */
-        if (strcmp(type, "bxml") == 0) {
-            atom = (MP4::Atom *) (new MP4::BXML());
-        } else if (strcmp(type, "co64") == 0) {
-            atom = (MP4::Atom *) (new MP4::CO64());
-        } else if (strcmp(type, "cprt") == 0) {
-            atom = (MP4::Atom *) (new MP4::CPRT());
-        } else if (strcmp(type, "ctts") == 0) {
-            atom = (MP4::Atom *) (new MP4::CTTS());
-        } else if (strcmp(type, "dref") == 0) {
-            atom = (MP4::Atom *) (new MP4::DREF());
-        } else if (strcmp(type, "elst") == 0) {
-            atom = (MP4::Atom *) (new MP4::ELST());
-        } else if (strcmp(type, "free") == 0) {
-            atom = (MP4::Atom *) (new MP4::FREE());
-        } else if (strcmp(type, "frma") == 0) {
-            atom = (MP4::Atom *) (new MP4::FRMA());
-        } else if (strcmp(type, "ftyp") == 0) {
-            atom = (MP4::Atom *) (new MP4::FTYP());
-        } else if (strcmp(type, "hdlr") == 0) {
-            atom = (MP4::Atom *) (new MP4::HDLR());
-        } else if (strcmp(type, "hmhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::HMHD());
-        } else if (strcmp(type, "iinf") == 0) {
-            atom = (MP4::Atom *) (new MP4::IINF());
-        } else if (strcmp(type, "iloc") == 0) {
-            atom = (MP4::Atom *) (new MP4::ILOC());
-        } else if (strcmp(type, "imif") == 0) {
-            atom = (MP4::Atom *) (new MP4::IMIF());
-        } else if (strcmp(type, "ipmc") == 0) {
-            atom = (MP4::Atom *) (new MP4::IPMC());
-        } else if (strcmp(type, "mdat") == 0) {
-            atom = (MP4::Atom *) (new MP4::MDAT());
-        } else if (strcmp(type, "mdhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::MDHD());
-        } else if (strcmp(type, "mehd") == 0) {
-            atom = (MP4::Atom *) (new MP4::MEHD());
-        } else if (strcmp(type, "mfhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::MFHD());
-        } else if (strcmp(type, "mfro") == 0) {
-            atom = (MP4::Atom *) (new MP4::MFRO());
-        } else if (strcmp(type, "mvhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::MVHD());
-        } else if (strcmp(type, "padb") == 0) {
-            atom = (MP4::Atom *) (new MP4::PADB());
-        } else if (strcmp(type, "pdin") == 0) {
-            atom = (MP4::Atom *) (new MP4::PDIN());
-        } else if (strcmp(type, "pitm") == 0) {
-            atom = (MP4::Atom *) (new MP4::PITM());
-        } else if (strcmp(type, "sbgp") == 0) {
-            atom = (MP4::Atom *) (new MP4::SBGP());
-        } else if (strcmp(type, "schi") == 0) {
-            atom = (MP4::Atom *) (new MP4::SCHI());
-        } else if (strcmp(type, "schm") == 0) {
-            atom = (MP4::Atom *) (new MP4::SCHM());
-        } else if (strcmp(type, "sdtp") == 0) {
-            atom = (MP4::Atom *) (new MP4::SDTP());
-        } else if (strcmp(type, "sgpd") == 0) {
-            atom = (MP4::Atom *) (new MP4::SGPD());
-        } else if (strcmp(type, "smhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::SMHD());
-        } else if (strcmp(type, "subs") == 0) {
-            atom = (MP4::Atom *) (new MP4::SUBS());
-        } else if (strcmp(type, "stsd") == 0) {
-            atom = (MP4::Atom *) (new MP4::STSD());
-        } else if (strcmp(type, "stco") == 0) {
-            atom = (MP4::Atom *) (new MP4::STCO());
-        } else if (strcmp(type, "stdp") == 0) {
-            atom = (MP4::Atom *) (new MP4::STDP());
-        } else if (strcmp(type, "stsc") == 0) {
-            atom = (MP4::Atom *) (new MP4::STSC());
-        } else if (strcmp(type, "stsh") == 0) {
-            atom = (MP4::Atom *) (new MP4::STSH());
-        } else if (strcmp(type, "stss") == 0) {
-            atom = (MP4::Atom *) (new MP4::STSS());
-        } else if (strcmp(type, "stsz") == 0) {
-            atom = (MP4::Atom *) (new MP4::STSZ());
-        } else if (strcmp(type, "stts") == 0) {
-            atom = (MP4::Atom *) (new MP4::STTS());
-        } else if (strcmp(type, "stz2") == 0) {
-            atom = (MP4::Atom *) (new MP4::STZ2());
-        } else if (strcmp(type, "tfdt") == 0) {
-            atom = (MP4::Atom *) (new MP4::TFDT());
-        } else if (strcmp(type, "tfhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::TFHD());
-        } else if (strcmp(type, "tfra") == 0) {
-            atom = (MP4::Atom *) (new MP4::TFRA());
-        } else if (strcmp(type, "tkhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::TKHD());
-        } else if (strcmp(type, "tref") == 0) {
-            atom = (MP4::Atom *) (new MP4::TREF());
-        } else if (strcmp(type, "trex") == 0) {
-            atom = (MP4::Atom *) (new MP4::TREX());
-        } else if (strcmp(type, "trun") == 0) {
-            atom = (MP4::Atom *) (new MP4::TRUN());
-        } else if (strcmp(type, "udta") == 0) {
-            atom = (MP4::Atom *) (new MP4::UDTA());
-        } else if (strcmp(type, "vmhd") == 0) {
-            atom = (MP4::Atom *) (new MP4::VMHD());
-        } else if (strcmp(type, "xml ") == 0) {
-            atom = (MP4::Atom *) (new MP4::XML());
-        } else {
-            atom = new MP4::UnknownAtom(type);
-        }
-
-        parentAtom->addChild(atom);
-
         ((MP4::DataAtom*)atom)->processData(&src, dataLength);
+        fn(atom);
+        delete atom;
     }
-
-    return file;
 }
 
 class DemuxerMP4 : public Demuxer {
@@ -278,35 +159,47 @@ public:
     {
         bool seenTrack = false;
         int64_t before = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
-        std::unique_ptr<MP4::File> pFile(parseMP4(source, false));
-        pFile->traverse([&](MP4::Atom* atom, MP4::ContainerAtom* container) {
-            if (atom->getType() == "TKHD") {
+
+        bool seenTkhd = false;
+        size_t track_id;
+        size_t track_width;
+        size_t track_height;
+        size_t duration;
+
+        parseMP4(source, false, [&](MP4::Atom* atom) {
+            if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tkhd")) {
                 MP4::TKHD* tkhd = (MP4::TKHD*)atom;
-                MP4::MDHD* mdhd = (MP4::MDHD*)container->findChild("MDHD");
-                if (mdhd) {
-                    seenTrack = true;
-                    m_defaultTimescale[tkhd->track_id - 1] = mdhd->_timeScale;
-                    if (tkhd->track_width && tkhd->track_height) {
+                track_id = tkhd->track_id;
+                track_width = tkhd->track_width;
+                track_height = tkhd->track_height;
+                duration = tkhd->duration;
+                seenTkhd = true;
+            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mdhd")) {
+                MP4::MDHD* mdhd = (MP4::MDHD*)atom;
+
+                if (seenTkhd && mdhd) {
+                    m_defaultTimescale[track_id - 1] = mdhd->_timeScale;
+                    if (track_width && track_height) {
                         // video
                         VideoStreamInfo info;
-                        info.m_streamIndex = tkhd->track_id - 1;
-                        info.m_duration = tkhd->duration;
+                        info.m_streamIndex = track_id - 1;
+                        info.m_duration = duration;
                         // TODO read avg_frame_rate
                         info.m_timeBaseNum = 0;
                         info.m_timeBaseDen = 1;
                         // TODO read codec name
                         info.m_codecName = "h264";
                         // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
-                        info.m_width = tkhd->track_width;
-                        info.m_height = tkhd->track_height;
+                        info.m_width = track_width;
+                        info.m_height = track_height;
                         STARFISH_LOG_INFO("DemuxerMP4::findStreamInfo finded video. %d %d %d\n", (int)info.m_streamIndex, (int)info.m_width, (int)info.m_height);
                         for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                             m_demuxerClients[j]->onDetectVideoStream(info);
                         }
                     } else {
                         AudioStreamInfo info;
-                        info.m_streamIndex = tkhd->track_id - 1;
-                        info.m_duration = tkhd->duration;
+                        info.m_streamIndex = track_id - 1;
+                        info.m_duration = duration;
                         // TODO read codec name
                         info.m_codecName = "aac";
                         // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;
@@ -319,6 +212,10 @@ public:
                         }
                     }
                 }
+                seenTkhd = false;
+                mdhd = nullptr;
+            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("moov")) {
+                seenTrack = true;
             }
         });
 
@@ -334,64 +231,91 @@ public:
 
     virtual bool findStreamPacket(DemuxerSource* source)
     {
-        std::unique_ptr<MP4::File> pFile(parseMP4(source, true));
-
         size_t trackID = SIZE_MAX;
+        bool has_default_sample_size;
+        bool has_default_sample_duration;
+        size_t default_sample_size;
+        size_t default_sample_duration;
         uint64_t dts = SIZE_MAX;
-        MP4::TRUN* trun = nullptr;
-        MP4::TFHD* tfhd = nullptr;
-        pFile->traverse([&](MP4::Atom* atom, MP4::ContainerAtom* container) {
-            if (atom->getType() == "TFHD") {
-                tfhd = (MP4::TFHD*)atom;
+        bool seenTrun = false;
+        bool seenTfhd = false;
+        std::vector<MP4::TRUN::Sample> samples;
+        bool has_sample_size;
+        bool has_sample_duration;
+        parseMP4(source, true, [&](MP4::Atom* atom) {
+            if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tfhd")) {
+                MP4::TFHD* tfhd = (MP4::TFHD*)atom;
+                seenTfhd = true;
                 trackID = tfhd->track_id - 1;
-            } else if (atom->getType() == "TFDT") {
+                has_default_sample_duration = tfhd->has_default_sample_duration;
+                has_default_sample_size = tfhd->has_default_sample_size;
+                default_sample_size = tfhd->default_sample_size;
+                default_sample_duration = tfhd->default_sample_duration;
+            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tfdt")) {
                 MP4::TFDT* tfdt = (MP4::TFDT*)atom;
                 dts = tfdt->decodeTime;
-            } else if (atom->getType() == "TRUN") {
-                trun = (MP4::TRUN*)atom;
-            } else if (atom->getType() == "MDAT") {
+            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("trun")) {
+                MP4::TRUN* trun = (MP4::TRUN*)atom;
+                has_sample_size = trun->has_sample_size;
+                has_sample_duration = trun->has_sample_duration;
+                seenTrun = true;
+                samples = std::move(trun->samples);
+            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mdat")) {
                 MP4::MDAT* mdat = (MP4::MDAT*)atom;
-                if (trackID != SIZE_MAX && dts != SIZE_MAX && trun != nullptr && tfhd != nullptr) {
+                if (trackID != SIZE_MAX && dts != SIZE_MAX && seenTrun && seenTfhd) {
+                    int64_t before = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                    source->onSeek(mdat->dataPos, DemuxerSource::SeekWhenceSet);
                     MediaPacket packet;
                     packet.m_streamIndex = trackID;
                     size_t scale = m_defaultTimescale[trackID];
-                    uint8_t* dataPtr = mdat->data;
+                    size_t dataPtr = 0;
                     uint64_t ptsInMP4 = dts;
 
-                    STARFISH_RELEASE_ASSERT(trun->has_sample_size || tfhd->has_default_sample_size);
-                    for (size_t i = 0; i < trun->samples.size(); i ++) {
-                        packet.m_data = dataPtr;
-                        if (trun->has_sample_size)
-                            packet.m_dataSize = trun->samples[i].size;
+                    STARFISH_RELEASE_ASSERT(has_sample_size || has_default_sample_size);
+                    for (size_t i = 0; i < samples.size(); i ++) {
+                        if (has_sample_size)
+                            packet.m_dataSize = samples[i].size;
                         else
-                            packet.m_dataSize = tfhd->default_sample_size;
+                            packet.m_dataSize = default_sample_size;
                         packet.m_pts = ptsInMP4 * 1000LL / scale;
 
-                        if (trun->has_sample_duration) {
-                            ptsInMP4 += trun->samples[i].duration;
-                            packet.m_duration = trun->samples[i].duration * 1000LL / scale;
-                        } else if (tfhd->has_default_sample_duration) {
-                            ptsInMP4 += tfhd->default_sample_duration;
-                            packet.m_duration = tfhd->default_sample_duration * 1000LL / scale;
+                        if (has_sample_duration) {
+                            ptsInMP4 += samples[i].duration;
+                            packet.m_duration = samples[i].duration * 1000LL / scale;
+                        } else if (has_default_sample_duration) {
+                            ptsInMP4 += default_sample_duration;
+                            packet.m_duration = default_sample_duration * 1000LL / scale;
                         } else {
                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                         }
-                        dataPtr += trun->samples[i].size;
 
-                        STARFISH_ASSERT(dataPtr <= (mdat->data + mdat->size));
+                        uint8_t* data = new uint8_t[packet.m_dataSize];
+                        size_t s;
+                        int err;
+                        source->onRead(packet.m_dataSize, s, err, data);
+                        STARFISH_ASSERT(packet.m_dataSize == s);
+                        packet.m_data = data;
                         /*
                         STARFISH_LOG_INFO("DemuxerMP4::findStreamPacket streamIndex(%d, %dbyte, %dms)\n", (int)packet.m_streamIndex, (int)packet.m_dataSize, (int)packet.m_pts);
                         */
                         for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                            m_demuxerClients[j]->onDetectPacket(packet);
+                            if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                                data = nullptr;
+                                break;
+                            }
                         }
+                        delete[] data;
+                        dataPtr += packet.m_dataSize;
+                        STARFISH_ASSERT(dataPtr <= mdat->size);
                     }
+
+                    source->onSeek(before, DemuxerSource::SeekWhenceSet);
                 }
 
                 trackID = SIZE_MAX;
                 dts = SIZE_MAX;
-                trun = nullptr;
-                tfhd = nullptr;
+                seenTrun = false;
+                seenTfhd = false;
             }
         });
 

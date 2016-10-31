@@ -35,16 +35,6 @@ using namespace MP4;
           
 STSD::STSD( void )
 {
-    this->_type.append( "STSD" );
-}
-
-std::string STSD::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void STSD::processData( MP4::BinaryStream * stream, size_t length )

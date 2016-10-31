@@ -35,16 +35,6 @@ using namespace MP4;
           
 IINF::IINF( void )
 {
-    this->_type.append( "IINF" );
-}
-
-std::string IINF::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void IINF::processData( MP4::BinaryStream * stream, size_t length )

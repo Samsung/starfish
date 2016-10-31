@@ -50,10 +50,8 @@ namespace MP4
             
         public:
             
-            File( void ) : ContainerAtom( ( char * )"" )
+            File( void ) : ContainerAtom( MP4_PARSER_DEFINE_TYPE_STRING("xxxx") )
             {}
-            
-            std::string description( void );
     };
 }
 

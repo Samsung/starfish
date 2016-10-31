@@ -43,19 +43,10 @@ namespace MP4
     {
         private:
             
-            
-            
         protected:
             
-            char * _data;
-            size_t _dataLength;
-            
         public:
-            
-            bool final;
-            
             virtual void processData( MP4::BinaryStream * stream, size_t length ) = 0;
-            virtual std::string description( void ) = 0;
     };
 }
 

@@ -35,16 +35,6 @@ using namespace MP4;
           
 SGPD::SGPD( void )
 {
-    this->_type.append( "SGPD" );
-}
-
-std::string SGPD::description( void )
-{
-    std::ostringstream o;
-    
-    o << "MP4 Atom:           " << this->_type << "\n";
-    
-    return o.str();
 }
 
 void SGPD::processData( MP4::BinaryStream * stream, size_t length )

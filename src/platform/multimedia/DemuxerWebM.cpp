@@ -233,7 +233,10 @@ public:
                     packet.m_duration = 33; // temp soluation
 
                     for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                        m_demuxerClients[j]->onDetectPacket(packet);
+                        if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                            dataPtr = nullptr;
+                            break;
+                        }
                     }
                     free(dataPtr);
                 }
