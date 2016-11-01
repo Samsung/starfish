@@ -19,6 +19,8 @@
 #include "Text.h"
 #include "HTMLElement.h"
 
+#include "layout/FrameBox.h"
+
 
 namespace StarFish {
 
@@ -71,6 +73,20 @@ int HTMLElement::tabIndex()
 bool HTMLElement::supportsFocus()
 {
     return Element::supportsFocus();
+}
+
+LayoutRect HTMLElement::offsetRect()
+{
+    document()->window()->layoutIfNeeds();
+    if (frame()) {
+        if (frame()->isFrameBox()) {
+            FrameBox* box = frame()->asFrameBox();
+            return LayoutRect(box->marginLeft(), box->marginTop(),
+                box->contentWidth() + box->paddingWidth() + box->borderWidth(),
+                box->contentHeight() + box->paddingHeight() + box->borderHeight());
+        }
+    }
+    return LayoutRect(0, 0, 0, 0);
 }
 
 }
