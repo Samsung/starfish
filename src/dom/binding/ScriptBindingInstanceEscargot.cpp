@@ -2906,6 +2906,30 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
     });
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("offsetWidth"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            return escargot::ESValue(nd->asElement()->asHTMLElement()->offsetWidth());
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("offsetHeight"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            return escargot::ESValue(nd->asElement()->asHTMLElement()->offsetHeight());
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onclick"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);

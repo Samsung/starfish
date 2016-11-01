@@ -102,6 +102,17 @@ public:
 
     int tabIndex() override;
     bool supportsFocus() override;
+    LayoutRect offsetRect();
+    uint32_t offsetWidth()
+    {
+        return (float)offsetRect().width() + .5f;
+    }
+    uint32_t offsetHeight()
+    {
+        return (float)offsetRect().height() + .5f;
+    }
+
+
 
 protected:
 
