@@ -297,6 +297,7 @@ protected:
         gc_allocator<std::pair<uint32_t, void*> > > m_requestAnimationFrameHandler;
 
     std::vector<Node*, gc_allocator<Node*> > m_activeNodes;
+    std::vector<Node*, gc_allocator<Node*> > m_hoveredNodes;
 };
 
 }

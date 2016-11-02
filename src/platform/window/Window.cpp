@@ -1193,11 +1193,22 @@ void Window::releaseFocusedNode()
 
 void Window::setActiveNodeWithMouseMove(Node *n)
 {
+    Node* t = n;
+    while (t) {
+        t->setState(Node::NodeStateHovered);
+        m_hoveredNodes.push_back(t);
+        t = t->parentNode();
+    }
     m_activeNodeWithTouchMove = n;
 }
 
 void Window::releaseActiveNodeWithMouseMove()
 {
+    for (size_t i = 0; i < m_hoveredNodes.size() ; i ++) {
+        m_hoveredNodes[i]->setState(Node::NodeStateNormal);
+    }
+    m_hoveredNodes.clear();
+    m_hoveredNodes.shrink_to_fit();
     m_activeNodeWithTouchMove = nullptr;
 }
 
@@ -1285,7 +1296,9 @@ void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
         }
         Node* node = hitTest(x, y);
         if (m_activeNodeWithTouchMove == nullptr || node != m_activeNodeWithTouchMove) {
-            releaseActiveNodeWithMouseMove();
+            if (node != m_activeNodeWithTouchMove) {
+                releaseActiveNodeWithMouseMove();
+            }
             setActiveNodeWithMouseMove(node);
             if (m_activeNodeWithTouchMove && node == m_activeNodeWithTouchMove) {
                 bool shouldDispatchEvent = true;
