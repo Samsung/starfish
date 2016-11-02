@@ -207,6 +207,267 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         userAgentStyleSheet->addRule(rule);
     }
 
+#ifdef STARFISH_ENABLE_WASU
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("h1"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontSize);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("2em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0.67em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0.67em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("h2"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontSize);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1.5em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0.83em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0.83em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("h3"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontSize);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1.17em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("h4"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1.33em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1.33em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("h5"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontSize);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0.83em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1.67em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1.67em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("h6"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontSize);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0.67em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("2.33em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("2.33em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+#endif
+
     m_styleResolver.addSheet(userAgentStyleSheet);
 
     auto df = new FrameDocument(this);
