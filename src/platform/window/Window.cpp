@@ -1295,8 +1295,11 @@ void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
             m_activeNodeWithTouchDown = nullptr;
         }
         Node* node = hitTest(x, y);
+        if (!node) {
+            return;
+        }
         if (m_activeNodeWithTouchMove == nullptr || node != m_activeNodeWithTouchMove) {
-            if (node != m_activeNodeWithTouchMove) {
+            if (m_activeNodeWithTouchMove != nullptr && node != m_activeNodeWithTouchMove) {
                 releaseActiveNodeWithMouseMove();
             }
             setActiveNodeWithMouseMove(node);
@@ -1463,6 +1466,12 @@ void Window::close()
 
     m_focusedNode = nullptr;
     m_relatedTarget = nullptr;
+
+    m_activeNodeWithTouchDown = nullptr;
+
+    m_hoveredNodes.clear();
+    m_hoveredNodes.shrink_to_fit();
+    m_activeNodeWithTouchMove = nullptr;
 
     if (m_location) {
         m_location->close();
