@@ -74,7 +74,6 @@ test/reftest/vendor/webkit/fast/block/positioning/auto/001.html
 test/reftest/vendor/webkit/fast/block/positioning/auto/002.html
 test/reftest/vendor/webkit/fast/block/positioning/auto-height-with-top-and-bottom.html
 test/reftest/vendor/webkit/fast/block/positioning/complex-positioned-movement.html
-test/reftest/vendor/webkit/fast/block/positioning/crash-when-transform-is-removed.html
 test/reftest/vendor/webkit/fast/block/positioning/insert-positioned-in-anonymous-crash.html
 test/reftest/vendor/webkit/fast/block/positioning/hiding-inside-relpositioned-inline.html
 test/reftest/vendor/webkit/fast/block/positioning/negative-rel-position.html
