@@ -50,6 +50,9 @@
 #ifdef STARFISH_ENABLE_MULTI_PAGE
 #include "dom/HTMLAnchorElement.h"
 #endif
+#ifdef STARFISH_ENABLE_WASU
+#include "dom/HTMLHeadingElement.h"
+#endif
 #include "dom/HTMLCollection.h"
 #include "dom/HTMLUnknownElement.h"
 #include "dom/DOMTokenList.h"

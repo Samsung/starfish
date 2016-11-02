@@ -47,6 +47,9 @@
 #include "HTMLAudioElement.h"
 #include "HTMLTrackElement.h"
 #endif
+#ifdef STARFISH_ENABLE_WASU
+#include "HTMLHeadingElement.h"
+#endif
 #include "dom/Attr.h"
 #include "dom/xml/XMLSerializer.h"
 
