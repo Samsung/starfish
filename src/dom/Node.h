@@ -311,6 +311,7 @@ public:
         NodeStateNormal = 0,
         NodeStateActive = 1 << 0,
         NodeStateFocused = 1 << 1,
+        NodeStateHovered = 1 << 2
     };
 
     virtual bool isNode() const
@@ -451,11 +452,13 @@ public:
         */
         if (state != m_state) {
             if (state == NodeStateNormal)
-                m_state &= ~(1 << 0);
+                m_state = 0;
             else if (state == NodeStateActive)
                 m_state |= (1 << 0);
             else if (state == NodeStateFocused)
                 m_state ^= 1 << 1;
+            else if (state == NodeStateHovered)
+                m_state |= 1 << 2;
 
             setNeedsStyleRecalc();
         }
