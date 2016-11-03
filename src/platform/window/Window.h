@@ -216,9 +216,21 @@ public:
     {
         return width();
     }
+
     double innerHeight()
     {
         return height();
+    }
+
+    // These attributes should return the real coordinate when we support scroll.
+    double scrollX()
+    {
+        return 0;
+    }
+
+    double scrollY()
+    {
+        return 0;
     }
 
     // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
