@@ -65,10 +65,7 @@ public:
         return m_isLooping;
     }
 
-    virtual void prepare(URL* url)
-    {
-    }
-
+    virtual void prepare(URL* url);
     virtual double currentTime()
     {
         return 0;

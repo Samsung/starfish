@@ -33,9 +33,10 @@
 
 using namespace MP4;
 
-ContainerAtom::ContainerAtom( const uint32_t type )
+ContainerAtom::ContainerAtom( const uint32_t type , uint32_t skip_bytes )
 {
     _type = type;
+    _skip_bytes = skip_bytes;
 }
 
 ContainerAtom::~ContainerAtom( void )

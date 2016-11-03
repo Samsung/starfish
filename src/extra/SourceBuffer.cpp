@@ -71,6 +71,7 @@ public:
     virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& error, uint8_t* buffer)
     {
         sizeSuccessToRead = 0;
+        error = 0;
         if (m_readPos < m_bufferRemain->size()) {
             size_t fillAmount;
 
@@ -94,6 +95,9 @@ public:
             memcpy(buffer, m_inputBuffer->m_data + diff, fillAmount);
             sizeSuccessToRead += fillAmount;
             m_readPos += fillAmount;
+        }
+        if (sizeWantToRead != sizeSuccessToRead) {
+            error = -1;
         }
         // STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)(m_readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
     }

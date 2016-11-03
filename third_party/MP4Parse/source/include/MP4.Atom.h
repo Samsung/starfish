@@ -34,6 +34,7 @@
 #define _MP4_ATOM_
 
 #include "mp4.h"
+#include "MP4.BinaryStream.h"
 
 #define MP4_PARSER_DEFINE_TYPE(a, b, c, d) \
     ((a) | ((b) << 8) | ((c) << 16) | ((unsigned)(d) << 24))
@@ -55,7 +56,8 @@ namespace MP4
             virtual ~Atom( void );
             
             virtual uint32_t getType( void ) = 0;
-            virtual bool isContainerAtom() { return false; } 
+            virtual bool isContainerAtom() { return false; }
+            virtual void processData( MP4::BinaryStream * stream, size_t length ) = 0;
     };
 }
 

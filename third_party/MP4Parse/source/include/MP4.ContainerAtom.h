@@ -42,7 +42,7 @@ namespace MP4
     {
         private:
             
-            uint32_t _type;
+            uint32_t _type, _skip_bytes;
             
         protected:
             
@@ -50,12 +50,17 @@ namespace MP4
             
         public:
             
-            ContainerAtom( const uint32_t type );
+            ContainerAtom( const uint32_t type , uint32_t skip_bytes = 0);
             ~ContainerAtom( void );
             
             virtual uint32_t getType( void )
             {
                 return _type;
+            }
+
+            virtual void processData( MP4::BinaryStream * stream, size_t length )
+            {
+                stream->ignore(_skip_bytes);
             }
 
             void addChild( Atom * a );
