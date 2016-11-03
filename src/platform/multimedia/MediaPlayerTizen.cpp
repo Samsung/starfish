@@ -484,6 +484,40 @@ void MediaPlayerTizen::unprepareOperation()
     }
 }
 
+void MediaPlayerTizen::setVolume(double volume)
+{
+    STARFISH_LOG_INFO("MediaPlayerTizen::setVolume(%f)\n", volume);
+    if (!m_nativePlayer)
+        return;
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+    if (state > PLAYER_STATE_IDLE) {
+        if (volume == 0.0) {
+            setMuted(true);
+            return;
+        }
+        setMuted(false);
+
+        int ret = player_set_volume(m_nativePlayer, volume, volume);
+        if (ret != PLAYER_ERROR_NONE)
+            STARFISH_LOG_ERROR("**ERROR: player_set_volume %x -> ", ret);
+    }
+}
+
+void MediaPlayerTizen::setMuted(bool muted)
+{
+    STARFISH_LOG_INFO("MediaPlayerTizen::setMuted(%s)\n", muted? "true" : "false");
+    if (!m_nativePlayer)
+        return;
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+    if (state > PLAYER_STATE_IDLE) {
+        int ret = player_set_mute(m_nativePlayer, muted);
+        if (ret != PLAYER_ERROR_NONE)
+            STARFISH_LOG_ERROR("**ERROR: player_set_mute %x -> ", ret);
+    }
+}
+
 void MediaPlayerTizen::drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
 {
     canvas->setColor(Color(0, 0, 0, 255));

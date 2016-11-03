@@ -3573,8 +3573,13 @@ escargot::ESFunctionObject* bindingHTMLAnchorElement(ScriptBindingInstance* scri
         Node* nd = originalObj; \
         if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()) { \
             HTML##ElementName##Element* __element = nd->asElement()->asHTMLElement()->asHTML##ElementName##Element(); \
-            ARG_##TYPE_F(setter) \
-            return v; \
+            try { \
+                ARG_##TYPE_F(setter) \
+                return v; \
+            } catch(DOMException* e) { \
+                escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue()); \
+                STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+            } \
         } \
         return escargot::ESValue(); \
     }
@@ -3667,7 +3672,7 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, autoplay, setAutoplay, TYPE_BOOLEAN);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, loop, setLoop, TYPE_BOOLEAN);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, controls, setControls, TYPE_BOOLEAN);
-    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, volume, setVolume, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, volume, setVolume, TYPE_NUMBER);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Media, muted, setMuted, TYPE_BOOLEAN);
     DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Media, textTracks, TYPE_SCRIPTVALUE);
 

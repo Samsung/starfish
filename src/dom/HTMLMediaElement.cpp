@@ -38,6 +38,8 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_delayingTheLoadEvent(false)
     , m_officialPlaybackPosition(0)
     , m_defaultPlaybackStartPosition(0)
+    , m_muted(false)
+    , m_volume(1.0)
     , m_mediaPlayer(nullptr)
     , m_currentSrc(String::emptyString)
     , m_textTracks(new TextTrackList())
@@ -493,16 +495,14 @@ bool HTMLMediaElement::controls()
     return true;
 }
 
-bool HTMLMediaElement::volume()
+double HTMLMediaElement::volume()
 {
-    // TODO
-    return false;
+    return m_volume;
 }
 
 bool HTMLMediaElement::muted()
 {
-    // TODO
-    return false;
+    return m_muted;
 }
 
 String* HTMLMediaElement::currentSrc()
@@ -537,9 +537,8 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
         STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
         setOfficialPlaybackPosition(currentTime);
-        m_mediaPlayer->seek(currentTime);
-        dispatchSeekingEvent();
-        m_isSeeking = true;
+        appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, currentTime));
+        startOperationQueueIfNeeded();
     }
 }
 
@@ -600,14 +599,26 @@ void HTMLMediaElement::setControls(bool controls)
     }
 }
 
-void HTMLMediaElement::setVolume(bool volume)
+void HTMLMediaElement::setVolume(double volume)
 {
-    // TODO
+    if (volume < 0.0f || volume > 1.0f)
+        throw new DOMException(document()->scriptBindingInstance(), DOMException::INDEX_SIZE_ERR, "volume should be in the range 0.0 to 1.0");
+
+    if (m_volume != volume) {
+        m_volume = volume;
+        if (m_mediaPlayer)
+            m_mediaPlayer->setVolume(volume);
+        dispatchVolumechangeEvent();
+    }
 }
 
 void HTMLMediaElement::setMuted(bool muted)
 {
-    // TODO
+    if (m_muted != muted) {
+        if (m_mediaPlayer)
+            m_mediaPlayer->setMuted(muted);
+        dispatchVolumechangeEvent();
+    }
 }
 
 HTMLMediaElement::ReadyState HTMLMediaElement::readyState()
@@ -853,6 +864,18 @@ void MediaOperationQueueDataRequestPrepare::processOperationQueue()
 void MediaOperationQueueDataRequestPrepare::cancelOperation()
 {
 
+}
+
+void MediaOperationQueueDataRequestSeek::processOperationQueue()
+{
+    STARFISH_LOG_INFO("MediaOperationQueueDataRequestSeek::processOperationQueue()\n");
+    // TODO Set the media element’s show poster flag to false.
+    // If the media element’s readyState is HAVE_NOTHING, abort these steps.
+    if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING)
+        return;
+    mediaPlayer()->seek(m_seekPosition);
+    m_mediaElement->dispatchSeekingEvent();
+    m_mediaElement->m_isSeeking = true;
 }
 
 void MediaOperationQueueDataRequestPause::processOperationQueue()
