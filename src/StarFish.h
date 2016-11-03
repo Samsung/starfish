@@ -284,6 +284,7 @@ public:
     QualifiedName m_volumechange;
 #endif
     QualifiedName m_keydown;
+    QualifiedName m_onkeydown;
     QualifiedName m_keyup;
 protected:
 };
