@@ -43,6 +43,9 @@ public:
         return m_isLooping;
     }
 
+    void setVolume(double volume);
+    void setMuted(bool muted);
+
     virtual void prepare(URL* url);
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(URL* url);

@@ -105,6 +105,19 @@ public:
     virtual void processOperationQueue();
 };
 
+class MediaOperationQueueDataRequestSeek : public MediaOperationQueueData {
+public:
+    MediaOperationQueueDataRequestSeek(HTMLMediaElement* p, double position)
+        : MediaOperationQueueData(p)
+        , m_seekPosition(position)
+    {
+    }
+
+    virtual void processOperationQueue();
+
+    double m_seekPosition;
+};
+
 class MediaOperationQueueDataRequestDispatchEvent : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestDispatchEvent(HTMLMediaElement* p, EventTarget* target, Event* e)
@@ -124,6 +137,7 @@ typedef std::list<MediaOperationQueueData*, gc_allocator<MediaOperationQueueData
 class HTMLMediaElement : public HTMLElement {
     friend class MediaPlayer;
     friend class MediaOperationQueueDataRequestPause;
+    friend class MediaOperationQueueDataRequestSeek;
     friend class MediaOperationQueueDataRequestResourceSelection;
     friend class MediaOperationQueueDataRequestDispatchEvent;
 public:
@@ -213,7 +227,7 @@ public:
     bool autoplay();
     bool loop();
     bool controls();
-    bool volume();
+    double volume();
     bool muted();
 
     void setPreload(String* preload);
@@ -225,7 +239,7 @@ public:
     void setAutoplay(bool autoplay);
     void setLoop(bool loop);
     void setControls(bool controls);
-    void setVolume(bool volume);
+    void setVolume(double volume);
     void setMuted(bool muted);
 
     static String* preloadToString(StarFish* starfish, PreloadState state)
@@ -292,6 +306,8 @@ protected:
     bool m_delayingTheLoadEvent;
     double m_officialPlaybackPosition;
     double m_defaultPlaybackStartPosition;
+    bool m_muted;
+    double m_volume;
     MediaPlayer* m_mediaPlayer;
     String* m_currentSrc;
     TextTrackList* m_textTracks;

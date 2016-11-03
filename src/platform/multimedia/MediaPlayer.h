@@ -59,6 +59,7 @@ public:
     }
 
     void setLoop(bool loop) { m_isLooping = true; }
+
     bool loop()
     {
         return m_isLooping;
@@ -76,6 +77,14 @@ public:
     virtual double duration()
     {
         return 0;
+    }
+
+    virtual void setVolume(double volume)
+    {
+    }
+
+    virtual void setMuted(bool muted)
+    {
     }
 
     PlaybackState playbackState()
