@@ -255,7 +255,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
         }
         if (packet.second != m_videoInitSegmentIndex) {
             m_videoInitSegmentIndex = packet.second;
-            // setVideoStreamInfo(packet.second);
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer detect ohter type of Video!\n");
         }
         m_lastVideoPts = packet.first->m_pts + packet.first->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet.first->m_data, packet.first->m_dataSize, packet.first->m_pts, PLAYER_TRACK_TYPE_VIDEO);
@@ -311,7 +311,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
         }
         if (packet.second != m_audioInitSegmentIndex) {
             m_audioInitSegmentIndex = packet.second;
-            // setAudioStreamInfo(packet.second);
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer detect ohter type of Audio!\n");
         }
         m_lastAudioPts = packet.first->m_pts + packet.first->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet.first->m_data, packet.first->m_dataSize, packet.first->m_pts, PLAYER_TRACK_TYPE_AUDIO);

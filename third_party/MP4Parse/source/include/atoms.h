@@ -39,6 +39,7 @@
 #include "MP4.File.h"
 #include "MP4.FullBox.h"
 #include "MP4.UnknownAtom.h"
+#include "MP4.AVCC.h"
 #include "MP4.BXML.h"
 #include "MP4.CO64.h"
 #include "MP4.CPRT.h"

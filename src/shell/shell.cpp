@@ -26,6 +26,7 @@
 #include <pthread.h>
 #include <Elementary.h>
 
+
 /*
 #include <player.h>
 
@@ -51,7 +52,13 @@ media_format_h mediaFormat;
 // player_h player;
 
 using namespace StarFish;
+
 /*
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+}
+
 class DemuxerMemorySource : public DemuxerSource {
 public:
     DemuxerMemorySource()
@@ -65,7 +72,7 @@ public:
             return data.size();
         } else if (whence == DemuxerSource::SeekWhenceSet) {
             // STARFISH_LOG_INFO("onSeek DemuxerSource::SeekWhenceSet %d\n", (int)position);
-            STARFISH_ASSERT((int)position < (int)data.size());
+            STARFISH_ASSERT((int)position <= (int)data.size());
             readPos = position;
             return readPos;
         } else if (whence == DemuxerSource::SeekWhenceCurrent) {
@@ -78,10 +85,12 @@ public:
 
     virtual void onRead(size_t sizeWantToRead, size_t& sizeSuccessToRead, int& error, uint8_t* buffer)
     {
+        error = 0;
         int readed = 0;
         int end = readPos + sizeWantToRead;
         if ((int)end > (int)data.size()) {
             end = data.size();
+            error = 1;
         }
         memcpy(buffer, data.data() + readPos, end - readPos);
         sizeSuccessToRead = end - readPos;
@@ -153,18 +162,29 @@ void copyFileContent(FILE* fp, int start, int end, std::vector<uint8_t>& data)
     delete[] buf;
 }
 
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0')
+
 class DemuxerTestClient : public DemuxerClient {
 public:
-
+    size_t nalSize = 0;
     virtual bool onDetectPacket(const MediaPacket& packet)
     {
-        if (packet.m_streamIndex == 0) {
-            MediaPacket newPacket = packet;
-            newPacket.m_data = new uint8_t[newPacket.m_dataSize];
-            memcpy(newPacket.m_data, packet.m_data, newPacket.m_dataSize);
-
-            packets.push_back(newPacket);
-        }
+        // for (size_t i = 0; i < 32; i ++) { printf("%x ", packet.m_data[i]); } puts("");
+        MediaPacket newP;
+        newP.m_data = new uint8_t[packet.m_dataSize];
+        memcpy(newP.m_data, packet.m_data, packet.m_dataSize);
+        newP.m_dataSize = packet.m_dataSize;
+        newP.m_pts = packet.m_pts;
+        packets.push_back(newP);
         return false;
     }
 
@@ -173,22 +193,56 @@ public:
 
 void testDemuxer()
 {
-    Demuxer* demuxer = Demuxer::createMP4Demuxer();
-    // DemuxerTestClient* c1 = new DemuxerTestClient();
 
-    // demuxer->addClient(c1);
+    Demuxer* demuxer = Demuxer::createMP4Demuxer();
+    DemuxerTestClient* c1 = new DemuxerTestClient();
+
+    demuxer->addClient(c1);
 
     auto ptr = new DemuxerMemorySource();
 
-    FILE* fp = fopen("frag_bunny.mp4", "rb");
+    FILE* fp = fopen("ob360.mp4", "rb");
 
-    copyFileContent(fp, 0, 5524488, ptr->data);
+    copyFileContent(fp, 0, 65870855, ptr->data);
 
     if (!demuxer->findStreamInfo(ptr, String::fromUTF8("video/mp4"))) {
         puts("fail0");
         // ptr->m_debug++;
     }
     demuxer->findStreamPacket(ptr);
+
+    printf("avformat setting start\n");
+    av_register_all();
+    printf("av_register_all done\n");
+    avcodec_register_all();
+    printf("avcodec_register_all\n");
+    avformat_network_init();
+    printf("avformat_network_init done\n");
+
+    AVFormatContext* fc = avformat_alloc_context();
+    fc->iformat = av_find_input_format("mp4");
+    avformat_open_input(&fc, "ob360.mp4", nullptr, nullptr);
+    avcodec_open2(fc->streams[0]->codec, avcodec_find_decoder(fc->streams[0]->codec->codec_id), nullptr);
+    AVFrame* frame = av_frame_alloc();
+    for (size_t i = 0; i < c1->packets.size() && i < 100; i ++) {
+        // printf("packet %d\n", (int)i);
+        AVPacket pkt;
+        av_init_packet(&pkt);
+        pkt.data = c1->packets[i].m_data;
+        pkt.size = c1->packets[i].m_dataSize;
+        int got_picture;
+        while (pkt.size > 0) {
+            auto len = avcodec_decode_video2(fc->streams[0]->codec, frame, &got_picture, &pkt);
+            printf("avcodec_decode_video2 ret %d got %d\n", len, got_picture);
+            if (len < 0) {
+                fprintf(stderr, "Error while decoding frame\n");
+                exit(1);
+            }
+            pkt.size -= len;
+            pkt.data += len;
+        }
+    }
+
 }
 */
 

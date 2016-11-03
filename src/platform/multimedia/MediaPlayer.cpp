@@ -48,5 +48,18 @@ void MediaPlayer::processNextOperationQueueInContainer()
     m_container->processNextOperationQueue();
 }
 
+void MediaPlayer::prepare(URL* url)
+{
+    if (url->isBlobURL()) {
+        BlobURLStore store;
+        if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
+            return;
+        }
+        if (m_starFish->isValidMediaSourceBlobURL(store)) {
+            ((MediaSource*)store.m_blob)->attach(m_container);
+        }
+    }
+}
+
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */

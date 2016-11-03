@@ -35,7 +35,6 @@
 
 #include "mp4.h"
 #include "MP4.Atom.h"
-#include "MP4.BinaryStream.h"
 
 namespace MP4
 {
@@ -46,7 +45,6 @@ namespace MP4
         protected:
             
         public:
-            virtual void processData( MP4::BinaryStream * stream, size_t length ) = 0;
     };
 }
 

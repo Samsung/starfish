@@ -149,12 +149,18 @@ Atom* atomFactory(const uint32_t type)
         case (MP4_PARSER_DEFINE_TYPE_STRING("traf")):
         case (MP4_PARSER_DEFINE_TYPE_STRING("trak")):
             return new MP4::ContainerAtom( type );
+        case (MP4_PARSER_DEFINE_TYPE_STRING("stsd")):
+            return new MP4::ContainerAtom( type , 8);
+        case (MP4_PARSER_DEFINE_TYPE_STRING("avc1")):
+            return new MP4::ContainerAtom( type , 78);
         default:
             break;
     };
 
     /* Data atoms */
     switch (type) {
+    case (MP4_PARSER_DEFINE_TYPE_STRING("avcC")):
+        return (new MP4::AVCC());
     case (MP4_PARSER_DEFINE_TYPE_STRING("bxml")):
         return (new MP4::BXML());
     case (MP4_PARSER_DEFINE_TYPE_STRING("co64")):
