@@ -290,7 +290,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         fetchData(this)->m_instance->globalObject(), escargot::ESString::create("location"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->location()->scriptObject();
-    }, nullptr, true, false);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        wnd->location()->setHref(String::fromUTF8(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()));
+        return escargot::ESValue();
+    }, true, false);
 #endif
 
     escargot::ESFunctionObject* toStringFunction = escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -2875,7 +2879,16 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
             return location->scriptValue();
         }
         return escargot::ESValue(escargot::ESValue::ESNull);
-    }, nullptr);
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isDocument()) {
+            nd->asDocument()->location()->setHref(String::fromUTF8(v.toString()->utf8Data()));
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
 
     return DocumentFunction;
 }
