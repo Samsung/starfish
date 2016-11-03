@@ -540,6 +540,54 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         },
         NULL, true, true, true);
 
+    // https://drafts.csswg.org/cssom-view/#dom-window-scrollx
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("scrollX"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject() == escargot::ESVMInstance::currentInstance()->globalObject()) {
+            double scrollX = ((Window*)originalObj->extraPointerData())->scrollX();
+            return escargot::ESValue(scrollX);
+        }
+        return escargot::ESValue(0);
+        },
+        NULL, true, true, true);
+
+    // https://drafts.csswg.org/cssom-view/#dom-window-pagexoffset
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("pageXOffset"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject() == escargot::ESVMInstance::currentInstance()->globalObject()) {
+            double scrollX = ((Window*)originalObj->extraPointerData())->scrollX();
+            return escargot::ESValue(scrollX);
+        }
+        return escargot::ESValue(0);
+        },
+        NULL, true, true, true);
+
+    // https://drafts.csswg.org/cssom-view/#dom-window-scrolly
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("scrollY"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject() == escargot::ESVMInstance::currentInstance()->globalObject()) {
+            double scrollX = ((Window*)originalObj->extraPointerData())->scrollY();
+            return escargot::ESValue(scrollX);
+        }
+        return escargot::ESValue(0);
+        },
+        NULL, true, true, true);
+
+    // https://drafts.csswg.org/cssom-view/#dom-window-pageyoffset
+    ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("pageYOffset"),
+        [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
+        escargot::ESValue v = originalObj;
+        if (v.isUndefinedOrNull() || v.asESPointer()->asESObject() == escargot::ESVMInstance::currentInstance()->globalObject()) {
+            double scrollX = ((Window*)originalObj->extraPointerData())->scrollY();
+            return escargot::ESValue(scrollX);
+        }
+        return escargot::ESValue(0);
+        },
+        NULL, true, true, true);
+
     ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("onclick"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
         escargot::ESValue v = originalObj;
