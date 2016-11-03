@@ -273,6 +273,11 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
         wnd->starFish()->console()->log(toBrowserString(instance->currentExecutionContext()->readArgument(0).toString()));
         return escargot::ESValue();
     }, escargot::ESString::create("log"), 1, false));
+    console->set(escargot::ESString::create("info"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        Window* wnd = (Window*)instance->globalObject()->extraPointerData();
+        wnd->starFish()->console()->info(toBrowserString(instance->currentExecutionContext()->readArgument(0).toString()));
+        return escargot::ESValue();
+    }, escargot::ESString::create("info"), 1, false));
     console->set(escargot::ESString::create("error"), escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         Window* wnd = (Window*)instance->globalObject()->extraPointerData();
         wnd->starFish()->console()->error(toBrowserString(instance->currentExecutionContext()->readArgument(0).toString()));

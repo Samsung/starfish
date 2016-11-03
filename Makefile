@@ -246,6 +246,7 @@ ifneq (,$(findstring tizen,$(HOST)))
   endif
   ifeq ($(TIZEN_PROFILE),wearable)
     CXXFLAGS += -DSTARFISH_TIZEN_WEARABLE
+    CXXFLAGS += -DSTARFISH_THREAD_POOL_SIZE=2
   endif
 endif
 

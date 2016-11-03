@@ -37,6 +37,16 @@ void Console::log(String* m)
     STARFISH_LOG_INFO("console.log: %s\n", m->utf8Data());
 }
 
+void Console::info(String* m)
+{
+#if defined(STARFISH_ENABLE_INSPECTOR)
+    if (m_starFish->inspector()) {
+        m_starFish->inspector()->sendInfoMessage(m);
+    }
+#endif
+    STARFISH_LOG_INFO("console.info: %s\n", m->utf8Data());
+}
+
 void Console::error(String* m)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
