@@ -40,9 +40,6 @@ INSPECTOR_SUPPORT=false
 # dom parser
 DOMPARSER_SUPPORT=false
 
-# WASU
-WASU_SUPPORT=false
-
 $(info goal... $(MAKECMDGOALS))
 
 ifneq (,$(findstring x86,$(MAKECMDGOALS)))
@@ -178,7 +175,6 @@ ifeq ($(ARCH), x64)
   MEDIA_SUPPORT=true
   DOMPARSER_SUPPORT=true
   MULTIPAGE_SUPPORT=true
-  WASU_SUPPORT=true
   CXXFLAGS += -DSTARFISH_ENABLE_TEST
 else ifeq ($(ARCH), x86)
   CXXFLAGS += -m32 -mfpmath=sse -msse2
@@ -240,14 +236,12 @@ ifneq (,$(findstring tizen,$(HOST)))
     MEDIA_SUPPORT=true
     DOMPARSER_SUPPORT=true
     MULTIPAGE_SUPPORT=true
-    WASU_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_TV
     CXXFLAGS += -DSTARFISH_ENABLE_TEST
   endif
   ifeq ($(TIZEN_PROFILE),mobile)
     MEDIA_SUPPORT=true
     DOMPARSER_SUPPORT=true
-    WASU_SUPPORT=true
     CXXFLAGS += -DSTARFISH_TIZEN_MOBILE
   endif
   ifeq ($(TIZEN_PROFILE),wearable)
@@ -271,11 +265,6 @@ endif
 
 ifeq ($(MULTIPAGE_SUPPORT), true)
   CXXFLAGS += -DSTARFISH_ENABLE_MULTI_PAGE
-endif
-
-# for WASU support
-ifeq ($(WASU_SUPPORT), true)
-  CXXFLAGS += -DSTARFISH_ENABLE_WASU
 endif
 
 ifeq ($(DOMPARSER_SUPPORT), true)

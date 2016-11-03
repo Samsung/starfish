@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-#if defined(STARFISH_ENABLE_WASU) && !defined (__StarFishHTMLHeadingElement__)
+#ifndef __StarFishHTMLHeadingElement__
 #define __StarFishHTMLHeadingElement__
 
 #include "dom/HTMLElement.h"

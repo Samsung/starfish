@@ -30,6 +30,7 @@
 
 #include "HTMLHtmlElement.h"
 #include "HTMLHeadElement.h"
+#include "HTMLHeadingElement.h"
 #include "HTMLBodyElement.h"
 #include "HTMLDivElement.h"
 #include "HTMLImageElement.h"
@@ -46,9 +47,6 @@
 #include "HTMLVideoElement.h"
 #include "HTMLAudioElement.h"
 #include "HTMLTrackElement.h"
-#endif
-#ifdef STARFISH_ENABLE_WASU
-#include "HTMLHeadingElement.h"
 #endif
 #include "dom/Attr.h"
 #include "dom/xml/XMLSerializer.h"
