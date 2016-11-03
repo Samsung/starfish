@@ -207,7 +207,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         userAgentStyleSheet->addRule(rule);
     }
 
-#ifdef STARFISH_ENABLE_WASU
     {
         CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("h1"), CSSStyleRule::PseudoClass::None, document());
         CSSStyleValuePair pair;
@@ -466,7 +465,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
         userAgentStyleSheet->addRule(rule);
     }
-#endif
 
     m_styleResolver.addSheet(userAgentStyleSheet);
 

@@ -48,6 +48,10 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLBRElement(document);
     } else if (name == str->m_imgTagName.localNameAtomic()) {
         return new HTMLImageElement(document);
+    } else if (name == str->m_h1TagName.localNameAtomic() || name == str->m_h2TagName.localNameAtomic()
+        || name == str->m_h3TagName.localNameAtomic() || name == str->m_h4TagName.localNameAtomic()
+        || name == str->m_h5TagName.localNameAtomic() || name == str->m_h6TagName.localNameAtomic()) {
+        return new HTMLHeadingElement(document, name);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
@@ -61,13 +65,6 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
 #ifdef STARFISH_ENABLE_MULTI_PAGE
     else if (name == str->m_aTagName.localNameAtomic()) {
         return new HTMLAnchorElement(document);
-    }
-#endif
-#ifdef STARFISH_ENABLE_WASU
-    else if (name == str->m_h1TagName.localNameAtomic() || name == str->m_h2TagName.localNameAtomic()
-        || name == str->m_h3TagName.localNameAtomic() || name == str->m_h4TagName.localNameAtomic()
-        || name == str->m_h5TagName.localNameAtomic() || name == str->m_h6TagName.localNameAtomic()) {
-        return new HTMLHeadingElement(document, name);
     }
 #endif
     STARFISH_LOG_INFO("got unknown html element - %s\n", name.string()->utf8Data());
