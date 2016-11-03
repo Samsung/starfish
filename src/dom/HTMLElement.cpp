@@ -60,6 +60,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
         setAttributeEventListener(ss->m_focusin, value, this);
     } else if (name == ss->m_onfocusout) {
         setAttributeEventListener(ss->m_focusout, value, this);
+    } else if (name == ss->m_onkeydown) {
+        setAttributeEventListener(ss->m_keydown, value, this);
     }
 }
 
