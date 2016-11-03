@@ -408,87 +408,129 @@ public:
                                 delete[] data;
                                 */
 
-                                // uint8_t naluHeader[4] = { 0, 0, 0, 1 };
-                                std::vector<uint8_t> data;
-                                data.reserve(packet.m_dataSize * 1.5f);
+                                size_t destBufferSize = 0;
+                                size_t destBufferPtr = 0;
+                                size_t bufStart = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                size_t bufEnd = packet.m_dataSize + bufStart;
                                 size_t nalSize;
                                 size_t unitType;
-
-                                size_t bufStart = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
-                                size_t bufPtr = bufStart;
-                                size_t bufEnd = packet.m_dataSize + bufStart;
-                                uint8_t nalBuffer[32];
-
                                 STARFISH_RELEASE_ASSERT(m_nalLengthSize < 32);
+                                uint8_t nalBuffer[32];
                                 bool sawSps = 0, sawPps = 0, sawIdr = 0;
                                 bool shouldPrependSpsPps = false;
-                                while (bufPtr < bufEnd) {
-                                    // data.insert(data.end(), &naluHeader[0], &naluHeader[4]);
-                                    size_t s;
-                                    int err = 0;
-                                    source->onRead(m_nalLengthSize, s, err, nalBuffer);
-                                    data.insert(data.end(), &nalBuffer[0], &nalBuffer[m_nalLengthSize]);
-                                    if (err) {
-                                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                                    }
 
-                                    nalSize = 0;
-                                    for (size_t i = 0 ; i < m_nalLengthSize; i ++) {
-                                        nalSize = (nalSize << 8) | nalBuffer[i];
-                                    }
-                                    bufPtr += m_nalLengthSize;
-                                    source->onRead(1, s, err, nalBuffer);
-                                    data.insert(data.end(), &nalBuffer[0], &nalBuffer[1]);
-                                    if (err) {
-                                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                                    }
-                                    unitType = nalBuffer[0] & 0x1f;
-
-                                    if (unitType == 7) {
-                                        sawSps = true;
-                                    } else if (unitType == 8) {
-                                        sawPps = true;
-                                    } else if (unitType == 5) {
-                                        sawIdr = true;
-                                    }
-
-                                    // printf("type %d size %d\n", (int)unitType, (int)nalSize);
-
-                                    if ((bufPtr + nalSize) > bufEnd || nalSize < 0) {
-                                        // STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                                        STARFISH_LOG_ERROR("DemuxerMP4 toAnnexBFormat nalSizeError (%d)!!\n", (int)nalSize);
-                                        goto fail;
-                                    }
-
-                                    size_t dataHead = data.size();
-                                    if (nalSize) {
-                                        size_t nalDataSize = nalSize - 1;
-                                        data.resize(data.size() + nalDataSize);
-                                        source->onRead(nalDataSize, s, err, data.data() + dataHead);
+                                {
+                                    size_t bufOrignalPosition = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                    size_t bufPtr = bufStart;
+                                    while (bufPtr < bufEnd) {
+                                        size_t s;
+                                        int err = 0;
+                                        source->onRead(m_nalLengthSize, s, err, nalBuffer);
                                         if (err) {
                                             STARFISH_RELEASE_ASSERT_NOT_REACHED();
                                         }
-                                    } else {
-                                    }
-                                    bufPtr += nalSize;
-                                }
 
-                                if (sawIdr && !sawSps && !sawPps) {
-                                    data.insert(data.begin(), m_spsPpsInfo.begin(), m_spsPpsInfo.end());
+                                        nalSize = 0;
+                                        for (size_t i = 0 ; i < m_nalLengthSize; i ++) {
+                                            nalSize = (nalSize << 8) | nalBuffer[i];
+                                        }
+                                        bufPtr += m_nalLengthSize;
+                                        destBufferSize += m_nalLengthSize;
+                                        source->onRead(1, s, err, nalBuffer);
+                                        if (err) {
+                                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                        }
+                                        unitType = nalBuffer[0] & 0x1f;
+
+                                        if (unitType == 7) {
+                                            sawSps = true;
+                                        } else if (unitType == 8) {
+                                            sawPps = true;
+                                        } else if (unitType == 5) {
+                                            sawIdr = true;
+                                        }
+
+                                        if (sawIdr && !sawSps && !sawPps && !shouldPrependSpsPps) {
+                                            shouldPrependSpsPps = true;
+                                            destBufferSize += m_spsPpsInfo.size();
+                                        }
+
+                                        // printf("type %d size %d\n", (int)unitType, (int)nalSize);
+                                        if ((bufPtr + nalSize) > bufEnd || nalSize < 0) {
+                                            // STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                            STARFISH_LOG_ERROR("DemuxerMP4 toAnnexBFormat nalSizeError (%d)!!\n", (int)nalSize);
+                                            goto fail;
+                                        }
+
+                                        if (nalSize) {
+                                            size_t nalDataSize = nalSize - 1;
+                                            source->onSeek(nalDataSize, DemuxerSource::SeekWhenceCurrent);
+                                            if (err) {
+                                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                            }
+                                        } else {
+                                        }
+                                        bufPtr += nalSize;
+                                        destBufferSize += nalSize;
+                                    }
+
+                                    source->onSeek(bufOrignalPosition, DemuxerSource::SeekWhenceSet);
                                 }
 
                                 {
-                                    uint8_t* newData = new uint8_t[data.size()];
-                                    memcpy(newData, data.data(), data.size());
-                                    packet.m_data = newData;
-                                    packet.m_dataSize = data.size();
+                                    uint8_t* data = new uint8_t[destBufferSize];
+                                    size_t bufPtr = bufStart;
+
+                                    if (shouldPrependSpsPps) {
+                                        memcpy(&data[destBufferPtr], m_spsPpsInfo.data(), m_spsPpsInfo.size());
+                                        destBufferPtr += m_spsPpsInfo.size();
+                                    }
+
+                                    while (bufPtr < bufEnd) {
+                                        size_t s;
+                                        int err = 0;
+                                        source->onRead(m_nalLengthSize, s, err, nalBuffer);
+                                        if (err) {
+                                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                        }
+                                        memcpy(&data[destBufferPtr], nalBuffer, m_nalLengthSize);
+                                        destBufferPtr += m_nalLengthSize;
+
+                                        nalSize = 0;
+                                        for (size_t i = 0 ; i < m_nalLengthSize; i ++) {
+                                            nalSize = (nalSize << 8) | nalBuffer[i];
+                                        }
+                                        bufPtr += m_nalLengthSize;
+                                        source->onRead(1, s, err, nalBuffer);
+                                        if (err) {
+                                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                        }
+                                        memcpy(&data[destBufferPtr], nalBuffer, 1);
+                                        destBufferPtr += 1;
+                                        unitType = nalBuffer[0] & 0x1f;
+
+                                        if (nalSize) {
+                                            size_t nalDataSize = nalSize - 1;
+                                            source->onRead(nalDataSize, s, err, &data[destBufferPtr]);
+                                            destBufferPtr += nalDataSize;
+                                            if (err) {
+                                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                            }
+                                        } else {
+                                        }
+                                        bufPtr += nalSize;
+                                    }
+
+                                    STARFISH_ASSERT(destBufferPtr == destBufferSize);
+                                    packet.m_data = data;
+                                    packet.m_dataSize = destBufferSize;
                                     for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
                                         if (m_demuxerClients[j]->onDetectPacket(packet)) {
-                                            newData = nullptr;
+                                            data = nullptr;
                                             break;
                                         }
                                     }
-                                    delete[] newData;
+                                    delete[] data;
                                 }
                                 fail:
                                 source->onSeek(bufEnd, DemuxerSource::SeekWhenceSet);

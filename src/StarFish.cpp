@@ -152,7 +152,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     m_lineBreaker = icu::BreakIterator::createLineInstance(m_locale, code);
     STARFISH_RELEASE_ASSERT(code <= U_ZERO_ERROR);
     m_messageLoop = new MessageLoop(this);
-    m_threadPool = new ThreadPool(2, m_messageLoop);
+#ifndef STARFISH_THREAD_POOL_SIZE
+#define STARFISH_THREAD_POOL_SIZE 6
+#endif
+    m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
+
 }
 
 StarFish::~StarFish()

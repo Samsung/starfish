@@ -25,6 +25,7 @@ class Console : public gc {
 public:
     Console(StarFish* starFish);
     void log(String* m);
+    void info(String* m);
     void error(String* m);
     void warn(String* m);
 protected:
