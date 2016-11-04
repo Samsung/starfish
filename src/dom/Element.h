@@ -106,6 +106,7 @@ public:
 #endif
 
     virtual QualifiedName name() = 0;
+    String* tagName();
 
     /* Other methods (not in Node interface) */
 

@@ -539,22 +539,34 @@ String* String::fromInt(int i)
 {
     return String::fromUTF8(std::to_string(i).c_str());
 }
+template <typename StringType, typename VectorType>
+static VectorType splitString(const StringType& s, char seperator)
+{
+    VectorType output;
+    std::string::size_type prev_pos = 0, pos = 0;
+    while ((pos = s.find(seperator, pos)) != std::string::npos) {
+        StringType substring(s.substr(prev_pos, pos - prev_pos));
+        output.push_back(std::move(substring));
+        prev_pos = ++pos;
+    }
+
+    output.push_back(s.substr(prev_pos, pos - prev_pos)); // Last word
+    return output;
+}
 
 void String::split(char delim, Vector& tokens)
 {
     if (m_isASCIIString) {
-        std::stringstream ss;
-        ss << utf8Data();
-        std::string item;
-        while (std::getline(ss, item, delim)) {
-            tokens.push_back(String::fromUTF8(item.c_str()));
+        std::vector<ASCIIString, gc_allocator<ASCIIString>> ss = splitString<ASCIIString, std::vector<ASCIIString, gc_allocator<ASCIIString>>>(*asASCIIString(), delim);
+        for (size_t i = 0; i < ss.size(); i ++) {
+            ASCIIString& item = ss[i];
+            tokens.push_back(new StringDataASCII(std::move(item)));
         }
     } else {
-        std::basic_stringstream<char32_t> ss;
-        ss << toUTF32String().data();
-        std::basic_string<char32_t> item;
-        while (std::getline(ss, item, (char32_t)delim)) {
-            tokens.push_back(String::createUTF32String(UTF32String(item.begin(), item.end())));
+        std::vector<UTF32String, gc_allocator<UTF32String>> ss = splitString<UTF32String, std::vector<UTF32String, gc_allocator<UTF32String>>>(*asUTF32String(), delim);
+        for (size_t i = 0; i < ss.size(); i ++) {
+            UTF32String& item = ss[i];
+            tokens.push_back(new StringDataUTF32(std::move(item)));
         }
     }
 }

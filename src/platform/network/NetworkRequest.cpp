@@ -286,6 +286,20 @@ static SubstringRange parseParameterPart(const std::string& input, unsigned long
     return SubstringRange(tokenStart, tokenEnd - tokenStart);
 }
 
+static std::vector<std::string> split(const std::string& s, char seperator)
+{
+    std::vector<std::string> output;
+    std::string::size_type prev_pos = 0, pos = 0;
+    while ((pos = s.find(seperator, pos)) != std::string::npos) {
+        std::string substring(s.substr(prev_pos, pos - prev_pos));
+        output.push_back(substring);
+        prev_pos = ++pos;
+    }
+
+    output.push_back(s.substr(prev_pos, pos - prev_pos)); // Last word
+    return output;
+}
+
 void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
@@ -301,10 +315,13 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
     }
 
     if (readyState == HEADERS_RECEIVED) {
-        std::istringstream resp(m_responseHeaderData);
-        std::string header;
+        std::vector<std::string> s = split(m_responseHeaderData, '\n');
         std::string::size_type index;
-        while (std::getline(resp, header) && header != "\r") {
+        for (size_t i = 0; i < s.size(); i ++) {
+            std::string& header = s[i];
+            if (header == "\r") {
+                continue;
+            }
             index = header.find(':', 0);
             if (index != std::string::npos) {
                 std::string h = header.substr(0, index);

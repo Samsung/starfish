@@ -416,14 +416,23 @@ ifeq ($(MEDIA_SUPPORT), true)
 
     SRC += $(foreach dir, third_party/MP4Parse/source , $(wildcard $(dir)/MP4*.cpp))
     CXXFLAGS += -Ithird_party/MP4Parse/source/include
-
     ifneq (,$(findstring tizen,$(HOST)))
-      LIBAV_CURPATH=third_party/libav/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE)
+      ifneq ($(TIZEN_PROFILE),wearable)
+        LDFLAGS += -lavformat -lavcodec -lavutil
+      else
+        LIBAV_CURPATH=third_party/libav/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE)
+        CXXFLAGS += -I$(LIBAV_CURPATH)
+        LDFLAGS += -L$(LIBAV_CURPATH)/libavformat/
+        LDFLAGS += -L$(LIBAV_CURPATH)/libavcodec/
+        LDFLAGS += -L$(LIBAV_CURPATH)/libavutil/
+        LDFLAGS += -lavformat -lavcodec -lavutil
+        LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavformat/
+        LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavcodec/
+        LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavutil/
+      endif
     else
       LIBAV_CURPATH=third_party/libav/out/$(HOST)/$(ARCH)/$(MODE)
-    endif
-    CXXFLAGS += -I$(LIBAV_CURPATH)
-    ifneq ($(TIZEN_PROFILE),tv)
+      CXXFLAGS += -I$(LIBAV_CURPATH)
       LDFLAGS += -L$(LIBAV_CURPATH)/libavformat/
       LDFLAGS += -L$(LIBAV_CURPATH)/libavcodec/
       LDFLAGS += -L$(LIBAV_CURPATH)/libavutil/
@@ -431,10 +440,7 @@ ifeq ($(MEDIA_SUPPORT), true)
       LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavformat/
       LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavcodec/
       LDFLAGS += -Wl,-rpath $(LIBAV_CURPATH)/libavutil/
-    else
-      LDFLAGS += -lavformat -lavcodec -lavutil
     endif
-      LDFLAGS += -lavformat -lavcodec -lavutil
 
 endif
 
@@ -518,7 +524,6 @@ else ifneq (,$(findstring tizen,$(HOST)))
   LDFLAGS += --sysroot=$(TIZEN_SYSROOT)
   LDFLAGS +=  $(addprefix -l, $(TIZEN_LIB))
   LDFLAGS += -Ldeps/tizen/lib/tizen-$(TIZEN_PROFILE)-$(TIZEN_VERSION)-$(TIZEN_ARCH)
-
 
   # Workaround for platform gcc 4.6 + toolchain gcc 4.9
   ifneq ($(TIZEN_VERSION), 3.0)

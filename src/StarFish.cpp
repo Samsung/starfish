@@ -118,6 +118,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
                 if (fp_mem&&g_memLogDump)
                     fprintf(fp_mem, "%f %f\n", GC_get_memory_use() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
+                // malloc_stats();
 #else
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
