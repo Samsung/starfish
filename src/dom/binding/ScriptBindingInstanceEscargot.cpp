@@ -987,7 +987,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
         Node* nd = originalObj;
         if (nd->isElement()) {
-            return toJSString(nd->asElement()->localName()->toUpper());
+            return toJSString(nd->asElement()->tagName());
         } else {
             THROW_ILLEGAL_INVOCATION();
         }

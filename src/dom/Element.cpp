@@ -53,6 +53,15 @@
 
 namespace StarFish {
 
+String* Element::tagName()
+{
+    if (document()->isXMLDocument()) {
+        return localName();
+    } else {
+        return localName()->toUpper();
+    }
+}
+
 size_t Element::hasAttribute(QualifiedName name)
 {
     for (size_t i = 0; i < m_attributes.size(); i ++) {
