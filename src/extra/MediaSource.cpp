@@ -340,7 +340,7 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                     // currently, we choose the first stream of each media
 
                     SourceBufferList* activeSourceBuffers = this->activeSourceBuffers();
-                    double newDuration = 0;
+                    uint64_t newDurationMS = 0;
                     for (size_t i = 0; i < m_sourceBuffers->length(); i ++) {
                         STARFISH_ASSERT(m_sourceBuffers->at(i)->m_streamInfo.size() != 0);
                         const StreamInfoVector& streamInfo = m_sourceBuffers->at(i)->m_streamInfo[0];
@@ -350,8 +350,8 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                                 if (m_activeVideoSourceBuffer == nullptr) {
                                     m_activeVideoSourceBuffer = m_sourceBuffers->at(i);
                                     m_activeVideoStreamIndex = streamInfo[j]->m_streamIndex;
-                                    if (newDuration < streamInfo[j]->m_duration / 1000.0) {
-                                        newDuration = streamInfo[j]->m_duration / 1000.0;
+                                    if (newDurationMS < streamInfo[j]->m_duration) {
+                                        newDurationMS = streamInfo[j]->m_duration;
                                     }
                                     if (!thisBufferAdded) {
                                         activeSourceBuffers->addWithoutEvent(m_activeVideoSourceBuffer);
@@ -362,8 +362,8 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                                 if (m_activeAudioSourceBuffer == nullptr) {
                                     m_activeAudioSourceBuffer = m_sourceBuffers->at(i);
                                     m_activeAudioStreamIndex = streamInfo[j]->m_streamIndex;
-                                    if (newDuration < streamInfo[j]->m_duration / 1000.0) {
-                                        newDuration = streamInfo[j]->m_duration / 1000.0;
+                                    if (newDurationMS < streamInfo[j]->m_duration) {
+                                        newDurationMS = streamInfo[j]->m_duration;
                                     }
                                     if (!thisBufferAdded) {
                                         activeSourceBuffers->addWithoutEvent(m_activeVideoSourceBuffer);
@@ -373,9 +373,11 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                             }
                         }
                     }
-
-                    if (newDuration == 0) {
+                    double newDuration = 0;
+                    if (newDurationMS == 0) {
                         newDuration = std::numeric_limits<double>::infinity();
+                    } else {
+                        newDuration = newDurationMS / 1000.0;
                     }
 
                     setDuration(newDuration, false);
