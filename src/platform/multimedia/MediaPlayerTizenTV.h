@@ -35,6 +35,11 @@ public:
         m_lastVideoPts = m_lastAudioPts = element->defaultPlaybackStartPosition() * 1000;
         m_videoInitSegmentIndex = 0;
         m_audioInitSegmentIndex = 0;
+#ifndef NDEBUG
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaPlayerTizenTV::~MediaPlayerTizenTV (%p)\n", obj);
+        }, NULL, NULL, NULL);
+#endif
     }
 
     virtual void initDisplay()

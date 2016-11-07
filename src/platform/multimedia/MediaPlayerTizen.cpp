@@ -263,7 +263,7 @@ void MediaPlayerTizen::close()
     m_container = nullptr;
 
 #ifndef NDEBUG
-    STARFISH_LOG_INFO("MediaPlayerTizen::close() : Rooting count of player(%p) is %d\n", this, (int)m_starFish->countPointersInRootSet(this));
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaPlayerTizen::close() : Rooting count of player(%p) is %d\n", this, (int)m_starFish->countPointersInRootSet(this));
 #endif
 }
 
