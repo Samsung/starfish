@@ -148,7 +148,7 @@ public:
                 return m_packetGroup[i];
             }
         }
-        MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex, SIZE_MAX);
+        MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex, SIZE_MAX, nullptr);
         m_packetGroup.push_back(newgroup);
         return newgroup;
     }
@@ -238,7 +238,7 @@ public:
             // NOTE: this packet should put to new group
             MediaPacketGroup* group = nullptr;
             if (m_currentGroupLastTimestamp == -1) {
-                MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex, SIZE_MAX, frameDuration, decodeTimestamp);
+                MediaPacketGroup* newgroup = new MediaPacketGroup(streamIndex, SIZE_MAX, nullptr, frameDuration, decodeTimestamp);
                 m_packetGroup.push_back(newgroup);
                 group = newgroup;
             } else {
@@ -549,17 +549,21 @@ void SourceBuffer::remove(double start, double end)
         parentMediaSource()->setReadyState(MediaSource::ReadyState::Open);
     }
 
-    // 3.5.6 Range Removal
+    setUpdating(true, UpdateState::Success);
     {
-        uint64_t startTimestamp = start * 1000;
-        uint64_t endTimestamp = end * 1000;
-
         Locker<Mutex> lock(*m_packetGroupMutex);
-        setUpdating(true, UpdateState::Success);
+        rangeRemoval(start * 1000, end * 1000);
+    }
+    setUpdating(false, UpdateState::Success);
+}
 
-        size_t groupIndex = 0;
-        while (groupIndex < m_packetGroup.size()) {
-            MediaPacketGroup* grp = m_packetGroup[groupIndex];
+void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp, StreamInfo::Type type)
+{
+    // 3.5.6 Range Removal
+    size_t groupIndex = 0;
+    while (groupIndex < m_packetGroup.size()) {
+        MediaPacketGroup* grp = m_packetGroup[groupIndex];
+        if (grp->m_streamInfo->m_type & type) {
             if (startTimestamp <= grp->m_groupTimestampStart && grp->m_groupTimestampEnd <= endTimestamp) {
                 // STARFISH_LOG_INFO("SourceBuffer::remove all %d was(%d->%d)\n", (int)groupIndex, (int)grp->m_groupTimestampStart, (int)grp->m_groupTimestampEnd);
 
@@ -638,7 +642,7 @@ void SourceBuffer::remove(double start, double end)
 
                 // STARFISH_LOG_INFO("SourceBuffer::remove hole %d %d %d\n", (int)groupIndex, (int)holeStart, (int)holeEnd);
 
-                MediaPacketGroup* newGroup = new MediaPacketGroup(grp->m_streamIndex, grp->m_initSegmentIndex);
+                MediaPacketGroup* newGroup = new MediaPacketGroup(grp->m_streamIndex, grp->m_initSegmentIndex, grp->m_streamInfo);
                 for (size_t i = holeEnd; i < grp->m_packets.size(); i ++) {
                     newGroup->m_packets.push_back(grp->m_packets[i]);
                 }
@@ -666,18 +670,16 @@ void SourceBuffer::remove(double start, double end)
                     delete grp;
                     m_packetGroup.erase(std::find(m_packetGroup.begin(), m_packetGroup.end(), grp));
                 }
-            } else {
-                groupIndex++;
             }
         }
-
-        auto iter2 = m_packetAccessCachePerStream.begin();
-        while (iter2 != m_packetAccessCachePerStream.end()) {
-            *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
-            iter2++;
-        }
+        groupIndex++;
     }
-    setUpdating(false, UpdateState::Success);
+
+    auto iter2 = m_packetAccessCachePerStream.begin();
+    while (iter2 != m_packetAccessCachePerStream.end()) {
+        *iter2 = std::make_pair<size_t, size_t>(SIZE_MAX, SIZE_MAX);
+        iter2++;
+    }
 }
 
 void SourceBuffer::codedFrameEviction()
@@ -811,6 +813,10 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 if (inputBuffer->m_sourceBuffer->m_indexPerInitSegment) {
                     for (size_t i = 0; i < cl->m_packetGroup.size(); i ++) {
                         cl->m_packetGroup[i]->m_initSegmentIndex = inputBuffer->m_sourceBuffer->m_indexPerInitSegment - 1;
+                        cl->m_packetGroup[i]->m_streamInfo = inputBuffer->m_sourceBuffer->streamInfo(cl->m_packetGroup[i]->m_initSegmentIndex, cl->m_packetGroup[i]->m_streamIndex);
+
+                        inputBuffer->m_sourceBuffer->rangeRemoval(cl->m_packetGroup[i]->m_groupTimestampStart, cl->m_packetGroup[i]->m_groupTimestampEnd, cl->m_packetGroup[i]->m_streamInfo->m_type);
+
                         STARFISH_LOG_INFO("packetGroupInfo initSegmentIndex%d streamIndex:%d, packetCount: %d(%dms->%dms)\n", (int)cl->m_packetGroup[i]->m_initSegmentIndex
                         , (int)cl->m_packetGroup[i]->m_streamIndex, (int)cl->m_packetGroup[i]->m_packets.size(), (int)cl->m_packetGroup[i]->m_groupTimestampStart, (int)cl->m_packetGroup[i]->m_groupTimestampEnd);
                     }

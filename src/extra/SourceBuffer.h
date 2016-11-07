@@ -55,13 +55,15 @@ struct SourceBufferData : public gc {
 struct MediaPacketGroup {
     size_t m_streamIndex;
     size_t m_initSegmentIndex;
+    StreamInfo* m_streamInfo;
     uint64_t m_maxFrameDuration;
     uint64_t m_groupTimestampStart;
     uint64_t m_groupTimestampEnd;
     std::vector<MediaPacket*> m_packets;
-    MediaPacketGroup(size_t idx, size_t initSegmentIdx, uint64_t duration = 0, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
+    MediaPacketGroup(size_t idx, size_t initSegmentIdx, StreamInfo* streamInfo, uint64_t duration = 0, uint64_t start = std::numeric_limits<uint64_t>::max(), uint64_t end = 0)
         : m_streamIndex(idx)
         , m_initSegmentIndex(initSegmentIdx)
+        , m_streamInfo(streamInfo)
         , m_maxFrameDuration(duration)
         , m_groupTimestampStart(start)
         , m_groupTimestampEnd(end)
@@ -187,6 +189,8 @@ public:
     StreamInfo* streamInfo(size_t initSegmentIndex, size_t streamIndex);
 
 protected:
+    // this method needs packet group lock
+    void rangeRemoval(uint64_t start, uint64_t end, StreamInfo::Type type = (StreamInfo::Type)((int)StreamInfo::Type::Video | (int)StreamInfo::Type::Audio | (int)StreamInfo::Type::Subtitle));
     void setUpdating(bool flag, UpdateState state);
 
     void attachedToParent(MediaSource* ms)
