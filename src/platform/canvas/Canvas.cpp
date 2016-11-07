@@ -837,7 +837,6 @@ public:
 
         // FIXME: evas textblock doesn't render 1 length space char
         bool isSpace = false;
-
         if (!lastState().m_hasUnderLine && !lastState().m_hasLineThrough) {
             if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ')
                 return;

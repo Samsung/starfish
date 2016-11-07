@@ -44,7 +44,9 @@ public:
 
 struct StreamInfo : public gc {
     enum Type {
-        Video, Audio, Subtitle
+        Video = 1,
+        Audio = 1 << 1,
+        Subtitle = 1 << 2
     };
     Type m_type;
     size_t m_streamIndex;
