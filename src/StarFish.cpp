@@ -291,9 +291,6 @@ void StarFish::addPointerInRootSet(void *ptr)
     } else {
         iter->second++;
     }
-#ifndef NDEBUG
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] %p added to RootSet : count %d\n", ptr, (int)countPointersInRootSet(ptr));
-#endif
 }
 
 void StarFish::removePointerFromRootSet(void *ptr)
@@ -306,9 +303,6 @@ void StarFish::removePointerFromRootSet(void *ptr)
             iter->second--;
         }
     }
-#ifndef NDEBUG
-    STARFISH_LOG_INFO("[TRACE_MSE_GC] %p removed to RootSet : count %d\n", ptr, (int)countPointersInRootSet(ptr));
-#endif
 }
 
 #ifndef NDEBUG
