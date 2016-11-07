@@ -276,6 +276,9 @@ void StarFish::addPointerInRootSet(void *ptr)
     } else {
         iter->second++;
     }
+#ifndef NDEBUG
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] %p added to RootSet : count %d\n", ptr, (int)countPointersInRootSet(ptr));
+#endif
 }
 
 void StarFish::removePointerFromRootSet(void *ptr)
@@ -288,7 +291,22 @@ void StarFish::removePointerFromRootSet(void *ptr)
             iter->second--;
         }
     }
+#ifndef NDEBUG
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] %p removed to RootSet : count %d\n", ptr, (int)countPointersInRootSet(ptr));
+#endif
 }
+
+#ifndef NDEBUG
+size_t StarFish::countPointersInRootSet(void* ptr)
+{
+    auto iter = m_rootMap.find(ptr);
+    if (iter != m_rootMap.end()) {
+        return iter->second;
+    } else {
+        return 0;
+    }
+}
+#endif
 
 bool StarFish::stringToBlobURLString(String* url, BlobURLStore& store)
 {
@@ -553,7 +571,7 @@ BlobURLStore StarFish::addMediaSourceInBlobURLStore(MediaSource* ptr)
 void StarFish::removeMediaSourceFromBlobURLStore(MediaSource* ptr)
 {
 #ifndef NDEBUG
-    STARFISH_LOG_INFO("[TRACKMSEGC] StarFish::removeMediaSourceFromBlobURLStore\n");
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] StarFish::removeMediaSourceFromBlobURLStore\n");
     {
         BlobURLStore s;
         s.m_blob = ptr;
