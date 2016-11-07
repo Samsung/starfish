@@ -87,6 +87,12 @@ static double process_mem_usage()
 #endif
 
 static bool g_starFishGlobalInit = false;
+typedef void (*GCCollectionEventListenter)(GC_EventType);
+static std::list<GCCollectionEventListenter> g_gcCollectionEventListenterList;
+void addGCCollectionListener(void (*fn)(GC_EventType))
+{
+    g_gcCollectionEventListenterList.push_back(fn);
+}
 
 StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* timezoneID, void* win, int w, int h, float defaultFontSizeMultiplier)
     : m_locale(icu::Locale::createFromName(locale))
@@ -112,7 +118,8 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
         {
             STARFISH_LOG_ERROR(msg, arg);
         });
-        GC_set_on_collection_event([](GC_EventType evtType) {
+
+        addGCCollectionListener([](GC_EventType evtType) {
             if (GC_EVENT_PRE_START_WORLD == evtType) {
 #ifdef STARFISH_ENABLE_TEST
                 if (fp_mem&&g_memLogDump)
@@ -123,6 +130,14 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);
 #endif
                 // malloc_stats();
+            }
+        });
+
+        GC_set_on_collection_event([](GC_EventType evtType) {
+            auto iter = g_gcCollectionEventListenterList.begin();
+            while (iter != g_gcCollectionEventListenterList.end()) {
+                (*iter)(evtType);
+                iter++;
             }
         });
         GC_set_free_space_divisor(64);

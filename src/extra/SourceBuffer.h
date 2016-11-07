@@ -83,6 +83,7 @@ struct MediaPacketGroup {
 
 typedef std::vector<uint8_t, gc_allocator<uint8_t>> SourceBufferDataVector;
 typedef std::vector<StreamInfo*, gc_allocator<StreamInfo*>> StreamInfoVector;
+
 class SourceBuffer : public EventTarget {
 public:
     friend class MediaSource;
