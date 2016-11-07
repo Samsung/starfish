@@ -336,6 +336,8 @@ template<> struct equal_to<StarFish::BlobURLStore> {
 
 namespace StarFish {
 
+void addGCCollectionListener(void (*fn)(GC_EventType));
+
 // you must call delete
 // StarFish::StarFish function is NOT THREAD-SAFE
 class StarFish : public gc {

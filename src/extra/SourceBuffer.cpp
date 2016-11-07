@@ -27,8 +27,14 @@
 #include "extra/TimeRanges.h"
 
 #define STARFISH_ENABLE_TIMER
+#define TRACE_MSE_GC
 
 namespace StarFish {
+
+#ifdef TRACE_MSE_GC
+static std::list<SourceBuffer*> g_sourceBufferList;
+static bool g_traceMSEGCInited = false;
+#endif
 
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
@@ -322,7 +328,43 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
         STARFISH_LOG_INFO("[TRACE_MSE_GC] SourceBuffer::~SourceBuffer (%p)\n", obj);
         SourceBuffer* nr = (SourceBuffer*)obj;
         nr->clearAll();
+        g_sourceBufferList.remove(nr);
     }, NULL, NULL, NULL);
+#ifdef TRACE_MSE_GC
+
+// #define TRACE_MSE_GC_DETAIL
+    g_sourceBufferList.push_back(this);
+    if (!g_traceMSEGCInited) {
+        g_traceMSEGCInited = true;
+        addGCCollectionListener([](GC_EventType) {
+            size_t totalDataSize = 0;
+
+            auto iter = g_sourceBufferList.begin();
+
+            while (iter != g_sourceBufferList.end()) {
+                SourceBuffer* sb = *iter;
+#ifdef TRACE_MSE_GC_DETAIL
+                STARFISH_LOG_INFO("[TRACE_MSE_GC] SourceBuffer %p-----------------\n", sb);
+#endif
+                for (size_t i = 0; i < sb->m_packetGroup.size(); i ++) {
+                    std::vector<MediaPacket*>& p = sb->m_packetGroup[i]->m_packets;
+                    size_t dataSize = 0;
+                    for (size_t j = 0; j < p.size(); j ++) {
+                        dataSize += p[j]->m_dataSize;
+                    }
+#ifdef TRACE_MSE_GC_DETAIL
+                    STARFISH_LOG_INFO("[TRACE_MSE_GC] packetGroupInfo %p %d->%d %fMB\n",
+                        sb->m_packetGroup[i], (int)sb->m_packetGroup[i]->m_groupTimestampStart, (int)sb->m_packetGroup[i]->m_groupTimestampEnd, dataSize  / 1024.f / 1024.f);
+#endif
+                    totalDataSize += dataSize;
+                }
+                iter++;
+            }
+            STARFISH_LOG_INFO("[TRACE_MSE_GC] totalDataSize %fMB\n", totalDataSize / 1024.f / 1024.f);
+        });
+    }
+
+#endif
 }
 
 void SourceBuffer::clearAll()
