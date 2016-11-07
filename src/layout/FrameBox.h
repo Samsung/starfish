@@ -563,7 +563,14 @@ public:
     {
 
     }
+
     virtual void didCompsiteStackingContext(Canvas* c)
+    {
+
+    }
+
+    // this callback only called (establishesStackingContext && !needsGraphicsBuffer)
+    virtual void compsitingStackingContext(Canvas* c)
     {
 
     }
