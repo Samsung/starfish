@@ -34,7 +34,10 @@ public:
     {
         FrameReplaced::computeStyleFlags();
         m_flags.m_isEstablishesStackingContext = true;
-        m_flags.m_needsGraphicsBuffer = true;
+#ifndef STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER
+#define STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER true
+#endif
+        m_flags.m_needsGraphicsBuffer = STARFISH_FRAME_REPLACED_VIDEO_NEEDS_GRAPHICS_BUFFER;
     }
 
     virtual bool isFrameReplacedVideo()
