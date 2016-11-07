@@ -92,6 +92,11 @@ public:
         : MediaSourceClient()
         , m_player(player)
     {
+#ifndef NDEBUG
+        GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+            STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaPlayerTizenMediaSourceClient::~MediaPlayerTizenMediaSourceClient (%p)\n", obj);
+        }, NULL, NULL, NULL);
+#endif
     }
 
     virtual void activeSourceComputed()
@@ -256,6 +261,10 @@ void MediaPlayerTizen::close()
 
     m_nativePlayer = nullptr;
     m_container = nullptr;
+
+#ifndef NDEBUG
+    STARFISH_LOG_INFO("MediaPlayerTizen::close() : Rooting count of player(%p) is %d\n", this, (int)m_starFish->countPointersInRootSet(this));
+#endif
 }
 
 double MediaPlayerTizen::duration()
@@ -464,7 +473,7 @@ void MediaPlayerTizen::compleatePrepare()
 void MediaPlayerTizen::unprepareOperation()
 {
     if (m_nativePlayer) {
-        STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaPlayerTizen::unprepareOperation (%p)\n", this);
+        STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaPlayerTizen::unprepareOperation (%p)\n", this);
         stopPlaying();
 
         player_unprepare(m_nativePlayer);

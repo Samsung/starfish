@@ -41,6 +41,11 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_activeMediaSource(nullptr)
     , m_starFish(element->document()->window()->starFish())
 {
+#ifndef NDEBUG
+    GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
+        STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaPlayer::~MediaPlayer (%p)\n", obj);
+    }, NULL, NULL, NULL);
+#endif
 }
 
 void MediaPlayer::processNextOperationQueueInContainer()

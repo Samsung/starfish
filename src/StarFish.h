@@ -413,6 +413,9 @@ public:
 
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
+#ifndef NDEBUG
+    size_t countPointersInRootSet(void* ptr);
+#endif
 
     static bool stringToBlobURLString(String* url, BlobURLStore& result);
     static String* blobURLStoreToString(BlobURLStore store, String* origin);

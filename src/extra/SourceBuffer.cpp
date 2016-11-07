@@ -317,9 +317,9 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     m_demuxer = Demuxer::createDemuxer(m_type);
     m_demuxer->addClient(new DemuxerClientSourceBuffer());
 
-    STARFISH_LOG_INFO("[TRACK_MSE_GC] SourceBuffer::SourceBuffer (%p)\n", this);
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] SourceBuffer::SourceBuffer (%p)\n", this);
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        STARFISH_LOG_INFO("[TRACK_MSE_GC] SourceBuffer::~SourceBuffer (%p)\n", obj);
+        STARFISH_LOG_INFO("[TRACE_MSE_GC] SourceBuffer::~SourceBuffer (%p)\n", obj);
         SourceBuffer* nr = (SourceBuffer*)obj;
         nr->clearAll();
     }, NULL, NULL, NULL);

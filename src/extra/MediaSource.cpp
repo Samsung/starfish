@@ -41,9 +41,9 @@ MediaSource::MediaSource(StarFish* starFish)
     , m_shortestMediaDuration(std::numeric_limits<uint64_t>::max())
 {
 #ifndef NDEBUG
-    STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaSource::MediaSource (%p)\n", this);
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::MediaSource (%p)\n", this);
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
-        STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaSource::~MediaSource (%p)\n", obj);
+        STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::~MediaSource (%p)\n", obj);
     }, NULL, NULL, NULL);
 #endif
 }
@@ -254,7 +254,7 @@ bool MediaSource::attach(HTMLMediaElement* e)
 // 2.4.2 Detaching from a media element
 void MediaSource::detach()
 {
-    STARFISH_LOG_INFO("[TRACK_MSE_GC] MediaSource::detach()\n");
+    STARFISH_LOG_INFO("[TRACE_MSE_GC] MediaSource::detach()\n");
     // Update duration to NaN.
     m_duration = std::numeric_limits<double>::quiet_NaN(); // update duration directly for avoiding exception
     m_shortestMediaDuration = std::numeric_limits<uint64_t>::max();
