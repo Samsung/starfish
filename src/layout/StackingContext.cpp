@@ -262,6 +262,7 @@ void StackingContext::compositeStackingContext(Canvas* canvas)
         if (owner()->shouldApplyOverflow()) {
             canvas->clip(Rect(0, 0, owner()->width(), owner()->height()));
         }
+        owner()->compsitingStackingContext(canvas);
     }
 
     // Within each stacking context, the following layers are painted in back-to-front order:

@@ -52,6 +52,8 @@ public:
 
     virtual void paintReplaced(Canvas* canvas)
     {
+        if (!m_flags.m_needsGraphicsBuffer)
+            didCompsiteStackingContext(canvas);
     }
 
     virtual IntrinsicSize intrinsicSize()
@@ -68,6 +70,7 @@ public:
     virtual void willCompsiteStackingContext(Canvas* c)
     {
     }
+
     virtual void didCompsiteStackingContext(Canvas* c)
     {
         STARFISH_ASSERT(node()->isElement());
@@ -79,6 +82,12 @@ public:
         c->applyMatrixTo(absVideoRect);
         if (v->mediaPlayer())
             v->mediaPlayer()->drawVideo(c, videoRect, absVideoRect);
+    }
+
+    virtual void compsitingStackingContext(Canvas* c)
+    {
+        if (!m_flags.m_needsGraphicsBuffer)
+            didCompsiteStackingContext(c);
     }
 
 protected:
