@@ -745,6 +745,18 @@ public:
         return m_flags.m_needsGraphicsBuffer;
     }
 
+    bool isDocumentElement() const
+    {
+        return m_node->document() == m_node;
+    }
+
+    bool isBody() const
+    {
+        return m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLBodyElement();
+    }
+
+    Element* offsetParent();
+
 protected:
     struct {
         bool m_needsLayout : 1;

@@ -161,4 +161,27 @@ std::pair<bool, LayoutUnit> LayoutContext::readRegisteredLastLineBoxYPos(FrameBl
     return std::pair<bool, LayoutUnit>(true, r);
 }
 
+Element* Frame::offsetParent()
+{
+    if (isDocumentElement() || isBody())
+        return nullptr;
+
+    Node* node = nullptr;
+    for (Frame* ancestor = layoutParent(); ancestor; ancestor = ancestor->layoutParent()) {
+
+        node = ancestor->node();
+
+        if (!node)
+            continue;
+
+        if (ancestor->isPositionedElement())
+            break;
+
+        if (node->isElement() && node->asElement()->isHTMLElement() && node->asElement()->asHTMLElement()->isHTMLBodyElement())
+            break;
+    }
+
+    return node && node->isElement() ? node->asElement() : nullptr;
+}
+
 }

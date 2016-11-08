@@ -970,6 +970,17 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
     }, nullptr);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("offsetParent"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        if (originalObj->isElement()) {
+            return originalObj->asElement()->offsetParent() ? originalObj->asElement()->offsetParent()->scriptValue() : escargot::ESValue(escargot::ESValue::ESNull);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("localName"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
