@@ -94,6 +94,10 @@ void MediaPlayerTizenTV::setNativePlayerDefaultOptions(URL* url)
         player_set_x11_display_roi_mode(m_nativePlayer, roiMode);
         player_display_video_at_paused_state(m_nativePlayer, TRUE);
     }
+
+    player_set_buffer_size(m_nativePlayer, PLAYER_BUFFER_FOR_PLAY, PLAYER_BUFFER_SIZE_IN_SECOND, 1);
+    player_set_buffer_size(m_nativePlayer, PLAYER_BUFFER_FOR_RESUME, PLAYER_BUFFER_SIZE_IN_SECOND, 1);
+
 }
 
 void MediaPlayerTizenTV::drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
@@ -166,13 +170,13 @@ void MediaPlayerTizenTV::seek(double time)
 
 void MediaPlayerTizenTV::prepareMediaSource()
 {
-    m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
-
     STARFISH_LOG_INFO("MediaPlayerTizenTV::prepareMediaSource\n");
     player_set_uri(m_nativePlayer, "external_demuxer://aaaa");
 
     setVideoStreamInfo();
     setAudioStreamInfo();
+
+    m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
 
     player_set_buffer_need_video_data_cb(m_nativePlayer, [](unsigned int size, void *user_data)
     {
@@ -224,7 +228,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
     uint64_t ptsStart = m_lastVideoPts;
     uint64_t streamIdx = m_activeMediaSource->activeVideoStreamIndex();
 
-    while (m_lastVideoPts - ptsStart < 1000) {
+    while (m_lastVideoPts - ptsStart < 500) {
         std::pair<MediaPacket*, size_t> packet = m_activeMediaSource->activeVideoSourceBuffer()->findProperMediaPacket(streamIdx, m_lastVideoPts);
 
         if (!packet.first) {
@@ -280,7 +284,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
     uint64_t ptsStart = m_lastAudioPts;
     uint64_t streamIdx = m_activeMediaSource->activeAudioStreamIndex();
 
-    while (m_lastAudioPts - ptsStart < 1000) {
+    while (m_lastAudioPts - ptsStart < 500) {
         std::pair<MediaPacket*, size_t> packet = m_activeMediaSource->activeAudioSourceBuffer()->findProperMediaPacket(streamIdx, m_lastAudioPts);
 
         if (!packet.first) {

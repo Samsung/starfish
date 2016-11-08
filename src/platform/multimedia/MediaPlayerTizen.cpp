@@ -26,10 +26,6 @@
 #include "platform/canvas/Canvas.h"
 #include "platform/threading/Thread.h"
 #include "platform/window/Window.h"
-#include "extra/MediaSource.h"
-#include "extra/SourceBuffer.h"
-#include "extra/Blob.h"
-#include "extra/TimeRanges.h"
 
 #define PLAYER_DEBUG
 #ifdef PLAYER_DEBUG
@@ -124,7 +120,6 @@ public:
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
-    , m_inPlaying(false)
     , m_alive(true)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)
@@ -134,7 +129,6 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_audioBufferMutex(new Mutex())
     , m_preparedCallback(nullptr)
     , m_canvasSurface(nullptr)
-    , m_currentTimeUpdateTimer(SIZE_MAX)
 {
     player_create(&m_nativePlayer);
     initDisplay();
@@ -254,6 +248,8 @@ void MediaPlayerTizen::close()
     m_alive = false;
     if (m_inPrepare)
         return;
+
+    stopPlaying();
 
     unprepareOperation();
     if (m_nativePlayer)
