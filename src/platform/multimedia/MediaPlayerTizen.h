@@ -49,7 +49,6 @@ public:
     virtual void prepare(URL* url);
     virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(URL* url);
-    virtual void prepareMediaSource();
     virtual void printNativePlayerError(int errorCode);
     virtual void fillVideoBuffer(bool useLock = true);
     virtual void fillAudioBuffer(bool useLock = true);
@@ -100,9 +99,9 @@ public:
 
     virtual double duration();
     virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect);
+    virtual void prepareMediaSource();
 
     bool m_inPrepare;
-    bool m_inPlaying;
     bool m_alive;
     bool m_isVideoBufferUnderrunState;
     bool m_isAudioBufferUnderrunState;
@@ -114,8 +113,6 @@ public:
     void (*m_preparedCallback)(void*);
     CanvasSurface* m_canvasSurface;
     player_h m_nativePlayer;
-    size_t m_currentTimeUpdateTimer;
-    unsigned long m_videoWidth, m_videoHeight;
 };
 }
 

@@ -26,39 +26,21 @@
 
 namespace StarFish {
 
-#if !defined(STARFISH_TIZEN)
-MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
-{
-    return new MediaPlayer(element);
-}
-#endif
-
 MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     : m_isLooping(false)
     , m_hasVideo(false)
+    , m_inPlaying(false)
     , m_playbackState(PLAYBACK_STATE_NONE)
     , m_container(element)
     , m_activeMediaSource(nullptr)
     , m_starFish(element->document()->window()->starFish())
+    , m_currentTimeUpdateTimer(SIZE_MAX)
 {
 }
 
 void MediaPlayer::processNextOperationQueueInContainer()
 {
     m_container->processNextOperationQueue();
-}
-
-void MediaPlayer::prepare(URL* url)
-{
-    if (url->isBlobURL()) {
-        BlobURLStore store;
-        if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
-            return;
-        }
-        if (m_starFish->isValidMediaSourceBlobURL(store)) {
-            ((MediaSource*)store.m_blob)->attach(m_container);
-        }
-    }
 }
 
 }

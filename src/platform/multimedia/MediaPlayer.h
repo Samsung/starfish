@@ -21,6 +21,10 @@
 #define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
 
 #include "util/URL.h"
+#include "extra/MediaSource.h"
+#include "extra/SourceBuffer.h"
+#include "extra/Blob.h"
+#include "extra/TimeRanges.h"
 
 namespace StarFish {
 
@@ -42,65 +46,43 @@ public:
     };
 
     static MediaPlayer* create(HTMLMediaElement* element);
-    virtual void close()
-    {
-    }
-
-    virtual void play()
-    {
-    }
-
-    virtual void pause()
-    {
-    }
-
-    virtual void seek(double time)
-    {
-    }
-
+    virtual void close() = 0;
+    virtual void play() = 0;
+    virtual void pause() = 0;
+    virtual void seek(double time) = 0;
     void setLoop(bool loop) { m_isLooping = true; }
-
     bool loop()
     {
         return m_isLooping;
     }
 
-    virtual void prepare(URL* url);
-    virtual double currentTime()
-    {
-        return 0;
-    }
-
-    virtual double duration()
-    {
-        return 0;
-    }
-
-    virtual void setVolume(double volume)
-    {
-    }
-
-    virtual void setMuted(bool muted)
-    {
-    }
+    virtual void prepare(URL* url) = 0;
+    virtual double currentTime() = 0;
+    virtual double duration() = 0;
+    virtual void setVolume(double volume) = 0;
+    virtual void setMuted(bool muted) = 0;
 
     PlaybackState playbackState()
     {
         return m_playbackState;
     }
 
-    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect)
-    {
-    }
+    virtual void drawVideo(Canvas* canvas, const LayoutRect& videoRect, const LayoutRect& absVideoRect) = 0;
 
     virtual unsigned long videoWidth()
     {
-        return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
+        if (m_hasVideo)
+            return STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
+        else
+            return m_videoWidth;
     }
 
     virtual unsigned long videoHeight()
     {
-        return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
+        if (m_hasVideo)
+            return STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
+        else
+            return m_videoHeight;
     }
 
     MediaSource* activeMediaSource()
@@ -108,16 +90,25 @@ public:
         return m_activeMediaSource;
     }
 
+    HTMLMediaElement* container()
+    {
+        return m_container;
+    }
+
+    virtual void prepareMediaSource() = 0;
 protected:
     MediaPlayer(HTMLMediaElement* element);
     void updateElementReadyState(HTMLMediaElement::ReadyState state);
     void processNextOperationQueueInContainer();
     bool m_isLooping;
     bool m_hasVideo;
+    bool m_inPlaying;
     PlaybackState m_playbackState;
     HTMLMediaElement* m_container;
     MediaSource* m_activeMediaSource;
     StarFish* m_starFish;
+    unsigned long m_videoWidth, m_videoHeight;
+    size_t m_currentTimeUpdateTimer;
 };
 
 }

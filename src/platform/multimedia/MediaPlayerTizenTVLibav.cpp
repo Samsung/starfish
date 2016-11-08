@@ -104,8 +104,8 @@ void MediaPlayerTizenTV::setVideoStreamInfo(size_t initSegmentIndex)
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
 
-        videoInfo.width = info->m_width;
-        videoInfo.height = info->m_height;
+        m_videoWidth = videoInfo.width = info->m_width;
+        m_videoHeight = videoInfo.height = info->m_height;
         videoInfo.framerate_den = info->m_timeBaseDen;
         videoInfo.framerate_num = info->m_timeBaseNum;
 
