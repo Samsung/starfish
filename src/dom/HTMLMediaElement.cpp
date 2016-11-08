@@ -809,6 +809,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestResourceSelection::processOperationQueue()\n");
     HTMLMediaElement* self = m_mediaElement;
+    self->processNextOperationQueue();
 
     // TODO If the media element's blocked-on-parser flag is false, then populate the list of pending text tracks.
     // TODO If the media element has an assigned media provider object, then let mode be object.
@@ -844,7 +845,6 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in parallel.
         self->initMediaPlayer();
-        self->processNextOperationQueue();
         STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection::resourceSelectionTask() - request prepare task\n");
         self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
         self->startOperationQueueIfNeeded();
@@ -874,6 +874,7 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
     if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING)
         return;
     mediaPlayer()->seek(m_seekPosition);
+    m_mediaElement->processNextOperationQueue();
     m_mediaElement->dispatchSeekingEvent();
     m_mediaElement->m_isSeeking = true;
 }
