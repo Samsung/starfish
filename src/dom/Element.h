@@ -193,6 +193,9 @@ public:
     uint32_t clientWidth();
     uint32_t clientHeight();
 
+    // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
+    Element* offsetParent();
+
     RareNodeMembers* ensureRareMembers();
     RareElementMembers* ensureRareElementMembers();
 

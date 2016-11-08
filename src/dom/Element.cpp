@@ -196,6 +196,12 @@ uint32_t Element::clientHeight()
     return (float)clientRect().height() + .5f;
 }
 
+Element* Element::offsetParent()
+{
+    Frame* frameObject = this->frame();
+    return frameObject ? frameObject->offsetParent() : nullptr;
+}
+
 void Element::setTextContent(String* text)
 {
     Text* node = new Text(document(), text);
