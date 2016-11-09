@@ -120,6 +120,7 @@ public:
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
+    , m_inSeeking(false)
     , m_alive(true)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)
@@ -159,6 +160,12 @@ void MediaPlayerTizen::handlePlayerError(int error)
         } else {
             close();
         }
+    } else if (m_inSeeking && error == PLAYER_ERROR_SEEK_FAILED) {
+        handleSeekend();
+        // close player if needed
+        if (!m_alive) {
+            close();
+        }
     }
 }
 
@@ -193,6 +200,8 @@ void MediaPlayerTizen::seekIfNeeded()
 void MediaPlayerTizen::handleSeekend()
 {
     if (isMainThread()) {
+        m_inSeeking = false;
+        m_starFish->removePointerFromRootSet(this);
         if (m_nativePlayer) {
             m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
         }
@@ -253,7 +262,7 @@ void MediaPlayerTizen::stopPlaying()
 void MediaPlayerTizen::close()
 {
     m_alive = false;
-    if (m_inPrepare)
+    if (m_inPrepare || m_inSeeking)
         return;
 
     stopPlaying();
