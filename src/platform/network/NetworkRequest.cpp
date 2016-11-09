@@ -672,6 +672,10 @@ void NetworkRequest::send(String* body)
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, this);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curlWriteCallback);
 
+#ifdef STARFISH_ENABLE_TEST
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+#endif
+
             if (m_method == POST_METHOD) {
                 curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body->utf8Data());
             } else {
