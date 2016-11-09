@@ -31,7 +31,6 @@
 #include <media/player.h>
 #include <media/player_product.h>
 
-
 namespace StarFish {
 
 void MediaPlayerTizenTV::printNativePlayerError(int errorCode)
@@ -124,6 +123,14 @@ void MediaPlayerTizenTV::seek(double time)
     player_get_state(m_nativePlayer, &state);
     uint64_t timestamp = time * 1000;
     int ret;
+
+    // Note : Seek operation's can occur in state PLAYING | PAUSED
+    // Note : player_set_position()'s callback will be invoked in non-main thread, so it needs to be rooted.
+    // Note : Rooting will just increase pointer count for the player in case of PLAYING,
+    //        and the count will decrease back when seeking done (or error case).
+    m_inSeeking = true;
+    m_starFish->addPointerInRootSet(this);
+
     if (m_activeMediaSource) {
         STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
         {
@@ -135,13 +142,14 @@ void MediaPlayerTizenTV::seek(double time)
                 m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
             m_lastVideoPts = m_lastAudioPts = timestamp;
 
-            ret = player_set_position(m_nativePlayer, time, [](void* data) {
+            int timeInMs = (int)(time * 1000.0);
+            ret = player_set_position(m_nativePlayer, timeInMs, [](void* data) {
                 // STARFISH_LOG_INFO("player_set_position_cb\n");
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
                 self->handleSeekend();
             }, this);
 
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %f state: %d \n", (float) time, (int)state);
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %d state: %d \n", timeInMs, (int)state);
 
             if (ret && m_inPrepare) {
                 // failed

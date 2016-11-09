@@ -873,9 +873,12 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
     // If the media element’s readyState is HAVE_NOTHING, abort these steps.
     if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING)
         return;
+
+    // Async seek task
     mediaPlayer()->seek(m_seekPosition);
     m_mediaElement->processNextOperationQueue();
     m_mediaElement->dispatchSeekingEvent();
+
     m_mediaElement->m_isSeeking = true;
 }
 
