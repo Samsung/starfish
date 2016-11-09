@@ -86,6 +86,7 @@ public:
 
     virtual void seek(double time)
     {
+        m_currentTimestamp = time * 1000;
     }
 
     virtual void prepare(URL* url);

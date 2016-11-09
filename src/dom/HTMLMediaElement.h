@@ -213,6 +213,11 @@ public:
     double defaultPlaybackRate();
     double playbackRate();
     double defaultPlaybackStartPosition();
+    double officialPlaybackPosition()
+    {
+        return m_officialPlaybackPosition;
+    }
+
     TimeRanges* played();
     TimeRanges* seekable();
 

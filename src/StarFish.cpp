@@ -84,6 +84,68 @@ static double process_mem_usage()
 
     return resident_set;
 }
+
+#include <stdio.h>
+#include <string.h>
+
+struct smaps_sizes {
+    int KernelPageSize;
+    int MMUPageSize;
+    int Private_Clean;
+    int Private_Dirty;
+    int Pss;
+    int Referenced;
+    int Rss;
+    int Shared_Clean;
+    int Shared_Dirty;
+    int Size;
+    int Swap;
+};
+
+smaps_sizes getSmapsStats()
+{
+    // Setup our pipe for reading and execute our command.
+    char command[512];
+    snprintf(command, 512, "cat /proc/%d/smaps", getpid());
+    FILE* file = popen(command, "r");
+
+    struct smaps_sizes sizes;
+    memset(&sizes, 0, sizeof sizes);
+
+    char line[BUFSIZ];
+    while (fgets(line, sizeof line, file)) {
+        // puts(line);
+        char substr[32];
+        int n;
+        if (sscanf(line, "%31[^:]: %d", substr, &n) == 2) {
+            if (strcmp(substr, "KernelPageSize") == 0) {
+                sizes.KernelPageSize += n;
+            } else if (strcmp(substr, "MMUPageSize") == 0) {
+                sizes.MMUPageSize += n;
+            } else if (strcmp(substr, "Private_Clean") == 0) {
+                sizes.Private_Clean += n;
+            } else if (strcmp(substr, "Private_Dirty") == 0) {
+                sizes.Private_Dirty += n;
+            } else if (strcmp(substr, "Pss") == 0) {
+                sizes.Pss += n;
+            } else if (strcmp(substr, "Referenced") == 0) {
+                sizes.Referenced += n;
+            } else if (strcmp(substr, "Rss") == 0) {
+                sizes.Rss += n;
+            } else if (strcmp(substr, "Shared_Clean") == 0) {
+                sizes.Shared_Clean += n;
+            } else if (strcmp(substr, "Shared_Dirty") == 0) {
+                sizes.Shared_Dirty += n;
+            } else if (strcmp(substr, "Size") == 0) {
+                sizes.Size += n;
+            } else if (strcmp(substr, "Swap") == 0) {
+                sizes.Swap += n;
+            }
+        }
+    }
+    fclose(file);
+    return sizes;
+}
 #endif
 
 static bool g_starFishGlobalInit = false;
@@ -124,7 +186,10 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 #ifdef STARFISH_ENABLE_TEST
                 if (fp_mem&&g_memLogDump)
                     fprintf(fp_mem, "%f %f\n", GC_get_memory_use() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
-                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
+
+                auto stat = getSmapsStats();
+
+                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB] RSS[%.1f MB] Private_Dirty[%.1fMB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f, process_mem_usage() / 1024.f, stat.Private_Dirty / 1024.f);
                 // malloc_stats();
 #else
                 STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n", GC_get_memory_use() / 1024.f / 1024.f, GC_get_heap_size() / 1024.f / 1024.f);

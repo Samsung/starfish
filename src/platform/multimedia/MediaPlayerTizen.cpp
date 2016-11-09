@@ -124,6 +124,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_isVideoBufferUnderrunState(false)
     , m_isAudioBufferUnderrunState(false)
     , m_needsPlayAfterPrepare(false)
+    , m_isEnded(false)
     , m_mseClient(nullptr)
     , m_videoBufferMutex(new Mutex())
     , m_audioBufferMutex(new Mutex())
@@ -206,6 +207,7 @@ void MediaPlayerTizen::handleSeekend()
 void MediaPlayerTizen::handleEnded()
 {
     if (isMainThread()) {
+        pause();
         if (m_nativePlayer) {
             m_container->dispatchPauseEventNow();
             m_container->mediaPlayerNotifyEndedItsContainer();
@@ -222,11 +224,16 @@ void MediaPlayerTizen::startPlaying()
 {
     if (!m_inPlaying) {
         m_inPlaying = true;
+        m_isEnded = false;
         player_start(m_nativePlayer);
         m_starFish->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = m_starFish->window()->setInterval([](Window* window, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-            self->m_container->setOfficialPlaybackPosition(self->currentTime());
+            if (self->currentTime() == self->m_container->officialPlaybackPosition() && self->m_isEnded) {
+                self->endOfStream();
+            } else {
+                self->m_container->setOfficialPlaybackPosition(self->currentTime());
+            }
         }, 250, this);
         seekIfNeeded();
     }
@@ -339,6 +346,7 @@ void MediaPlayerTizen::closePreparingMode()
 
 void MediaPlayerTizen::endOfStream()
 {
+    STARFISH_LOG_INFO("MediaPlayerTizen::endOfStream\n");
     mediaEndOperation();
     stopPlaying();
     m_playbackState = MediaPlayer::PLAYBACK_STATE_END;

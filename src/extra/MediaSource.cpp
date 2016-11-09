@@ -380,6 +380,8 @@ void MediaSource::didSourceBufferUpdated(SourceBuffer* src)
                         newDuration = newDurationMS / 1000.0;
                     }
 
+                    STARFISH_LOG_INFO("MediaSource didSourceBufferUpdated compute duration -> %lf\n", newDuration);
+
                     setDuration(newDuration, false);
                     m_isActiveBufferComputed = true;
 

@@ -180,7 +180,7 @@ public:
                         // video
                         VideoStreamInfo info;
                         info.m_streamIndex = track_id - 1;
-                        info.m_duration = mdhd->_timeScale > 0 ? (duration * 1000LL / mdhd->_timeScale) : 0;
+                        info.m_duration = duration;
                         // TODO read avg_frame_rate
                         info.m_timeBaseNum = 0;
                         info.m_timeBaseDen = 1;
@@ -196,7 +196,7 @@ public:
                     } else {
                         AudioStreamInfo info;
                         info.m_streamIndex = track_id - 1;
-                        info.m_duration = mdhd->_timeScale > 0 ? (duration * 1000LL / mdhd->_timeScale) : 0;
+                        info.m_duration = duration;
                         // TODO read codec name
                         info.m_codecName = "aac";
                         // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;

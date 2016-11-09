@@ -106,6 +106,7 @@ public:
     bool m_isVideoBufferUnderrunState;
     bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
+    bool m_isEnded;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;
     Mutex* m_audioBufferMutex;

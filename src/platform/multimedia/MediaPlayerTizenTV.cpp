@@ -239,6 +239,7 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
             STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer try to detect end of Video -> %d %d\n", (int)endTime, (int)m_lastVideoPts);
             uint64_t lastBufferedTime = m_activeMediaSource->activeVideoSourceBuffer()->lastBufferedTimestamp(streamIdx);
             if ((endTime - m_lastVideoPts) < 10 || ((m_lastVideoPts == lastBufferedTime) && (std::abs(endTime - lastBufferedTime) < 1000))) {
+                m_isEnded = true;
                 player_submit_packet(m_nativePlayer, 0, 0, 0, PLAYER_TRACK_TYPE_VIDEO);
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer detect end of Video!\n");
                 if (useLock)
@@ -295,6 +296,7 @@ void MediaPlayerTizenTV::fillAudioBuffer(bool useLock)
             STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer try to detect end of Audio -> %d %d\n", (int)endTime, (int)m_lastAudioPts);
             uint64_t lastBufferedTime = m_activeMediaSource->activeAudioSourceBuffer()->lastBufferedTimestamp(streamIdx);
             if ((endTime - m_lastAudioPts) < 10 || ((m_lastAudioPts == lastBufferedTime) && (std::abs(endTime - lastBufferedTime) < 1000))) {
+                m_isEnded = true;
                 player_submit_packet(m_nativePlayer, 0, 0, 0, PLAYER_TRACK_TYPE_AUDIO);
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::fillAudioBuffer detect end of Audio!\n");
                 if (useLock)
