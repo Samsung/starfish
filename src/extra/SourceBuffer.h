@@ -229,7 +229,6 @@ protected:
     double m_groupEndTimestamp;
     String* m_type;
     MediaSource* m_parentMediaSource;
-    Thread* m_sourceBufferUpdateThread;
     SourceBufferDataVector m_bufferUnprocessed;
     std::vector<SourceBufferDataVector, gc_allocator<SourceBufferDataVector>> m_bufferHeader;
     std::vector<StreamInfoVector, gc_allocator<StreamInfoVector>> m_streamInfo;

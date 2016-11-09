@@ -23,6 +23,7 @@
 #include "dom/HTMLMediaElement.h"
 #include "platform/multimedia/MediaPlayer.h"
 #include "platform/message_loop/MessageLoop.h"
+#include "platform/threading/ThreadPool.h"
 #include "MediaSource.h"
 #include "extra/TimeRanges.h"
 
@@ -304,7 +305,6 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     , m_demuxer(nullptr)
     , m_type(type)
     , m_parentMediaSource(nullptr)
-    , m_sourceBufferUpdateThread(nullptr)
     , m_packetGroupMutex(new Mutex())
 {
     m_mode = AppendMode::Segments;
@@ -691,10 +691,8 @@ void SourceBuffer::codedFrameEviction()
 void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 {
     STARFISH_ASSERT(inputBuffer->m_isProcessed == false);
-    STARFISH_ASSERT(m_sourceBufferUpdateThread == nullptr);
 
-    m_sourceBufferUpdateThread = new Thread();
-    m_sourceBufferUpdateThread->run(m_starFish->messageLoop(), [](void* data) -> void* {
+    m_starFish->threadPool()->addWork([](void* data) -> void* {
         SourceBufferData* inputBuffer = (SourceBufferData*)data;
 #ifdef STARFISH_ENABLE_TIMER
         Timer timer("[TRACE_MSE_PROFILE] SourceBuffer::bufferAppend");
@@ -830,7 +828,6 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
                 std::vector<MediaPacketGroup*>().swap(cl->m_packetGroup);
                 std::vector<StreamProcessInfo>().swap(cl->m_streamProcessInfo);
 
-                inputBuffer->m_sourceBuffer->m_sourceBufferUpdateThread = nullptr;
                 inputBuffer->m_isProcessed = true;
             }
             inputBuffer->m_sourceBuffer->setUpdating(false, UpdateState::Success);

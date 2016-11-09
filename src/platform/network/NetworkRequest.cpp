@@ -259,33 +259,6 @@ static void skipSpaces(const std::string& input, unsigned long int& startIndex)
         ++startIndex;
 }
 
-static SubstringRange parseParameterPart(const std::string& input, unsigned long int& startIndex)
-{
-    unsigned inputLength = input.length();
-    unsigned long int tokenStart = startIndex;
-    unsigned long int& tokenEnd = startIndex;
-
-    if (tokenEnd >= inputLength)
-        return SubstringRange();
-
-    bool quoted = input[tokenStart] == '\"';
-    bool escape = false;
-
-    while (tokenEnd < inputLength) {
-        char32_t c = input[tokenEnd];
-        if (quoted && tokenStart != tokenEnd && c == '\"' && !escape)
-            return SubstringRange(tokenStart + 1, tokenEnd++ - tokenStart - 1);
-        if (!quoted && (c == ';' || c == '='))
-            return SubstringRange(tokenStart, tokenEnd - tokenStart);
-        escape = !escape && c == '\\';
-        ++tokenEnd;
-    }
-
-    if (quoted)
-        return SubstringRange();
-    return SubstringRange(tokenStart, tokenEnd - tokenStart);
-}
-
 static std::vector<std::string> split(const std::string& s, char seperator)
 {
     std::vector<std::string> output;
@@ -349,42 +322,6 @@ void NetworkRequest::changeReadyState(ReadyState readyState, bool isExplicitActi
 
                     m_responseMimeType = String::fromUTF8(part.substr(index, semiColonIndex - index).data());
                     index = semiColonIndex + 1;
-
-                    /*while (true) {
-                        skipSpaces(part, index);
-                        SubstringRange keyRange = parseParameterPart(part, index);
-                        if (!keyRange.second || index >= contentTypeLength) {
-                            STARFISH_LOG_ERROR("Invalid Content-Type parameter name. (at %ld)\n", index);
-                            break;
-                        }
-
-                        // Should we tolerate spaces here?
-                        if (part[index++] != '=' || index >= contentTypeLength) {
-                            STARFISH_LOG_ERROR("Invalid Content-Type malformed parameter (at %ld)\n.", index);
-                            break;
-                        }
-
-                        // Should we tolerate spaces here?
-                        SubstringRange valueRange = parseParameterPart(part, index);
-
-                        if (!valueRange.second) {
-                            STARFISH_LOG_ERROR("Invalid Content-Type, invalid parameter value (at %ld, for '%s').\n", index, part.substr(keyRange.first, keyRange.second).data());
-                            break;
-                        }
-
-                        // Should we tolerate spaces here?
-                        if (index < contentTypeLength && part[index++] != ';') {
-                            STARFISH_LOG_ERROR("Invalid Content-Type, invalid character at the end of key/value parameter (at %ld).\n", index);
-                            break;
-                        }
-
-                        setContentTypeParameter(part, keyRange, valueRange);
-
-                        if (index >= contentTypeLength)
-                            break;
-                    }
-                    */
-
                 } else if (h == "Content-Transfer-Encoding") {
                     std::string part = d;
                     trim(part);
