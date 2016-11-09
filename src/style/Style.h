@@ -1248,6 +1248,115 @@ protected:
     Element* m_element;
 };
 
+class CSSSelector : public gc {
+public:
+    CSSSelector()
+        : m_type(UnKnown)
+        , m_relation(None)
+        , m_pseudotype(PseudoNone)
+        , m_selectorText(String::emptyString)
+    {
+    }
+
+    enum Type {
+        UnKnown,
+        Universal,
+        Tag,
+        Id,
+        Class
+    };
+
+    enum RelationType {
+        None,
+        SubSelector, // No combinator
+        Descendant, // "Space" combinator
+        Child, // > combinator
+        DirectAdjacent, // + combinator
+        IndirectAdjacent // ~ combinator
+    };
+
+    enum PseudoType {
+        PseudoNone,
+        PseudoActive,
+        PseudoHover
+    };
+
+    Type type() const
+    {
+        return m_type;
+    }
+
+    void setType(Type type)
+    {
+        m_type = type;
+    }
+
+    RelationType relation() const
+    {
+        return m_relation;
+    }
+
+    void setRelation(RelationType relation)
+    {
+        m_relation = relation;
+    }
+
+    PseudoType pseudoType() const
+    {
+        return m_pseudotype;
+    }
+
+    void setPseudoType(PseudoType pseudoType)
+    {
+        m_pseudotype = pseudoType;
+    }
+
+    String* selectorText()
+    {
+        return m_selectorText;
+    }
+
+    void setSelectorText(String* selectorText)
+    {
+        m_selectorText = selectorText;
+    }
+
+    // http://www.w3.org/TR/css3-selectors/#specificity
+    // We use 256 as the base of the specificity number system.
+    // unsigned specificity() const;
+
+protected:
+    Type m_type;
+    RelationType m_relation;
+    PseudoType m_pseudotype;
+    String* m_selectorText;
+};
+
+class CSSSelectorList : public gc {
+public:
+    CSSSelectorList()
+    {
+    }
+
+    void addSelector(CSSSelector* selector)
+    {
+        m_selectors.push_back(selector);
+    }
+
+    void clear()
+    {
+        m_selectors.clear();
+    }
+
+    unsigned long length() const
+    {
+        return m_selectors.size();
+    }
+
+protected:
+    std::vector<CSSSelector*, gc_allocator<CSSSelector*> > m_selectors;
+};
+
 class CSSStyleRule : public ScriptWrappable {
     friend class StyleResolver;
 
@@ -1318,6 +1427,7 @@ protected:
     PseudoClass m_pseudoClass;
     String** m_ruleText;
     size_t m_ruleTextLength;
+    CSSSelectorList* m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
     Document* m_document;
 };
