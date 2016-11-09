@@ -110,6 +110,14 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
     registerFinalizer();
 }
 
+TextConverter::~TextConverter()
+{
+    if (m_converter) {
+        ucnv_close(m_converter);
+        m_converter = nullptr;
+    }
+}
+
 String* TextConverter::convert(const char* bytes, size_t len, bool isEndOfStream)
 {
     if (m_converter) {
@@ -170,6 +178,7 @@ void TextConverter::registerFinalizer()
         TextConverter* nr = (TextConverter*)obj;
         if (nr->m_converter) {
             ucnv_close(nr->m_converter);
+            nr->m_converter = nullptr;
         }
     }, NULL, NULL, NULL);
 }

@@ -9,6 +9,7 @@ class TextConverter : public gc {
 public:
     TextConverter(String* charsetName);
     TextConverter(String* mimetype, String* preferredEncoding, const char* bytes, size_t len);
+    ~TextConverter();
     String* convert(const char* bytes, size_t len, bool isEndOfStream);
     String* encoding()
     {
