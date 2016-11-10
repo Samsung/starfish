@@ -171,6 +171,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
 
+        mallopt(M_MMAP_THRESHOLD, 2048);
+        mallopt(M_MMAP_MAX, 1024 * 1024);
+
         GC_set_abort_func([](const char* msg) {
             STARFISH_LOG_ERROR("gc abort called\n");
             STARFISH_LOG_ERROR("%s\n", msg);
