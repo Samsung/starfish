@@ -299,6 +299,48 @@ static void printNativePlayerError(int errorCode)
     }
 }
 */
+
+// #define STARFISH_ENABLE_TV_MEMPS
+
+#ifdef STARFISH_ENABLE_TV_MEMPS
+#ifndef STARFISH_ENABLE_MULTIMEDIA
+#undef STARFISH_ENABLE_TV_MEMPS
+#endif
+#endif
+
+#ifdef STARFISH_ENABLE_TV_MEMPS
+#ifndef STARFISH_TIZEN_TV
+#undef STARFISH_ENABLE_TV_MEMPS
+#endif
+#endif
+
+#ifdef STARFISH_ENABLE_TV_MEMPS
+#include <chrono>
+
+static void printMemps(std::chrono::time_point<std::chrono::system_clock>& startTime)
+{
+    std::chrono::time_point<std::chrono::system_clock> currentTime = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = currentTime - startTime;
+    char command[512];
+#ifdef STARFISH_TIZEN_TV_EMULATOR
+    snprintf(command, 512, "memps -v 2> /dev/null | sed 's/^[ \\t]*//' | sed 's/,//g' | grep -E %d | grep -v grep | egrep -o '[0-9]+ '", getpid());
+    FILE* file = popen(command, "r");
+    char line[512];
+    int tmp, pss, gempss, gemrss;
+    fscanf(file, "%d%d%d%d%d%d%d%d%d%d%d", &tmp, &tmp, &tmp, &tmp, &tmp, &tmp, &pss, &tmp, &gempss, &gemrss, &tmp);
+    STARFISH_LOG_INFO("[MEMPS] PSS: %d, GEM_PSS: %d, GEM_RSS: %d\n", pss, gempss, gemrss);
+#else
+    snprintf(command, 512, "vd_memps -x 1 2> /dev/null  | sed 's/^[ \\t]*//' | sed 's/,//g' | grep -E %d | grep -v grep | egrep -o '[0-9]+ '", getpid());
+    FILE* file = popen(command, "r");
+    char line[512];
+    int tmp, pss, gem, maliprocess, malidevice;
+    fscanf(file, "%d%d%d%d%d%d%d%d%d%d%d%d", &tmp, &tmp, &tmp, &tmp, &tmp, &tmp, &pss, &tmp, &tmp, &gem, &maliprocess, &malidevice);
+    STARFISH_LOG_INFO("[VD_MEMPS][%lf sec] PSS: %d, GEM: %d, MALI(PROCESS): %d, MALI(DEVICE): %d\n", diff.count(), pss, gem, maliprocess, malidevice);
+#endif
+    fclose(file);
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     /*
@@ -685,6 +727,21 @@ int main(int argc, char *argv[])
 
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+
+#ifdef STARFISH_ENABLE_TV_MEMPS
+    pthread_t vdm;
+    pthread_attr_t attrAttr;
+    pthread_attr_init(&attrAttr);
+    pthread_create(&vdm, &attrAttr, [](void* data) -> void* {
+        std::chrono::time_point<std::chrono::system_clock> startTime = std::chrono::system_clock::now();
+        while (1) {
+            // Print result of memps (or vd_memps) every 5 seconds
+            sleep(5);
+            printMemps(startTime);
+        }
+        return NULL;
+    }, NULL);
+#endif
 
     StarFish::StarFish* sf = new StarFish::StarFish((StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr, width, height, 1);
 
