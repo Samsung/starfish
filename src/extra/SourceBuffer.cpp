@@ -336,7 +336,10 @@ SourceBuffer::SourceBuffer(StarFish* starFish, String* type)
     g_sourceBufferList.push_back(this);
     if (!g_traceMSEGCInited) {
         g_traceMSEGCInited = true;
-        addGCCollectionListener([](GC_EventType) {
+        addGCCollectionListener([](GC_EventType e) {
+            if (GC_EVENT_PRE_START_WORLD != e) {
+                return;
+            }
             size_t totalDataSize = 0;
 
             auto iter = g_sourceBufferList.begin();
