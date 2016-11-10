@@ -55,6 +55,7 @@ TextConverter::TextConverter(String* mimetype, String* preferredEncoding, const 
 
     match = ucsdet_detectAll(det, &num, &err);
     if (U_FAILURE(err)) {
+        ucsdet_close(det);
         return;
     }
 

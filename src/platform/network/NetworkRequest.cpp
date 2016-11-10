@@ -155,8 +155,8 @@ NetworkRequest::NetworkRequest(Document* document)
 void NetworkRequest::initVariables()
 {
     m_responseMimeType = String::emptyString;
-    m_response.clear();
-    m_responseHeaderData.clear();
+    NetworkRequestResponse().swap(m_response);
+    NetworkRequestResponseHeader().swap(m_responseHeaderData);
     m_isSync = false;
     m_gotError = false;
     m_containsBase64Content = false;
