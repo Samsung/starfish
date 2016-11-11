@@ -1250,14 +1250,6 @@ protected:
 
 class CSSSelector : public gc {
 public:
-    CSSSelector()
-        : m_type(UnKnown)
-        , m_relation(None)
-        , m_pseudotype(PseudoNone)
-        , m_selectorText(String::emptyString)
-    {
-    }
-
     enum Type {
         UnKnown,
         Universal,
@@ -1280,6 +1272,22 @@ public:
         PseudoActive,
         PseudoHover
     };
+
+    CSSSelector()
+        : m_type(UnKnown)
+        , m_relation(None)
+        , m_pseudotype(PseudoNone)
+        , m_selectorText(String::emptyString)
+    {
+    }
+
+    CSSSelector(Type type, RelationType relation, PseudoType pseudo, String* text)
+        : m_type(type)
+        , m_relation(relation)
+        , m_pseudotype(pseudo)
+        , m_selectorText(text)
+    {
+    }
 
     Type type() const
     {
@@ -1338,9 +1346,14 @@ public:
     {
     }
 
-    void addSelector(CSSSelector* selector)
+    CSSSelectorList(CSSSelector* selector)
     {
         m_selectors.push_back(selector);
+    }
+
+    void addSelector(CSSSelector* selector)
+    {
+        m_selectors.insert(m_selectors.begin(), selector);
     }
 
     void clear()
@@ -1348,9 +1361,19 @@ public:
         m_selectors.clear();
     }
 
-    unsigned long length() const
+    CSSSelector* at(int idx)
+    {
+        return m_selectors[idx];
+    }
+
+    unsigned long size() const
     {
         return m_selectors.size();
+    }
+
+    std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selectors()
+    {
+        return m_selectors;
     }
 
 protected:
@@ -1361,35 +1384,23 @@ class CSSStyleRule : public ScriptWrappable {
     friend class StyleResolver;
 
 public:
-    enum Kind {
-        UniversalSelector,
-        TypeSelector,
-        ClassSelector,
-        TypeClassSelector,
-        IdSelector,
-        TypeIdSelector,
-    };
-
-    enum PseudoClass {
-        None,
-        Active,
-        Hover,
-    };
-
-    CSSStyleRule(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document, CSSStyleDeclaration* decl)
+    CSSStyleRule(CSSSelector::Type type, String* selectorText, CSSSelector::PseudoType pseudoType, Document* document)
         : ScriptWrappable(this)
         , m_document(document)
     {
-        init(kind, ruleText, ruleTextLength, pc, document, decl);
+        CSSSelector* selector = new CSSSelector(type, CSSSelector::RelationType::None, pseudoType, selectorText);
+        CSSSelectorList* selectorList = new CSSSelectorList(selector);
+        m_selectorList = selectorList;
+        m_styleDeclaration = new CSSStyleDeclaration(document);
+        m_document = document;
     }
 
-    CSSStyleRule(Kind kind, String* ruleText, PseudoClass pc, Document* document)
+    CSSStyleRule(CSSSelectorList* selectorList, Document* document, CSSStyleDeclaration* decl)
         : ScriptWrappable(this)
+        , m_selectorList(selectorList)
+        , m_styleDeclaration(decl)
         , m_document(document)
     {
-        String** rt =  new(GC) String*[1];
-        rt[0] = ruleText;
-        init(kind, rt, 1, pc, document, new CSSStyleDeclaration(document));
     }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
@@ -1414,19 +1425,6 @@ public:
     }
 
 protected:
-    void init(Kind kind, String** ruleText, size_t ruleTextLength, PseudoClass pc, Document* document, CSSStyleDeclaration* decl)
-    {
-        m_kind = kind;
-        m_ruleText = ruleText;
-        m_ruleTextLength = ruleTextLength;
-        m_pseudoClass = pc;
-        m_styleDeclaration = decl;
-    }
-
-    Kind m_kind;
-    PseudoClass m_pseudoClass;
-    String** m_ruleText;
-    size_t m_ruleTextLength;
     CSSSelectorList* m_selectorList;
     CSSStyleDeclaration* m_styleDeclaration;
     Document* m_document;

@@ -2160,292 +2160,124 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         }
     }
 
+    // TODO: Consider selector's specificity.
     // first sheet is must user-agent style sheet!
     for (unsigned i = 0; i < m_sheets.size(); i++) {
         CSSStyleSheet* sheet = m_sheets[i];
 
-        // * selector
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::UniversalSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:universal-selector\n");
-#endif
-                auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                apply(*this, sheet->url(), cssValues, ret, parent);
-            }
-        }
+            bool isMatched = false;
+            unsigned idx = 0;
+            CSSSelectorList* selectorList = sheet->rules()[j]->m_selectorList;
+            CSSSelector* selector = selectorList->at(idx);
 
-        // type selector
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:type-selector\n");
-#endif
-                if (sheet->rules()[j]->m_ruleText[0]->equalsWithoutCase(element->localName())) {
-                    auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                    apply(*this, sheet->url(), cssValues, ret, parent);
-                }
-            }
-        }
-
-        // class selector
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::ClassSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:class-selector\n");
-#endif
-                auto className = element->classNames();
-                for (unsigned f = 0; f < className.size(); f++) {
-                    if (className[f]->equals(sheet->rules()[j]->m_ruleText[0])) {
-                        auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(*this, sheet->url(), cssValues, ret, parent);
-                    }
-                }
-            }
-        }
-
-        // type.class selector
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeClassSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:class-selector\n");
-#endif
-                if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
+            switch (selector->relation()) {
+            case CSSSelector::RelationType::None:
+                if (selector->type() == CSSSelector::Type::Universal) {
+                    isMatched = true;
+                } else if (selector->type() == CSSSelector::Type::Tag) {
+                    isMatched = selector->selectorText()->equalsWithoutCase(element->localName());
+                } else if (selector->type() == CSSSelector::Type::Id) {
+                    isMatched = selector->selectorText()->equalsWithoutCase(element->id());
+                } else if (selector->type() == CSSSelector::Type::Class) {
                     auto className = element->classNames();
                     for (unsigned f = 0; f < className.size(); f++) {
-                        if (className[f]->equals(sheet->rules()[j]->m_ruleText[1])) {
-                            auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(*this, sheet->url(), cssValues, ret, parent);
+                        if (selector->selectorText()->equals(className[f])) {
+                            isMatched = true;
+                            break;
                         }
                     }
                 }
-            }
-        }
-
-        // id selector
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::IdSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:id-selector\n");
-#endif
-                if (element->id()->equals(sheet->rules()[j]->m_ruleText[0])) {
-                    auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                    apply(*this, sheet->url(), cssValues, ret, parent);
-                }
-            }
-        }
-
-        // type#id selector
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeIdSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::None) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:id-selector\n");
-#endif
-                if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
-                    if (element->id()->equals(sheet->rules()[j]->m_ruleText[1])) {
+                if (isMatched) {
+                    if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone
+                        || ((element->state() & Node::NodeState::NodeStateActive) && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive)
+                        || ((element->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover)) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
                         apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
-            }
-        }
-    }
+                break;
 
-    // first sheet is must user-agent style sheet!
-    for (unsigned i = 0; i < m_sheets.size(); i++) {
-        CSSStyleSheet* sheet = m_sheets[i];
-        if ((element->state() & Node::NodeState::NodeStateHovered)) {
-            // * selector
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::UniversalSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Hover) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:universal-selector\n");
-#endif
-                    auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                    apply(*this, sheet->url(), cssValues, ret, parent);
-                }
-            }
-        }
-
-        if ((element->state() & Node::NodeState::NodeStateHovered)) {
-            // type selector
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Hover) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:type-selector\n");
-#endif
-                    if (sheet->rules()[j]->m_ruleText[0]->equalsWithoutCase(element->localName())) {
-                        auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(*this, sheet->url(), cssValues, ret, parent);
-                    }
-                }
-            }
-        }
-
-        if ((element->state() & Node::NodeState::NodeStateHovered)) {
-            // class selector
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::ClassSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Hover) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:class-selector\n");
-#endif
-                    auto className = element->classNames();
-                    for (unsigned f = 0; f < className.size(); f++) {
-                        if (className[f]->equals(sheet->rules()[j]->m_ruleText[0])) {
-                            auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(*this, sheet->url(), cssValues, ret, parent);
-                        }
-                    }
-                }
-            }
-        }
-
-        if ((element->state() & Node::NodeState::NodeStateHovered)) {
-            // type.class selector
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeClassSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Hover) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:class-selector\n");
-#endif
-                    if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
+            // TODO: Consider all case. (e.g., Universal#id, Universal.class, nested subselector, etc.)
+            //       Assume that pseudo-class selector is located at the end.
+            case CSSSelector::RelationType::SubSelector:
+                {
+                CSSSelector* s = selector;
+                if (s->selectorText()->equalsWithoutCase(element->localName())) {
+                    s = selectorList->at(++idx);
+                    if (s->type() == CSSSelector::Type::Universal) {
+                        isMatched = true;
+                    } else if (s->type() == CSSSelector::Type::Id) {
+                        isMatched = s->selectorText()->equalsWithoutCase(element->id());
+                    } else if ((s->type() == CSSSelector::Type::Class)) {
                         auto className = element->classNames();
                         for (unsigned f = 0; f < className.size(); f++) {
-                            if (className[f]->equals(sheet->rules()[j]->m_ruleText[1])) {
-                                auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                                apply(*this, sheet->url(), cssValues, ret, parent);
+                            if (s->selectorText()->equals(className[f])) {
+                                isMatched = true;
+                                break;
                             }
                         }
                     }
                 }
-            }
-        }
-
-        if ((element->state() & Node::NodeState::NodeStateHovered)) {
-            // id selector
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::IdSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Hover) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:id-selector\n");
-#endif
-                    if (element->id()->equals(sheet->rules()[j]->m_ruleText[0])) {
+                if (isMatched) {
+                    if (s->pseudoType() == CSSSelector::PseudoType::PseudoNone
+                        || ((element->state() & Node::NodeState::NodeStateActive) && s->pseudoType() == CSSSelector::PseudoType::PseudoActive)
+                        || ((element->state() & Node::NodeState::NodeStateHovered) && s->pseudoType() == CSSSelector::PseudoType::PseudoHover)) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
                         apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
-            }
-        }
+                break;
+                }
 
-        if ((element->state() & Node::NodeState::NodeStateHovered)) {
-            // type#id selector
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeIdSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Hover) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:id-selector\n");
-#endif
-                    if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
-                        if (element->id()->equals(sheet->rules()[j]->m_ruleText[1])) {
-                            auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(*this, sheet->url(), cssValues, ret, parent);
+            // TODO: Assume that pseudo-class selector is located at the end.
+            case CSSSelector::RelationType::Descendant:
+                {
+                Element* e = element;
+                CSSSelector* s = selector;
+                bool isOneSelectorMatched = false;
+                while (e) {
+                    if (s->type() == CSSSelector::Type::Universal) {
+                        isOneSelectorMatched = true;
+                    } else if (s->type() == CSSSelector::Type::Tag) {
+                        isOneSelectorMatched = s->selectorText()->equalsWithoutCase(e->localName());
+                    } else if (s->type() == CSSSelector::Type::Id) {
+                        isOneSelectorMatched = s->selectorText()->equalsWithoutCase(e->id());
+                    } else if (s->type() == CSSSelector::Type::Class) {
+                        auto className = e->classNames();
+                        for (unsigned f = 0; f < className.size(); f++) {
+                            if (s->selectorText()->equals(className[f])) {
+                                isOneSelectorMatched = true;
+                                break;
+                            }
                         }
                     }
-                }
-            }
-        }
-    }
-    // first sheet is must user-agent style sheet!
-    for (unsigned i = 0; i < m_sheets.size(); i++) {
-        CSSStyleSheet* sheet = m_sheets[i];
-        // *:active selector
-        if ((element->state() & Node::NodeState::NodeStateActive)) {
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::UniversalSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
-#endif
-                    auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                    apply(*this, sheet->url(), cssValues, ret, parent);
-                }
-            }
-        }
-
-        // type:active selector
-        if ((element->state() & Node::NodeState::NodeStateActive)) {
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
-#endif
-                    if (sheet->rules()[j]->m_ruleText[0]->equalsWithoutCase(element->localName())) {
-                        auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(*this, sheet->url(), cssValues, ret, parent);
-                    }
-                }
-            }
-        }
-
-        // class:active selector
-        if ((element->state() & Node::NodeState::NodeStateActive)) {
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::ClassSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
-#endif
-                    auto className = element->classNames();
-                    for (unsigned f = 0; f < className.size(); f++) {
-                        if (className[f]->equals(sheet->rules()[j]->m_ruleText[0])) {
-                            auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(*this, sheet->url(), cssValues, ret, parent);
+                    if (isOneSelectorMatched) {
+                        if (idx == selectorList->size() - 1) {
+                            isMatched = true;
+                            break;
+                        } else {
+                            s = selectorList->at(++idx);
                         }
+                    } else if (idx == 0) {
+                        break;
                     }
+                    e = e->parentElement();
                 }
-            }
-        }
 
-        // type.class:active selector
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeClassSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
-#endif
-                if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
-                    auto className = element->classNames();
-                    for (unsigned f = 0; f < className.size(); f++) {
-                        if (className[f]->equals(sheet->rules()[j]->m_ruleText[1])) {
-                            auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                            apply(*this, sheet->url(), cssValues, ret, parent);
-                        }
-                    }
-                }
-            }
-        }
-
-        // id:active selector
-        if ((element->state() & Node::NodeState::NodeStateActive)) {
-            for (unsigned j = 0; j < sheet->rules().size(); j++) {
-                if (sheet->rules()[j]->m_kind == CSSStyleRule::IdSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-#ifdef STARFISH_TC_COVERAGE
-                    STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
-#endif
-                    if (element->id()->equals(sheet->rules()[j]->m_ruleText[0])) {
+                if (isMatched) {
+                    if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone
+                        || ((element->state() & Node::NodeState::NodeStateActive) && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive)
+                        || ((element->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover)) {
                         auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
                         apply(*this, sheet->url(), cssValues, ret, parent);
                     }
                 }
-            }
-        }
-
-        // type#id:active selector
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            if (sheet->rules()[j]->m_kind == CSSStyleRule::TypeIdSelector && sheet->rules()[j]->m_pseudoClass == CSSStyleRule::PseudoClass::Active) {
-#ifdef STARFISH_TC_COVERAGE
-                STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
-#endif
-                if (element->localName()->equalsWithoutCase(sheet->rules()[j]->m_ruleText[0])) {
-                    if (element->id()->equals(sheet->rules()[j]->m_ruleText[1])) {
-                        auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(*this, sheet->url(), cssValues, ret, parent);
-                    }
+                break;
                 }
+
+            default:
+                break;
             }
         }
     }
