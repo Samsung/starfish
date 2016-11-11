@@ -212,7 +212,7 @@ public:
 private:
     // In the common case, this queue will have only one task because most
     // tokens produce only one DOM mutation.
-    typedef std::vector<HTMLConstructionSiteTask, gc_allocator<HTMLConstructionSiteTask>> TaskQueue;
+    typedef std::vector<HTMLConstructionSiteTask, gc_allocator_ignore_off_page<HTMLConstructionSiteTask>> TaskQueue;
 
     void setCompatibilityMode(Document::CompatibilityMode);
     void setCompatibilityModeFromDoctype(String* name, String* publicId, String* systemId);

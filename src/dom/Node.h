@@ -41,7 +41,7 @@ class RareNodeMembers;
 class RareElementMembers;
 
 // TODO use weak reference for activeHtmlCollectionLists
-typedef std::vector<std::pair<String*, HTMLCollection*>, gc_allocator<std::pair<String*, HTMLCollection*>>> ActiveHTMLCollectionList;
+typedef std::vector<std::pair<String*, HTMLCollection*>, gc_allocator_ignore_off_page<std::pair<String*, HTMLCollection*>>> ActiveHTMLCollectionList;
 
 class RareNodeMembers : public gc {
 public:

@@ -19,7 +19,7 @@ protected:
     void registerFinalizer();
     UConverter* m_converter;
     String* m_encoding;
-    std::basic_string<char, std::char_traits<char>, gc_allocator<char> > m_bufferToConvert;
+    std::basic_string<char, std::char_traits<char>, gc_allocator_ignore_off_page<char> > m_bufferToConvert;
 };
 
 

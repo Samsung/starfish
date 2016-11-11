@@ -95,7 +95,7 @@ protected:
 
 };
 
-typedef std::vector<EventListener*, gc_allocator<EventListener*>> EventListenerVector;
+typedef std::vector<EventListener*, gc_allocator_ignore_off_page<EventListener*>> EventListenerVector;
 
 class EventTarget : public ScriptWrappable {
 protected:
@@ -185,7 +185,7 @@ public:
 
 protected:
     std::unordered_map<String*, EventListenerVector*, std::hash<String*>, std::equal_to<String*>,
-        gc_allocator<std::pair<String*, EventListenerVector*>>> m_eventListeners;
+        gc_allocator_ignore_off_page<std::pair<String*, EventListenerVector*>>> m_eventListeners;
 };
 
 }

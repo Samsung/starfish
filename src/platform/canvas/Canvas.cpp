@@ -1488,7 +1488,7 @@ protected:
     std::vector<Evas_Object*>* m_objList;
     std::vector<Evas_Object*>* m_surfaceList;
     std::unordered_map<ImageData*, std::vector<std::pair<Evas_Object*, bool>>,
-        std::hash<ImageData*>, std::equal_to<ImageData*>, gc_allocator<std::pair<ImageData*, std::vector<std::pair<Evas_Object*, bool>>>>>* m_prevDrawnImageMap;
+        std::hash<ImageData*>, std::equal_to<ImageData*>, gc_allocator_ignore_off_page<std::pair<ImageData*, std::vector<std::pair<Evas_Object*, bool>>>>>* m_prevDrawnImageMap;
 };
 
 Canvas* Canvas::createDirect(void* data)

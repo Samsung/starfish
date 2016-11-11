@@ -91,9 +91,9 @@ private:
     uint64_t m_documentOpenTime;
     size_t m_pendingResourceCountWhileDocumentOpening;
     Document* m_document;
-    std::vector<Resource*, gc_allocator<Resource*>> m_currentLoadingResources;
-    std::unordered_map<std::string, ResourceCacheData, std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, ResourceCacheData>>> m_imageResourceCache;
-    std::list<Resource*, gc_allocator<Resource*>> m_imageResourceCacheLRUList;
+    std::vector<Resource*, gc_allocator_ignore_off_page<Resource*>> m_currentLoadingResources;
+    std::unordered_map<std::string, ResourceCacheData, std::hash<std::string>, std::equal_to<std::string>, gc_allocator_ignore_off_page<std::pair<std::string, ResourceCacheData>>> m_imageResourceCache;
+    std::list<Resource*, gc_allocator_ignore_off_page<Resource*>> m_imageResourceCacheLRUList;
     size_t m_resourceCacheSize;
     uint64_t m_lastCachePruneTime;
 };

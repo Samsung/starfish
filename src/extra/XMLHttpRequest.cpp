@@ -182,14 +182,14 @@ void XMLHttpRequest::onReadyStateChange(NetworkRequest* request, bool fromExplic
                 String* text = cvt.convert(m_networkRequest->responseData().data(), m_networkRequest->responseData().size(), true);
                 m_responseJsonObject = parseJSON(text);
             } else if (m_responseType == ResponseType::BlobType) {
-                void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
+                void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(m_networkRequest->responseData().size());
                 memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
                 m_responseBlob = new Blob(m_networkRequest->starFish(), m_networkRequest->responseData().size(), m_networkRequest->mimeType(), buffer, false, false);
                 m_networkRequest->responseData().clear();
                 m_networkRequest->responseData().shrink_to_fit();
             } else if (m_responseType == ResponseType::ArrayBuffer) {
 #ifdef USE_ES6_FEATURE
-                void* buffer = GC_MALLOC_ATOMIC(m_networkRequest->responseData().size());
+                void* buffer = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(m_networkRequest->responseData().size());
                 memcpy(buffer, m_networkRequest->responseData().data(), m_networkRequest->responseData().size());
                 m_responseArrayBuffer = createArrayBuffer(buffer, m_networkRequest->responseData().size());
                 m_networkRequest->responseData().clear();

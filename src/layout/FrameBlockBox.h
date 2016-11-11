@@ -130,8 +130,8 @@ protected:
 
 class InlineNonReplacedBox : public InlineBox {
     friend class FrameBlockBox;
-    friend void splitInlineBoxesAndMarkDirectionForResolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes);
-    friend void reassignLeftRightMBPOfInlineNonReplacedBox(LineFormattingContext& ctx, std::vector<FrameBox*, gc_allocator<FrameBox*>>& boxes);
+    friend void splitInlineBoxesAndMarkDirectionForResolveBidi(LineFormattingContext& ctx, DirectionValue parentDir, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
+    friend void reassignLeftRightMBPOfInlineNonReplacedBox(LineFormattingContext& ctx, std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*>>& boxes);
 public:
     InlineNonReplacedBox(Node* node, ComputedStyle* style, Frame* parent, FrameInline* origin)
         : InlineBox(node, style, parent)
@@ -216,7 +216,7 @@ public:
         return m_origin;
     }
 
-    std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes()
+    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes()
     {
         return m_boxes;
     }
@@ -237,7 +237,7 @@ protected:
     LayoutUnit m_descender;
     FrameInline* m_origin;
     LayoutBoxSurroundData m_orgPadding, m_orgBorder, m_orgMargin;
-    std::vector<FrameBox*, gc_allocator<FrameBox*> > m_boxes;
+    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
 };
 
 class LineBox : public FrameBox {
@@ -268,7 +268,7 @@ public:
         return m_descender;
     }
 
-    std::vector<FrameBox*, gc_allocator<FrameBox*> >& boxes()
+    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes()
     {
         return m_boxes;
     }
@@ -295,7 +295,7 @@ public:
     }
 
 protected:
-    std::vector<FrameBox*, gc_allocator<FrameBox*> > m_boxes;
+    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
     // FIXME
     // we use these value only for vertical-align of inline-block
     // in layout, we use only 'ascender'
@@ -495,7 +495,7 @@ public:
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
-    std::vector<LineBox*, gc_allocator<LineBox*> > m_lineBoxes;
+    std::vector<LineBox*, gc_allocator_ignore_off_page<LineBox*> > m_lineBoxes;
 };
 
 struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {

@@ -92,12 +92,12 @@ public:
         UTF32String value;
     };
 
-    typedef std::vector<Attribute, gc_allocator<Attribute>> AttributeList;
+    typedef std::vector<Attribute, gc_allocator_ignore_off_page<Attribute>> AttributeList;
 
     // By using an inline capacity of 256, we avoid spilling over into an malloced buffer
     // approximately 99% of the time based on a non-scientific browse around a number of
     // popular web sites on 23 May 2013.
-    typedef std::vector<char32_t, gc_allocator<char32_t>> DataVector;
+    typedef std::vector<char32_t, gc_allocator_ignore_off_page<char32_t>> DataVector;
 
     HTMLToken()
     {
@@ -279,7 +279,7 @@ public:
         m_data.push_back(character);
     }
 
-    void beginEndTag(const std::vector<char, gc_allocator<char>>& characters)
+    void beginEndTag(const std::vector<char, gc_allocator_ignore_off_page<char>>& characters)
     {
         STARFISH_ASSERT(m_type == Uninitialized);
         m_type = EndTag;
@@ -406,7 +406,7 @@ public:
         m_orAllData |= character;
     }
 
-    void appendToCharacter(const std::vector<char, gc_allocator<char>>& characters)
+    void appendToCharacter(const std::vector<char, gc_allocator_ignore_off_page<char>>& characters)
     {
         STARFISH_ASSERT(m_type == Character);
 

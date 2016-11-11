@@ -24,7 +24,7 @@ class Traverse {
     }
 
 public:
-    typedef std::vector<Node*, gc_allocator<Node*>> NodeCollection;
+    typedef std::vector<Node*, gc_allocator_ignore_off_page<Node*>> NodeCollection;
 
     template<typename Func>
     static Node* findDescendant(Node* parent, Func matchingRule)
@@ -44,7 +44,7 @@ public:
     }
 
     template<typename Func>
-    static void getherDescendant(std::vector<Node*, gc_allocator<Node*>>* collection, Node* root, Func filter)
+    static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Node*>>* collection, Node* root, Func filter)
     {
         Node* child = root->firstChild();
         while (child) {

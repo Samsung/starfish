@@ -191,7 +191,7 @@ const char* utf32ToUtf8(const char32_t* t, const size_t& len, size_t* bufferSize
         strLength += length;
     }
 
-    char* result = (char*)GC_MALLOC_ATOMIC(strLength + 1);
+    char* result = (char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(strLength + 1);
     if (bufferSize)
         *bufferSize = strLength + 1;
     unsigned currentPosition = 0;
@@ -274,7 +274,7 @@ const char* utf32ToUtf8IgnoreZeroWidthChar(const char32_t* t, const size_t& len,
         strLength += length;
     }
 
-    char* result = (char*)GC_MALLOC_ATOMIC(strLength + 1);
+    char* result = (char*)GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(strLength + 1);
     if (bufferSize)
         *bufferSize = strLength + 1;
     unsigned currentPosition = 0;
@@ -414,7 +414,7 @@ String* String::createASCIIStringFromUTF32SourceIfPossible(const UTF32String& sr
 NullableUTF8String String::toNullableUTF8String()
 {
     if (m_isASCIIString) {
-        void* ptr = GC_MALLOC_ATOMIC(asASCIIString()->size());
+        void* ptr = GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(asASCIIString()->size());
         memcpy(ptr, asASCIIString()->data(), asASCIIString()->size());
         return NullableUTF8String((const char*)ptr, asASCIIString()->size());
     } else {
@@ -557,13 +557,13 @@ static VectorType splitString(const StringType& s, char seperator)
 void String::split(char delim, Vector& tokens)
 {
     if (m_isASCIIString) {
-        std::vector<ASCIIString, gc_allocator<ASCIIString>> ss = splitString<ASCIIString, std::vector<ASCIIString, gc_allocator<ASCIIString>>>(*asASCIIString(), delim);
+        std::vector<ASCIIString, gc_allocator_ignore_off_page<ASCIIString>> ss = splitString<ASCIIString, std::vector<ASCIIString, gc_allocator_ignore_off_page<ASCIIString>>>(*asASCIIString(), delim);
         for (size_t i = 0; i < ss.size(); i ++) {
             ASCIIString& item = ss[i];
             tokens.push_back(new StringDataASCII(std::move(item)));
         }
     } else {
-        std::vector<UTF32String, gc_allocator<UTF32String>> ss = splitString<UTF32String, std::vector<UTF32String, gc_allocator<UTF32String>>>(*asUTF32String(), delim);
+        std::vector<UTF32String, gc_allocator_ignore_off_page<UTF32String>> ss = splitString<UTF32String, std::vector<UTF32String, gc_allocator_ignore_off_page<UTF32String>>>(*asUTF32String(), delim);
         for (size_t i = 0; i < ss.size(); i ++) {
             UTF32String& item = ss[i];
             tokens.push_back(new StringDataUTF32(std::move(item)));
@@ -598,9 +598,9 @@ String* String::trim()
     return substring(first, (last - first + 1));
 }
 
-std::vector<String*, gc_allocator<String*> > String::tokenize(const char* tokens, size_t tokensLength)
+std::vector<String*, gc_allocator_ignore_off_page<String*> > String::tokenize(const char* tokens, size_t tokensLength)
 {
-    std::vector<String*, gc_allocator<String*> > result;
+    std::vector<String*, gc_allocator_ignore_off_page<String*> > result;
     const char* data = utf8Data();
     size_t length = strlen(data);
 
@@ -1008,8 +1008,8 @@ unsigned SegmentedString::length() const
             ++length;
     }
     if (isComposite()) {
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator it = m_substrings.begin();
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator e = m_substrings.end();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_iterator it = m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_iterator e = m_substrings.end();
         for (; it != e; ++it)
             length += it->m_length;
     }
@@ -1020,8 +1020,8 @@ void SegmentedString::setExcludeLineNumbers()
 {
     m_currentString.setExcludeLineNumbers();
     if (isComposite()) {
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::iterator it = m_substrings.begin();
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::iterator e = m_substrings.end();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::iterator it = m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::iterator e = m_substrings.end();
         for (; it != e; ++it)
             it->setExcludeLineNumbers();
     }
@@ -1099,8 +1099,8 @@ void SegmentedString::append(const SegmentedString& s)
     STARFISH_ASSERT(!s.escaped());
     append(s.m_currentString);
     if (s.isComposite()) {
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator it = s.m_substrings.begin();
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator e = s.m_substrings.end();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_iterator it = s.m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_iterator e = s.m_substrings.end();
         for (; it != e; ++it)
             append(*it);
     }
@@ -1112,8 +1112,8 @@ void SegmentedString::prepend(const SegmentedString& s)
     STARFISH_ASSERT(!escaped());
     STARFISH_ASSERT(!s.escaped());
     if (s.isComposite()) {
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_reverse_iterator it = s.m_substrings.rbegin();
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_reverse_iterator e = s.m_substrings.rend();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_reverse_iterator it = s.m_substrings.rbegin();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_reverse_iterator e = s.m_substrings.rend();
         for (; it != e; ++it)
             prepend(*it);
     }
@@ -1151,8 +1151,8 @@ String* SegmentedString::toString() const
     }
     m_currentString.appendTo(result);
     if (isComposite()) {
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator it = m_substrings.begin();
-        std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>>::const_iterator e = m_substrings.end();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_iterator it = m_substrings.begin();
+        std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>>::const_iterator e = m_substrings.end();
         for (; it != e; ++it)
             it->appendTo(result);
     }

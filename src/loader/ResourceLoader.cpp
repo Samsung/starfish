@@ -108,7 +108,7 @@ public:
     ResourceAliveChecker(Resource* res)
         : ResourceClient(res)
     {
-        std::vector<Resource*, gc_allocator<Resource*>>& v =  m_resource->loader()->m_currentLoadingResources;
+        std::vector<Resource*, gc_allocator_ignore_off_page<Resource*>>& v =  m_resource->loader()->m_currentLoadingResources;
         v.push_back(m_resource);
     }
 
@@ -132,7 +132,7 @@ public:
 
     void clearAlive()
     {
-        std::vector<Resource*, gc_allocator<Resource*>>& v =  m_resource->loader()->m_currentLoadingResources;
+        std::vector<Resource*, gc_allocator_ignore_off_page<Resource*>>& v =  m_resource->loader()->m_currentLoadingResources;
         auto iter = std::find(v.begin(), v.end(), m_resource);
         // TODO prevent remove twice
         if (iter != v.end()) {
@@ -362,7 +362,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
 
 void ResourceLoader::cancelAllOfPendingRequests()
 {
-    std::vector<Resource*, gc_allocator<Resource*>>& v = m_currentLoadingResources;
+    std::vector<Resource*, gc_allocator_ignore_off_page<Resource*>>& v = m_currentLoadingResources;
     while (v.size()) {
         v[0]->cancel();
     }

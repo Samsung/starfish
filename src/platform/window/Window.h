@@ -288,7 +288,7 @@ protected:
     LocationObj* m_location;
     Document* m_document;
     StackingContext* m_rootStackingContext;
-    std::vector<CanvasSurface*, gc_allocator<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;
+    std::vector<CanvasSurface*, gc_allocator_ignore_off_page<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;
     Node* m_activeNodeWithTouchDown;
 
     Node* m_activeNodeWithTouchMove;
@@ -302,14 +302,14 @@ protected:
 
     uint32_t m_timeoutCounter;
     std::unordered_map<uint32_t, void*, std::hash<uint32_t>, std::equal_to<uint32_t>,
-        gc_allocator<std::pair<uint32_t, void* > > > m_timeoutHandler;
+        gc_allocator_ignore_off_page<std::pair<uint32_t, void* > > > m_timeoutHandler;
 
     uint32_t m_requestAnimationFrameCounter;
     std::unordered_map<uint32_t, void*, std::hash<uint32_t>, std::equal_to<uint32_t>,
-        gc_allocator<std::pair<uint32_t, void*> > > m_requestAnimationFrameHandler;
+        gc_allocator_ignore_off_page<std::pair<uint32_t, void*> > > m_requestAnimationFrameHandler;
 
-    std::vector<Node*, gc_allocator<Node*> > m_activeNodes;
-    std::vector<Node*, gc_allocator<Node*> > m_hoveredNodes;
+    std::vector<Node*, gc_allocator_ignore_off_page<Node*> > m_activeNodes;
+    std::vector<Node*, gc_allocator_ignore_off_page<Node*> > m_hoveredNodes;
 };
 
 }

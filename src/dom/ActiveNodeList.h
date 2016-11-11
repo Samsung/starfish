@@ -49,7 +49,7 @@ private:
     Node* m_root;
     ActiveNodeListFilterFunction m_filter;
     void* m_data;
-    mutable std::vector<Node*, gc_allocator<Node*>> m_cachedNodeList;
+    mutable std::vector<Node*, gc_allocator_ignore_off_page<Node*>> m_cachedNodeList;
 };
 
 }

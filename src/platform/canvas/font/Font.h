@@ -112,7 +112,7 @@ protected:
         m_fontCache.shrink_to_fit();
     }
 public:
-    std::vector<std::tuple<Font*, String*, float, char, char>, gc_allocator<std::tuple<Font*, String*, float, char, char>>> m_fontCache;
+    std::vector<std::tuple<Font*, String*, float, char, char>, gc_allocator_ignore_off_page<std::tuple<Font*, String*, float, char, char>>> m_fontCache;
 };
 
 };

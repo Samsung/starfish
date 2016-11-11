@@ -132,7 +132,7 @@ public:
     Event* m_event;
 };
 
-typedef std::list<MediaOperationQueueData*, gc_allocator<MediaOperationQueueData*>> MediaOperationQueue;
+typedef std::list<MediaOperationQueueData*, gc_allocator_ignore_off_page<MediaOperationQueueData*>> MediaOperationQueue;
 
 class HTMLMediaElement : public HTMLElement {
     friend class MediaPlayer;

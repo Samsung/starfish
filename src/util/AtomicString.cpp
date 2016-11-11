@@ -29,7 +29,7 @@ AtomicString AtomicString::createAtomicString(StarFish* sf, const char* str)
 {
     std::string data = str;
     std::unordered_map<std::string, AtomicString,
-        std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString> > >& map = sf->m_atomicStringMap;
+        std::hash<std::string>, std::equal_to<std::string>, gc_allocator_ignore_off_page<std::pair<std::string, AtomicString> > >& map = sf->m_atomicStringMap;
     auto iter = map.find(data);
 
     if (iter != map.end()) {
@@ -53,7 +53,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
     std::string data = str;
     std::transform(data.begin(), data.end(), data.begin(), ::tolower);
     std::unordered_map<std::string, AtomicString,
-        std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString> > >& map = sf->m_atomicStringMap;
+        std::hash<std::string>, std::equal_to<std::string>, gc_allocator_ignore_off_page<std::pair<std::string, AtomicString> > >& map = sf->m_atomicStringMap;
     auto iter = map.find(data);
 
     if (iter != map.end()) {

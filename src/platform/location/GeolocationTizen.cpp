@@ -73,7 +73,7 @@ public:
             iter++;
         }
     }
-    std::vector<LocationRequestInfoTizen*, gc_allocator<LocationRequestInfoTizen*>> m_pendingRequest;
+    std::vector<LocationRequestInfoTizen*, gc_allocator_ignore_off_page<LocationRequestInfoTizen*>> m_pendingRequest;
 
     struct {
         double altitude;
@@ -100,7 +100,7 @@ static void sendResult(LocationRequestInfoTizen* info)
     Coordinates* c = new Coordinates(info->starFish, info->latitude, info->longitude, new(GC) double(info->altitude), info->horizontalAccuracy, nullptr, new(GC) double(info->direction), new(GC) double(info->speed * 1000));
     info->cb(info->starFish, new Geoposition(info->starFish, c, info->timestamp), info->cbData);
 
-    std::vector<LocationRequestInfoTizen*, gc_allocator<LocationRequestInfoTizen*>>& v = info->geolocation->m_pendingRequest;
+    std::vector<LocationRequestInfoTizen*, gc_allocator_ignore_off_page<LocationRequestInfoTizen*>>& v = info->geolocation->m_pendingRequest;
     v.erase(std::find(v.begin(), v.end(), info));
     GC_FREE(info);
 }
@@ -189,7 +189,7 @@ void GeolocationTizen::getCurrentPosition(GeopositionCallback cb, void* cbData, 
                     return ECORE_CALLBACK_CANCEL;
                 }, (void*)info->manager);
 
-                std::vector<LocationRequestInfoTizen*, gc_allocator<LocationRequestInfoTizen*>>& v = info->geolocation->m_pendingRequest;
+                std::vector<LocationRequestInfoTizen*, gc_allocator_ignore_off_page<LocationRequestInfoTizen*>>& v = info->geolocation->m_pendingRequest;
                 v.erase(std::find(v.begin(), v.end(), info));
                 GC_FREE(info);
                 return;

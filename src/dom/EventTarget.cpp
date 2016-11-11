@@ -135,7 +135,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     event->setTarget(origin);
 
     // 4. If event's target attribute value is participating in a tree, let event path be a static ordered list of all its ancestors in tree order, and let event path be the empty list otherwise.
-    std::vector<EventTarget*, gc_allocator<EventTarget*> > eventPath;
+    std::vector<EventTarget*, gc_allocator_ignore_off_page<EventTarget*> > eventPath;
     EventTarget* eventTarget = origin;
     while (eventTarget) {
         if (eventTarget->isNode()) {
