@@ -1295,64 +1295,78 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                 return;
         }
         for (unsigned i = 0; i < tokens.size(); i++) {
-            const char* selectorText = tokens[i]->trim()->utf8Data();
-            CSSStyleRule::Kind kind;
-            String** st;
-            size_t stLen = 0;
-            std::string cSelectorText;
-            CSSStyleRule::PseudoClass pc = CSSStyleRule::PseudoClass::None;
-            char* pcPos = strchr((char *)selectorText, ':');
-            if (pcPos) {
-                cSelectorText = selectorText;
-                cSelectorText[pcPos - selectorText] = '\0';
-                selectorText = cSelectorText.data();
-                if (strcmp(pcPos + 1, "active") == 0) {
-                    pc = CSSStyleRule::PseudoClass::Active;
-#ifdef STARFISH_TC_COVERAGE
-        STARFISH_LOG_INFO("+++selector:pseudo-active-selector\n");
-#endif
-                } else if (strcmp(pcPos + 1, "hover") == 0) {
-                    pc = CSSStyleRule::PseudoClass::Hover;
+            // Descendant selector
+            CSSSelectorList* selectorList = new CSSSelectorList();
+            String::Vector simpleSelectors;
+            tokens[i]->trim()->split(' ', simpleSelectors);
+            for (unsigned j = 0; j < simpleSelectors.size(); j++) {
+                CSSSelector* selector = new CSSSelector();
+                selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
+                const char* selectorText = simpleSelectors[j]->trim()->utf8Data();
+                std::string cSelectorText;
+                char* pcPos = strchr((char *)selectorText, ':');
+                if (pcPos) {
+                    cSelectorText = selectorText;
+                    cSelectorText[pcPos - selectorText] = '\0';
+                    selectorText = cSelectorText.data();
+                    if (strcmp(pcPos + 1, "active") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoActive);
+                    } else if (strcmp(pcPos + 1, "hover") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoHover);
+                    }
                 }
-            }
 
-            if (selectorText[0] == '.') {
-                kind = CSSStyleRule::Kind::ClassSelector;
-                st = new(GC) String*[1];
-                st[0] = String::fromUTF8(&selectorText[1]);
-            } else if (selectorText[0] == '#') {
-                kind = CSSStyleRule::Kind::IdSelector;
-                st = new(GC) String*[1];
-                st[0] = String::fromUTF8(&selectorText[1]);
-            } else if (selectorText[0] == '*') {
-                st = new(GC) String*[1];
-                kind = CSSStyleRule::Kind::UniversalSelector;
-            } else if (strchr(selectorText, '#')) {
-                st = new(GC) String*[2];
-                const char* p = strchr(selectorText, '#');
-                std::string s1(&selectorText[0], p - selectorText);
-                st[0] = String::fromUTF8(s1.data());
-                std::string s2(p + 1);
-                st[1] = String::fromUTF8(s2.data());
-                kind = CSSStyleRule::Kind::TypeIdSelector;
-            } else if (strchr(selectorText, '.')) {
-                st = new(GC) String*[2];
-                const char* p = strchr(selectorText, '.');
-                std::string s1(&selectorText[0], p - selectorText);
-                st[0] = String::fromUTF8(s1.data());
-                std::string s2(p + 1);
-                st[1] = String::fromUTF8(s2.data());
-                kind = CSSStyleRule::Kind::TypeClassSelector;
-            } else {
-                st = new(GC) String*[1];
-                kind = CSSStyleRule::Kind::TypeSelector;
-                if (selectorText[0] == '*') {
-                    st[0] = String::emptyString;
+                if (selectorText[0] == '.') {
+                    selector->setSelectorText(String::fromUTF8(&selectorText[1]));
+                    selector->setType(CSSSelector::Type::Class);
+                    if (j)
+                        selector->setRelation(CSSSelector::Descendant);
+                    selectorList->addSelector(selector);
+                } else if (selectorText[0] == '#') {
+                    selector->setSelectorText(String::fromUTF8(&selectorText[1]));
+                    selector->setType(CSSSelector::Type::Id);
+                    if (j)
+                        selector->setRelation(CSSSelector::Descendant);
+                    selectorList->addSelector(selector);
+                } else if (selectorText[0] == '*') {
+                    selector->setType(CSSSelector::Type::Universal);
+                    if (j)
+                        selector->setRelation(CSSSelector::Descendant);
+                    selectorList->addSelector(selector);
+                } else if (strchr(selectorText, '#')) {
+                    const char* p = strchr(selectorText, '#');
+                    std::string s1(&selectorText[0], p - selectorText);
+                    std::string s2(p + 1);
+                    // Subselectors are saved left-to-right
+                    selector->setSelectorText(String::fromUTF8(s2.data()));
+                    selector->setType(CSSSelector::Type::Id);
+                    if (j)
+                        selector->setRelation(CSSSelector::Descendant);
+                    selectorList->addSelector(selector);
+                    CSSSelector* s = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector, CSSSelector::PseudoType::PseudoNone, String::fromUTF8(s1.data()));
+                    selectorList->addSelector(s);
+                } else if (strchr(selectorText, '.')) {
+                    const char* p = strchr(selectorText, '.');
+                    std::string s1(&selectorText[0], p - selectorText);
+                    std::string s2(p + 1);
+                    // Subselectors are saved left-to-right
+                    selector->setSelectorText(String::fromUTF8(s2.data()));
+                    selector->setType(CSSSelector::Type::Class);
+                    if (j)
+                        selector->setRelation(CSSSelector::Descendant);
+                    selectorList->addSelector(selector);
+                    CSSSelector* s = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector, CSSSelector::PseudoType::PseudoNone, String::fromUTF8(s1.data()));
+                    selectorList->addSelector(s);
                 } else {
-                    st[0] = String::fromUTF8(selectorText);
+                    // TODO: We should consider multiple selectors in one token. (e.g., div#id.class1.class2)
+                    selector->setSelectorText(String::fromUTF8(selectorText));
+                    selector->setType(CSSSelector::Tag);
+                    if (j)
+                        selector->setRelation(CSSSelector::Descendant);
+                    selectorList->addSelector(selector);
                 }
             }
-            CSSStyleRule* rule = new CSSStyleRule(kind, st, stLen, pc, m_document, declarations);
+            CSSStyleRule* rule = new CSSStyleRule(selectorList, m_document, declarations);
             aOwner->addRule(rule);
         }
         return;
