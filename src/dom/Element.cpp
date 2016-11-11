@@ -31,6 +31,8 @@
 #include "HTMLHtmlElement.h"
 #include "HTMLHeadElement.h"
 #include "HTMLHeadingElement.h"
+#include "HTMLLIElement.h"
+#include "HTMLUListElement.h"
 #include "HTMLBodyElement.h"
 #include "HTMLDivElement.h"
 #include "HTMLImageElement.h"

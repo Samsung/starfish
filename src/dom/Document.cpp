@@ -466,6 +466,57 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         userAgentStyleSheet->addRule(rule);
     }
 
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("ul"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginTop);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginBottom);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("1em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::MarginRight);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("0em");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::PaddingLeft);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("40px");
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("li"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::BlockDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
     m_styleResolver.addSheet(userAgentStyleSheet);
 
     auto df = new FrameDocument(this);
