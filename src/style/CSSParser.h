@@ -408,6 +408,8 @@ public:
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
+    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>>* sList, bool isQueryingSelector = false);
+    CSSToken* makeToken(String* str);
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);
     CSSToken* currentToken();
@@ -416,7 +418,6 @@ protected:
     void restoreState();
     void forgetState();
     CSSToken* lookAhead(bool aSkipWS, bool aSkipComment);
-    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule);
     String* parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool& validSelector);
     String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector);
     String* parseDefaultPropertyValue(CSSToken* token);

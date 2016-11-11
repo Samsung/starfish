@@ -22,9 +22,12 @@
 #include "Element.h"
 #include "Traverse.h"
 #include "NodeList.h"
+#include "SelectorQuery.h"
 
 #include "layout/Frame.h"
 #include "layout/FrameTreeBuilder.h"
+
+#include "style/CSSParser.h"
 
 namespace StarFish {
 
@@ -162,6 +165,18 @@ bool Node::isEqualNode(Node* other)
     }
 
     return true;
+}
+
+bool Node::isDescendantOf(const Node *other)
+{
+    // Return true if other is an ancestor of this, otherwise false
+    if (!other || !other->hasChildNodes())
+        return false;
+    for (const Node* n = parentNode(); n; n = n->parentNode()) {
+        if (n == other)
+            return true;
+    }
+    return false;
 }
 
 Element* Node::firstElementChild()
@@ -883,6 +898,31 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
     list = new HTMLCollection(document()->scriptBindingInstance(), this, filter, classNames, true);
     rareData->putActiveHtmlCollectionListWithQuery(activeLists, classNames, list);
     return list;
+}
+
+Element* Node::querySelector(String* selectors)
+{
+    if (selectors->equals(String::emptyString))
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::SYNTAX_ERR, "Failed to execute 'querySelector' on 'Document': The provided selector is empty.");
+
+    CSSParser parser(document());
+    CSSToken* token = parser.makeToken(selectors);
+
+
+    std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>> selectorList;
+#if 1
+    parser.parseStyleRule(token, nullptr, false, &selectorList, true);
+#else
+    parser.parseStyleRule(token, nullptr, false);
+#endif
+
+    if (selectorList.size() < 1) {
+        throw new DOMException(m_document->scriptBindingInstance(), DOMException::DOM_EXCEPTION, "Failed to execute 'querySelector' on 'Document': The provided selector is invalid.");
+    }
+
+    // TODO: Consider for one or more selectorLists
+    SelectorQuery selectorQuery(selectorList[0]);
+    return selectorQuery.queryFirst(*this);
 }
 
 void Node::setNeedsFrameTreeBuild()

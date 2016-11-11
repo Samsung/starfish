@@ -249,6 +249,8 @@ public:
 
     bool isEqualNode(Node* other);
 
+    bool isDescendantOf(const Node *other);
+
     virtual Node* cloneNode(bool deep = false);
 
     unsigned short compareDocumentPosition(const Node* other);
@@ -305,6 +307,8 @@ public:
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
 
+    Element* querySelector(String* selector);
+    /*NodeList* querySelectorAll();*/
 
     /* Other methods (not in Node Interface) */
     enum NodeState {
