@@ -1255,7 +1255,8 @@ public:
         Universal,
         Tag,
         Id,
-        Class
+        Class,
+        PseudoClass
     };
 
     enum RelationType {
@@ -1332,6 +1333,8 @@ public:
     // http://www.w3.org/TR/css3-selectors/#specificity
     // We use 256 as the base of the specificity number system.
     // unsigned specificity() const;
+
+    bool isLastInTagHistory() const { return relation() == RelationType::None; }
 
 protected:
     Type m_type;

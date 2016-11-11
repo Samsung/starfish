@@ -1232,13 +1232,13 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
     return;
 }
 
-void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule)
+void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>>* sList, bool isQueryingSelector)
 {
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
     preserveState();
     // first let's see if we have a selector here...
     bool validSelector = true;
-    String* selector = parseSelector(aToken, false, validSelector);
+    String* selector = parseSelector(aToken, isQueryingSelector, validSelector);
     bool valid = false;
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(m_document);
     // var declarations = [];
@@ -1264,6 +1264,8 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                 }
                 token = getToken(true, false);
             }
+        } else if (isQueryingSelector) {
+            valid = true;
         }
     } else if (!validSelector) {
         // selector is invalid so the whole rule is invalid with it
@@ -1366,8 +1368,13 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                     selectorList->addSelector(selector);
                 }
             }
-            CSSStyleRule* rule = new CSSStyleRule(selectorList, m_document, declarations);
-            aOwner->addRule(rule);
+
+            if (isQueryingSelector) {
+                sList->push_back(selectorList);
+            } else {
+                CSSStyleRule* rule = new CSSStyleRule(selectorList, m_document, declarations);
+                aOwner->addRule(rule);
+            }
         }
         return;
     }
@@ -1461,16 +1468,29 @@ bool CSSParser::parseCharsetRule(CSSStyleSheet* aSheet)
     return false;
 }
 
-void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
+CSSToken* CSSParser::makeToken(String* str)
 {
     m_lookAhead = nullptr;
     m_token = nullptr;
     m_preserveWS = false;
     m_preserveComments = false;
+    m_scanner = new CSSScanner(str);
+
+    return getToken(false, false);
+}
+
+void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
+{
+    /* m_lookAhead = nullptr;
+    m_token = nullptr;
+    m_preserveWS = false;
+    m_preserveComments = false;
     m_scanner = new CSSScanner(sourceString);
 
-    // @charset can only appear at first char of the stylesheet
     CSSToken* token = getToken(false, false);
+    */
+    // @charset can only appear at first char of the stylesheet
+    CSSToken* token = makeToken(sourceString);
     if (!token->isNotNull())
         return;
     if (token->isAtRule(String::createASCIIString("@charset"))) {
@@ -1555,7 +1575,7 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
             } */
         } else {
             // plain style rules
-            parseStyleRule(token, target, false);
+            parseStyleRule(token, target, false, nullptr, false);
             // String* ruleText = parseStyleRule(token, sheet, false);
             // if (ruleText)
             //     foundStyleRules = true;
