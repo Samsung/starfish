@@ -25,7 +25,7 @@ namespace StarFish {
 class HTMLElement;
 class CSSStyleDeclaration;
 
-typedef std::vector<Attr*, gc_allocator<Attr*>> AttrList;
+typedef std::vector<Attr*, gc_allocator_ignore_off_page<Attr*>> AttrList;
 
 class RareElementMembers : public RareNodeMembers {
 public:
@@ -209,7 +209,7 @@ public:
     }
 
     // DO NOT MODIFY THIS VECTOR
-    const std::vector<String*, gc_allocator<String*> >& classNames()
+    const std::vector<String*, gc_allocator_ignore_off_page<String*> >& classNames()
     {
         return m_classNames;
     }
@@ -277,7 +277,7 @@ protected:
 private:
     String* m_id;
     String* m_className;
-    std::vector<String*, gc_allocator<String*>> m_classNames;
+    std::vector<String*, gc_allocator_ignore_off_page<String*>> m_classNames;
     AttributeVector m_attributes;
 };
 

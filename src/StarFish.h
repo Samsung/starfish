@@ -475,13 +475,13 @@ protected:
     size_t m_enterCount;
     unsigned int m_seed;
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
-        gc_allocator<std::pair<void*, size_t>>> m_rootMap;
+        gc_allocator_ignore_off_page<std::pair<void*, size_t>>> m_rootMap;
     std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
-        gc_allocator<BlobURLStore>> m_urlBlobStore;
+        gc_allocator_ignore_off_page<BlobURLStore>> m_urlBlobStore;
     std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,
-        gc_allocator<BlobURLStore>> m_urlMediaSourceBlobStore;
+        gc_allocator_ignore_off_page<BlobURLStore>> m_urlMediaSourceBlobStore;
     std::unordered_map<std::string, AtomicString,
-        std::hash<std::string>, std::equal_to<std::string>, gc_allocator<std::pair<std::string, AtomicString>>> m_atomicStringMap;
+        std::hash<std::string>, std::equal_to<std::string>, gc_allocator_ignore_off_page<std::pair<std::string, AtomicString>>> m_atomicStringMap;
 };
 
 class StarFishEnterer {

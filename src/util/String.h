@@ -46,11 +46,11 @@
 
 namespace StarFish {
 
-typedef std::basic_string<char, std::char_traits<char>, gc_allocator<char> > ASCIIString;
-typedef std::basic_string<char16_t, std::char_traits<char16_t>, gc_allocator<char16_t> > UTF16String;
+typedef std::basic_string<char, std::char_traits<char>, gc_allocator_ignore_off_page<char> > ASCIIString;
+typedef std::basic_string<char16_t, std::char_traits<char16_t>, gc_allocator_ignore_off_page<char16_t> > UTF16String;
 typedef std::basic_string<char> UTF8NonGCString;
 typedef std::basic_string<char16_t> UTF16NonGCString;
-typedef std::basic_string<char32_t, std::char_traits<char32_t>, gc_allocator<char32_t> > UTF32String;
+typedef std::basic_string<char32_t, std::char_traits<char32_t>, gc_allocator_ignore_off_page<char32_t> > UTF32String;
 
 class StringDataASCII;
 class String;
@@ -95,7 +95,7 @@ enum CharDirection {
 class String {
 public:
     static const unsigned defaultLengthLimit = 1 << 16;
-    typedef std::vector<String*, gc_allocator<String*> > Vector;
+    typedef std::vector<String*, gc_allocator_ignore_off_page<String*> > Vector;
 
     static String* const emptyString;
     static String* const spaceString;
@@ -307,7 +307,7 @@ public:
     String* trim();
 
     // token is only 1-byte char now.
-    std::vector<String*, gc_allocator<String*>> tokenize(const char* tokens, size_t tokensLength);
+    std::vector<String*, gc_allocator_ignore_off_page<String*>> tokenize(const char* tokens, size_t tokensLength);
 
     icu::UnicodeString toUnicodeString() const
     {
@@ -880,7 +880,7 @@ private:
     int m_numberOfCharactersConsumedPriorToCurrentString;
     int m_numberOfCharactersConsumedPriorToCurrentLine;
     int m_currentLine;
-    std::deque<SegmentedSubstring, gc_allocator<SegmentedSubstring>> m_substrings;
+    std::deque<SegmentedSubstring, gc_allocator_ignore_off_page<SegmentedSubstring>> m_substrings;
     bool m_closed;
     bool m_empty;
     unsigned char m_fastPathFlags;

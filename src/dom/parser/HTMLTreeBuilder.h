@@ -244,7 +244,7 @@ private:
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/parsing.html#original-insertion-mode
     InsertionMode m_originalInsertionMode;
 
-    std::vector<InsertionMode, gc_allocator<InsertionMode>> m_templateInsertionModes;
+    std::vector<InsertionMode, gc_allocator_ignore_off_page<InsertionMode>> m_templateInsertionModes;
 
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/tokenization.html#pending-table-character-tokens
     UTF32String m_pendingTableCharacters;

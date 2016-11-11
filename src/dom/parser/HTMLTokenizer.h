@@ -282,15 +282,15 @@ private:
     // http://www.whatwg.org/specs/web-apps/current-work/#preprocessing-the-input-stream
     InputStreamPreprocessor<HTMLTokenizer> m_inputStreamPreprocessor;
 
-    std::vector<char32_t, gc_allocator<char32_t>> m_appropriateEndTagName;
+    std::vector<char32_t, gc_allocator_ignore_off_page<char32_t>> m_appropriateEndTagName;
 
     // http://www.whatwg.org/specs/web-apps/current-work/#temporary-buffer
-    std::vector<char, gc_allocator<char>> m_temporaryBuffer;
+    std::vector<char, gc_allocator_ignore_off_page<char>> m_temporaryBuffer;
 
     // We occationally want to emit both a character token and an end tag
     // token (e.g., when lexing script). We buffer the name of the end tag
     // token here so we remember it next time we re-enter the tokenizer.
-    std::vector<char, gc_allocator<char>> m_bufferedEndTagName;
+    std::vector<char, gc_allocator_ignore_off_page<char>> m_bufferedEndTagName;
 };
 
 }

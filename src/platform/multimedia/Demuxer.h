@@ -135,7 +135,7 @@ protected:
     {
     }
 
-    std::vector<DemuxerClient*, gc_allocator<DemuxerClient*>> m_demuxerClients;
+    std::vector<DemuxerClient*, gc_allocator_ignore_off_page<DemuxerClient*>> m_demuxerClients;
 };
 
 }

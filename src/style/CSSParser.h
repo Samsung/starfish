@@ -424,11 +424,11 @@ protected:
     void addUnknownAtRule(CSSStyleSheet* aSheet, String* aString);
     void reportError(const char *aMsg);
     bool parseCharsetRule(CSSStyleSheet* aSheet);
-    static String* combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator<CSSToken*>>* list);
+    static String* combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>>* list);
     Document* m_document;
     bool m_preserveWS;
     bool m_preserveComments;
-    std::vector<CSSToken*, gc_allocator<CSSToken*> > m_preservedTokens;
+    std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*> > m_preservedTokens;
     CSSScanner* m_scanner;
     CSSToken* m_lookAhead;
     CSSToken* m_token;

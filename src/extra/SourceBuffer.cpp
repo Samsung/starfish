@@ -39,7 +39,7 @@ static bool g_traceMSEGCInited = false;
 
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
-    DemuxerSourceForSourceBuffer(SourceBufferData* inputBuffer, std::vector<uint8_t, gc_allocator<uint8_t>>* bufferRemain)
+    DemuxerSourceForSourceBuffer(SourceBufferData* inputBuffer, std::vector<uint8_t, gc_allocator_ignore_off_page<uint8_t>>* bufferRemain)
         : m_inputBuffer(inputBuffer)
         , m_bufferRemain(bufferRemain)
         , m_readPos(0)
@@ -109,7 +109,7 @@ public:
         // STARFISH_LOG_INFO("onRead pos %d readed %d\n", (int)(m_readPos - sizeSuccessToRead), (int)sizeSuccessToRead);
     }
     SourceBufferData* m_inputBuffer;
-    std::vector<uint8_t, gc_allocator<uint8_t>>* m_bufferRemain;
+    std::vector<uint8_t, gc_allocator_ignore_off_page<uint8_t>>* m_bufferRemain;
     size_t m_readPos;
 };
 

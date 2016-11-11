@@ -203,7 +203,7 @@ public:
     HTMLCollection* namedAccess(String* name);
     void invalidNamedAccessCacheIfNeeded();
 
-    std::vector<Element*, gc_allocator<Element*>>& elementExecutionStackForAttributeStringEventFunctionObject()
+    std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& elementExecutionStackForAttributeStringEventFunctionObject()
     {
         return m_elementExecutionStackForAttributeStringEventFunctionObject;
     }
@@ -251,9 +251,9 @@ protected:
     ScriptBindingInstance* m_scriptBindingInstance;
     PageVisibilityState m_pageVisibilityState;
     size_t m_domVersion;
-    std::vector<NetworkRequest*, gc_allocator<NetworkRequest*>> m_activeNetworkRequests;
+    std::vector<NetworkRequest*, gc_allocator_ignore_off_page<NetworkRequest*>> m_activeNetworkRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
-    std::vector<Element*, gc_allocator<Element*>> m_elementExecutionStackForAttributeStringEventFunctionObject;
+    std::vector<Element*, gc_allocator_ignore_off_page<Element*>> m_elementExecutionStackForAttributeStringEventFunctionObject;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif

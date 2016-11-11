@@ -71,7 +71,7 @@ static inline char32_t toLowerCase(char32_t cc)
     return cc + lowerCaseOffset;
 }
 
-static inline bool vectorEqualsString(const std::vector<char, gc_allocator<char>>& vector, String* string)
+static inline bool vectorEqualsString(const std::vector<char, gc_allocator_ignore_off_page<char>>& vector, String* string)
 {
     if (vector.size() != string->length())
         return false;

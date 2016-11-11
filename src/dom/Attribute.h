@@ -86,7 +86,7 @@ private:
     mutable AttributeRareData* m_rareData;
 };
 
-typedef std::vector<Attribute, gc_allocator<Attribute>> AttributeVector;
+typedef std::vector<Attribute, gc_allocator_ignore_off_page<Attribute>> AttributeVector;
 
 Attribute* findAttributeInVector(AttributeVector& attr, const QualifiedName& attributeName);
 }

@@ -569,7 +569,7 @@ public:
     String* toString();
 
 protected:
-    std::vector<CSSTransformFunction, gc_allocator<CSSTransformFunction> > m_transforms;
+    std::vector<CSSTransformFunction, gc_allocator_ignore_off_page<CSSTransformFunction> > m_transforms;
 };
 
 class CSSStyleValuePair : public gc {
@@ -657,7 +657,7 @@ public:
         m_valueKind = kind;
     }
 
-    bool updateValueCommon(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool updateValueCommon(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens);
 
     bool isAuto()
     {
@@ -954,17 +954,17 @@ public:
     }
 
 #define NEW_SET_VALUE_DECL(name, ...) \
-    bool updateValue##name(std::vector<String*, gc_allocator<String*> >* tokens);
+    bool updateValue##name(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens);
     FOR_EACH_STYLE_ATTRIBUTE(NEW_SET_VALUE_DECL)
 #undef NEW_SET_VALUE_DECL
 
-    bool updateValueLengthOrPercent(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
+    bool updateValueLengthOrPercent(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercent(String* token, bool allowNegative);
-    bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator<String*> >* tokens, bool allowNegative);
+    bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
 
-    bool updateValueBackgroundImage(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
-    bool updateValueBackgroundSize(std::vector<String*, gc_allocator<String*> >* tokens, bool allowComma);
+    bool updateValueBackgroundImage(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowComma);
+    bool updateValueBackgroundSize(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowComma);
     bool updateValueUnitBackgroundRepeat(String* token);
     bool updateValueUnitBackgroundPositionX(String* token);
     bool updateValueUnitBackgroundPositionY(String* token);
@@ -1032,7 +1032,7 @@ public:
 
 protected:
     Separator m_separator;
-    std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> > m_values;
+    std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> > m_values;
 };
 
 class CSSStyleDeclaration : public ScriptWrappable {
@@ -1091,7 +1091,7 @@ public:
 
     void notifyNeedsStyleRecalc();
 
-    void tokenizeCSSValue(std::vector<String*, gc_allocator<String*> >* tokens, String* src, String* seperator = String::emptyString);
+    void tokenizeCSSValue(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, String* src, String* seperator = String::emptyString);
 
     String* Border();
     String* BorderTop();
@@ -1162,7 +1162,7 @@ public:
             removeCSSValuePair(CSSStyleValuePair::KeyKind::name);                      \
             return;                                                                    \
         }                                                                              \
-        std::vector<String*, gc_allocator<String*> > tokens;                           \
+        std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;           \
         tokenizeCSSValue(&tokens, value, String::fromUTF8(","));                       \
         CSSStyleValuePair ret;                                                         \
         if (ret.updateValueCommon(&tokens) || ret.updateValue##name(&tokens)) {        \
@@ -1243,7 +1243,7 @@ public:
     }
 
 protected:
-    std::vector<CSSStyleValuePair, gc_allocator<CSSStyleValuePair> > m_cssValues;
+    std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> > m_cssValues;
     Document* m_document;
     Element* m_element;
 };
@@ -1343,7 +1343,7 @@ public:
 
     void parseSheetIfneeds();
 
-    std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> >& rules()
+    std::vector<CSSStyleRule*, gc_allocator_ignore_off_page<CSSStyleRule*> >& rules()
     {
         STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_rules;
@@ -1352,7 +1352,7 @@ protected:
     // m_stringString != String::emptyString means we need to parse style sheet before access style rules.
     String* m_sourceString;
 
-    std::vector<CSSStyleRule*, gc_allocator<CSSStyleRule*> > m_rules;
+    std::vector<CSSStyleRule*, gc_allocator_ignore_off_page<CSSStyleRule*> > m_rules;
     Node* m_origin;
 };
 
@@ -1366,7 +1366,7 @@ public:
         m_sheets.erase(std::find(m_sheets.begin(), m_sheets.end(), sheet));
     }
 
-    std::vector<CSSStyleSheet*, gc_allocator<CSSStyleSheet*> >& sheets()
+    std::vector<CSSStyleSheet*, gc_allocator_ignore_off_page<CSSStyleSheet*> >& sheets()
     {
         return m_sheets;
     }
@@ -1381,7 +1381,7 @@ public:
 protected:
     Document& m_document;
     float m_mediumFontSize;
-    std::vector<CSSStyleSheet*, gc_allocator<CSSStyleSheet*> > m_sheets;
+    std::vector<CSSStyleSheet*, gc_allocator_ignore_off_page<CSSStyleSheet*> > m_sheets;
 };
 }
 

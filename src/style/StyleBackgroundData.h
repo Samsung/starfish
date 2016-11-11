@@ -394,7 +394,7 @@ private:
     unsigned int m_maxLayerSizes;
     unsigned int m_maxLayerPositions;
 
-    std::vector<BackgroundLayer, gc_allocator<BackgroundLayer> > m_layers;
+    std::vector<BackgroundLayer, gc_allocator_ignore_off_page<BackgroundLayer> > m_layers;
 
 };
 

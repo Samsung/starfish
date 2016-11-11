@@ -686,7 +686,7 @@ public:
 protected:
     String* m_string;
     size_t m_pos;
-    std::vector<size_t, gc_allocator<size_t> > m_preservedPos;
+    std::vector<size_t, gc_allocator_ignore_off_page<size_t> > m_preservedPos;
 
 };
 
@@ -1016,10 +1016,10 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
 
 String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
 {
-    std::vector<CSSToken*, gc_allocator<CSSToken*>> willBeConcat;
-    std::vector<String*, gc_allocator<String*>> blocks;
+    std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>> willBeConcat;
+    std::vector<String*, gc_allocator_ignore_off_page<String*>> blocks;
     // bool foundPriority = false;
-    std::vector<String*, gc_allocator<String*>> values;
+    std::vector<String*, gc_allocator_ignore_off_page<String*>> values;
     bool isURLFunc = false;
     int urlTokens = 0;
     while (token->isNotNull()) {
@@ -1098,11 +1098,11 @@ String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
 }
 
 // Remove comments from both sides of a tokenList & Concat
-String* CSSParser::combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator<CSSToken*>>* list)
+String* CSSParser::combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>>* list)
 {
     String* result = String::emptyString;
     if (list != nullptr) {
-        std::vector<CSSToken*, gc_allocator<CSSToken*>> stashed;
+        std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>> stashed;
         bool seenNoneComment = false;
         for (CSSToken* item : *list) {
             if (seenNoneComment && item->isComment()) {
@@ -1125,7 +1125,7 @@ String* CSSParser::combineAndTrimTokenValues(std::vector<CSSToken*, gc_allocator
 void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration)
 {
     preserveState();
-    std::vector<String*, gc_allocator<String*>> blocks;
+    std::vector<String*, gc_allocator_ignore_off_page<String*>> blocks;
     if (aToken->isIdent()) {
         String* descriptor = aToken->m_value->toLower();
 #ifdef STARFISH_TC_COVERAGE
@@ -1365,7 +1365,7 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
 void CSSParser::addUnknownAtRule(CSSStyleSheet* aSheet, String* aString)
 {
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
-    std::vector<String*, gc_allocator<String*>> blocks;
+    std::vector<String*, gc_allocator_ignore_off_page<String*>> blocks;
     CSSToken* token = getToken(false, false);
     while (token->isNotNull()) {
         aString = aString->concat(token->m_value);

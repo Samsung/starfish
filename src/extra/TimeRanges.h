@@ -58,7 +58,7 @@ public:
     }
 
 private:
-    std::vector<TimeRange, gc_allocator<TimeRange>> m_list;
+    std::vector<TimeRange, gc_allocator_ignore_off_page<TimeRange>> m_list;
 };
 
 }

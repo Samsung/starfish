@@ -159,7 +159,7 @@ protected:
     StarFish* m_starFish;
     SourceBufferList* m_sourceBuffers;
     SourceBufferList* m_activeSourceBuffers;
-    std::vector<MediaSourceClient*, gc_allocator<MediaSourceClient*>> m_clients;
+    std::vector<MediaSourceClient*, gc_allocator_ignore_off_page<MediaSourceClient*>> m_clients;
     double m_duration;
     uint64_t m_shortestMediaDuration;
 };

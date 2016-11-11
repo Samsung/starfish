@@ -22,7 +22,7 @@ namespace StarFish {
 class Resource;
 class ResourceClient;
 
-typedef std::vector<ResourceClient*, gc_allocator<ResourceClient*>> ResourceClientVector;
+typedef std::vector<ResourceClient*, gc_allocator_ignore_off_page<ResourceClient*>> ResourceClientVector;
 
 class ResourceClient : public gc {
 public:
