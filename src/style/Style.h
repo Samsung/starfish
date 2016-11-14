@@ -1331,8 +1331,7 @@ public:
     }
 
     // http://www.w3.org/TR/css3-selectors/#specificity
-    // We use 256 as the base of the specificity number system.
-    // unsigned specificity() const;
+    unsigned specificityForOneSelector() const;
 
     bool isLastInTagHistory() const { return relation() == RelationType::None; }
 
@@ -1379,6 +1378,10 @@ public:
         return m_selectors;
     }
 
+    // http://www.w3.org/TR/css3-selectors/#specificity
+    // We use 256 as the base of the specificity number system.
+    unsigned specificity() const;
+
 protected:
     std::vector<CSSSelector*, gc_allocator<CSSSelector*> > m_selectors;
 };
@@ -1416,6 +1419,10 @@ public:
         return ScriptWrappable::Type::CSSStyleRuleObject;
     }
 
+    CSSSelectorList* selectorList()
+    {
+        return m_selectorList;
+    }
 
     CSSStyleDeclaration* styleDeclaration()
     {
@@ -1439,11 +1446,13 @@ public:
     {
         m_sourceString = str;
         m_origin = origin;
+        m_needsSpecificityResort = true;
     }
 
     void addRule(CSSStyleRule* rule)
     {
         m_rules.push_back(rule);
+        m_needsSpecificityResort = true;
     }
 
     URL* url();
@@ -1459,12 +1468,15 @@ public:
         STARFISH_ASSERT(m_sourceString == String::emptyString);
         return m_rules;
     }
+
+    void sortRulesBySpecificity();
+
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet before access style rules.
     String* m_sourceString;
-
     std::vector<CSSStyleRule*, gc_allocator_ignore_off_page<CSSStyleRule*> > m_rules;
     Node* m_origin;
+    bool m_needsSpecificityResort;
 };
 
 class StyleResolver {

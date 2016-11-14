@@ -549,6 +549,56 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator_ignore_of
     return true;
 }
 
+unsigned CSSSelector::specificityForOneSelector() const
+{
+    unsigned specificity = 0;
+
+    // For now, we support only the pseudo class selector.
+    if (m_pseudotype != PseudoNone)
+        specificity += 0x000100;
+
+    switch (m_type) {
+    case Tag:
+        return specificity + 0x000001;
+    case Id:
+        return specificity + 0x010000;
+    case Class:
+        return specificity + 0x000100;
+    default:
+        break;
+    }
+
+    return 0;
+}
+
+unsigned CSSSelectorList::specificity() const
+{
+    // Make sure the result doesn't overflow
+    static const unsigned idMask = 0xff0000; // count the number of ID selectors in the selector (= a)
+    static const unsigned classMask = 0x00ff00; // count the number of class selectors, attributes selectors, and pseudo-classes in the selector (= b)
+    static const unsigned elementMask = 0x0000ff; // count the number of type selectors and pseudo-elements in the selector (= c)
+
+    unsigned total = 0;
+    unsigned temp = 0;
+
+    for (unsigned i = 0; i < size(); i++) {
+        CSSSelector* selector = m_selectors[i];
+        temp = total + selector->specificityForOneSelector();
+
+        // Clamp each component to its max in the case of overflow.
+        if ((temp & idMask) < (total & idMask))
+            total |= idMask;
+        else if ((temp & classMask) < (total & classMask))
+            total |= classMask;
+        else if ((temp & elementMask) < (total & elementMask))
+            total |= elementMask;
+        else
+            total = temp;
+    }
+
+    return total;
+}
+
 URL* CSSStyleSheet::url()
 {
     if (m_origin->isElement() && m_origin->asElement()->isHTMLElement() && m_origin->asElement()->asHTMLElement()->isHTMLLinkElement()) {
@@ -564,6 +614,19 @@ void CSSStyleSheet::parseSheetIfneeds()
         CSSParser parser(m_origin->document());
         parser.parseStyleSheet(m_sourceString, this);
         m_sourceString = String::emptyString;
+    }
+}
+
+static bool compareSpecificity(CSSStyleRule* r1, CSSStyleRule* r2)
+{
+    return r1->selectorList()->specificity() < r2->selectorList()->specificity();
+}
+
+void CSSStyleSheet::sortRulesBySpecificity()
+{
+    if (m_needsSpecificityResort) {
+        std::sort(m_rules.begin(), m_rules.end(), compareSpecificity);
+        m_needsSpecificityResort = false;
     }
 }
 
@@ -2160,10 +2223,11 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
         }
     }
 
-    // TODO: Consider selector's specificity.
+    // TODO: Consider page's specificity.
     // first sheet is must user-agent style sheet!
     for (unsigned i = 0; i < m_sheets.size(); i++) {
         CSSStyleSheet* sheet = m_sheets[i];
+        sheet->sortRulesBySpecificity();
 
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
             bool isMatched = false;
