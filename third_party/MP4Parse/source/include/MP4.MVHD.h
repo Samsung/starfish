@@ -44,7 +44,7 @@ namespace MP4
         private:
             
             
-        protected:
+        public:
             
             uint64_t _creationTime;
             uint64_t _modificationTime;

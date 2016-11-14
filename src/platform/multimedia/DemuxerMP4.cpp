@@ -162,9 +162,17 @@ public:
         size_t track_width;
         size_t track_height;
         size_t duration;
+        size_t time_scale;
 
         parseMP4(source, false, [&](MP4::Atom* atom) {
-            if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tkhd")) {
+            if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mvhd")) {
+                MP4::MVHD* mvhd = (MP4::MVHD*)atom;
+                time_scale = mvhd->_timeScale;
+                // fprintf(stderr, "[parseMP4][%p] Found mvhd\n", source);
+                // fprintf(stderr, "[parseMP4][%p] mvhd->_duration : %lld\n", source, mvhd->_duration);
+                // fprintf(stderr, "[parseMP4][%p] mvhd->_timeScale : %d\n", source, mvhd->_timeScale);
+                // fprintf(stderr, "[parseMP4][%p] mvhd->_rate : %f\n", source, mvhd->_rate);
+            } else if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("tkhd")) {
                 MP4::TKHD* tkhd = (MP4::TKHD*)atom;
                 track_id = tkhd->track_id;
                 track_width = tkhd->track_width;
@@ -180,7 +188,11 @@ public:
                         // video
                         VideoStreamInfo info;
                         info.m_streamIndex = track_id - 1;
-                        info.m_duration = duration;
+                        // Set duration
+                        // Note : https://www.w3.org/2008/WebVideo/Annotations/drafts/ontology10/CR/mappings_tested/container-MPEG4.htm
+                        //      - Find the movie header box (mvhd) and get the timescale field,
+                        //      - and then retrieve the duration field from the movie or track header (mvhd, tkhd) as appropriate, and divide.
+                        info.m_duration = time_scale > 0 ? (duration * 1000LL / time_scale) : 0;
                         // TODO read avg_frame_rate
                         info.m_timeBaseNum = 0;
                         info.m_timeBaseDen = 1;
@@ -196,7 +208,7 @@ public:
                     } else {
                         AudioStreamInfo info;
                         info.m_streamIndex = track_id - 1;
-                        info.m_duration = duration;
+                        info.m_duration = time_scale > 0 ? (duration * 1000LL / time_scale) : 0;
                         // TODO read codec name
                         info.m_codecName = "aac";
                         // info.m_bitRate = m_formatContext->streams[i]->codec->bit_rate;

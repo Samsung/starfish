@@ -566,7 +566,9 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp, 
     size_t groupIndex = 0;
     while (groupIndex < m_packetGroup.size()) {
         MediaPacketGroup* grp = m_packetGroup[groupIndex];
-        if (grp->m_streamInfo->m_type & type) {
+        // Note : Remove Packets
+        //        packet.start < endTimestamp && patcket.end > startTimestamp
+        if ((grp->m_streamInfo->m_type & type) && !(startTimestamp >= grp->m_groupTimestampEnd || endTimestamp <= grp->m_groupTimestampStart)) {
             if (startTimestamp <= grp->m_groupTimestampStart && grp->m_groupTimestampEnd <= endTimestamp) {
                 // STARFISH_LOG_INFO("SourceBuffer::remove all %d was(%d->%d)\n", (int)groupIndex, (int)grp->m_groupTimestampStart, (int)grp->m_groupTimestampEnd);
 
@@ -578,48 +580,7 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp, 
                 std::vector<MediaPacket*>().swap(grp->m_packets);
                 delete grp;
                 m_packetGroup.erase(m_packetGroup.begin() + groupIndex);
-            } else if ((startTimestamp <= grp->m_groupTimestampStart && endTimestamp < grp->m_groupTimestampEnd) || (grp->m_groupTimestampStart < startTimestamp && grp->m_groupTimestampEnd <= endTimestamp)) {
-                // remove head or tail
-                size_t eraseStart = 0 , eraseEnd = 0;
-
-                if ((startTimestamp <= grp->m_groupTimestampStart && endTimestamp < grp->m_groupTimestampEnd)) {
-                    // remove head
-                    for (size_t i = 0; i < grp->m_packets.size(); i ++) {
-                        MediaPacket* pkt = grp->m_packets[i];
-                        if (endTimestamp > (pkt->m_pts + pkt->m_duration)) {
-                            eraseEnd = i;
-                        } else {
-                            break;
-                        }
-                    }
-                } else {
-                    // remove tail
-                    for (size_t i = grp->m_packets.size(); i > 0; i --) {
-                        MediaPacket* pkt = grp->m_packets[i - 1];
-                        if (startTimestamp < pkt->m_pts) {
-                            eraseStart = i;
-                        } else {
-                            break;
-                        }
-                    }
-                }
-
-                // STARFISH_LOG_INFO("SourceBuffer::remove %d %d %d\n", (int)groupIndex, (int)eraseStart, (int)eraseEnd);
-
-                for (size_t i = eraseStart; i < eraseEnd; i ++) {
-                    delete [] grp->m_packets[i]->m_data;
-                    delete grp->m_packets[i];
-                }
-
-                grp->m_packets.erase(grp->m_packets.begin() + eraseStart, grp->m_packets.begin() + eraseEnd);
-                if (grp->m_packets.size()) {
-                    grp->m_groupTimestampStart = (*grp->m_packets.begin())->m_pts;
-                    grp->m_groupTimestampEnd = (*(grp->m_packets.end() - 1))->m_pts + (*(grp->m_packets.end() - 1))->m_duration;
-                    groupIndex++;
-                } else {
-                    delete grp;
-                    m_packetGroup.erase(m_packetGroup.begin() + groupIndex);
-                }
+                continue;
             } else if (grp->m_groupTimestampStart < startTimestamp && endTimestamp < grp->m_groupTimestampEnd) {
                 // remove center
                 size_t holeStart = 0;
@@ -672,6 +633,49 @@ void SourceBuffer::rangeRemoval(uint64_t startTimestamp, uint64_t endTimestamp, 
                 } else {
                     delete grp;
                     m_packetGroup.erase(std::find(m_packetGroup.begin(), m_packetGroup.end(), grp));
+                }
+                continue;
+            } else {
+                // Remove head or tail
+                size_t eraseStart = 0 , eraseEnd = grp->m_packets.size();
+                if (startTimestamp <= grp->m_groupTimestampStart && endTimestamp < grp->m_groupTimestampEnd) {
+                    // Remove head
+                    for (eraseEnd = 0; eraseEnd < grp->m_packets.size(); eraseEnd++) {
+                        MediaPacket* pkt = grp->m_packets[eraseEnd];
+                        // Note : "packet.start < endTimestamp" && patcket.end > startTimestamp
+                        if (pkt->m_pts >= endTimestamp) {
+                            break;
+                        }
+                    }
+                } else {
+                    // Remove tail
+                    for (eraseStart = grp->m_packets.size(); eraseStart > 0; eraseStart --) {
+                        MediaPacket* pkt = grp->m_packets[eraseStart - 1];
+                        // Note : packet.start < endTimestamp && "patcket.end > startTimestamp"
+                        if (pkt->m_pts + pkt->m_duration <= startTimestamp) {
+                            break;
+                        }
+                    }
+                }
+
+                if (eraseStart < eraseEnd) {
+                    // STARFISH_LOG_INFO("SourceBuffer::remove %d %d %d\n", (int)groupIndex, (int)eraseStart, (int)eraseEnd);
+
+                    for (size_t i = eraseStart; i < eraseEnd; i ++) {
+                        delete [] grp->m_packets[i]->m_data;
+                        delete grp->m_packets[i];
+                    }
+
+                    grp->m_packets.erase(grp->m_packets.begin() + eraseStart, grp->m_packets.begin() + eraseEnd);
+                    if (grp->m_packets.size()) {
+                        grp->m_groupTimestampStart = (*grp->m_packets.begin())->m_pts;
+                        grp->m_groupTimestampEnd = (*(grp->m_packets.end() - 1))->m_pts + (*(grp->m_packets.end() - 1))->m_duration;
+                        groupIndex++;
+                    } else {
+                        delete grp;
+                        m_packetGroup.erase(m_packetGroup.begin() + groupIndex);
+                    }
+                    continue;
                 }
             }
         }
