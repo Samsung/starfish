@@ -624,10 +624,7 @@ static bool compareSpecificity(CSSStyleRule* r1, CSSStyleRule* r2)
 
 void CSSStyleSheet::sortRulesBySpecificity()
 {
-    if (m_needsSpecificityResort) {
-        std::sort(m_rules.begin(), m_rules.end(), compareSpecificity);
-        m_needsSpecificityResort = false;
-    }
+    std::sort(m_rules.begin(), m_rules.end(), compareSpecificity);
 }
 
 String* CSSStyleDeclaration::generateCSSText()
@@ -2299,8 +2296,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 {
                 Element* e = element;
                 CSSSelector* s = selector;
-                bool isOneSelectorMatched = false;
                 while (e) {
+                    bool isOneSelectorMatched = false;
                     if (s->type() == CSSSelector::Type::Universal) {
                         isOneSelectorMatched = true;
                     } else if (s->type() == CSSSelector::Type::Tag) {
