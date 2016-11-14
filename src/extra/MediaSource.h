@@ -78,7 +78,10 @@ public:
     static bool isTypeSupported(String* type)
     {
         // TODO
-        return true;
+        // Currently, check only whether containier is mp4 or NOT
+        if (type->contains("video/mp4") || type->contains("audio/mp4"))
+            return true;
+        return false;
     }
 
     ReadyState readyState()
