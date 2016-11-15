@@ -56,6 +56,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLLIElement(document, name);
     } else if (name == str->m_ulTagName.localNameAtomic()) {
         return new HTMLUListElement(document, name);
+    } else if (name == str->m_strongTagName.localNameAtomic()) {
+        return new HTMLStrongElement(document, name);
     }
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {

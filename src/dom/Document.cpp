@@ -517,6 +517,25 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         userAgentStyleSheet->addRule(rule);
     }
 
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("strong"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::InlineDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        userAgentStyleSheet->addRule(rule);
+    }
+
     m_styleResolver.addSheet(userAgentStyleSheet);
 
     auto df = new FrameDocument(this);
