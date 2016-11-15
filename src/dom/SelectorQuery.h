@@ -27,27 +27,27 @@ class CSSSelectorList;
 class SelectorQuery : public gc {
 public:
     enum VisitedMatchType { VisitedMatchDisabled, VisitedMatchEnabled };
+    enum MatchTraverseRootState { DoesNotMatchTraverseRoots, MatchesTraverseRoots };
 
-    SelectorQuery(CSSSelectorList* selector)
-        : m_selectors(selector)
+    SelectorQuery(std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>>& selector)
+        : m_selectorListContainer(selector)
     { }
     Element* queryFirst(Node& rootNode);
 
     struct SelectorCheckingContext {
         // Initial selector constructor
         SelectorCheckingContext(Element* e, VisitedMatchType v)
+            : element(e)
+            , previousElement(nullptr)
+            , scope(nullptr)
+            , visitedMatchType(v)
+            , isSubSelector(false)
+            , inRightmostCompound(true)
+            , hasScrollbarPseudo(false)
+            , hasSelectionPseudo(false)
+            , treatShadowHostAsNormalScope(false)
+
         {
-            /*selector(nullptr);*/
-            element = e;
-            previousElement = nullptr;
-            scope = nullptr;
-            visitedMatchType = v;
-            /*, pseudoId(PseudoIdNone)*/
-            isSubSelector = false;
-            inRightmostCompound = true;
-            hasScrollbarPseudo = false;
-            hasSelectionPseudo = false;
-            treatShadowHostAsNormalScope = false;
         }
 
         std::vector<CSSSelector*, gc_allocator<CSSSelector*>> selector;
@@ -55,7 +55,6 @@ public:
         Element* previousElement;
         Node* scope;
         VisitedMatchType visitedMatchType;
-        /*PseudoId pseudoId;*/
         bool isSubSelector;
         bool inRightmostCompound;
         bool hasScrollbarPseudo;
@@ -65,10 +64,7 @@ public:
 
     struct MatchResult {
         MatchResult()
-            : /*dynamicPseudo(PseudoIdNone)
-            , */ specificity(0) { }
-
-        /*PseudoId dynamicPseudo;*/
+            : specificity(0) { }
         unsigned specificity;
     };
 
@@ -78,16 +74,26 @@ public:
 private:
     enum Match { SelectorMatches, SelectorFailsLocally, SelectorFailsAllSiblings, SelectorFailsCompletely };
 
+    bool canUseFastQuery(const Node& rootNode);
     bool checkPseudoClass(const SelectorCheckingContext& context, MatchResult& result);
     bool checkOne(const SelectorCheckingContext& context, MatchResult& result);
     Match matchForRelation(const SelectorCheckingContext& context, MatchResult& result);
     Match matchForSubSelector(const SelectorCheckingContext& context, MatchResult& result);
     Match matchSelector(const SelectorCheckingContext&, MatchResult&);
-    void execute(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>* matchedElement, bool shouldOnlyMatchFirstElement);
-    void collectElementsById(Node& rootNode, AtomicString& id, std::vector<Node*, gc_allocator<Node*>>* collection);
-    bool selectorMatches(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selector, Element& element, Node& rootNode);
+    void traverseDescendants(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selectors, Node* traverseRoot, Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement);
+    void executeForTraverseRoot(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selector, Node* traverseRoot, MatchTraverseRootState matchTraverseRoot, Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& output, bool shouldOnlyMatchFirstElement);
+    template <typename SimpleElementListType>
+    void executeForTraverseRoots(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selector, SimpleElementListType& traverseRoots, MatchTraverseRootState matchTraverseRoots, Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& output, bool shouldOnlyMatchFirstElement);
+    void findTraverseRootsAndExecute(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& output, bool shouldOnlyMatchFirstElement);
+    bool selectorListMatches(Node& rootNode, Element* element, std::vector<Element*, gc_allocator<Element*>>& output);
+    void executeSlow(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement);
+    void execute(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& matchedElement, bool shouldOnlyMatchFirstElement);
+    void collectElementsById(Node& rootNode, String* id, std::vector<Element*, gc_allocator<Element*>>& collection);
+    void collectElementsByClassName(Node& rootNode, const String* className,  std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement);
+    void collectElementsByTagName(Node& rootNode, const String* tagName, std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement);
+    bool selectorMatches(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selector, Element* element, Node& rootNode);
     CSSSelector* selectorForIdLookup(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& firstSelector);
-    CSSSelectorList* m_selectors;
+    std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>>& m_selectorListContainer;
 };
 
 }
