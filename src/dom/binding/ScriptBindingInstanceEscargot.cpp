@@ -5462,6 +5462,77 @@ escargot::ESFunctionObject* bindingURL(ScriptBindingInstance* scriptBindingInsta
     return URLFunction;
 }
 
+escargot::ESFunctionObject* bindingDOMRectReadOnly(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMRectReadOnly, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("x"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->x());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("y"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->y());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("width"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->width());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("height"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->height());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("top"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->top());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("right"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->right());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("bottom"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->bottom());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("left"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectReadOnlyObject, DOMRectReadOnly);
+            DOMRectReadOnly* rect = originalObj;
+            return escargot::ESValue(rect->left());
+        }, nullptr, true, true);
+
+    return DOMRectReadOnlyFunction;
+}
+
 escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBindingInstance)
 {
     /* DOM Exception */

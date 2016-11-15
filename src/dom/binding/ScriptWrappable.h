@@ -96,6 +96,7 @@ class Geoposition;
 class PositionError;
 class Coordinates;
 class DOMParser;
+class DOMRectReadOnly;
 
 typedef escargot::ESValue ScriptValue;
 typedef escargot::ESObject* ScriptObject;
@@ -107,42 +108,43 @@ class ScriptWrappable : public gc {
 public:
     enum Type {
         None = 0,
-        EventTargetObject = 1 << 0,
-        WindowObject = 1 << 1 | EventTargetObject,
-        NodeObject = 1 << 2 | EventTargetObject,
-        EventObject = 1 << 3,
-        HTMLCollectionObject = 1 << 4,
-        NodeListObject = 1 << 5,
-        DOMTokenListObject = 1 << 6,
-        DOMSettableTokenListObject = 1 << 7,
-        NamedNodeMapObject = 1 << 8,
-        CSSStyleDeclarationObject = 1 << 9,
-        CSSStyleRuleObject = 1 << 10,
-        XMLHttpRequestObject = 1 << 11 | EventTargetObject,
-        BlobObject = 1 << 12,
-        URLObject = 1 << 13,
-        DOMExceptionObject = 1 << 14,
-        AttributeStringEventFunctionObject = 1 << 15,
-#ifdef STARFISH_EXP
-        DOMImplementationObject = 1 << 16,
-#endif
+        EventTargetObject = 1,
+        WindowObject = 2 | EventTargetObject,
+        NodeObject = 4 | EventTargetObject,
+        XMLHttpRequestObject = 6 | EventTargetObject,
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-        TextTrackObject = 1 << 17 | EventTargetObject,
-        TextTrackListObject = 1 << 18 | EventTargetObject,
-        TextTrackCueObject = 1 << 19 | EventTargetObject,
-        TextTrackCueListObject = 1 << 20,
-        TimeRangesObject = 1 << 21,
-        MediaSourceObject = 1 << 22 | EventTargetObject,
-        SourceBufferObject = 1 << 23 | EventTargetObject,
-        SourceBufferListObject = 1 << 24 | EventTargetObject,
+        TextTrackObject = 8 | EventTargetObject,
+        TextTrackListObject = 10 | EventTargetObject,
+        TextTrackCueObject = 12 | EventTargetObject,
+        MediaSourceObject = 14 | EventTargetObject,
+        SourceBufferObject = 16 | EventTargetObject,
+        SourceBufferListObject = 18 | EventTargetObject,
+        TextTrackCueListObject = 32,
+        TimeRangesObject = 34,
 #endif
-        NavigatorObject = 1 << 25,
-        GeolocationObject = 1 << 26,
-        GeopositionObject = 1 << 27,
-        PositionErrorObject = 1 << 28,
-        CoordinatesObject = 1 << 29,
-        DOMParserObject = 1 << 30,
-        LocationObject = 1 << 31,
+#ifdef STARFISH_EXP
+        DOMImplementationObject = 36,
+#endif
+        EventObject = 38,
+        HTMLCollectionObject = 40,
+        NodeListObject = 42,
+        DOMTokenListObject = 44,
+        DOMSettableTokenListObject = 46,
+        NamedNodeMapObject = 48,
+        CSSStyleDeclarationObject = 50,
+        CSSStyleRuleObject = 52,
+        BlobObject = 54,
+        URLObject = 56,
+        DOMExceptionObject = 58,
+        AttributeStringEventFunctionObject = 60,
+        NavigatorObject = 62,
+        GeolocationObject = 64,
+        GeopositionObject = 66,
+        PositionErrorObject = 68,
+        CoordinatesObject = 70,
+        DOMParserObject = 72,
+        LocationObject = 74,
+        DOMRectReadOnlyObject = 76,
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -237,6 +239,7 @@ public:
     void initScriptWrappable(Coordinates* ptr);
     void initScriptWrappable(PositionError* ptr);
     void initScriptWrappable(DOMParser* ptr);
+    void initScriptWrappable(DOMRectReadOnly* ptr, ScriptBindingInstance*);
 
     bool hasProperty(String* name);
 
