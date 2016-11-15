@@ -909,19 +909,19 @@ Element* Node::querySelector(String* selectors)
     CSSToken* token = parser.makeToken(selectors);
 
 
-    std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>> selectorList;
+    std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>> selectorListContainer;
 #if 1
-    parser.parseStyleRule(token, nullptr, false, &selectorList, true);
+    parser.parseStyleRule(token, nullptr, false, &selectorListContainer, true);
 #else
     parser.parseStyleRule(token, nullptr, false);
 #endif
 
-    if (selectorList.size() < 1) {
+    if (selectorListContainer.size() < 1) {
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::DOM_EXCEPTION, "Failed to execute 'querySelector' on 'Document': The provided selector is invalid.");
     }
 
     // TODO: Consider for one or more selectorLists
-    SelectorQuery selectorQuery(selectorList[0]);
+    SelectorQuery selectorQuery(selectorListContainer);
     return selectorQuery.queryFirst(*this);
 }
 

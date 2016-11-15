@@ -44,14 +44,33 @@ public:
     }
 
     template<typename Func>
-    static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Node*>>* collection, Node* root, Func filter)
+    static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Node*>>* collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
     {
         Node* child = root->firstChild();
         while (child) {
-            if (filter(child))
-                collection->push_back(child);
+            if (filter(child)) {
+                collection.push_back(child);
+                if (shouldOnlyMatchFirstElement)
+                    return;
+            }
 
-            getherDescendant(collection, child, filter);
+            getherDescendant(collection, child, filter, shouldOnlyMatchFirstElement);
+            child = child->nextSibling();
+        }
+    }
+
+    template<typename Func>
+    static void getherDescendant(std::vector<Element*, gc_allocator<Element*>>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
+    {
+        Node* child = root->firstChild();
+        while (child) {
+            if (filter(child)) {
+                collection.push_back(child->asElement());
+                if (shouldOnlyMatchFirstElement)
+                    return;
+            }
+
+            getherDescendant(collection, child, filter, shouldOnlyMatchFirstElement);
             child = child->nextSibling();
         }
     }
@@ -62,6 +81,18 @@ public:
         Node* child = parent->firstChild();
         while (child) {
             if (matchingRule(child))
+                return child;
+            else
+                child = child->nextSibling();
+        }
+        return nullptr;
+    }
+
+    static Node* firstChild(Node* parent)
+    {
+        Node* child = parent->firstChild();
+        while (child) {
+            if (!child && child->isElement())
                 return child;
             else
                 child = child->nextSibling();
@@ -144,6 +175,55 @@ public:
             child = child->nextSibling();
         }
         return count;
+    }
+
+    static Node* nextAncestorSibling(const Node* current, const Node* stayWithin)
+    {
+        STARFISH_ASSERT(!current->nextSibling());
+        STARFISH_ASSERT(current != stayWithin);
+        for (Node* parent = current->parentNode(); parent; parent = parent->parentNode()) {
+            if (parent == stayWithin)
+                return 0;
+            if (parent->nextSibling())
+                return parent->nextSibling();
+        }
+        return 0;
+    }
+
+    static Node* next(Node* current, const Node* stayWithin)
+    {
+        if (current->hasChildNodes())
+            return current->firstChild();
+        if (current == stayWithin)
+            return 0;
+        if (current->nextSibling())
+            return current->nextSibling();
+        return nextAncestorSibling(current, stayWithin);
+    }
+
+    static Element* nextElement(Node* current, const Node* stayWithin)
+    {
+        Node* node = next(current, stayWithin);
+        while (node && !node->isElement())
+            node = next(node, stayWithin);
+        return node->asElement();
+    }
+
+    static Node* nextSkippingChildren(Node* current, const Node* stayWithin)
+    {
+        if (current == stayWithin)
+            return 0;
+        if (current->nextSibling())
+            return current->nextSibling();
+        return nextAncestorSibling(current, stayWithin);
+    }
+
+    static Element* nextSkippingChildrenElement(Node* current, const Node* stayWithin)
+    {
+        Node* node = nextSkippingChildren(current, stayWithin);
+        while (node && !node->isElement())
+            node = nextSkippingChildren(node, stayWithin);
+        return node->asElement();
     }
 };
 

@@ -1298,6 +1298,48 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         }, escargot::ESString::create("getElementsByTagName"), 1, false)
     );
 
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("querySelector"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            if (obj->isElement()) {
+                if (instance->currentExecutionContext()->argumentCount() > 0) {
+                    Element* elem = obj->asElement();
+                    escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+
+                    if (argValue.isESString()) {
+                        try {
+                            escargot::ESString* argStr = argValue.asESString();
+
+                            if (*argStr == *(escargot::strings->emptyString.string()))
+                                throw new DOMException(elem->document()->window()->scriptBindingInstance(),
+                                    DOMException::Code::DOM_EXCEPTION, "Failed to execute 'querySelector' on 'Element': The provided selector is empty.");
+
+                            Element* result = elem->querySelector(toBrowserString(argStr));
+                            if (result != nullptr)
+                                return result->scriptValue();
+                        } catch(DOMException* e) {
+                            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                        }
+                    } else if (argValue.isNull() || argValue.isUndefined()) {
+                        return escargot::ESValue(escargot::ESValue::ESNull);
+                    }
+                } else {
+                    auto msg = escargot::ESString::create("Failed to execute 'querySelector' on 'Element': 1 argument required, but only 0 present.");
+                    instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+                }
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("Element&&&querySelector\n");
+#endif
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("querySelector"), 1, false)
+    );
+
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("hasAttribute"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();

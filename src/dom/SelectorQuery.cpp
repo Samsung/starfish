@@ -31,15 +31,80 @@ static inline SelectorQuery::SelectorCheckingContext prepareNextContextForRelati
     return nextContext;
 }
 
+static bool contains(const std::vector<String*, gc_allocator<String*> >& vector, const String* string)
+{
+    size_t size = vector.size();
+    for (size_t i = 0; i < size; ++i) {
+        if (string->equals(vector[i]))
+            return true;
+    }
+    return false;
+}
+
+enum ClassElementListBehavior { AllElements, OnlyRoots };
+template <ClassElementListBehavior onlyRoots>
+class ClassElementList : public gc {
+public:
+    ClassElementList(Node& rootNode, String* className)
+        : m_className(className)
+        , m_rootNode(&rootNode)
+        , m_currentElement(nextInternal((Element*)Traverse::firstChild(&rootNode, [&](Node* child) {
+            if (!child && child->isElement()) {
+                return true;
+            } else
+                return false;
+        })))
+    { }
+
+    bool isEmpty() const { return !m_currentElement; }
+
+    Element* next()
+    {
+        Element* current = m_currentElement;
+        STARFISH_ASSERT(current);
+        if (onlyRoots)
+            m_currentElement = nextInternal((Element*)Traverse::nextSkippingChildren(m_currentElement, m_rootNode));
+        else
+            m_currentElement = nextInternal((Element*)Traverse::nextElement(m_currentElement, m_rootNode));
+        return current;
+    }
+
+private:
+    Element* nextInternal(Element* element)
+    {
+        for (; element; element = (Element*)Traverse::nextElement(element, m_rootNode)) {
+            if (element->hasClass() && contains(element->classNames(), m_className))
+                return element;
+        }
+        return nullptr;
+    }
+
+    const String* m_className;
+    Node* m_rootNode;
+    Element* m_currentElement;
+};
+
 Element* SelectorQuery::queryFirst(Node& rootNode)
 {
     std::vector<Element*, gc_allocator<Element*>> matchedElement;
-    execute(rootNode, &matchedElement, true);
+    execute(rootNode, matchedElement, true);
 
     if (matchedElement.size() > 0)
         return matchedElement[0];
     else
         return nullptr;
+}
+
+inline bool ancestorHasClassName(Node& rootNode, const String* className)
+{
+    if (!rootNode.isElement())
+        return false;
+
+    for (Element* element = rootNode.asElement(); element; element = element->parentElement()) {
+        if (element->hasClass() && contains(element->classNames(), className))
+            return true;
+    }
+    return false;
 }
 
 bool SelectorQuery::match(const SelectorQuery::SelectorCheckingContext& context, SelectorQuery::MatchResult& result)
@@ -57,57 +122,227 @@ bool SelectorQuery::match(const SelectorQuery::SelectorCheckingContext& context)
 CSSSelector* SelectorQuery::selectorForIdLookup(std::vector<CSSSelector*, gc_allocator<CSSSelector*>>& selectors)
 {
     int i = 0;
-    for (CSSSelector* selector = selectors[i]; selector; selector = selectors[++i]) {
-        if (selector->type() == CSSSelector::Id)
-            return selector;
-        if (selector->relation() != CSSSelector::SubSelector)
+    for (std::vector<CSSSelector*, gc_allocator<CSSSelector*>>::iterator it = selectors.begin(); it != selectors.end(); ++it) {
+        if ((*it)->type() == CSSSelector::Id)
+            return *it;
+        if ((*it)->relation() != CSSSelector::SubSelector)
             break;
     }
     return nullptr;
 }
 
 
-void SelectorQuery::collectElementsById(Node& rootNode, AtomicString& id, std::vector<Node*, gc_allocator<Node*>>* collection)
+void SelectorQuery::collectElementsById(Node& rootNode, String* id, std::vector<Element*, gc_allocator<Element*>>& collection)
 {
     Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
-        if (child->isElement() && child->asElement()->isHTMLElement() && child->asElement()->asHTMLElement()->id()->equals(id)) {
+        if (child->isElement() && child->asElement()->hasId() && child->asElement()->id()->equals(id)) {
             return true;
         } else
             return false;
     });
 }
 
-bool SelectorQuery::selectorMatches(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selector, Element& element, Node& rootNode)
+void SelectorQuery::collectElementsByClassName(Node& rootNode, const String* className,  std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement)
 {
-    SelectorCheckingContext context(&element, VisitedMatchDisabled);
+    Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
+        if (child->isElement() && child->asElement()->hasClass() && contains(child->asElement()->classNames(), className)) {
+            return true;
+        } else
+            return false;
+    }, shouldOnlyMatchFirstElement);
+}
+
+void SelectorQuery::collectElementsByTagName(Node& rootNode, const String* tagName, std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement)
+{
+    Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
+        if (child->isElement() && (tagName->equals(String::fromUTF8("*")) || child->asElement()->tagName()->equals(tagName))) {
+            return true;
+        } else
+            return false;
+    }, shouldOnlyMatchFirstElement);
+}
+
+void SelectorQuery::traverseDescendants(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selectors, Node* traverseRoot, Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement)
+{
+    Traverse::getherDescendant(collection, traverseRoot, [&](Node* child) {
+        if (child->isElement() && selectorMatches(selectors, child->asElement(), rootNode))
+            return true;
+        return false;
+    }, shouldOnlyMatchFirstElement);
+}
+
+bool SelectorQuery::selectorMatches(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selector, Element* element, Node& rootNode)
+{
+    SelectorCheckingContext context(element, VisitedMatchDisabled);
     context.selector = selector;
     context.scope = &rootNode;
     return match(context);
 }
 
-void SelectorQuery::execute(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>* output, bool shouldOnlyMatchFirstElement)
+void SelectorQuery::executeForTraverseRoot(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selectors, Node* traverseRoot, MatchTraverseRootState matchTraverseRoot, Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& output, bool shouldOnlyMatchFirstElement)
 {
-    if (!m_selectors->size())
+    if (!traverseRoot)
         return;
 
-    std::vector<CSSSelector*, gc_allocator<CSSSelector*> > selectors = m_selectors->selectors();
+    if (matchTraverseRoot) {
+        if (!traverseRoot->isElement())
+            return;
+        if (selectorMatches(selectors, traverseRoot->asElement(), rootNode))
+            output.push_back(traverseRoot->asElement());
+        return;
+    }
+
+    traverseDescendants(selectors, traverseRoot, rootNode, output, shouldOnlyMatchFirstElement);
+}
+
+template <typename SimpleElementListType>
+void SelectorQuery::executeForTraverseRoots(std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selectors, SimpleElementListType& traverseRoots, MatchTraverseRootState matchTraverseRoots, Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& output, bool shouldOnlyMatchFirstElement)
+{
+    if (traverseRoots.isEmpty())
+        return;
+
+    if (matchTraverseRoots) {
+        while (!traverseRoots.isEmpty()) {
+            Element* element = traverseRoots.next();
+            if (selectorMatches(selectors, element, rootNode)) {
+                output.push_back(element);
+                if (shouldOnlyMatchFirstElement)
+                    return;
+            }
+        }
+        return;
+    }
+
+    while (!traverseRoots.isEmpty()) {
+        traverseDescendants(selectors, traverseRoots.next(), rootNode, output, shouldOnlyMatchFirstElement);
+    }
+}
+
+void SelectorQuery::findTraverseRootsAndExecute(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& output, bool shouldOnlyMatchFirstElement)
+{
+    // We need to return the matches in document order. To use id lookup while there is possibility of multiple matches
+    // we would need to sort the results. For now, just traverse the document in that case.
+    STARFISH_ASSERT(m_selectorListContainer.size() == 1);
+
+    bool isRightmostSelector = true;
+    bool startFromParent = false;
+
+    std::vector<CSSSelector*, gc_allocator<CSSSelector*> > selectors = m_selectorListContainer[0]->selectors();
+    for (std::vector<CSSSelector*, gc_allocator<CSSSelector*>>::iterator it = selectors.begin(); it != selectors.end(); ++it) {
+        std::vector<Element*, gc_allocator<Element*>> elements;
+        collectElementsById(rootNode, (*it)->selectorText(), elements);
+        if ((*it)->type() == CSSSelector::Id && elements.size() == 1) {
+            Element* element = rootNode.document()->getElementById((*it)->selectorText());
+
+            Node* adjustedNode = &rootNode;
+            if (element && (rootNode.isDocument() || element->isDescendantOf(&rootNode)))
+                adjustedNode = element;
+            else if (!element || isRightmostSelector)
+                adjustedNode = nullptr;
+            if (isRightmostSelector) {
+                executeForTraverseRoot(selectors, adjustedNode, MatchesTraverseRoots, rootNode, output, shouldOnlyMatchFirstElement);
+
+                return;
+            }
+
+            if (startFromParent && adjustedNode)
+                adjustedNode = adjustedNode->parentNode();
+
+            executeForTraverseRoot(selectors, adjustedNode, DoesNotMatchTraverseRoots, rootNode, output, shouldOnlyMatchFirstElement);
+            return;
+        }
+
+        // If we have both CSSSelector::Id and CSSSelector::Class at the same time, we should use Id
+        // to find traverse root.
+        if (!shouldOnlyMatchFirstElement && !startFromParent && (*it)->type() == CSSSelector::Class) {
+            if (isRightmostSelector) {
+                ClassElementList<AllElements> traverseRoots(rootNode, (*it)->selectorText());
+                executeForTraverseRoots(selectors, traverseRoots, MatchesTraverseRoots, rootNode, output, shouldOnlyMatchFirstElement);
+                return;
+            }
+            // Since there exists some ancestor element which has the class name, we need to see all children of rootNode.
+            if (ancestorHasClassName(rootNode, (*it)->selectorText())) {
+                executeForTraverseRoot(selectors, &rootNode, DoesNotMatchTraverseRoots, rootNode, output, shouldOnlyMatchFirstElement);
+                return;
+            }
+
+            ClassElementList<OnlyRoots> traverseRoots(rootNode, (*it)->selectorText());
+            executeForTraverseRoots(selectors, traverseRoots, DoesNotMatchTraverseRoots, rootNode, output, shouldOnlyMatchFirstElement);
+            return;
+        }
+
+        if ((*it)->relation() == CSSSelector::SubSelector)
+            continue;
+        isRightmostSelector = false;
+        if ((*it)->relation() == CSSSelector::DirectAdjacent || (*it)->relation() == CSSSelector::IndirectAdjacent)
+            startFromParent = true;
+        else
+            startFromParent = false;
+    }
+
+    executeForTraverseRoot(selectors, &rootNode, DoesNotMatchTraverseRoots, rootNode, output, shouldOnlyMatchFirstElement);
+}
+
+inline bool SelectorQuery::canUseFastQuery(const Node& rootNode)
+{
+    /*if (m_needsUpdatedDistribution)
+        return false;
+    */
+    if (!rootNode.isDocument())
+        return false;
+    return m_selectorListContainer.size() == 1;
+}
+
+bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element, std::vector<Element*, gc_allocator<Element*>>& output)
+{
+    for (unsigned i = 0; i < m_selectorListContainer.size(); ++i) {
+        if (selectorMatches(m_selectorListContainer[i]->selectors(), element, rootNode)) {
+            output.push_back(element);
+            return true;
+        }
+    }
+    return false;
+}
+
+void SelectorQuery::executeSlow(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& collection, bool shouldOnlyMatchFirstElement)
+{
+    Traverse::getherDescendant(collection, &rootNode, [&](Node* child) {
+        if (child->isElement() && selectorListMatches(rootNode, child->asElement(), collection))
+            return true;
+        return false;
+    }, shouldOnlyMatchFirstElement);
+}
+
+void SelectorQuery::execute(Node& rootNode, std::vector<Element*, gc_allocator<Element*>>& output, bool shouldOnlyMatchFirstElement)
+{
+    if (!m_selectorListContainer.size())
+        return;
+
+    if (!canUseFastQuery(rootNode)) {
+        // TODO: We should investigate below code's purpose
+        // if (m_needsUpdatedDistribution)
+        //     rootNode.updateDistribution();
+        executeSlow(rootNode, output, shouldOnlyMatchFirstElement);
+        return;
+    }
+
+    STARFISH_ASSERT(m_selectorListContainer.size() == 1);
+
+    std::vector<CSSSelector*, gc_allocator<CSSSelector*> > selectors = m_selectorListContainer[0]->selectors();
     CSSSelector* firstSelector = selectors[0];
 
     // Fast path for querySelector*('#id'), querySelector*('tag#id').
     if (CSSSelector* idSelector = selectorForIdLookup(selectors)) {
-        AtomicString idToMatch = AtomicString::createAtomicString(rootNode.document()->window()->starFish(), idSelector->selectorText());
-
-        std::vector<Node*, gc_allocator<Node*>> elements;
-        collectElementsById(rootNode, idToMatch, &elements);
-
-        if (elements.size() > 0) {
+        std::vector<Element*, gc_allocator<Element*>> elements;
+        collectElementsById(rootNode, idSelector->selectorText(), elements);
+        if (elements.size() > 1) {
             size_t count = elements.size();
             for (size_t i = 0; i < count; ++i) {
-                Element* element = elements[i]->asElement();
-                if (!(element->isDescendantOf(&rootNode)))
+                Element* element = elements[i];
+                if (!(rootNode.isDocument() || element->isDescendantOf(&rootNode)))
                     continue;
-                if (selectorMatches(selectors, *element, rootNode)) {
-                    output->push_back(element);
+                if (selectorMatches(selectors, element, rootNode)) {
+                    output.push_back(element);
 
                     if (shouldOnlyMatchFirstElement)
                         return;
@@ -116,13 +351,29 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*, gc_allocator<E
             return;
         }
 
-        Element* element = rootNode.document()->getElementById(idToMatch);
-        if (!element /* || !(isTreeScopeRoot(rootNode) */ || element->isDescendantOf(&rootNode))
+        Element* element = rootNode.document()->getElementById(idSelector->selectorText());
+        if (!element || !(rootNode.isDocument() || element->isDescendantOf(&rootNode)))
             return;
-        if (selectorMatches(selectors, *element, rootNode))
-            output->push_back(element);
+        if (selectorMatches(selectors, element, rootNode))
+            output.push_back(element);
         return;
     }
+
+    // Fast path for querySelector*('.foo'), and querySelector*('div').
+    if (firstSelector->isLastInTagHistory()) {
+        switch (firstSelector->type()) {
+        case CSSSelector::Class:
+            collectElementsByClassName(rootNode, firstSelector->selectorText(), output, shouldOnlyMatchFirstElement);
+            return;
+        case CSSSelector::Tag:
+            collectElementsByTagName(rootNode, firstSelector->selectorText()->toUpper(), output, shouldOnlyMatchFirstElement);
+            return;
+        default:
+            break; // If we need another fast path, add here.
+        }
+    }
+
+    findTraverseRootsAndExecute(rootNode, output, shouldOnlyMatchFirstElement);
 }
 
 bool SelectorQuery::checkPseudoClass(const SelectorCheckingContext& context, MatchResult& result)
@@ -181,11 +432,9 @@ bool SelectorQuery::checkOne(const SelectorCheckingContext& context, MatchResult
     case CSSSelector::Tag:
         return element.tagName()->equals(selector[0]->selectorText()->toUpper());
     case CSSSelector::Class:
-        return element.hasAttribute(element.document()->window()->starFish()->staticStrings()->m_class)
-            && (std::find(element.classNames().begin(), element.classNames().end(), selector[0]->selectorText()) != element.classNames().end());
+        return element.hasClass() && contains(element.classNames(), selector[0]->selectorText());
     case CSSSelector::Id:
-        return element.hasAttribute(element.document()->window()->starFish()->staticStrings()->m_id)
-            && element.id()->equals(selector[0]->selectorText());
+        return element.hasId() && element.id()->equals(selector[0]->selectorText());
 
     // Attribute selectors
     /*case CSSSelector::AttributeExact:
@@ -228,28 +477,16 @@ SelectorQuery::Match SelectorQuery::matchForRelation(const SelectorCheckingConte
     nextContext.inRightmostCompound = false;
     nextContext.isSubSelector = false;
     nextContext.previousElement = context.element;
-    /* nextContext.pseudoId = PseudoIdNone; */
 
     switch (relation) {
     case CSSSelector::Descendant:
-        /* if (context.selector->relationIsAffectedByPseudoContent()) {
-            for (Element* element = context.element; element; element = element->parentElement()) {
-                if (matchForPseudoContent(nextContext, *element, result) == SelectorMatches)
-                    return SelectorMatches;
-            }
-            return SelectorFailsCompletely;
-        }
-
-        if (nextContext.selector->getPseudoType() == CSSSelector::PseudoShadow)
-            return matchForPseudoShadow(nextContext, context.element->containingShadowRoot(), result);
-        */
         for (nextContext.element = context.element->parentElement(); nextContext.element; nextContext.element = nextContext.element->parentElement()) {
             Match match = matchSelector(nextContext, result);
             if (match == SelectorMatches || match == SelectorFailsCompletely)
                 return match;
             /*if (nextSelectorExceedsScope(nextContext))
                 return SelectorFailsCompletely;
-                */
+            */
         }
         return SelectorFailsCompletely;
     case CSSSelector::Child:
@@ -266,93 +503,11 @@ SelectorQuery::Match SelectorQuery::matchForRelation(const SelectorCheckingConte
             return matchSelector(nextContext, result);
         }*/
     case CSSSelector::DirectAdjacent:
-        /*// Shadow roots can't have sibling elements
-        if (nextContext.selector->getPseudoType() == CSSSelector::PseudoShadow)
-            return SelectorFailsCompletely;
-
-        if (m_mode == ResolvingStyle) {
-            if (ContainerNode* parent = context.element->parentElementOrShadowRoot())
-                parent->setChildrenAffectedByDirectAdjacentRules();
-        }
-        nextContext.element = ElementTraversal::previousSibling(*context.element);
-        if (!nextContext.element)
-            return SelectorFailsAllSiblings;
-        return matchSelector(nextContext, result);
-         */
     case CSSSelector::IndirectAdjacent:
-        /*// Shadow roots can't have sibling elements
-        if (nextContext.selector->getPseudoType() == CSSSelector::PseudoShadow)
-            return SelectorFailsCompletely;
-
-        if (m_mode == ResolvingStyle) {
-            if (ContainerNode* parent = context.element->parentElementOrShadowRoot())
-                parent->setChildrenAffectedByIndirectAdjacentRules();
-        }
-        nextContext.element = ElementTraversal::previousSibling(*context.element);
-        for (; nextContext.element; nextContext.element = ElementTraversal::previousSibling(*nextContext.element)) {
-            Match match = matchSelector(nextContext, result);
-            if (match == SelectorMatches || match == SelectorFailsAllSiblings || match == SelectorFailsCompletely)
-                return match;
-        }
-        return SelectorFailsAllSiblings;
-         */
-    /*case CSSSelector::ShadowPseudo:
-        {
-            if (!m_isUARule && !m_isQuerySelector && context.selector->getPseudoType() == CSSSelector::PseudoShadow)
-                Deprecation::countDeprecation(context.element->document(), UseCounter::CSSSelectorPseudoShadow);
-            // If we're in the same tree-scope as the scoping element, then following a shadow descendant combinator would escape that and thus the scope.
-            if (context.scope && context.scope->shadowHost() && context.scope->shadowHost()->treeScope() == context.element->treeScope())
-                return SelectorFailsCompletely;
-
-            Element* shadowHost = context.element->shadowHost();
-            if (!shadowHost)
-                return SelectorFailsCompletely;
-            nextContext.element = shadowHost;
-            return matchSelector(nextContext, result);
-        }
-
-    case CSSSelector::ShadowDeep:
-        {
-            if (!m_isUARule && !m_isQuerySelector)
-                Deprecation::countDeprecation(context.element->document(), UseCounter::CSSDeepCombinator);
-            if (ShadowRoot* root = context.element->containingShadowRoot()) {
-                if (root->type() == ShadowRootType::UserAgent)
-                    return SelectorFailsCompletely;
-            }
-
-            if (context.selector->relationIsAffectedByPseudoContent()) {
-                // TODO(kochi): closed mode tree should be handled as well for ::content.
-                for (Element* element = context.element; element; element = element->parentOrShadowHostElement()) {
-                    if (matchForPseudoContent(nextContext, *element, result) == SelectorMatches)
-                        return SelectorMatches;
-                }
-                return SelectorFailsCompletely;
-            }
-
-            for (nextContext.element = parentOrV0ShadowHostElement(*context.element); nextContext.element; nextContext.element = parentOrV0ShadowHostElement(*nextContext.element)) {
-                Match match = matchSelector(nextContext, result);
-                if (match == SelectorMatches || match == SelectorFailsCompletely)
-                    return match;
-                if (nextSelectorExceedsScope(nextContext))
-                    return SelectorFailsCompletely;
-            }
-            return SelectorFailsCompletely;
-        }
-
-    case CSSSelector::ShadowSlot:
-        {
-            const HTMLSlotElement* slot = findSlotElementInScope(context);
-            if (!slot)
-                return SelectorFailsCompletely;
-
-            nextContext.element = const_cast<HTMLSlotElement*>(slot);
-            return matchSelector(nextContext, result);
-        }
-     */
-
     case CSSSelector::SubSelector:
     case CSSSelector::None:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        break;
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -371,9 +526,6 @@ SelectorQuery::Match SelectorQuery::matchSelector(const SelectorCheckingContext&
     if (!checkOne(context, subResult))
         return SelectorFailsLocally;
 
-    /* if (subResult.dynamicPseudo != PseudoIdNone)
-        result.dynamicPseudo = subResult.dynamicPseudo;
-    */
     if (context.selector[0]->isLastInTagHistory()) {
         result.specificity += subResult.specificity;
         return SelectorMatches;
@@ -381,14 +533,6 @@ SelectorQuery::Match SelectorQuery::matchSelector(const SelectorCheckingContext&
 
     Match match;
     if (context.selector[0]->relation() != CSSSelector::SubSelector) {
-        /*if (nextSelectorExceedsScope(context))
-            return SelectorFailsCompletely;
-
-        if (context.pseudoId != PseudoIdNone && context.pseudoId != result.dynamicPseudo)
-            return SelectorFailsCompletely;
-
-        TemporaryChange<PseudoId> dynamicPseudoScope(result.dynamicPseudo, PseudoIdNone);
-        */
         match = matchForRelation(context, result);
     } else {
         match = matchForSubSelector(context, result);
@@ -401,11 +545,6 @@ SelectorQuery::Match SelectorQuery::matchSelector(const SelectorCheckingContext&
 SelectorQuery::Match SelectorQuery::matchForSubSelector(const SelectorCheckingContext& context, MatchResult& result)
 {
     SelectorCheckingContext nextContext = prepareNextContextForRelation(context);
-
-    /* PseudoId dynamicPseudo = result.dynamicPseudo;
-    nextContext.hasScrollbarPseudo = dynamicPseudo != PseudoIdNone && (m_scrollbar || dynamicPseudo == PseudoIdScrollbarCorner || dynamicPseudo == PseudoIdResizer);
-    nextContext.hasSelectionPseudo = dynamicPseudo == PseudoIdSelection;
-    */
     nextContext.isSubSelector = true;
     return matchSelector(nextContext, result);
 }
