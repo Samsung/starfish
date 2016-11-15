@@ -34,6 +34,7 @@
 #include "dom/HTMLHeadingElement.h"
 #include "dom/HTMLLIElement.h"
 #include "dom/HTMLUListElement.h"
+#include "dom/HTMLStrongElement.h"
 #include "dom/HTMLScriptElement.h"
 #include "dom/HTMLStyleElement.h"
 #include "dom/HTMLLinkElement.h"
