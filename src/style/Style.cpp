@@ -2228,117 +2228,101 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
             bool isMatched = false;
+            bool needToCheck = true;
             unsigned idx = 0;
             CSSSelectorList* selectorList = sheet->rules()[j]->m_selectorList;
             CSSSelector* selector = selectorList->at(idx);
+            CSSSelector::RelationType prevRelation = CSSSelector::RelationType::None;
+            Element* e = element;
 
-            switch (selector->relation()) {
-            case CSSSelector::RelationType::None:
-                if (selector->type() == CSSSelector::Type::Universal) {
-                    isMatched = true;
-                } else if (selector->type() == CSSSelector::Type::Tag) {
-                    isMatched = selector->selectorText()->equalsWithoutCase(element->localName());
-                } else if (selector->type() == CSSSelector::Type::Id) {
-                    isMatched = selector->selectorText()->equalsWithoutCase(element->id());
-                } else if (selector->type() == CSSSelector::Type::Class) {
-                    auto className = element->classNames();
-                    for (unsigned f = 0; f < className.size(); f++) {
-                        if (selector->selectorText()->equals(className[f])) {
-                            isMatched = true;
-                            break;
-                        }
-                    }
-                }
-                if (isMatched) {
-                    if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone
-                        || ((element->state() & Node::NodeState::NodeStateActive) && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive)
-                        || ((element->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover)) {
-                        auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(*this, sheet->url(), cssValues, ret, parent);
-                    }
-                }
-                break;
-
-            // TODO: Consider all case. (e.g., Universal#id, Universal.class, nested subselector, etc.)
-            //       Assume that pseudo-class selector is located at the end.
-            case CSSSelector::RelationType::SubSelector:
-                {
-                CSSSelector* s = selector;
-                if (s->selectorText()->equalsWithoutCase(element->localName())) {
-                    s = selectorList->at(++idx);
-                    if (s->type() == CSSSelector::Type::Universal) {
-                        isMatched = true;
-                    } else if (s->type() == CSSSelector::Type::Id) {
-                        isMatched = s->selectorText()->equalsWithoutCase(element->id());
-                    } else if ((s->type() == CSSSelector::Type::Class)) {
-                        auto className = element->classNames();
+            // TODO: Assume that pseudo class selector located in the end.
+            while (e && needToCheck) {
+                switch (selector->relation()) {
+                case CSSSelector::RelationType::None:
+                    {
+                    bool isOneSelectorMatched = false;
+                    if (selector->type() == CSSSelector::Type::Universal) {
+                        isOneSelectorMatched = true;
+                    } else if (selector->type() == CSSSelector::Type::Tag) {
+                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->localName());
+                    } else if (selector->type() == CSSSelector::Type::Id) {
+                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->id());
+                    } else if (selector->type() == CSSSelector::Type::Class) {
+                        auto className = e->classNames();
                         for (unsigned f = 0; f < className.size(); f++) {
-                            if (s->selectorText()->equals(className[f])) {
-                                isMatched = true;
+                            if (selector->selectorText()->equals(className[f])) {
+                                isOneSelectorMatched = true;
                                 break;
                             }
                         }
                     }
-                }
-                if (isMatched) {
-                    if (s->pseudoType() == CSSSelector::PseudoType::PseudoNone
-                        || ((element->state() & Node::NodeState::NodeStateActive) && s->pseudoType() == CSSSelector::PseudoType::PseudoActive)
-                        || ((element->state() & Node::NodeState::NodeStateHovered) && s->pseudoType() == CSSSelector::PseudoType::PseudoHover)) {
-                        auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(*this, sheet->url(), cssValues, ret, parent);
+                    // Pseudo class
+                    if (isOneSelectorMatched) {
+                        if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone) {
+                            isMatched = true;
+                        } else if (e->state() == Node::NodeState::NodeStateActive && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive) {
+                            isMatched = true;
+                        } else if (e->state() == Node::NodeState::NodeStateHovered && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover) {
+                            isMatched = true;
+                        }
                     }
-                }
-                break;
-                }
+                    // Consider combinator
+                    if (!isMatched && prevRelation == CSSSelector::RelationType::Descendant) {
+                        e = e->parentElement();
+                    } else {
+                        needToCheck = false;
+                    }
+                    break;
+                    }
 
-            // TODO: Assume that pseudo-class selector is located at the end.
-            case CSSSelector::RelationType::Descendant:
-                {
-                Element* e = element;
-                CSSSelector* s = selector;
-                while (e) {
+                // TODO: Consider all case. (e.g., Universal#id, Universal.class, nested subselector, etc.)
+                case CSSSelector::RelationType::SubSelector:
+                    if (selector->selectorText()->equalsWithoutCase(e->localName())) {
+                        selector = selectorList->at(++idx);
+                    } else if (prevRelation == CSSSelector::RelationType::Descendant) {
+                        e = e->parentElement();
+                    } else {
+                        needToCheck = false;
+                    }
+                    break;
+
+                case CSSSelector::RelationType::Descendant:
+                    {
                     bool isOneSelectorMatched = false;
-                    if (s->type() == CSSSelector::Type::Universal) {
+                    if (selector->type() == CSSSelector::Type::Universal) {
                         isOneSelectorMatched = true;
-                    } else if (s->type() == CSSSelector::Type::Tag) {
-                        isOneSelectorMatched = s->selectorText()->equalsWithoutCase(e->localName());
-                    } else if (s->type() == CSSSelector::Type::Id) {
-                        isOneSelectorMatched = s->selectorText()->equalsWithoutCase(e->id());
-                    } else if (s->type() == CSSSelector::Type::Class) {
+                    } else if (selector->type() == CSSSelector::Type::Tag) {
+                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->localName());
+                    } else if (selector->type() == CSSSelector::Type::Id) {
+                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->id());
+                    } else if (selector->type() == CSSSelector::Type::Class) {
                         auto className = e->classNames();
                         for (unsigned f = 0; f < className.size(); f++) {
-                            if (s->selectorText()->equals(className[f])) {
+                            if (selector->selectorText()->equals(className[f])) {
                                 isOneSelectorMatched = true;
                                 break;
                             }
                         }
                     }
                     if (isOneSelectorMatched) {
-                        if (idx == selectorList->size() - 1) {
-                            isMatched = true;
-                            break;
-                        } else {
-                            s = selectorList->at(++idx);
-                        }
+                        selector = selectorList->at(++idx);
                     } else if (idx == 0) {
-                        break;
+                        needToCheck = false;
                     }
+                    prevRelation = CSSSelector::RelationType::Descendant;
                     e = e->parentElement();
-                }
-
-                if (isMatched) {
-                    if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone
-                        || ((element->state() & Node::NodeState::NodeStateActive) && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive)
-                        || ((element->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover)) {
-                        auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                        apply(*this, sheet->url(), cssValues, ret, parent);
+                    break;
                     }
-                }
-                break;
-                }
 
-            default:
-                break;
+                default:
+                    needToCheck = false;
+                    break;
+                }
+            }
+
+            if (isMatched) {
+                auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
+                apply(*this, sheet->url(), cssValues, ret, parent);
             }
         }
     }
