@@ -63,6 +63,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(xhrElement, XMLHttpRequest) \
     F(blobElement, Blob) \
     F(url, URL) \
+    F(domRectReadOnly, DOMRectReadOnly) \
     F(location, Location) \
     F(domException, DOMException) \
     F(navigator, Navigator) \
@@ -228,6 +229,7 @@ private:
     escargot::ESFunctionObject* m_geoposition;
     escargot::ESFunctionObject* m_positionError;
     escargot::ESFunctionObject* m_domParser;
+    escargot::ESFunctionObject* m_domRectReadOnly;
 
 public:
 #define FOR_EACH_SCRIPTVALUE_FN(codeName, exportName) \

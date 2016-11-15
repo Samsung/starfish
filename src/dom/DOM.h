@@ -65,6 +65,7 @@
 #include "dom/DOMParser.h"
 #include "extra/Blob.h"
 #include "extra/XMLHttpRequest.h"
+#include "dom/DOMRectReadOnly.h"
 
 #ifdef STARFISH_EXP
 #include "dom/DOMImplementation.h"

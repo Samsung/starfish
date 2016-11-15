@@ -1209,6 +1209,12 @@ void ScriptWrappable::initScriptWrappable(URL* url, ScriptBindingInstance* insta
     scriptObject()->set__proto__(data->url()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(DOMRectReadOnly* rect, ScriptBindingInstance* instance)
+{
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->domRectReadOnly()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
