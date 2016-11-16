@@ -1217,6 +1217,12 @@ void ScriptWrappable::initScriptWrappable(DOMRectReadOnly* rect, ScriptBindingIn
     scriptObject()->set__proto__(data->domRectReadOnly()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(DOMRect* rect, ScriptBindingInstance* instance)
+{
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->domRect()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);
