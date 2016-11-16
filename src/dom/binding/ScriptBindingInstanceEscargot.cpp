@@ -5692,6 +5692,114 @@ escargot::ESFunctionObject* bindingDOMRectReadOnly(ScriptBindingInstance* script
     return DOMRectReadOnlyFunction;
 }
 
+escargot::ESFunctionObject* bindingDOMRect(ScriptBindingInstance* scriptBindingInstance)
+{
+    escargot::ESString* DOMRectString = escargot::ESString::create("DOMRect");
+    auto DOMRectFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+
+        int cnt = instance->currentExecutionContext()->argumentCount();
+        (cnt > 4) ? cnt = 4 : cnt;
+        DOMRect* rect = nullptr;
+        double args[4] = {0, };
+        if (cnt == 0) {
+            rect = DOMRect::create();
+        } else {
+            for (int i = 0; i < cnt; ++i) {
+                args[i] = instance->currentExecutionContext()->readArgument(i).toNumber();
+            }
+            if (cnt == 1) {
+                rect = DOMRect::create(args[0]);
+            } else if (cnt == 2) {
+                rect = DOMRect::create(args[0], args[1]);
+            } else if (cnt == 3) {
+                rect = DOMRect::create(args[0], args[1], args[2]);
+            } else {
+                rect = DOMRect::create(args[0], args[1], args[2], args[3]);
+            }
+        }
+        return rect->scriptValue();
+    }, DOMRectString, 0, true, true);
+
+    DOMRectFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);
+    DOMRectFunction->protoType().asESPointer()->asESObject()->forceNonVectorHiddenClass(false);
+    DOMRectFunction->protoType().asESPointer()->asESObject()->set__proto__(fetchData(scriptBindingInstance)->domRectReadOnly()->protoType());
+    DOMRectFunction->set__proto__(fetchData(scriptBindingInstance)->domRectReadOnly());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+    DOMRectFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("x"),
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        return escargot::ESValue(rect->x());
+    },
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        if (rect != nullptr) {
+            rect->setX(v.toNumber());
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    }, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+    DOMRectFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("y"),
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        return escargot::ESValue(rect->y());
+    },
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        if (rect != nullptr) {
+            rect->setY(v.toNumber());
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    }, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+    DOMRectFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("width"),
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        return escargot::ESValue(rect->width());
+    },
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        if (rect != nullptr) {
+            rect->setWidth(v.toNumber());
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    }, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+    DOMRectFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("height"),
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        return escargot::ESValue(rect->height());
+    },
+    [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectObject, DOMRect);
+        DOMRect* rect = originalObj;
+        if (rect != nullptr) {
+            rect->setHeight(v.toNumber());
+            return escargot::ESValue();
+        }
+        THROW_ILLEGAL_INVOCATION();
+        return escargot::ESValue();
+    }, true, true);
+
+    return DOMRectFunction;
+}
+
 escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBindingInstance)
 {
     /* DOM Exception */
