@@ -408,7 +408,7 @@ public:
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
-    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>>* sList, bool isQueryingSelector = false);
+    void parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector = false);
     CSSToken* makeToken(String* str);
 protected:
     CSSToken* getToken(bool aSkipWS, bool aSkipComment, bool isURL = false);

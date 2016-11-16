@@ -1373,7 +1373,7 @@ public:
         return m_selectors.size();
     }
 
-    std::vector<CSSSelector*, gc_allocator<CSSSelector*> >& selectors()
+    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& selectors()
     {
         return m_selectors;
     }
@@ -1383,7 +1383,7 @@ public:
     unsigned specificity() const;
 
 protected:
-    std::vector<CSSSelector*, gc_allocator<CSSSelector*> > m_selectors;
+    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_selectors;
 };
 
 class CSSStyleRule : public ScriptWrappable {

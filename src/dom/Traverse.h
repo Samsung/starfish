@@ -44,7 +44,7 @@ public:
     }
 
     template<typename Func>
-    static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Node*>>* collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
+    static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Node*>>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
     {
         Node* child = root->firstChild();
         while (child) {
@@ -60,7 +60,7 @@ public:
     }
 
     template<typename Func>
-    static void getherDescendant(std::vector<Element*, gc_allocator<Element*>>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
+    static void getherDescendant(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& collection, Node* root, Func filter, bool shouldOnlyMatchFirstElement = false)
     {
         Node* child = root->firstChild();
         while (child) {

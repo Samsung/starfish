@@ -909,7 +909,7 @@ Element* Node::querySelector(String* selectors)
     CSSToken* token = parser.makeToken(selectors);
 
 
-    std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>> selectorListContainer;
+    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> selectorListContainer;
 #if 1
     parser.parseStyleRule(token, nullptr, false, &selectorListContainer, true);
 #else
