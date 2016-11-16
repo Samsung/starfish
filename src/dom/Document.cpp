@@ -467,7 +467,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("ul"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("ul"), CSSSelector::PseudoType::PseudoNone, document());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -505,7 +505,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("li"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("li"), CSSSelector::PseudoType::PseudoNone, document());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
@@ -518,7 +518,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
-        CSSStyleRule* rule = new CSSStyleRule(CSSStyleRule::Kind::TypeSelector, String::createASCIIString("strong"), CSSStyleRule::PseudoClass::None, document());
+        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("strong"), CSSSelector::PseudoType::PseudoNone, document());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
         pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);

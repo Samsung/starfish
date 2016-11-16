@@ -1232,7 +1232,7 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
     return;
 }
 
-void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator<CSSSelectorList*>>* sList, bool isQueryingSelector)
+void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIsInsideMediaRule, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector)
 {
     // size_t currentLine = countLF(m_scanner->getAlreadyScanned());
     preserveState();
