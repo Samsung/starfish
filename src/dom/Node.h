@@ -307,8 +307,9 @@ public:
     HTMLCollection* getElementsByTagName(QualifiedName qualifiedName);
     HTMLCollection* getElementsByClassName(String* classNames);
 
+    void parseSelector(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& selectorListContainer, String* selectors);
     Element* querySelector(String* selector);
-    /*NodeList* querySelectorAll();*/
+    NodeList* querySelectorAll(String* selector);
 
     /* Other methods (not in Node Interface) */
     enum NodeState {
