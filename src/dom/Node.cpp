@@ -1029,9 +1029,9 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
 CSSStyleDeclaration* Node::getComputedStyle()
 {
     CSSStyleDeclaration* d = new CSSStyleDeclaration(document());
-    // force render to get computed style
-    setNeedsPainting();
-    document()->window()->rendering();
+
+    // TODO: change below code to resolve DOM style
+    document()->window()->layoutIfNeeds();
 
     ComputedStyle* style = m_style;
     if (style == nullptr) {

@@ -186,7 +186,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 
         addGCCollectionListener([](GC_EventType evtType) {
             if (GC_EVENT_PRE_START_WORLD == evtType) {
-#ifdef STARFISH_ENABLE_TEST
+#ifndef STARFISH_ENABLE_TEST
                 if (fp_mem&&g_memLogDump)
                     fprintf(fp_mem, "%f %f\n", GC_get_memory_use() / 1024.f / 1024.f, process_mem_usage() / 1024.f);
 
