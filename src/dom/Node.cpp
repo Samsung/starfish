@@ -900,7 +900,7 @@ HTMLCollection* Node::getElementsByClassName(String* classNames)
     return list;
 }
 
-Element* Node::querySelector(String* selectors)
+void Node::parseSelector(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& selectorListContainer, String* selectors)
 {
     if (selectors->equals(String::emptyString))
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::SYNTAX_ERR, "Failed to execute 'querySelector' on 'Document': The provided selector is empty.");
@@ -908,21 +908,28 @@ Element* Node::querySelector(String* selectors)
     CSSParser parser(document());
     CSSToken* token = parser.makeToken(selectors);
 
-
-    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> selectorListContainer;
-#if 1
     parser.parseStyleRule(token, nullptr, false, &selectorListContainer, true);
-#else
-    parser.parseStyleRule(token, nullptr, false);
-#endif
 
-    if (selectorListContainer.size() < 1) {
+    if (selectorListContainer.size() < 1)
         throw new DOMException(m_document->scriptBindingInstance(), DOMException::DOM_EXCEPTION, "Failed to execute 'querySelector' on 'Document': The provided selector is invalid.");
-    }
+}
 
-    // TODO: Consider for one or more selectorLists
+Element* Node::querySelector(String* selectors)
+{
+    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> selectorListContainer;
+    parseSelector(selectorListContainer, selectors);
+
     SelectorQuery selectorQuery(selectorListContainer);
     return selectorQuery.queryFirst(*this);
+}
+
+NodeList* Node::querySelectorAll(String* selectors)
+{
+    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> selectorListContainer;
+    parseSelector(selectorListContainer, selectors);
+
+    SelectorQuery selectorQuery(selectorListContainer);
+    return selectorQuery.queryAll(*this);
 }
 
 void Node::setNeedsFrameTreeBuild()

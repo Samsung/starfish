@@ -75,4 +75,11 @@ void ActiveNodeList::fillCacheIfNeed() const
 
 }
 
+void ActiveNodeList::setItems(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& elements)
+{
+    for (auto element : elements) {
+        m_cachedNodeList.push_back(element);
+    }
+}
+
 }

@@ -1340,6 +1340,48 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         }, escargot::ESString::create("querySelector"), 1, false)
     );
 
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("querySelectorAll"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+            Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            if (obj->isElement()) {
+                if (instance->currentExecutionContext()->argumentCount() > 0) {
+                    Element* elem = obj->asElement();
+                    escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+
+                    if (argValue.isESString()) {
+                        try {
+                            escargot::ESString* argStr = argValue.asESString();
+
+                            if (*argStr == *(escargot::strings->emptyString.string()))
+                                throw new DOMException(elem->document()->window()->scriptBindingInstance(),
+                                    DOMException::Code::DOM_EXCEPTION, "Failed to execute 'querySelectorAll' on 'Element': The provided selector is empty.");
+
+                            NodeList* result = elem->querySelectorAll(toBrowserString(argStr));
+                            if (result != nullptr)
+                                return result->scriptValue();
+                        } catch(DOMException* e) {
+                            escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                        }
+                    } else if (argValue.isNull() || argValue.isUndefined()) {
+                        return escargot::ESValue(escargot::ESValue::ESNull);
+                    }
+                } else {
+                    auto msg = escargot::ESString::create("Failed to execute 'querySelectorAll' on 'Element': 1 argument required, but only 0 present.");
+                    instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+                }
+#ifdef STARFISH_TC_COVERAGE
+                STARFISH_LOG_INFO("Element&&&querySelectorAll\n");
+#endif
+            } else {
+                THROW_ILLEGAL_INVOCATION()
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("querySelectorAll"), 1, false)
+    );
+
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("hasAttribute"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -2557,16 +2599,15 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
 
         if (obj->isDocument()) {
-            Document* doc = obj->asDocument();
-            size_t count = instance->currentExecutionContext()->argumentCount();
-
-            if (count > 0) {
+            if (instance->currentExecutionContext()->argumentCount() > 0) {
+                Document* doc = obj->asDocument();
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
                 if (argValue.isESString()) {
                     try {
                         escargot::ESString* argStr = argValue.asESString();
                         if (*argStr == *(escargot::strings->emptyString.string()))
-                            throw new DOMException(doc->window()->scriptBindingInstance(), DOMException::Code::DOM_EXCEPTION, "Failed to execute 'querySelector' on 'Document': The provided selector is empty.");
+                            throw new DOMException(doc->window()->scriptBindingInstance(),
+                                DOMException::Code::DOM_EXCEPTION, "Failed to execute 'querySelector' on 'Document': The provided selector is empty.");
 
                         Element* elem = doc->querySelector(toBrowserString(argStr));
                         if (elem != nullptr)
@@ -2587,6 +2628,42 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("querySelector"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("querySelector"), false, false, false, querySelectorFunction);
+
+    escargot::ESFunctionObject* querySelectorAllFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+        CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
+        Node* obj = (Node*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+        if (obj->isDocument()) {
+            if (instance->currentExecutionContext()->argumentCount() > 0) {
+                Document* doc = obj->asDocument();
+                escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+                if (argValue.isESString()) {
+                    try {
+                        escargot::ESString* argStr = argValue.asESString();
+                        if (*argStr == *(escargot::strings->emptyString.string()))
+                            throw new DOMException(doc->window()->scriptBindingInstance(),
+                                DOMException::Code::DOM_EXCEPTION, "Failed to execute 'querySelectorAll' on 'Document': The provided selector is empty.");
+
+                        NodeList* list = doc->querySelectorAll(toBrowserString(argStr));
+                        if (list != nullptr)
+                            return list->scriptValue();
+                    } catch(DOMException* e) {
+                        escargot::ESVMInstance::currentInstance()->throwError(e->scriptValue());
+                    }
+                } else if (argValue.isNull() || argValue.isUndefined()) {
+                    return escargot::ESValue(escargot::ESValue::ESNull);
+                }
+            } else {
+                auto msg = escargot::ESString::create("Failed to execute 'querySelectorAll' on 'Document': 1 argument required, but only 0 present.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION()
+        }
+        return escargot::ESValue(escargot::ESValue::ESNull);
+    }, escargot::ESString::create("querySelectorAll"), 1, false);
+    DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("querySelectorAll"), false, false, false, querySelectorAllFunction);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("doctype"),

@@ -32,6 +32,12 @@ public:
     {
     }
 
+    NodeList(ScriptBindingInstance* instance, Node* root, bool canCache = true)
+        : ScriptWrappable(this)
+        , m_activeNodeList(root, canCache)
+    {
+    }
+
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
         initScriptWrappable(this, instance);

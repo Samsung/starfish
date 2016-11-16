@@ -20,6 +20,7 @@
 #include "dom/HTMLElement.h"
 #include "dom/Document.h"
 #include "dom/Traverse.h"
+#include "dom/NodeList.h"
 
 namespace StarFish {
 
@@ -49,7 +50,7 @@ public:
         : m_className(className)
         , m_rootNode(&rootNode)
         , m_currentElement(nextInternal((Element*)Traverse::firstChild(&rootNode, [&](Node* child) {
-            if (!child && child->isElement()) {
+            if (child->isElement()) {
                 return true;
             } else
                 return false;
@@ -73,7 +74,7 @@ private:
     Element* nextInternal(Element* element)
     {
         for (; element; element = (Element*)Traverse::nextElement(element, m_rootNode)) {
-            if (element->hasClass() && contains(element->classNames(), m_className))
+            if (element->isElement() && element->hasClass() && contains(element->classNames(), m_className))
                 return element;
         }
         return nullptr;
@@ -91,8 +92,18 @@ Element* SelectorQuery::queryFirst(Node& rootNode)
 
     if (matchedElement.size() > 0)
         return matchedElement[0];
-    else
-        return nullptr;
+    return nullptr;
+}
+
+NodeList* SelectorQuery::queryAll(Node& rootNode)
+{
+    std::vector<Element*, gc_allocator_ignore_off_page<Element*>> matchedElement;
+    execute(rootNode, matchedElement, false);
+
+    NodeList* list = new NodeList(rootNode.document()->scriptBindingInstance(), &rootNode, true);
+    if (matchedElement.size() > 0)
+        list->activeNodeList().setItems(matchedElement);
+    return list;
 }
 
 inline bool ancestorHasClassName(Node& rootNode, const String* className)
@@ -297,7 +308,6 @@ bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element, std::v
 {
     for (unsigned i = 0; i < m_selectorListContainer.size(); ++i) {
         if (selectorMatches(m_selectorListContainer[i]->selectors(), element, rootNode)) {
-            output.push_back(element);
             return true;
         }
     }

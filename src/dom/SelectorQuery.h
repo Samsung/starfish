@@ -21,6 +21,7 @@ namespace StarFish {
 
 class Element;
 class Node;
+class NodeList;
 class CSSSelector;
 class CSSSelectorList;
 
@@ -33,6 +34,7 @@ public:
         : m_selectorListContainer(selector)
     { }
     Element* queryFirst(Node& rootNode);
+    NodeList* queryAll(Node& rootNode);
 
     struct SelectorCheckingContext {
         // Initial selector constructor

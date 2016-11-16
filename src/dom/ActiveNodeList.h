@@ -20,6 +20,7 @@
 namespace StarFish {
 
 class Node;
+class Element;
 typedef bool (*ActiveNodeListFilterFunction)(Node*, void*);
 
 class ActiveNodeList : public gc {
@@ -33,6 +34,15 @@ public:
     {
     }
 
+    ActiveNodeList(Node* root, bool canCache = true)
+        : m_canCache(canCache)
+        , m_isCacheValid(true)
+        , m_root(root)
+        , m_filter(nullptr)
+        , m_data(nullptr)
+    {
+    }
+
     unsigned long length() const;
     Node* item(unsigned long index);
     void invalidateCache() const
@@ -41,6 +51,8 @@ public:
         m_isCacheValid = false;
         m_cachedNodeList.clear();
     }
+
+    void setItems(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& elements);
 private:
     void fillCacheIfNeed() const;
     bool m_canCache;

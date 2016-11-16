@@ -206,7 +206,9 @@ public:
         Node* node = next(current, stayWithin);
         while (node && !node->isElement())
             node = next(node, stayWithin);
-        return node->asElement();
+        if (node)
+            return node->asElement();
+        return nullptr;
     }
 
     static Node* nextSkippingChildren(Node* current, const Node* stayWithin)
@@ -223,7 +225,9 @@ public:
         Node* node = nextSkippingChildren(current, stayWithin);
         while (node && !node->isElement())
             node = nextSkippingChildren(node, stayWithin);
-        return node->asElement();
+        if (node)
+            return node->asElement();
+        return nullptr;
     }
 };
 
