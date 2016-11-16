@@ -1401,13 +1401,14 @@ void Window::dispatchKeyEvent(String* key, KeyEventKind kind)
         e->setShiftKey();
     if (m_metaKeyDown > 0)
         e->setMetaKey();
-    STARFISH_ASSERT(document()->rootElement());
 
     // [Target]
     // 1) currently focused element if possible -> no focus concept
     // or 2) body element if possible
     // or 3) root element
-    EventTarget::dispatchEvent((document()->bodyElement() ? document()->bodyElement()->asNode() : document()->rootElement()->asNode()), e);
+    if (document()->rootElement()) {
+        EventTarget::dispatchEvent((document()->bodyElement() ? document()->bodyElement()->asNode() : document()->rootElement()->asNode()), e);
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object
