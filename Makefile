@@ -40,6 +40,9 @@ INSPECTOR_SUPPORT=false
 # dom parser
 DOMPARSER_SUPPORT=false
 
+# WASU
+WASU_SUPPORT=false
+
 $(info goal... $(MAKECMDGOALS))
 
 ifneq (,$(findstring x86,$(MAKECMDGOALS)))
@@ -271,6 +274,10 @@ endif
 
 ifeq ($(DOMPARSER_SUPPORT), true)
   CXXFLAGS += -DSTARFISH_ENABLE_DOMPARSER
+endif
+
+ifeq ($(WASU_SUPPORT), true)
+  CXXFLAGS += -DSTARFISH_ENABLE_WASU
 endif
 
 ################################################################################
