@@ -1340,6 +1340,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         }, escargot::ESString::create("querySelector"), 1, false)
     );
 
+#ifdef STARFISH_ENABLE_WASU
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("querySelectorAll"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
@@ -1381,6 +1382,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
             return escargot::ESValue(escargot::ESValue::ESNull);
         }, escargot::ESString::create("querySelectorAll"), 1, false)
     );
+#endif
 
     ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("hasAttribute"), false, false, false,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -2629,6 +2631,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
     }, escargot::ESString::create("querySelector"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("querySelector"), false, false, false, querySelectorFunction);
 
+#ifdef STARFISH_ENABLE_WASU
     escargot::ESFunctionObject* querySelectorAllFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
         CHECK_TYPEOF(thisValue, ScriptWrappable::Type::NodeObject);
@@ -2664,7 +2667,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
         return escargot::ESValue(escargot::ESValue::ESNull);
     }, escargot::ESString::create("querySelectorAll"), 1, false);
     DocumentFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("querySelectorAll"), false, false, false, querySelectorAllFunction);
-
+#endif
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         DocumentFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("doctype"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
