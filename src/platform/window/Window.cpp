@@ -1141,7 +1141,10 @@ void Window::setFocusedNode(Node* n)
         m = m->parentNode();
     }
 
-    if (m == nullptr || m->isDocument()) {
+    if (!m || m->isDocument()) {
+        if (!this->document()->bodyElement()) {
+            return;
+        }
         m = this->document()->bodyElement()->asNode();
     }
 
