@@ -221,6 +221,7 @@ void MessageLoop::clearPendingIdlers()
         IdlerData* id = (IdlerData*)*iter;
         ecore_animator_del(id->m_idler);
         GC_FREE(id);
+        iter++;
     }
     m_idlers.clear();
 
@@ -229,6 +230,7 @@ void MessageLoop::clearPendingIdlers()
     while (iter2 != m_idlersFromOtherThread.end()) {
         IdlerData* id = (IdlerData*)*iter2;
         id->m_shouldExecute = false;
+        iter2++;
     }
 }
 
