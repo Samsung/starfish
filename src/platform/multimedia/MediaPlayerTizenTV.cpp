@@ -124,38 +124,64 @@ void MediaPlayerTizenTV::seek(double time)
     uint64_t timestamp = time * 1000;
     int ret;
 
+    STARFISH_ASSERT(!std::isnan(time));
+    if (time < 0) {
+        time = 0;
+    }
+
     // Note : Seek operation's can occur in state PLAYING | PAUSED
     // Note : player_set_position()'s callback will be invoked in non-main thread, so it needs to be rooted.
     // Note : Rooting will just increase pointer count for the player in case of PLAYING,
-    //        and the count will decrease back when seeking done (or error case).
+    //        and the count will be decreased back when seeking done (or error case).
+    STARFISH_ASSERT(!m_inSeeking);
     m_inSeeking = true;
     m_starFish->addPointerInRootSet(this);
 
     if (m_activeMediaSource) {
         STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
         {
+            // Set timer
+            // Note : Sometimes player_set_position() does not response.
+            //        in that case, the timer will help the player to remove rooted pointer and properly destroyed
+            m_seekingTimer = m_starFish->window()->setTimeout([](Window* window, void* data) {
+                MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() : timeout\n");
+                self->handleSeekFailure();
+            }, MAX_WAITING_SECONDS_FOR_SEEK_OPERATION, this);
+
             Locker<Mutex> videoLock(*m_videoBufferMutex);
             Locker<Mutex> audioLock(*m_audioBufferMutex);
             if (m_activeMediaSource->activeVideoSourceBuffer())
                 m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
             if (m_activeMediaSource->activeAudioSourceBuffer())
                 m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
-            m_lastVideoPts = m_lastAudioPts = timestamp;
 
             int timeInMs = (int)(time * 1000.0);
-            ret = player_set_position(m_nativePlayer, timeInMs, [](void* data) {
-                // STARFISH_LOG_INFO("player_set_position_cb\n");
+            ret = player_set_position_async(m_nativePlayer, timeInMs, [](void* data, int result) {
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (1)\n");
+                // result 0  -> succeed
+                // otherwise -> failed
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-                self->handleSeekend();
+                if (result == 0)
+                    self->handleSeekend();
+                else
+                    self->handleSeekFailure();
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (2)\n");
             }, this);
 
             STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %d state: %d \n", timeInMs, (int)state);
-
-            if (ret && m_inPrepare) {
-                // failed
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek -> seeking failed saving time %lf\n", time);
-                m_container->setDefaultPlaybackStartPosition(time);
+            if (ret) {
+                // Failed immediately
+                // Note: failed but ignore!
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async failed immediately -> ignore\n");
+                handleSeekend();
+                if (m_inPrepare) {
+                    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek -> seeking failed saving time %lf\n", time);
+                    m_container->setDefaultPlaybackStartPosition(time);
+                }
+                return;
             }
+            m_lastVideoPts = m_lastAudioPts = timestamp;
         }
 
         if (m_activeMediaSource->activeVideoSourceBuffer())
@@ -233,10 +259,10 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
         m_videoBufferMutex->lock();
 
     STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer -> %dms\n", (int)m_lastVideoPts);
-    uint64_t ptsStart = m_lastVideoPts;
+    uint64_t submitted = 0;
     uint64_t streamIdx = m_activeMediaSource->activeVideoStreamIndex();
 
-    while (m_lastVideoPts - ptsStart < 500) {
+    while (submitted < 500) {
         std::pair<MediaPacket*, size_t> packet = m_activeMediaSource->activeVideoSourceBuffer()->findProperMediaPacket(streamIdx, m_lastVideoPts);
 
         if (!packet.first) {
@@ -262,15 +288,22 @@ void MediaPlayerTizenTV::fillVideoBuffer(bool useLock)
             return;
         }
         if (packet.first->m_pts > m_lastVideoPts && packet.first->m_pts - m_lastVideoPts > 500) {
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer runs into video buffer under run state[2]\n");
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer runs into video buffer under run state[2] - requested(%lld) but returned(%lld)\n", m_lastVideoPts, packet.first->m_pts);
             m_isVideoBufferUnderrunState = true;
             break;
         }
-        if (packet.second != m_videoInitSegmentIndex) {
-            m_videoInitSegmentIndex = packet.second;
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer detect ohter type of Video!\n");
-        }
+
         m_lastVideoPts = packet.first->m_pts + packet.first->m_duration;
+        if (packet.second != m_videoInitSegmentIndex) {
+            if (!packet.first->m_hasIdr) {
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer drops non-idr packet when video type changed\n");
+                continue;
+            } else {
+                m_videoInitSegmentIndex = packet.second;
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::fillVideoBuffer detect ohter type of Video! (and will submit packet including idr)\n");
+            }
+        }
+        submitted += packet.first->m_duration;
         int ret = player_submit_packet(m_nativePlayer, packet.first->m_data, packet.first->m_dataSize, packet.first->m_pts, PLAYER_TRACK_TYPE_VIDEO);
 
         if (ret != PLAYER_ERROR_NONE) {

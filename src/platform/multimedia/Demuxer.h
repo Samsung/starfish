@@ -25,6 +25,7 @@ struct MediaPacket {
     size_t m_dataSize;
     uint64_t m_pts;
     uint64_t m_duration;
+    bool m_hasIdr : 1;
 };
 
 

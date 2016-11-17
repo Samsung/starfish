@@ -252,6 +252,7 @@ public:
             pkt->m_streamIndex = streamIndex;
             pkt->m_dataSize = packet.m_dataSize;
             pkt->m_data = packet.m_data;
+            pkt->m_hasIdr = packet.m_hasIdr;
             ret = true;
             memcpy(pkt->m_data, packet.m_data, packet.m_dataSize);
             // printf("[%d] pkt data pts %d len %d %d\n",streamIndex, (int)pkt->m_pts, (int)pkt->m_dataSize, (int) m_packetGroup.size());
