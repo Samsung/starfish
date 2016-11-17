@@ -14,23 +14,24 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishDOMRect__
-#define __StarFishDOMRect__
+#ifndef __StarFishDOMPoint__
+#define __StarFishDOMPoint__
 
 #include "util/String.h"
-#include "dom/DOMRectReadOnly.h"
+#include "dom/DOMPointReadOnly.h"
 
 namespace StarFish {
 
-class DOMRect : public DOMRectReadOnly {
+class DOMPoint : public DOMPointReadOnly {
 
 public:
-    static DOMRect* create(double x = 0 , double y = 0, double width = 0, double height = 0);
+    static DOMPoint* create(double x = 0, double y = 0, double z = 0, double w = 1);
+    // todo : Constructor(optional DOMPointInit point)
 
     void setX(double x) { m_x = x; }
     void setY(double y) { m_y = y; }
-    void setWidth(double width) { m_width = width; }
-    void setHeight(double height) { m_height = height; }
+    void setZ(double z) { m_z = z; }
+    void setW(double w) { m_w = w; }
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {
@@ -39,11 +40,12 @@ public:
 
     virtual Type type()
     {
-        return ScriptWrappable::Type::DOMRectObject;
+        return ScriptWrappable::Type::DOMPointObject;
     }
 
 protected:
-    DOMRect(double x, double y, double width, double height);
+    DOMPoint(double x, double y, double z, double w);
+
 };
 
 }
