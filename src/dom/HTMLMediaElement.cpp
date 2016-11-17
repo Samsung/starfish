@@ -40,6 +40,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_defaultPlaybackStartPosition(0)
     , m_muted(false)
     , m_volume(1.0)
+    , m_pendingSeek(std::numeric_limits<double>::quiet_NaN())
     , m_mediaPlayer(nullptr)
     , m_currentSrc(String::emptyString)
     , m_textTracks(new TextTrackList())
@@ -138,6 +139,7 @@ void HTMLMediaElement::load()
 
         // If seeking is true, set it to false.
         m_isSeeking = false;
+        m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
 
         // TODO Set the current playback position to 0.
         // Set the official playback position to 0.
@@ -171,6 +173,7 @@ void HTMLMediaElement::initMediaPlayer()
     m_mediaPlayer = MediaPlayer::create(this);
     m_mediaPlayer->setLoop(loop());
     m_isSeeking = false;
+    m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
 }
 
 void HTMLMediaElement::resourceSelection()
@@ -536,15 +539,26 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
         m_defaultPlaybackStartPosition = currentTime;
         STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
-        setOfficialPlaybackPosition(currentTime);
-        appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, currentTime));
-        startOperationQueueIfNeeded();
+        // Note: Update officialPlaybackPosition here but not dispatch timeupdate event.
+        // Event sequence : seeking -> (SEEK) -> timeupdate -> seeked -> timeupdate
+        m_officialPlaybackPosition = currentTime;
+        if (m_isSeeking) {
+            STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() Seek pending..\n");
+            m_pendingSeek = currentTime;
+        } else {
+            // Note: Set seeking flag to true here to prevent MediaPlayer's timer updating officialPlaybackPosition
+            //       while "seek" is in the operation queue.
+            m_isSeeking = true;
+            appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, currentTime));
+            startOperationQueueIfNeeded();
+        }
     }
 }
 
 void HTMLMediaElement::setOfficialPlaybackPosition(double time)
 {
-    if (m_officialPlaybackPosition != time) {
+    // Note: officialPlaybackPosition should be updated manually when seeking
+    if (!m_isSeeking && m_officialPlaybackPosition != time) {
         m_officialPlaybackPosition = time;
         dispatchTimeupdateEvent();
     }
@@ -671,10 +685,35 @@ void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaEl
 
 void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
 {
-    m_isSeeking = false;
+    STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekedItsContainer (%lf)\n", currentTime);
+    // Note : Set officialPlaybackPosition manually instead of calling setOfficialPlaybackPosition()
+    //        Because m_isSeeking effects setOfficialPlaybackPosition()
     m_officialPlaybackPosition = currentTime;
     dispatchTimeupdateEvent();
-    dispatchSeekedEvent();
+
+    if (!std::isnan(m_pendingSeek)) {
+        STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found pending seek operation (%lf)\n", m_pendingSeek);
+        m_officialPlaybackPosition = m_pendingSeek;
+        appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, m_pendingSeek));
+        m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
+        startOperationQueueIfNeeded();
+    } else {
+        // Finish "seek"
+        m_isSeeking = false;
+        dispatchSeekedEvent();
+        dispatchTimeupdateEvent();
+    }
+}
+
+
+void HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer()
+{
+    STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer\n");
+    m_isSeeking = false;
+    m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
+    // TODO
+    dedicatedMediaSourceFailure();
+    closeMediaPlayer();
 }
 
 void HTMLMediaElement::mediaPlayerNotifyEndedItsContainer()
@@ -874,12 +913,15 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
     if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING)
         return;
 
-    // Async seek task
-    mediaPlayer()->seek(m_seekPosition);
-    m_mediaElement->processNextOperationQueue();
+    STARFISH_ASSERT(m_mediaElement->m_isSeeking);
     m_mediaElement->dispatchSeekingEvent();
 
-    m_mediaElement->m_isSeeking = true;
+    // Async Seek task
+    STARFISH_ASSERT(mediaPlayer());
+    mediaPlayer()->seek(m_seekPosition);
+
+    // Seek task does not hold operation queue
+    m_mediaElement->processNextOperationQueue();
 }
 
 void MediaOperationQueueDataRequestPause::processOperationQueue()

@@ -267,6 +267,7 @@ public:
 
     void mediaPlayerNotifyUpdateReadyStateItsContainer(ReadyState state);
     void mediaPlayerNotifySeekedItsContainer(double currentTime);
+    void mediaPlayerNotifySeekFailureItsContainer();
     void mediaPlayerNotifyEndedItsContainer();
     void addEventToOperationQueue(EventTarget* t, Event* e);
     void addOperation(MediaOperationQueueData* data)
@@ -313,6 +314,7 @@ protected:
     double m_defaultPlaybackStartPosition;
     bool m_muted;
     double m_volume;
+    double m_pendingSeek;
     MediaPlayer* m_mediaPlayer;
     String* m_currentSrc;
     TextTrackList* m_textTracks;

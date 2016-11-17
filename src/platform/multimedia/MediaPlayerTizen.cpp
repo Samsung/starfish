@@ -46,7 +46,6 @@
 #define PLAYER_LOGE(...)
 #endif
 
-
 namespace StarFish {
 
 void MediaPlayerTizen::printNativePlayerError(int errorCode)
@@ -97,19 +96,20 @@ public:
 
     virtual void activeSourceComputed()
     {
-        m_player->prepareMediaSource();
+        if (m_player)
+            m_player->prepareMediaSource();
     }
 
     virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
     {
-        if (m_player->m_activeMediaSource->activeVideoSourceBuffer() == s) {
+        if (m_player && m_player->m_activeMediaSource && m_player->m_activeMediaSource->activeVideoSourceBuffer() == s) {
             m_player->fillVideoBufferIfNeeded();
         }
     }
 
     virtual void activeAudioSourceBufferUpdated(SourceBuffer* s)
     {
-        if (m_player->m_activeMediaSource->activeAudioSourceBuffer() == s) {
+        if (m_player && m_player->m_activeMediaSource && m_player->m_activeMediaSource->activeAudioSourceBuffer() == s) {
             m_player->fillAudioBufferIfNeeded();
         }
     }
@@ -126,6 +126,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_isAudioBufferUnderrunState(false)
     , m_needsPlayAfterPrepare(false)
     , m_isEnded(false)
+    , m_seekingTimer(SIZE_MAX)
     , m_mseClient(nullptr)
     , m_videoBufferMutex(new Mutex())
     , m_audioBufferMutex(new Mutex())
@@ -161,11 +162,7 @@ void MediaPlayerTizen::handlePlayerError(int error)
             close();
         }
     } else if (m_inSeeking && error == PLAYER_ERROR_SEEK_FAILED) {
-        handleSeekend();
-        // close player if needed
-        if (!m_alive) {
-            close();
-        }
+        handleSeekFailure();
     }
 }
 
@@ -200,8 +197,24 @@ void MediaPlayerTizen::seekIfNeeded()
 void MediaPlayerTizen::handleSeekend()
 {
     if (isMainThread()) {
+        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeekend\n");
+        if (!m_inSeeking) {
+            // Seek timeout
+            return;
+        }
         m_inSeeking = false;
+
+        // Remove timeout timer
+        if (m_seekingTimer != SIZE_MAX) {
+            m_starFish->window()->clearTimeout(m_seekingTimer);
+            m_seekingTimer = SIZE_MAX;
+        }
+
         m_starFish->removePointerFromRootSet(this);
+        if (!m_alive) {
+            close();
+            return;
+        }
         if (m_nativePlayer) {
             m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
         }
@@ -209,6 +222,39 @@ void MediaPlayerTizen::handleSeekend()
         m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             self->handleSeekend();
+        }, this);
+    }
+}
+
+void MediaPlayerTizen::handleSeekFailure()
+{
+    if (isMainThread()) {
+        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeekFailure\n");
+        if (!m_inSeeking) {
+            return;
+        }
+        // Note : Seek failure
+        // case1. timeout
+        // case2. error_cb invoked
+        // case3. player_set_position_async callback invoked and result is negative
+
+        // Remove timeout timer in case of case2, case3
+        if (m_seekingTimer != SIZE_MAX) {
+            m_starFish->window()->clearTimeout(m_seekingTimer);
+            m_seekingTimer = SIZE_MAX;
+        }
+
+        m_inSeeking = false;
+        m_starFish->removePointerFromRootSet(this);
+        if (m_nativePlayer) {
+            m_container->mediaPlayerNotifySeekFailureItsContainer();
+        }
+        // TODO
+        close();
+    } else {
+        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+            self->handleSeekFailure();
         }, this);
     }
 }
@@ -238,10 +284,12 @@ void MediaPlayerTizen::startPlaying()
         m_starFish->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = m_starFish->window()->setInterval([](Window* window, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-            if (self->currentTime() == self->m_container->officialPlaybackPosition() && self->m_isEnded) {
-                self->endOfStream();
-            } else {
-                self->m_container->setOfficialPlaybackPosition(self->currentTime());
+            if (!self->m_inSeeking) {
+                if (self->currentTime() == self->m_container->officialPlaybackPosition() && self->m_isEnded) {
+                    self->endOfStream();
+                } else {
+                    self->m_container->setOfficialPlaybackPosition(self->currentTime());
+                }
             }
         }, 250, this);
         seekIfNeeded();
@@ -264,6 +312,11 @@ void MediaPlayerTizen::close()
     m_alive = false;
     if (m_inPrepare || m_inSeeking)
         return;
+
+    if (m_seekingTimer != SIZE_MAX) {
+        m_starFish->window()->clearTimeout(m_seekingTimer);
+        m_seekingTimer = SIZE_MAX;
+    }
 
     stopPlaying();
 

@@ -389,19 +389,72 @@ public:
                             bool isAnnexBType = m_isAnnexBType;
 
                             if (isAnnexBType) {
-                                uint8_t* data = new uint8_t[packet.m_dataSize];
-                                size_t s;
-                                int err;
-                                source->onRead(packet.m_dataSize, s, err, data);
-                                STARFISH_ASSERT(packet.m_dataSize == s);
-                                packet.m_data = data;
-                                for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
-                                    if (m_demuxerClients[j]->onDetectPacket(packet)) {
-                                        data = nullptr;
-                                        break;
+                                // Check whether it has idr
+                                size_t bufStart = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                size_t bufEnd = packet.m_dataSize + bufStart;
+                                size_t nalSize, unitType;
+                                STARFISH_RELEASE_ASSERT(m_nalLengthSize < 32);
+                                uint8_t nalBuffer[32];
+                                packet.m_hasIdr = false;
+                                {
+                                    size_t bufOrignalPosition = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+                                    size_t bufPtr = bufStart;
+                                    while (bufPtr < bufEnd) {
+                                        size_t s;
+                                        int err = 0;
+                                        source->onRead(m_nalLengthSize, s, err, nalBuffer);
+                                        if (err) {
+                                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                        }
+                                        nalSize = 0;
+                                        for (size_t i = 0 ; i < m_nalLengthSize; i ++) {
+                                            nalSize = (nalSize << 8) | nalBuffer[i];
+                                        }
+                                        bufPtr += m_nalLengthSize;
+                                        source->onRead(1, s, err, nalBuffer);
+                                        if (err) {
+                                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                        }
+                                        unitType = nalBuffer[0] & 0x1f;
+                                        if (unitType == 5) {
+                                            packet.m_hasIdr = true;
+                                            break;
+                                        }
+                                        if ((bufPtr + nalSize) > bufEnd || nalSize < 0) {
+                                            STARFISH_LOG_ERROR("DemuxerMP4 nalSizeError (%d)!!\n", (int)nalSize);
+                                            goto fail_in_annexb_idr_check;
+                                        }
+
+                                        if (nalSize) {
+                                            size_t nalDataSize = nalSize - 1;
+                                            source->onSeek(nalDataSize, DemuxerSource::SeekWhenceCurrent);
+                                            if (err) {
+                                                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                                            }
+                                        } else {
+                                        }
+                                        bufPtr += nalSize;
                                     }
+                                    source->onSeek(bufOrignalPosition, DemuxerSource::SeekWhenceSet);
                                 }
-                                delete[] data;
+                                {
+                                    // STARFISH_LOG_INFO("DemuxerMP4 create packet AnnexBType (idr:%s)\n", packet.m_hasIdr ? "true" : "false");
+                                    uint8_t* data = new uint8_t[packet.m_dataSize];
+                                    size_t s;
+                                    int err;
+                                    source->onRead(packet.m_dataSize, s, err, data);
+                                    STARFISH_ASSERT(packet.m_dataSize == s);
+                                    packet.m_data = data;
+                                    for (size_t j = 0; j < m_demuxerClients.size(); j ++) {
+                                        if (m_demuxerClients[j]->onDetectPacket(packet)) {
+                                            data = nullptr;
+                                            break;
+                                        }
+                                    }
+                                    delete[] data;
+                                }
+                                fail_in_annexb_idr_check:
+                                source->onSeek(bufEnd, DemuxerSource::SeekWhenceSet);
                             } else {
                                 // debug code
                                 /*
@@ -532,7 +585,7 @@ public:
                                         }
                                         bufPtr += nalSize;
                                     }
-
+                                    packet.m_hasIdr = sawIdr;
                                     STARFISH_ASSERT(destBufferPtr == destBufferSize);
                                     packet.m_data = data;
                                     packet.m_dataSize = destBufferSize;

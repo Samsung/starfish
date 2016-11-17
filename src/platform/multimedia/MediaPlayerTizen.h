@@ -21,6 +21,10 @@
 
 #include <media/player.h>
 
+#ifndef MAX_WAITING_SECONDS_FOR_SEEK_OPERATION
+#define MAX_WAITING_SECONDS_FOR_SEEK_OPERATION 30000
+#endif
+
 namespace StarFish {
 
 class CanvasSurface;
@@ -70,6 +74,7 @@ public:
 
     void handleEnded();
     void handleSeekend();
+    void handleSeekFailure();
     void handlePlayerError(int error);
 
     virtual unsigned long videoWidth()
@@ -108,6 +113,7 @@ public:
     bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
     bool m_isEnded;
+    size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;
     Mutex* m_audioBufferMutex;
