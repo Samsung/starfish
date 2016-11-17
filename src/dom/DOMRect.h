@@ -14,7 +14,6 @@
  *    limitations under the License.
  */
 
-
 #ifndef __StarFishDOMRect__
 #define __StarFishDOMRect__
 

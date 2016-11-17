@@ -99,6 +99,7 @@ class DOMParser;
 class DOMRectReadOnly;
 class DOMRect;
 class DOMPointReadOnly;
+class DOMPoint;
 
 typedef escargot::ESValue ScriptValue;
 typedef escargot::ESObject* ScriptObject;
@@ -149,6 +150,7 @@ public:
         DOMRectReadOnlyObject = 76,
         DOMRectObject = 78,
         DOMPointReadOnlyObject = 80,
+        DOMPointObject = 82,
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -246,6 +248,7 @@ public:
     void initScriptWrappable(DOMRectReadOnly* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMRect* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMPointReadOnly* ptr, ScriptBindingInstance*);
+    void initScriptWrappable(DOMPoint* ptr, ScriptBindingInstance*);
 
     bool hasProperty(String* name);
 
