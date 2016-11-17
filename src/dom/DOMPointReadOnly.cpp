@@ -15,21 +15,21 @@
  */
 
 #include "StarFishConfig.h"
-#include "dom/DOMRectReadOnly.h"
+#include "dom/DOMPointReadOnly.h"
 
 namespace StarFish {
 
-DOMRectReadOnly* DOMRectReadOnly::create(double x, double y, double width, double height)
+DOMPointReadOnly* DOMPointReadOnly::create(double x, double y, double z, double w)
 {
-    return new DOMRectReadOnly(x, y, width, height);
+    return new DOMPointReadOnly(x, y, z, w);
 }
 
-DOMRectReadOnly::DOMRectReadOnly(double x, double y, double width, double height)
+DOMPointReadOnly::DOMPointReadOnly(double x, double y, double z, double w)
     : ScriptWrappable(this)
     , m_x(x)
     , m_y(y)
-    , m_width(width)
-    , m_height(height)
+    , m_z(z)
+    , m_w(w)
 { }
 
 }

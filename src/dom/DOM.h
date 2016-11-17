@@ -67,6 +67,7 @@
 #include "extra/XMLHttpRequest.h"
 #include "dom/DOMRectReadOnly.h"
 #include "dom/DOMRect.h"
+#include "dom/DOMPointReadOnly.h"
 
 #ifdef STARFISH_EXP
 #include "dom/DOMImplementation.h"
