@@ -5800,6 +5800,45 @@ escargot::ESFunctionObject* bindingDOMRect(ScriptBindingInstance* scriptBindingI
     return DOMRectFunction;
 }
 
+escargot::ESFunctionObject* bindingDOMPointReadOnly(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMPointReadOnly, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("x"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject, DOMPointReadOnly);
+            DOMPointReadOnly* point = originalObj;
+            return escargot::ESValue(point->x());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("y"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject, DOMPointReadOnly);
+            DOMPointReadOnly* point = originalObj;
+            return escargot::ESValue(point->y());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("z"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject, DOMPointReadOnly);
+            DOMPointReadOnly* point = originalObj;
+            return escargot::ESValue(point->z());
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMPointReadOnlyFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("w"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMPointReadOnlyObject, DOMPointReadOnly);
+            DOMPointReadOnly* point = originalObj;
+            return escargot::ESValue(point->w());
+        }, nullptr, true, true);
+
+    return DOMPointReadOnlyFunction;
+}
+
 escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBindingInstance)
 {
     /* DOM Exception */

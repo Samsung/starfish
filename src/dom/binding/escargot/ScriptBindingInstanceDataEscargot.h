@@ -65,6 +65,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(url, URL) \
     F(domRectReadOnly, DOMRectReadOnly) \
     F(domRect, DOMRect) \
+    F(domPointReadOnly, DOMPointReadOnly) \
     F(location, Location) \
     F(domException, DOMException) \
     F(navigator, Navigator) \
@@ -232,6 +233,7 @@ private:
     escargot::ESFunctionObject* m_domParser;
     escargot::ESFunctionObject* m_domRectReadOnly;
     escargot::ESFunctionObject* m_domRect;
+    escargot::ESFunctionObject* m_domPointReadOnly;
 
 public:
 #define FOR_EACH_SCRIPTVALUE_FN(codeName, exportName) \

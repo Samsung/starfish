@@ -13,8 +13,10 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 #include "StarFishConfig.h"
 #include "dom/DOMRectReadOnly.h"
+
 namespace StarFish {
 
 DOMRectReadOnly* DOMRectReadOnly::create(double x, double y, double width, double height)

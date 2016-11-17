@@ -98,6 +98,7 @@ class Coordinates;
 class DOMParser;
 class DOMRectReadOnly;
 class DOMRect;
+class DOMPointReadOnly;
 
 typedef escargot::ESValue ScriptValue;
 typedef escargot::ESObject* ScriptObject;
@@ -147,6 +148,7 @@ public:
         LocationObject = 74,
         DOMRectReadOnlyObject = 76,
         DOMRectObject = 78,
+        DOMPointReadOnlyObject = 80,
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -243,6 +245,7 @@ public:
     void initScriptWrappable(DOMParser* ptr);
     void initScriptWrappable(DOMRectReadOnly* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMRect* ptr, ScriptBindingInstance*);
+    void initScriptWrappable(DOMPointReadOnly* ptr, ScriptBindingInstance*);
 
     bool hasProperty(String* name);
 
