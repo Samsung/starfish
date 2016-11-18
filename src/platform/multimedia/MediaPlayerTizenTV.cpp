@@ -157,20 +157,26 @@ void MediaPlayerTizenTV::seek(double time)
                 m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
 
             int timeInMs = (int)(time * 1000.0);
+            m_seekCbCounter = true;
             ret = player_set_position_async(m_nativePlayer, timeInMs, [](void* data, int result) {
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (1)\n");
-                // result 0  -> succeed
-                // otherwise -> failed
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-                if (result == 0)
+                if (self->m_seekCbCounter) {
+                    self->m_seekCbCounter = false;
+                    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb - first cb\n");
+                    // result 0  -> succeed
+                    // otherwise -> failed
+                    if (result != 0)
+                        self->handleSeekFailure();
+                } else {
+                    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb - second cb\n");
                     self->handleSeekend();
-                else
-                    self->handleSeekFailure();
+                }
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (2)\n");
             }, this);
 
             STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %d state: %d \n", timeInMs, (int)state);
-            if (ret) {
+            if (ret != PLAYER_ERROR_NONE) {
                 // Failed immediately
                 // Note: failed but ignore!
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async failed immediately -> ignore\n");

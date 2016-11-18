@@ -113,6 +113,7 @@ public:
     bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
     bool m_isEnded;
+    bool m_seekCbCounter; // TODO : Remove this flag when we get stable set_position result
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;

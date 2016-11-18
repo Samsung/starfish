@@ -162,7 +162,7 @@ public:
         size_t track_width;
         size_t track_height;
         size_t duration;
-        size_t time_scale;
+        size_t time_scale = 0;
 
         parseMP4(source, false, [&](MP4::Atom* atom) {
             if (atom->getType() == MP4_PARSER_DEFINE_TYPE_STRING("mvhd")) {
