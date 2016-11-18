@@ -5845,26 +5845,45 @@ escargot::ESFunctionObject* bindingDOMPoint(ScriptBindingInstance* scriptBinding
     auto DOMPointFunction = escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
 
         int cnt = instance->currentExecutionContext()->argumentCount();
-        (cnt > 4) ? cnt = 4 : cnt;
-        DOMPoint* point = nullptr;
-        double args[4] = {0, };
         if (cnt == 0) {
-            point = DOMPoint::create();
+            DOMPoint* point = DOMPoint::create();
+            return point->scriptValue();
+        } else if (cnt == 1) {
+            DOMPoint* point = nullptr;
+            escargot::ESValue arg = instance->currentExecutionContext()->readArgument(0);
+            if (arg.isUndefinedOrNull()) {
+                point = DOMPoint::create();
+            } else if (arg.isObject()) {
+                DOMPointInit initPoint;
+                escargot::ESValue value;
+                value = arg.asESPointer()->asESObject()->get(escargot::ESString::create("x"));
+                if (!value.isUndefined())
+                    initPoint.x = value.toNumber();
+                value = arg.asESPointer()->asESObject()->get(escargot::ESString::create("y"));
+                if (!value.isUndefined())
+                    initPoint.y = value.toNumber();
+                value = arg.asESPointer()->asESObject()->get(escargot::ESString::create("z"));
+                if (!value.isUndefined())
+                    initPoint.z = value.toNumber();
+                value = arg.asESPointer()->asESObject()->get(escargot::ESString::create("w"));
+                if (!value.isUndefined())
+                    initPoint.w = value.toNumber();
+                point = DOMPoint::create(initPoint);
+            }
+            return point->scriptValue();
         } else {
+            (cnt > 4) ? cnt = 4 : cnt;
+            DOMPoint* point = nullptr;
+            double args[4] = {0, 0, 0, 1}; // x, y, z, w
             for (int i = 0; i < cnt; ++i) {
-                args[i] = instance->currentExecutionContext()->readArgument(i).toNumber();
+                escargot::ESValue value = instance->currentExecutionContext()->readArgument(i);
+                if (!value.isUndefined()) {
+                    args[i] = value.toNumber();
+                }
             }
-            if (cnt == 1) {
-                point = DOMPoint::create(args[0]);
-            } else if (cnt == 2) {
-                point = DOMPoint::create(args[0], args[1]);
-            } else if (cnt == 3) {
-                point = DOMPoint::create(args[0], args[1], args[2]);
-            } else {
-                point = DOMPoint::create(args[0], args[1], args[2], args[3]);
-            }
+            point = DOMPoint::create(args[0], args[1], args[2], args[3]);
+            return point->scriptValue();
         }
-        return point->scriptValue();
     }, DOMPointString, 0, true, true);
 
     DOMPointFunction->defineAccessorProperty(escargot::ESVMInstance::currentInstance()->strings().prototype.string(), escargot::ESVMInstance::currentInstance()->functionPrototypeAccessorData(), false, false, false);

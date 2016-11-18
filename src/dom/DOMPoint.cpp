@@ -18,6 +18,17 @@
 #include "dom/DOMPoint.h"
 
 namespace StarFish {
+DOMPointInit::DOMPointInit(double inX, double inY, double inZ, double inW)
+    : x(inX)
+    , y(inY)
+    , z(inZ)
+    , w(inW)
+{ }
+
+DOMPoint* DOMPoint::create(const DOMPointInit& pi)
+{
+    return new DOMPoint(pi.x, pi.y, pi.z, pi.w);
+}
 
 DOMPoint* DOMPoint::create(double x, double y, double z, double w)
 {
