@@ -219,6 +219,7 @@ void MediaPlayerTizen::handleSeekend()
             m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
         }
     } else {
+        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeekend - nonMainThread\n");
         m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             self->handleSeekend();
@@ -252,6 +253,7 @@ void MediaPlayerTizen::handleSeekFailure()
         // TODO
         close();
     } else {
+        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeekFailure - nonMainThread\n");
         m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             self->handleSeekFailure();
