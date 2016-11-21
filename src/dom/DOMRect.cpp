@@ -17,6 +17,13 @@
 #include "dom/DOMRect.h"
 
 namespace StarFish {
+DOMRectInit::DOMRectInit(double inX, double inY, double inWidth, double inHeight)
+    : x(inX)
+    , y(inY)
+    , width(inWidth)
+    , height(inHeight)
+{ }
+
 DOMRect* DOMRect::create(double x, double y, double width, double height)
 {
     return new DOMRect(x, y, width, height);
