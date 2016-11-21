@@ -262,6 +262,7 @@ endif
 # for media support
 ifeq ($(MEDIA_SUPPORT), true)
   CXXFLAGS += -DSTARFISH_ENABLE_MULTIMEDIA
+  CXXFLAGS += -DSTARFISH_ENABLE_AVPLAY
 endif
 
 ifeq ($(INSPECTOR_SUPPORT), true)
@@ -604,6 +605,7 @@ tizen_obs_arm.exe.debug: $(OUTDIR)/$(BIN)
 tizen_obs_arm.exe.release: $(OUTDIR)/$(BIN)
 	cp -f $< .
 tizen_obs_emulator.exe.release: $(OUTDIR)/$(BIN)
+	cp -f $< .
 tizen_obs_emulator.exe.debug: $(OUTDIR)/$(BIN)
 	cp -f $< .
 

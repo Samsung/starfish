@@ -46,6 +46,9 @@
 #include "dom/TextTrack.h"
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#include "extra/AVPlay.h"
+#endif
 #endif
 
 namespace StarFish {
@@ -2322,7 +2325,199 @@ escargot::ESFunctionObject* bindingSourceBufferList(ScriptBindingInstance* scrip
 
     return SourceBufferListFunction;
 }
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+escargot::ESFunctionObject* bindingwebapis(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(webapis, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        webapisFunction, escargot::ESString::create("avplay"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            return ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay()->scriptObject();
+    }, nullptr);
+    return webapisFunction;
+}
 
+escargot::ESFunctionObject* bindingavplay(ScriptBindingInstance* scriptBindingInstance)
+{
+
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(avplay, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("open"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            String* url = toBrowserString(firstArg);
+            avPlay->open(url);
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("open"), 1, false)
+    );
+
+    // webapis.avplay.prepare();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("prepare"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->prepare();
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("prepare"), 1, false)
+    );
+
+    // webapis.avplay.setDisplayRect(avPlayerObj.offsetLeft, avPlayerObj.offsetTop, avPlayerObj.offsetWidth, avPlayerObj.offsetHeight);
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setDisplayRect"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            escargot::ESValue Arg1 = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue Arg2 = instance->currentExecutionContext()->readArgument(1);
+            escargot::ESValue Arg3 = instance->currentExecutionContext()->readArgument(2);
+            escargot::ESValue Arg4 = instance->currentExecutionContext()->readArgument(3);
+
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->setDisplayRect(Arg1.toNumber(), Arg2.toNumber(), Arg3.toNumber(), Arg4.toNumber());
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("setDisplayRect"), 1, false)
+    );
+
+    // webapis.avplay.play();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("play"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->play();
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("play"), 1, false)
+    );
+
+    // webapis.avplay.close();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("close"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->close();
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("close"), 1, false)
+    );
+
+    // webapis.avplay.pause();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pause"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->pause();
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("pause"), 1, false)
+    );
+
+    // webapis.avplay.stop();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("stop"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->stop();
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("stop"), 1, false)
+    );
+
+    // webapis.avplay.suspend();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("suspend"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->suspend();
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("suspend"), 1, false)
+    );
+
+    // webapis.avplay.restore();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("restore"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->restore();
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("restore"), 1, false)
+    );
+
+    // webapis.avplay.getState()!=='NONE'
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getState"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            return toJSString(avPlay->getState());
+        }, escargot::ESString::create("getState"), 1, false)
+    );
+
+    // webapis.avplay.getCurrentTime();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getCurrentTime"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            return escargot::ESValue(avPlay->getCurrentTime());
+        }, escargot::ESString::create("getCurrentTime"), 1, false)
+    );
+
+    // webapis.avplay.getDuration();
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getDuration"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            return escargot::ESValue(avPlay->getDuration());
+        }, escargot::ESString::create("getDuration"), 1, false)
+    );
+
+    // webapis.avplay.setStreamingProperty("SET_MODE_3D", "MODE_3D_EFFECT_SIDE_BY_SIDE");
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setStreamingProperty"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            escargot::ESValue secondArg = instance->currentExecutionContext()->readArgument(1);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->setStreamingProperty(toBrowserString(firstArg), toBrowserString(secondArg));
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("setStreamingProperty"), 1, false)
+    );
+
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("prepareAsync"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->prepareAsync(firstArg);
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("prepareAsync"), 1, false)
+    );
+
+    // webapis.avplay.prepareAsync(function(){}
+    // webapis.avplay.setListener(listener);
+    // webapis.avplay.seekTo( _seekTime );
+
+    return avplayFunction;
+}
+#endif
 #endif
 
 escargot::ESFunctionObject* bindingDocumentFragment(ScriptBindingInstance* scriptBindingInstance)

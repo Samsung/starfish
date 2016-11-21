@@ -25,6 +25,9 @@
 
 #include "extra/Navigator.h"
 #include "extra/Location.h"
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#include "extra/AVPlay.h"
+#endif
 
 #include "layout/Frame.h"
 #include "layout/FrameBox.h"
@@ -392,6 +395,9 @@ Window::Window(StarFish* starFish)
     , m_navigator(nullptr)
     , m_location(nullptr)
     , m_document(nullptr)
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+    , m_webapis(nullptr)
+#endif
     , m_rootStackingContext(nullptr)
     , m_touchDownPoint(0, 0)
     , m_ctrlKeyDown(0)
@@ -480,7 +486,9 @@ void Window::navigate(URL* url)
 
     m_navigator = new Navigator(m_starFish);
     m_location = new LocationObj(m_starFish);
-
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+    m_webapis = new webapis(m_starFish);
+#endif
     m_document = new HTMLDocument(this, scriptBindingInstance(), url, String::createASCIIString("UTF-8"), true);
     m_document->open();
 }

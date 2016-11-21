@@ -35,6 +35,9 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "dom/TextTrack.h"
 #include "extra/SourceBuffer.h"
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#include "extra/AVPlay.h"
+#endif
 #endif
 
 #include "extra/Navigator.h"
@@ -1090,6 +1093,20 @@ void ScriptWrappable::initScriptWrappable(SourceBufferList* ptr)
         return v;
     }, true);
 }
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+void ScriptWrappable::initScriptWrappable(webapis* ptr)
+{
+    webapis* webApis = (webapis*)this;
+    auto data = fetchData(webApis->starFish()->window()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->webApis()->protoType());
+}
+void ScriptWrappable::initScriptWrappable(avplay* ptr)
+{
+    avplay* avPlay = (avplay*)this;
+    auto data = fetchData(avPlay->starFish()->window()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->avPlay()->protoType());
+}
+#endif
 #endif
 
 void ScriptWrappable::initScriptWrappable(HTMLElement* ptr)
