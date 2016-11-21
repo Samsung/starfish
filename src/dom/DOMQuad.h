@@ -27,11 +27,21 @@ struct DOMPointInit;
 class DOMPoint;
 class DOMRectReadOnly;
 
-class DOMQuad {
+class DOMQuad : public ScriptWrappable {
 
 public:
     static DOMQuad* create(const DOMPointInit& , const DOMPointInit& , const DOMPointInit&, const DOMPointInit&);
     static DOMQuad* create(const DOMRectInit&);
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this, instance);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::DOMQuadObject;
+    }
 
     DOMPoint* p1() const { return m_p1; }
     DOMPoint* p2() const { return m_p2; }
