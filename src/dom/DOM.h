@@ -69,6 +69,7 @@
 #include "dom/DOMRect.h"
 #include "dom/DOMPointReadOnly.h"
 #include "dom/DOMPoint.h"
+#include "dom/DOMQuad.h"
 
 #ifdef STARFISH_EXP
 #include "dom/DOMImplementation.h"

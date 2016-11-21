@@ -5950,6 +5950,58 @@ escargot::ESFunctionObject* bindingDOMPoint(ScriptBindingInstance* scriptBinding
     return DOMPointFunction;
 }
 
+escargot::ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingInstance)
+{
+    /*
+        Todo : bind to Constructor of DOMQuad
+        [Constructor(optional DOMPointInit p1, optional DOMPointInit p2, optional DOMPointInit p3, optional DOMPointInit p4),
+         Constructor(optional DOMRectInit rect),Exposed=(Window,Worker)]
+    */
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMQuad, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMQuadFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("p1"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+            DOMQuad* quad = originalObj;
+            return quad->p1()->scriptValue();
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMQuadFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("p2"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+            DOMQuad* quad = originalObj;
+            return quad->p2()->scriptValue();
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMQuadFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("p3"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+            DOMQuad* quad = originalObj;
+            return quad->p3()->scriptValue();
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMQuadFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("p4"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+            DOMQuad* quad = originalObj;
+            return quad->p4()->scriptValue();
+        }, nullptr, true, true);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMQuadFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("bounds"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMQuadObject, DOMQuad);
+            DOMQuad* quad = originalObj;
+            return quad->bounds()->scriptValue();
+        }, nullptr, true, true);
+
+    return DOMQuadFunction;
+}
+
 escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBindingInstance)
 {
     /* DOM Exception */

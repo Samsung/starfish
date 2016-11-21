@@ -1235,6 +1235,12 @@ void ScriptWrappable::initScriptWrappable(DOMPoint* point, ScriptBindingInstance
     scriptObject()->set__proto__(data->domPoint()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(DOMQuad* quad, ScriptBindingInstance* instance)
+{
+    auto data = fetchData(instance);
+    scriptObject()->set__proto__(data->domQuad()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance)
 {
     auto data = fetchData(instance);

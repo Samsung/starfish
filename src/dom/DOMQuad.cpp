@@ -68,7 +68,8 @@ DOMRectReadOnly* DOMQuad::bounds() const
 }
 
 DOMQuad::DOMQuad(const DOMPointInit& p1, const DOMPointInit& p2, const DOMPointInit& p3, const DOMPointInit& p4)
-    : m_p1(DOMPoint::create(p1))
+    : ScriptWrappable(this)
+    , m_p1(DOMPoint::create(p1))
     , m_p2(DOMPoint::create(p2))
     , m_p3(DOMPoint::create(p3))
     , m_p4(DOMPoint::create(p4))
