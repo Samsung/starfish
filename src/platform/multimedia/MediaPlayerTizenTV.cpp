@@ -129,7 +129,7 @@ void MediaPlayerTizenTV::seek(double time)
         time = 0;
     }
 
-    // Note : Seek operation's can occur in state PLAYING | PAUSED
+    // Note : Seek operation can occur in state PLAYING | PAUSED
     // Note : player_set_position()'s callback will be invoked in non-main thread, so it needs to be rooted.
     // Note : Rooting will just increase pointer count for the player in case of PLAYING,
     //        and the count will be decreased back when seeking done (or error case).
@@ -141,7 +141,7 @@ void MediaPlayerTizenTV::seek(double time)
         STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
         {
             // Set timer
-            // Note : Sometimes player_set_position() does not response.
+            // Note : Sometimes player_set_position_async() does not invoke its callback.
             //        in that case, the timer will help the player to remove rooted pointer and properly destroyed
             m_seekingTimer = m_starFish->window()->setTimeout([](Window* window, void* data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
@@ -175,11 +175,12 @@ void MediaPlayerTizenTV::seek(double time)
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (2)\n");
             }, this);
 
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position time: %d state: %d \n", timeInMs, (int)state);
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async (time: %d state: %d)\n", timeInMs, (int)state);
             if (ret != PLAYER_ERROR_NONE) {
                 // Failed immediately
                 // Note: failed but ignore!
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async failed immediately -> ignore\n");
+                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async failed immediately (IGNORE) : ");
+                printNativePlayerError(ret);
                 handleSeekend();
                 if (m_inPrepare) {
                     STARFISH_LOG_INFO("MediaPlayerTizenTV::seek -> seeking failed saving time %lf\n", time);
@@ -201,10 +202,12 @@ void MediaPlayerTizenTV::seek(double time)
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             self->handleSeekend();
         }, this);
-    }
-    if (ret != PLAYER_ERROR_NONE) {
-        STARFISH_LOG_ERROR("**ERROR: player_set_position %x -> ", ret);
-        printNativePlayerError(ret);
+
+        if (ret != PLAYER_ERROR_NONE) {
+            STARFISH_LOG_ERROR("**ERROR: player_set_position %x -> ", ret);
+            printNativePlayerError(ret);
+            handleSeekend();
+        }
     }
 }
 
