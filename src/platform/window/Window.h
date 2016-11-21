@@ -33,6 +33,7 @@ class HTMLCollection;
 class StackingContext;
 class CanvasSurface;
 class Navigator;
+class webapis;
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
@@ -134,6 +135,13 @@ public:
     {
         return m_location;
     }
+
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+    webapis* Webapis()
+    {
+        return m_webapis;
+    }
+#endif
 
     StarFish* starFish()
     {
@@ -287,6 +295,9 @@ protected:
     Navigator* m_navigator;
     LocationObj* m_location;
     Document* m_document;
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+    webapis* m_webapis;
+#endif
     StackingContext* m_rootStackingContext;
     std::vector<CanvasSurface*, gc_allocator_ignore_off_page<CanvasSurface*>> m_backStackingContextBufferUpWhileReCompsite;
     Node* m_activeNodeWithTouchDown;

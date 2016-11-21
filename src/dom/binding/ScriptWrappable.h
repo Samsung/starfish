@@ -42,6 +42,10 @@ class VTTCue;
 class MediaSource;
 class SourceBuffer;
 class SourceBufferList;
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+class webapis;
+class avplay;
+#endif
 #endif
 class HTMLElement;
 class HTMLHtmlElement;
@@ -156,6 +160,10 @@ public:
         DOMPointObject = 82,
         DOMQuadObject = 84,
         DOMRectListObject = 86,
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+        webapisObject = 88,
+        avplayObject = 90,
+#endif
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -224,6 +232,10 @@ public:
     void initScriptWrappable(MediaSource* ptr);
     void initScriptWrappable(SourceBuffer* ptr);
     void initScriptWrappable(SourceBufferList* ptr);
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+    void initScriptWrappable(webapis* ptr);
+    void initScriptWrappable(avplay* ptr);
+#endif
 #endif
     void initScriptWrappable(Event* event);
     void initScriptWrappable(UIEvent* ptr);
