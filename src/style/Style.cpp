@@ -624,7 +624,7 @@ static bool compareSpecificity(CSSStyleRule* r1, CSSStyleRule* r2)
 
 void CSSStyleSheet::sortRulesBySpecificity()
 {
-    std::sort(m_rules.begin(), m_rules.end(), compareSpecificity);
+    std::stable_sort(m_rules.begin(), m_rules.end(), compareSpecificity);
 }
 
 String* CSSStyleDeclaration::generateCSSText()
