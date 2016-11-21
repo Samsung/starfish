@@ -121,13 +121,6 @@ void MediaPlayerTizenTV::seek(double time)
 {
     player_state_e state;
     player_get_state(m_nativePlayer, &state);
-    uint64_t timestamp = time * 1000;
-    int ret;
-
-    STARFISH_ASSERT(!std::isnan(time));
-    if (time < 0) {
-        time = 0;
-    }
 
     // Note : Seek operation can occur in state PLAYING | PAUSED
     // Note : player_set_position()'s callback will be invoked in non-main thread, so it needs to be rooted.
@@ -136,6 +129,29 @@ void MediaPlayerTizenTV::seek(double time)
     STARFISH_ASSERT(!m_inSeeking);
     m_inSeeking = true;
     m_starFish->addPointerInRootSet(this);
+
+    if (m_playbackState == PlaybackState::PLAYBACK_STATE_END) {
+        STARFISH_LOG_INFO("MediaPlayerTizen::seek() called after EOS\n");
+        // TODO
+        handleSeekend();
+        return;
+    }
+
+    // Check seek boundary
+    STARFISH_ASSERT(!std::isnan(time));
+    double dur = duration();
+    if (time < 0) {
+        time = 0;
+    } else if (dur != 0 && !std::isnan(dur) && time >= dur) {
+        // Note: Seeking to EOS is impossible!!! (player_set_position fault)
+        STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() reaches EOS\n");
+        endOfStream();
+        handleSeekend();
+        return;
+    }
+
+    uint64_t timestamp = time * 1000;
+    int ret;
 
     if (m_activeMediaSource) {
         STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
@@ -156,9 +172,8 @@ void MediaPlayerTizenTV::seek(double time)
             if (m_activeMediaSource->activeAudioSourceBuffer())
                 m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
 
-            int timeInMs = (int)(time * 1000.0);
             m_seekCbCounter = true;
-            ret = player_set_position_async(m_nativePlayer, timeInMs, [](void* data, int result) {
+            ret = player_set_position_async(m_nativePlayer, (int)timestamp, [](void* data, int result) {
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (1)\n");
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
                 if (self->m_seekCbCounter) {
@@ -175,7 +190,7 @@ void MediaPlayerTizenTV::seek(double time)
                 STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (2)\n");
             }, this);
 
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async (time: %d state: %d)\n", timeInMs, (int)state);
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async (time: %d state: %d)\n", (int)timestamp, (int)state);
             if (ret != PLAYER_ERROR_NONE) {
                 // Failed immediately
                 // Note: failed but ignore!
@@ -197,9 +212,10 @@ void MediaPlayerTizenTV::seek(double time)
             fillAudioBufferIfNeeded();
 
     } else {
-        ret = player_set_position(m_nativePlayer, time, [](void* data) {
-            // STARFISH_LOG_INFO("player_set_position_cb\n");
+        STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position (time: %d state: %d)\n", (int)timestamp, (int)state);
+        ret = player_set_position(m_nativePlayer, (int)timestamp, [](void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_cb : %lf\n", self->currentTime());
             self->handleSeekend();
         }, this);
 
