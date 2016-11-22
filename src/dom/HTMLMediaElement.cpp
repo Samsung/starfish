@@ -718,6 +718,9 @@ void HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer()
 
 void HTMLMediaElement::mediaPlayerNotifyEndedItsContainer()
 {
+    m_isPaused = true;
+    dispatchPauseEventNow();
+
     m_isEnded = true;
     m_officialPlaybackPosition = duration();
     dispatchTimeupdateEvent();
