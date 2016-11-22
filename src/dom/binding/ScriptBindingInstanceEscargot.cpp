@@ -6002,6 +6002,38 @@ escargot::ESFunctionObject* bindingDOMQuad(ScriptBindingInstance* scriptBindingI
     return DOMQuadFunction;
 }
 
+escargot::ESFunctionObject* bindingDOMRectList(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMRectList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+
+    DOMRectListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(thisValue, ScriptWrappable::Type::DOMRectListObject);
+            DOMRectList* domRectList = (DOMRectList*)thisValue.asESPointer()->asESObject()->extraPointerData();
+
+            escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
+            TO_INDEX_UINT32(argValue, idx);
+            if (idx != INVALID_INDEX && idx < domRectList->length()) {
+                DOMRect* rect = domRectList->item(idx);
+                return rect->scriptValue();
+            }
+            return escargot::ESValue(escargot::ESValue::ESNull);
+        }, escargot::ESString::create("item"), 1, false)
+    );
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        DOMRectListFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::DOMRectListObject, DOMRectList);
+        uint32_t len = originalObj->length();
+        return escargot::ESValue(len);
+    }, nullptr);
+
+    return DOMRectListFunction;
+}
+
 escargot::ESFunctionObject* bindingDOMException(ScriptBindingInstance* scriptBindingInstance)
 {
     /* DOM Exception */
