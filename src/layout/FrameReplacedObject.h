@@ -63,6 +63,8 @@ public:
         auto v = node()->asElement()->asHTMLElement()->asHTMLObjectElement();
         if (v->content()) {
             result.m_intrinsicContentSize = LayoutSize(v->content()->width(), v->content()->height());
+        } else {
+            result.m_intrinsicContentSize = LayoutSize(1, 1);
         }
         return result;
     }
@@ -77,7 +79,8 @@ public:
         LayoutRect contentRect(borderLeft() + paddingLeft(), borderTop() + paddingTop(), contentWidth(), contentHeight());
         LayoutRect absContentRect(contentRect);
         c->applyMatrixTo(absContentRect);
-        v->content()->drawContent(c, contentRect, absContentRect);
+        if (v->content())
+            v->content()->drawContent(c, contentRect, absContentRect);
     }
 
     virtual void compsitingStackingContext(Canvas* c)
