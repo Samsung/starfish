@@ -64,7 +64,8 @@ public:
             m_lastAudioPts = m_lastVideoPts = 0;
         }
     }
-    virtual void seek(double time);
+    virtual void seekOperation(int timeInMS);
+    virtual void handleSeekend(bool success = true);
 
     uint64_t m_lastVideoPts;
     uint64_t m_lastAudioPts;

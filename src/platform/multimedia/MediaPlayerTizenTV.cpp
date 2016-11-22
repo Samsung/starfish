@@ -117,113 +117,91 @@ double MediaPlayerTizenTV::currentTime()
     return s / 1000.0;
 }
 
-void MediaPlayerTizenTV::seek(double time)
+void MediaPlayerTizenTV::seekOperation(int timeInMS)
 {
-    player_state_e state;
-    player_get_state(m_nativePlayer, &state);
-
-    // Note : Seek operation can occur in state PLAYING | PAUSED
-    // Note : player_set_position()'s callback will be invoked in non-main thread, so it needs to be rooted.
-    // Note : Rooting will just increase pointer count for the player in case of PLAYING,
-    //        and the count will be decreased back when seeking done (or error case).
-    STARFISH_ASSERT(!m_inSeeking);
-    m_inSeeking = true;
-    m_starFish->addPointerInRootSet(this);
-
-    if (m_playbackState == PlaybackState::PLAYBACK_STATE_END) {
-        STARFISH_LOG_INFO("MediaPlayerTizen::seek() called after EOS\n");
-        // TODO
-        handleSeekend();
-        return;
+    STARFISH_LOG_INFO("MediaPlayerTizenTV::seekOperation() (time: %d)\n", timeInMS);
+    if (m_activeMediaSource) {
+        Locker<Mutex> videoLock(*m_videoBufferMutex);
+        Locker<Mutex> audioLock(*m_audioBufferMutex);
+        if (m_activeMediaSource->activeVideoSourceBuffer())
+            m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
+        if (m_activeMediaSource->activeAudioSourceBuffer())
+            m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
     }
 
-    // Check seek boundary
-    STARFISH_ASSERT(!std::isnan(time));
-    double dur = duration();
-    if (time < 0) {
-        time = 0;
-    } else if (dur != 0 && !std::isnan(dur) && time >= dur) {
-        // Note: Seeking to EOS is impossible!!! (player_set_position fault)
-        STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() reaches EOS\n");
-        endOfStream();
-        handleSeekend();
+    int ret = player_set_position_async(m_nativePlayer, timeInMS, [](void* data, int result) {
+        STARFISH_LOG_INFO("MediaPlayerTizenTV::seekOperation() player_set_position_async_cb (1)\n");
+        MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+        // Result 0  : Succeed
+        // Otherwise : Failed
+        self->handleSeekend(result == 0);
+    }, this);
+
+    if (ret != PLAYER_ERROR_NONE) {
+        // Failed immediately
+        STARFISH_LOG_INFO("MediaPlayerTizenTV::seekOperation() player_set_position_async failed immediately (IGNORE) : ");
+        printNativePlayerError(ret);
+        handleSeekend(false);
         return;
     }
-
-    uint64_t timestamp = time * 1000;
-    int ret;
 
     if (m_activeMediaSource) {
-        STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() time: %f state: %d \n", (float) time, (int)state);
-        {
-            // Set timer
-            // Note : Sometimes player_set_position_async() does not invoke its callback.
-            //        in that case, the timer will help the player to remove rooted pointer and properly destroyed
-            m_seekingTimer = m_starFish->window()->setTimeout([](Window* window, void* data) {
-                MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() : timeout\n");
-                self->handleSeekFailure();
-            }, MAX_WAITING_SECONDS_FOR_SEEK_OPERATION, this);
-
-            Locker<Mutex> videoLock(*m_videoBufferMutex);
-            Locker<Mutex> audioLock(*m_audioBufferMutex);
-            if (m_activeMediaSource->activeVideoSourceBuffer())
-                m_activeMediaSource->activeVideoSourceBuffer()->clearPacketAccessCache();
-            if (m_activeMediaSource->activeAudioSourceBuffer())
-                m_activeMediaSource->activeAudioSourceBuffer()->clearPacketAccessCache();
-
-            m_seekCbCounter = true;
-            ret = player_set_position_async(m_nativePlayer, (int)timestamp, [](void* data, int result) {
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (1)\n");
-                MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-                if (self->m_seekCbCounter) {
-                    self->m_seekCbCounter = false;
-                    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb - first cb\n");
-                    // result 0  -> succeed
-                    // otherwise -> failed
-                    if (result != 0)
-                        self->handleSeekFailure();
-                } else {
-                    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb - second cb\n");
-                    self->handleSeekend();
-                }
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async_cb (2)\n");
-            }, this);
-
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async (time: %d state: %d)\n", (int)timestamp, (int)state);
-            if (ret != PLAYER_ERROR_NONE) {
-                // Failed immediately
-                // Note: failed but ignore!
-                STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_async failed immediately (IGNORE) : ");
-                printNativePlayerError(ret);
-                handleSeekend();
-                if (m_inPrepare) {
-                    STARFISH_LOG_INFO("MediaPlayerTizenTV::seek -> seeking failed saving time %lf\n", time);
-                    m_container->setDefaultPlaybackStartPosition(time);
-                }
-                return;
-            }
-            m_lastVideoPts = m_lastAudioPts = timestamp;
-        }
+        m_videoBufferMutex->lock();
+        m_audioBufferMutex->lock();
+        m_lastVideoPts = m_lastAudioPts = timeInMS;
+        m_videoBufferMutex->unlock();
+        m_audioBufferMutex->unlock();
 
         if (m_activeMediaSource->activeVideoSourceBuffer())
             fillVideoBufferIfNeeded();
         if (m_activeMediaSource->activeAudioSourceBuffer())
             fillAudioBufferIfNeeded();
+    }
+}
 
-    } else {
-        STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position (time: %d state: %d)\n", (int)timestamp, (int)state);
-        ret = player_set_position(m_nativePlayer, (int)timestamp, [](void* data) {
+void MediaPlayerTizenTV::handleSeekend(bool success)
+{
+    if (isMainThread()) {
+        STARFISH_LOG_INFO("MediaPlayerTizenTV::handleSeekend (success:%s)\n", success ? "true" : "false");
+        if (m_seekState == SEEKSTATE_NO_SEEK) {
+            return;
+        }
+        // Note : success value only useful when state SEEKSTATE_SEEKING
+        //        (Because player_set_position_async()'s second callback always return "fail"!! Why!!!)
+        if (m_seekState == SEEKSTATE_SEEKING && success) {
+            m_seekState = SEEKSTATE_WAITING;
+            return;
+        }
+        STARFISH_ASSERT((m_seekState == SEEKSTATE_SEEKING && !success) || m_seekState == SEEKSTATE_WAITING);
+        m_seekState = SEEKSTATE_NO_SEEK;
+
+        // Notify "Seeked" to its container
+        if (m_container) {
+            m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
+        }
+
+        // Remove timeout timer
+        if (m_seekingTimer != SIZE_MAX) {
+            m_starFish->window()->clearTimeout(m_seekingTimer);
+            m_seekingTimer = SIZE_MAX;
+        }
+        // Remove rooted pointer
+        m_starFish->removePointerFromRootSet(this);
+
+        if (!m_alive) {
+            close();
+            return;
+        }
+    } else if (success) {
+        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-            STARFISH_LOG_INFO("MediaPlayerTizenTV::seek() player_set_position_cb : %lf\n", self->currentTime());
             self->handleSeekend();
         }, this);
-
-        if (ret != PLAYER_ERROR_NONE) {
-            STARFISH_LOG_ERROR("**ERROR: player_set_position %x -> ", ret);
-            printNativePlayerError(ret);
-            handleSeekend();
-        }
+    } else {
+        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            MediaPlayerTizen* self = (MediaPlayerTizen*)data;
+            self->handleSeekend(false);
+        }, this);
     }
 }
 
