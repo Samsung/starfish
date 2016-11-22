@@ -115,7 +115,6 @@ public:
     virtual void prepareMediaSource();
 
     bool m_inPrepare;
-    bool m_inSeeking;
     bool m_alive;
     bool m_isVideoBufferUnderrunState;
     bool m_isAudioBufferUnderrunState;
