@@ -34,6 +34,7 @@ namespace StarFish {
         F(Image) \
         F(Span) \
         F(BR) \
+        F(Object) \
         F(Unknown)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA

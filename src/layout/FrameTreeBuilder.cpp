@@ -29,6 +29,7 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "FrameReplacedVideo.h"
 #endif
+#include "FrameReplacedObject.h"
 #include "FrameLineBreak.h"
 
 namespace StarFish {
@@ -245,6 +246,9 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 #endif
         else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLBRElement()) {
             currentFrame = new FrameLineBreak(current);
+            shouldSkipChildren = true;
+        } else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLObjectElement()) {
+            currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
         } else {
             if (display == DisplayValue::BlockDisplayValue || display == DisplayValue::InlineBlockDisplayValue) {
