@@ -313,7 +313,6 @@ void MediaPlayerTizen::handleEnded()
     if (isMainThread()) {
         pause();
         if (m_nativePlayer) {
-            m_container->dispatchPauseEventNow();
             m_container->mediaPlayerNotifyEndedItsContainer();
         }
     } else {
