@@ -46,6 +46,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLSpanElement(document);
     } else if (name == str->m_brTagName.localNameAtomic()) {
         return new HTMLBRElement(document);
+    } else if (name == str->m_objectTagName.localNameAtomic()) {
+        return new HTMLObjectElement(document);
     } else if (name == str->m_imgTagName.localNameAtomic()) {
         return new HTMLImageElement(document);
     } else if (name == str->m_h1TagName.localNameAtomic() || name == str->m_h2TagName.localNameAtomic()

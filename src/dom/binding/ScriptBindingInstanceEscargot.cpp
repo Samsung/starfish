@@ -3745,6 +3745,12 @@ escargot::ESFunctionObject* bindingHTMLImageElement(ScriptBindingInstance* scrip
     return HTMLImageElementFunction;
 }
 
+escargot::ESFunctionObject* bindingHTMLObjectElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLObjectElement, fetchData(scriptBindingInstance)->htmlElement());
+    return HTMLObjectElementFunction;
+}
+
 #ifdef STARFISH_ENABLE_MULTI_PAGE
 escargot::ESFunctionObject* bindingHTMLAnchorElement(ScriptBindingInstance* scriptBindingInstance)
 {

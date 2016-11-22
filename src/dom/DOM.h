@@ -45,6 +45,7 @@
 #include "dom/HTMLImageElement.h"
 #include "dom/HTMLSpanElement.h"
 #include "dom/HTMLBRElement.h"
+#include "dom/HTMLObjectElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "dom/HTMLMediaElement.h"
 #include "dom/HTMLVideoElement.h"

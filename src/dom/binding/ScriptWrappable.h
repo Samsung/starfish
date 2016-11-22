@@ -53,6 +53,7 @@ class HTMLBodyElement;
 class HTMLDivElement;
 class HTMLImageElement;
 class HTMLBRElement;
+class HTMLObjectElement;
 class HTMLMetaElement;
 class HTMLParagraphElement;
 class HTMLSpanElement;
@@ -200,6 +201,7 @@ public:
     void initScriptWrappable(HTMLScriptElement* ptr);
     void initScriptWrappable(HTMLImageElement* ptr);
     void initScriptWrappable(HTMLBRElement* ptr);
+    void initScriptWrappable(HTMLObjectElement* ptr);
     void initScriptWrappable(HTMLDivElement* ptr);
     void initScriptWrappable(HTMLMetaElement* ptr);
     void initScriptWrappable(HTMLParagraphElement* ptr);

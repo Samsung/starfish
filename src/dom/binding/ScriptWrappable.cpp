@@ -1162,6 +1162,13 @@ void ScriptWrappable::initScriptWrappable(HTMLBRElement* ptr)
     scriptObject()->set__proto__(data->htmlBrElement()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(HTMLObjectElement* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->htmlObjectElement()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(HTMLMetaElement* ptr)
 {
     Node* node = (Node*)this;
