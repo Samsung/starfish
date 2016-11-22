@@ -13,29 +13,35 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-#include "StarFishConfig.h"
-#include "dom/DOMRect.h"
+
+#ifndef __StarFishDOMRectList__
+#define __StarFishDOMRectList__
+
+#include <cstdio>
+#include "util/String.h"
+#include "dom/binding/ScriptWrappable.h"
 
 namespace StarFish {
-DOMRectInit::DOMRectInit(double inX, double inY, double inWidth, double inHeight)
-    : x(inX)
-    , y(inY)
-    , width(inWidth)
-    , height(inHeight)
-{ }
 
-DOMRect* DOMRect::create(double x, double y, double width, double height)
-{
-    return new DOMRect(x, y, width, height);
+class DOMRect;
+
+class DOMRectList {
+public:
+    static DOMRectList* create() { return new DOMRectList;}
+    static DOMRectList* create(const std::vector<DOMQuad>& quads)
+    {
+        return new DOMRectList(quads);
+    }
+    unsigned long length() const;
+    DOMRect* item(unsigned long index);
+
+private:
+    DOMRectList();
+    explicit DOMRectList(const std::vector<DOMQuad>&);
+
+    std::vector<DOMRect*, gc_allocator_ignore_off_page<DOMRect*>> m_list;
+};
+
 }
 
-DOMRect* DOMRect::create(const DOMRectReadOnly* rect)
-{
-    return new DOMRect(rect->x(), rect->y(), rect->width(), rect->height());
-}
-
-DOMRect::DOMRect(double x, double y, double width, double height)
-    : DOMRectReadOnly(x, y, width, height)
-{ }
-
-}
+#endif

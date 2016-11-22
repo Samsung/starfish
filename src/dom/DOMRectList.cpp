@@ -13,29 +13,34 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
+
 #include "StarFishConfig.h"
 #include "dom/DOMRect.h"
+#include "dom/DOMQuad.h"
+
+#include "dom/DOMRectList.h"
 
 namespace StarFish {
-DOMRectInit::DOMRectInit(double inX, double inY, double inWidth, double inHeight)
-    : x(inX)
-    , y(inY)
-    , width(inWidth)
-    , height(inHeight)
-{ }
 
-DOMRect* DOMRect::create(double x, double y, double width, double height)
+DOMRectList::DOMRectList() { }
+DOMRectList::DOMRectList(const std::vector<DOMQuad>& quads)
 {
-    return new DOMRect(x, y, width, height);
+    m_list.reserve(quads.size());
+    for (size_t i = 0 ; i < quads.size(); ++i)
+        m_list.push_back(DOMRect::create(quads[i].bounds()));
 }
 
-DOMRect* DOMRect::create(const DOMRectReadOnly* rect)
+unsigned long DOMRectList::length() const
 {
-    return new DOMRect(rect->x(), rect->y(), rect->width(), rect->height());
+    return m_list.size();
 }
 
-DOMRect::DOMRect(double x, double y, double width, double height)
-    : DOMRectReadOnly(x, y, width, height)
-{ }
+DOMRect* DOMRectList::item(unsigned long index)
+{
+    if (index >= m_list.size())
+        return nullptr;
+
+    return m_list[index];
+}
 
 }
