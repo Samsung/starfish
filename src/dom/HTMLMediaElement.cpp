@@ -540,6 +540,10 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
         STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
         if (m_isSeeking) {
+            // https://www.w3.org/TR/html51/semantics-embedded-content.html#seek
+            // If the element's seeking IDL attribute is true, (...) algorithm is already running.
+            // Abort that other instance of the algorithm without waiting for the step that it is running to complete.
+            // Note : But there is no way of aborting player_set_position_async, we have to wait.
             STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() Seek pending..\n");
             m_pendingSeek = currentTime;
         } else {
