@@ -33,6 +33,11 @@ class MediaPlayerTizenMediaSourceClient;
 
 class MediaPlayerTizen : public MediaPlayer {
 public:
+    enum SeekState {
+        SEEKSTATE_NO_SEEK,
+        SEEKSTATE_SEEKING, // Waiting first callback  (for Tizen2.4 TV)
+        SEEKSTATE_WAITING, // Waiting second callback (for Tizen2.4 TV)
+    };
     friend class MediaPlayerTizenMediaSourceClient;
     MediaPlayerTizen(HTMLMediaElement* element);
 
@@ -73,9 +78,12 @@ public:
     void stopPlaying();
 
     void handleEnded();
-    void handleSeekend();
-    void handleSeekFailure();
     void handlePlayerError(int error);
+
+    void seek(double time);
+    virtual void seekOperation(int timeInMS);
+    virtual void handleSeekTimeout();
+    virtual void handleSeekend(bool success = true);
 
     virtual unsigned long videoWidth()
     {
@@ -113,7 +121,7 @@ public:
     bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
     bool m_isEnded;
-    bool m_seekCbCounter; // TODO : Remove this flag when we get stable set_position result
+    SeekState m_seekState;
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;

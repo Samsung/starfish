@@ -539,9 +539,6 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
         m_defaultPlaybackStartPosition = currentTime;
         STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
-        // Note: Update officialPlaybackPosition here but not dispatch timeupdate event.
-        // Event sequence : seeking -> (SEEK) -> timeupdate -> seeked -> timeupdate
-        m_officialPlaybackPosition = currentTime;
         if (m_isSeeking) {
             STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() Seek pending..\n");
             m_pendingSeek = currentTime;
@@ -549,6 +546,9 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
             // Note: Set seeking flag to true here to prevent MediaPlayer's timer updating officialPlaybackPosition
             //       while "seek" is in the operation queue.
             m_isSeeking = true;
+            // Note: Update officialPlaybackPosition here but not dispatch timeupdate event.
+            // Event sequence : seeking -> (SEEK) -> timeupdate -> seeked -> timeupdate
+            m_officialPlaybackPosition = currentTime;
             appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, currentTime));
             startOperationQueueIfNeeded();
         }
@@ -689,7 +689,6 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
     // Note : Set officialPlaybackPosition manually instead of calling setOfficialPlaybackPosition()
     //        Because m_isSeeking effects setOfficialPlaybackPosition()
     m_officialPlaybackPosition = currentTime;
-    dispatchTimeupdateEvent();
 
     if (!std::isnan(m_pendingSeek)) {
         STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found pending seek operation (%lf)\n", m_pendingSeek);
@@ -700,6 +699,7 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
     } else {
         // Finish "seek"
         m_isSeeking = false;
+        dispatchTimeupdateEvent();
         dispatchSeekedEvent();
         dispatchTimeupdateEvent();
     }
