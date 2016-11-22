@@ -35,6 +35,7 @@ class DOMRect : public DOMRectReadOnly {
 
 public:
     static DOMRect* create(double x = 0 , double y = 0, double width = 0, double height = 0);
+    static DOMRect* create(const DOMRectReadOnly*);
 
     void setX(double x) { m_x = x; }
     void setY(double y) { m_y = y; }
