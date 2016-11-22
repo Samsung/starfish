@@ -25,7 +25,7 @@ namespace StarFish {
 
 class DOMRect;
 
-class DOMRectList {
+class DOMRectList : public ScriptWrappable {
 public:
     static DOMRectList* create() { return new DOMRectList;}
     static DOMRectList* create(const std::vector<DOMQuad>& quads)
@@ -34,6 +34,16 @@ public:
     }
     unsigned long length() const;
     DOMRect* item(unsigned long index);
+
+    virtual void initScriptObject(ScriptBindingInstance* instance)
+    {
+        initScriptWrappable(this, instance);
+    }
+
+    virtual Type type()
+    {
+        return ScriptWrappable::Type::DOMRectListObject;
+    }
 
 private:
     DOMRectList();
