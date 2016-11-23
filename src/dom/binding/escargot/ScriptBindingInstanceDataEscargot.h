@@ -113,7 +113,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 #endif
 
 #if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
-#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F) \
 F(webApis, webapis) \
 F(avPlay, avplay)
 #else
