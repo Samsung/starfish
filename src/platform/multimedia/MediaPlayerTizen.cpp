@@ -476,6 +476,7 @@ void MediaPlayerTizen::prepare(URL* url)
         BlobURLStore store;
         if (!StarFish::stringToBlobURLString(url->urlString(), store)) {
             PLAYER_LOGE("MediaPlayerTizen::prepare, seturl, FAIL - INVALID BLOB URL\n");
+            processNextOperationQueueInContainer();
             return;
         }
         if (m_starFish->isValidBlobURL(store)) {
@@ -491,8 +492,8 @@ void MediaPlayerTizen::prepare(URL* url)
             if (m_container) {
                 // Note: In MSE case, ignore defaultPlaybackPosition
                 m_container->setDefaultPlaybackStartPosition(0);
-                processNextOperationQueueInContainer();
             }
+            processNextOperationQueueInContainer();
             return;
         } else {
             // fire eror
@@ -518,6 +519,7 @@ void MediaPlayerTizen::prepare(URL* url)
 
         STARFISH_ASSERT(m_inPrepare);
         closePreparingMode();
+        processNextOperationQueueInContainer();
     }
 
     return;
