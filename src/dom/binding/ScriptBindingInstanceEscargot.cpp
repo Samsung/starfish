@@ -25,6 +25,7 @@
 #include "dom/NodeList.h"
 #include "style/CSSStyleLookupTrie.h"
 #include "extra/Console.h"
+#include "extra/History.h"
 #include "extra/Navigator.h"
 #include "extra/Location.h"
 #include "platform/location/Geolocation.h"
@@ -447,6 +448,12 @@ void ScriptBindingInstance::initBinding(StarFish* sf)
 #endif
         return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->document()->scriptObject();
     }, nullptr, true, false);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        fetchData(this)->m_instance->globalObject(), escargot::ESString::create("history"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        return (((Window*)escargot::ESVMInstance::currentInstance()->globalObject()->extraPointerData()))->history()->scriptObject();
+    }, nullptr, true, true);
 
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         fetchData(this)->m_instance->globalObject(), escargot::ESString::create("navigator"),
@@ -6401,6 +6408,44 @@ escargot::ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBinding
     });
 
     return LocationFunction;
+}
+
+escargot::ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR(History, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
+    HistoryFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("go"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+
+            if (instance->currentExecutionContext()->argumentCount() > 0)
+                originalObj->go(instance->currentExecutionContext()->readArgument(0).asInt32());
+            else
+                originalObj->go(0);
+
+            return escargot::ESValue();
+        }, escargot::ESString::create("go"), 1, false));
+
+    HistoryFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("back"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+            originalObj->back();
+            return escargot::ESValue();
+        }, escargot::ESString::create("back"), 1, false));
+
+    HistoryFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("forward"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+            originalObj->forward();
+            return escargot::ESValue();
+        }, escargot::ESString::create("forward"), 1, false));
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HistoryFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+        return escargot::ESValue(originalObj->length());
+    }, nullptr);
+    return HistoryFunction;
 }
 
 escargot::ESFunctionObject* bindingNavigator(ScriptBindingInstance* scriptBindingInstance)

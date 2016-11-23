@@ -94,6 +94,7 @@ class DOMException;
 class DOMImplementation;
 #endif
 class LocationObj;
+class History;
 class Navigator;
 class ScriptBindingInstance;
 class Geolocation;
@@ -164,6 +165,7 @@ public:
         webapisObject = 88,
         avplayObject = 90,
 #endif
+        HistoryObject = 92
     };
     ScriptWrappable(void* extraPointerData);
 
@@ -173,6 +175,11 @@ public:
             return scriptObjectSlowCase();
         }
         return m_object;
+    }
+
+    void giveUpScriptValue()
+    {
+        m_object = (escargot::ESObject*)1;
     }
 
     ScriptObject scriptObjectSlowCase();
@@ -257,6 +264,7 @@ public:
     void initScriptWrappable(URL* ptr, ScriptBindingInstance*);
     void initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance);
     void initScriptWrappable(LocationObj* ptr);
+    void initScriptWrappable(History* ptr);
     void initScriptWrappable(Navigator* ptr);
     void initScriptWrappable(Geolocation* ptr);
     void initScriptWrappable(Geoposition* ptr);

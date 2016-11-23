@@ -40,6 +40,7 @@
 #endif
 #endif
 
+#include "extra/History.h"
 #include "extra/Navigator.h"
 #include "extra/Location.h"
 #include "platform/location/Geolocation.h"
@@ -841,6 +842,13 @@ void ScriptWrappable::initScriptWrappable(Navigator* ptr)
     Navigator* nav = (Navigator*)this;
     auto data = fetchData(nav->starFish()->window()->scriptBindingInstance());
     scriptObject()->set__proto__(data->navigator()->protoType());
+}
+
+void ScriptWrappable::initScriptWrappable(History* ptr)
+{
+    History* history = (History*)this;
+    auto data = fetchData(history->starFish()->window()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->history()->protoType());
 }
 
 void ScriptWrappable::initScriptWrappable(Geolocation* ptr)

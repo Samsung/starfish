@@ -32,6 +32,7 @@ class Canvas;
 class HTMLCollection;
 class StackingContext;
 class CanvasSurface;
+class History;
 class Navigator;
 class webapis;
 
@@ -48,6 +49,8 @@ public:
     ~Window();
     void navigate(URL* url);
     void navigateAsync(URL* url);
+    void navigateAsyncWithoutSetHistory(URL* url);
+    void setHistory(URL* url);
 
     virtual bool isWindow()
     {
@@ -124,6 +127,11 @@ public:
     Document* document()
     {
         return m_document;
+    }
+
+    History* history()
+    {
+        return m_history;
     }
 
     Navigator* navigator()
@@ -292,6 +300,7 @@ protected:
 
     StarFish* m_starFish;
     ScriptBindingInstance* m_scriptBindingInstance;
+    History* m_history;
     Navigator* m_navigator;
     LocationObj* m_location;
     Document* m_document;

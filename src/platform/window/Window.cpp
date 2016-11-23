@@ -23,6 +23,7 @@
 #include "platform/canvas/font/Font.h"
 #include "platform/message_loop/MessageLoop.h"
 
+#include "extra/History.h"
 #include "extra/Navigator.h"
 #include "extra/Location.h"
 #if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
@@ -392,6 +393,7 @@ Window* Window::create(StarFish* sf, void* win, int width, int height)
 Window::Window(StarFish* starFish)
     : m_starFish(starFish)
     , m_scriptBindingInstance(nullptr)
+    , m_history(nullptr)
     , m_navigator(nullptr)
     , m_location(nullptr)
     , m_document(nullptr)
@@ -476,6 +478,7 @@ void Window::navigate(URL* url)
     initFlags();
     STARFISH_LOG_INFO("Window::navigate %s\n", url->urlString()->utf8Data());
 
+
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
     eflWindow->m_isActive = true;
 
@@ -484,6 +487,7 @@ void Window::navigate(URL* url)
     m_scriptBindingInstance->initBinding(m_starFish);
     initScriptWrappable(this);
 
+    m_history = new History(m_starFish);
     m_navigator = new Navigator(m_starFish);
     m_location = new LocationObj(m_starFish);
 #if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
@@ -493,7 +497,22 @@ void Window::navigate(URL* url)
     m_document->open();
 }
 
+void Window::setHistory(URL* url)
+{
+    if (!m_history)
+        m_history = new History(m_starFish);
+    m_history->setHistory(url);
+}
+
 void Window::navigateAsync(URL* url)
+{
+    starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering([](size_t a, void* data, void* data2) {
+        ((Window*)data2)->navigate((URL*)data);
+        ((Window*)data2)->setHistory((URL*)data);
+    }, url, this);
+}
+
+void Window::navigateAsyncWithoutSetHistory(URL* url)
 {
     starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering([](size_t a, void* data, void* data2) {
         ((Window*)data2)->navigate((URL*)data);
