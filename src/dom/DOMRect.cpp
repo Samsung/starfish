@@ -38,4 +38,20 @@ DOMRect::DOMRect(double x, double y, double width, double height)
     : DOMRectReadOnly(x, y, width, height)
 { }
 
+void DOMRect::unite(const DOMRectReadOnly* other)
+{
+    if (other->width() <= 0 || other->height() <= 0)
+        return;
+
+    double left = std::min(x(), other->x());
+    double top = std::min(y(), other->y());
+    double right = std::max(x()+width(), other->x() + other->width());
+    double bottom = std::max(y()+height(), other->y() + other->height());
+
+    setX(left);
+    setY(top);
+    setWidth(right - left);
+    setHeight(bottom - top);
+}
+
 }
