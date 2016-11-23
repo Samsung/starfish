@@ -35,6 +35,7 @@ class Blob;
 class MediaSource;
 class Console;
 class Inspector;
+class HistoryEntry;
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
 F(abbr) \
@@ -439,6 +440,10 @@ public:
     {
         return m_console;
     }
+
+    int& offset() { return m_offset; }
+    std::vector<HistoryEntry*, gc_allocator_ignore_off_page<HistoryEntry*>>& history() { return m_historyList; }
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector()
     {
@@ -474,6 +479,10 @@ protected:
 #endif
     size_t m_enterCount;
     unsigned int m_seed;
+
+    int m_offset;
+    std::vector<HistoryEntry*, gc_allocator_ignore_off_page<HistoryEntry*>> m_historyList;
+
     std::unordered_map<void*, size_t, std::hash<void*>, std::equal_to<void*>,
         gc_allocator_ignore_off_page<std::pair<void*, size_t>>> m_rootMap;
     std::unordered_set<BlobURLStore, std::hash<BlobURLStore>, std::equal_to<BlobURLStore>,

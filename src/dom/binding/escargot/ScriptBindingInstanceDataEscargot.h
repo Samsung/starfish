@@ -71,6 +71,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(domRectList, DOMRectList) \
     F(location, Location) \
     F(domException, DOMException) \
+    F(history, History) \
     F(navigator, Navigator) \
     F(geolocation, Geolocation) \
     F(geoposition, Geoposition) \
@@ -243,6 +244,7 @@ private:
     escargot::ESFunctionObject* m_url;
     escargot::ESFunctionObject* m_location;
     escargot::ESFunctionObject* m_domException;
+    escargot::ESFunctionObject* m_history;
     escargot::ESFunctionObject* m_navigator;
     escargot::ESFunctionObject* m_geolocation;
     escargot::ESFunctionObject* m_coordinates;

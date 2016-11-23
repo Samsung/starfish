@@ -167,6 +167,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale, const char* tim
 #endif
     , m_enterCount(0)
     , m_seed((unsigned int)time(NULL))
+    , m_offset(-1)
 {
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
@@ -322,7 +323,9 @@ void StarFish::loadHTMLDocument(String* filePath)
     int height;
     evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width, &height);
     m_window = Window::create(this, m_nativeWindow, width, height);
-    m_window->navigate(URL::createURL(String::emptyString, String::fromUTF8(path.c_str())));
+    URL* url = URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));
+    m_window->navigate(url);
+    m_window->setHistory(url);
 }
 
 void StarFish::resume()
