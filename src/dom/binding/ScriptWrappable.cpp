@@ -543,7 +543,6 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         },
         NULL, true, true, true);
 
-#ifdef STARFISH_ENABLE_WASU
     // https://drafts.csswg.org/cssom-view/#dom-window-scrollx
     ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("scrollX"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {
@@ -591,7 +590,6 @@ void ScriptWrappable::initScriptWrappable(Window* window)
         return escargot::ESValue(0);
         },
         NULL, true, true, true);
-#endif
 
     ((escargot::ESObject*)this->m_object)->defineAccessorProperty(escargot::ESString::create("onclick"),
         [](::escargot::ESObject* obj, ::escargot::ESObject* originalObj, escargot::ESString* name) -> escargot::ESValue {

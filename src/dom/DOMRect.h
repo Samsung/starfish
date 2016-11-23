@@ -41,6 +41,7 @@ public:
     void setY(double y) { m_y = y; }
     void setWidth(double width) { m_width = width; }
     void setHeight(double height) { m_height = height; }
+    void unite(const DOMRectReadOnly*);
 
     virtual void initScriptObject(ScriptBindingInstance* instance)
     {

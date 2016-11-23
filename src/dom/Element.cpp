@@ -213,8 +213,25 @@ void Element::getClientQuads(std::vector<DOMQuad>& quads)
     Frame* frameObject = this->frame();
     if (!frameObject)
         return;
+    // todo : support SVG model
     // there is Getting bounding rectangle from the SVG model in the spec, but SVG model is not supported
 
+    // initial version : implement for display:block
+    if (frameObject->isFrameBox() && frameObject->style()->display() == DisplayValue::BlockDisplayValue) {
+        LayoutRect rect = ((FrameBox*)frameObject)->absoluteRect((FrameBox*)document()->rootElement()->frame());
+
+        DOMQuad* q = DOMQuad::create
+        (DOMPointInit(rect.location().x(), rect.location().y())
+        , DOMPointInit(rect.location().x() + rect.size().width(), rect.location().y())
+        , DOMPointInit(rect.location().x() + rect.size().width(), rect.location().y() + rect.size().height())
+        , DOMPointInit(rect.location().x() , rect.location().y()+ rect.size().height()));
+
+        quads.push_back(*q);
+    } else {
+        // todo assert
+        STARFISH_LOG_ERROR("%s %d\n : implement not yet", __FUNCTION__, __LINE__);
+        STARFISH_ASSERT(false);
+    }
     return;
 }
 
@@ -226,17 +243,24 @@ DOMRectList* Element::getClientRects()
     if (quads.empty())
         return DOMRectList::create();
 
+    // todo : Apply the transforms
     return DOMRectList::create(quads);
 }
 
 DOMRect* Element::getBoundingClientRect()
 {
     std::vector<DOMQuad> quads;
-    DOMRectInit init;
-    DOMQuad q = *(DOMQuad::create(init));
-    quads.push_back(q);
+    getClientQuads(quads);
+    if (quads.empty())
+        return DOMRect::create();
 
-    return DOMRect::create(quads[0].bounds());
+    DOMRect* rect = DOMRect::create(quads[0].bounds());
+
+    for (size_t i= 1; i < quads.size(); ++i)
+        rect->unite(quads[i].bounds());
+
+    // todo : Apply the transforms
+    return rect;
 }
 
 void Element::setTextContent(String* text)
