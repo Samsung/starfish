@@ -20,7 +20,6 @@
 namespace StarFish {
 
 const uint32_t kEscargotObjectCheckMagic = 0x0fff;
-#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     F(node, Node) \
     F(element, Element) \
@@ -77,64 +76,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(geoposition, Geoposition) \
     F(coordinates, Coordinates) \
     F(positionError, PositionError) \
-    F(webApis, webapis) \
-    F(avPlay, avplay)
-#else
-#define STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
-    F(node, Node) \
-    F(element, Element) \
-    F(document, Document) \
-    F(documentType, DocumentType) \
-    F(documentFragment, DocumentFragment) \
-    F(htmlDocument, HTMLDocument) \
-    F(characterData, CharacterData) \
-    F(text, Text) \
-    F(comment, Comment) \
-    F(htmlElement, HTMLElement) \
-    F(htmlHtmlElement, HTMLHtmlElement) \
-    F(htmlHeadElement, HTMLHeadElement) \
-    F(htmlScriptElement, HTMLScriptElement) \
-    F(htmlStyleElement, HTMLStyleElement) \
-    F(htmlLinkElement, HTMLLinkElement) \
-    F(htmlBodyElement, HTMLBodyElement) \
-    F(htmlDivElement, HTMLDivElement) \
-    F(htmlImageElement, HTMLImageElement) \
-    F(htmlBrElement, HTMLBRElement) \
-    F(htmlMetaElement, HTMLMetaElement) \
-    F(htmlParagraphElement, HTMLParagraphElement) \
-    F(htmlSpanElement, HTMLSpanElement) \
-    F(htmlUnknownElement, HTMLUnknownElement) \
-    F(htmlCollection, HTMLCollection) \
-    F(event, Event) \
-    F(uiEvent, UIEvent) \
-    F(mouseEvent, MouseEvent) \
-    F(touchEvent, TouchEvent) \
-    F(keyboardEvent, KeyboardEvent) \
-    F(focusEvent, FocusEvent) \
-    F(progressEvent, ProgressEvent) \
-    F(nodeList, NodeList) \
-    F(domTokenList, DOMTokenList) \
-    F(domSettableTokenList, DOMSettableTokenList) \
-    F(namedNodeMap, NamedNodeMap) \
-    F(attr, Attr) \
-    F(cssStyleDeclaration, CSSStyleDeclaration) \
-    F(cssStyleRule, CSSStyleRule) \
-    F(xhrElement, XMLHttpRequest) \
-    F(blobElement, Blob) \
-    F(url, URL) \
-    F(domRectReadOnly, DOMRectReadOnly) \
-    F(domRect, DOMRect) \
-    F(domPointReadOnly, DOMPointReadOnly) \
-    F(domPoint, DOMPoint) \
-    F(domQuad, DOMQuad) \
-    F(location, Location) \
-    F(domException, DOMException) \
-    F(navigator, Navigator) \
-    F(geolocation, Geolocation) \
-    F(geoposition, Geoposition) \
-    F(coordinates, Coordinates) \
-    F(positionError, PositionError)
-#endif
+
 
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -170,11 +112,20 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
 #define STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
 #endif
 
+#if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
+F(webApis, webapis) \
+F(avPlay, avplay)
+#else
+#define STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
+#endif
+
 #define STARFISH_ENUM_LAZY_BINDING_NAMES(F) \
     STARFISH_ENUM_LAZY_BINDING_NAMES_DEFAULT(F) \
     STARFISH_ENUM_LAZY_BINDING_NAMES_MEDIA(F) \
     STARFISH_ENUM_LAZY_BINDING_NAMES_MULTI_PAGE(F) \
-    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F)
+    STARFISH_ENUM_LAZY_BINDING_NAMES_DOMPARSER(F) \
+    STARFISH_ENUM_LAZY_BINDING_NAMES_AVPLAY(F)
 
 #define FOR_EACH_DECLARE_FN(codeName, exportName) \
     escargot::ESFunctionObject* binding##exportName(ScriptBindingInstance* scriptBindingInstance);
