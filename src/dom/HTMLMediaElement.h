@@ -118,6 +118,16 @@ public:
     double m_seekPosition;
 };
 
+class MediaOperationQueueDataRequestSeekToDefault: public MediaOperationQueueDataRequestSeek {
+public:
+    MediaOperationQueueDataRequestSeekToDefault(HTMLMediaElement* p)
+        : MediaOperationQueueDataRequestSeek(p, 0)
+    {
+    }
+
+    virtual void processOperationQueue();
+};
+
 class MediaOperationQueueDataRequestDispatchEvent : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestDispatchEvent(HTMLMediaElement* p, EventTarget* target, Event* e)
@@ -138,6 +148,7 @@ class HTMLMediaElement : public HTMLElement {
     friend class MediaPlayer;
     friend class MediaOperationQueueDataRequestPause;
     friend class MediaOperationQueueDataRequestSeek;
+    friend class MediaOperationQueueDataRequestSeekToDefault;
     friend class MediaOperationQueueDataRequestResourceSelection;
     friend class MediaOperationQueueDataRequestDispatchEvent;
 public:
@@ -270,11 +281,6 @@ public:
     void mediaPlayerNotifySeekFailureItsContainer();
     void mediaPlayerNotifyEndedItsContainer();
     void addEventToOperationQueue(EventTarget* t, Event* e);
-    void addOperation(MediaOperationQueueData* data)
-    {
-        appendToOperationQueue(data);
-        startOperationQueueIfNeeded();
-    }
     void processNextOperationQueue();
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow(); \
@@ -335,18 +341,20 @@ protected:
 
     void startOperationQueueIfNeeded()
     {
-        if (m_currentPendingOperationCount == 0) {
+        if (m_currentPendingOperationCount == 0 && m_currentOperation == nullptr) {
             processNextOperationQueue();
         }
     }
     void prependToOperationQueue(MediaOperationQueueData* data)
     {
         m_operationQueue.push_front(data);
+        startOperationQueueIfNeeded();
     }
 
     void appendToOperationQueue(MediaOperationQueueData* data)
     {
         m_operationQueue.push_back(data);
+        startOperationQueueIfNeeded();
     }
 
     void appendToPlayOperationQueue(MediaOperationQueueData* data)

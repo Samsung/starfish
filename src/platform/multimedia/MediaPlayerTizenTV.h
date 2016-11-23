@@ -65,7 +65,8 @@ public:
         }
     }
     virtual void seekOperation(int timeInMS);
-    virtual void handleSeekend(bool success = true);
+    virtual void handleSeeked();
+    virtual void handleSeekFail();
 
     uint64_t m_lastVideoPts;
     uint64_t m_lastAudioPts;
