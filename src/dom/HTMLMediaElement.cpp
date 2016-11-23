@@ -851,6 +851,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestResourceSelection::processOperationQueue()\n");
     HTMLMediaElement* self = m_mediaElement;
+    self->processNextOperationQueue();
 
     // TODO If the media element's blocked-on-parser flag is false, then populate the list of pending text tracks.
     // TODO If the media element has an assigned media provider object, then let mode be object.
@@ -889,7 +890,6 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection::resourceSelectionTask() - request prepare task\n");
         self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
         self->appendToOperationQueue(new MediaOperationQueueDataRequestSeekToDefault(self));
-        self->processNextOperationQueue();
         return;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -950,6 +950,7 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestPause::processOperationQueue()\n");
     mediaPlayer()->pause();
+    m_mediaElement->processNextOperationQueue();
     // Fire a simple event named timeupdate at the element.
     m_mediaElement->dispatchTimeupdateEventNow();
     // Fire a simple event named pause at the element.
@@ -965,14 +966,13 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
     }
     // Set the official playback position to the current playback position.
     m_mediaElement->setOfficialPlaybackPosition(mediaPlayer()->currentTime());
-    m_mediaElement->processNextOperationQueue();
 }
 
 void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() -> %s\n", m_event->eventType()->utf8Data());
-    m_target->dispatchEvent(m_event);
     m_mediaElement->processNextOperationQueue();
+    m_target->dispatchEvent(m_event);
 }
 
 
