@@ -1269,6 +1269,29 @@ void ScriptWrappable::initScriptWrappable(DOMRectList* list, ScriptBindingInstan
 {
     auto data = fetchData(instance);
     scriptObject()->set__proto__(data->domRectList()->protoType());
+
+    scriptObject()->setPropertyInterceptor([](const escargot::ESValue& key, escargot::ESObject* obj) -> escargot::ESValue {
+        STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+        DOMRectList* self = (DOMRectList*)obj->extraPointerData();
+        STARFISH_ASSERT(self->type() == ScriptWrappable::Type::DOMRectListObject);
+        uint32_t idx = key.toIndex();
+        if (idx < self->length())
+            return self->item(idx)->scriptValue();
+        return escargot::ESValue(escargot::ESValue::ESDeletedValue);
+    }, [](const escargot::ESValue& key, const escargot::ESValue& val, escargot::ESObject* obj) -> bool {
+        STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+        return false;
+    }, [](escargot::ESObject* obj) -> escargot::ESValueVector {
+        STARFISH_ASSERT(obj->extraData() == kEscargotObjectCheckMagic);
+        DOMRectList* self = (DOMRectList*)obj->extraPointerData();
+        STARFISH_ASSERT(self->type() == ScriptWrappable::Type::DOMRectListObject);
+        size_t len = self->length();
+        escargot::ESValueVector v(len);
+        for (size_t i = 0; i < len; i ++) {
+            v[i] = escargot::ESValue(i);
+        }
+        return v;
+    }, true);
 }
 
 void ScriptWrappable::initScriptWrappable(DOMException* exception, ScriptBindingInstance* instance)

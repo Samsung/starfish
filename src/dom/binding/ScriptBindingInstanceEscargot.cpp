@@ -983,6 +983,30 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
         }
     }, nullptr);
 
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getClientRects"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue nd = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(nd, ScriptWrappable::Type::NodeObject);
+
+            Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
+            DOMRectList* rectList = elem->getClientRects();
+
+            return rectList->scriptValue();
+        }, escargot::ESString::create("getClientRects"), 0, false)
+    );
+
+    ElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("getBoundingClientRect"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            escargot::ESValue nd = instance->currentExecutionContext()->resolveThisBinding();
+            CHECK_TYPEOF(nd, ScriptWrappable::Type::NodeObject);
+
+            Element* elem = ((Node*)nd.asESPointer()->asESObject()->extraPointerData())->asElement();
+            DOMRect* rect = elem->getBoundingClientRect();
+
+            return rect->scriptValue();
+        }, escargot::ESString::create("getBoundingClientRect"), 0, false)
+    );
+
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         ElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("localName"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
@@ -6207,7 +6231,7 @@ escargot::ESFunctionObject* bindingDOMRectList(ScriptBindingInstance* scriptBind
 {
     DEFINE_FUNCTION_NOT_CONSTRUCTOR(DOMRectList, fetchData(scriptBindingInstance)->m_instance->globalObject()->objectPrototype());
 
-    DOMRectListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), false, false, false,
+    DOMRectListFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("item"), true, true, true,
         escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
         {
             escargot::ESValue thisValue = instance->currentExecutionContext()->resolveThisBinding();

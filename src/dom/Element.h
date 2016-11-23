@@ -196,6 +196,10 @@ public:
     // https://drafts.csswg.org/cssom-view/#extensions-to-the-htmlelement-interface
     Element* offsetParent();
 
+    // https://www.w3.org/TR/cssom-view-1/#dom-element-getclientrects
+    DOMRectList* getClientRects();
+    DOMRect* getBoundingClientRect();
+
     RareNodeMembers* ensureRareMembers();
     RareElementMembers* ensureRareElementMembers();
 
@@ -266,6 +270,8 @@ protected:
     // clientRect is differ with clientBoundingRect.
     // this function is only for client{Left, Top, Width, Top}
     LayoutRect clientRect();
+
+    void getClientQuads(std::vector<DOMQuad>& quads);
 
     // DO NOT MODIFY ATTRIBUTES.
     const AttributeVector* getAttributes() { return (AttributeVector*)&m_attributes; }
