@@ -23,6 +23,7 @@
 
 #include "dom/parser/HTMLParser.h"
 
+#include "layout/Frame.h"
 #include "layout/FrameBox.h"
 
 #include "style/Style.h"
@@ -53,6 +54,8 @@
 #endif
 #include "dom/Attr.h"
 #include "dom/xml/XMLSerializer.h"
+#include "dom/DOMRect.h"
+#include "dom/DOMRectList.h"
 
 namespace StarFish {
 
@@ -203,6 +206,37 @@ Element* Element::offsetParent()
 {
     Frame* frameObject = this->frame();
     return frameObject ? frameObject->offsetParent() : nullptr;
+}
+
+void Element::getClientQuads(std::vector<DOMQuad>& quads)
+{
+    Frame* frameObject = this->frame();
+    if (!frameObject)
+        return;
+    // there is Getting bounding rectangle from the SVG model in the spec, but SVG model is not supported
+
+    return;
+}
+
+DOMRectList* Element::getClientRects()
+{
+    std::vector<DOMQuad> quads;
+    getClientQuads(quads);
+
+    if (quads.empty())
+        return DOMRectList::create();
+
+    return DOMRectList::create(quads);
+}
+
+DOMRect* Element::getBoundingClientRect()
+{
+    std::vector<DOMQuad> quads;
+    DOMRectInit init;
+    DOMQuad q = *(DOMQuad::create(init));
+    quads.push_back(q);
+
+    return DOMRect::create(quads[0].bounds());
 }
 
 void Element::setTextContent(String* text)
