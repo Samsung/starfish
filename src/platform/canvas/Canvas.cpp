@@ -601,7 +601,9 @@ public:
         evas_object_color_set(eo, lastState().m_color.r(), lastState().m_color.g(), lastState().m_color.b(), lastState().m_color.a());
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
-        applyClippers(eo);
+        if (!isHole) {
+            applyClippers(eo);
+        }
         applyEvasMapIfNeeded(eo, rt);
         evas_object_show(eo);
 
@@ -644,6 +646,7 @@ public:
         drawEvasRect(xx, yy, ww, hh, rt);
     }
 
+    // NOTE punchHole && Evas can not apply clip
     virtual void punchHole(const Rect& rt)
     {
         if (!lastState().m_visible) {
