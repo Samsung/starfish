@@ -77,7 +77,7 @@ avplay::avplay(StarFish* starFish)
 
 void avplay::open(String* url)
 {
-    STARFISH_LOG_INFO("avplay::open() %s\n", url);
+    STARFISH_LOG_INFO("avplay::open() :: URL %s\n", url->utf8Data());
     if (m_nativePlayer) {
         player_destroy(m_nativePlayer);
         m_nativePlayer = nullptr;
