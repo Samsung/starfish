@@ -48,7 +48,7 @@ public:
 
     /* Other methods (not in DOM API) */
 
-    virtual bool isHTMLUListElement() const
+    virtual bool isHTMLLIElement() const
     {
         return true;
     }
