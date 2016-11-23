@@ -44,6 +44,11 @@ public:
         PLAYBACK_STATE_PAUSED = 1 << 2,
         PLAYBACK_STATE_END = 1 << 3 | PLAYBACK_STATE_PAUSED,
     };
+    enum SeekState {
+        SEEKSTATE_NO_SEEK,
+        SEEKSTATE_SEEKING, // Waiting first callback  (for Tizen2.4 TV)
+        SEEKSTATE_WAITING, // Waiting second callback (for Tizen2.4 TV)
+    };
 
     static MediaPlayer* create(HTMLMediaElement* element);
     virtual void close() = 0;
@@ -95,14 +100,21 @@ public:
         return m_container;
     }
 
+    bool seeking()
+    {
+        return (m_seekState != SEEKSTATE_NO_SEEK);
+    }
+
     virtual void prepareMediaSource() = 0;
 protected:
     MediaPlayer(HTMLMediaElement* element);
     void updateElementReadyState(HTMLMediaElement::ReadyState state);
     void processNextOperationQueueInContainer();
+    void appendToOperationQueueInContainer(MediaOperationQueueData* data);
     bool m_isLooping;
     bool m_hasVideo;
     bool m_inPlaying;
+    SeekState m_seekState;
     PlaybackState m_playbackState;
     HTMLMediaElement* m_container;
     MediaSource* m_activeMediaSource;

@@ -96,8 +96,9 @@ public:
 
     virtual void activeSourceComputed()
     {
-        if (m_player)
+        if (m_player) {
             m_player->prepareMediaSource();
+        }
     }
 
     virtual void activeVideoSourceBufferUpdated(SourceBuffer* s)
@@ -125,7 +126,6 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_isAudioBufferUnderrunState(false)
     , m_needsPlayAfterPrepare(false)
     , m_isEnded(false)
-    , m_seekState(SEEKSTATE_NO_SEEK)
     , m_seekingTimer(SIZE_MAX)
     , m_mseClient(nullptr)
     , m_videoBufferMutex(new Mutex())
@@ -190,7 +190,7 @@ void MediaPlayerTizen::seek(double time)
     STARFISH_ASSERT(m_seekState == SEEKSTATE_NO_SEEK);
     STARFISH_ASSERT(m_nativePlayer && m_alive);
     if (m_playbackState == PLAYBACK_STATE_END) {
-        m_playbackState = PLAYBACK_STATE_NONE;
+        m_playbackState = PLAYBACK_STATE_PAUSED;
         player_start(m_nativePlayer);
         player_pause(m_nativePlayer);
     }
@@ -226,13 +226,13 @@ void MediaPlayerTizen::seek(double time)
 void MediaPlayerTizen::seekOperation(int timeInMS)
 {
     // TODO
-    handleSeekend();
+    handleSeeked();
 }
 
-void MediaPlayerTizen::handleSeekend(bool success)
+void MediaPlayerTizen::handleSeeked()
 {
     if (isMainThread()) {
-        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeekend (success:%s)\n", success ? "true" : "false");
+        STARFISH_LOG_INFO("MediaPlayerTizen::handleSeeked\n");
         if (m_seekState == SEEKSTATE_NO_SEEK) {
             return;
         }
@@ -254,17 +254,17 @@ void MediaPlayerTizen::handleSeekend(bool success)
             close();
             return;
         }
-    } else if (success) {
-        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-            MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-            self->handleSeekend();
-        }, this);
     } else {
         m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-            self->handleSeekend(false);
+            self->handleSeeked();
         }, this);
     }
+}
+
+void MediaPlayerTizen::handleSeekFail()
+{
+    // TODO
 }
 
 void MediaPlayerTizen::handleSeekTimeout()
@@ -290,18 +290,6 @@ void MediaPlayerTizen::handleSeekTimeout()
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             self->handleSeekTimeout();
         }, this);
-    }
-}
-
-void MediaPlayerTizen::seekIfNeeded()
-{
-    if (!m_activeMediaSource)
-        return;
-    double seekTime = m_activeMediaSource->attachedMediaElement()->defaultPlaybackStartPosition();
-    STARFISH_LOG_INFO("MediaPlayerTizen::seekIfNeeded() %lf\n", seekTime);
-    if (seekTime > 0) {
-        seek(seekTime);
-        m_activeMediaSource->attachedMediaElement()->setDefaultPlaybackStartPosition(0);
     }
 }
 
@@ -337,7 +325,6 @@ void MediaPlayerTizen::startPlaying()
                 }
             }
         }, 250, this);
-        seekIfNeeded();
     }
 }
 
@@ -403,7 +390,7 @@ void MediaPlayerTizen::play()
         STARFISH_LOG_INFO("MediaPlayerTizen::play() create end %d\n", (int)ret);
         m_playbackState = PLAYBACK_STATE_NONE;
         m_needsPlayAfterPrepare = true;
-        m_container->addOperation(new MediaOperationQueueDataRequestPrepare(m_container, m_currentURL));
+        appendToOperationQueueInContainer(new MediaOperationQueueDataRequestPrepare(m_container, m_currentURL));
     } else {
         startPlaying();
     }
@@ -501,6 +488,11 @@ void MediaPlayerTizen::prepare(URL* url)
             m_mseClient = new MediaPlayerTizenMediaSourceClient(this);
             m_activeMediaSource->addClient(m_mseClient);
             m_activeMediaSource->attach(m_container);
+            if (m_container) {
+                // Note: In MSE case, ignore defaultPlaybackPosition
+                m_container->setDefaultPlaybackStartPosition(0);
+                processNextOperationQueueInContainer();
+            }
             return;
         } else {
             // fire eror
@@ -515,7 +507,7 @@ void MediaPlayerTizen::prepare(URL* url)
     {
         PLAYER_LOGI("player_prepare_async_cb");
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
-        self->compleatePrepare();
+        self->completePrepare();
     };
     int nativeResult = player_prepare_async(m_nativePlayer, m_preparedCallback, this);
 
@@ -531,11 +523,12 @@ void MediaPlayerTizen::prepare(URL* url)
     return;
 }
 
-void MediaPlayerTizen::compleatePrepare()
+void MediaPlayerTizen::completePrepare()
 {
     STARFISH_ASSERT(!isMainThread());
+    STARFISH_LOG_INFO("MediaPlayerTizen::completePrepare in non-MainThread");
     m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* user_data) {
-        STARFISH_LOG_INFO("MediaPlayerTizen::compleatePrepare in MainThread");
+        STARFISH_LOG_INFO("MediaPlayerTizen::completePrepare in MainThread");
         MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
 
         STARFISH_ASSERT(self->m_inPrepare);
@@ -574,9 +567,10 @@ void MediaPlayerTizen::compleatePrepare()
             self->m_needsPlayAfterPrepare = false;
         }
 
-        self->processNextOperationQueueInContainer();
-        if (!self->m_activeMediaSource)
+        if (!self->m_activeMediaSource) {
+            self->processNextOperationQueueInContainer();
             self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
+        }
         self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
     }, this);
 }

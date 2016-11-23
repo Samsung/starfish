@@ -140,6 +140,7 @@ void HTMLMediaElement::load()
         // If seeking is true, set it to false.
         m_isSeeking = false;
         m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
+        m_isEnded = false;
 
         // TODO Set the current playback position to 0.
         // Set the official playback position to 0.
@@ -186,7 +187,6 @@ void HTMLMediaElement::resourceSelection()
     m_delayingTheLoadEvent = true;
 
     appendToOperationQueue(new MediaOperationQueueDataRequestResourceSelection(this));
-    startOperationQueueIfNeeded();
 }
 
 void HTMLMediaElement::dedicatedMediaSourceFailure()
@@ -296,7 +296,6 @@ void HTMLMediaElement::pause()
         m_isPaused = true;
         // Queue a task to run the following substeps:
         appendToOperationQueue(new MediaOperationQueueDataRequestPause(this));
-        startOperationQueueIfNeeded();
     }
 }
 
@@ -387,6 +386,7 @@ bool HTMLMediaElement::seeking()
 
 double HTMLMediaElement::currentTime()
 {
+    // Note : https://www.w3.org/TR/html51/semantics-embedded-content.html#dom-htmlmediaelement-currenttime
     return m_mediaPlayer ? m_officialPlaybackPosition : 0;
 }
 
@@ -539,6 +539,7 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
         m_defaultPlaybackStartPosition = currentTime;
         STARFISH_LOG_INFO("HTMLMediaElement::setCurrentTime() readyState is HAVE_NOTHING..\n");
     } else {
+        m_isEnded = false;
         if (m_isSeeking) {
             // https://www.w3.org/TR/html51/semantics-embedded-content.html#seek
             // If the element's seeking IDL attribute is true, (...) algorithm is already running.
@@ -554,7 +555,6 @@ void HTMLMediaElement::setCurrentTime(double currentTime)
             // Event sequence : seeking -> (SEEK) -> timeupdate -> seeked -> timeupdate
             m_officialPlaybackPosition = currentTime;
             appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, currentTime));
-            startOperationQueueIfNeeded();
         }
     }
 }
@@ -696,10 +696,10 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
 
     if (!std::isnan(m_pendingSeek)) {
         STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found pending seek operation (%lf)\n", m_pendingSeek);
-        m_officialPlaybackPosition = m_pendingSeek;
-        appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, m_pendingSeek));
+        double pendingSeek = m_pendingSeek;
         m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
-        startOperationQueueIfNeeded();
+        m_officialPlaybackPosition = pendingSeek;
+        appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, pendingSeek));
     } else {
         // Finish "seek"
         m_isSeeking = false;
@@ -739,7 +739,6 @@ HTMLMediaElement::NetworkState HTMLMediaElement::networkState()
 void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
 {
     appendToOperationQueue(new MediaOperationQueueDataRequestDispatchEvent(this, t, e));
-    startOperationQueueIfNeeded();
 }
 
 #define ADD_DISPATCH_EVENT_DEF(name, Name) \
@@ -804,18 +803,15 @@ void HTMLMediaElement::abortEveryPendingOperation(DOMException* exceptionForPlay
         m_currentPendingOperationCount = 0;
     }
 
+    m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
     STARFISH_ASSERT(m_currentPendingOperationCount == 0);
     STARFISH_ASSERT(m_currentPendingOperationHandle == SIZE_MAX);
 }
 
 void HTMLMediaElement::processNextOperationQueue()
 {
-    STARFISH_ASSERT(m_currentPendingOperationCount == 1 || m_currentPendingOperationCount == 0);
-    if (m_currentPendingOperationCount == 1) {
-        m_currentPendingOperationCount--;
-        m_currentOperation = nullptr;
-        m_currentPendingOperationHandle = SIZE_MAX;
-    }
+    STARFISH_ASSERT(m_currentPendingOperationCount == 0);
+    m_currentOperation = nullptr;
 
     if (m_operationQueue.size()) {
         STARFISH_ASSERT(m_currentPendingOperationCount == 0);
@@ -823,21 +819,21 @@ void HTMLMediaElement::processNextOperationQueue()
         STARFISH_ASSERT(m_currentPendingOperationHandle == SIZE_MAX);
 
         m_currentPendingOperationCount++;
-        m_currentOperation = m_operationQueue.front();
-        STARFISH_ASSERT(!m_currentOperation->isPlayRequest());
+        MediaOperationQueueData* next = m_operationQueue.front();
+        STARFISH_ASSERT(!next->isPlayRequest());
         m_operationQueue.pop_front();
 
         m_currentPendingOperationHandle = document()->window()->starFish()->messageLoop()->addIdler([](size_t, void* data) {
             MediaOperationQueueData* queueData = (MediaOperationQueueData*)data;
-            // STARFISH_LOG_INFO("HTMLMediaElement::processNextOperationQueue::process %d\n", (int)queueData->m_mediaElement->m_operationQueue.size());
+            // Clear pending data
+            queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
+            queueData->m_mediaElement->m_currentPendingOperationCount--;
+            STARFISH_ASSERT(queueData->m_mediaElement->m_currentPendingOperationCount == 0);
+
+            // Register and execute current processing operation
+            queueData->m_mediaElement->m_currentOperation = queueData;
             queueData->processOperationQueue();
-            STARFISH_ASSERT(queueData->m_mediaElement->m_currentPendingOperationCount == 1 || queueData->m_mediaElement->m_currentPendingOperationCount == 0);
-            if (queueData->m_mediaElement->m_currentPendingOperationCount == 1) {
-                queueData->m_mediaElement->m_currentPendingOperationCount--;
-                queueData->m_mediaElement->m_currentOperation = nullptr;
-                queueData->m_mediaElement->m_currentPendingOperationHandle = SIZE_MAX;
-            }
-        }, m_currentOperation);
+        }, next);
     }
 }
 
@@ -855,7 +851,6 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestResourceSelection::processOperationQueue()\n");
     HTMLMediaElement* self = m_mediaElement;
-    self->processNextOperationQueue();
 
     // TODO If the media element's blocked-on-parser flag is false, then populate the list of pending text tracks.
     // TODO If the media element has an assigned media provider object, then let mode be object.
@@ -893,7 +888,8 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         self->initMediaPlayer();
         STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection::resourceSelectionTask() - request prepare task\n");
         self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
-        self->startOperationQueueIfNeeded();
+        self->appendToOperationQueue(new MediaOperationQueueDataRequestSeekToDefault(self));
+        self->processNextOperationQueue();
         return;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -920,7 +916,14 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
     if (m_mediaElement->readyState() == HTMLMediaElement::HAVE_NOTHING)
         return;
 
-    STARFISH_ASSERT(m_mediaElement->m_isSeeking);
+    m_mediaElement->m_isEnded = false;
+    m_mediaElement->m_isSeeking = true;
+    if (mediaPlayer()->seeking()) {
+        // UNLIKELY
+        m_mediaElement->m_pendingSeek = m_seekPosition;
+        return;
+    }
+    m_mediaElement->m_officialPlaybackPosition = m_seekPosition;
     m_mediaElement->dispatchSeekingEvent();
 
     // Async Seek task
@@ -931,11 +934,22 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
     m_mediaElement->processNextOperationQueue();
 }
 
+void MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()
+{
+    STARFISH_LOG_INFO("MediaOperationQueueDataRequestSeekToDefault::processOperationQueue()\n");
+    if (m_mediaElement->m_defaultPlaybackStartPosition != 0) {
+        m_seekPosition = m_mediaElement->m_defaultPlaybackStartPosition;
+        m_mediaElement->m_defaultPlaybackStartPosition = 0;
+        MediaOperationQueueDataRequestSeek::processOperationQueue();
+    } else {
+        m_mediaElement->processNextOperationQueue();
+    }
+}
+
 void MediaOperationQueueDataRequestPause::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestPause::processOperationQueue()\n");
     mediaPlayer()->pause();
-    m_mediaElement->processNextOperationQueue();
     // Fire a simple event named timeupdate at the element.
     m_mediaElement->dispatchTimeupdateEventNow();
     // Fire a simple event named pause at the element.
@@ -951,13 +965,14 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
     }
     // Set the official playback position to the current playback position.
     m_mediaElement->setOfficialPlaybackPosition(mediaPlayer()->currentTime());
+    m_mediaElement->processNextOperationQueue();
 }
 
 void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestDispatchEvent::processOperationQueue() -> %s\n", m_event->eventType()->utf8Data());
-    m_mediaElement->processNextOperationQueue();
     m_target->dispatchEvent(m_event);
+    m_mediaElement->processNextOperationQueue();
 }
 
 

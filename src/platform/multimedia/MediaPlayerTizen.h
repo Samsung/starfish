@@ -33,18 +33,12 @@ class MediaPlayerTizenMediaSourceClient;
 
 class MediaPlayerTizen : public MediaPlayer {
 public:
-    enum SeekState {
-        SEEKSTATE_NO_SEEK,
-        SEEKSTATE_SEEKING, // Waiting first callback  (for Tizen2.4 TV)
-        SEEKSTATE_WAITING, // Waiting second callback (for Tizen2.4 TV)
-    };
     friend class MediaPlayerTizenMediaSourceClient;
     MediaPlayerTizen(HTMLMediaElement* element);
 
     virtual void close();
     virtual void play();
     virtual void pause();
-    void seekIfNeeded();
 
     void setLoop(bool loop) { m_isLooping = true; }
     bool loop()
@@ -71,7 +65,7 @@ public:
 
     void openPreparingMode();
     void closePreparingMode();
-    void compleatePrepare();
+    void completePrepare();
     void endOfStream();
 
     void startPlaying();
@@ -83,7 +77,8 @@ public:
     void seek(double time);
     virtual void seekOperation(int timeInMS);
     virtual void handleSeekTimeout();
-    virtual void handleSeekend(bool success = true);
+    virtual void handleSeeked();
+    virtual void handleSeekFail();
 
     virtual unsigned long videoWidth()
     {
@@ -120,7 +115,6 @@ public:
     bool m_isAudioBufferUnderrunState;
     bool m_needsPlayAfterPrepare;
     bool m_isEnded;
-    SeekState m_seekState;
     size_t m_seekingTimer;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_videoBufferMutex;

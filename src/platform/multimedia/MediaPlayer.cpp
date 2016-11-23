@@ -30,6 +30,7 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     : m_isLooping(false)
     , m_hasVideo(false)
     , m_inPlaying(false)
+    , m_seekState(SEEKSTATE_NO_SEEK)
     , m_playbackState(PLAYBACK_STATE_NONE)
     , m_container(element)
     , m_activeMediaSource(nullptr)
@@ -40,7 +41,14 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
 
 void MediaPlayer::processNextOperationQueueInContainer()
 {
-    m_container->processNextOperationQueue();
+    if (m_container)
+        m_container->processNextOperationQueue();
+}
+
+void MediaPlayer::appendToOperationQueueInContainer(MediaOperationQueueData* data)
+{
+    if (m_container)
+        m_container->appendToOperationQueue(data);
 }
 
 }
