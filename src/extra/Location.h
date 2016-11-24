@@ -100,7 +100,6 @@ public:
         m_starFish->window()->navigateAsync(URL::createURL(m_starFish->window()->document()->documentURI()->urlString(), newURL));
     }
 
-
 protected:
     StarFish* m_starFish;
 };

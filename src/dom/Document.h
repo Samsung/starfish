@@ -180,6 +180,11 @@ public:
         return m_documentURI;
     }
 
+    void setDocumentURI(URL* newURL)
+    {
+        m_documentURI = newURL;
+    }
+
     LocationObj* location()
     {
         return window()->location();

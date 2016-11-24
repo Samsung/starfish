@@ -324,8 +324,8 @@ void StarFish::loadHTMLDocument(String* filePath)
     evas_object_geometry_get((Evas_Object*)m_nativeWindow, NULL, NULL, &width, &height);
     m_window = Window::create(this, m_nativeWindow, width, height);
     URL* url = URL::createURL(String::emptyString, String::fromUTF8(path.c_str()));
-    m_window->navigate(url);
     m_window->setHistory(url);
+    m_window->navigate(url);
 }
 
 void StarFish::resume()
