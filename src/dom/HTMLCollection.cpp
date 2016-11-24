@@ -24,19 +24,19 @@ namespace StarFish {
 
 unsigned long HTMLCollection::length() const
 {
-    return m_activeNodeList.length();
+    return m_nodeListImpl.length();
 }
 
 Element* HTMLCollection::item(unsigned long index)
 {
-    return m_activeNodeList.item(index)->asElement();
+    return m_nodeListImpl.item(index)->asElement();
 }
 
 Element* HTMLCollection::namedItem(String* key)
 {
     if (key->length()) {
-        for (unsigned i = 0; i < m_activeNodeList.length(); i++) {
-            Element* elem = m_activeNodeList.item(i)->asElement();
+        for (unsigned i = 0; i < m_nodeListImpl.length(); i++) {
+            Element* elem = m_nodeListImpl.item(i)->asElement();
             if (elem->asElement()->asHTMLElement()->id()->equals(key))
                 return elem;
             size_t idx = elem->hasAttribute(elem->document()->window()->starFish()->staticStrings()->m_name);

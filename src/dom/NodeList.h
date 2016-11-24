@@ -18,7 +18,7 @@
 #define __StarFishNodeList__
 
 #include "dom/binding/ScriptWrappable.h"
-#include "dom/ActiveNodeList.h"
+#include "dom/NodeListImpl.h"
 
 namespace StarFish {
 
@@ -26,15 +26,15 @@ class Node;
 
 class NodeList : public ScriptWrappable {
 public:
-    NodeList(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data, bool canCache = false)
+    NodeList(ScriptBindingInstance* instance, Node* root, NodeListFilterFunction filter, void* data, bool canCache = false)
         : ScriptWrappable(this)
-        , m_activeNodeList(root, filter, data, canCache)
+        , m_nodeListImpl(root, filter, data, canCache)
     {
     }
 
     NodeList(ScriptBindingInstance* instance, Node* root, bool canCache = true)
         : ScriptWrappable(this)
-        , m_activeNodeList(root, canCache)
+        , m_nodeListImpl(root, canCache)
     {
     }
 
@@ -50,12 +50,12 @@ public:
 
     unsigned long length() const;
     Node* item(unsigned long index);
-    ActiveNodeList& activeNodeList()
+    NodeListImpl& getNodeListImpl()
     {
-        return m_activeNodeList;
+        return m_nodeListImpl;
     }
 private:
-    ActiveNodeList m_activeNodeList;
+    NodeListImpl m_nodeListImpl;
 };
 }
 

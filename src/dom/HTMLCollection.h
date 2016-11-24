@@ -18,7 +18,7 @@
 #define __StarFishHTMLCollection__
 
 #include "dom/binding/ScriptWrappable.h"
-#include "dom/ActiveNodeList.h"
+#include "dom/NodeListImpl.h"
 
 namespace StarFish {
 
@@ -27,8 +27,8 @@ class Element;
 
 class HTMLCollection : public ScriptWrappable {
 public:
-    HTMLCollection(ScriptBindingInstance* instance, Node* root, ActiveNodeListFilterFunction filter, void* data, bool canCache = false)
-        : ScriptWrappable(this), m_activeNodeList(root, filter, data, canCache)
+    HTMLCollection(ScriptBindingInstance* instance, Node* root, NodeListFilterFunction filter, void* data, bool canCache = false)
+        : ScriptWrappable(this), m_nodeListImpl(root, filter, data, canCache)
     {
     }
 
@@ -45,12 +45,12 @@ public:
     unsigned long length() const;
     Element* item(unsigned long index);
     Element* namedItem(String* name);
-    ActiveNodeList& activeNodeList()
+    NodeListImpl& getNodeListImpl()
     {
-        return m_activeNodeList;
+        return m_nodeListImpl;
     }
 private:
-    ActiveNodeList m_activeNodeList;
+    NodeListImpl m_nodeListImpl;
 };
 
 }

@@ -15,7 +15,7 @@
  */
 
 #include "StarFishConfig.h"
-#include "ActiveNodeList.h"
+#include "NodeListImpl.h"
 #include "dom/Element.h"
 #include "dom/Document.h"
 
@@ -34,7 +34,7 @@ static void getherDescendant(std::vector<Node*, gc_allocator_ignore_off_page<Nod
     }
 }
 
-unsigned long ActiveNodeList::length() const
+unsigned long NodeListImpl::length() const
 {
     if (m_canCache) {
         fillCacheIfNeed();
@@ -47,7 +47,7 @@ unsigned long ActiveNodeList::length() const
     return collection.size();
 }
 
-Node* ActiveNodeList::item(unsigned long index)
+Node* NodeListImpl::item(unsigned long index)
 {
     if (m_canCache) {
         fillCacheIfNeed();
@@ -63,7 +63,7 @@ Node* ActiveNodeList::item(unsigned long index)
     return nullptr;
 }
 
-void ActiveNodeList::fillCacheIfNeed() const
+void NodeListImpl::fillCacheIfNeed() const
 {
     STARFISH_ASSERT(m_canCache);
     if (!m_isCacheValid) {
@@ -75,7 +75,7 @@ void ActiveNodeList::fillCacheIfNeed() const
 
 }
 
-void ActiveNodeList::setItems(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& elements)
+void NodeListImpl::setItems(std::vector<Element*, gc_allocator_ignore_off_page<Element*>>& elements)
 {
     for (auto element : elements) {
         m_cachedNodeList.push_back(element);

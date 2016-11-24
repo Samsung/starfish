@@ -23,12 +23,12 @@ namespace StarFish {
 
 unsigned long NodeList::length() const
 {
-    return m_activeNodeList.length();
+    return m_nodeListImpl.length();
 }
 
 Node* NodeList::item(unsigned long index)
 {
-    return m_activeNodeList.item(index);
+    return m_nodeListImpl.item(index);
 }
 
 }

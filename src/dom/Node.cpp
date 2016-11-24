@@ -52,23 +52,23 @@ void RareNodeMembers::putActiveHtmlCollectionListWithQuery(ActiveHTMLCollectionL
 void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
 {
     if (m_children) {
-        m_children->activeNodeList().invalidateCache();
+        m_children->getNodeListImpl().invalidateCache();
     }
 
     if (m_activeHtmlCollectionListsForTagName) {
         for (size_t i = 0; i < m_activeHtmlCollectionListsForTagName->size(); i ++) {
-            m_activeHtmlCollectionListsForTagName->at(i).second->activeNodeList().invalidateCache();
+            m_activeHtmlCollectionListsForTagName->at(i).second->getNodeListImpl().invalidateCache();
         }
     }
 
     if (m_activeHtmlCollectionListsForClassName) {
         for (size_t i = 0; i < m_activeHtmlCollectionListsForClassName->size(); i ++) {
-            m_activeHtmlCollectionListsForClassName->at(i).second->activeNodeList().invalidateCache();
+            m_activeHtmlCollectionListsForClassName->at(i).second->getNodeListImpl().invalidateCache();
         }
     }
 
     if (m_childNodeList) {
-        m_childNodeList->activeNodeList().invalidateCache();
+        m_childNodeList->getNodeListImpl().invalidateCache();
     }
 }
 
@@ -1018,7 +1018,7 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
     if (hasRareMembers()) {
         if (m_rareNodeMembers->m_activeHtmlCollectionListsForClassName) {
             for (size_t i = 0; i < m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->size(); i ++) {
-                m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->at(i).second->activeNodeList().invalidateCache();
+                m_rareNodeMembers->m_activeHtmlCollectionListsForClassName->at(i).second->getNodeListImpl().invalidateCache();
             }
         }
     }

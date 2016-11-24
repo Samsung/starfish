@@ -14,18 +14,18 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishActiveNodeList__
-#define __StarFishActiveNodeList__
+#ifndef __StarFishNodeListImpl__
+#define __StarFishNodeListImpl__
 
 namespace StarFish {
 
 class Node;
 class Element;
-typedef bool (*ActiveNodeListFilterFunction)(Node*, void*);
+typedef bool (*NodeListFilterFunction)(Node*, void*);
 
-class ActiveNodeList : public gc {
+class NodeListImpl : public gc {
 public:
-    ActiveNodeList(Node* root, ActiveNodeListFilterFunction filter, void* data, bool canCache = false)
+    NodeListImpl(Node* root, NodeListFilterFunction filter, void* data, bool canCache = false)
         : m_canCache(canCache)
         , m_isCacheValid(false)
         , m_root(root)
@@ -34,7 +34,7 @@ public:
     {
     }
 
-    ActiveNodeList(Node* root, bool canCache = true)
+    NodeListImpl(Node* root, bool canCache = true)
         : m_canCache(canCache)
         , m_isCacheValid(true)
         , m_root(root)
@@ -59,7 +59,7 @@ private:
     mutable bool m_isCacheValid;
 
     Node* m_root;
-    ActiveNodeListFilterFunction m_filter;
+    NodeListFilterFunction m_filter;
     void* m_data;
     mutable std::vector<Node*, gc_allocator_ignore_off_page<Node*>> m_cachedNodeList;
 };
