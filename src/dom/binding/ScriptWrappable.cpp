@@ -36,6 +36,7 @@
 #include "dom/TextTrack.h"
 #include "extra/SourceBuffer.h"
 #if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
+#include "extra/WebApis.h"
 #include "extra/AVPlay.h"
 #endif
 #endif

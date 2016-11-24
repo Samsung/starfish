@@ -26,37 +26,23 @@
 namespace StarFish {
 
 class StarFish;
-class webapis : public ScriptWrappable {
-public:
-    webapis(StarFish* starFish);
-    StarFish* starFish()
-    {
-        return m_starFish;
-    }
-
-    virtual void initScriptObject(ScriptBindingInstance* instance)
-    {
-        initScriptWrappable(this);
-    }
-
-    virtual Type type()
-    {
-        return ScriptWrappable::Type::webapisObject;
-    }
-
-    avplay* AVPlay()
-    {
-        return m_avplay;
-    }
-
-protected:
-    StarFish* m_starFish;
-    avplay* m_avplay;
-};
-
 class avplay : public ScriptWrappable {
 public:
+    enum AVPLAY_CALLBACK_TYPE {
+        prepare_async_CALLBACK,
+        onbufferingstart_CALLBACK,
+        onbufferingprogress_CALLBACK,
+        onbufferingcomplete_CALLBACK,
+        oncurrentplaytime_CALLBACK,
+        onevent_CALLBACK,
+        onerror_CALLBACK,
+        onsubtitlechange_CALLBACK,
+        ondrmevent_CALLBACK,
+        onstreamcompleted_CALLBACK
+    };
+
     avplay(StarFish* starFish);
+    ~avplay();
     StarFish* starFish()
     {
         return m_starFish;
@@ -77,21 +63,25 @@ public:
     void suspend();
     void restore();
 
-
     String* getState();
     double getCurrentTime();
     double getDuration();
-    // void setListener(listener);
 
     void seekTo(double seekTime);
     void setStreamingProperty(String* arg1, String* arg2);
     void prepareAsync(ScriptValue listener);
+    void setListener(ScriptValue listener);
 
     virtual Type type()
     {
         return ScriptWrappable::Type::avplayObject;
     }
-    void callprepareCallback();
+    void callJSCallback(AVPLAY_CALLBACK_TYPE type);
+
+    void setBufferingPercent(int percent)
+    {
+        m_bufferingPercent = percent;
+    }
 protected:
     StarFish* m_starFish;
     double m_offsetLeft;
@@ -99,9 +89,12 @@ protected:
     double m_offsetWidth;
     double m_offsetHeight;
 
-    player_h m_nativePlayer;
-    ScriptValue m_async_prepre;
+    int m_bufferingPercent;
 
+    player_h m_nativePlayer;
+
+    ScriptValue m_prepare_async;
+    ScriptValue m_listener;
 };
 
 }
