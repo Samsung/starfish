@@ -501,14 +501,14 @@ void Window::setHistory(URL* url)
 {
     if (!m_history)
         m_history = new History(m_starFish);
-    m_history->setHistory(url);
+    m_history->setHistory(String::emptyString, String::emptyString, url);
 }
 
 void Window::navigateAsync(URL* url)
 {
     starFish()->messageLoop()->addIdlerWithNoScriptInstanceEntering([](size_t a, void* data, void* data2) {
-        ((Window*)data2)->navigate((URL*)data);
         ((Window*)data2)->setHistory((URL*)data);
+        ((Window*)data2)->navigate((URL*)data);
     }, url, this);
 }
 

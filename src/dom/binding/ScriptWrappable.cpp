@@ -1776,6 +1776,13 @@ ScriptValue parseJSON(String* jsonData)
     return callScriptFunction(json_parse_fn, json_arg, 1, instance->globalObject()->json());
 }
 
+String* jsonStringify(escargot::ESValue value)
+{
+    escargot::ESVMInstance* instance = escargot::ESVMInstance::currentInstance();
+    ScriptValue json_parse_fn = instance->globalObject()->json()->get(ScriptValue(createScriptString(String::fromUTF8("stringify"))));
+    return toBrowserString(callScriptFunction(json_parse_fn, &value, 1, instance->globalObject()->json()));
+}
+
 bool isCallableScriptValue(ScriptValue v)
 {
     if (v.isESPointer() && v.asESPointer()->isESFunctionObject()) {

@@ -18,6 +18,8 @@
 #define __StarFishHistory__
 
 #include "dom/binding/ScriptWrappable.h"
+#include "platform/window/Window.h"
+#include "dom/Document.h"
 
 namespace StarFish {
 
@@ -44,18 +46,18 @@ public:
     }
 
     int length();
+    String* state();
 
     void back();
     void forward();
     void go(int delta);
 
-    void setHistory(URL* url);
+    void pushState(String* state, String* title, String* url);
+    void replaceState(String* state, String* title, String* url);
 
-/*
-    // TODO: implement functions below
-    StateObject* state();
-    void pushState(StateObject* data, const String& title, const String& url);
-    void replaceState(StateObject* data, const String& title, const String& url);
+    void setHistory(String* state, String* title, URL* url, bool isPushState = false);
+
+/*  // TODO: implement functions below
     void setScrollRestoration(const String& value);
     String scrollRestoration();
     bool stateChanged() const;
@@ -64,11 +66,13 @@ public:
 protected:
     StarFish* m_starFish;
     URL* getURL(int delta);
+
     int historyForwardListCount();
     int historyBackListCount();
     bool navigateBackForward(int offset);
     int& offset();
     std::vector<HistoryEntry*, gc_allocator_ignore_off_page<HistoryEntry*>>& history();
+    bool isPushState();
 };
 
 }

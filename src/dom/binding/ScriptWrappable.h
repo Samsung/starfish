@@ -306,6 +306,7 @@ ScriptValue createAttributeStringEventFunction(Element* target, String* function
 ScriptValue callScriptFunction(ScriptValue fn, ScriptValue* argv, size_t argc, ScriptValue thisValue);
 ScriptValue createArrayBuffer(void* bufferSrc, size_t len);
 ScriptValue parseJSON(String* jsonData);
+String* jsonStringify(escargot::ESValue);
 
 bool isCallableScriptValue(ScriptValue v);
 

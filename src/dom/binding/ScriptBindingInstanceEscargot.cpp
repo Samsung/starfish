@@ -6439,11 +6439,56 @@ escargot::ESFunctionObject* bindingHistory(ScriptBindingInstance* scriptBindingI
             return escargot::ESValue();
         }, escargot::ESString::create("forward"), 1, false));
 
+    HistoryFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("pushState"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+
+            if (instance->currentExecutionContext()->argumentCount() >= 2) {
+                // TODO: State value must be stored to form of StructuredClone
+                // Therefore, implement StructuredClone() to convert state value
+                String* state = jsonStringify(instance->currentExecutionContext()->readArgument(0));
+                String* title = String::fromUTF8(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data());
+                String* url = String::fromUTF8(instance->currentExecutionContext()->readArgument(2).toString()->utf8Data());
+                originalObj->pushState(state, title, url);
+            } else {
+                auto msg = escargot::ESString::create("Failed to execute 'pushState' on 'History': 2 arguments required, but only 0 present.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            }
+            return escargot::ESValue();
+        }, escargot::ESString::create("pushState"), 1, false));
+
+    HistoryFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("replaceState"), false, false, false,
+        escargot::ESFunctionObject::create(nullptr, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+
+            if (instance->currentExecutionContext()->argumentCount() >= 2) {
+                // TODO: State value must be stored to form of StructuredClone
+                // Therefore, implement StructuredClone() to convert state value
+                String* state = jsonStringify(instance->currentExecutionContext()->readArgument(0));
+                String* title = String::fromUTF8(instance->currentExecutionContext()->readArgument(1).toString()->utf8Data());
+                String* url = String::fromUTF8(instance->currentExecutionContext()->readArgument(2).toString()->utf8Data());
+                originalObj->replaceState(state, title, url);
+            } else {
+                auto msg = escargot::ESString::create("Failed to execute 'pushState' on 'History': 2 arguments required, but only 0 present.");
+                instance->throwError(escargot::ESValue(escargot::TypeError::create(msg)));
+            }
+            return escargot::ESValue();
+        }, escargot::ESString::create("pushState"), 1, false));
+
     defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         HistoryFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("length"),
         [](escargot::ESVMInstance* instance) -> escargot::ESValue {
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
         return escargot::ESValue(originalObj->length());
+    }, nullptr);
+
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HistoryFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("state"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::HistoryObject, History);
+        if (!originalObj->state()->equals(String::emptyString))
+            return parseJSON(originalObj->state());
+        return ScriptValueNull;
     }, nullptr);
     return HistoryFunction;
 }
