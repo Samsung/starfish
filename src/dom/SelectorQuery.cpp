@@ -102,7 +102,7 @@ NodeList* SelectorQuery::queryAll(Node& rootNode)
 
     NodeList* list = new NodeList(rootNode.document()->scriptBindingInstance(), &rootNode, true);
     if (matchedElement.size() > 0)
-        list->activeNodeList().setItems(matchedElement);
+        list->getNodeListImpl().setItems(matchedElement);
     return list;
 }
 

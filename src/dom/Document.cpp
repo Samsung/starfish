@@ -822,7 +822,7 @@ HTMLCollection* Document::namedAccess(String* name)
 void Document::invalidNamedAccessCacheIfNeeded()
 {
     for (size_t i = 0; i < m_namedAccessActiveHTMLCollectionList.size(); i ++) {
-        m_namedAccessActiveHTMLCollectionList.at(i).second->activeNodeList().invalidateCache();
+        m_namedAccessActiveHTMLCollectionList.at(i).second->getNodeListImpl().invalidateCache();
     }
 }
 
