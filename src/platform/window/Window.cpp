@@ -27,7 +27,7 @@
 #include "extra/Navigator.h"
 #include "extra/Location.h"
 #if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
-#include "extra/AVPlay.h"
+#include "extra/WebApis.h"
 #endif
 
 #include "layout/Frame.h"

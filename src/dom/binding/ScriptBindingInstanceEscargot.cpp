@@ -49,6 +49,7 @@
 #include "extra/SourceBuffer.h"
 #if defined(STARFISH_TIZEN_TV) && defined (STARFISH_ENABLE_AVPLAY)
 #include "extra/AVPlay.h"
+#include "extra/WebApis.h"
 #endif
 #endif
 
@@ -2542,9 +2543,30 @@ escargot::ESFunctionObject* bindingavplay(ScriptBindingInstance* scriptBindingIn
         }, escargot::ESString::create("prepareAsync"), 1, false)
     );
 
-    // webapis.avplay.prepareAsync(function(){}
     // webapis.avplay.setListener(listener);
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("setListener"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->setListener(firstArg);
+
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("setListener"), 1, false)
+    );
+
     // webapis.avplay.seekTo( _seekTime );
+    avplayFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("seekTo"), true, true, true,
+        escargot::ESFunctionObject::create(NULL, [](escargot::ESVMInstance* instance) -> escargot::ESValue
+        {
+            GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::avplayObject, avplay);
+            escargot::ESValue Arg = instance->currentExecutionContext()->readArgument(0);
+            avplay* avPlay = ((Window*)instance->globalObject()->extraPointerData())->Webapis()->AVPlay();
+            avPlay->seekTo(Arg.toNumber());
+            return escargot::ESValue(escargot::ESValue::ESUndefined);
+        }, escargot::ESString::create("seekTo"), 1, false)
+    );
 
     return avplayFunction;
 }

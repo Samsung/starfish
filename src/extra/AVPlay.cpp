@@ -22,6 +22,57 @@
 
 namespace StarFish {
 
+static void _videoPlayerPrepareCB(void *user_data)
+{
+    STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()\n");
+    avplay* self = (avplay*)user_data;
+    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+        avplay* self = (avplay*)data;
+        self->callJSCallback(avplay::onbufferingcomplete_CALLBACK);
+        self->callJSCallback(avplay::prepare_async_CALLBACK);
+    }, user_data);
+}
+
+
+static void _videoPlayerCompletedCB(void *user_data)
+{
+    STARFISH_LOG_INFO("avplay::_videoPlayerCompletedCB()\n");
+    avplay* self = (avplay*)user_data;
+    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+        avplay* self = (avplay*)data;
+        self->callJSCallback(avplay::onstreamcompleted_CALLBACK);
+    }, user_data);
+
+}
+
+static void _videoPlayerbufferingCBNative(int percent, void *user_data)
+{
+    STARFISH_LOG_INFO("avplay::_videoPlayerbufferingCBNative() %d\n", percent);
+    avplay* self = (avplay*)user_data;
+    self->setBufferingPercent(percent);
+    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+        avplay* self = (avplay*)data;
+        self->callJSCallback(avplay::onbufferingprogress_CALLBACK);
+    }, user_data);
+}
+
+
+static void _videoPlayerEventCBNative(int msg, void *msg_data, void *user_data)
+{
+    STARFISH_LOG_INFO("avplay::_videoPlayerEventCBNative()\n");
+
+}
+
+static void _videoPlayerErrorEventCBNative(int error_code, void *user_data)
+{
+    STARFISH_LOG_INFO("avplay::_videoPlayerErrorEventCBNative()\n");
+    avplay* self = (avplay*)user_data;
+    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+        avplay* self = (avplay*)data;
+        self->callJSCallback(avplay::onerror_CALLBACK);
+    }, user_data);
+}
+
 void printNativePlayerError(int errorCode)
 {
     switch (errorCode) {
@@ -55,14 +106,6 @@ void printNativePlayerError(int errorCode)
     }
 }
 
-webapis::webapis(StarFish* starFish)
-    : ScriptWrappable(this)
-    , m_starFish(starFish)
-{
-    m_avplay = new avplay(m_starFish);
-}
-
-
 avplay::avplay(StarFish* starFish)
     : ScriptWrappable(this)
     , m_starFish(starFish)
@@ -70,9 +113,16 @@ avplay::avplay(StarFish* starFish)
     , m_offsetTop(0)
     , m_offsetWidth(0)
     , m_offsetHeight(0)
+    , m_bufferingPercent(0)
     , m_nativePlayer(nullptr)
-    , m_async_prepre(ScriptValueNull)
+    , m_prepare_async(ScriptValueNull)
+    , m_listener(ScriptValueNull)
 {
+}
+
+avplay::~avplay()
+{
+    close();
 }
 
 void avplay::open(String* url)
@@ -86,6 +136,29 @@ void avplay::open(String* url)
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
     }
+
+
+    ret = player_set_completed_cb(m_nativePlayer, _videoPlayerCompletedCB, this);
+    if (ret != PLAYER_ERROR_NONE) {
+        printNativePlayerError(ret);
+    }
+
+    // ret = player_set_others_event_cb(m_nativePlayer, _videoPlayerEventCBNative, this);
+    // if (ret != PLAYER_ERROR_NONE) {
+    //     printNativePlayerError(ret);
+    // }
+
+    ret = player_set_error_cb(m_nativePlayer, _videoPlayerErrorEventCBNative, this);
+    if (ret != PLAYER_ERROR_NONE) {
+        printNativePlayerError(ret);
+    }
+
+    ret = player_set_buffering_cb(m_nativePlayer, _videoPlayerbufferingCBNative, this);
+    if (ret != PLAYER_ERROR_NONE) {
+        printNativePlayerError(ret);
+    }
+
+
 
     player_display_h display_handle = GET_DISPLAY(elm_win_xwindow_get((Evas_Object*)starFish()->window()->unwrap()));
     player_display_type_e display_type = PLAYER_DISPLAY_TYPE_X11;
@@ -137,7 +210,17 @@ void avplay::play()
 
 void avplay::close()
 {
+    STARFISH_LOG_INFO("avplay::close()\n");
     if (m_nativePlayer) {
+
+        player_unset_buffering_cb(m_nativePlayer);
+
+        player_unset_completed_cb(m_nativePlayer);
+
+        // player_unset_others_event_cb(m_nativePlayer);
+
+        player_unset_error_cb(m_nativePlayer);
+
         player_destroy(m_nativePlayer);
         m_nativePlayer = nullptr;
     }
@@ -145,12 +228,26 @@ void avplay::close()
 
 void avplay::pause()
 {
-    player_pause(m_nativePlayer);
+    STARFISH_LOG_INFO("avplay::pause()\n");
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+
+    if (state >= PLAYER_STATE_READY) {
+        int ret = player_pause(m_nativePlayer);
+        if (ret != PLAYER_ERROR_NONE) {
+            printNativePlayerError(ret);
+        }
+    }
 }
 
 void avplay::stop()
 {
-    player_stop(m_nativePlayer);
+    STARFISH_LOG_INFO("avplay::stop()\n");
+    int ret = player_stop(m_nativePlayer);
+    if (ret != PLAYER_ERROR_NONE) {
+        printNativePlayerError(ret);
+    }
+    close();
 }
 
 String* avplay::getState()
@@ -173,25 +270,42 @@ String* avplay::getState()
 
 double avplay::getCurrentTime()
 {
+    STARFISH_LOG_INFO("avplay::getCurrentTime()\n");
     int position = 0;
-    player_get_position(m_nativePlayer, &position);
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+    if (state == PLAYER_STATE_PLAYING) {
+        player_get_position(m_nativePlayer, &position);
+    }
     return (double)position;
 }
 
 double avplay::getDuration()
 {
+    STARFISH_LOG_INFO("avplay::getDuration()\n");
     int duration = 0;
-    player_get_duration(m_nativePlayer, &duration);
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+    if (state >= PLAYER_STATE_READY) {
+        player_get_duration(m_nativePlayer, &duration);
+    }
     return (double)duration;
 }
 
 void avplay::seekTo(double seekTime)
 {
     // TODO
-    int ret = player_set_position(m_nativePlayer, seekTime, NULL, NULL);
-    if (ret != PLAYER_ERROR_NONE) {
-        printNativePlayerError(ret);
+    STARFISH_LOG_INFO("avplay::seekTo()\n");
+    player_state_e state;
+    player_get_state(m_nativePlayer, &state);
+
+    if (state >= PLAYER_STATE_READY) {
+        int ret = player_set_position(m_nativePlayer, seekTime, NULL, NULL);
+        if (ret != PLAYER_ERROR_NONE) {
+            printNativePlayerError(ret);
+        }
     }
+
 }
 
 void avplay::suspend()
@@ -204,20 +318,12 @@ void avplay::restore()
     // TODO
 }
 
-static void _videoPlayerPrepareCB(void *user_data)
-{
-    STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()\n");
-    avplay* self = (avplay*)user_data;
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        avplay* self = (avplay*)data;
-        self->callprepareCallback();
-    }, user_data);
-}
-
 void avplay::prepareAsync(ScriptValue listener)
 {
+    callJSCallback(onbufferingstart_CALLBACK);
+
     STARFISH_LOG_INFO("avplay::prepareAsync()\n");
-    m_async_prepre = listener;
+    m_prepare_async = listener;
     int ret = player_prepare_async(m_nativePlayer, _videoPlayerPrepareCB, this);
     if (ret != PLAYER_ERROR_NONE) {
         printNativePlayerError(ret);
@@ -225,19 +331,89 @@ void avplay::prepareAsync(ScriptValue listener)
     // TODO
 }
 
+void avplay::setListener(ScriptValue listener)
+{
+    // TODO
+    m_listener = listener;
+
+    // Test Code
+    /*
+    {
+        callJSCallback(onbufferingstart_CALLBACK);
+        callJSCallback(onbufferingprogress_CALLBACK);
+        callJSCallback(onbufferingcomplete_CALLBACK);
+        callJSCallback(oncurrentplaytime_CALLBACK);
+        callJSCallback(onevent_CALLBACK);
+        callJSCallback(onerror_CALLBACK);
+        callJSCallback(onsubtitlechange_CALLBACK);
+        callJSCallback(ondrmevent_CALLBACK);
+        callJSCallback(onstreamcompleted_CALLBACK);
+    }
+    */
+}
+
 void avplay::setStreamingProperty(String* arg1, String* arg2)
 {
     // TODO
 }
 
-void avplay::callprepareCallback()
+void avplay::callJSCallback(AVPLAY_CALLBACK_TYPE type)
 {
-    callScriptFunction(m_async_prepre, { }, 0, escargot::ESVMInstance::currentInstance()->globalObject());
+
+    ScriptValue thisValue = escargot::ESVMInstance::currentInstance()->globalObject();
+    ScriptValue fn = ScriptValueNull;
+    ScriptValue* argv = { };
+    size_t argc = 0;
+    switch (type) {
+
+    case prepare_async_CALLBACK:
+        fn = m_prepare_async;
+        break;
+
+    case onbufferingstart_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onbufferingstart"));
+        break;
+
+    case onbufferingprogress_CALLBACK:
+        argv = new ScriptValue(m_bufferingPercent);
+        argc = 1;
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onbufferingprogress"));
+        break;
+
+    case onbufferingcomplete_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onbufferingcomplete"));
+        break;
+
+    case oncurrentplaytime_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("oncurrentplaytime"));
+        break;
+
+    case onevent_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onevent"));
+        break;
+
+    case onerror_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onerror"));
+        break;
+
+    case onsubtitlechange_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onsubtitlechange"));
+        break;
+
+    case ondrmevent_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("ondrmevent"));
+        break;
+
+    case onstreamcompleted_CALLBACK:
+        fn = m_listener.asESPointer()->asESObject()->get(escargot::ESString::create("onstreamcompleted"));
+        break;
+
+    default:
+        STARFISH_LOG_INFO("avplay::callJSCallback() ERROR!\n");
+    }
+    callScriptFunction(fn, argv, argc, thisValue);
+    delete argv;
 }
-
-// void setListener(listener);
-
-
 
 }
 #endif
