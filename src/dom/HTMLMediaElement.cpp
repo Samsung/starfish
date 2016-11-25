@@ -694,11 +694,10 @@ void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
     //        Because m_isSeeking effects setOfficialPlaybackPosition()
     m_officialPlaybackPosition = currentTime;
 
-    if (!std::isnan(m_pendingSeek)) {
+    if (!std::isnan(m_pendingSeek) && m_pendingSeek != currentTime) {
         STARFISH_LOG_INFO("HTMLMediaElement::mediaPlayerNotifySeekedItsContainer found pending seek operation (%lf)\n", m_pendingSeek);
         double pendingSeek = m_pendingSeek;
         m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
-        m_officialPlaybackPosition = pendingSeek;
         appendToOperationQueue(new MediaOperationQueueDataRequestSeek(this, pendingSeek));
     } else {
         // Finish "seek"
@@ -923,6 +922,11 @@ void MediaOperationQueueDataRequestSeek::processOperationQueue()
         m_mediaElement->m_pendingSeek = m_seekPosition;
         return;
     }
+
+    if (m_seekPosition < 0) {
+        m_seekPosition = 0;
+    }
+
     m_mediaElement->m_officialPlaybackPosition = m_seekPosition;
     m_mediaElement->dispatchSeekingEvent();
 
