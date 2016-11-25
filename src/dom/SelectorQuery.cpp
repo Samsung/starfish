@@ -370,7 +370,7 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*, gc_allocator_i
     }
 
     // Fast path for querySelector*('.foo'), and querySelector*('div').
-    if (firstSelector->isLastInTagHistory()) {
+    if (firstSelector->isLastInTagHistory() && firstSelector->pseudoType() == CSSSelector::PseudoNone) {
         switch (firstSelector->type()) {
         case CSSSelector::Class:
             collectElementsByClassName(rootNode, firstSelector->selectorText(), output, shouldOnlyMatchFirstElement);
@@ -440,7 +440,14 @@ bool SelectorQuery::checkOne(const SelectorCheckingContext& context, MatchResult
 
     switch (selector[0]->type()) {
     case CSSSelector::Tag:
-        return element.tagName()->equals(selector[0]->selectorText()->toUpper());
+        if (element.tagName()->equals(selector[0]->selectorText()->toUpper())) {
+            if (selector[0]->pseudoType() == CSSSelector::PseudoNone) {
+                return true;
+            } else {
+                return checkPseudoClass(context, result);
+            }
+        }
+        return false;
     case CSSSelector::Class:
         return element.hasClass() && contains(element.classNames(), selector[0]->selectorText());
     case CSSSelector::Id:
