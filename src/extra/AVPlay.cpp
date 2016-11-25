@@ -28,7 +28,6 @@ static void _videoPlayerPrepareCB(void *user_data)
     avplay* self = (avplay*)user_data;
     self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
         avplay* self = (avplay*)data;
-        self->callJSCallback(avplay::onbufferingcomplete_CALLBACK);
         self->callJSCallback(avplay::prepare_async_CALLBACK);
     }, user_data);
 }
@@ -49,11 +48,19 @@ static void _videoPlayerbufferingCBNative(int percent, void *user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerbufferingCBNative() %d\n", percent);
     avplay* self = (avplay*)user_data;
-    self->setBufferingPercent(percent);
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
-        avplay* self = (avplay*)data;
-        self->callJSCallback(avplay::onbufferingprogress_CALLBACK);
-    }, user_data);
+    if (percent < 100) {
+        self->setBufferingPercent(percent);
+        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            avplay* self = (avplay*)data;
+            self->callJSCallback(avplay::onbufferingprogress_CALLBACK);
+        }, user_data);
+    } else if (percent == 100) {
+        self->setBufferingPercent(percent);
+        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread([](size_t, void* data) {
+            avplay* self = (avplay*)data;
+            self->callJSCallback(avplay::onbufferingcomplete_CALLBACK);
+        }, user_data);
+    }
 }
 
 
@@ -272,11 +279,7 @@ double avplay::getCurrentTime()
 {
     STARFISH_LOG_INFO("avplay::getCurrentTime()\n");
     int position = 0;
-    player_state_e state;
-    player_get_state(m_nativePlayer, &state);
-    if (state == PLAYER_STATE_PLAYING) {
-        player_get_position(m_nativePlayer, &position);
-    }
+    player_get_position(m_nativePlayer, &position);
     return (double)position;
 }
 
