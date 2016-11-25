@@ -1144,7 +1144,7 @@ void Window::setActiveNode(Node* n)
 {
     Node* t = n;
     while (t) {
-        t->setState(Node::NodeStateActive);
+        t->setState(Node::NodeStateActive, true);
         m_activeNodes.push_back(t);
         t = t->parentNode();
     }
@@ -1154,7 +1154,7 @@ void Window::setActiveNode(Node* n)
 void Window::releaseActiveNode()
 {
     for (size_t i = 0; i < m_activeNodes.size() ; i ++) {
-        m_activeNodes[i]->setState(Node::NodeStateNormal);
+        m_activeNodes[i]->setState(Node::NodeStateActive, false);
     }
     m_activeNodes.clear();
     m_activeNodes.shrink_to_fit();
@@ -1179,7 +1179,7 @@ void Window::setFocusedNode(Node* n)
         return;
     }
 
-    m->setState(Node::NodeStateFocused);
+    m->setState(Node::NodeStateFocused, true);
 
     Node* t = m_focusedNode;
     String* eventType;
@@ -1218,14 +1218,14 @@ void Window::setFocusedNode(Node* n)
 void Window::releaseFocusedNode()
 {
     if (m_relatedTarget)
-        m_relatedTarget->setState(Node::NodeStateFocused);
+        m_relatedTarget->setState(Node::NodeStateFocused, false);
 }
 
 void Window::setActiveNodeWithMouseMove(Node *n)
 {
     Node* t = n;
     while (t) {
-        t->setState(Node::NodeStateHovered);
+        t->setState(Node::NodeStateHovered, true);
         m_hoveredNodes.push_back(t);
         t = t->parentNode();
     }
@@ -1235,7 +1235,7 @@ void Window::setActiveNodeWithMouseMove(Node *n)
 void Window::releaseActiveNodeWithMouseMove()
 {
     for (size_t i = 0; i < m_hoveredNodes.size() ; i ++) {
-        m_hoveredNodes[i]->setState(Node::NodeStateNormal);
+        m_hoveredNodes[i]->setState(Node::NodeStateHovered, false);
     }
     m_hoveredNodes.clear();
     m_hoveredNodes.shrink_to_fit();

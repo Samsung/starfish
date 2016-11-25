@@ -2260,9 +2260,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                     if (isOneSelectorMatched) {
                         if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone) {
                             isMatched = true;
-                        } else if (e->state() == Node::NodeState::NodeStateActive && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive) {
+                        } else if ((e->state() & Node::NodeState::NodeStateActive) && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive) {
                             isMatched = true;
-                        } else if (e->state() == Node::NodeState::NodeStateHovered && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover) {
+                        } else if ((e->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover) {
                             isMatched = true;
                         }
                     }

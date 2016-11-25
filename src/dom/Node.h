@@ -448,23 +448,13 @@ public:
 
     virtual Node* clone() = 0;
 
-    void setState(NodeState state)
+    void setState(NodeState state, bool enable)
     {
-        /*if (state != m_state) {
-            m_state = state;
-            setNeedsStyleRecalc();
-        }
-        */
-        if (state != m_state) {
+        if ((m_state & state) != enable) {
             if (state == NodeStateNormal)
                 m_state = 0;
-            else if (state == NodeStateActive)
-                m_state |= (1 << 0);
-            else if (state == NodeStateFocused)
-                m_state ^= 1 << 1;
-            else if (state == NodeStateHovered)
-                m_state |= 1 << 2;
-
+            else
+                m_state ^= state;
             setNeedsStyleRecalc();
         }
     }
