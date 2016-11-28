@@ -450,11 +450,11 @@ public:
 
     void setState(NodeState state, bool enable)
     {
-        if ((m_state & state) != enable) {
-            if (state == NodeStateNormal)
-                m_state = 0;
-            else
-                m_state ^= state;
+        if (state == NodeStateNormal) {
+            m_state = 0;
+            setNeedsStyleRecalc();
+        } else if (!(m_state & state) == enable) {
+            m_state ^= state;
             setNeedsStyleRecalc();
         }
     }
