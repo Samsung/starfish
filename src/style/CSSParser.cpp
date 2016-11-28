@@ -1306,15 +1306,24 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                 selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
                 const char* selectorText = simpleSelectors[j]->trim()->utf8Data();
                 std::string cSelectorText;
+                // TODO: Pseudo-elements use ":" (CSS2 syntax) and "::" (CSS3 syntax) convention.
                 char* pcPos = strchr((char *)selectorText, ':');
                 if (pcPos) {
                     cSelectorText = selectorText;
                     cSelectorText[pcPos - selectorText] = '\0';
                     selectorText = cSelectorText.data();
                     if (strcmp(pcPos + 1, "active") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoActive);
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoActive);
                     } else if (strcmp(pcPos + 1, "hover") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoHover);
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoHover);
+                    } else if (strcmp(pcPos + 1, "first-line") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstLine);
+                    } else if (strcmp(pcPos + 1, "first-letter") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstLetter);
+                    } else if (strcmp(pcPos + 1, "before") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoBefore);
+                    } else if (strcmp(pcPos + 1, "after") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoAfter);
                     }
                 }
 
