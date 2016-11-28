@@ -1256,7 +1256,7 @@ public:
         Tag,
         Id,
         Class,
-        PseudoClass
+        PseudoClass // FIXME: This type is not used but SelectorQuery use this type.
     };
 
     enum RelationType {
@@ -1271,7 +1271,11 @@ public:
     enum PseudoType {
         PseudoNone,
         PseudoActive,
-        PseudoHover
+        PseudoHover,
+        PseudoFirstLine,
+        PseudoFirstLetter,
+        PseudoBefore,
+        PseudoAfter
     };
 
     CSSSelector()
