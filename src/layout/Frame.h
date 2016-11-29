@@ -38,6 +38,7 @@ class LineBox;
 
 enum PaintingStage {
     PaintingNormalFlowBlock, // the in-flow, non-inline-level, non-positioned descendants.
+    PaintingNonPositionedFloats, // the non-positioned float
     PaintingNormalFlowInline, // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     PaintingPositionedElements, // the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     PaintingStageEnd
@@ -91,11 +92,12 @@ public:
     {
         if (!isNormalFlow || isRoot) {
             std::vector<FrameBlockBox*>* s = new std::vector<FrameBlockBox*>();
-            std::unordered_map<FrameBlockBox*, LayoutUnit>* s2 = new std::unordered_map<FrameBlockBox*, LayoutUnit>();
-            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, s, s2));
+            std::vector<FrameBlockBox*>* s2 = new std::vector<FrameBlockBox*>();
+            std::unordered_map<FrameBlockBox*, LayoutUnit>* s3 = new std::unordered_map<FrameBlockBox*, LayoutUnit>();
+            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, s, s2, s3));
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
-            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, back.m_registeredYPositionForVerticalAlignInlineBlock));
+            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, back.m_floatBoxes, back.m_registeredYPositionForVerticalAlignInlineBlock));
         }
     }
 
@@ -108,6 +110,8 @@ public:
         m_blockFormattingContextInfo.pop_back();
     }
 
+    LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition);
+    std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit left, LayoutUnit right);
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
@@ -154,6 +158,12 @@ public:
         m_relativePositionedFrames.insert(std::make_pair(cb, std::vector<std::pair<Frame*, bool> >()));
         std::vector<std::pair<Frame*, bool> >& vec = m_relativePositionedFrames[cb];
         vec.push_back(std::make_pair(frm, dueToSelf));
+    }
+
+    void registerFloatingBoxes(FrameBlockBox* box)
+    {
+        BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+        c.m_floatBoxes->push_back(box);
     }
 
     template <typename Fn>
@@ -245,11 +255,13 @@ public:
 
 private:
     struct BlockFormattingContext {
-        BlockFormattingContext(bool isNormalFlow, bool isRoot, std::vector<FrameBlockBox*>* inlineBlockBoxStack, std::unordered_map<FrameBlockBox*, LayoutUnit>* registeredYPositionForVerticalAlignInlineBlock)
+        BlockFormattingContext(bool isNormalFlow, bool isRoot, std::vector<FrameBlockBox*>* inlineBlockBoxStack,
+            std::vector<FrameBlockBox*>* floatBoxes, std::unordered_map<FrameBlockBox*, LayoutUnit>* registeredYPositionForVerticalAlignInlineBlock)
         {
             m_isRoot = isRoot;
             m_isNormalFlow = isNormalFlow;
             m_inlineBlockBoxStack = inlineBlockBoxStack;
+            m_floatBoxes = floatBoxes;
             m_registeredYPositionForVerticalAlignInlineBlock = registeredYPositionForVerticalAlignInlineBlock;
         }
         bool m_isRoot;
@@ -259,6 +271,7 @@ private:
         LayoutUnit m_maxPositiveMarginBottom;
         LayoutUnit m_maxNegativeMarginBottom;
         std::vector<FrameBlockBox*>* m_inlineBlockBoxStack;
+        std::vector<FrameBlockBox*>* m_floatBoxes;
         std::unordered_map<FrameBlockBox*, LayoutUnit>* m_registeredYPositionForVerticalAlignInlineBlock;
     };
 
@@ -452,7 +465,8 @@ public:
             m_flags.m_shouldComputePreferredWidth = false;
         }
 
-        if (style && style->position() == PositionValue::AbsolutePositionValue) {
+        if (style && (style->position() == PositionValue::AbsolutePositionValue
+            || style->floating() != FloatValue::NoneFloatValue)) {
             m_flags.m_isNormalFlow = false;
         } else {
             m_flags.m_isNormalFlow = true;

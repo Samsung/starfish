@@ -18,6 +18,7 @@
 #include "Frame.h"
 #include "FrameBox.h"
 #include "FrameBlockBox.h"
+#include "FrameDocument.h"
 
 namespace StarFish {
 
@@ -85,6 +86,86 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
         Frame* block = blockContainer(currentFrame);
         return block;
     }
+}
+
+LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
+{
+    std::vector<LayoutUnit> leftHeights;
+    LayoutUnit lastRightHeight = 0;
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+#ifndef NDEBUG
+    bool leftFirst = true, rightFirst = true;
+    LayoutUnit leftX, rightX;
+#endif
+
+    for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+        FrameBlockBox* f = c.m_floatBoxes->at(i);
+        LayoutLocation loc = f->absolutePoint(frameDocument());
+        if (loc.y() <= yPosition && yPosition < loc.y() + f->height()) {
+            if (f->style()->floating() == LeftFloatValue) {
+                LayoutUnit y = loc.y() + f->height() + f->marginBottom();
+                auto iter = leftHeights.begin();
+                while (iter != leftHeights.end()) {
+                    if (*iter < y) {
+                        iter = leftHeights.erase(iter);
+                    } else {
+                        break;
+                    }
+                }
+                leftHeights.push_back(y);
+#ifndef NDEBUG
+                if (leftFirst) {
+                    leftFirst = false;
+                } else {
+                    STARFISH_ASSERT(loc.x() > leftX);
+                }
+                leftX = loc.x();
+#endif
+            } else {
+                lastRightHeight = loc.y() + f->height() + f->marginBottom();
+#ifndef NDEBUG
+                if (rightFirst) {
+                    rightFirst = false;
+                } else {
+                    STARFISH_ASSERT(loc.x() < rightX);
+                }
+                rightX = loc.x();
+#endif
+            }
+        }
+    }
+
+    if (leftHeights.size() > 0) {
+        return leftHeights.at(leftHeights.size() - 1) - yPosition;
+    } else {
+        return lastRightHeight - yPosition;
+    }
+}
+
+std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit left, LayoutUnit right)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+        FrameBlockBox* f = c.m_floatBoxes->at(i);
+        LayoutLocation loc = f->absolutePoint(frameDocument());
+        if (loc.y() <= yPosition && yPosition < loc.y() + f->height()) {
+            if (f->style()->floating() == FloatValue::LeftFloatValue) {
+                LayoutUnit x = loc.x() + f->contentWidth() + f->borderRight() + f->paddingRight() + f->marginRight();
+                if (x > left) {
+                    left = x;
+                }
+            } else {
+                LayoutUnit x = loc.x() - f->marginLeft();
+                if (x < right) {
+                    right = x;
+                }
+            }
+        }
+    }
+
+    return std::make_pair(left, right);
 }
 
 LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
