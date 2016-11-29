@@ -29,8 +29,10 @@ void FrameBox::paintStackingContextContent(Canvas* canvas)
     ctx.m_paintingInlineStage = PaintingInlineLevelElements;
     paintChildrenWith(ctx);
 
-    // TODO the non-positioned floats.
-    // paintChildrenWith(canvas, ctx, PaintingNonPositionedFloats);
+
+    // the non-positioned float
+    ctx.m_paintingStage = PaintingNonPositionedFloats;
+    paintChildrenWith(ctx);
 
     // the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     ctx.m_paintingStage = PaintingNormalFlowInline;

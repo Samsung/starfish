@@ -109,7 +109,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     }
                 }
             }
-        } else {
+        } else if (style() && style()->position() == PositionValue::AbsolutePositionValue) {
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             computeBorderMarginPadding(cb->contentWidth());
 
@@ -292,6 +292,47 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             if (left.isAuto() && right.isAuto() && direction == DirectionValue::RtlDirectionValue) {
                 moveX(-this->width());
             }
+        } else {
+            // 10.3.5 Floating, non-replaced elements
+            FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
+            computeBorderMarginPadding(cb->contentWidth());
+
+            DirectionValue direction = ctx.blockContainer(this)->style()->direction();
+
+            Length marginLeft = style()->marginLeft();
+            Length marginRight = style()->marginRight();
+            Length width = style()->width();
+
+            LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
+
+            auto computeContentWidth = [&](LayoutUnit parentWidthForComputePreferredWidthFromOutside = 0)
+            {
+                if (width.isAuto()) {
+                    LayoutUnit parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidthFromOutside;
+
+                    parentWidthForComputePreferredWidth -= marginWidth() + borderWidth() + paddingWidth();
+
+                    if (parentWidthForComputePreferredWidth < 0)
+                        parentWidthForComputePreferredWidth = 0;
+
+                    ComputePreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
+                    computePreferredWidth(p);
+                    setContentWidth(p.result());
+                } else if (width.isFixed()) {
+                    setContentWidth(width.fixed());
+                } else if (width.isPercent()) {
+                    setContentWidth(containgBlockContentWidth * width.percent());
+                }
+            };
+
+            if (marginLeft.isAuto()) {
+                setMarginLeft(0);
+            }
+            if (marginRight.isAuto()) {
+                setMarginRight(0);
+            }
+
+            computeContentWidth(containgBlockContentWidth);
         }
 
         if (isFrameBlockBox() && asFrameBlockBox()->hasBlockFlow()) {
@@ -402,19 +443,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     // Now the intrinsic height of the object is known because the children are placed
 
     // Determine the final height
-    if (isNormalFlow()) {
-        if (style()->height().isAuto()) {
-            setContentHeight(contentHeight);
-        } else if (style()->height().isFixed()) {
-            setContentHeight(style()->height().fixed());
-        } else {
-            if (ctx.parentHasFixedHeight(this)) {
-                setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
-            } else {
-                setContentHeight(contentHeight);
-            }
-        }
-    } else {
+    if (style() && style()->position() == PositionValue::AbsolutePositionValue) {
         FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
         FrameBox* parent = Frame::layoutParent()->asFrameBox();
 
@@ -495,6 +524,20 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         } else if (marginTop.isAuto() && !marginBottom.isAuto()) {
             moveY(-FrameBox::marginBottom());
         } else {
+        }
+    } else {
+        // Normal Flow
+        // 10.6.6 Complicated cases
+        if (style()->height().isAuto()) {
+            setContentHeight(contentHeight);
+        } else if (style()->height().isFixed()) {
+            setContentHeight(style()->height().fixed());
+        } else {
+            if (ctx.parentHasFixedHeight(this)) {
+                setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
+            } else {
+                setContentHeight(contentHeight);
+            }
         }
     }
 
@@ -766,26 +809,35 @@ void FrameBlockBox::paint(PaintingContext& ctx)
     if (isPositionedElement()) {
         if (ctx.m_paintingStage == PaintingPositionedElements) {
             paintBackgroundAndBorders(ctx.m_canvas);
-            PaintingStage last = ctx.m_paintingStage;
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
                 ctx.m_paintingStage = s;
                 paintChildrenWith(ctx);
                 s = (PaintingStage)(s + 1);
             }
-            ctx.m_paintingStage = last;
+            ctx.m_paintingStage = PaintingPositionedElements;
         }
     } else if (style()->display() == InlineBlockDisplayValue) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline && ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
-            PaintingStage last = ctx.m_paintingStage;
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
                 ctx.m_paintingStage = s;
                 paintChildrenWith(ctx);
                 s = (PaintingStage)(s + 1);
             }
-            ctx.m_paintingStage = last;
+            ctx.m_paintingStage = PaintingNormalFlowInline;
+        }
+    } else if (style()->floating() != NoneFloatValue) {
+        if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
+            paintBackgroundAndBorders(ctx.m_canvas);
+            PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
+            while (s != PaintingStageEnd) {
+                ctx.m_paintingStage = s;
+                paintChildrenWith(ctx);
+                s = (PaintingStage)(s + 1);
+            }
+            ctx.m_paintingStage = PaintingNonPositionedFloats;
         }
     } else {
         if (ctx.m_paintingStage == PaintingNormalFlowBlock) {

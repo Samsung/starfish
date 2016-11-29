@@ -88,6 +88,11 @@ public:
         return m_position;
     }
 
+    FloatValue floating()
+    {
+        return m_float;
+    }
+
     Length width()
     {
         return m_width;
@@ -798,6 +803,7 @@ protected:
         VisibilityValue m_visibility : 1;
     } m_inheritedStyles;
 
+    FloatValue m_float : 2;
     DisplayValue m_display : 3;
     DisplayValue m_originalDisplay : 3;
     PositionValue m_position : 2;

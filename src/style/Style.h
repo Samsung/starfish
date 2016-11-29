@@ -242,6 +242,12 @@ enum PositionValue {
     AbsolutePositionValue,
 };
 
+enum FloatValue {
+    NoneFloatValue,
+    LeftFloatValue,
+    RightFloatValue,
+};
+
 enum VerticalAlignValue {
     BaselineVAlignValue,
     SubVAlignValue,
@@ -412,6 +418,7 @@ class CSSStyleDeclaration;
     F(Position, position, "position")                              \
     F(TextDecoration, textDecoration, "text-decoration")           \
     F(Display, display, "display")                                 \
+    F(Float, float, "float")                                       \
     F(BorderImageSlice, borderImageSlice, "border-image-slice")    \
     F(BorderImageSource, borderImageSource, "border-image-source") \
     F(BorderImageWidth, borderImageWidth, "border-image-width")    \
@@ -601,6 +608,7 @@ public:
 
         DisplayValueKind,
         PositionValueKind,
+        FloatValueKind,
         VerticalAlignValueKind,
         SideValueKind,
         DirectionValueKind,
@@ -679,6 +687,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == PositionValueKind);
         return m_value.m_position;
+    }
+
+    FloatValue floatValue()
+    {
+        STARFISH_ASSERT(m_valueKind == FloatValueKind);
+        return m_value.m_float;
     }
 
     VerticalAlignValue verticalAlignValue()
@@ -848,6 +862,7 @@ public:
         int32_t m_int32Value;
         DisplayValue m_display;
         PositionValue m_position;
+        FloatValue m_float;
         VerticalAlignValue m_verticalAlign;
         FontSizeValue m_fontSize;
         FontStyleValue m_fontStyle;

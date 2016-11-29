@@ -514,26 +514,9 @@ struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {
 
 class LineFormattingContext {
 public:
-    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth)
-        : m_block(block)
-        , m_layoutContext(ctx)
-    {
-        m_lineBoxX = lineBoxX;
-        m_lineBoxY = lineBoxY;
-        m_lineBoxWidth = lineBoxWidth;
-        m_block.m_lineBoxes.clear();
-        // m_block.m_lineBoxes.shrink_to_fit();
-        LineBox* lineBox = new LineBox(&m_block);
-        lineBox->setX(m_lineBoxX);
-        lineBox->setY(m_lineBoxY);
-        lineBox->setWidth(m_lineBoxWidth);
-        m_block.m_lineBoxes.push_back(lineBox);
-        m_currentLine = 0;
-        m_currentLineWidth = 0;
-        m_shouldLineBreakForabsolutePositionedBlock = false;
-    }
+    LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
-    void breakLine(bool dueToBr, bool isInLineBox);
+    void breakLine(bool dueToBr, bool isInLineBox, bool forceInsertFloatingBlock);
     void completeLastLine();
 
     bool isBreakedLineWithoutBR(size_t idx)
@@ -542,6 +525,10 @@ public:
     }
 
     void registerInlineContent();
+    void insertFloatingBox(FrameBlockBox* box);
+    void insertNonFloatingBox(FrameBox* box);
+    void insertPendingFloatingBoxes(bool isInlineBox, bool force = false);
+    void layoutLineBox(LineBox* lineBox, std::pair<LayoutUnit, LayoutUnit> boundaries);
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();
@@ -558,10 +545,20 @@ public:
         return m_inlineBlockAscender[box];
     }
 
+    bool hasFloatBoxAlreadyInLineBox()
+    {
+        return m_originalLineBoxWidth != m_lineBoxWidth;
+    }
+
+    LayoutUnit m_leftBoundary;
+    LayoutUnit m_rightBoundary;
+    LayoutLocation m_absPosition;
+    LayoutUnit m_originalLineBoxX;
     LayoutUnit m_lineBoxX;
     LayoutUnit m_lineBoxY;
     LayoutUnit m_currentLineWidth;
     LayoutUnit m_lineBoxWidth;
+    LayoutUnit m_originalLineBoxWidth;
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
@@ -574,6 +571,7 @@ public:
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 
     std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
+    std::vector<FrameBlockBox*> m_pendingFloatBoxes;
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
     std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;

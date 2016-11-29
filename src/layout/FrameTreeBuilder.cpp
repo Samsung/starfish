@@ -315,7 +315,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             ctx.setCurrentBlockContainer(parent->asFrameBlockBox());
             ctx.setIsInFrameInlineFlow(false);
         } else if (!currentFrame->isNormalFlow()) {
-            // To prevent inline contents from splitting, add absolute positioned block to inline-box, inline-boxes + Block(absolute positioned)
+            // To prevent inline contents from splitting, add not-normal flowed block to inline-box, inline-boxes + Block(Not normal flow)
             if (ctx.currentBlockContainer()->hasBlockFlow()) {
                 Frame* last = ctx.currentBlockContainer()->lastChild();
                 if (last) {

@@ -173,6 +173,8 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle, Node* current
     m_originalDisplay = m_display;
     if (m_originalDisplay != DisplayValue::NoneDisplayValue && position() == AbsolutePositionValue) {
         m_display = DisplayValue::BlockDisplayValue;
+    } else if (m_float != FloatValue::NoneFloatValue) {
+        m_display = DisplayValue::BlockDisplayValue;
     }
 
     if (lineHeight().isPercent()) {
