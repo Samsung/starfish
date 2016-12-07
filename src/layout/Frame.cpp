@@ -90,12 +90,12 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
 
 LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
 {
-    std::vector<LayoutUnit> leftHeights;
-    LayoutUnit lastRightHeight = 0;
+    bool hasLeft = false, hasRight = false;
+    LayoutUnit lastLeftHeight;
+    LayoutUnit lastRightHeight;
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
 #ifndef NDEBUG
-    bool leftFirst = true, rightFirst = true;
     LayoutUnit leftX, rightX;
 #endif
 
@@ -104,42 +104,39 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
         LayoutLocation loc = f->absolutePoint(frameDocument());
         if (loc.y() <= yPosition && yPosition < loc.y() + f->height()) {
             if (f->style()->floating() == LeftFloatValue) {
-                LayoutUnit y = loc.y() + f->height() + f->marginBottom();
-                auto iter = leftHeights.begin();
-                while (iter != leftHeights.end()) {
-                    if (*iter < y) {
-                        iter = leftHeights.erase(iter);
-                    } else {
-                        break;
-                    }
-                }
-                leftHeights.push_back(y);
 #ifndef NDEBUG
-                if (leftFirst) {
-                    leftFirst = false;
-                } else {
+                if (hasLeft) {
                     STARFISH_ASSERT(loc.x() > leftX);
                 }
                 leftX = loc.x();
 #endif
+                hasLeft = true;
+                lastLeftHeight = loc.y() + f->height() + f->marginBottom();
             } else {
-                lastRightHeight = loc.y() + f->height() + f->marginBottom();
 #ifndef NDEBUG
-                if (rightFirst) {
-                    rightFirst = false;
-                } else {
+                if (hasRight) {
                     STARFISH_ASSERT(loc.x() < rightX);
                 }
                 rightX = loc.x();
 #endif
+                hasRight = true;
+                lastRightHeight = loc.y() + f->height() + f->marginBottom();
             }
         }
     }
 
-    if (leftHeights.size() > 0) {
-        return leftHeights.at(leftHeights.size() - 1) - yPosition;
+    if (hasLeft) {
+        if (hasRight) {
+            return std::min(lastLeftHeight, lastRightHeight) - yPosition;
+        } else {
+            return lastLeftHeight - yPosition;
+        }
     } else {
-        return lastRightHeight - yPosition;
+        if (hasRight) {
+            return lastRightHeight - yPosition;
+        } else {
+            return 0;
+        }
     }
 }
 

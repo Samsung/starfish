@@ -528,6 +528,7 @@ public:
     void insertFloatingBox(FrameBlockBox* box);
     void insertNonFloatingBox(FrameBox* box);
     void insertPendingFloatingBoxes(bool isInlineBox, bool force = false);
+    void insertPendingAboslutePositionedBoxes();
     void layoutLineBox(LineBox* lineBox);
     LineBox* currentLine()
     {
