@@ -39,40 +39,6 @@ static LayoutUnit computeLineHeight(ComputedStyle* style)
     return fontSize;
 }
 
-static LayoutUnit heightDueToFloatingBoxes(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >* boxes)
-{
-    std::vector<LayoutUnit> leftHeights;
-    for (size_t k = 0; k < boxes->size(); k ++) {
-        FrameBox* box = boxes->at(k);
-        if (!box->isNormalFlow()) {
-            if (box->style()->floating() == LeftFloatValue) {
-                LayoutUnit y = box->height() + box->marginBottom();
-                auto iter = leftHeights.begin();
-                while (iter != leftHeights.end()) {
-                    if (*iter < y) {
-                        iter = leftHeights.erase(iter);
-                    } else {
-                        break;
-                    }
-                }
-                leftHeights.push_back(y);
-            } else if (box->style()->floating() == RightFloatValue) {
-                if (leftHeights.size() > 0) {
-                    break;
-                } else {
-                    return box->height() + box->marginBottom();
-                }
-            }
-        }
-    }
-
-    if (leftHeights.size() > 0) {
-        return leftHeights.at(leftHeights.size() - 1);
-    } else {
-        return 0;
-    }
-}
-
 static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, LineFormattingContext& ctx, bool dueToBr, bool isLineBox)
 {
     LayoutUnit maxAscender = ascenderInOut;
@@ -102,10 +68,6 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
             ascenderInOut = 0;
             descenderInOut = 0;
 
-            if (ctx.hasFloatBoxAlreadyInLineBox() && ctx.m_currentLineWidth == 0) {
-                return ctx.m_layoutContext.heightDueTofloatingBoxes(ctx.m_absPosition.y() + ctx.m_lineBoxY);
-            }
-
             return 0;
         }
 
@@ -133,11 +95,9 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
     // 2. find max ascender and descender
     LayoutUnit maxAscenderSoFar = 0;
     LayoutUnit maxDescenderSoFar = intMaxForLayoutUnit;
-    bool floatPresent = false;
     for (size_t k = 0; k < boxes->size(); k ++) {
         FrameBox* box = boxes->at(k);
         if (!box->isNormalFlow()) {
-            floatPresent |= box->style()->floating() != NoneFloatValue;
             continue;
         } else {
             hasNormalFlowChild = true;
@@ -290,12 +250,7 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
 
     if (!hasNormalFlowChild && boxes->size() != 0) {
         ascenderInOut = descenderInOut = 0;
-
-        if (floatPresent) {
-            return heightDueToFloatingBoxes(boxes);
-        } else {
-            return ctx.m_layoutContext.heightDueTofloatingBoxes(ctx.m_absPosition.y() + ctx.m_lineBoxY);
-        }
+        return 0;
     }
 
     // Consider parent's font ascender/descender
@@ -1170,16 +1125,9 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool fo
         FrameBlockBox* box = *iter;
         if (m_currentLineWidth + box->width() + box->marginWidth() > m_lineBoxWidth) {
             if (force) {
-                if (box->style()->floating() == LeftFloatValue) {
-                    if (m_currentLineWidth != 0 || hasFloatBoxAlreadyInLineBox()) {
-                        breakLine(false, isInLineBox, force);
-                        return;
-                    }
-                } else {
-                    if (m_currentLineWidth != 0 || (hasFloatBoxAlreadyInLineBox() && m_originalLineBoxX == m_lineBoxX)) {
-                        breakLine(false, isInLineBox, force);
-                        return;
-                    }
+                if (m_currentLineWidth != 0 || hasFloatBoxAlreadyInLineBox()) {
+                    breakLine(false, isInLineBox, force);
+                    return;
                 }
             } else {
                 break;
@@ -1192,6 +1140,44 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool fo
         m_currentLineWidth += box->width() + box->marginWidth();
         iter = m_pendingFloatBoxes.erase(iter);
     }
+}
+
+void LineFormattingContext::insertPendingAboslutePositionedBoxes()
+{
+    LineBox* lineBox = currentLine();
+    DirectionValue dir = m_block.style()->direction();
+    for (size_t i = 0; i < m_absolutePositionedBoxes.size(); i ++) {
+        FrameBox* box = m_absolutePositionedBoxes[i].first;
+        if (box->style()->originalDisplay() == BlockDisplayValue) {
+            lineBox->boxes().push_back(box);
+            box->setLayoutParent(lineBox);
+            if (dir == DirectionValue::LtrDirectionValue)
+                box->setX(0);
+            else
+                box->setX(lineBox->width());
+            if (m_absolutePositionedBoxes[i].second)
+                box->setY(lineBox->height());
+            else
+                box->setY(0);
+        } else {
+            box->setY(0);
+            FrameBox* parent = box->layoutParent()->asFrameBox();
+            if (parent->isLineBox()) {
+                STARFISH_ASSERT(parent == lineBox);
+                std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = parent->asLineBox()->boxes();
+                boxes.erase(std::find(boxes.begin(), boxes.end(), box));
+            } else {
+                std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = parent->asInlineBox()->asInlineNonReplacedBox()->boxes();
+                auto pos = box->absolutePoint(lineBox);
+                boxes.erase(std::find(boxes.begin(), boxes.end(), box));
+                box->setX(pos.x());
+            }
+            lineBox->boxes().push_back(box);
+            box->setLayoutParent(lineBox);
+        }
+    }
+
+    m_absolutePositionedBoxes.clear();
 }
 
 void LineFormattingContext::layoutLineBox(LineBox* lineBox)
@@ -1323,40 +1309,6 @@ void LineFormattingContext::completeLastLine()
         }
     }
 
-    DirectionValue dir = m_block.style()->direction();
-    for (size_t i = 0; i < m_absolutePositionedBoxes.size(); i ++) {
-        FrameBox* box = m_absolutePositionedBoxes[i].first;
-        if (box->style()->originalDisplay() == BlockDisplayValue) {
-            back->boxes().push_back(box);
-            box->setLayoutParent(back);
-            if (dir == DirectionValue::LtrDirectionValue)
-                box->setX(0);
-            else
-                box->setX(back->width());
-            if (m_absolutePositionedBoxes[i].second)
-                box->setY(back->height());
-            else
-                box->setY(0);
-        } else {
-            box->setY(0);
-            FrameBox* parent = box->layoutParent()->asFrameBox();
-            if (parent->isLineBox()) {
-                STARFISH_ASSERT(parent == back);
-                std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = parent->asLineBox()->boxes();
-                boxes.erase(std::find(boxes.begin(), boxes.end(), box));
-            } else {
-                std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& boxes = parent->asInlineBox()->asInlineNonReplacedBox()->boxes();
-                auto pos = box->absolutePoint(back);
-                boxes.erase(std::find(boxes.begin(), boxes.end(), box));
-                box->setX(pos.x());
-            }
-            back->boxes().push_back(box);
-            box->setLayoutParent(back);
-        }
-    }
-
-    m_absolutePositionedBoxes.clear();
-
     registerInlineContent();
 }
 
@@ -1368,15 +1320,27 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool force
     LayoutUnit ascender;
     LayoutUnit descender;
     LineBox* back = m_block.m_lineBoxes.back();
-    LayoutUnit height = computeVerticalProperties(back, m_block.style(), ascender, descender, *this, dueToBr, isInLineBox);
+    computeVerticalProperties(back, m_block.style(), ascender, descender, *this, dueToBr, isInLineBox);
     back->m_ascender = ascender;
     back->m_descender = descender;
+    completeLastLine();
+    LayoutUnit height = ascender - descender;
+    // If forceInsertFloatingBlock is `true`, that means there's no more inline boxes appended to the line box.
+    // So the height for content should be ignored, but for the positioning of following floating boxes,
+    // y position should be considered.
     if (forceInsertFloatingBlock) {
-        back->setHeight(ascender - descender);
+        back->setHeight(height);
+        if (height == 0) {
+            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
+        }
     } else {
+        if (height == 0) {
+            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
+        }
         back->setHeight(height);
     }
-    completeLastLine();
+    insertPendingAboslutePositionedBoxes();
+
     m_lineBoxY += height;
 
     LineBox* lineBox = new LineBox(&m_block);
@@ -1981,6 +1945,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     back->m_frameRect.setHeight(ascender - descender);
 
     lineFormattingContext.completeLastLine();
+    lineFormattingContext.insertPendingAboslutePositionedBoxes();
 
     if (m_lineBoxes.size() && m_lineBoxes.back()->boxes().size() == 0) {
         m_lineBoxes.erase(m_lineBoxes.end() - 1);
