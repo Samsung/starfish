@@ -1067,12 +1067,10 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox& block, LayoutContext
     : m_block(block)
     , m_layoutContext(ctx)
 {
-    m_absPosition = block.absolutePoint(m_layoutContext.frameDocument()->asFrameBox());
-    m_leftBoundary = m_absPosition.x();
-    m_rightBoundary = m_leftBoundary + block.paddingLeft() + block.borderLeft() + block.contentWidth();
-    std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y(), m_leftBoundary, m_rightBoundary);
-    if (boundaries.first > m_absPosition.x() + lineBoxX) {
-        m_absPosition.setX(boundaries.first);
+    if (block.style()->floating() == NoneFloatValue) {
+        m_absPosition = block.absolutePoint(m_layoutContext.frameDocument()->asFrameBox());
+        m_leftBoundary = m_absPosition.x();
+        m_rightBoundary = m_leftBoundary + block.paddingLeft() + block.borderLeft() + block.contentWidth();
     }
     m_originalLineBoxX = lineBoxX;
     m_lineBoxY = lineBoxY;
@@ -1080,7 +1078,7 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox& block, LayoutContext
     m_block.m_lineBoxes.clear();
     // m_block.m_lineBoxes.shrink_to_fit();
     LineBox* lineBox = new LineBox(&m_block);
-    layoutLineBox(lineBox, boundaries);
+    layoutLineBox(lineBox);
     m_block.m_lineBoxes.push_back(lineBox);
     m_currentLine = 0;
     m_currentLineWidth = 0;
@@ -1196,8 +1194,9 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool fo
     }
 }
 
-void LineFormattingContext::layoutLineBox(LineBox* lineBox, std::pair<LayoutUnit, LayoutUnit> boundaries)
+void LineFormattingContext::layoutLineBox(LineBox* lineBox)
 {
+    std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
     if (m_block.style()->floating() == NoneFloatValue) {
         if (boundaries.first > m_absPosition.x() + m_originalLineBoxX) {
             m_lineBoxX = boundaries.first - m_absPosition.x();
@@ -1382,8 +1381,7 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool force
 
     LineBox* lineBox = new LineBox(&m_block);
     m_block.m_lineBoxes.push_back(lineBox);
-    std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
-    layoutLineBox(lineBox, boundaries);
+    layoutLineBox(lineBox);
     m_currentLine++;
     m_currentLineWidth = 0;
     m_shouldLineBreakForabsolutePositionedBlock = false;

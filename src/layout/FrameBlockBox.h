@@ -528,7 +528,7 @@ public:
     void insertFloatingBox(FrameBlockBox* box);
     void insertNonFloatingBox(FrameBox* box);
     void insertPendingFloatingBoxes(bool isInlineBox, bool force = false);
-    void layoutLineBox(LineBox* lineBox, std::pair<LayoutUnit, LayoutUnit> boundaries);
+    void layoutLineBox(LineBox* lineBox);
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();
