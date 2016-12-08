@@ -116,6 +116,7 @@ public:
     void registerFloatingBoxes(FrameBlockBox* box);
     LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition);
     LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition);
+    LayoutUnit lastTopLoc(FloatValue floating);
     std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit left, LayoutUnit right);
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
@@ -269,6 +270,8 @@ private:
         LayoutUnit m_maxNegativeMarginTop;
         LayoutUnit m_maxPositiveMarginBottom;
         LayoutUnit m_maxNegativeMarginBottom;
+        LayoutUnit m_lastLeftTopFloatBoxLoc;
+        LayoutUnit m_lastRightFloatTopLoc;
         std::vector<FrameBlockBox*>* m_inlineBlockBoxStack;
         std::vector<FloatingBoxInfo>* m_floatBoxes;
         std::unordered_map<FrameBlockBox*, LayoutUnit>* m_registeredYPositionForVerticalAlignInlineBlock;

@@ -106,7 +106,13 @@ void LayoutContext::registerFloatingBoxes(FrameBlockBox* box)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     LayoutLocation loc = box->absolutePoint(m_frameDocument);
-    c.m_floatBoxes->push_back(FloatingBoxInfo {box, loc});
+    FloatingBoxInfo fbi = FloatingBoxInfo(box, loc);
+    c.m_floatBoxes->push_back(fbi);
+    if (fbi.isLeft()) {
+        c.m_lastLeftTopFloatBoxLoc = fbi.loc().y();
+    } else {
+        c.m_lastRightFloatTopLoc = fbi.loc().y();
+    }
 }
 
 LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
@@ -240,6 +246,17 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit 
     }
 
     return std::make_pair(left, right);
+}
+
+LayoutUnit LayoutContext::lastTopLoc(FloatValue floating)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    if (floating == LeftFloatValue) {
+        return c.m_lastLeftTopFloatBoxLoc;
+    } else {
+        return c.m_lastRightFloatTopLoc;
+    }
 }
 
 LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
