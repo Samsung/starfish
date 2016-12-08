@@ -97,7 +97,8 @@ public:
             m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, s, s2, s3));
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
-            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, back.m_floatBoxes, back.m_registeredYPositionForVerticalAlignInlineBlock));
+            std::vector<FrameBlockBox*>* s = new std::vector<FrameBlockBox*>();
+            m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s, back.m_registeredYPositionForVerticalAlignInlineBlock));
         }
     }
 
@@ -105,11 +106,13 @@ public:
     {
         if (m_blockFormattingContextInfo.back().m_isRoot || !m_blockFormattingContextInfo.back().m_isNormalFlow) {
             delete m_blockFormattingContextInfo.back().m_inlineBlockBoxStack;
+            delete m_blockFormattingContextInfo.back().m_floatBoxes;
             delete m_blockFormattingContextInfo.back().m_registeredYPositionForVerticalAlignInlineBlock;
         }
         m_blockFormattingContextInfo.pop_back();
     }
 
+    LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition);
     LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition);
     std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit left, LayoutUnit right);
     LayoutUnit parentContentWidth(Frame* currentFrame);

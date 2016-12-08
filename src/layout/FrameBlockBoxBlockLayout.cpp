@@ -31,7 +31,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     DirectionValue direction = style()->direction();
 
     while (child) {
-        // Set initial position for resolve child width when position: absolute
+        // Set initial position for resolve child width when child is non normal flow
         if (!child->isNormalFlow()) {
             if (direction == LtrDirectionValue) {
                 child->asFrameBox()->setX(paddingLeft() + borderLeft());

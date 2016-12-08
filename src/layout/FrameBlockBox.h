@@ -516,6 +516,7 @@ class LineFormattingContext {
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
+    LayoutUnit computeLineBoxHeight(bool forceInsertFloatingBlock, bool isLastLine);
     void breakLine(bool dueToBr, bool isInLineBox, bool forceInsertFloatingBlock);
     void completeLastLine();
 
