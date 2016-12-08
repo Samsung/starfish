@@ -1312,6 +1312,31 @@ void LineFormattingContext::completeLastLine()
     registerInlineContent();
 }
 
+LayoutUnit LineFormattingContext::computeLineBoxHeight(bool forceInsertFloatingBlock, bool isLastLine)
+{
+    LineBox* lineBox = currentLine();
+    LayoutUnit height = lineBox->m_ascender - lineBox->m_descender;
+    // If forceInsertFloatingBlock is `true`, that means there are no more inline boxes appended to the line box.
+    // In this case, the height for content depends on if the block contianer box established new
+    // block formatting context, but still for the positioning of following floating boxes,
+    // y position should be considered.
+    if (forceInsertFloatingBlock && !m_block.isEstablishesBlockFormattingContext()) {
+        lineBox->setHeight(height);
+        if (height == 0) {
+            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
+        }
+    } else {
+        if (isLastLine) {
+            height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY));
+        } else if (height == 0) {
+            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
+        }
+        lineBox->setHeight(height);
+    }
+
+    return height;
+}
+
 void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool forceInsertFloatingBlock)
 {
     if (dueToBr == false)
@@ -1324,23 +1349,8 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool force
     back->m_ascender = ascender;
     back->m_descender = descender;
     completeLastLine();
-    LayoutUnit height = ascender - descender;
-    // If forceInsertFloatingBlock is `true`, that means there's no more inline boxes appended to the line box.
-    // So the height for content should be ignored, but for the positioning of following floating boxes,
-    // y position should be considered.
-    if (forceInsertFloatingBlock) {
-        back->setHeight(height);
-        if (height == 0) {
-            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
-        }
-    } else {
-        if (height == 0) {
-            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
-        }
-        back->setHeight(height);
-    }
+    LayoutUnit height = computeLineBoxHeight(forceInsertFloatingBlock, false);
     insertPendingAboslutePositionedBoxes();
-
     m_lineBoxY += height;
 
     LineBox* lineBox = new LineBox(&m_block);
@@ -1632,8 +1642,9 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                 f->setLayoutParent(layoutParent);
                 f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
-                if ((r->width() + r->marginWidth()) <= (lineFormattingContext.m_lineBoxWidth- lineFormattingContext.m_currentLineWidth - unprocessedWidth)
-                    || (!lineFormattingContext.hasFloatBoxAlreadyInLineBox() && lineFormattingContext.m_currentLineWidth == 0 && lineFormattingContext.m_pendingFloatBoxes.size() == 0)
+                if ((lineFormattingContext.m_pendingFloatBoxes.size() == 0
+                    && ((r->width() + r->marginWidth()) <= (lineFormattingContext.m_lineBoxWidth- lineFormattingContext.m_currentLineWidth - unprocessedWidth)
+                    || (!lineFormattingContext.hasFloatBoxAlreadyInLineBox() && lineFormattingContext.m_currentLineWidth == 0)))
                     || !hasBreakableWhiteSpaceProperty(f)) {
                     lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                     gotInlineBoxCallback(r);
@@ -1942,9 +1953,9 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     computeVerticalProperties(back, style(), ascender, descender, lineFormattingContext, false, true);
     back->m_ascender = ascender;
     back->m_descender = descender;
-    back->m_frameRect.setHeight(ascender - descender);
 
     lineFormattingContext.completeLastLine();
+    lineFormattingContext.computeLineBoxHeight(true, true);
     lineFormattingContext.insertPendingAboslutePositionedBoxes();
 
     if (m_lineBoxes.size() && m_lineBoxes.back()->boxes().size() == 0) {

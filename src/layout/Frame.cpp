@@ -88,6 +88,66 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
     }
 }
 
+LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
+{
+    bool hasLeft = false, hasRight = false;
+    LayoutUnit maxLeftHeight;
+    LayoutUnit maxRightHeight;
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+#ifndef NDEBUG
+    LayoutUnit leftX, rightX;
+#endif
+
+    for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+        FrameBlockBox* f = c.m_floatBoxes->at(i);
+        LayoutLocation loc = f->absolutePoint(frameDocument());
+        if (loc.y() <= yPosition && yPosition < loc.y() + f->height()) {
+            if (f->style()->floating() == LeftFloatValue) {
+#ifndef NDEBUG
+                if (hasLeft) {
+                    STARFISH_ASSERT(loc.x() > leftX);
+                }
+                leftX = loc.x();
+#endif
+                if (!hasLeft) {
+                    maxLeftHeight = loc.y() + f->height() + f->marginBottom();
+                    hasLeft = true;
+                } else {
+                    maxLeftHeight = std::max(maxLeftHeight, loc.y() + f->height() + f->marginBottom());
+                }
+            } else {
+#ifndef NDEBUG
+                if (hasRight) {
+                    STARFISH_ASSERT(loc.x() < rightX);
+                }
+                rightX = loc.x();
+#endif
+                if (!hasRight) {
+                    maxRightHeight = loc.y() + f->height() + f->marginBottom();
+                    hasRight = true;
+                } else {
+                    maxRightHeight = std::max(maxRightHeight, loc.y() + f->height() + f->marginBottom());
+                }
+            }
+        }
+    }
+
+    if (hasLeft) {
+        if (hasRight) {
+            return std::max(maxLeftHeight, maxRightHeight) - yPosition;
+        } else {
+            return maxLeftHeight - yPosition;
+        }
+    } else {
+        if (hasRight) {
+            return maxRightHeight - yPosition;
+        } else {
+            return 0;
+        }
+    }
+}
+
 LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
 {
     bool hasLeft = false, hasRight = false;

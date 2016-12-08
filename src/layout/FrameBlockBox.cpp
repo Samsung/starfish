@@ -526,7 +526,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         } else {
         }
     } else {
-        // Normal Flow
+        // Normal Flow or Float box
         // 10.6.6 Complicated cases
         if (style()->height().isAuto()) {
             setContentHeight(contentHeight);
