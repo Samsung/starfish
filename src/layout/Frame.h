@@ -60,6 +60,7 @@ enum PaintingInlineStage {
 
 class LineBox;
 class MarginInfo;
+class FloatingBoxInfo;
 
 class LayoutContext {
 public:
@@ -92,12 +93,12 @@ public:
     {
         if (!isNormalFlow || isRoot) {
             std::vector<FrameBlockBox*>* s = new std::vector<FrameBlockBox*>();
-            std::vector<FrameBlockBox*>* s2 = new std::vector<FrameBlockBox*>();
+            std::vector<FloatingBoxInfo>* s2 = new std::vector<FloatingBoxInfo>();
             std::unordered_map<FrameBlockBox*, LayoutUnit>* s3 = new std::unordered_map<FrameBlockBox*, LayoutUnit>();
             m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, s, s2, s3));
         } else {
             BlockFormattingContext& back = m_blockFormattingContextInfo.back();
-            std::vector<FrameBlockBox*>* s = new std::vector<FrameBlockBox*>();
+            std::vector<FloatingBoxInfo>* s = new std::vector<FloatingBoxInfo>();
             m_blockFormattingContextInfo.push_back(BlockFormattingContext(isNormalFlow, isRoot, back.m_inlineBlockBoxStack, s, back.m_registeredYPositionForVerticalAlignInlineBlock));
         }
     }
@@ -112,6 +113,7 @@ public:
         m_blockFormattingContextInfo.pop_back();
     }
 
+    void registerFloatingBoxes(FrameBlockBox* box);
     LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition);
     LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition);
     std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit left, LayoutUnit right);
@@ -161,12 +163,6 @@ public:
         m_relativePositionedFrames.insert(std::make_pair(cb, std::vector<std::pair<Frame*, bool> >()));
         std::vector<std::pair<Frame*, bool> >& vec = m_relativePositionedFrames[cb];
         vec.push_back(std::make_pair(frm, dueToSelf));
-    }
-
-    void registerFloatingBoxes(FrameBlockBox* box)
-    {
-        BlockFormattingContext& c = m_blockFormattingContextInfo.back();
-        c.m_floatBoxes->push_back(box);
     }
 
     template <typename Fn>
@@ -259,7 +255,7 @@ public:
 private:
     struct BlockFormattingContext {
         BlockFormattingContext(bool isNormalFlow, bool isRoot, std::vector<FrameBlockBox*>* inlineBlockBoxStack,
-            std::vector<FrameBlockBox*>* floatBoxes, std::unordered_map<FrameBlockBox*, LayoutUnit>* registeredYPositionForVerticalAlignInlineBlock)
+            std::vector<FloatingBoxInfo>* floatBoxes, std::unordered_map<FrameBlockBox*, LayoutUnit>* registeredYPositionForVerticalAlignInlineBlock)
         {
             m_isRoot = isRoot;
             m_isNormalFlow = isNormalFlow;
@@ -274,7 +270,7 @@ private:
         LayoutUnit m_maxPositiveMarginBottom;
         LayoutUnit m_maxNegativeMarginBottom;
         std::vector<FrameBlockBox*>* m_inlineBlockBoxStack;
-        std::vector<FrameBlockBox*>* m_floatBoxes;
+        std::vector<FloatingBoxInfo>* m_floatBoxes;
         std::unordered_map<FrameBlockBox*, LayoutUnit>* m_registeredYPositionForVerticalAlignInlineBlock;
     };
 
@@ -285,6 +281,23 @@ private:
     std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
     std::map<Frame*, std::vector<Frame*> > m_absolutePositionedFrames;
     std::map<Frame*, std::vector<std::pair<Frame*, bool> > > m_relativePositionedFrames;
+};
+
+class FloatingBoxInfo {
+public:
+    FloatingBoxInfo(FrameBlockBox* box, LayoutLocation loc);
+    FrameBlockBox* box() { return m_box; }
+    bool isLeft() { return m_isLeft; }
+    LayoutLocation loc() { return m_loc; }
+    LayoutUnit bottom() { return m_bottom; }
+    LayoutUnit horizontalBoundary() { return m_horizontalBoundary; }
+
+private:
+    FrameBlockBox* m_box;
+    bool m_isLeft;
+    LayoutLocation m_loc;
+    LayoutUnit m_bottom;
+    LayoutUnit m_horizontalBoundary;
 };
 
 class ComputePreferredWidthContext {

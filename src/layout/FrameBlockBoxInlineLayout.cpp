@@ -1117,28 +1117,28 @@ void LineFormattingContext::insertNonFloatingBox(FrameBox* box)
         currentLine()->m_boxes.insert(iter + index, box);
     }
 }
+static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width, LayoutUnit unprocessedWidth);
 
 void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool force)
 {
     auto iter = m_pendingFloatBoxes.begin();
     while (iter != m_pendingFloatBoxes.end()) {
         FrameBlockBox* box = *iter;
-        if (m_currentLineWidth + box->width() + box->marginWidth() > m_lineBoxWidth) {
-            if (m_currentLineWidth != 0 || hasFloatBoxAlreadyInLineBox()) {
-                if (force) {
-                    breakLine(false, isInLineBox, force);
-                    return;
-                } else {
-                    break;
-                }
+        // TODO: considering unprocessedWidth
+        if (dontBreakLine(this, box, box->width() + box->marginWidth(), 0)) {
+            box->setLayoutParent(currentLine());
+            insertFloatingBox(box);
+
+            m_currentLineWidth += box->width() + box->marginWidth();
+            iter = m_pendingFloatBoxes.erase(iter);
+        } else {
+            if (force) {
+                breakLine(false, isInLineBox, force);
+                return;
+            } else {
+                break;
             }
         }
-
-        box->setLayoutParent(currentLine());
-        insertFloatingBox(box);
-
-        m_currentLineWidth += box->width() + box->marginWidth();
-        iter = m_pendingFloatBoxes.erase(iter);
     }
 }
 
@@ -1409,6 +1409,13 @@ static bool hasBreakableWhiteSpaceProperty(Frame* f)
     return f->style()->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue;
 }
 
+static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width, LayoutUnit unprocessedWidth)
+{
+    return (!ctx->hasFloatBoxAlreadyInLineBox() && ctx->m_currentLineWidth == 0)
+        || width <= (ctx->m_lineBoxWidth- ctx->m_currentLineWidth - unprocessedWidth)
+        || !hasBreakableWhiteSpaceProperty(f);
+}
+
 void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ctx, LineFormattingContext& lineFormattingContext, LayoutUnit& unprocessedStartingWidth, LayoutUnit& unprocessedEndingWidth,
     std::function<void(FrameBox*)> gotInlineBoxCallback, std::function<void(bool)> lineBreakCallback, std::function<void(FrameInline*)> frameInlineCallback, std::function<void(FrameBox*)> absBoxCallback)
 {
@@ -1485,9 +1492,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                     unprocessedWidth = unprocessedStartingWidth;
                 }
 
-                if ((!lineFormattingContext.hasFloatBoxAlreadyInLineBox() && lineFormattingContext.m_currentLineWidth == 0)
-                    || textWidth <= (lineFormattingContext.m_lineBoxWidth- lineFormattingContext.m_currentLineWidth - unprocessedWidth)
-                    || !hasBreakableWhiteSpaceProperty(f)) {
+                if (dontBreakLine(&lineFormattingContext, f, textWidth, unprocessedWidth)) {
 
                 } else {
                     // try this at nextline
@@ -1591,8 +1596,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
 
             r->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
         insertReplacedBox:
-            if ((r->width() + r->marginWidth()) <= (lineFormattingContext.m_lineBoxWidth - lineFormattingContext.m_currentLineWidth - unprocessedWidth)
-                || (!lineFormattingContext.hasFloatBoxAlreadyInLineBox() && lineFormattingContext.m_currentLineWidth == 0) || !hasBreakableWhiteSpaceProperty(f)) {
+            if (dontBreakLine(&lineFormattingContext, r, r->width() + r->marginWidth(), unprocessedWidth)) {
                 lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                 gotInlineBoxCallback(r);
             } else {
@@ -1627,9 +1631,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                 lineFormattingContext.registerInlineBlockAscender(ascender, r);
 
                 insertInlineBlockBox:
-                if ((r->width() + r->marginWidth()) <= (lineFormattingContext.m_lineBoxWidth- lineFormattingContext.m_currentLineWidth - unprocessedWidth)
-                    || (!lineFormattingContext.hasFloatBoxAlreadyInLineBox() && lineFormattingContext.m_currentLineWidth == 0)
-                    || !hasBreakableWhiteSpaceProperty(f)) {
+                if (dontBreakLine(&lineFormattingContext, r, r->width() + r->marginWidth(), unprocessedWidth)) {
                     lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                     gotInlineBoxCallback(r);
                 } else {
@@ -1642,10 +1644,8 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                 f->setLayoutParent(layoutParent);
                 f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
-                if ((lineFormattingContext.m_pendingFloatBoxes.size() == 0
-                    && ((r->width() + r->marginWidth()) <= (lineFormattingContext.m_lineBoxWidth- lineFormattingContext.m_currentLineWidth - unprocessedWidth)
-                    || (!lineFormattingContext.hasFloatBoxAlreadyInLineBox() && lineFormattingContext.m_currentLineWidth == 0)))
-                    || !hasBreakableWhiteSpaceProperty(f)) {
+                if (lineFormattingContext.m_pendingFloatBoxes.size() == 0
+                    && dontBreakLine(&lineFormattingContext, r, r->width() + r->marginWidth(), unprocessedWidth)) {
                     lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                     gotInlineBoxCallback(r);
                 } else {
