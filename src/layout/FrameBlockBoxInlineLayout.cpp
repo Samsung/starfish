@@ -1118,6 +1118,15 @@ void LineFormattingContext::insertNonFloatingBox(FrameBox* box)
     }
 }
 static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width, LayoutUnit unprocessedWidth);
+static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBlockBox* f)
+{
+    if (ctx->m_block.style()->floating() == NoneFloatValue) {
+        LineBox* lineBox = ctx->currentLine();
+        return ctx->m_absPosition.y() + lineBox->y() >= ctx->m_layoutContext.lastTopLoc(ctx->m_block.style()->floating());
+    } else {
+        return true;
+    }
+}
 
 void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool force)
 {
@@ -1125,7 +1134,8 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool fo
     while (iter != m_pendingFloatBoxes.end()) {
         FrameBlockBox* box = *iter;
         // TODO: considering unprocessedWidth
-        if (dontBreakLine(this, box, box->width() + box->marginWidth(), 0)) {
+        if (canInsertFloatingBox(this, box)
+            && dontBreakLine(this, box, box->width() + box->marginWidth(), 0)) {
             box->setLayoutParent(currentLine());
             insertFloatingBox(box);
 
@@ -1182,8 +1192,8 @@ void LineFormattingContext::insertPendingAboslutePositionedBoxes()
 
 void LineFormattingContext::layoutLineBox(LineBox* lineBox)
 {
-    std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
     if (m_block.style()->floating() == NoneFloatValue) {
+        std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
         if (boundaries.first > m_absPosition.x() + m_originalLineBoxX) {
             m_lineBoxX = boundaries.first - m_absPosition.x();
         } else {
@@ -1645,6 +1655,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                 f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
 
                 if (lineFormattingContext.m_pendingFloatBoxes.size() == 0
+                    && canInsertFloatingBox(&lineFormattingContext, r)
                     && dontBreakLine(&lineFormattingContext, r, r->width() + r->marginWidth(), unprocessedWidth)) {
                     lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
                     gotInlineBoxCallback(r);
