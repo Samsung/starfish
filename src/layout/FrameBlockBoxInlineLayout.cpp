@@ -1124,13 +1124,13 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool fo
     while (iter != m_pendingFloatBoxes.end()) {
         FrameBlockBox* box = *iter;
         if (m_currentLineWidth + box->width() + box->marginWidth() > m_lineBoxWidth) {
-            if (force) {
-                if (m_currentLineWidth != 0 || hasFloatBoxAlreadyInLineBox()) {
+            if (m_currentLineWidth != 0 || hasFloatBoxAlreadyInLineBox()) {
+                if (force) {
                     breakLine(false, isInLineBox, force);
                     return;
+                } else {
+                    break;
                 }
-            } else {
-                break;
             }
         }
 
