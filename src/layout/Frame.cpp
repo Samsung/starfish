@@ -88,6 +88,27 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
     }
 }
 
+FloatingBoxInfo::FloatingBoxInfo(FrameBlockBox* box, LayoutLocation loc)
+    : m_box(box)
+    , m_loc(loc)
+{
+    STARFISH_ASSERT(box->style()->floating() != NoneFloatValue);
+    m_isLeft = box->style()->floating() == LeftFloatValue;
+    m_bottom = m_loc.y() + m_box->height() + m_box->marginBottom();
+    if (m_isLeft) {
+        m_horizontalBoundary = m_loc.x() + m_box->contentWidth() + m_box->borderRight() + m_box->paddingRight() + m_box->marginRight();
+    } else {
+        m_horizontalBoundary = m_loc.x() - m_box->marginLeft();
+    }
+}
+
+void LayoutContext::registerFloatingBoxes(FrameBlockBox* box)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    LayoutLocation loc = box->absolutePoint(m_frameDocument);
+    c.m_floatBoxes->push_back(FloatingBoxInfo {box, loc});
+}
+
 LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
 {
     bool hasLeft = false, hasRight = false;
@@ -100,34 +121,33 @@ LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
 #endif
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
-        FrameBlockBox* f = c.m_floatBoxes->at(i);
-        LayoutLocation loc = f->absolutePoint(frameDocument());
-        if (loc.y() <= yPosition && yPosition < loc.y() + f->height()) {
-            if (f->style()->floating() == LeftFloatValue) {
+        FloatingBoxInfo f = c.m_floatBoxes->at(i);
+        if (f.loc().y() <= yPosition && yPosition < f.bottom()) {
+            if (f.isLeft()) {
 #ifndef NDEBUG
                 if (hasLeft) {
-                    STARFISH_ASSERT(loc.x() > leftX);
+                    STARFISH_ASSERT(f.loc().x() > leftX);
                 }
-                leftX = loc.x();
+                leftX = f.loc().x();
 #endif
                 if (!hasLeft) {
-                    maxLeftHeight = loc.y() + f->height() + f->marginBottom();
+                    maxLeftHeight = f.bottom();
                     hasLeft = true;
                 } else {
-                    maxLeftHeight = std::max(maxLeftHeight, loc.y() + f->height() + f->marginBottom());
+                    maxLeftHeight = std::max(maxLeftHeight, f.bottom());
                 }
             } else {
 #ifndef NDEBUG
                 if (hasRight) {
-                    STARFISH_ASSERT(loc.x() < rightX);
+                    STARFISH_ASSERT(f.loc().x() < rightX);
                 }
-                rightX = loc.x();
+                rightX = f.loc().x();
 #endif
                 if (!hasRight) {
-                    maxRightHeight = loc.y() + f->height() + f->marginBottom();
+                    maxRightHeight = f.bottom();
                     hasRight = true;
                 } else {
-                    maxRightHeight = std::max(maxRightHeight, loc.y() + f->height() + f->marginBottom());
+                    maxRightHeight = std::max(maxRightHeight, f.bottom());
                 }
             }
         }
@@ -160,27 +180,26 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
 #endif
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
-        FrameBlockBox* f = c.m_floatBoxes->at(i);
-        LayoutLocation loc = f->absolutePoint(frameDocument());
-        if (loc.y() <= yPosition && yPosition < loc.y() + f->height()) {
-            if (f->style()->floating() == LeftFloatValue) {
+        FloatingBoxInfo f = c.m_floatBoxes->at(i);
+        if (f.loc().y() <= yPosition && yPosition < f.bottom()) {
+            if (f.isLeft()) {
 #ifndef NDEBUG
                 if (hasLeft) {
-                    STARFISH_ASSERT(loc.x() > leftX);
+                    STARFISH_ASSERT(f.loc().x() > leftX);
                 }
-                leftX = loc.x();
+                leftX = f.loc().x();
 #endif
                 hasLeft = true;
-                lastLeftHeight = loc.y() + f->height() + f->marginBottom();
+                lastLeftHeight = f.bottom();
             } else {
 #ifndef NDEBUG
                 if (hasRight) {
-                    STARFISH_ASSERT(loc.x() < rightX);
+                    STARFISH_ASSERT(f.loc().x() < rightX);
                 }
-                rightX = loc.x();
+                rightX = f.loc().x();
 #endif
                 hasRight = true;
-                lastRightHeight = loc.y() + f->height() + f->marginBottom();
+                lastRightHeight = f.bottom();
             }
         }
     }
@@ -205,16 +224,14 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit 
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
-        FrameBlockBox* f = c.m_floatBoxes->at(i);
-        LayoutLocation loc = f->absolutePoint(frameDocument());
-        if (loc.y() <= yPosition && yPosition < loc.y() + f->height()) {
-            if (f->style()->floating() == FloatValue::LeftFloatValue) {
-                LayoutUnit x = loc.x() + f->contentWidth() + f->borderRight() + f->paddingRight() + f->marginRight();
+        FloatingBoxInfo f = c.m_floatBoxes->at(i);
+        if (f.loc().y() <= yPosition && yPosition < f.bottom()) {
+            LayoutUnit x = f.horizontalBoundary();
+            if (f.isLeft()) {
                 if (x > left) {
                     left = x;
                 }
             } else {
-                LayoutUnit x = loc.x() - f->marginLeft();
                 if (x < right) {
                     right = x;
                 }
