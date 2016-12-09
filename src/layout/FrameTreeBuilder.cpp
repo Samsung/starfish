@@ -132,6 +132,16 @@ void FrameTreeBuilder::clearTree(Node* current)
     }
 }
 
+static FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* frameBlockBox, Node* node)
+{
+    ComputedStyle* style = new ComputedStyle(frameBlockBox->style());
+    style->setDisplay(DisplayValue::BlockDisplayValue);
+    style->loadResources(node);
+    style->arrangeStyleValues(frameBlockBox->style(), node);
+
+    return new FrameBlockBox(nullptr, style);
+}
+
 static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx)
 {
     if (!frameBlockBox->firstChild()) {
@@ -152,7 +162,14 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
     if (frameBlockBox->hasBlockFlow()) {
         if (isBlockChild) {
             // Block... + Block case
-            frameBlockBox->appendChild(currentFrame);
+            if (currentFrame->isNormalFlow()) {
+                frameBlockBox->appendChild(currentFrame);
+            } else {
+                FrameBox* blockBox = createAnonymouseBlockBox(frameBlockBox, currentNode);
+                blockBox->appendChild(currentFrame);
+                frameBlockBox->appendChild(blockBox);
+            }
+
         } else {
             // Block... + Inline case
             Frame* last = frameBlockBox->lastChild();
@@ -160,12 +177,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
             STARFISH_ASSERT(last);
 
             if (last->node()) {
-                ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
-                newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-                newStyle->loadResources(currentNode);
-                newStyle->arrangeStyleValues(frameBlockBox->style(), currentNode);
-
-                FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
+                FrameBox* blockBox = createAnonymouseBlockBox(frameBlockBox, currentNode);
                 blockBox->appendChild(currentFrame);
                 frameBlockBox->appendChild(blockBox);
             } else {
@@ -186,12 +198,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
                 frameBlockBox->removeChild(frameBlockBox->firstChild());
             }
 
-            ComputedStyle* newStyle = new ComputedStyle(frameBlockBox->style());
-            newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-            newStyle->loadResources(currentNode);
-            newStyle->arrangeStyleValues(frameBlockBox->style(), currentNode);
-
-            FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
+            FrameBox* blockBox = createAnonymouseBlockBox(frameBlockBox, currentNode);
             for (unsigned i = 0; i < backup.size(); i++) {
                 blockBox->appendChild(backup[i]);
             }
@@ -319,8 +326,8 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             if (ctx.currentBlockContainer()->hasBlockFlow()) {
                 Frame* last = ctx.currentBlockContainer()->lastChild();
                 if (last) {
-                    ASSERT(last->isFrameBlockBox());
-                    if (!last->asFrameBlockBox()->hasBlockFlow()) {
+                    STARFISH_ASSERT(last->isFrameBlockBox());
+                    if (!last->node() && !last->asFrameBlockBox()->hasBlockFlow()) {
                         originalFrameBlockBox = ctx.currentBlockContainer();
                         ctx.setCurrentBlockContainer(last->asFrameBlockBox());
                     }
