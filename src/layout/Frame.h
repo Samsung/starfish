@@ -107,9 +107,9 @@ public:
     {
         if (m_blockFormattingContextInfo.back().m_isRoot || !m_blockFormattingContextInfo.back().m_isNormalFlow) {
             delete m_blockFormattingContextInfo.back().m_inlineBlockBoxStack;
-            delete m_blockFormattingContextInfo.back().m_floatBoxes;
             delete m_blockFormattingContextInfo.back().m_registeredYPositionForVerticalAlignInlineBlock;
         }
+        delete m_blockFormattingContextInfo.back().m_floatBoxes;
         m_blockFormattingContextInfo.pop_back();
     }
 
@@ -449,6 +449,7 @@ public:
             m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (shouldApplyOverflow());
             m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
             m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->position() == PositionValue::AbsolutePositionValue);
+            m_flags.m_isEstablishesBlockFormattingContext = m_flags.m_isEstablishesBlockFormattingContext || (style->floating() != FloatValue::NoneFloatValue);
         }
 
         m_flags.m_isPositionedElement = style && style->position() != PositionValue::StaticPositionValue;

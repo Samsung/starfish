@@ -1024,8 +1024,8 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox& block, LayoutContext
 {
     if (block.style()->floating() == NoneFloatValue) {
         m_absPosition = block.absolutePoint(m_layoutContext.frameDocument()->asFrameBox());
-        m_leftBoundary = m_absPosition.x();
-        m_rightBoundary = m_leftBoundary + block.paddingLeft() + block.borderLeft() + block.contentWidth();
+        m_leftBoundary = m_absPosition.x() + block.paddingLeft() + block.borderLeft();
+        m_rightBoundary = m_leftBoundary + block.contentWidth();
     }
     m_originalLineBoxX = lineBoxX;
     m_lineBoxY = lineBoxY;
@@ -1194,14 +1194,14 @@ void LineFormattingContext::layoutLineBox(LineBox* lineBox)
 {
     if (m_block.style()->floating() == NoneFloatValue) {
         std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
-        if (boundaries.first > m_absPosition.x() + m_originalLineBoxX) {
+        if (boundaries.first > m_absPosition.x()) {
             m_lineBoxX = boundaries.first - m_absPosition.x();
         } else {
             m_lineBoxX = m_originalLineBoxX;
         }
 
-        if (m_absPosition.x() + m_originalLineBoxX + m_originalLineBoxWidth > boundaries.second) {
-            m_lineBoxWidth = boundaries.second - m_absPosition.x() - m_originalLineBoxX;
+        if (m_absPosition.x() + m_originalLineBoxWidth > boundaries.second) {
+            m_lineBoxWidth = boundaries.second - m_absPosition.x();
         } else {
             m_lineBoxWidth = m_originalLineBoxWidth;
         }

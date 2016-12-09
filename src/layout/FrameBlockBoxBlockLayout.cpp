@@ -15,6 +15,7 @@
  */
 
 #include "StarFishConfig.h"
+#include "FrameDocument.h"
 #include "FrameBlockBox.h"
 #include "FrameText.h"
 #include "FrameInline.h"
@@ -31,46 +32,59 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     DirectionValue direction = style()->direction();
 
     while (child) {
-        // Set initial position for resolve child width when child is non normal flow
-        if (!child->isNormalFlow()) {
-            if (direction == LtrDirectionValue) {
-                child->asFrameBox()->setX(paddingLeft() + borderLeft());
-            } else {
-                child->asFrameBox()->setX(width() - borderRight() - paddingRight());
-            }
-        }
+        STARFISH_ASSERT(child->isNormalFlow());
 
-        // Place the child.
-        if (child->isNormalFlow()) {
-            Length marginLeft = child->style()->marginLeft();
-            Length marginRight = child->style()->marginRight();
-            LayoutUnit mX = 0;
-            if (direction == LtrDirectionValue) {
-                mX = child->asFrameBox()->marginLeft();
-                child->asFrameBox()->setX(paddingLeft() + borderLeft() + mX);
-            } else {
-                mX = child->asFrameBox()->marginRight();
-                child->asFrameBox()->setX(width() - child->asFrameBox()->width() - mX - borderRight() - paddingRight());
-            }
+        Length marginLeft = child->style()->marginLeft();
+        Length marginRight = child->style()->marginRight();
+        LayoutUnit mX = 0;
+        if (direction == LtrDirectionValue) {
+            mX = child->asFrameBox()->marginLeft();
+            child->asFrameBox()->setX(paddingLeft() + borderLeft() + mX);
+        } else {
+            mX = child->asFrameBox()->marginRight();
+            child->asFrameBox()->setX(width() - child->asFrameBox()->width() - mX - borderRight() - paddingRight());
         }
 
         child->asFrameBox()->setY(normalFlowHeight + top);
+        child->asFrameBox()->moveY(child->asFrameBox()->marginCollapseResult().m_advanceY);
 
-        if (child->isNormalFlow()) {
-            // Lay out the child
-            child->asFrameBox()->moveY(child->asFrameBox()->marginCollapseResult().m_advanceY);
-            child->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+        if (child->isEstablishesBlockFormattingContext()) {
+            bool widthIsAuto = child->style()->width().isAuto();
+            bool floatAffected = false;
+            FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
+            LayoutLocation loc = cb->absolutePoint(ctx.frameDocument());
+            LayoutUnit leftBoundary = loc.x() + cb->paddingLeft() + cb->borderLeft();
+            LayoutUnit rightBoundary = leftBoundary + cb->contentWidth();
+            LayoutLocation selfLoc = child->asFrameBox()->absolutePoint(ctx.frameDocument());
+            LayoutUnit originalY = selfLoc.y();
+            positionEstablishedBlockFormatContextBox:
+            std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.floatingBoxBoundary(selfLoc.y(), leftBoundary, rightBoundary);
+            floatAffected |= boundaries.first != leftBoundary || boundaries.second != rightBoundary;
 
-            if (!child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
-                if (maxNormalFlowBottom < child->asFrameBox()->height() + child->asFrameBox()->y())
-                    maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
-                normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
+            if (floatAffected) {
+                LayoutUnit width = boundaries.second - boundaries.first;
+                LayoutUnit yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y());
+                if (widthIsAuto || width > child->asFrameBox()->width() || yDiff == 0) {
+                    child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
+                    child->asFrameBox()->moveY(selfLoc.y() - originalY);
+                    if (widthIsAuto) {
+                        child->asFrameBox()->setContentWidth(child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width());
+                    }
+                } else {
+                    selfLoc.setY(selfLoc.y() + yDiff);
+                    goto positionEstablishedBlockFormatContextBox;
+                }
             }
-            normalFlowPosition = child->asFrameBox()->y() + child->asFrameBox()->height() + child->asFrameBox()->marginBottom();
-        } else {
-            child->asFrameBox()->setY(normalFlowPosition);
-            ctx.registerAbsolutePositionedFrames(child);
         }
+
+        child->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+
+        if (!child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
+            if (maxNormalFlowBottom < child->asFrameBox()->height() + child->asFrameBox()->y())
+                maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
+            normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
+        }
+        normalFlowPosition = child->asFrameBox()->y() + child->asFrameBox()->height() + child->asFrameBox()->marginBottom();
 
         child = child->next();
     }
