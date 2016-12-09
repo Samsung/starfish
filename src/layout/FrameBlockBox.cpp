@@ -305,12 +305,10 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
             LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
 
-            auto computeContentWidth = [&](LayoutUnit parentWidthForComputePreferredWidthFromOutside = 0)
+            auto computeContentWidth = [&]()
             {
                 if (width.isAuto()) {
-                    LayoutUnit parentWidthForComputePreferredWidth = parentWidthForComputePreferredWidthFromOutside;
-
-                    parentWidthForComputePreferredWidth -= marginWidth() + borderWidth() + paddingWidth();
+                    LayoutUnit parentWidthForComputePreferredWidth = containgBlockContentWidth - marginWidth() + borderWidth() + paddingWidth();
 
                     if (parentWidthForComputePreferredWidth < 0)
                         parentWidthForComputePreferredWidth = 0;
@@ -332,7 +330,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 setMarginRight(0);
             }
 
-            computeContentWidth(containgBlockContentWidth);
+            computeContentWidth();
         }
 
         if (isFrameBlockBox() && asFrameBlockBox()->hasBlockFlow()) {
