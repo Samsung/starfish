@@ -51,10 +51,10 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         if (child->isEstablishesBlockFormattingContext()) {
             bool widthIsAuto = child->style()->width().isAuto();
             bool floatAffected = false;
-            FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
-            LayoutLocation loc = cb->absolutePoint(ctx.frameDocument());
-            LayoutUnit leftBoundary = loc.x() + cb->paddingLeft() + cb->borderLeft();
-            LayoutUnit rightBoundary = leftBoundary + cb->contentWidth();
+            LayoutLocation loc = absolutePoint(ctx.frameDocument());
+            // TODO: Consider Rtl
+            LayoutUnit leftBoundary = loc.x() + paddingLeft() + borderLeft() + child->asFrameBox()->marginLeft();
+            LayoutUnit rightBoundary = leftBoundary + contentWidth() - child->asFrameBox()->marginRight();
             LayoutLocation selfLoc = child->asFrameBox()->absolutePoint(ctx.frameDocument());
             LayoutUnit originalY = selfLoc.y();
             positionEstablishedBlockFormatContextBox:
@@ -64,7 +64,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             if (floatAffected) {
                 LayoutUnit width = boundaries.second - boundaries.first;
                 LayoutUnit yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y());
-                if (widthIsAuto || width > child->asFrameBox()->width() || yDiff == 0) {
+                if (widthIsAuto || width > child->asFrameBox()->width() + child->asFrameBox()->marginWidth() || yDiff == 0) {
                     child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
                     child->asFrameBox()->moveY(selfLoc.y() - originalY);
                     if (widthIsAuto) {
