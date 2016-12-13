@@ -46,14 +46,17 @@ public:
 void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
+
+    // Determine the horizontal margins and the width of this object.
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        // Determine horizontal margins and width of this object.
         if (isNormalFlow()) {
             // https://www.w3.org/TR/CSS2/visudet.html#the-width-property
             LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
             computeBorderMarginPadding(parentContentWidth);
 
-            // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
+            // width of containing block =
+            //     'margin-left' + 'border-left-width' + 'padding-left' + 'width' +
+            //     'padding-right' + 'border-right-width' + 'margin-right'
             ComputedStyle* style = Frame::style();
             if (style->width().isAuto()) {
                 if (m_flags.m_shouldComputePreferredWidth) {
@@ -70,13 +73,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                         remainWidth = 0;
                     setContentWidth(remainWidth);
                 }
+            } else if (style->width().isFixed()) {
+                setContentWidth(style->width().fixed());
             } else {
-                if (style->width().isFixed()) {
-                    setContentWidth(style->width().fixed());
-                } else {
-                    STARFISH_ASSERT(style->width().isPercent());
-                    setContentWidth(parentContentWidth * style->width().percent());
-                }
+                STARFISH_ASSERT(style->width().isPercent());
+                setContentWidth(parentContentWidth * style->width().percent());
             }
 
             if (style->display() == BlockDisplayValue) {
@@ -108,6 +109,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                         setMarginRight(remain);
                     }
                 }
+            } else {
+                // NOTE: only "display: block" is supported
             }
         } else if (style() && style()->position() == PositionValue::AbsolutePositionValue) {
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
@@ -135,9 +138,13 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
             // 10.3.7 Absolutely positioned, non-replaced elements
             // The constraint that determines the used values for these elements is:
-            // 'left' + 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' + 'right' = width of containing block
+            // width of containing block =
+            //     'left' + 'margin-left' + 'border-left-width' + 'padding-left' + 'width' +
+            //     'padding-right' + 'border-right-width' + 'margin-right' + 'right' =
 
-            // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the static position and apply rule number three below;
+            // Then, if the 'direction' property of the element establishing
+            // the static-position containing block is 'ltr' set 'left' to
+            // the static position and apply rule number three below;
             // otherwise, set 'right' to the static position and apply rule number one below.
 
             auto applyMargin = [&](bool isOpposite = false)
