@@ -1318,8 +1318,7 @@ escargot::ESFunctionObject* bindingElement(ScriptBindingInstance* scriptBindingI
                 escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
                 if (argValue.isESString()) {
                     escargot::ESString* argStr = argValue.asESString();
-                    QualifiedName name(elem->document()->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(elem->document()->window()->starFish(), toBrowserString(argStr)));
-                    HTMLCollection* result = elem->getElementsByTagName(name);
+                    HTMLCollection* result = elem->getElementsByTagName(elem->document()->createAttributeName(toBrowserString(argStr)));
                     if (result) {
                         return result->scriptValue();
                     }
@@ -3058,8 +3057,7 @@ escargot::ESFunctionObject* bindingDocument(ScriptBindingInstance* scriptBinding
             escargot::ESValue argValue = instance->currentExecutionContext()->readArgument(0);
             if (argValue.isESString()) {
                 escargot::ESString* argStr = argValue.asESString();
-                QualifiedName name(doc->window()->starFish()->staticStrings()->m_xhtmlNamespaceURI, AtomicString::createAttrAtomicString(doc->window()->starFish(), toBrowserString(argStr)));
-                HTMLCollection* result = doc->getElementsByTagName(name);
+                HTMLCollection* result = doc->getElementsByTagName(doc->createAttributeName(toBrowserString(argStr)));
                 if (result != nullptr)
                     return result->scriptValue();
             }
