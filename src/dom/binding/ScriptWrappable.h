@@ -31,6 +31,7 @@ class DocumentType;
 class HTMLDocument;
 class CharacterData;
 class Text;
+class CDataSection;
 class Comment;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 class TimeRanges;
@@ -203,6 +204,7 @@ public:
     void initScriptWrappable(HTMLDocument* ptr);
     void initScriptWrappable(CharacterData* ptr);
     void initScriptWrappable(Text* ptr);
+    void initScriptWrappable(CDataSection* ptr);
     void initScriptWrappable(Comment* ptr);
 #ifdef STARFISH_EXP
     void initScriptWrappable(DOMImplementation* ptr, ScriptBindingInstance*);

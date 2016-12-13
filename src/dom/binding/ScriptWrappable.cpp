@@ -906,6 +906,13 @@ void ScriptWrappable::initScriptWrappable(Text* ptr)
     scriptObject()->set__proto__(data->text()->protoType());
 }
 
+void ScriptWrappable::initScriptWrappable(CDataSection* ptr)
+{
+    Node* node = (Node*)this;
+    auto data = fetchData(node->document()->scriptBindingInstance());
+    scriptObject()->set__proto__(data->cDataSection()->protoType());
+}
+
 void ScriptWrappable::initScriptWrappable(Comment* ptr)
 {
     Node* node = (Node*)this;

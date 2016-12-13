@@ -17,6 +17,7 @@
 #include "StarFishConfig.h"
 #include "Element.h"
 #include "Text.h"
+#include "CDataSection.h"
 
 #include "Document.h"
 #include "DocumentFragment.h"

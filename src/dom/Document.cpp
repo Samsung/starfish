@@ -643,6 +643,11 @@ Text* Document::createTextNode(String* data)
     return new Text(this, data);
 }
 
+CDataSection* Document::createCDataSectionNode(String* data)
+{
+    return new CDataSection(this, data);
+}
+
 Comment* Document::createComment(String* data)
 {
     return new Comment(this, data);
