@@ -46,6 +46,18 @@
 #include "HTMLMetaElement.h"
 #include "HTMLParagraphElement.h"
 #include "HTMLSpanElement.h"
+
+#include "HTMLTableElement.h"
+#include "HTMLTHElement.h"
+#include "HTMLTRElement.h"
+#include "HTMLTDElement.h"
+#include "HTMLCaptionElement.h"
+#include "HTMLColGroupElement.h"
+#include "HTMLColElement.h"
+#include "HTMLTHeadElement.h"
+#include "HTMLTBodyElement.h"
+#include "HTMLTFootElement.h"
+
 #include "HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "HTMLMediaElement.h"
