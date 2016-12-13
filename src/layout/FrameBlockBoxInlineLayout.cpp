@@ -1022,11 +1022,9 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox& block, LayoutContext
     : m_block(block)
     , m_layoutContext(ctx)
 {
-    if (block.style()->floating() == NoneFloatValue) {
-        m_absPosition = block.absolutePoint(m_layoutContext.frameDocument()->asFrameBox());
-        m_leftBoundary = m_absPosition.x() + block.paddingLeft() + block.borderLeft();
-        m_rightBoundary = m_leftBoundary + block.contentWidth();
-    }
+    m_absPosition = block.absolutePoint(m_layoutContext.frameDocument()->asFrameBox());
+    m_leftBoundary = m_absPosition.x() + block.paddingLeft() + block.borderLeft();
+    m_rightBoundary = m_leftBoundary + block.contentWidth();
     m_originalLineBoxX = lineBoxX;
     m_lineBoxY = lineBoxY;
     m_originalLineBoxWidth = lineBoxWidth;
@@ -1238,12 +1236,15 @@ void LineFormattingContext::completeLastLine()
             childBox->setX(x + childBox->marginLeft());
             x += childBox->width() + childBox->marginWidth();
         } else {
-            childBox->setX(x);
             if (childBox->style()->floating() == LeftFloatValue) {
+                childBox->setX(x + childBox->marginLeft());
                 x += childBox->width() + childBox->marginWidth();
                 m_layoutContext.registerFloatingBoxes(childBox->asFrameBlockBox());
             } else if (childBox->style()->floating() == RightFloatValue) {
                 continue;
+            } else {
+                STARFISH_ASSERT(childBox->style()->position() == AbsolutePositionValue);
+                childBox->setX(x);
             }
         }
     }
@@ -1255,6 +1256,7 @@ void LineFormattingContext::completeLastLine()
             break;
         } else if (childBox->style()->floating() == RightFloatValue) {
             x2 -= childBox->width() + childBox->marginWidth();
+            x += childBox->width() + childBox->marginWidth();
             childBox->setX(x2);
             m_layoutContext.registerFloatingBoxes(childBox->asFrameBlockBox());
         }
@@ -1266,7 +1268,8 @@ void LineFormattingContext::completeLastLine()
         LayoutUnit diff = (m_lineBoxWidth - x);
         for (size_t k = 0; k < back->m_boxes.size(); k++) {
             FrameBox* childBox = back->m_boxes[k];
-            childBox->moveX(diff);
+            if (childBox->style()->floating() == NoneFloatValue)
+                childBox->moveX(diff);
         }
     /*
      * justify: No supported value
@@ -1314,7 +1317,8 @@ void LineFormattingContext::completeLastLine()
         if (diff > 0) {
             for (size_t k = 0; k < back->m_boxes.size(); k++) {
                 FrameBox* childBox = back->m_boxes[k];
-                childBox->moveX(diff);
+                if (childBox->style()->floating() == NoneFloatValue)
+                    childBox->moveX(diff);
             }
         }
     }
