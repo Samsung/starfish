@@ -29,6 +29,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(htmlDocument, HTMLDocument) \
     F(characterData, CharacterData) \
     F(text, Text) \
+    F(cDataSection, CDataSection) \
     F(comment, Comment) \
     F(htmlElement, HTMLElement) \
     F(htmlHtmlElement, HTMLHtmlElement) \
@@ -186,6 +187,7 @@ private:
     escargot::ESFunctionObject* m_htmlDocument;
     escargot::ESFunctionObject* m_characterData;
     escargot::ESFunctionObject* m_text;
+    escargot::ESFunctionObject* m_cDataSection;
     escargot::ESFunctionObject* m_comment;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     escargot::ESFunctionObject* m_textTrack;

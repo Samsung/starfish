@@ -94,6 +94,7 @@ public:
     DocumentFragment* createDocumentFragment();
     virtual Element* createElement(AtomicString localName, bool shouldCheckName);
     Text* createTextNode(String* data);
+    CDataSection* createCDataSectionNode(String* data);
     Comment* createComment(String* data);
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);

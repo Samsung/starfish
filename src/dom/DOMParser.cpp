@@ -78,7 +78,9 @@ static void buildDocumentFromXML(rapidxml::xml_node<char>* node, StarFish* sf, N
         newNode = parent->document()->createComment(String::fromUTF8(node->value()));
     } else if (node->type() == rapidxml::node_type::node_doctype) {
         newNode = new DocumentType(parent->document(), String::fromUTF8(node->name()), String::fromUTF8(node->value()), String::emptyString);
-    } else if (node->type() == rapidxml::node_type::node_cdata || node->type() == rapidxml::node_type::node_data) {
+    } else if (node->type() == rapidxml::node_type::node_cdata) {
+        newNode = parent->document()->createCDataSectionNode(String::fromUTF8(node->value()));
+    } else if (node->type() == rapidxml::node_type::node_data) {
         newNode = parent->document()->createTextNode(String::fromUTF8(node->value()));
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

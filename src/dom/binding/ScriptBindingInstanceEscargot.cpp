@@ -518,6 +518,7 @@ IMPL_EMPTY_BINDING(htmlParagraphElement, HTMLParagraphElement, htmlElement);
 IMPL_EMPTY_BINDING(htmlSpanElement, HTMLSpanElement, htmlElement);
 IMPL_EMPTY_BINDING(htmlBrElement, HTMLBRElement, htmlElement);
 IMPL_EMPTY_BINDING(htmlUnknownElement, HTMLUnknownElement, htmlElement);
+IMPL_EMPTY_BINDING(cDataSection, CDataSection, text);
 
 escargot::ESFunctionObject* bindingNode(ScriptBindingInstance* scriptBindingInstance)
 {
