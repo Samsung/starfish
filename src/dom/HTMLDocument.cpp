@@ -60,7 +60,28 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLUListElement(document, name);
     } else if (name == str->m_strongTagName.localNameAtomic()) {
         return new HTMLStrongElement(document, name);
+    } else if (name == str->m_tableTagName.localNameAtomic()) {
+        return new HTMLTableElement(document);
+    } else if (name == str->m_thTagName.localNameAtomic()) {
+        return new HTMLTHElement(document);
+    } else if (name == str->m_trTagName.localNameAtomic()) {
+        return new HTMLTRElement(document);
+    } else if (name == str->m_tdTagName.localNameAtomic()) {
+        return new HTMLTDElement(document);
+    } else if (name == str->m_captionTagName.localNameAtomic()) {
+        return new HTMLCaptionElement(document);
+    } else if (name == str->m_colgroupTagName.localNameAtomic()) {
+        return new HTMLColGroupElement(document);
+    } else if (name == str->m_colTagName.localNameAtomic()) {
+        return new HTMLColElement(document);
+    } else if (name == str->m_theadTagName.localNameAtomic()) {
+        return new HTMLTHeadElement(document);
+    } else if (name == str->m_tbodyTagName.localNameAtomic()) {
+        return new HTMLTBodyElement(document);
+    } else if (name == str->m_tfootTagName.localNameAtomic()) {
+        return new HTMLTFootElement(document);
     }
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic()) {
         return new HTMLVideoElement(document);
@@ -77,6 +98,7 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLAnchorElement(document);
     }
 #endif
+
     STARFISH_LOG_INFO("got unknown html element - %s\n", name.string()->utf8Data());
     return new HTMLUnknownElement(document, name);
 }
