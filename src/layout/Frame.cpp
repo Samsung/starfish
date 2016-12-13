@@ -115,6 +115,21 @@ void LayoutContext::registerFloatingBoxes(FrameBlockBox* box)
     }
 }
 
+void LayoutContext::unregisterFloatingBoxes(LayoutUnit yPosition)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    auto iter = c.m_floatBoxes->begin();
+    while (iter != c.m_floatBoxes->end()) {
+        FloatingBoxInfo f = *iter;
+        if (f.bottom() > yPosition) {
+            iter = c.m_floatBoxes->erase(iter);
+        } else {
+            iter++;
+        }
+    }
+}
+
 LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
 {
     bool hasLeft = false, hasRight = false;
