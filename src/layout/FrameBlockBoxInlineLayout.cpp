@@ -1190,24 +1190,19 @@ void LineFormattingContext::insertPendingAboslutePositionedBoxes()
 
 void LineFormattingContext::layoutLineBox(LineBox* lineBox)
 {
-    if (m_block.style()->floating() == NoneFloatValue) {
-        std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
-        if (boundaries.first > m_absPosition.x()) {
-            m_lineBoxX = boundaries.first - m_absPosition.x();
-        } else {
-            m_lineBoxX = m_originalLineBoxX;
-        }
-
-        if (m_absPosition.x() + m_originalLineBoxWidth > boundaries.second) {
-            m_lineBoxWidth = boundaries.second - m_absPosition.x();
-        } else {
-            m_lineBoxWidth = m_originalLineBoxWidth;
-        }
-        m_lineBoxWidth -= (m_lineBoxX - m_originalLineBoxX);
+    std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
+    if (boundaries.first > m_absPosition.x()) {
+        m_lineBoxX = boundaries.first - m_absPosition.x();
     } else {
         m_lineBoxX = m_originalLineBoxX;
+    }
+
+    if (m_absPosition.x() + m_originalLineBoxWidth > boundaries.second) {
+        m_lineBoxWidth = boundaries.second - m_absPosition.x();
+    } else {
         m_lineBoxWidth = m_originalLineBoxWidth;
     }
+    m_lineBoxWidth -= (m_lineBoxX - m_originalLineBoxX);
 
     lineBox->setX(m_lineBoxX);
     lineBox->setY(m_lineBoxY);
