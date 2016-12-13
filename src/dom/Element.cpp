@@ -322,11 +322,6 @@ Node* Element::clone()
 
 NamedNodeMap* Element::attributes()
 {
-    if (hasRareMembers()) {
-        STARFISH_ASSERT(rareMembers()->isRareElementMembers());
-        if (!rareMembers()->asRareElementMembers()->m_namedNodeMap)
-            return nullptr;
-    }
     RareElementMembers* rareMembers = ensureRareElementMembers();
     if (!rareMembers->m_namedNodeMap)
         rareMembers->m_namedNodeMap = new NamedNodeMap(document()->scriptBindingInstance(), this);
