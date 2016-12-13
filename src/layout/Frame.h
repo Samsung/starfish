@@ -114,6 +114,7 @@ public:
     }
 
     void registerFloatingBoxes(FrameBlockBox* box);
+    void unregisterFloatingBoxes(LayoutUnit yPosition);
     LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition);
     LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition);
     LayoutUnit lastTopLoc(FloatValue floating);

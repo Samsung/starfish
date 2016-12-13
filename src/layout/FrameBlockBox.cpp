@@ -537,6 +537,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 setContentHeight(contentHeight);
             }
         }
+
+        if (hasBlockFlow() && style() && style()->originalDisplay() == BlockDisplayValue) {
+            LayoutLocation loc = absolutePoint(ctx.frameDocument());
+            ctx.unregisterFloatingBoxes(loc.y() + height());
+        }
     }
 
     if (style()->position() == PositionValue::RelativePositionValue)
