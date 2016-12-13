@@ -134,12 +134,14 @@ void Element::didAttributeChanged(QualifiedName name, String* old, String* value
     StaticStrings* ss = document()->window()->starFish()->staticStrings();
     if (name == ss->m_id) {
         m_id = value;
-        setNeedsStyleRecalc();
+        // Style should be recalculated from root node because of combinators.
+        document()->window()->setWholeDocumentNeedsStyleRecalc();
 
         document()->invalidNamedAccessCacheIfNeeded();
     } else if (name == ss->m_class) {
         DOMTokenList::tokenize(&m_classNames, value);
-        setNeedsStyleRecalc();
+        // Style should be recalculated from root node because of combinators.
+        document()->window()->setWholeDocumentNeedsStyleRecalc();
 
         // propagate invalidate nodeList cache(getElementsByClassName) damage to parent tree
         Node* parent = parentNode();
