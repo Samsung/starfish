@@ -1201,14 +1201,14 @@ void LineFormattingContext::insertPendingAboslutePositionedBoxes()
 void LineFormattingContext::layoutLineBox(LineBox* lineBox)
 {
     std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
-    if (boundaries.first > m_absPosition.x()) {
+    if (boundaries.first > m_leftBoundary) {
         m_lineBoxX = boundaries.first - m_absPosition.x();
     } else {
         m_lineBoxX = m_originalLineBoxX;
     }
 
-    if (m_absPosition.x() + m_originalLineBoxWidth > boundaries.second) {
-        m_lineBoxWidth = boundaries.second - m_absPosition.x();
+    if (m_leftBoundary + m_originalLineBoxWidth > boundaries.second) {
+        m_lineBoxWidth = boundaries.second - m_leftBoundary;
     } else {
         m_lineBoxWidth = m_originalLineBoxWidth;
     }
