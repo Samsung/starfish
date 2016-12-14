@@ -151,3 +151,12 @@ test/internal-test/click/click-internal-test-5.html
 test/internal-test/click/click-internal-test-6.html
 test/internal-test/click/click-propagation-internal-test.html
 test/internal-test/click/click-propagation-with-stop-internal-test.html
+test/internal-test/css/float/float-internal-test-1.html
+test/internal-test/css/float/float-internal-test-2.html
+test/internal-test/css/float/float-internal-test-3.html
+test/internal-test/css/float/float-internal-test-4.html
+test/internal-test/css/float/float-internal-test-5.html
+test/internal-test/css/float/float-internal-test-6.html
+test/internal-test/css/float/float-internal-test-7.html
+test/internal-test/css/float/float-internal-test-8.html
+test/internal-test/css/float/float-internal-test-9.html
