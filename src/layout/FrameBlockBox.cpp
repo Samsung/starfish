@@ -308,7 +308,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             auto computeContentWidth = [&]()
             {
                 if (width.isAuto()) {
-                    LayoutUnit parentWidthForComputePreferredWidth = containgBlockContentWidth - marginWidth() + borderWidth() + paddingWidth();
+                    LayoutUnit parentWidthForComputePreferredWidth = containgBlockContentWidth - marginWidth() - borderWidth() - paddingWidth();
 
                     if (parentWidthForComputePreferredWidth < 0)
                         parentWidthForComputePreferredWidth = 0;

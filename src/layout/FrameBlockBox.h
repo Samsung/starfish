@@ -516,7 +516,7 @@ class LineFormattingContext {
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
-    LayoutUnit computeLineBoxHeight(bool forceInsertFloatingBlock, bool isLastLine);
+    LayoutUnit computeLineBoxHeight(bool dueToBr, bool forceInsertFloatingBlock, bool isLastLine);
     void breakLine(bool dueToBr, bool isInLineBox, bool forceInsertFloatingBlock);
     template <typename Box>
     LayoutUnit layoutChildInlineBox(Box* parent, LayoutUnit start);
@@ -534,6 +534,7 @@ public:
     void insertPendingFloatingBoxes(bool isInlineBox, bool force = false);
     void insertPendingAboslutePositionedBoxes();
     void layoutLineBox(LineBox* lineBox);
+    void removeDanglingSpaceFromLine();
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();

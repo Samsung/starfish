@@ -1118,12 +1118,8 @@ void LineFormattingContext::insertNonFloatingBox(FrameBox* box)
 static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width, LayoutUnit unprocessedWidth);
 static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBlockBox* f)
 {
-    if (ctx->m_block.style()->floating() == NoneFloatValue) {
-        LineBox* lineBox = ctx->currentLine();
-        return ctx->m_absPosition.y() + lineBox->y() >= ctx->m_layoutContext.lastTopLoc(ctx->m_block.style()->floating());
-    } else {
-        return true;
-    }
+    LineBox* lineBox = ctx->currentLine();
+    return ctx->m_absPosition.y() + lineBox->y() >= ctx->m_layoutContext.lastTopLoc(ctx->m_block.style()->floating());
 }
 
 void LineFormattingContext::insertPendingFloatingBoxesFromInlineFrame()
@@ -1261,18 +1257,24 @@ LayoutUnit LineFormattingContext::layoutChildInlineBox(Box* parent, LayoutUnit s
     return x;
 }
 
-void LineFormattingContext::completeLastLine()
+void LineFormattingContext::removeDanglingSpaceFromLine()
 {
-    LineBox* back = m_block.m_lineBoxes.back();
+    LineBox* lineBox = currentLine();
     FrameBox* last = nullptr;
-    while ((last = findLastInlineBox(back), last) && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
+    while ((last = findLastInlineBox(lineBox), last) && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
         const StringView& sv = last->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
         if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ') {
             removeBoxFromLine(last);
+            m_currentLineWidth -= last->width();
         } else {
             break;
         }
     }
+}
+
+void LineFormattingContext::completeLastLine()
+{
+    LineBox* back = m_block.m_lineBoxes.back();
 
     resolveBidi(*this, m_block.style()->direction(), back->boxes());
 
@@ -1342,7 +1344,7 @@ void LineFormattingContext::completeLastLine()
     registerInlineContent();
 }
 
-LayoutUnit LineFormattingContext::computeLineBoxHeight(bool forceInsertFloatingBlock, bool isLastLine)
+LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool forceInsertFloatingBlock, bool isLastLine)
 {
     LineBox* lineBox = currentLine();
     LayoutUnit height = lineBox->m_ascender - lineBox->m_descender;
@@ -1352,13 +1354,13 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool forceInsertFloatingB
     // y position should be considered.
     if (forceInsertFloatingBlock && !m_block.isEstablishesBlockFormattingContext()) {
         lineBox->setHeight(height);
-        if (height == 0) {
+        if (!dueToBr && (height == 0 || m_currentLineWidth == 0)) {
             height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
         }
     } else {
         if (isLastLine) {
             height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY));
-        } else if (height == 0) {
+        } else if (!dueToBr && (height == 0 || m_currentLineWidth == 0)) {
             height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
         }
         lineBox->setHeight(height);
@@ -1375,11 +1377,17 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool force
     LayoutUnit ascender;
     LayoutUnit descender;
     LineBox* back = m_block.m_lineBoxes.back();
+
+    removeDanglingSpaceFromLine();
+    // Should check if there has enough space for pending block box due to removing
+    // white space from above function `removeDanglingSpaceFromLine`
+    insertPendingFloatingBoxes(isInLineBox, false);
+
     computeVerticalProperties(back, m_block.style(), ascender, descender, *this, dueToBr, isInLineBox);
     back->m_ascender = ascender;
     back->m_descender = descender;
     completeLastLine();
-    LayoutUnit height = computeLineBoxHeight(forceInsertFloatingBlock, false);
+    LayoutUnit height = computeLineBoxHeight(dueToBr, forceInsertFloatingBlock, false);
     insertPendingAboslutePositionedBoxes();
     m_lineBoxY += height;
 
@@ -1442,7 +1450,7 @@ static bool hasBreakableWhiteSpaceProperty(Frame* f)
 static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width, LayoutUnit unprocessedWidth)
 {
     return (!ctx->hasFloatBoxAlreadyInLineBox() && ctx->m_currentLineWidth == 0)
-        || width <= (ctx->m_lineBoxWidth- ctx->m_currentLineWidth - unprocessedWidth)
+        || width <= (ctx->m_lineBoxWidth - ctx->m_currentLineWidth - unprocessedWidth)
         || !hasBreakableWhiteSpaceProperty(f);
 }
 
@@ -1977,6 +1985,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     });
 
     lineFormattingContext.insertPendingFloatingBoxes(true, true);
+    lineFormattingContext.removeDanglingSpaceFromLine();
 
     LineBox* back = m_lineBoxes.back();
     LayoutUnit ascender;
@@ -1986,7 +1995,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     back->m_descender = descender;
 
     lineFormattingContext.completeLastLine();
-    lineFormattingContext.computeLineBoxHeight(true, true);
+    lineFormattingContext.computeLineBoxHeight(false, true, true);
     lineFormattingContext.insertPendingAboslutePositionedBoxes();
 
     if (m_lineBoxes.size() && m_lineBoxes.back()->boxes().size() == 0) {
@@ -2343,11 +2352,11 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
         std::function<void(Frame*)> computeInlineLayout = [&](Frame* f)
         {
             // current
-            if (!f->isNormalFlow()) {
+            if (f->style()->position() == AbsolutePositionValue) {
                 return;
             }
 
-            bool whiteSpaceCanBreak = f->style()->whiteSpace() == WhiteSpaceValue::NormalWhiteSpaceValue;
+            bool whiteSpaceCanBreak = hasBreakableWhiteSpaceProperty(f);
 
             if (f->isFrameText()) {
                 String* s = f->asFrameText()->text();
@@ -2381,12 +2390,11 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                             currentLineWidth += w;
                         } else {
                             ctx.setResult(remainWidth);
-                            currentLineWidth = 0;
-                        }
-
-                        if (w > remainWidth) {
-                            ctx.setResult(remainWidth);
-                            currentLineWidth = 0;
+                            if (isWhiteSpace) {
+                                currentLineWidth = 0;
+                            } else {
+                                currentLineWidth = w;
+                            }
                         }
                     } else {
                         currentLineWidth += w;
@@ -2405,14 +2413,8 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     if (currentLineWidth + w < remainWidth) {
                         currentLineWidth += w;
                     } else {
-                        ctx.setResult(currentLineWidth);
-                        currentLineWidth = w;
-                    }
-
-                    if (currentLineWidth > remainWidth) {
-                        // linebreaks
                         ctx.setResult(remainWidth);
-                        currentLineWidth = 0;
+                        currentLineWidth = w;
                     }
                 } else {
                     currentLineWidth += w;
@@ -2463,14 +2465,8 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     if (currentLineWidth + w < remainWidth) {
                         currentLineWidth += w;
                     } else {
-                        ctx.setResult(currentLineWidth);
-                        currentLineWidth = w;
-                    }
-
-                    if (currentLineWidth > remainWidth) {
-                        // linebreaks
                         ctx.setResult(remainWidth);
-                        currentLineWidth = 0;
+                        currentLineWidth = w;
                     }
                 } else {
                     currentLineWidth += w;
