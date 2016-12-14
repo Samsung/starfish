@@ -385,12 +385,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             if (i == stackedFrameInline.size()) {
                 STARFISH_ASSERT(ctx.currentBlockContainer()->hasBlockFlow());
 
-                ComputedStyle* newStyle = new ComputedStyle(ctx.currentBlockContainer()->style());
-                newStyle->setDisplay(DisplayValue::BlockDisplayValue);
-                newStyle->loadResources(current);
-                newStyle->arrangeStyleValues(ctx.currentBlockContainer()->style(), current);
-
-                FrameBlockBox* blockBox = new FrameBlockBox(nullptr, newStyle);
+                FrameBlockBox* blockBox = createAnonymouseBlockBox(ctx.currentBlockContainer(), current);
 
                 ctx.currentBlockContainer()->appendChild(blockBox);
                 blockBox->appendChild(in);

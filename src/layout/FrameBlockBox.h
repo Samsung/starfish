@@ -518,6 +518,8 @@ public:
 
     LayoutUnit computeLineBoxHeight(bool forceInsertFloatingBlock, bool isLastLine);
     void breakLine(bool dueToBr, bool isInLineBox, bool forceInsertFloatingBlock);
+    template <typename Box>
+    LayoutUnit layoutChildInlineBox(Box* parent, LayoutUnit start);
     void completeLastLine();
 
     bool isBreakedLineWithoutBR(size_t idx)
@@ -528,6 +530,7 @@ public:
     void registerInlineContent();
     void insertFloatingBox(FrameBlockBox* box);
     void insertNonFloatingBox(FrameBox* box);
+    void insertPendingFloatingBoxesFromInlineFrame();
     void insertPendingFloatingBoxes(bool isInlineBox, bool force = false);
     void insertPendingAboslutePositionedBoxes();
     void layoutLineBox(LineBox* lineBox);
@@ -573,6 +576,7 @@ public:
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 
     std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
+    std::vector<FrameBlockBox*> m_pendingFloatBoxesFromInlineFrame;
     std::vector<FrameBlockBox*> m_pendingFloatBoxes;
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
