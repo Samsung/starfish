@@ -70,7 +70,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                     child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
                     child->asFrameBox()->moveY(selfLoc.y() - originalY);
                     if (widthIsAuto) {
-                        child->asFrameBox()->setContentWidth(child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width());
+                        child->asFrameBox()->setContentWidth(child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() - child->asFrameBox()->marginWidth());
                     }
                 } else {
                     selfLoc.setY(selfLoc.y() + yDiff);
