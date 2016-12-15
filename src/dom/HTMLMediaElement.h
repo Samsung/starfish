@@ -282,36 +282,38 @@ public:
     void mediaPlayerNotifyEndedItsContainer();
     void addEventToOperationQueue(EventTarget* t, Event* e);
     void processNextOperationQueue();
+
 #define ADD_DISPATCH_EVENT_DECL(Name) \
     void dispatch##Name##EventNow(); \
     void dispatch##Name##Event();
-    ADD_DISPATCH_EVENT_DECL(Progress);
-    ADD_DISPATCH_EVENT_DECL(Suspend);
-    ADD_DISPATCH_EVENT_DECL(Abort);
-    ADD_DISPATCH_EVENT_DECL(Error);
-    ADD_DISPATCH_EVENT_DECL(Emptied);
-    ADD_DISPATCH_EVENT_DECL(Stalled);
-    ADD_DISPATCH_EVENT_DECL(Loadedmetadata);
-    ADD_DISPATCH_EVENT_DECL(Loadeddata);
-    ADD_DISPATCH_EVENT_DECL(Loadstart);
-    ADD_DISPATCH_EVENT_DECL(Canplay);
-    ADD_DISPATCH_EVENT_DECL(Canplaythrough);
-    ADD_DISPATCH_EVENT_DECL(Playing);
-    ADD_DISPATCH_EVENT_DECL(Waiting);
-    ADD_DISPATCH_EVENT_DECL(Seeking);
-    ADD_DISPATCH_EVENT_DECL(Seeked);
-    ADD_DISPATCH_EVENT_DECL(Ended);
-    ADD_DISPATCH_EVENT_DECL(Durationchange);
-    ADD_DISPATCH_EVENT_DECL(Timeupdate);
-    ADD_DISPATCH_EVENT_DECL(Play);
-    ADD_DISPATCH_EVENT_DECL(Pause);
-    ADD_DISPATCH_EVENT_DECL(Ratechange);
-    ADD_DISPATCH_EVENT_DECL(Volumechange);
+    ADD_DISPATCH_EVENT_DECL(Progress)
+    ADD_DISPATCH_EVENT_DECL(Suspend)
+    ADD_DISPATCH_EVENT_DECL(Abort)
+    ADD_DISPATCH_EVENT_DECL(Error)
+    ADD_DISPATCH_EVENT_DECL(Emptied)
+    ADD_DISPATCH_EVENT_DECL(Stalled)
+    ADD_DISPATCH_EVENT_DECL(Loadedmetadata)
+    ADD_DISPATCH_EVENT_DECL(Loadeddata)
+    ADD_DISPATCH_EVENT_DECL(Loadstart)
+    ADD_DISPATCH_EVENT_DECL(Canplay)
+    ADD_DISPATCH_EVENT_DECL(Canplaythrough)
+    ADD_DISPATCH_EVENT_DECL(Playing)
+    ADD_DISPATCH_EVENT_DECL(Waiting)
+    ADD_DISPATCH_EVENT_DECL(Seeking)
+    ADD_DISPATCH_EVENT_DECL(Seeked)
+    ADD_DISPATCH_EVENT_DECL(Ended)
+    ADD_DISPATCH_EVENT_DECL(Durationchange)
+    ADD_DISPATCH_EVENT_DECL(Timeupdate)
+    ADD_DISPATCH_EVENT_DECL(Play)
+    ADD_DISPATCH_EVENT_DECL(Pause)
+    ADD_DISPATCH_EVENT_DECL(Ratechange)
+    ADD_DISPATCH_EVENT_DECL(Volumechange)
 #undef ADD_DISPATCH_EVENT_DECL
 
     void giveupFetchingResource(bool shouldSetError = true);
     void setNetworkStateAsHaveNothing();
 protected:
+    bool m_autoplayingFlag;
     bool m_isPaused;
     bool m_isSeeking;
     bool m_isEnded;
@@ -363,6 +365,17 @@ protected:
     }
 
     void abortEveryPendingOperation(DOMException* exceptionForPlayPromise);
+
+    void notifyAboutPlaying();
+
+    bool eligibleForAutoplay()
+    {
+        // https://html.spec.whatwg.org/multipage/embedded-content.html#eligible-for-autoplay
+
+        // TODO Check the element's node document's active sandboxing flag set
+        //      does not have the sandboxed automatic features browsing context flag set.
+        return (m_autoplayingFlag && m_isPaused && autoplay());
+    }
 };
 
 }
