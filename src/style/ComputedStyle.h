@@ -93,6 +93,11 @@ public:
         return m_float;
     }
 
+    ClearValue clear()
+    {
+        return m_clear;
+    }
+
     Length width()
     {
         return m_width;
@@ -804,6 +809,7 @@ protected:
     } m_inheritedStyles;
 
     FloatValue m_float : 2;
+    ClearValue m_clear : 3;
     DisplayValue m_display : 3;
     DisplayValue m_originalDisplay : 3;
     PositionValue m_position : 2;
