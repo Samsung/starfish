@@ -530,7 +530,6 @@ public:
     void registerInlineContent();
     void insertFloatingBox(FrameBlockBox* box);
     void insertNonFloatingBox(FrameBox* box);
-    void insertPendingFloatingBoxesFromInlineFrame();
     void insertPendingFloatingBoxes(bool isInlineBox, bool force = false);
     void insertPendingAboslutePositionedBoxes();
     void layoutLineBox(LineBox* lineBox);
@@ -569,6 +568,12 @@ public:
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
     bool m_shouldLineBreakForabsolutePositionedBlock;
+    enum Float {
+        HasNone,
+        HasLeft,
+        HasRight,
+    };
+    int m_hasFloat;
 
     std::set<size_t> m_breakedLinesSet;
 
@@ -577,7 +582,6 @@ public:
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 
     std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
-    std::vector<FrameBlockBox*> m_pendingFloatBoxesFromInlineFrame;
     std::vector<FrameBlockBox*> m_pendingFloatBoxes;
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
