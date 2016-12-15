@@ -741,17 +741,30 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     }
 
     Frame* result = nullptr;
-    if (isPositionedElement() && stage == HitTestPositionedElements) {
-        HitTestStage s = HitTestStage::HitTestPositionedElements;
-        while (s != HitTestStageEnd) {
-            result = hitTestChildrenWith(x, y, s);
-            if (result)
-                return result;
-            s = (HitTestStage)(s + 1);
+    if (isPositionedElement()) {
+        if (stage == HitTestPositionedElements) {
+            HitTestStage s = HitTestStage::HitTestPositionedElements;
+            while (s != HitTestStageEnd) {
+                result = hitTestChildrenWith(x, y, s);
+                if (result)
+                    return result;
+                s = (HitTestStage)(s + 1);
+            }
+            return FrameBox::hitTest(x, y, stage);
         }
-        return FrameBox::hitTest(x, y, stage);
     } else if (style()->display() == InlineBlockDisplayValue) {
         if (stage == HitTestNormalFlowInline) {
+            HitTestStage s = HitTestStage::HitTestPositionedElements;
+            while (s != HitTestStageEnd) {
+                result = hitTestChildrenWith(x, y, s);
+                if (result)
+                    return result;
+                s = (HitTestStage)(s + 1);
+            }
+            return FrameBox::hitTest(x, y, stage);
+        }
+    } else if (style()->floating() != NoneFloatValue) {
+        if (stage == HitTestNonPositionedFloats) {
             HitTestStage s = HitTestStage::HitTestPositionedElements;
             while (s != HitTestStageEnd) {
                 result = hitTestChildrenWith(x, y, s);

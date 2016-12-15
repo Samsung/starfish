@@ -381,7 +381,10 @@ Frame* StackingContext::hitTestStackingContext(LayoutUnit x, LayoutUnit y)
     if (result)
         return result;
 
-    // TODO the non-positioned floats.
+    // the non-positioned float.
+    result = m_owner->hitTestChildrenWith(x, y, HitTestNonPositionedFloats);
+    if (result)
+        return result;
 
     // the in-flow, non-inline-level, non-positioned descendants.
     result = m_owner->hitTestChildrenWith(x, y, HitTestNormalFlowBlock);
