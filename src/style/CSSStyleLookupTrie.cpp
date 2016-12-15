@@ -43,6 +43,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             if (memcmp(data, "color", 5) == 0) {
                 return CSSStyleKind::Color;
             }
+            if (memcmp(data, "clear", 5) == 0) {
+                return CSSStyleKind::Clear;
+            }
             break;
         case 'f':
             if (memcmp(data, "float", 5) == 0) {

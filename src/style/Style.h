@@ -248,6 +248,13 @@ enum FloatValue {
     RightFloatValue,
 };
 
+enum ClearValue {
+    NoneClearValue,
+    LeftClearValue,
+    RightClearValue,
+    BothClearValue
+};
+
 enum VerticalAlignValue {
     BaselineVAlignValue,
     SubVAlignValue,
@@ -419,6 +426,7 @@ class CSSStyleDeclaration;
     F(TextDecoration, textDecoration, "text-decoration")           \
     F(Display, display, "display")                                 \
     F(Float, float, "float")                                       \
+    F(Clear, clear, "clear")                                       \
     F(BorderImageSlice, borderImageSlice, "border-image-slice")    \
     F(BorderImageSource, borderImageSource, "border-image-source") \
     F(BorderImageWidth, borderImageWidth, "border-image-width")    \
@@ -609,6 +617,7 @@ public:
         DisplayValueKind,
         PositionValueKind,
         FloatValueKind,
+        ClearValueKind,
         VerticalAlignValueKind,
         SideValueKind,
         DirectionValueKind,
@@ -693,6 +702,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == FloatValueKind);
         return m_value.m_float;
+    }
+
+    ClearValue clearValue()
+    {
+        STARFISH_ASSERT(m_valueKind == ClearValueKind);
+        return m_value.m_clear;
     }
 
     VerticalAlignValue verticalAlignValue()
@@ -863,6 +878,7 @@ public:
         DisplayValue m_display;
         PositionValue m_position;
         FloatValue m_float;
+        ClearValue m_clear;
         VerticalAlignValue m_verticalAlign;
         FontSizeValue m_fontSize;
         FontStyleValue m_fontStyle;

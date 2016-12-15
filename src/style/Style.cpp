@@ -862,6 +862,19 @@ String* CSSStyleValuePair::toString()
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+    case CSSStyleValuePair::ValueKind::ClearValueKind:
+        switch (clearValue()) {
+        case ClearValue::LeftClearValue:
+            return String::fromUTF8("left");
+        case ClearValue::RightClearValue:
+            return String::fromUTF8("right");
+        case ClearValue::BothClearValue:
+            return String::fromUTF8("both");
+        case ClearValue::NoneClearValue:
+            return String::fromUTF8("none");
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     case CSSStyleValuePair::ValueKind::VerticalAlignValueKind:
         switch (verticalAlignValue()) {
         case VerticalAlignValue::BaselineVAlignValue:
@@ -1503,6 +1516,16 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                 } else {
                     STARFISH_ASSERT(CSSStyleValuePair::ValueKind::FloatValueKind == cssValues[k].valueKind());
                     style->m_float = cssValues[k].floatValue();
+                }
+                break;
+            case CSSStyleValuePair::KeyKind::Clear:
+                if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                    style->m_clear = parentStyle->m_clear;
+                } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                    style->m_clear = ClearValue::NoneClearValue;
+                } else {
+                    STARFISH_ASSERT(CSSStyleValuePair::ValueKind::ClearValueKind == cssValues[k].valueKind());
+                    style->m_clear = cssValues[k].clearValue();
                 }
                 break;
             case CSSStyleValuePair::KeyKind::Width:
@@ -2625,6 +2648,27 @@ bool CSSStyleValuePair::updateValueFloat(std::vector<String*, gc_allocator_ignor
         m_value.m_float = FloatValue::LeftFloatValue;
     } else if (STRING_VALUE_IS_STRING("right")) {
         m_value.m_float = FloatValue::RightFloatValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueClear(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    if (tokens->size() != 1)
+        return false;
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::ClearValueKind;
+    if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_clear = ClearValue::NoneClearValue;
+    } else if (STRING_VALUE_IS_STRING("left")) {
+        m_value.m_clear = ClearValue::LeftClearValue;
+    } else if (STRING_VALUE_IS_STRING("right")) {
+        m_value.m_clear = ClearValue::RightClearValue;
+    } else if (STRING_VALUE_IS_STRING("both")) {
+        m_value.m_clear = ClearValue::BothClearValue;
     } else {
         return false;
     }
