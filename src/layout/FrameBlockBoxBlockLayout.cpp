@@ -63,10 +63,10 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
             if (floatAffected) {
                 LayoutUnit width = boundaries.second - boundaries.first;
-                LayoutUnit yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y());
+                LayoutUnit yDiff;
                 if ((widthIsAuto && child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() > 0)
                     || width > child->asFrameBox()->width() + child->asFrameBox()->marginWidth()
-                    || yDiff == 0) {
+                    || (yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y())) == 0) {
                     child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
                     child->asFrameBox()->moveY(selfLoc.y() - originalY);
                     if (widthIsAuto) {

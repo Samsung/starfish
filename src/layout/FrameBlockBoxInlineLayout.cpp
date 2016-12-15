@@ -1057,9 +1057,9 @@ void LineFormattingContext::registerInlineContent()
 void LineFormattingContext::insertFloatingBox(FrameBlockBox* box)
 {
     auto iter = currentLine()->m_boxes.begin();
+    size_t index = SIZE_MAX;
     if (box->style()->floating() == LeftFloatValue) {
-        int index = -1;
-        for (int i = 0; i < (int)currentLine()->m_boxes.size(); i++) {
+        for (size_t i = 0; i < currentLine()->m_boxes.size(); i++) {
             FrameBox* box = currentLine()->m_boxes.at(i);
 
             if (box->style()->floating() == LeftFloatValue) {
@@ -1070,14 +1070,13 @@ void LineFormattingContext::insertFloatingBox(FrameBlockBox* box)
             }
         }
 
-        if (index == -1) {
+        if (index == SIZE_MAX) {
             currentLine()->m_boxes.push_back(box);
         } else {
             currentLine()->m_boxes.insert(iter + index, box);
         }
     } else {
-        int index = -1;
-        for (int i = currentLine()->m_boxes.size() - 1; i >= 0; i--) {
+        for (size_t i = currentLine()->m_boxes.size() - 1; i != SIZE_MAX; i--) {
             FrameBox* box = currentLine()->m_boxes.at(i);
 
             if (box->style()->floating() == RightFloatValue) {
@@ -1087,7 +1086,7 @@ void LineFormattingContext::insertFloatingBox(FrameBlockBox* box)
             }
         }
 
-        if (index == -1) {
+        if (index == SIZE_MAX) {
             currentLine()->m_boxes.push_back(box);
         } else {
             currentLine()->m_boxes.insert(iter + index, box);
@@ -1098,8 +1097,8 @@ void LineFormattingContext::insertFloatingBox(FrameBlockBox* box)
 void LineFormattingContext::insertNonFloatingBox(FrameBox* box)
 {
     auto iter = currentLine()->m_boxes.begin();
-    int index = -1;
-    for (int i = currentLine()->m_boxes.size() - 1; i >= 0; i--) {
+    size_t index = SIZE_MAX;
+    for (size_t i = currentLine()->m_boxes.size() - 1; i != SIZE_MAX; i--) {
         FrameBox* box = currentLine()->m_boxes.at(i);
 
         if (box->style()->floating() == RightFloatValue) {
@@ -1109,7 +1108,7 @@ void LineFormattingContext::insertNonFloatingBox(FrameBox* box)
         }
     }
 
-    if (index == -1) {
+    if (index == SIZE_MAX) {
         currentLine()->m_boxes.push_back(box);
     } else {
         currentLine()->m_boxes.insert(iter + index, box);
@@ -1354,13 +1353,13 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool forceI
     // y position should be considered.
     if (forceInsertFloatingBlock && !m_block.isEstablishesBlockFormattingContext()) {
         lineBox->setHeight(height);
-        if (!dueToBr && (height == 0 || m_currentLineWidth == 0)) {
+        if (!dueToBr && m_currentLineWidth == 0) {
             height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
         }
     } else {
         if (isLastLine) {
             height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY));
-        } else if (!dueToBr && (height == 0 || m_currentLineWidth == 0)) {
+        } else if (!dueToBr && m_currentLineWidth == 0) {
             height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
         }
         lineBox->setHeight(height);
