@@ -1346,6 +1346,12 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool forceI
 {
     LineBox* lineBox = currentLine();
     LayoutUnit height = lineBox->m_ascender - lineBox->m_descender;
+
+    if (m_hasFloat == HasNone) {
+        lineBox->setHeight(height);
+        return height;
+    }
+
     // If forceInsertFloatingBlock is `true`, that means there are no more inline boxes appended to the line box.
     // In this case, the height for content depends on if the block contianer box established new
     // block formatting context, but still for the positioning of following floating boxes,
@@ -1357,9 +1363,11 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool forceI
         }
     } else {
         if (isLastLine) {
+            STARFISH_ASSERT(forceInsertFloatingBlock);
             height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY));
         } else if (!dueToBr && m_currentLineWidth == 0) {
             height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
+            lineBox->markHeightComputed();
         }
         lineBox->setHeight(height);
     }
@@ -2004,7 +2012,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     size_t p = m_lineBoxes.size();
     while (p--) {
         LineBox* lineBox = m_lineBoxes[p];
-        if (lineBox->boxes().size() == 1 && lineBox->boxes().at(0)->isInlineBox() && lineBox->boxes().at(0)->asInlineBox()->isInlineNonReplacedBox() && lineBox->boxes().at(0)->width() == 0 && lineBox->boxes().at(0)->marginLeft() == 0 && lineBox->boxes().at(0)->marginRight() == 0) {
+        if (!lineBox->heightComputed() && lineBox->boxes().size() == 1 && lineBox->boxes().at(0)->isInlineBox() && lineBox->boxes().at(0)->asInlineBox()->isInlineNonReplacedBox() && lineBox->boxes().at(0)->width() == 0 && lineBox->boxes().at(0)->marginLeft() == 0 && lineBox->boxes().at(0)->marginRight() == 0) {
             m_lineBoxes.erase(m_lineBoxes.begin() + p);
         }
     }

@@ -248,9 +248,11 @@ class LineBox : public FrameBox {
 public:
     LineBox(Frame* parent)
         : FrameBox(nullptr, nullptr)
+        , m_ascender(0)
+        , m_descender(0)
+        , m_heightComputed(false)
     {
         setParent(parent);
-        m_descender = m_ascender = 0;
     }
 
     virtual bool isLineBox()
@@ -294,6 +296,16 @@ public:
             afterIterateChild(this);
     }
 
+    void markHeightComputed()
+    {
+        m_heightComputed = true;
+    }
+
+    bool heightComputed()
+    {
+        return m_heightComputed;
+    }
+
 protected:
     std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > m_boxes;
     // FIXME
@@ -302,6 +314,7 @@ protected:
     // should we delete m_decender?
     LayoutUnit m_ascender;
     LayoutUnit m_descender;
+    bool m_heightComputed;
 };
 
 class MarginInfo {
