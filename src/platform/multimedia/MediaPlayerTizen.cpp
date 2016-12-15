@@ -573,7 +573,7 @@ void MediaPlayerTizen::completePrepare()
             self->processNextOperationQueueInContainer();
             self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_METADATA);
         }
-        self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_FUTURE_DATA);
+        self->m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::HAVE_ENOUGH_DATA);
     }, this);
 }
 

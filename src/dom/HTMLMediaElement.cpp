@@ -32,6 +32,7 @@ namespace StarFish {
 
 HTMLMediaElement::HTMLMediaElement(Document* document)
     : HTMLElement(document)
+    , m_autoplayingFlag(true)
     , m_isPaused(true)
     , m_isSeeking(false)
     , m_isEnded(false)
@@ -57,14 +58,10 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
 
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        if (value->length() != 0) {
-            if (autoplay()) {
-                load();
-                play();
-                return;
-            }
-        }
         load();
+        if (value->length() != 0 && autoplay()) {
+            appendToPlayOperationQueue(new MediaOperationQueueDataRequestPlay(this));
+        }
     } else if (name == document()->window()->starFish()->staticStrings()->m_loop) {
         if (m_mediaPlayer) {
             if (attributeRemoved)
@@ -78,7 +75,7 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
 void HTMLMediaElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
-    if (autoplay()) {
+    if (m_autoplayingFlag && autoplay()) {
         play();
     }
 }
@@ -154,7 +151,9 @@ void HTMLMediaElement::load()
     }
 
     // TODO Set the playbackRate attribute to the value of the defaultPlaybackRate attribute.
-    // TODO Set the error attribute to null and the autoplaying flag to true.
+
+    // Set the error attribute to null and the autoplaying flag to true.
+    m_autoplayingFlag = true;
 
     // Invoke the media element's resource selection algorithm.
     resourceSelection();
@@ -261,13 +260,11 @@ void HTMLMediaElement::play()
             dispatchWaitingEvent();
         } else if  (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
             // Otherwise, the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA: notify about playing for the element.
-            dispatchPlayingEventNow();
+            notifyAboutPlaying();
         }
-    }
-
-    // Otherwise, if the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA,
-    // take pending play promises and queue a task to resolve pending play promises with the result.
-    if (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
+    } else if (m_readyState == HAVE_FUTURE_DATA || m_readyState == HAVE_ENOUGH_DATA) {
+        // Otherwise, if the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA,
+        // take pending play promises and queue a task to resolve pending play promises with the result.
         auto iter = m_playOperationQueue.begin();
         while (iter != m_playOperationQueue.end()) {
             ((MediaOperationQueueDataRequestPlay*)(*iter))->processOperationQueue();
@@ -275,7 +272,8 @@ void HTMLMediaElement::play()
         }
     }
 
-    // TODO Set the media element's autoplaying flag to false.
+    // Set the media element's autoplaying flag to false.
+    m_autoplayingFlag = false;
 
     // Return promise.
 #ifdef USE_ES6_FEATURE
@@ -289,7 +287,9 @@ void HTMLMediaElement::pause()
     if (networkState() == NETWORK_EMPTY) {
         resourceSelection();
     }
-    // TODO Set the media element's autoplaying flag to false.
+    // Set the media element's autoplaying flag to false.
+    m_autoplayingFlag = false;
+
     // If the media element's paused attribute is false, run the following steps:
     if (m_isPaused == false) {
         // Change the value of paused to true.
@@ -644,47 +644,88 @@ HTMLMediaElement::ReadyState HTMLMediaElement::readyState()
     return m_readyState;
 }
 
+void HTMLMediaElement::notifyAboutPlaying()
+{
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#notify-about-playing
+    dispatchPlayingEvent();
+    while (m_playOperationQueue.size()) {
+        ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())->processOperationQueue();
+        m_playOperationQueue.pop_front();
+    }
+}
+
 void HTMLMediaElement::mediaPlayerNotifyUpdateReadyStateItsContainer(HTMLMediaElement::ReadyState state)
 {
     if (state == m_readyState) {
         return;
     }
+
+    HTMLMediaElement::ReadyState prevState = m_readyState;
+    m_readyState = state;
+
     if (networkState() != HTMLMediaElement::NETWORK_EMPTY) {
-        HTMLMediaElement::ReadyState prevState = m_readyState;
+        // If the previous ready state was HAVE_NOTHING, and the new ready state is HAVE_METADATA
         if (prevState == HTMLMediaElement::HAVE_NOTHING && state == HTMLMediaElement::HAVE_METADATA) {
+            // NOTE : Before this task is run, as part of the event loop mechanism,
+            //        the rendering will have been updated to resize the video element if appropriate.
             if (isHTMLVideoElement() && frame()) {
                 setNeedsLayout();
             }
+            // Queue a task to fire an event named loadedmetadata at the element.
             dispatchLoadedmetadataEvent();
         }
+
+        // If the previous ready state was HAVE_METADATA and the new ready state is HAVE_CURRENT_DATA or greater
         if (prevState == HTMLMediaElement::HAVE_METADATA && state >= HTMLMediaElement::HAVE_CURRENT_DATA) {
             dispatchLoadeddataEvent();
         }
+        // If the previous ready state was HAVE_FUTURE_DATA or more, and the new ready state is HAVE_CURRENT_DATA or less
         if (prevState >= HTMLMediaElement::HAVE_FUTURE_DATA && state <= HTMLMediaElement::HAVE_CURRENT_DATA) {
             if (m_mediaPlayer && m_mediaPlayer->playbackState() == MediaPlayer::PLAYBACK_STATE_PLAYING) {
                 dispatchTimeupdateEvent();
                 dispatchWaitingEvent();
             }
         }
-        if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA && state >= HTMLMediaElement::HAVE_FUTURE_DATA) {
+        // If the previous ready state was HAVE_CURRENT_DATA or less, and the new ready state is HAVE_FUTURE_DATA,
+        if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA && state == HTMLMediaElement::HAVE_FUTURE_DATA) {
+            // The user agent must queue a task to fire an event named canplay at the element.
             dispatchCanplayEvent();
 
-            while (m_playOperationQueue.size()) {
-                ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())->processOperationQueue();
-                m_playOperationQueue.pop_front();
-            }
-
-            if (m_mediaPlayer && m_mediaPlayer->playbackState() == MediaPlayer::PLAYBACK_STATE_PLAYING) {
-                dispatchPlayingEvent();
+            // If the element's paused attribute is false, the user agent must notify about playing for the element.
+            if (!m_isPaused) {
+                notifyAboutPlaying();
             }
         }
+        // If the new ready state is HAVE_ENOUGH_DATA,
         if (state == HTMLMediaElement::HAVE_ENOUGH_DATA) {
+            // If the previous ready state was HAVE_CURRENT_DATA or lesss,
+            // the user agent must queue a task to fire an event named canplay at the element, and,
+            // if the element's paused attribute is false, notify about playing for the element.
+            if (prevState <= HTMLMediaElement::HAVE_CURRENT_DATA) {
+                dispatchCanplayEvent();
+                if (!m_isPaused) {
+                    notifyAboutPlaying();
+                }
+            }
+
+            if (eligibleForAutoplay()) {
+                // 1. Set the paused attribute to false.
+                m_isPaused = false;
+                // 2. If the element's show poster flag is true, set it to false and run the time marches on steps.
+                // TODO
+                // 3. Queue a task to fire an event named play at the element.
+                dispatchPlayEvent();
+                // 4. Notify about playing for the element.
+                notifyAboutPlaying();
+                // 5. Set the autoplaying flag to false.
+                m_autoplayingFlag = false;
+            }
+
+            // The user agent must queue a task to fire an event named canplaythrough at the element.
             dispatchCanplaythroughEvent();
-            // if(autoplay() && m_mediaPlayer && m_mediaPlayer->isState(MediaPlayer::STATE_PAUSED)
         }
     } else {
     }
-    m_readyState = state;
 }
 
 void HTMLMediaElement::mediaPlayerNotifySeekedItsContainer(double currentTime)
@@ -978,7 +1019,6 @@ void MediaOperationQueueDataRequestDispatchEvent::processOperationQueue()
     m_mediaElement->processNextOperationQueue();
     m_target->dispatchEvent(m_event);
 }
-
 
 void MediaOperationQueueDataRequestPlay::processOperationQueue()
 {
