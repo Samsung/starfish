@@ -160,3 +160,4 @@ test/internal-test/css/float/float-internal-test-6.html
 test/internal-test/css/float/float-internal-test-7.html
 test/internal-test/css/float/float-internal-test-8.html
 test/internal-test/css/float/float-internal-test-9.html
+test/internal-test/css/clear/clear-internal-test-1.html

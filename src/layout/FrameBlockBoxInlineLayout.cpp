@@ -1019,23 +1019,24 @@ static void removeBoxFromLine(FrameBox* box)
 }
 
 LineFormattingContext::LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth)
-    : m_block(block)
+    : m_originalLineBoxX(lineBoxX)
+    , m_lineBoxY(lineBoxY)
+    , m_currentLineWidth(0)
+    , m_originalLineBoxWidth(lineBoxWidth)
+    , m_currentLine(0)
+    , m_block(block)
     , m_layoutContext(ctx)
+    , m_shouldLineBreakForabsolutePositionedBlock(false)
+    , m_hasFloat(HasNone)
 {
     m_absPosition = block.absolutePoint(m_layoutContext.frameDocument()->asFrameBox());
     m_leftBoundary = m_absPosition.x() + block.paddingLeft() + block.borderLeft();
     m_rightBoundary = m_leftBoundary + block.contentWidth();
-    m_originalLineBoxX = lineBoxX;
-    m_lineBoxY = lineBoxY;
-    m_originalLineBoxWidth = lineBoxWidth;
     m_block.m_lineBoxes.clear();
     // m_block.m_lineBoxes.shrink_to_fit();
     LineBox* lineBox = new LineBox(&m_block);
     layoutLineBox(lineBox);
     m_block.m_lineBoxes.push_back(lineBox);
-    m_currentLine = 0;
-    m_currentLineWidth = 0;
-    m_shouldLineBreakForabsolutePositionedBlock = false;
 }
 
 void LineFormattingContext::registerInlineContent()
@@ -1059,6 +1060,7 @@ void LineFormattingContext::insertFloatingBox(FrameBlockBox* box)
     auto iter = currentLine()->m_boxes.begin();
     size_t index = SIZE_MAX;
     if (box->style()->floating() == LeftFloatValue) {
+        m_hasFloat |= HasLeft;
         for (size_t i = 0; i < currentLine()->m_boxes.size(); i++) {
             FrameBox* box = currentLine()->m_boxes.at(i);
 
@@ -1076,6 +1078,7 @@ void LineFormattingContext::insertFloatingBox(FrameBlockBox* box)
             currentLine()->m_boxes.insert(iter + index, box);
         }
     } else {
+        m_hasFloat |= HasRight;
         for (size_t i = currentLine()->m_boxes.size() - 1; i != SIZE_MAX; i--) {
             FrameBox* box = currentLine()->m_boxes.at(i);
 
@@ -1118,17 +1121,11 @@ static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width
 static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBlockBox* f)
 {
     LineBox* lineBox = ctx->currentLine();
-    return ctx->m_absPosition.y() + lineBox->y() >= ctx->m_layoutContext.lastTopLoc(ctx->m_block.style()->floating());
-}
-
-void LineFormattingContext::insertPendingFloatingBoxesFromInlineFrame()
-{
-    auto iter = m_pendingFloatBoxesFromInlineFrame.begin();
-    while (iter != m_pendingFloatBoxesFromInlineFrame.end()) {
-        FrameBlockBox* box = *iter;
-        insertFloatingBox(box);
-        iter = m_pendingFloatBoxesFromInlineFrame.erase(iter);
-    }
+    return ((ctx->m_absPosition.y() + lineBox->y() >= ctx->m_layoutContext.lastTopLoc(ctx->m_block.style()->floating()))
+        && ((f->style()->clear() == NoneClearValue)
+        || (f->style()->clear() == LeftClearValue && (ctx->m_hasFloat & LineFormattingContext::HasLeft) == 0)
+        || (f->style()->clear() == RightClearValue && (ctx->m_hasFloat & LineFormattingContext::HasRight) == 0)
+        || (f->style()->clear() == BothClearValue && ctx->m_hasFloat == LineFormattingContext::HasNone)));
 }
 
 void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool force)
@@ -1197,12 +1194,14 @@ void LineFormattingContext::layoutLineBox(LineBox* lineBox)
 {
     std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
     if (boundaries.first > m_leftBoundary) {
+        m_hasFloat |= HasLeft;
         m_lineBoxX = boundaries.first - m_absPosition.x();
     } else {
         m_lineBoxX = m_originalLineBoxX;
     }
 
     if (m_leftBoundary + m_originalLineBoxWidth > boundaries.second) {
+        m_hasFloat |= HasRight;
         m_lineBoxWidth = boundaries.second - m_leftBoundary;
     } else {
         m_lineBoxWidth = m_originalLineBoxWidth;
@@ -1392,6 +1391,7 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool force
 
     LineBox* lineBox = new LineBox(&m_block);
     m_block.m_lineBoxes.push_back(lineBox);
+    m_hasFloat = HasNone;
     layoutLineBox(lineBox);
     m_currentLine++;
     m_currentLineWidth = 0;
@@ -2180,7 +2180,6 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
         if (hasIsolateBidiContent(self)) {
             resolveBidi(lineFormattingContext, self->style()->direction(), self->boxes());
         }
-        lineFormattingContext.insertPendingFloatingBoxesFromInlineFrame();
         lineFormattingContext.layoutChildInlineBox(self, self->paddingLeft() + self->borderLeft());
 
         InlineNonReplacedBox* selfForFinishLayout = self;
@@ -2250,7 +2249,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
     inlineBoxGenerator(self, self->m_origin, ctx, lineFormattingContext, unprocessedStartingWidth, unprocessedEndingWidth, [&](FrameBox* ib)
     {
         if (ib->style()->floating() != NoneFloatValue) {
-            lineFormattingContext.m_pendingFloatBoxesFromInlineFrame.push_back(ib->asFrameBlockBox());
+            lineFormattingContext.insertFloatingBox(ib->asFrameBlockBox());
             ib->setLayoutParent(lineFormattingContext.currentLine());
         } else {
             self->boxes().push_back(ib);
