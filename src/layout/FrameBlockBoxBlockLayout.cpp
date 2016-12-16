@@ -45,8 +45,27 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             child->asFrameBox()->setX(width() - child->asFrameBox()->width() - mX - borderRight() - paddingRight());
         }
 
-        child->asFrameBox()->setY(normalFlowHeight + top);
-        child->asFrameBox()->moveY(child->asFrameBox()->marginCollapseResult().m_advanceY);
+        if (child->style()->clear() == NoneClearValue) {
+            child->asFrameBox()->setY(normalFlowHeight + top);
+            child->asFrameBox()->moveY(child->asFrameBox()->marginCollapseResult().m_advanceY);
+        } else  {
+            LayoutLocation loc = absolutePoint(ctx.frameDocument());
+            LayoutUnit yPosition = loc.y() + normalFlowHeight + top;
+            LayoutUnit height;
+            if (child->style()->clear() == LeftClearValue) {
+                height = ctx.maxHeightDueTofloatingBoxes(yPosition, LeftClearValue);
+            } else if (child->style()->clear() == RightClearValue) {
+                height = ctx.maxHeightDueTofloatingBoxes(yPosition, RightClearValue);
+            } else {
+                height = ctx.maxHeightDueTofloatingBoxes(yPosition, BothClearValue);
+            }
+
+            if (height > 0) {
+                child->asFrameBox()->setY(normalFlowHeight + top + height);
+            } else {
+                child->asFrameBox()->setY(normalFlowHeight + top);
+            }
+        }
 
         if (child->isEstablishesBlockFormattingContext()) {
             bool widthIsAuto = child->style()->width().isAuto();
@@ -67,7 +86,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 LayoutUnit yDiff;
                 if ((widthIsAuto && child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() > 0)
                     || (width > child->asFrameBox()->width())
-                    || ((yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y(), child->asFrameBox()->height() + child->asFrameBox()->marginHeight())) == 0)) {
+                    || ((yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y(), child->asFrameBox()->height())) == 0)) {
                     child->asFrameBox()->moveY(selfLoc.y() - originalY);
                     if (widthIsAuto) {
                         child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
