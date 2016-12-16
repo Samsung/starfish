@@ -130,7 +130,21 @@ void LayoutContext::unregisterFloatingBoxes(LayoutUnit yPosition)
     }
 }
 
-LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
+static bool floatAffected(LayoutUnit yPosition, LayoutUnit height, FloatingBoxInfo& f)
+{
+    if (f.loc().y() > yPosition) {
+        if (f.loc().y() >= yPosition + height) {
+            return false;
+        }
+    } else if (f.loc().y() < yPosition) {
+        if (f.bottom() <= yPosition) {
+            return false;
+        }
+    }
+    return true;
+}
+
+LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height)
 {
     bool hasLeft = false, hasRight = false;
     LayoutUnit maxLeftHeight;
@@ -143,7 +157,7 @@ LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
         FloatingBoxInfo f = c.m_floatBoxes->at(i);
-        if (f.loc().y() <= yPosition && yPosition < f.bottom()) {
+        if (floatAffected(yPosition, height, f)) {
             if (f.isLeft()) {
 #ifndef NDEBUG
                 if (hasLeft) {
@@ -189,7 +203,7 @@ LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition)
     }
 }
 
-LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
+LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height)
 {
     bool hasLeft = false, hasRight = false;
     LayoutUnit lastLeftHeight;
@@ -202,7 +216,7 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
         FloatingBoxInfo f = c.m_floatBoxes->at(i);
-        if (f.loc().y() <= yPosition && yPosition < f.bottom()) {
+        if (floatAffected(yPosition, height, f)) {
             if (f.isLeft()) {
 #ifndef NDEBUG
                 if (hasLeft) {
@@ -240,13 +254,13 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition)
     }
 }
 
-std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit left, LayoutUnit right)
+std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
         FloatingBoxInfo f = c.m_floatBoxes->at(i);
-        if (f.loc().y() <= yPosition && yPosition < f.bottom()) {
+        if (floatAffected(yPosition, height, f)) {
             LayoutUnit x = f.horizontalBoundary();
             if (f.isLeft()) {
                 if (x > left) {

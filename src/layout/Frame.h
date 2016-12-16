@@ -115,10 +115,10 @@ public:
 
     void registerFloatingBoxes(FrameBlockBox* box);
     void unregisterFloatingBoxes(LayoutUnit yPosition);
-    LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition);
-    LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition);
+    LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height);
+    LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height);
     LayoutUnit lastTopLoc(FloatValue floating);
-    std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit left, LayoutUnit right);
+    std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right);
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
