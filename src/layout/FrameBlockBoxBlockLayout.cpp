@@ -53,24 +53,33 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             bool floatAffected = false;
             LayoutLocation loc = absolutePoint(ctx.frameDocument());
             // TODO: Consider Rtl
-            LayoutUnit leftBoundary = loc.x() + paddingLeft() + borderLeft() + child->asFrameBox()->marginLeft();
-            LayoutUnit rightBoundary = leftBoundary + contentWidth() - child->asFrameBox()->marginRight();
+            LayoutUnit leftBoundary = loc.x() + paddingLeft() + borderLeft();
+            LayoutUnit rightBoundary = leftBoundary + contentWidth();
             LayoutLocation selfLoc = child->asFrameBox()->absolutePoint(ctx.frameDocument());
             LayoutUnit originalY = selfLoc.y();
             positionEstablishedBlockFormatContextBox:
-            std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.floatingBoxBoundary(selfLoc.y(), leftBoundary, rightBoundary);
+            std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.floatingBoxBoundary(selfLoc.y(),
+                child->asFrameBox()->height() + child->asFrameBox()->marginHeight(), leftBoundary, rightBoundary);
             floatAffected |= boundaries.first != leftBoundary || boundaries.second != rightBoundary;
 
             if (floatAffected) {
                 LayoutUnit width = boundaries.second - boundaries.first;
                 LayoutUnit yDiff;
                 if ((widthIsAuto && child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() > 0)
-                    || width > child->asFrameBox()->width() + child->asFrameBox()->marginWidth()
-                    || (yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y())) == 0) {
-                    child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
+                    || (width > child->asFrameBox()->width())
+                    || ((yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y(), child->asFrameBox()->height() + child->asFrameBox()->marginHeight())) == 0)) {
                     child->asFrameBox()->moveY(selfLoc.y() - originalY);
                     if (widthIsAuto) {
-                        child->asFrameBox()->setContentWidth(child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() - child->asFrameBox()->marginWidth());
+                        child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
+                        child->asFrameBox()->setContentWidth(child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width());
+                    } else {
+                        if (selfLoc.x() < boundaries.first) {
+                            child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
+                        }
+
+                        if (selfLoc.x() + child->asFrameBox()->width() > boundaries.second) {
+                            child->asFrameBox()->moveX(boundaries.second - selfLoc.x() - child->asFrameBox()->width());
+                        }
                     }
                 } else {
                     selfLoc.setY(selfLoc.y() + yDiff);

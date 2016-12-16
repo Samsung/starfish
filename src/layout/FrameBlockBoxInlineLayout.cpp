@@ -1192,7 +1192,8 @@ void LineFormattingContext::insertPendingAboslutePositionedBoxes()
 
 void LineFormattingContext::layoutLineBox(LineBox* lineBox)
 {
-    std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, m_leftBoundary, m_rightBoundary);
+    // TODO: Should we predict height of line box? or can the predicted line height be default font height?
+    std::pair<LayoutUnit, LayoutUnit> boundaries = m_layoutContext.floatingBoxBoundary(m_absPosition.y() + m_lineBoxY, 0, m_leftBoundary, m_rightBoundary);
     if (boundaries.first > m_leftBoundary) {
         m_hasFloat |= HasLeft;
         m_lineBoxX = boundaries.first - m_absPosition.x();
@@ -1358,15 +1359,15 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool forceI
     // y position should be considered.
     if (forceInsertFloatingBlock && !m_block.isEstablishesBlockFormattingContext()) {
         lineBox->setHeight(height);
-        if (!dueToBr && m_currentLineWidth == 0) {
-            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
+        if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
+            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
         }
     } else {
         if (isLastLine) {
             STARFISH_ASSERT(forceInsertFloatingBlock);
-            height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY));
-        } else if (!dueToBr && m_currentLineWidth == 0) {
-            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY);
+            height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height));
+        } else if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
+            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
             lineBox->markHeightComputed();
         }
         lineBox->setHeight(height);
