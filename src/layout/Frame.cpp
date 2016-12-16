@@ -144,27 +144,17 @@ static bool floatAffected(LayoutUnit yPosition, LayoutUnit height, FloatingBoxIn
     return true;
 }
 
-LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height)
+LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition, ClearValue clearValue)
 {
     bool hasLeft = false, hasRight = false;
     LayoutUnit maxLeftHeight;
     LayoutUnit maxRightHeight;
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
-#ifndef NDEBUG
-    LayoutUnit leftX, rightX;
-#endif
-
-    for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
-        FloatingBoxInfo f = c.m_floatBoxes->at(i);
-        if (floatAffected(yPosition, height, f)) {
+    if (clearValue == BothClearValue) {
+        for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+            FloatingBoxInfo f = c.m_floatBoxes->at(i);
             if (f.isLeft()) {
-#ifndef NDEBUG
-                if (hasLeft) {
-                    STARFISH_ASSERT(f.loc().x() > leftX);
-                }
-                leftX = f.loc().x();
-#endif
                 if (!hasLeft) {
                     maxLeftHeight = f.bottom();
                     hasLeft = true;
@@ -172,12 +162,6 @@ LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition, Layo
                     maxLeftHeight = std::max(maxLeftHeight, f.bottom());
                 }
             } else {
-#ifndef NDEBUG
-                if (hasRight) {
-                    STARFISH_ASSERT(f.loc().x() < rightX);
-                }
-                rightX = f.loc().x();
-#endif
                 if (!hasRight) {
                     maxRightHeight = f.bottom();
                     hasRight = true;
@@ -186,15 +170,51 @@ LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition, Layo
                 }
             }
         }
-    }
 
-    if (hasLeft) {
-        if (hasRight) {
-            return std::max(maxLeftHeight, maxRightHeight) - yPosition;
+        if (hasLeft) {
+            if (hasRight) {
+                return std::max(maxLeftHeight, maxRightHeight) - yPosition;
+            } else {
+                return maxLeftHeight - yPosition;
+            }
         } else {
+            if (hasRight) {
+                return maxRightHeight - yPosition;
+            } else {
+                return 0;
+            }
+        }
+    } else if (clearValue == LeftClearValue) {
+        for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+            FloatingBoxInfo f = c.m_floatBoxes->at(i);
+            if (f.isLeft()) {
+                if (!hasLeft) {
+                    maxLeftHeight = f.bottom();
+                    hasLeft = true;
+                } else {
+                    maxLeftHeight = std::max(maxLeftHeight, f.bottom());
+                }
+            }
+        }
+
+        if (hasLeft) {
             return maxLeftHeight - yPosition;
+        } else {
+            return 0;
         }
     } else {
+        for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+            FloatingBoxInfo f = c.m_floatBoxes->at(i);
+            if (!f.isLeft()) {
+                if (!hasRight) {
+                    maxRightHeight = f.bottom();
+                    hasRight = true;
+                } else {
+                    maxRightHeight = std::max(maxRightHeight, f.bottom());
+                }
+            }
+        }
+
         if (hasRight) {
             return maxRightHeight - yPosition;
         } else {

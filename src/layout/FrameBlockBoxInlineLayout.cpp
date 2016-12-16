@@ -1365,7 +1365,7 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool forceI
     } else {
         if (isLastLine) {
             STARFISH_ASSERT(forceInsertFloatingBlock);
-            height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height));
+            height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, BothClearValue));
         } else if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
             height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
             lineBox->markHeightComputed();
