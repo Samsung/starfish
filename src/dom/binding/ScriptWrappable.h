@@ -70,6 +70,7 @@ class HTMLMediaElement;
 class HTMLVideoElement;
 class HTMLAudioElement;
 class HTMLTrackElement;
+class HTMLSourceElement;
 #endif
 class HTMLUnknownElement;
 class Event;
@@ -232,6 +233,7 @@ public:
     void initScriptWrappable(HTMLVideoElement* ptr);
     void initScriptWrappable(HTMLAudioElement* ptr);
     void initScriptWrappable(HTMLTrackElement* ptr);
+    void initScriptWrappable(HTMLSourceElement* ptr);
     void initScriptWrappable(TextTrack* ptr);
     void initScriptWrappable(TextTrackList* ptr);
     void initScriptWrappable(TextTrackCue* ptr);

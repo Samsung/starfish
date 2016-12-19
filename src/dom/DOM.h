@@ -52,6 +52,7 @@
 #include "dom/HTMLVideoElement.h"
 #include "dom/HTMLAudioElement.h"
 #include "dom/HTMLTrackElement.h"
+#include "dom/HTMLSourceElement.h"
 #endif
 #ifdef STARFISH_ENABLE_MULTI_PAGE
 #include "dom/HTMLAnchorElement.h"
