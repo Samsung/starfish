@@ -87,6 +87,7 @@ const uint32_t kEscargotObjectCheckMagic = 0x0fff;
     F(htmlVideoElement, HTMLVideoElement) \
     F(htmlAudioElement, HTMLAudioElement) \
     F(htmlTrackElement, HTMLTrackElement) \
+    F(htmlSourceElement, HTMLSourceElement) \
     F(textTrack, TextTrack) \
     F(textTrackList, TextTrackList) \
     F(textTrackCue, TextTrackCue) \
@@ -200,6 +201,7 @@ private:
     escargot::ESFunctionObject* m_htmlVideoElement;
     escargot::ESFunctionObject* m_htmlAudioElement;
     escargot::ESFunctionObject* m_htmlTrackElement;
+    escargot::ESFunctionObject* m_htmlSourceElement;
     escargot::ESFunctionObject* m_mediaSource;
     escargot::ESFunctionObject* m_sourceBuffer;
     escargot::ESFunctionObject* m_sourceBufferList;

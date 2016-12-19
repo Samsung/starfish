@@ -68,6 +68,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLAudioElement(document);
     } else if (name == str->m_trackTagName.localNameAtomic()) {
         return new HTMLTrackElement(document);
+    } else if (name == str->m_sourceTagName.localNameAtomic()) {
+        return new HTMLSourceElement(document);
     }
 #endif
 #ifdef STARFISH_ENABLE_MULTI_PAGE

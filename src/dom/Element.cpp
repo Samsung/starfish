@@ -52,6 +52,7 @@
 #include "HTMLVideoElement.h"
 #include "HTMLAudioElement.h"
 #include "HTMLTrackElement.h"
+#include "HTMLSourceElement.h"
 #endif
 #include "dom/Attr.h"
 #include "dom/xml/XMLSerializer.h"

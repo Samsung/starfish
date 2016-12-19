@@ -4022,7 +4022,7 @@ escargot::ESFunctionObject* bindingHTMLAnchorElement(ScriptBindingInstance* scri
     [](escargot::ESVMInstance* instance) -> escargot::ESValue { \
         GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node); \
         Node* nd = originalObj; \
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLMediaElement()) { \
+        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTML##ElementName##Element()) { \
             HTML##ElementName##Element* __element = nd->asElement()->asHTMLElement()->asHTML##ElementName##Element(); \
             try { \
                 ARG_##TYPE_F(setter) \
@@ -4302,6 +4302,16 @@ escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scrip
     });
 
     return HTMLTrackElementFunction;
+}
+
+escargot::ESFunctionObject* bindingHTMLSourceElement(ScriptBindingInstance* scriptBindingInstance)
+{
+    DEFINE_FUNCTION_NOT_CONSTRUCTOR_WITH_PARENTFUNC(HTMLSourceElement, fetchData(scriptBindingInstance)->htmlElement());
+
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Source, src, setSrc, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Source, typeAttr, setTypeAttr, TYPE_STRING);
+
+    return HTMLSourceElementFunction;
 }
 
 #undef DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY
