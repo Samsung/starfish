@@ -529,11 +529,13 @@ class LineFormattingContext {
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
-    LayoutUnit computeLineBoxHeight(bool dueToBr, bool forceInsertFloatingBlock, bool isLastLine);
-    void breakLine(bool dueToBr, bool isInLineBox, bool forceInsertFloatingBlock);
+    LayoutUnit computeLineBoxHeight(bool dueToBr, bool hasMoreInlineBoxes);
+    void resetLineBox();
+    void finishLine(bool dueToBr, bool isInLineBox, bool isLastLine);
+    void breakLine(bool dueToBr, bool isInLineBox, bool isLastLine, bool skipFinishLine);
     template <typename Box>
     LayoutUnit layoutChildInlineBox(Box* parent, LayoutUnit start);
-    void completeLastLine();
+    void computeHorizontalProperties();
 
     bool isBreakedLineWithoutBR(size_t idx)
     {
@@ -541,12 +543,14 @@ public:
     }
 
     void registerInlineContent();
-    void insertFloatingBox(FrameBlockBox* box);
-    void insertNonFloatingBox(FrameBox* box);
-    void insertPendingFloatingBoxes(bool isInlineBox, bool force = false);
+    void insertPendingFloatingBoxes(bool isInlineBox, bool isLastLine, bool skipFinishLine, LayoutUnit floatYDiff, bool onlyAllowBeforeCurrentLine);
     void insertPendingAboslutePositionedBoxes();
-    void layoutLineBox(LineBox* lineBox);
+    void insertPendingInlineBoxesDueToFloatinBoxes();
+    void initLineBox(LineBox* lineBox, LayoutUnit height);
+    void layoutLineBoxDueToFloatBox(FrameBlockBox* box);
     void removeDanglingSpaceFromLine();
+    void removeAllInlineBoxes();
+    void sortInlineBoxes();
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();
@@ -565,7 +569,7 @@ public:
 
     bool hasFloatBoxAlreadyInLineBox()
     {
-        return m_originalLineBoxWidth != m_lineBoxWidth;
+        return m_hasFloat != HasNone;
     }
 
     LayoutUnit m_leftBoundary;
@@ -587,6 +591,10 @@ public:
         HasRight,
     };
     int m_hasFloat;
+    size_t m_pendingFloatBoxNumsBeforeCurrentLine;
+    LayoutUnit m_accumulatedFloatLeftWidth;
+    LayoutUnit m_accumulatedFloatRightWidth;
+    LayoutUnit m_floatBoxY;
 
     std::set<size_t> m_breakedLinesSet;
 
@@ -596,6 +604,7 @@ public:
 
     std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
     std::vector<FrameBlockBox*> m_pendingFloatBoxes;
+    std::vector<FrameBox*> m_pendingInlineBoxes;
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;
     std::unordered_map<FrameInline*, InlineNonReplacedBox*> m_checkLastInlineNonReplacedPerLine;
