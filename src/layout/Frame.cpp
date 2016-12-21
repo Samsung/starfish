@@ -132,16 +132,17 @@ void LayoutContext::unregisterFloatingBoxes(LayoutUnit yPosition)
 
 static bool floatAffected(LayoutUnit yPosition, LayoutUnit height, FloatingBoxInfo& f)
 {
-    if (f.loc().y() > yPosition) {
+    if (height == 0) {
+        // height of Linebox can be 0 for the first time.
+        return f.loc().y() <= yPosition && yPosition < f.bottom();
+    } else {
         if (f.loc().y() >= yPosition + height) {
             return false;
-        }
-    } else if (f.loc().y() < yPosition) {
-        if (f.bottom() <= yPosition) {
+        } else if (f.bottom() <= yPosition) {
             return false;
         }
+        return true;
     }
-    return true;
 }
 
 LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition, ClearValue clearValue)
