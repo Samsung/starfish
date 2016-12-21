@@ -1317,7 +1317,7 @@ LayoutUnit LineFormattingContext::layoutChildInlineBox(Box* parent, LayoutUnit s
         } else if (childBox->style()->floating() == RightFloatValue) {
             STARFISH_ASSERT(parent->isLineBox() && childBox->layoutParent() == currentLine());
             rightFloatX -= childBox->width() + childBox->marginWidth();
-            childBox->setX(rightFloatX);
+            childBox->setX(rightFloatX + childBox->marginLeft());
             m_layoutContext.registerFloatingBoxes(childBox->asFrameBlockBox());
         }
     }
