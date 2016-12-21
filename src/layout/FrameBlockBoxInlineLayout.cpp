@@ -98,6 +98,10 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
     for (size_t k = 0; k < boxes->size(); k ++) {
         FrameBox* box = boxes->at(k);
         if (!box->isNormalFlow()) {
+            if (box->style()->position() != AbsolutePositionValue) {
+                STARFISH_ASSERT(box->style()->floating() != NoneFloatValue);
+                box->moveY(box->marginTop());
+            }
             continue;
         } else {
             hasNormalFlowChild = true;
