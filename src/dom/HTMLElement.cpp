@@ -36,6 +36,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old, String* v
         setAttributeEventListener(ss->m_load, value, this);
     } else if (name == ss->m_onunload) {
         setAttributeEventListener(ss->m_unload, value, this);
+    } else if (name == ss->m_onerror) {
+        setAttributeEventListener(ss->m_error, value, this);
     } else if (name == ss->m_dir) {
         if (attributeCreated)
             m_hasDirAttribute = true;

@@ -26,6 +26,48 @@ class TextTrack;
 class TextTrackList;
 class TimeRanges;
 class MediaPlayer;
+class HTMLMediaElement;
+
+class ResourceSelectionContext : public gc {
+public:
+    enum Mode {
+        MODE_NONE,      /* INITIAL */
+        MODE_OBJECT,    /* NOT SUPPORT */
+        MODE_ATTRIBUTE,
+        MODE_CHILDREN,
+    };
+
+    ResourceSelectionContext(HTMLMediaElement* element)
+        : m_mediaElement(element)
+        , m_nodeBeforePointer(nullptr)
+        , m_mode(MODE_NONE)
+        , m_waiting(false)
+    { }
+
+    Node* nodeBeforePointer()
+    {
+        return m_nodeBeforePointer;
+    }
+    void updatePointer(Node* nodeBeforePointer)
+    {
+        m_nodeBeforePointer = nodeBeforePointer;
+    }
+    bool hasPointer()
+    {
+        return (m_nodeBeforePointer != nullptr);
+    }
+    bool waitingChildren()
+    {
+        return m_waiting;
+    }
+    void failedWithElements(Element* candidate);
+    HTMLSourceElement* getNextCandidate();
+
+    HTMLMediaElement* m_mediaElement;
+    Node* m_nodeBeforePointer;
+    Mode m_mode;
+    bool m_waiting;
+};
 
 class MediaOperationQueueData : public gc {
 public:
@@ -150,6 +192,7 @@ class HTMLMediaElement : public HTMLElement {
     friend class MediaOperationQueueDataRequestSeek;
     friend class MediaOperationQueueDataRequestSeekToDefault;
     friend class MediaOperationQueueDataRequestResourceSelection;
+    friend class MediaOperationQueueDataRequestPrepare;
     friend class MediaOperationQueueDataRequestDispatchEvent;
 public:
     enum NetworkState {
@@ -190,6 +233,7 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved);
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
+    virtual void onDOMContentLoaded();
 
     TextTrackList* textTracks()
     {
@@ -334,6 +378,7 @@ protected:
     MediaOperationQueue m_playOperationQueue;
     size_t m_currentPendingOperationCount;
     size_t m_currentPendingOperationHandle;
+    ResourceSelectionContext* m_resourceSelectionContext;
 
     void initMediaPlayer();
     void closeMediaPlayer();
@@ -375,6 +420,17 @@ protected:
         // TODO Check the element's node document's active sandboxing flag set
         //      does not have the sandboxed automatic features browsing context flag set.
         return (m_autoplayingFlag && m_isPaused && autoplay());
+    }
+
+    bool hasSourceElementChild()
+    {
+        Node* child = firstChild();
+        while (child) {
+            if (child->isElement() && child->asElement()->isHTMLElement() && child->asElement()->asHTMLElement()->isHTMLSourceElement())
+                return true;
+            child = child->nextSibling();
+        }
+        return false;
     }
 };
 
