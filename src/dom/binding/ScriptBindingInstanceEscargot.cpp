@@ -3615,6 +3615,34 @@ escargot::ESFunctionObject* bindingHTMLElement(ScriptBindingInstance* scriptBind
     }, escargot::ESString::create("focus"), 1, false);
     HTMLElementFunction->protoType().asESPointer()->asESObject()->defineDataProperty(escargot::ESString::create("focus"), true, true, true, focusFunction);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        HTMLElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("onerror"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            return element->attributeEventListener(element->document()->window()->starFish()->staticStrings()->m_error);
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
+        Node* nd = originalObj;
+        if (nd->isElement() && nd->asElement()->isHTMLElement()) {
+            auto element = nd->asElement()->asHTMLElement();
+            auto eventType = element->document()->window()->starFish()->staticStrings()->m_error;
+            if (v.isObject() || (v.isESPointer() && v.asESPointer()->isESFunctionObject())) {
+                element->setAttributeEventListener(eventType, v);
+            } else {
+                element->clearAttributeEventListener(eventType);
+            }
+        } else {
+            THROW_ILLEGAL_INVOCATION();
+        }
+        return escargot::ESValue();
+    });
+
     return HTMLElementFunction;
 }
 
@@ -4130,7 +4158,6 @@ escargot::ESFunctionObject* bindingHTMLMediaElement(ScriptBindingInstance* scrip
     DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, progress, Progress, TYPE_EVENT);
     DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, suspend, Suspend, TYPE_EVENT);
     DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, abort, Abort, TYPE_EVENT);
-    DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, error, Error, TYPE_EVENT);
     DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, emptied, Emptied, TYPE_EVENT);
     DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, stalled, Stalled, TYPE_EVENT);
     DEFINE_HTMLELEMENT_EVENT_PROPERTY(Media, loadedmetadata, Loadedmetadata, TYPE_EVENT);

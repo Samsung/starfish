@@ -753,8 +753,9 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_mouseup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "mouseup"));
     m_onmouseup = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onmouseup"));
     m_load = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "load"));
-    m_error = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "error"));
     m_onload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onload"));
+    m_error = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "error"));
+    m_onerror = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onerror"));
     m_unload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "unload"));
     m_onunload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "onunload"));
     m_visibilitychange = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "visibilitychange"));

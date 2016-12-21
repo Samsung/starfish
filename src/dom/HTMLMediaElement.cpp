@@ -19,6 +19,7 @@
 #include "StarFishConfig.h"
 #include "extra/TimeRanges.h"
 #include "dom/HTMLMediaElement.h"
+#include "dom/HTMLSourceElement.h"
 #include "dom/HTMLTrackElement.h"
 #include "dom/TextTrack.h"
 #include "dom/DOMException.h"
@@ -27,6 +28,7 @@
 #include "platform/message_loop/MessageLoop.h"
 #include "extra/MediaSource.h"
 #include "extra/SourceBuffer.h"
+#include "extra/MimeType.h"
 
 namespace StarFish {
 
@@ -50,7 +52,19 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
     , m_currentOperation(nullptr)
     , m_currentPendingOperationCount(0)
     , m_currentPendingOperationHandle(SIZE_MAX)
+    , m_resourceSelectionContext(nullptr)
 {
+}
+
+void HTMLMediaElement::onDOMContentLoaded()
+{
+    if (!document()->inParsing() && (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
+        // STARFISH_LOG_INFO("HTMLMediaElement::onDOMContentLoaded() causes content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" : "false", preload()->utf8Data());
+        load();
+        if (autoplay()) {
+            appendToPlayOperationQueue(new MediaOperationQueueDataRequestPlay(this));
+        }
+    }
 }
 
 void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
@@ -58,16 +72,16 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
 
     if (name == document()->window()->starFish()->staticStrings()->m_src) {
-        load();
-        if (value->length() != 0 && autoplay()) {
-            appendToPlayOperationQueue(new MediaOperationQueueDataRequestPlay(this));
+        if (!document()->inParsing() && (autoplay() || preloadEnum() != HTMLMediaElement::PRELOAD_NONE)) {
+            // STARFISH_LOG_INFO("HTMLMediaElement::Changing src attribute causes content load (autoplay:%s, preload:%s)\n", autoplay() ? "true" : "false", preload()->utf8Data());
+            load();
+            if (autoplay()) {
+                appendToPlayOperationQueue(new MediaOperationQueueDataRequestPlay(this));
+            }
         }
     } else if (name == document()->window()->starFish()->staticStrings()->m_loop) {
         if (m_mediaPlayer) {
-            if (attributeRemoved)
-                m_mediaPlayer->setLoop(false);
-            else
-                m_mediaPlayer->setLoop(true);
+            m_mediaPlayer->setLoop(!attributeRemoved);
         }
     }
 }
@@ -75,9 +89,6 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old, Stri
 void HTMLMediaElement::didNodeInsertedToDocumenTree()
 {
     HTMLElement::didNodeInsertedToDocumenTree();
-    if (m_autoplayingFlag && autoplay()) {
-        play();
-    }
 }
 
 void HTMLMediaElement::didNodeRemovedFromDocumenTree()
@@ -178,13 +189,14 @@ void HTMLMediaElement::initMediaPlayer()
 
 void HTMLMediaElement::resourceSelection()
 {
-    // STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection()\n");
+    STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection()\n");
     closeMediaPlayer();
     m_networkState = NETWORK_NO_SOURCE;
     // Set the element's show poster flag to true.
     // Set the media element's delaying-the-load-event flag to true (this delays the load event).
     m_delayingTheLoadEvent = true;
 
+    m_resourceSelectionContext = new ResourceSelectionContext(this);
     appendToOperationQueue(new MediaOperationQueueDataRequestResourceSelection(this));
 }
 
@@ -197,7 +209,7 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
 
     // TODO Set the element's show poster flag to true.
     // Fire a simple event named error at the media element.
-    dispatchErrorEvent();
+    dispatchErrorEventNow();
 
     // Reject pending play promises with promises and a "NotSupportedError" DOMException.
     abortEveryPendingOperation(new DOMException(document()->window()->scriptBindingInstance(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
@@ -222,6 +234,7 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
         dispatchErrorEvent();
     }
 
+    m_resourceSelectionContext = nullptr;
     // Abort the overall resource selection algorithm
     abortEveryPendingOperation(new DOMException(document()->window()->scriptBindingInstance(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
 }
@@ -332,6 +345,9 @@ void HTMLMediaElement::didNodeInserted(Node* parent, Node* newChild)
         STARFISH_ASSERT(trackElement->track());
         addTextTrack(trackElement->track());
     }
+    if (m_resourceSelectionContext && m_resourceSelectionContext->waitingChildren()) {
+        // TODO Release waiting?
+    }
 }
 
 void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
@@ -341,6 +357,11 @@ void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
         HTMLTrackElement* trackElement = oldChild->asElement()->asHTMLElement()->asHTMLTrackElement();
         STARFISH_ASSERT(trackElement->track());
         removeTextTrack(trackElement->track());
+    }
+    if (m_resourceSelectionContext && m_resourceSelectionContext->hasPointer()) {
+        if (oldChild == m_resourceSelectionContext->nodeBeforePointer()) {
+            m_resourceSelectionContext->updatePointer(previousSibling());
+        }
     }
 }
 
@@ -887,35 +908,73 @@ MediaPlayer* MediaOperationQueueData::mediaPlayer()
     return m_mediaElement->mediaPlayer();
 }
 
+HTMLSourceElement* ResourceSelectionContext::getNextCandidate()
+{
+    STARFISH_ASSERT(m_mode == ResourceSelectionContext::MODE_CHILDREN);
+    Node* child;
+    if (hasPointer()) {
+        child = nodeBeforePointer()->nextSibling();
+    } else {
+        child = m_mediaElement->firstChild();
+    }
+    updatePointer(child);
+
+    while (child) {
+        if (child->isElement() && child->asElement()->isHTMLElement() && child->asElement()->asHTMLElement()->isHTMLSourceElement()) {
+            return child->asElement()->asHTMLElement()->asHTMLSourceElement();
+        }
+        child = child->nextSibling();
+        updatePointer(child);
+    }
+
+    m_waiting = true;
+    return nullptr;
+}
+
+void ResourceSelectionContext::failedWithElements(Element* candidate)
+{
+    // Failed with elements:
+    // Queue a task to fire an event named error at the candidate element.
+    String* eventType = m_mediaElement->document()->window()->starFish()->staticStrings()->m_error.localName();
+    Event* e = new Event(eventType, EventInit(false, false));
+    m_mediaElement->addEventToOperationQueue(candidate, e);
+}
+
 void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
     STARFISH_LOG_INFO("MediaOperationQueueDataRequestResourceSelection::processOperationQueue()\n");
     HTMLMediaElement* self = m_mediaElement;
     self->processNextOperationQueue();
 
+    STARFISH_ASSERT(self->m_resourceSelectionContext);
+    ResourceSelectionContext* context = self->m_resourceSelectionContext;
+
     // TODO If the media element's blocked-on-parser flag is false, then populate the list of pending text tracks.
     // TODO If the media element has an assigned media provider object, then let mode be object.
-    // mode == 1(src), mode == 2(source elements)
-    int mediaProviderObjectMode = -1;
 
     // Otherwise, if the media element has no assigned media provider object but has a src attribute, then let mode be attribute.
-    // TODO Otherwise, if the media element does not have an assigned media provider object and does not have a src attribute, but does have a source element child, then let mode be children and let candidate be the first such source element child in tree order.
-    if (self->src()->length()) {
-        mediaProviderObjectMode = 1;
-    } else {
-        // Otherwise the media element has no assigned media provider object and has neither a src attribute nor a source element child: set the networkState to NETWORK_EMPTY, and abort these steps; the synchronous section ends.
-        self->m_networkState = HTMLMediaElement::NETWORK_EMPTY;
-        // NOTE: Firing emptied event and Detaching MediaSource must have done in "load()"
-        //       (or does not have to consider if m_networkState were already NETWORK_EMPTY)
-        return;
+    // Otherwise, if the media element does not have an assigned media provider object and does not have a src attribute,
+    // but does have a source element child, then let mode be children and let candidate be the first such source element child in tree order.
+    if (context->m_mode == ResourceSelectionContext::MODE_NONE) {
+        if (self->hasAttribute(self->document()->window()->starFish()->staticStrings()->m_src) != SIZE_MAX) {
+            context->m_mode = ResourceSelectionContext::MODE_ATTRIBUTE;
+        } else if (self->hasSourceElementChild()) {
+            context->m_mode = ResourceSelectionContext::MODE_CHILDREN;
+        } else {
+            // Otherwise the media element has no assigned media provider object and has neither a src attribute nor a source element child: set the networkState to NETWORK_EMPTY, and abort these steps; the synchronous section ends.
+            self->m_networkState = HTMLMediaElement::NETWORK_EMPTY;
+            // NOTE: Firing emptied event and Detaching MediaSource must have done in "load()"
+            //       (or does not have to consider if m_networkState were already NETWORK_EMPTY)
+            return;
+        }
+
+        // Set the media element's networkState to NETWORK_LOADING.
+        self->m_networkState = HTMLMediaElement::NETWORK_LOADING;
+        // Queue a task to fire a simple event named loadstart at the media element.
+        self->dispatchLoadstartEvent();
     }
 
-    // Set the media element's networkState to NETWORK_LOADING.
-    self->m_networkState = HTMLMediaElement::NETWORK_LOADING;
-    // Queue a task to fire a simple event named loadstart at the media element.
-    self->dispatchLoadstartEvent();
-
-    if (mediaProviderObjectMode == 1) {
+    if (context->m_mode == ResourceSelectionContext::MODE_ATTRIBUTE) {
         // If the src attribute's value is the empty string, then end the synchronous section, and jump down to the failed with attribute step below.
         if (self->src()->containsOnlyWhitespace()) {
             self->dedicatedMediaSourceFailure();
@@ -927,7 +986,37 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in parallel.
         self->initMediaPlayer();
-        STARFISH_LOG_INFO("HTMLMediaElement::resourceSelection::resourceSelectionTask() - request prepare task\n");
+        self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
+        self->appendToOperationQueue(new MediaOperationQueueDataRequestSeekToDefault(self));
+        return;
+    } else if (context->m_mode == ResourceSelectionContext::MODE_CHILDREN) {
+        HTMLSourceElement* candidate = context->getNextCandidate();
+        if (!candidate) {
+            // Wait until the node after pointer is a node other than the end of the list. (This step might wait forever.)
+            self->m_networkState = HTMLMediaElement::NETWORK_NO_SOURCE;
+            return;
+        }
+        // Process candidate:
+        if (candidate->src()->length() == 0 || candidate->src()->containsOnlyWhitespace()) {
+            // If candidate does not have a src attribute, or if its src attribute's value is the empty string,
+            // then end the synchronous section, and jump down to the failed with elements step below.
+            context->failedWithElements(candidate);
+            self->appendToOperationQueue(new MediaOperationQueueDataRequestResourceSelection(self));
+            return;
+        } else if (candidate->typeAttr()->length() > 0 && MimeType::parseFromString(candidate->typeAttr()).isValid() && !MediaSource::isTypeSupported(candidate->typeAttr())) {
+            // FIXME : MediaSource::isTypeSupported() -> replaced method to proper one.
+
+            // If candidate has a type attribute whose value, when parsed as a MIME type,
+            // represents a type that the user agent knows it cannot render, then end the synchronous section,
+            // and jump down to the failed with elements step below.
+            context->failedWithElements(candidate);
+            self->appendToOperationQueue(new MediaOperationQueueDataRequestResourceSelection(self));
+            return;
+        }
+        URL* url = URL::createURL(self->document()->documentURI()->urlString(), candidate->src());
+        self->m_currentSrc = url->urlString();
+        // End the synchronous section, continuing the remaining steps in parallel.
+        self->initMediaPlayer();
         self->appendToOperationQueue(new MediaOperationQueueDataRequestPrepare(self, url));
         self->appendToOperationQueue(new MediaOperationQueueDataRequestSeekToDefault(self));
         return;
@@ -945,7 +1034,7 @@ void MediaOperationQueueDataRequestPrepare::processOperationQueue()
 
 void MediaOperationQueueDataRequestPrepare::cancelOperation()
 {
-
+    m_mediaElement->m_resourceSelectionContext = nullptr;
 }
 
 void MediaOperationQueueDataRequestSeek::processOperationQueue()

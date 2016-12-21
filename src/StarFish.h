@@ -232,8 +232,9 @@ public:
     QualifiedName m_mouseup;
     QualifiedName m_onmouseup;
     QualifiedName m_load;
-    QualifiedName m_error;
     QualifiedName m_onload;
+    QualifiedName m_error;
+    QualifiedName m_onerror;
     QualifiedName m_unload;
     QualifiedName m_onunload;
     QualifiedName m_visibilitychange;
