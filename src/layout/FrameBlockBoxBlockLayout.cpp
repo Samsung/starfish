@@ -61,9 +61,15 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
 
             if (height > 0) {
-                child->asFrameBox()->setY(normalFlowHeight + top + height);
+                child->asFrameBox()->setY(normalFlowHeight + top);
+                if (height > child->asFrameBox()->marginTop()) {
+                    child->asFrameBox()->moveY(height);
+                } else {
+                    child->asFrameBox()->moveY(child->asFrameBox()->marginTop());
+                }
             } else {
                 child->asFrameBox()->setY(normalFlowHeight + top);
+                child->asFrameBox()->moveY(child->asFrameBox()->marginCollapseResult().m_advanceY);
             }
         }
 
