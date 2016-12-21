@@ -94,6 +94,7 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBlockBox* box, LayoutLocation loc)
 {
     STARFISH_ASSERT(box->style()->floating() != NoneFloatValue);
     m_isLeft = box->style()->floating() == LeftFloatValue;
+    m_top = m_loc.y() - m_box->marginTop();
     m_bottom = m_loc.y() + m_box->height() + m_box->marginBottom();
     if (m_isLeft) {
         m_horizontalBoundary = m_loc.x() + m_box->contentWidth() + m_box->borderRight() + m_box->paddingRight() + m_box->marginRight();
@@ -134,9 +135,9 @@ static bool floatAffected(LayoutUnit yPosition, LayoutUnit height, FloatingBoxIn
 {
     if (height == 0) {
         // height of Linebox can be 0 for the first time.
-        return f.loc().y() <= yPosition && yPosition < f.bottom();
+        return f.top() <= yPosition && yPosition < f.bottom();
     } else {
-        if (f.loc().y() >= yPosition + height) {
+        if (f.top() >= yPosition + height) {
             return false;
         } else if (f.bottom() <= yPosition) {
             return false;

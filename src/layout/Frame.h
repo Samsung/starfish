@@ -293,6 +293,7 @@ public:
     FrameBlockBox* box() { return m_box; }
     bool isLeft() { return m_isLeft; }
     LayoutLocation loc() { return m_loc; }
+    LayoutUnit top() { return m_top; }
     LayoutUnit bottom() { return m_bottom; }
     LayoutUnit horizontalBoundary() { return m_horizontalBoundary; }
 
@@ -300,6 +301,7 @@ private:
     FrameBlockBox* m_box;
     bool m_isLeft;
     LayoutLocation m_loc;
+    LayoutUnit m_top;
     LayoutUnit m_bottom;
     LayoutUnit m_horizontalBoundary;
 };
