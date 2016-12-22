@@ -233,7 +233,7 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutU
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
 #ifndef NDEBUG
-    LayoutUnit leftX, rightX;
+    LayoutUnit leftX, rightX, leftY, rightY;
 #endif
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
@@ -242,18 +242,30 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutU
             if (f.isLeft()) {
 #ifndef NDEBUG
                 if (hasLeft) {
-                    STARFISH_ASSERT(f.loc().x() > leftX);
+                    if (leftY == f.top()) {
+                        STARFISH_ASSERT(f.loc().x() > leftX);
+                    } else {
+                        leftY = f.top();
+                        leftX = f.loc().x() - f.box()->marginLeft();
+                    }
                 }
-                leftX = f.loc().x();
+                leftY = f.top();
+                leftX = f.loc().x() - f.box()->marginLeft();
 #endif
                 hasLeft = true;
                 lastLeftHeight = f.bottom();
             } else {
 #ifndef NDEBUG
                 if (hasRight) {
-                    STARFISH_ASSERT(f.loc().x() < rightX);
+                    if (rightY == f.top()) {
+                        STARFISH_ASSERT(f.loc().x() < rightX);
+                    } else {
+                        rightY = f.top();
+                        rightX = f.loc().x() - f.box()->marginLeft();
+                    }
                 }
-                rightX = f.loc().x();
+                rightY = f.top();
+                rightX = f.loc().x() - f.box()->marginLeft();
 #endif
                 hasRight = true;
                 lastRightHeight = f.bottom();
