@@ -1451,6 +1451,7 @@ void LineFormattingContext::removeAllInlineBoxes()
     auto iter = lineBox->boxes().begin();
 
     while (iter != lineBox->boxes().end()) {
+        (*iter)->setY(0); // already its y position is somehow determined, so we have to reset the y value.
         m_pendingInlineBoxes.insert(m_pendingInlineBoxes.begin(), *iter);
         iter = lineBox->boxes().erase(iter);
     }
