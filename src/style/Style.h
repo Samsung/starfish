@@ -233,6 +233,16 @@ enum DisplayValue {
     InlineDisplayValue, // initial value
     BlockDisplayValue,
     InlineBlockDisplayValue,
+    TableDisplayValue,
+    InlineTableDisplayValue,
+    TableRowGroupDisplayValue,
+    TableHeaderGroupDisplayValue,
+    TableFooterGroupDisplayValue,
+    TableRowDisplayValue,
+    TableColumnGroupDisplayValue,
+    TableColumnDisplayValue,
+    TableCellDisplayValue,
+    TableCaptionDisplayValue,
     NoneDisplayValue,
 };
 

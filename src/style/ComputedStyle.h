@@ -810,8 +810,8 @@ protected:
 
     FloatValue m_float : 2;
     ClearValue m_clear : 3;
-    DisplayValue m_display : 3;
-    DisplayValue m_originalDisplay : 3;
+    DisplayValue m_display : 13;
+    DisplayValue m_originalDisplay : 13;
     PositionValue m_position : 2;
     VerticalAlignValue m_verticalAlign : 4;
     OverflowValue m_overflow : 1;
