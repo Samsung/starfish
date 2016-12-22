@@ -1140,9 +1140,8 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool is
         FrameBlockBox* box = *iter;
         if (leftEmpty && box->style()->floating() == LeftFloatValue) {
             if (rightEmpty || (box->style()->clear() == LeftClearValue || box->style()->clear() == NoneClearValue)) {
-                leftEmpty = false;
                 m_hasFloat = m_hasFloat & (~HasLeft);
-                m_accumulatedFloatLeftWidth = 0;
+                STARFISH_ASSERT(m_floatBoxY == 0 && m_accumulatedFloatLeftWidth == 0 && m_accumulatedFloatRightWidth == 0);
                 m_floatBoxY = floatYDiff;
                 if (rightEmpty) {
                     m_originalLineBoxX = m_leftBoundary - m_absPosition.x();
@@ -1152,13 +1151,14 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool is
                     m_originalLineBoxX = m_leftBoundary - m_absPosition.x();
                     m_originalLineBoxWidth -= lastOriginalLineBoxX - m_originalLineBoxX;
                 }
+                leftEmpty = false;
+                rightEmpty = false;
                 continue;
             }
         } else if (rightEmpty && box->style()->floating() == RightFloatValue) {
             if (leftEmpty || (box->style()->clear() == RightClearValue || box->style()->clear() == NoneClearValue)) {
-                rightEmpty = false;
                 m_hasFloat = m_hasFloat & (~HasRight);
-                m_accumulatedFloatRightWidth = 0;
+                STARFISH_ASSERT(m_floatBoxY == 0 && m_accumulatedFloatLeftWidth == 0 && m_accumulatedFloatRightWidth == 0);
                 m_floatBoxY = floatYDiff;
                 if (leftEmpty) {
                     m_originalLineBoxX = m_leftBoundary - m_absPosition.x();
@@ -1166,6 +1166,8 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool is
                 } else {
                     m_originalLineBoxWidth = m_rightBoundary - m_originalLineBoxX;
                 }
+                leftEmpty = false;
+                rightEmpty = false;
                 continue;
             }
         }
@@ -1500,6 +1502,11 @@ void LineFormattingContext::insertPendingInlineBoxesDueToFloatinBoxes()
 
                 iter = m_pendingInlineBoxes.erase(iter);
                 continue;
+            } else {
+                m_pendingFloatBoxes.push_back(box->asFrameBlockBox());
+
+                iter = m_pendingInlineBoxes.erase(iter);
+                continue;
             }
         }
 
@@ -1527,15 +1534,17 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
     LayoutUnit ascender;
     LayoutUnit descender;
     LineBox* back = currentLine();
+    bool firstChecked = false;
 
     reComputeVerticalProperties:
     LayoutUnit height = computeVerticalProperties(back, m_block.style(), ascender, descender, *this, dueToBr, isInLineBox);
     if (m_hasFloat != HasNone) {
         LayoutUnit floatHeight = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
-        if (floatHeight != 0 && height > floatHeight) {
+        if ((!firstChecked || m_pendingFloatBoxNumsBeforeCurrentLine > 0) && floatHeight != 0 && height > floatHeight) {
             removeAllInlineBoxes();
             m_hasFloat = HasNone;
             initLineBox(back, floatHeight + 1);
+            firstChecked = true;
             m_currentLineWidth = 0;
             m_accumulatedFloatLeftWidth = 0;
             m_accumulatedFloatRightWidth = 0;
