@@ -535,6 +535,16 @@ public:
         return false;
     }
 
+    virtual bool isFrameTable()
+    {
+        return false;
+    }
+
+    virtual bool isFrameTableCaption()
+    {
+        return false;
+    }
+
     FrameText* asFrameText()
     {
         STARFISH_ASSERT(isFrameText());

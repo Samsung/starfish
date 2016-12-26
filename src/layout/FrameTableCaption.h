@@ -21,9 +21,25 @@
 
 namespace StarFish {
 
+class FrameTreeBuilderContext;
+
 class FrameTableCaption : public FrameBlockBox {
 public:
     FrameTableCaption(Node* node, ComputedStyle* style);
+
+    static FrameTableCaption* buildFrameTableCaption(Node* captionNode,
+                                                     FrameTreeBuilderContext& ctx,
+                                                     bool force);
+
+    virtual const char* name()
+    {
+        return "FrameCaption";
+    }
+
+    virtual bool isFrameTableCaption()
+    {
+        return true;
+    }
 
 private:
 

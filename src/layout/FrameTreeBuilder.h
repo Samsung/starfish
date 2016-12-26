@@ -23,7 +23,40 @@ class Node;
 class Document;
 class Element;
 
+class FrameBlockBox;
+class Frame;
+class ComputedStyle;
+class FrameTextTextDecorationData;
+class FrameInline;
+
+class FrameTable;
+class FrameTableCaption;
+
+class FrameTreeBuilderContext {
+public:
+    FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer);
+    void setCurrentBlockContainer(FrameBlockBox* blockContainer);
+    void setCurrentTextDecorationData(FrameTextTextDecorationData* deco);
+    FrameBlockBox* currentBlockContainer();
+    void computeTextDecorationData(ComputedStyle* style);
+    void mergeTextDecorationData(ComputedStyle* style);
+    FrameTextTextDecorationData* currentDecorationData();
+    std::unordered_map<Node*, FrameInline*>& frameInlineItem();
+    bool isInFrameInlineFlow();
+    void setIsInFrameInlineFlow(bool b);
+
+protected:
+    bool m_isInFrameInlineFlow;
+    FrameBlockBox* m_currentBlockContainer;
+    FrameTextTextDecorationData* m_currentDecorationData;
+    std::unordered_map<Node*, FrameInline*, std::hash<Node*>, std::equal_to<Node*>> m_frameInlineItem;
+};
+
 class FrameTreeBuilder {
+    // table layout algorithm needs to call buildTree()
+    friend FrameTable;
+    friend FrameTableCaption;
+
 public:
     static void buildFrameTree(Document* document);
     static void clearTree(Node* current);
@@ -31,6 +64,10 @@ public:
     // debug function
     static void dumpFrameTree(Document* document);
 #endif
+
+private:
+    static void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force);
+    static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
 };
 
 }

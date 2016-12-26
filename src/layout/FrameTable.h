@@ -21,11 +21,32 @@
 
 namespace StarFish {
 
+class FrameTableCaption;
+class FrameTreeBuilderContext;
+
 class FrameTable : public FrameBlockBox {
 public:
     FrameTable(Node* node, ComputedStyle* style);
 
+    static FrameTable* buildFrameTable(Node* tableNode,
+                                       FrameTreeBuilderContext& ctx,
+                                       bool force);
+
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
+    virtual bool isFrameTable()
+    {
+        return true;
+    }
+
+    virtual const char* name()
+    {
+        return "FrameTable";
+    }
+
 private:
+    std::vector<FrameTableCaption*,
+                gc_allocator_ignore_off_page<FrameTableCaption*>> m_captions;
 
 };
 

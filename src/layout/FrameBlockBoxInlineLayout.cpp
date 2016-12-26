@@ -1910,6 +1910,9 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                     goto insertReplacedBox;
                 }
             }
+        } else if (f->isFrameTable()) {
+            // Todo
+
         } else if (f->isFrameBlockBox()) {
             FrameBlockBox* r = f->asFrameBlockBox();
             LayoutUnit unprocessedWidth;
