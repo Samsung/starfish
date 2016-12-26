@@ -404,6 +404,7 @@ public:
         : m_document(document)
     {
         m_error = String::emptyString;
+        m_failedParsing = false;
     }
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
@@ -419,6 +420,25 @@ protected:
     void forgetState();
     CSSToken* lookAhead(bool aSkipWS, bool aSkipComment);
     String* parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool& validSelector);
+
+
+
+    void parseComplexSelectorList(CSSStyleSheet* aOwner, CSSStyleDeclaration* declarations, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector);
+    void parseComplexSelector(CSSSelectorList* selectorList);
+    void parseCompoundSelector(CSSSelectorList* selectorList);
+    CSSSelector::RelationType parseCombinator();
+    bool parseName(String** name);
+    CSSSelector* getSimpleSelector();
+    CSSSelector* getIdSelector();
+    CSSSelector* getClassSelector();
+    CSSSelector* getAttributeSelector();
+    CSSSelector* getPseudoSelector();
+    String* determineNamespace(String* prefix);
+    void prependTypeSelectorIfNeeded(String* namespacePrefix, String* elementName, CSSSelector* compoundSelector);
+    unsigned extractCompoundFlags(CSSSelector* simpleSelector);
+
+
+
     String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector);
     String* parseDefaultPropertyValue(CSSToken* token);
     void parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declaration);
@@ -434,6 +454,7 @@ protected:
     CSSToken* m_lookAhead;
     CSSToken* m_token;
     String* m_error;
+    bool m_failedParsing;
 };
 
 }
