@@ -29,7 +29,7 @@ public:
         InvalidMode,
         Off,
         Hidden,
-        Showing
+        Showing,
     };
 
     enum Kind {
@@ -41,7 +41,7 @@ public:
         Metadata,
     };
 
-    TextTrack(Kind kind = Kind::Captions, String* label = String::emptyString, String* language = String::emptyString)
+    TextTrack(Kind kind = Kind::Subtitles, String* label = String::emptyString, String* language = String::emptyString)
         : EventTarget()
         , m_mode(Mode::Off)
         , m_kind(kind)
@@ -114,6 +114,7 @@ public:
 
     Kind kind()
     {
+        STARFISH_ASSERT(m_kind != TextTrack::Kind::InvalidKind);
         return m_kind;
     }
 

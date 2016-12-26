@@ -4302,31 +4302,13 @@ escargot::ESFunctionObject* bindingHTMLTrackElement(ScriptBindingInstance* scrip
     HTMLTrackElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("LOADED"), false, true, false, escargot::ESValue(HTMLTrackElement::LOADED));
     HTMLTrackElementFunction->asESObject()->defineDataProperty(escargot::ESString::create("ERROR"), false, true, false, escargot::ESValue(HTMLTrackElement::ERROR));
 
-    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Track, readyState, TYPE_NUMBER);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Track, kind, setKind, TYPE_STRING);
     DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Track, src, setSrc, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Track, srclang, setSrclang, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Track, label, setLabel, TYPE_STRING);
+    DEFINE_HTMLELEMENT_READ_WRITE_PROPERTY(Track, defaultAttr, setDefaultAttr, TYPE_BOOLEAN);
+    DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Track, readyState, TYPE_NUMBER);
     DEFINE_HTMLELEMENT_READ_ONLY_PROPERTY(Track, track, TYPE_SCRIPTVALUE);
-
-    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
-        HTMLTrackElementFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("default"),
-        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-            return escargot::ESValue(nd->asElement()->asHTMLElement()->asHTMLTrackElement()->defaultValue());
-        }
-        return escargot::ESValue();
-    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
-        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::NodeObject, Node);
-        Node* nd = originalObj;
-        if (nd->isElement() && nd->asElement()->isHTMLElement() && nd->asElement()->asHTMLElement()->isHTMLTrackElement()) {
-            escargot::ESValue firstArg = instance->currentExecutionContext()->readArgument(0);
-            if (!firstArg.isBoolean())
-                return escargot::ESValue();
-            nd->asElement()->asHTMLElement()->asHTMLTrackElement()->setDefaultValue(firstArg.asBoolean());
-            return firstArg;
-        }
-        return escargot::ESValue();
-    });
 
     return HTMLTrackElementFunction;
 }

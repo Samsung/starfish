@@ -130,35 +130,21 @@ HTMLTrackElement::HTMLTrackElement(Document* document)
     m_track->setTrackElement(this);
 }
 
-bool HTMLTrackElement::defaultValue()
-{
-    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_default);
-    if (siz == SIZE_MAX)
-        return false;
-    return true;
-}
-
-void HTMLTrackElement::setDefaultValue(bool value)
-{
-    QualifiedName name = document()->window()->starFish()->staticStrings()->m_default;
-    if (value) {
-        size_t siz = hasAttribute(name);
-        if (siz == SIZE_MAX) {
-            setAttribute(name, String::fromUTF8(""));
-        }
-    } else {
-        removeAttribute(name);
-    }
-}
-
 void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old, String* value, bool attributeCreated, bool attributeRemoved)
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated, attributeRemoved);
-    if (name == document()->window()->starFish()->staticStrings()->m_src) {
+    if (name == document()->window()->starFish()->staticStrings()->m_kind) {
+        m_track->setKind(value);
+    } else if (name == document()->window()->starFish()->staticStrings()->m_src) {
+        // TODO : FIX HERE
         m_track->clear();
         if (!value->equals(String::emptyString)) {
-            loadSrc(value); 
+            load(value);
         }
+    } else if (name == document()->window()->starFish()->staticStrings()->m_srclang) {
+        m_track->setLanguage(value);
+    } else if (name == document()->window()->starFish()->staticStrings()->m_label) {
+        m_track->setLabel(value);
     }
 }
 
@@ -167,12 +153,12 @@ void HTMLTrackElement::didNodeInsertedToDocumenTree()
     HTMLElement::didNodeInsertedToDocumenTree();
     m_live = true;
     if (m_hasPendingRequest) {
-        loadSrc();
+        load();
     }
     // Set Track Mode
     // FIXME
     STARFISH_ASSERT(m_track);
-    if (defaultValue()) {
+    if (defaultAttr()) {
         m_track->setMode(TextTrack::Mode::Showing);
     }
 }
@@ -193,12 +179,12 @@ void HTMLTrackElement::clearResource()
     m_VTTFileResource = nullptr;
 }
 
-void HTMLTrackElement::loadSrc()
+void HTMLTrackElement::load()
 {
-    loadSrc(src());
+    load(src());
 }
 
-void HTMLTrackElement::loadSrc(String* srcURL)
+void HTMLTrackElement::load(String* srcURL)
 {
     if (!m_live) {
         m_hasPendingRequest = true;
@@ -260,6 +246,67 @@ void HTMLTrackElement::generateCues()
         newcue->setTrack(m_track);
 
         m_track->addCue(newcue);
+    }
+}
+
+String* HTMLTrackElement::kind()
+{
+    return TextTrack::kindToString(m_track->kind());
+}
+
+String* HTMLTrackElement::src()
+{
+    return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
+}
+
+String* HTMLTrackElement::srclang()
+{
+    return m_track->language();
+}
+
+String* HTMLTrackElement::label()
+{
+    return m_track->label();
+}
+
+bool HTMLTrackElement::defaultAttr()
+{
+    size_t siz = hasAttribute(document()->window()->starFish()->staticStrings()->m_default);
+    if (siz == SIZE_MAX)
+        return false;
+    return true;
+}
+
+void HTMLTrackElement::setKind(String* kind)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_kind, kind);
+}
+
+void HTMLTrackElement::setSrc(String* src)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
+}
+
+void HTMLTrackElement::setSrclang(String* srclang)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_srclang, srclang);
+}
+
+void HTMLTrackElement::setLabel(String* label)
+{
+    setAttribute(document()->window()->starFish()->staticStrings()->m_label, label);
+}
+
+void HTMLTrackElement::setDefaultAttr(bool value)
+{
+    QualifiedName name = document()->window()->starFish()->staticStrings()->m_default;
+    if (value) {
+        size_t siz = hasAttribute(name);
+        if (siz == SIZE_MAX) {
+            setAttribute(name, String::fromUTF8(""));
+        }
+    } else {
+        removeAttribute(name);
     }
 }
 

@@ -39,7 +39,9 @@ void TextTrack::dispatchCueChangeEvent()
 void TextTrack::setKind(String* kind)
 {
     TextTrack::Kind kindEnum = TextTrack::stringToKind(kind);
-    if (!kindEnum == TextTrack::Kind::InvalidKind) {
+    if (kindEnum != TextTrack::Kind::InvalidKind) {
+        m_kind = TextTrack::Metadata;
+    } else {
         m_kind = kindEnum;
     }
 }
