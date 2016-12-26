@@ -26,6 +26,7 @@
 #include "FrameDocument.h"
 #include "FrameReplaced.h"
 #include "FrameReplacedImage.h"
+#include "FrameTable.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "FrameReplacedVideo.h"
 #endif
@@ -34,92 +35,83 @@
 
 namespace StarFish {
 
-class FrameTreeBuilderContext {
-public:
-    FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer)
-    {
-        m_isInFrameInlineFlow = false;
-        setCurrentBlockContainer(currentBlockContainer);
-        computeTextDecorationData(currentBlockContainer->style());
-    }
+FrameTreeBuilderContext::FrameTreeBuilderContext(FrameBlockBox* currentBlockContainer)
+{
+    m_isInFrameInlineFlow = false;
+    setCurrentBlockContainer(currentBlockContainer);
+    computeTextDecorationData(currentBlockContainer->style());
+}
 
-    void setCurrentBlockContainer(FrameBlockBox* blockContainer)
-    {
-        m_currentBlockContainer = blockContainer;
-    }
+void FrameTreeBuilderContext::setCurrentBlockContainer(FrameBlockBox* blockContainer)
+{
+    m_currentBlockContainer = blockContainer;
+}
 
-    void setCurrentTextDecorationData(FrameTextTextDecorationData* deco)
-    {
-        m_currentDecorationData = deco;
-    }
+void FrameTreeBuilderContext::setCurrentTextDecorationData(FrameTextTextDecorationData* deco)
+{
+    m_currentDecorationData = deco;
+}
 
-    FrameBlockBox* currentBlockContainer()
-    {
-        return m_currentBlockContainer;
-    }
+FrameBlockBox* FrameTreeBuilderContext::currentBlockContainer()
+{
+    return m_currentBlockContainer;
+}
 
-    void computeTextDecorationData(ComputedStyle* style)
-    {
-        if (style->textDecoration() != NoneTextDecorationValue) {
+void FrameTreeBuilderContext::computeTextDecorationData(ComputedStyle* style)
+{
+    if (style->textDecoration() != NoneTextDecorationValue) {
+        m_currentDecorationData = new FrameTextTextDecorationData;
+        m_currentDecorationData->m_hasUnderLine = false;
+        m_currentDecorationData->m_hasLineThrough = false;
+        if (style->textDecoration() == UnderLineTextDecorationValue) {
+            m_currentDecorationData->m_hasUnderLine = true;
+            m_currentDecorationData->m_underLineColor = style->color();
+        } else if (style->textDecoration() == LineThroughTextDecorationValue) {
+            m_currentDecorationData->m_hasLineThrough = true;
+            m_currentDecorationData->m_lineThroughColor = style->color();
+        }
+    } else {
+        m_currentDecorationData = nullptr;
+    }
+}
+
+void FrameTreeBuilderContext::mergeTextDecorationData(ComputedStyle* style)
+{
+    if (style->textDecoration() != NoneTextDecorationValue) {
+        if (!m_currentDecorationData) {
             m_currentDecorationData = new FrameTextTextDecorationData;
             m_currentDecorationData->m_hasUnderLine = false;
             m_currentDecorationData->m_hasLineThrough = false;
-            if (style->textDecoration() == UnderLineTextDecorationValue) {
-                m_currentDecorationData->m_hasUnderLine = true;
-                m_currentDecorationData->m_underLineColor = style->color();
-            } else if (style->textDecoration() == LineThroughTextDecorationValue) {
-                m_currentDecorationData->m_hasLineThrough = true;
-                m_currentDecorationData->m_lineThroughColor = style->color();
-            }
-        } else {
-            m_currentDecorationData = nullptr;
+        }
+        if (style->textDecoration() == UnderLineTextDecorationValue) {
+            m_currentDecorationData->m_hasUnderLine = true;
+            m_currentDecorationData->m_underLineColor = style->color();
+        } else if (style->textDecoration() == LineThroughTextDecorationValue) {
+            m_currentDecorationData->m_hasLineThrough = true;
+            m_currentDecorationData->m_lineThroughColor = style->color();
         }
     }
+}
 
-    void mergeTextDecorationData(ComputedStyle* style)
-    {
-        if (style->textDecoration() != NoneTextDecorationValue) {
-            if (!m_currentDecorationData) {
-                m_currentDecorationData = new FrameTextTextDecorationData;
-                m_currentDecorationData->m_hasUnderLine = false;
-                m_currentDecorationData->m_hasLineThrough = false;
-            }
-            if (style->textDecoration() == UnderLineTextDecorationValue) {
-                m_currentDecorationData->m_hasUnderLine = true;
-                m_currentDecorationData->m_underLineColor = style->color();
-            } else if (style->textDecoration() == LineThroughTextDecorationValue) {
-                m_currentDecorationData->m_hasLineThrough = true;
-                m_currentDecorationData->m_lineThroughColor = style->color();
-            }
-        }
-    }
+FrameTextTextDecorationData* FrameTreeBuilderContext::currentDecorationData()
+{
+    return m_currentDecorationData;
+}
 
-    FrameTextTextDecorationData* currentDecorationData()
-    {
-        return m_currentDecorationData;
-    }
+std::unordered_map<Node*, FrameInline*>& FrameTreeBuilderContext::frameInlineItem()
+{
+    return m_frameInlineItem;
+}
 
-    std::unordered_map<Node*, FrameInline*>& frameInlineItem()
-    {
-        return m_frameInlineItem;
-    }
+bool FrameTreeBuilderContext::isInFrameInlineFlow()
+{
+    return m_isInFrameInlineFlow;
+}
 
-    bool isInFrameInlineFlow()
-    {
-        return m_isInFrameInlineFlow;
-    }
-
-    void setIsInFrameInlineFlow(bool b)
-    {
-        m_isInFrameInlineFlow = b;
-    }
-
-protected:
-    bool m_isInFrameInlineFlow;
-    FrameBlockBox* m_currentBlockContainer;
-    FrameTextTextDecorationData* m_currentDecorationData;
-    std::unordered_map<Node*, FrameInline*, std::hash<Node*>, std::equal_to<Node*>> m_frameInlineItem;
-};
+void FrameTreeBuilderContext::setIsInFrameInlineFlow(bool b)
+{
+    m_isInFrameInlineFlow = b;
+}
 
 void FrameTreeBuilder::clearTree(Node* current)
 {
@@ -142,15 +134,15 @@ static FrameBlockBox* createAnonymouseBlockBox(FrameBlockBox* frameBlockBox, Nod
     return new FrameBlockBox(nullptr, style);
 }
 
-static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx)
+void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx)
 {
     if (!frameBlockBox->firstChild()) {
         frameBlockBox->appendChild(currentFrame);
         return;
     }
 
-    bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue;
-
+    bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue ||
+                        currentFrame->style()->originalDisplay() == TableDisplayValue;
     if (!isBlockChild || (!currentFrame->isNormalFlow())) {
         if (currentNode->parentNode()->style()->display() == InlineDisplayValue) {
             auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
@@ -212,7 +204,7 @@ static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* curr
     }
 }
 
-void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
+void FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 {
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
@@ -257,6 +249,10 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
         } else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLObjectElement()) {
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
+        } else if (display == DisplayValue::TableDisplayValue) {
+            // table has its own frametree builder
+            FrameTable::buildFrameTable(current, ctx, force);
+            return;
         } else {
             if (display == DisplayValue::BlockDisplayValue || display == DisplayValue::InlineBlockDisplayValue) {
                 currentFrame = new FrameBlockBox(current, nullptr);
@@ -335,7 +331,7 @@ void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
             }
         }
 
-        frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame, current, ctx);
+        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), currentFrame, current, ctx);
 
         STARFISH_ASSERT(currentFrame->parent());
         current->setFrame(currentFrame);

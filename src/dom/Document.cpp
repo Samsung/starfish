@@ -208,6 +208,30 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     }
 
     {
+        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("table"), CSSSelector::PseudoType::PseudoNone, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::TableDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
+        CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("caption"), CSSSelector::PseudoType::PseudoNone, document());
+        CSSStyleValuePair pair;
+        pair.setKeyKind(CSSStyleValuePair::Display);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::DisplayValueKind);
+        CSSStyleValuePair::ValueData data = {0};
+        data.m_display = DisplayValue::TableCaptionDisplayValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+        userAgentStyleSheet->addRule(rule);
+    }
+
+    {
         CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("h1"), CSSSelector::PseudoType::PseudoNone, document());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);

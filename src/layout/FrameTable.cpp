@@ -17,12 +17,52 @@
 #include "StarFishConfig.h"
 #include "FrameTable.h"
 
+#include "FrameTableCaption.h"
+#include "FrameTreeBuilder.h"
+
 namespace StarFish {
 
 FrameTable::FrameTable(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
+                    (node != nullptr && style == nullptr));
+}
+
+FrameTable* FrameTable::buildFrameTable(Node* tableNode,
+                                        FrameTreeBuilderContext& ctx,
+                                        bool force = false)
+{
+    FrameTable* tableWrapper = new FrameTable(tableNode, nullptr);
+    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
+                                                 tableWrapper, tableNode, ctx);
+    tableNode->setFrame(tableWrapper);
+
+    // Table establishes a new block context
+    FrameBlockBox* lastContext = ctx.currentBlockContainer();
+    ctx.setCurrentBlockContainer(tableWrapper);
+    ctx.mergeTextDecorationData(tableWrapper->style());
+
+    // Create either FrameTableCaptions or a FrameTableSection
+    for(Node* c = tableNode->firstChild(); c; c = c->nextSibling()) {
+        if(c->style()->display() == DisplayValue::TableCaptionDisplayValue) {
+            FrameTableCaption* captionFrame =
+                    FrameTableCaption::buildFrameTableCaption(c, ctx, force);
+
+            FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
+                                                         captionFrame, c, ctx);
+
+            STARFISH_ASSERT(captionFrame->parent());
+        }
+    }
+
+    ctx.setCurrentBlockContainer(lastContext);
+
+    return tableWrapper;
+}
+
+void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+{
 }
 
 }
