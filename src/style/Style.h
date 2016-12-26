@@ -1303,6 +1303,8 @@ public:
         PseudoNone,
         PseudoActive,
         PseudoHover,
+        PseudoFirstChild,
+        PseudoLastChild,
         PseudoFirstLine,
         PseudoFirstLetter,
         PseudoBefore,
