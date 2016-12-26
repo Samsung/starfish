@@ -465,8 +465,9 @@ bool SelectorQuery::checkOne(const SelectorCheckingContext& context, MatchResult
     */
     case CSSSelector::PseudoClass:
         return checkPseudoClass(context, result);
-    /*case CSSSelector::PseudoElement:
-        return checkPseudoElement(context, result);
+    case CSSSelector::PseudoElement:
+        return true;
+    /*    return checkPseudoElement(context, result);
 
     case CSSSelector::PagePseudoClass:
         // FIXME: what?

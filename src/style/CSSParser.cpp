@@ -1014,6 +1014,314 @@ String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool
     return String::emptyString;
 }
 
+CSSSelector::RelationType CSSParser::parseCombinator()
+{
+    CSSSelector::RelationType fallbackResult = CSSSelector::SubSelector;
+
+    CSSToken* token = currentToken();
+    while (token->isWhiteSpace()) {
+        token = getToken(false, true);
+        fallbackResult = CSSSelector::Descendant;
+    }
+
+    if (fallbackResult == CSSSelector::Descendant)
+        return fallbackResult;
+
+    if (token->isSymbol('+'))
+        return CSSSelector::DirectAdjacent;
+    else if (token->isSymbol('~'))
+        return CSSSelector::IndirectAdjacent;
+    else if (token->isSymbol('>'))
+        return CSSSelector::Child;
+
+    return fallbackResult;
+}
+
+String* CSSParser::determineNamespace(String* prefix)
+{
+    if (prefix == nullptr)
+        return String::emptyString;
+    if (prefix->equals(String::emptyString))
+        return String::emptyString; // No namespace. If an element/attribute has a namespace, we won't match it.
+    if (prefix->equals(String::fromUTF8("*")))
+        return String::fromUTF8("*"); // We'll match any namespace.
+
+    if (m_document->styleResolver()->sheets().size() == 0)
+        return nullptr; // Cannot resolve prefix to namespace without a stylesheet, syntax error.
+
+    // TODO: Implement logic for getting namespace uri from prefix in stylesheet
+    // return m_styleSheet->namespaceURIFromPrefix(prefix);
+    return String::emptyString;
+}
+
+CSSSelector* CSSParser::getPseudoSelector()
+{
+    int colons = 1;
+
+    CSSToken* token = getToken(true, true);
+    if (token->isSymbol(':'))
+        colons++;
+
+    token = getToken(true, true);
+    if (!token->isIdent() && !token->isFunction())
+        return nullptr;
+
+    CSSSelector* selector = new CSSSelector();
+    selector->setType(colons == 1 ? CSSSelector::Type::PseudoClass: CSSSelector::Type::PseudoElement);
+
+    String* value = token->m_value;
+    bool hasArguments = token->isFunction();
+    selector->updatePseudoType(value, hasArguments);
+
+    if (token->isIdent()) {
+        token = getToken(true, true);
+
+        if (selector->pseudoType() == CSSSelector::PseudoNone)
+            return nullptr;
+        return selector;
+    }
+
+    // TODO: handle pseudo-* selectors of function type
+    // For examples, not(), lang(), nth-*() ans so on.
+
+    return nullptr;
+}
+
+CSSSelector* CSSParser::getAttributeSelector()
+{
+    // TODO: implement logic for getting attribute selector
+    return nullptr;
+}
+
+CSSSelector* CSSParser::getClassSelector()
+{
+    CSSSelector* selector = new CSSSelector();
+
+    CSSToken* token = getToken(true, true);
+    selector->setSelectorText(token->m_value);
+    selector->setType(CSSSelector::Type::Class);
+    selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
+    selector->setRelation(CSSSelector::SubSelector);
+
+    getToken(false, true);
+
+    return selector;
+}
+
+CSSSelector* CSSParser::getIdSelector()
+{
+    CSSSelector* selector = new CSSSelector();
+
+    CSSToken* token = getToken(true, true);
+    selector->setSelectorText(token->m_value);
+    selector->setType(CSSSelector::Type::Id);
+    selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
+    selector->setRelation(CSSSelector::SubSelector);
+
+    getToken(false, true);
+
+    return selector;
+}
+
+CSSSelector* CSSParser::getSimpleSelector()
+{
+    CSSToken* token = currentToken();
+    CSSSelector* selector;
+    if (token->isSymbol('#'))
+        selector = getIdSelector();
+    else if (token->isSymbol('.'))
+        selector = getClassSelector();
+    else if (token->isSymbol('['))
+        selector = getAttributeSelector();
+    else if (token->isSymbol(':'))
+        selector = getPseudoSelector();
+    else
+        return nullptr;
+
+    if (!selector)
+        m_failedParsing = true;
+
+    return selector;
+}
+
+bool CSSParser::parseName(String** name)
+{
+    CSSToken* firstToken = currentToken();
+    if (firstToken->isIdent()) {
+        *name = firstToken->m_value;
+        getToken(false, true);
+    } else if (firstToken->isSymbol('*')) {
+        *name = String::fromUTF8("*");
+        getToken(false, true);
+    } else if (firstToken->isSymbol('|')) {
+        *name = String::emptyString;
+    } else {
+        return false;
+    }
+
+    if (!firstToken->isSymbol('|'))
+        return true;
+
+    CSSToken* nameToken = getToken(true, true);
+    if (nameToken->isIdent()) {
+        *name = nameToken->m_value;
+    } else if (nameToken->isSymbol('*')) {
+        *name = String::fromUTF8("*");
+    } else {
+        *name = nullptr;
+        return false;
+    }
+
+    return true;
+}
+
+void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
+{
+    CSSSelector* compoundSelector;
+
+    String* elementName = nullptr;
+    CSSSelector::PseudoType compoundPseudoElement = CSSSelector::PseudoNone;
+    if (!parseName(&elementName)) {
+        compoundSelector = getSimpleSelector();
+
+        if (!compoundSelector)
+            return;
+        if (compoundSelector->type() == CSSSelector::PseudoElement)
+            compoundPseudoElement = compoundSelector->pseudoType();
+
+        selectorList->pushBack(compoundSelector);
+    }
+
+    while (CSSSelector* simpleSelector = getSimpleSelector()) {
+        if (simpleSelector->type() == CSSSelector::PseudoElement)
+            compoundPseudoElement = simpleSelector->pseudoType();
+
+        selectorList->pushBack(simpleSelector);
+    }
+
+    if (selectorList->size() > 0)
+        selectorList->at(selectorList->size() - 1)->setRelation(CSSSelector::None);
+
+    if (elementName) {
+        CSSSelector* selector = new CSSSelector();
+        selector->setSelectorText(elementName->toLower());
+        selector->setType(CSSSelector::Type::Tag);
+        selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
+
+        if (selectorList->size() > 0)
+            selector->setRelation(CSSSelector::SubSelector);
+        else
+            selector->setRelation(CSSSelector::None);
+
+        selectorList->insertFront(selector);
+    }
+}
+
+enum CompoundSelectorFlags {
+    HasPseudoElementForRightmostCompound = 1 << 0,
+    HasContentPseudoElement = 1 << 1
+};
+
+unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
+{
+    if (simpleSelector->type() != CSSSelector::PseudoElement)
+        return 0;
+//    if (simpleSelector->pseudoType() == CSSSelector::PseudoContent)
+//        return HasContentPseudoElement;
+
+    return HasPseudoElementForRightmostCompound;
+}
+
+void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
+{
+    parseCompoundSelector(selectorList);
+
+    if (selectorList->size() == 0)
+        return;
+
+    unsigned selectorSize = selectorList->size();
+
+    unsigned previousCompoundFlags = 0;
+    for (unsigned i = 0; i < selectorSize; i++) {
+        CSSSelector* simple = selectorList->at(i);
+        if (simple && !previousCompoundFlags)
+            break;
+
+        previousCompoundFlags |= extractCompoundFlags(simple);
+    }
+
+    CSSSelectorList* secondSelectorList = new CSSSelectorList();
+
+    while (CSSSelector::RelationType combinator = parseCombinator()) {
+        secondSelectorList->clear();
+        parseCompoundSelector(secondSelectorList);
+
+        if (secondSelectorList->size() == 0)
+            return;
+        if (previousCompoundFlags & HasPseudoElementForRightmostCompound)
+            return;
+
+        unsigned i = 0;
+        CSSSelector* end = secondSelectorList->at(i);
+        unsigned compoundFlags = extractCompoundFlags(end);
+        selectorSize = secondSelectorList->size();
+
+        while (++i < selectorSize) {
+            end = secondSelectorList->at(i);
+            compoundFlags |= extractCompoundFlags(end);
+        }
+        end->setRelation(combinator);
+
+        if (previousCompoundFlags & HasContentPseudoElement)
+            end->relationIsAffectedByPseudoContent();
+        previousCompoundFlags = compoundFlags;
+        selectorList->selectors().insert(selectorList->selectors().begin(),
+            secondSelectorList->selectors().begin(),
+            secondSelectorList->selectors().end());
+    }
+}
+
+void CSSParser::parseComplexSelectorList(CSSStyleSheet* aOwner, CSSStyleDeclaration* declarations, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector)
+{
+    CSSSelectorList* selectorList = new CSSSelectorList();
+    parseComplexSelector(selectorList);
+
+    if (selectorList->size() == 0)
+        return;
+
+    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> listOfSelectorList;
+    listOfSelectorList.push_back(selectorList);
+
+    CSSToken* token = currentToken();
+    while (token->isNotNull() && token->isSymbol(',')) {
+        do {
+            token = getToken(false, true);
+        } while (token->isSGMLComment() || token->isWhiteSpace());
+
+        CSSSelectorList* nextSelectorList = new CSSSelectorList();
+        parseComplexSelector(nextSelectorList);
+        if (nextSelectorList->size() == 0)
+            return;
+
+        listOfSelectorList.push_back(nextSelectorList);
+
+        token = getToken(true, true);
+    }
+
+    if (m_failedParsing)
+        return;
+
+    if (isQueryingSelector) {
+        sList->assign(listOfSelectorList.begin(), listOfSelectorList.end());
+    } else {
+        unsigned size = listOfSelectorList.size();
+        for (unsigned i = 0; i < size; ++i) {
+            CSSStyleRule* rule = new CSSStyleRule(listOfSelectorList.at(i), m_document, declarations);
+            aOwner->addRule(rule);
+        }
+    }
+}
+
 String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
 {
     std::vector<CSSToken*, gc_allocator_ignore_off_page<CSSToken*>> willBeConcat;
@@ -1296,103 +1604,16 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
             if (tokens[i]->length() == 0 || tokens[i]->containsOnlyWhitespace())
                 return;
         }
-        for (unsigned i = 0; i < tokens.size(); i++) {
-            // Descendant selector
-            CSSSelectorList* selectorList = new CSSSelectorList();
-            String::Vector simpleSelectors;
-            tokens[i]->trim()->split(' ', simpleSelectors);
-            for (unsigned j = 0; j < simpleSelectors.size(); j++) {
-                CSSSelector* selector = new CSSSelector();
-                selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
-                const char* selectorText = simpleSelectors[j]->trim()->utf8Data();
-                std::string cSelectorText;
-                // TODO: Pseudo-elements use ":" (CSS2 syntax) and "::" (CSS3 syntax) convention.
-                char* pcPos = strchr((char *)selectorText, ':');
-                if (pcPos) {
-                    cSelectorText = selectorText;
-                    cSelectorText[pcPos - selectorText] = '\0';
-                    selectorText = cSelectorText.data();
-                    if (strcmp(pcPos + 1, "active") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoActive);
-                    } else if (strcmp(pcPos + 1, "hover") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoHover);
-                    } else if (strcmp(pcPos + 1, "first-child") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstChild);
-                    } else if (strcmp(pcPos + 1, "last-child") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoLastChild);
-                    } else if (strcmp(pcPos + 1, "first-of-type") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstOfType);
-                    } else if (strcmp(pcPos + 1, "last-of-type") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoLastOfType);
-                    } else if (strcmp(pcPos + 1, "first-line") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstLine);
-                    } else if (strcmp(pcPos + 1, "first-letter") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstLetter);
-                    } else if (strcmp(pcPos + 1, "before") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoBefore);
-                    } else if (strcmp(pcPos + 1, "after") == 0) {
-                        selector->setPseudoType(CSSSelector::PseudoType::PseudoAfter);
-                    }
-                }
-
-                if (selectorText[0] == '.') {
-                    selector->setSelectorText(String::fromUTF8(&selectorText[1]));
-                    selector->setType(CSSSelector::Type::Class);
-                    if (j)
-                        selector->setRelation(CSSSelector::Descendant);
-                    selectorList->addSelector(selector);
-                } else if (selectorText[0] == '#') {
-                    selector->setSelectorText(String::fromUTF8(&selectorText[1]));
-                    selector->setType(CSSSelector::Type::Id);
-                    if (j)
-                        selector->setRelation(CSSSelector::Descendant);
-                    selectorList->addSelector(selector);
-                } else if (selectorText[0] == '*') {
-                    selector->setType(CSSSelector::Type::Universal);
-                    if (j)
-                        selector->setRelation(CSSSelector::Descendant);
-                    selectorList->addSelector(selector);
-                } else if (strchr(selectorText, '#')) {
-                    const char* p = strchr(selectorText, '#');
-                    std::string s1(&selectorText[0], p - selectorText);
-                    std::string s2(p + 1);
-                    // Subselectors are saved left-to-right
-                    selector->setSelectorText(String::fromUTF8(s2.data()));
-                    selector->setType(CSSSelector::Type::Id);
-                    if (j)
-                        selector->setRelation(CSSSelector::Descendant);
-                    selectorList->addSelector(selector);
-                    CSSSelector* s = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector, CSSSelector::PseudoType::PseudoNone, String::fromUTF8(s1.data()));
-                    selectorList->addSelector(s);
-                } else if (strchr(selectorText, '.')) {
-                    const char* p = strchr(selectorText, '.');
-                    std::string s1(&selectorText[0], p - selectorText);
-                    std::string s2(p + 1);
-                    // Subselectors are saved left-to-right
-                    selector->setSelectorText(String::fromUTF8(s2.data()));
-                    selector->setType(CSSSelector::Type::Class);
-                    if (j)
-                        selector->setRelation(CSSSelector::Descendant);
-                    selectorList->addSelector(selector);
-                    CSSSelector* s = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector, CSSSelector::PseudoType::PseudoNone, String::fromUTF8(s1.data()));
-                    selectorList->addSelector(s);
-                } else {
-                    // TODO: We should consider multiple selectors in one token. (e.g., div#id.class1.class2)
-                    selector->setSelectorText(String::fromUTF8(selectorText));
-                    selector->setType(CSSSelector::Tag);
-                    if (j)
-                        selector->setRelation(CSSSelector::Descendant);
-                    selectorList->addSelector(selector);
-                }
-            }
-
-            if (isQueryingSelector) {
-                sList->push_back(selectorList);
-            } else {
-                CSSStyleRule* rule = new CSSStyleRule(selectorList, m_document, declarations);
+        if (isQueryingSelector) {
+            sList->assign(list.begin(), list.end());
+        } else {
+            unsigned size = list.size();
+            for (unsigned i = 0; i < size; ++i) {
+                CSSStyleRule* rule = new CSSStyleRule(list.at(i), m_document, declarations);
                 aOwner->addRule(rule);
             }
         }
+
         return;
     }
     restoreState();

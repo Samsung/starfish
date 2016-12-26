@@ -1287,7 +1287,8 @@ public:
         Tag,
         Id,
         Class,
-        PseudoClass // FIXME: This type is not used but SelectorQuery use this type.
+        PseudoClass, // FIXME: This type is not used but SelectorQuery use this type.
+        PseudoElement
     };
 
     enum RelationType {
@@ -1301,16 +1302,31 @@ public:
 
     enum PseudoType {
         PseudoNone,
-        PseudoActive,
-        PseudoHover,
+        PseudoEmpty,
+        PseudoRoot,
         PseudoFirstChild,
-        PseudoLastChild,
         PseudoFirstOfType,
+        PseudoLastChild,
         PseudoLastOfType,
         PseudoFirstLine,
         PseudoFirstLetter,
+        PseudoNthChild,
+        PseudoLink,
+        PseudoHover,
+        PseudoFocus,
+        PseudoActive,
+        PseudoEnabled,
+        PseudoDisabled,
         PseudoBefore,
-        PseudoAfter
+        PseudoAfter,
+        PseudoLang,
+        PseudoNot,
+        PseudoSelection
+    };
+
+    enum AttributeMatchType {
+        CaseSensitive,
+        CaseInsensitive,
     };
 
     CSSSelector()
@@ -1318,6 +1334,8 @@ public:
         , m_relation(None)
         , m_pseudotype(PseudoNone)
         , m_selectorText(String::emptyString)
+        , m_attributeMatch(CaseInsensitive)
+        , m_relationIsAffectedByPseudoContent(false)
     {
     }
 
@@ -1326,6 +1344,8 @@ public:
         , m_relation(relation)
         , m_pseudotype(pseudo)
         , m_selectorText(text)
+        , m_attributeMatch(CaseInsensitive)
+        , m_relationIsAffectedByPseudoContent(false)
     {
     }
 
@@ -1337,6 +1357,16 @@ public:
     void setType(Type type)
     {
         m_type = type;
+    }
+
+    AttributeMatchType attributeMatch()
+    {
+        return m_attributeMatch;
+    }
+
+    void setAttributeMatch(AttributeMatchType attrMatch)
+    {
+        m_attributeMatch = attrMatch;
     }
 
     RelationType relation() const
@@ -1369,16 +1399,30 @@ public:
         m_selectorText = selectorText;
     }
 
+    bool relationIsAffectedByPseudoContent()
+    {
+        return m_relationIsAffectedByPseudoContent;
+    }
+
+    void setRelationIsAffectedByPseudoContent()
+    {
+        m_relationIsAffectedByPseudoContent = true;
+    }
+
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
 
     bool isLastInTagHistory() const { return relation() == RelationType::None; }
+    PseudoType parsePseudoType(String* name, bool hasArguments);
+    void updatePseudoType(String* name, bool hasArguments);
 
 protected:
     Type m_type;
     RelationType m_relation;
     PseudoType m_pseudotype;
     String* m_selectorText;
+    AttributeMatchType m_attributeMatch;
+    unsigned m_relationIsAffectedByPseudoContent;
 };
 
 class CSSSelectorList : public gc {
@@ -1392,9 +1436,14 @@ public:
         m_selectors.push_back(selector);
     }
 
-    void addSelector(CSSSelector* selector)
+    void insertFront(CSSSelector* selector)
     {
         m_selectors.insert(m_selectors.begin(), selector);
+    }
+
+    void pushBack(CSSSelector* selector)
+    {
+        m_selectors.push_back(selector);
     }
 
     void clear()

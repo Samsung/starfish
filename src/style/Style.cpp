@@ -571,6 +571,158 @@ unsigned CSSSelector::specificityForOneSelector() const
     return 0;
 }
 
+CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArguments)
+{
+    if (name == nullptr || !name->isASCIIString())
+        return CSSSelector::PseudoNone;
+
+    if (name->equals(String::fromUTF8("first-child")))
+        return CSSSelector::PseudoType::PseudoFirstChild;
+    else if (name->equals(String::fromUTF8("first-of-type")))
+        return CSSSelector::PseudoType::PseudoFirstOfType;
+    else if (name->equals(String::fromUTF8("last-child")))
+        return CSSSelector::PseudoType::PseudoLastChild;
+    else if (name->equals(String::fromUTF8("last-of-type")))
+        return CSSSelector::PseudoType::PseudoLastOfType;
+    else if (name->equals(String::fromUTF8("first-line")))
+        return CSSSelector::PseudoType::PseudoFirstLine;
+    else if (name->equals(String::fromUTF8("first-letter")))
+        return CSSSelector::PseudoType::PseudoFirstLetter;
+    else if (name->equals(String::fromUTF8("nth-child")))
+        return CSSSelector::PseudoType::PseudoFirstLine;
+    else if (name->equals(String::fromUTF8("first-letter")))
+        return CSSSelector::PseudoType::PseudoFirstLetter;
+    else if (name->equals(String::fromUTF8("link")))
+        return CSSSelector::PseudoType::PseudoLink;
+    else if (name->equals(String::fromUTF8("hover")))
+        return CSSSelector::PseudoType::PseudoHover;
+    else if (name->equals(String::fromUTF8("focus")))
+        return CSSSelector::PseudoType::PseudoFocus;
+    else if (name->equals(String::fromUTF8("active")))
+        return CSSSelector::PseudoType::PseudoActive;
+    else if (name->equals(String::fromUTF8("enabled")))
+        return CSSSelector::PseudoType::PseudoEnabled;
+    else if (name->equals(String::fromUTF8("disabled")))
+        return CSSSelector::PseudoType::PseudoDisabled;
+    else if (name->equals(String::fromUTF8("before")))
+        return CSSSelector::PseudoType::PseudoBefore;
+    else if (name->equals(String::fromUTF8("after")))
+        return CSSSelector::PseudoType::PseudoAfter;
+    else if (name->equals(String::fromUTF8("lang")))
+        return CSSSelector::PseudoType::PseudoLang;
+    else if (name->equals(String::fromUTF8("not")))
+        return CSSSelector::PseudoType::PseudoNot;
+    else if (name->equals(String::fromUTF8("selection")))
+        return CSSSelector::PseudoType::PseudoSelection;
+    else
+        return CSSSelector::PseudoNone;
+}
+
+void CSSSelector::updatePseudoType(String* name, bool hasArguments)
+{
+    setPseudoType(parsePseudoType(name, hasArguments));
+
+    switch (pseudoType()) {
+    case PseudoAfter:
+    case PseudoBefore:
+    case PseudoFirstLetter:
+    case PseudoFirstLine:
+        // The spec says some pseudos allow both single and double colons like
+        // :before for backwards compatability. Single colon becomes PseudoClass,
+        // but should be PseudoElement like double colon.
+        if (type() == PseudoClass)
+            setType(PseudoElement);
+        // fallthrough
+//    case PseudoBackdrop:
+//    case PseudoCue:
+//    case PseudoResizer:
+//    case PseudoScrollbar:
+//    case PseudoScrollbarCorner:
+//    case PseudoScrollbarButton:
+//    case PseudoScrollbarThumb:
+//    case PseudoScrollbarTrack:
+//    case PseudoScrollbarTrackPiece:
+    case PseudoSelection:
+//    case PseudoWebKitCustomElement:
+//    case PseudoContent:
+//    case PseudoShadow:
+//    case PseudoSlotted:
+        if (type() != PseudoElement)
+            setPseudoType(PseudoNone);
+        break;
+//    case PseudoFirstPage:
+//    case PseudoLeftPage:
+//    case PseudoRightPage:
+//        if (type() != PagePseudoClass)
+//            setPseudoType(PseudoUnknown);
+//        break;
+    case PseudoActive:
+//    case PseudoAny:
+//    case PseudoAnyLink:
+//    case PseudoAutofill:
+//    case PseudoChecked:
+//    case PseudoCornerPresent:
+//    case PseudoDecrement:
+//    case PseudoDefault:
+    case PseudoDisabled:
+//    case PseudoDoubleButton:
+//    case PseudoDrag:
+    case PseudoEmpty:
+    case PseudoEnabled:
+//    case PseudoEnd:
+    case PseudoFirstChild:
+    case PseudoFirstOfType:
+    case PseudoFocus:
+//    case PseudoFullPageMedia:
+//    case PseudoFullScreen:
+//    case PseudoFullScreenAncestor:
+//    case PseudoFutureCue:
+//    case PseudoHorizontal:
+//    case PseudoHost:
+//    case PseudoHostContext:
+    case PseudoHover:
+//    case PseudoInRange:
+//    case PseudoIncrement:
+//    case PseudoIndeterminate:
+//    case PseudoInvalid:
+    case PseudoLang:
+    case PseudoLastChild:
+    case PseudoLastOfType:
+    case PseudoLink:
+//    case PseudoListBox:
+//    case PseudoNoButton:
+    case PseudoNot:
+    case PseudoNthChild:
+//    case PseudoNthLastChild:
+//    case PseudoNthLastOfType:
+//    case PseudoNthOfType:
+//    case PseudoOnlyChild:
+//    case PseudoOnlyOfType:
+//    case PseudoOptional:
+//    case PseudoPlaceholderShown:
+//    case PseudoOutOfRange:
+//    case PseudoPastCue:
+//    case PseudoReadOnly:
+//    case PseudoReadWrite:
+//    case PseudoRequired:
+//    case PseudoRoot:
+//    case PseudoScope:
+//    case PseudoSingleButton:
+//    case PseudoSpatialNavigationFocus:
+//    case PseudoStart:
+//    case PseudoTarget:
+    case PseudoNone:
+//    case PseudoUnresolved:
+//    case PseudoValid:
+//    case PseudoVertical:
+//    case PseudoVisited:
+//    case PseudoWindowInactive:
+        if (type() != PseudoClass)
+            setPseudoType(PseudoNone);
+        break;
+    }
+}
+
 unsigned CSSSelectorList::specificity() const
 {
     // Make sure the result doesn't overflow
