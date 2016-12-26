@@ -2308,6 +2308,18 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                             isMatched = true;
                         } else if ((e->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover) {
                             isMatched = true;
+                        } else if (selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstChild) {
+                            if (e->parentElement()) {
+                                Element* firstChild = e->parentElement()->firstElementChild();
+                                if (firstChild && e == firstChild)
+                                    isMatched = true;
+                            }
+                        } else if (selector->pseudoType() == CSSSelector::PseudoType::PseudoLastChild) {
+                            if (e->parentElement()) {
+                                Element* lastChild = e->parentElement()->lastElementChild();
+                                if (lastChild && e == lastChild)
+                                    isMatched = true;
+                            }
                         }
                     }
                     // Consider combinator
