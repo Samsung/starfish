@@ -33,7 +33,7 @@ public:
 
     virtual const char* name()
     {
-        return "FrameCaption";
+        return "FrameTableCaption";
     }
 
     virtual bool isFrameTableCaption()
