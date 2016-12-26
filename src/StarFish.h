@@ -210,12 +210,16 @@ public:
     QualifiedName m_size;
     QualifiedName m_charset;
     QualifiedName m_content;
+    QualifiedName m_lang;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
     QualifiedName m_autoplay;
     QualifiedName m_preload;
     QualifiedName m_controls;
+    QualifiedName m_kind;
+    QualifiedName m_label;
+    QualifiedName m_srclang;
 #endif
 
     // Event Names

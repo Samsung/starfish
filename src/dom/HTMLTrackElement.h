@@ -61,44 +61,29 @@ public:
     virtual void didNodeInsertedToDocumenTree();
     virtual void didNodeRemovedFromDocumenTree();
 
-    void loadSrc();
-    void loadSrc(String* srcURL);
+    void load();
+    void load(String* srcURL);
 
-    void setSrc(String* src)
-    {
-        setAttribute(document()->window()->starFish()->staticStrings()->m_src, src);
-    }
+    /* Interface */
+    // https://html.spec.whatwg.org/multipage/embedded-content.html#the-track-element
+    String* kind();
+    String* src();
+    String* srclang();
+    String* label();
+    bool defaultAttr();
+    ReadyState readyState() { return m_readyState; }
+    TextTrack* track() { return m_track; }
 
-    String* src()
-    {
-        return getAttribute(document()->window()->starFish()->staticStrings()->m_src);
-    }
-
-    void generateCues();
-    TextTrack* track()
-    {
-        return m_track;
-    }
-
-    ReadyState readyState()
-    {
-        return m_readyState;
-    }
-
-    bool isReadyState(ReadyState state)
-    {
-        return m_readyState == state;
-    }
-
-    void setReadyState(ReadyState readyState)
-    {
-        m_readyState = readyState;
-    }
-
-    bool defaultValue();
-    void setDefaultValue(bool value);
+    void setKind(String* kind);
+    void setSrc(String* src);
+    void setSrclang(String* srclang);
+    void setLabel(String* label); // not public
+    void setDefaultAttr(bool value);
+    bool isReadyState(ReadyState state) { return m_readyState == state; } // not public
+    void setReadyState(ReadyState readyState) { m_readyState = readyState;} // not public
 
 protected:
+    void generateCues();
     void clearResource();
 
 protected:

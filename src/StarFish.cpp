@@ -732,12 +732,16 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_size = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "size"));
     m_charset = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "charset"));
     m_content = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "content"));
+    m_lang = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "lang"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "default"));
     m_loop = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "loop"));
     m_autoplay = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "autoplay"));
     m_preload = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "preload"));
     m_controls = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "controls"));
+    m_kind = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "kind"));
+    m_label = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "label"));
+    m_srclang = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "srclang"));
 #endif
 
     m_click = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(sf, "click"));
