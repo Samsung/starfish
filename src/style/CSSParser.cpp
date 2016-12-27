@@ -1157,6 +1157,10 @@ unsigned CSSParser::extractCompoundFlags(CSSSelector* simpleSelector)
 
 void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
 {
+    CSSToken* token = currentToken();
+    while (token->isSGMLComment() || token->isWhiteSpace())
+        token = getToken(false, true);
+
     parseCompoundSelector(selectorList);
 
     if (selectorList->size() == 0)
