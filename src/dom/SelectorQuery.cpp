@@ -42,6 +42,18 @@ static bool contains(const std::vector<String*, gc_allocator_ignore_off_page<Str
     return false;
 }
 
+static bool isFirstChild(Element& element)
+{
+    Node* ret = Traverse::previousSibling(element.asNode(), [](Node* sibling) {
+        if (sibling->isElement())
+            return true;
+        else
+            return false;
+    });
+
+    return !ret;
+}
+
 enum ClassElementListBehavior { AllElements, OnlyRoots };
 template <ClassElementListBehavior onlyRoots>
 class ClassElementList : public gc {
@@ -392,6 +404,15 @@ bool SelectorQuery::checkPseudoClass(const SelectorCheckingContext& context, Mat
     const std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*>>& selector = context.selector;
 
     switch (selector[0]->pseudoType()) {
+    case CSSSelector::PseudoFirstChild:
+        if (Node* parent = element.parentElement()) {
+            /*if (m_mode == ResolvingStyle) {
+                parent->setChildrenAffectedByFirstChildRules();
+                element.setAffectedByFirstChildRules();
+            }*/
+            return isFirstChild(element);
+        }
+        break;
     case CSSSelector::PseudoHover:
         /*if (m_mode == ResolvingStyle) {
             if (context.inRightmostCompound) {
