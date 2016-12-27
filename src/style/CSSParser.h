@@ -419,11 +419,10 @@ protected:
     void restoreState();
     void forgetState();
     CSSToken* lookAhead(bool aSkipWS, bool aSkipComment);
-    String* parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool& validSelector);
+    void parseSelector(std::vector<CSSSelectorList *, gc_allocator_ignore_off_page<CSSSelectorList *>>& list, bool& validSelector);
 
 
-
-    void parseComplexSelectorList(CSSStyleSheet* aOwner, CSSStyleDeclaration* declarations, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector);
+    bool parseComplexSelectorList(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& sList);
     void parseComplexSelector(CSSSelectorList* selectorList);
     void parseCompoundSelector(CSSSelectorList* selectorList);
     CSSSelector::RelationType parseCombinator();
@@ -436,7 +435,6 @@ protected:
     String* determineNamespace(String* prefix);
     void prependTypeSelectorIfNeeded(String* namespacePrefix, String* elementName, CSSSelector* compoundSelector);
     unsigned extractCompoundFlags(CSSSelector* simpleSelector);
-
 
 
     String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector);
