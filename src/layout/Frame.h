@@ -34,6 +34,7 @@ class FrameBlockBox;
 class FrameReplaced;
 class FrameInline;
 class FrameDocument;
+class FrameTable;
 class LineBox;
 
 enum PaintingStage {
@@ -553,7 +554,7 @@ public:
 
     FrameBox* asFrameBox()
     {
-        STARFISH_ASSERT(isFrameBox());
+        STARFISH_ASSERT(isFrameBox() || isFrameTable() || isFrameTableCaption());
         return (FrameBox*)this;
     }
 
@@ -573,6 +574,12 @@ public:
     {
         STARFISH_ASSERT(isFrameInline());
         return (FrameInline*)this;
+    }
+
+    FrameTable* asFrameTable()
+    {
+        STARFISH_ASSERT(isFrameTable());
+        return (FrameTable*)this;
     }
 
     ComputedStyle* style()

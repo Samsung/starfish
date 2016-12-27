@@ -48,7 +48,8 @@ FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode,
             continue;
         }
 
-        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), content, c, ctx);
+        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
+                                                     content, c, ctx);
         STARFISH_ASSERT(content->parent());
         c->setFrame(content);
     }
@@ -56,6 +57,11 @@ FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode,
     ctx.setCurrentBlockContainer(lastContext);
 
     return tableCaption;
+}
+
+void FrameTableCaption::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+{
+    FrameBlockBox::layout(ctx, resolveWhat);
 }
 
 }

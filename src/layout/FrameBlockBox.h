@@ -462,13 +462,13 @@ public:
             afterIterateChild(this);
     }
 
-    bool hasBlockFlow()
+    virtual bool hasBlockFlow()
     {
         if (!firstChild())
             return true;
 
         Frame* child = firstChild();
-        return child->style()->originalDisplay() == BlockDisplayValue && child->isNormalFlow();
+        return (child->style()->originalDisplay() == BlockDisplayValue) && child->isNormalFlow();
     }
 
     virtual bool isSelfCollapsingBlock(LayoutContext& ctx)

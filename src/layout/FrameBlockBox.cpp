@@ -19,6 +19,7 @@
 #include "FrameText.h"
 #include "FrameInline.h"
 #include "FrameDocument.h"
+#include "FrameTable.h"
 
 namespace StarFish {
 
@@ -340,7 +341,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             computeContentWidth();
         }
 
-        if (isFrameBlockBox() && asFrameBlockBox()->hasBlockFlow()) {
+        if ((isFrameBlockBox() && asFrameBlockBox()->hasBlockFlow()) ||
+            (isFrameTable() && asFrameTable()->hasBlockFlow())) {
             Frame* child = firstChild();
             bool hasOnlySelfCollapsing = true;
 

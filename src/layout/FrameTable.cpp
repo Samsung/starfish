@@ -44,15 +44,15 @@ FrameTable* FrameTable::buildFrameTable(Node* tableNode,
     ctx.mergeTextDecorationData(tableWrapper->style());
 
     // Create either FrameTableCaptions or a FrameTableSection
-    for(Node* c = tableNode->firstChild(); c; c = c->nextSibling()) {
-        if(c->style()->display() == DisplayValue::TableCaptionDisplayValue) {
+    for (Node* c = tableNode->firstChild(); c; c = c->nextSibling()) {
+        if (c->style()->display() == DisplayValue::TableCaptionDisplayValue) {
             FrameTableCaption* captionFrame =
                     FrameTableCaption::buildFrameTableCaption(c, ctx, force);
 
             FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
                                                          captionFrame, c, ctx);
-
             STARFISH_ASSERT(captionFrame->parent());
+            tableWrapper->m_captions.push_back(captionFrame);
         }
     }
 
@@ -63,6 +63,7 @@ FrameTable* FrameTable::buildFrameTable(Node* tableNode,
 
 void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
+    FrameBlockBox::layout(ctx, resolveWhat);
 }
 
 }
