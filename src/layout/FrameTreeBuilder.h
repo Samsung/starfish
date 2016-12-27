@@ -66,7 +66,7 @@ public:
 #endif
 
 private:
-    static void buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force);
+    static Frame* buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force);
     static void frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, Frame* currentFrame, Node* currentNode, FrameTreeBuilderContext& ctx);
 };
 
