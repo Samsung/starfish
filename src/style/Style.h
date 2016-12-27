@@ -1305,6 +1305,8 @@ public:
         PseudoHover,
         PseudoFirstChild,
         PseudoLastChild,
+        PseudoFirstOfType,
+        PseudoLastOfType,
         PseudoFirstLine,
         PseudoFirstLetter,
         PseudoBefore,
