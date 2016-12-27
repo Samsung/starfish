@@ -31,6 +31,8 @@ public:
                                                      FrameTreeBuilderContext& ctx,
                                                      bool force);
 
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
     virtual const char* name()
     {
         return "FrameTableCaption";

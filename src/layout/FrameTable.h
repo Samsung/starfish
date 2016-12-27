@@ -44,6 +44,19 @@ public:
         return "FrameTable";
     }
 
+    virtual bool hasBlockFlow()
+    {
+        Frame* child = firstChild();
+
+        if (!child) {
+            return true;
+        } else {
+            DisplayValue display = child->style()->originalDisplay();
+            return (display == BlockDisplayValue ||
+                    display == TableCaptionDisplayValue) && child->isNormalFlow();
+        }
+    }
+
 private:
     std::vector<FrameTableCaption*,
                 gc_allocator_ignore_off_page<FrameTableCaption*>> m_captions;
