@@ -1320,6 +1320,10 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                         selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstChild);
                     } else if (strcmp(pcPos + 1, "last-child") == 0) {
                         selector->setPseudoType(CSSSelector::PseudoType::PseudoLastChild);
+                    } else if (strcmp(pcPos + 1, "first-of-type") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstOfType);
+                    } else if (strcmp(pcPos + 1, "last-of-type") == 0) {
+                        selector->setPseudoType(CSSSelector::PseudoType::PseudoLastOfType);
                     } else if (strcmp(pcPos + 1, "first-line") == 0) {
                         selector->setPseudoType(CSSSelector::PseudoType::PseudoFirstLine);
                     } else if (strcmp(pcPos + 1, "first-letter") == 0) {

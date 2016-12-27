@@ -2279,7 +2279,6 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
             CSSSelector::RelationType prevRelation = CSSSelector::RelationType::None;
             Element* e = element;
 
-            // TODO: Assume that pseudo class selector located in the end.
             while (e && needToCheck) {
                 switch (selector->relation()) {
                 case CSSSelector::RelationType::None:
@@ -2300,7 +2299,8 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                             }
                         }
                     }
-                    // Pseudo class
+                    // Pseudo-classes/elements
+                    // TODO: Consider combinators + pseudo-classes/elements.
                     if (isOneSelectorMatched) {
                         if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone) {
                             isMatched = true;
@@ -2308,17 +2308,24 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
                             isMatched = true;
                         } else if ((e->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover) {
                             isMatched = true;
-                        } else if (selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstChild) {
+                        } else if  (selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstChild || selector->pseudoType() == CSSSelector::PseudoType::PseudoLastChild) {
                             if (e->parentElement()) {
-                                Element* firstChild = e->parentElement()->firstElementChild();
-                                if (firstChild && e == firstChild)
+                                Element* child = selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstChild ? e->parentElement()->firstElementChild() : e->parentElement()->lastElementChild();
+                                if (child && e == child)
                                     isMatched = true;
                             }
-                        } else if (selector->pseudoType() == CSSSelector::PseudoType::PseudoLastChild) {
+                        } else if (selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstOfType || selector->pseudoType() == CSSSelector::PseudoType::PseudoLastOfType) {
                             if (e->parentElement()) {
-                                Element* lastChild = e->parentElement()->lastElementChild();
-                                if (lastChild && e == lastChild)
-                                    isMatched = true;
+                                Element* child = selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstOfType ? e->parentElement()->firstElementChild() : e->parentElement()->lastElementChild();
+                                while (child) {
+                                    if (e->tagName()->equalsWithoutCase(child->tagName())) {
+                                        if (e == child)
+                                            isMatched = true;
+                                        break;
+                                    } else {
+                                        child = selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstOfType ? child->nextElementSibling() : child->previousElementSibling();
+                                    }
+                                }
                             }
                         }
                     }
