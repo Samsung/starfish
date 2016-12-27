@@ -1010,18 +1010,11 @@ CSSSelector* CSSParser::getAttributeSelector()
 
 CSSSelector* CSSParser::getClassSelector()
 {
-    CSSSelector* selector = new CSSSelector();
-
     CSSToken* token = getToken(false, true);
-
     if (!token->isIdent())
         return nullptr;
 
-    selector->setSelectorText(token->m_value);
-    selector->setType(CSSSelector::Type::Class);
-    selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
-    selector->setRelation(CSSSelector::SubSelector);
-
+    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Class, CSSSelector::SubSelector, CSSSelector::PseudoType::PseudoNone, token->m_value);
     getToken(false, true);
 
     return selector;
@@ -1029,18 +1022,11 @@ CSSSelector* CSSParser::getClassSelector()
 
 CSSSelector* CSSParser::getIdSelector()
 {
-    CSSSelector* selector = new CSSSelector();
-
     CSSToken* token = getToken(false, true);
-
     if (!token->isIdent())
         return nullptr;
 
-    selector->setSelectorText(token->m_value);
-    selector->setType(CSSSelector::Type::Id);
-    selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
-    selector->setRelation(CSSSelector::SubSelector);
-
+    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Id, CSSSelector::SubSelector, CSSSelector::PseudoType::PseudoNone, token->m_value);
     getToken(false, true);
 
     return selector;
@@ -1128,13 +1114,18 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
     if (elementName) {
         CSSSelector* selector = new CSSSelector();
         selector->setSelectorText(elementName->toLower());
-        selector->setType(CSSSelector::Type::Tag);
-        selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
+
+        if (elementName->equals(String::fromUTF8("*")))
+            selector->setType(CSSSelector::Type::Universal);
+        else
+            selector->setType(CSSSelector::Type::Tag);
 
         if (selectorList->size() > 0)
             selector->setRelation(CSSSelector::SubSelector);
         else
             selector->setRelation(CSSSelector::None);
+
+        selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
 
         selectorList->insertFront(selector);
     }
