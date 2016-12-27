@@ -973,24 +973,21 @@ CSSSelector* CSSParser::getPseudoSelector()
 {
     int colons = 1;
 
-    CSSToken* token = getToken(true, true);
+    CSSToken* token = getToken(false, true);
     if (token->isSymbol(':'))
         colons++;
 
-    token = getToken(false, true);
+    token = currentToken();
     if (!token->isIdent() && !token->isFunction())
         return nullptr;
 
     CSSSelector* selector = new CSSSelector();
     selector->setType(colons == 1 ? CSSSelector::Type::PseudoClass: CSSSelector::Type::PseudoElement);
-
-    String* value = token->m_value;
-    bool hasArguments = token->isFunction();
-    selector->updatePseudoType(value, hasArguments);
+    selector->setRelation(CSSSelector::RelationType::SubSelector);
+    selector->updatePseudoType(token->m_value->toLower(), token->isFunction());
 
     if (token->isIdent()) {
         token = getToken(false, true);
-
         if (selector->pseudoType() == CSSSelector::PseudoNone)
             return nullptr;
         return selector;

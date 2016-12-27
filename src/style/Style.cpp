@@ -620,6 +620,7 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
 
 void CSSSelector::updatePseudoType(String* name, bool hasArguments)
 {
+    setSelectorText(name);
     setPseudoType(parsePseudoType(name, hasArguments));
 
     switch (pseudoType()) {
