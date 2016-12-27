@@ -974,10 +974,12 @@ CSSSelector* CSSParser::getPseudoSelector()
     int colons = 1;
 
     CSSToken* token = getToken(false, true);
-    if (token->isSymbol(':'))
+    if (token->isSymbol(':')) {
+        token = getToken(false, true);
         colons++;
+    }
 
-    token = currentToken();
+    // token = currentToken();
     if (!token->isIdent() && !token->isFunction())
         return nullptr;
 
