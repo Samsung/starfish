@@ -204,7 +204,7 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
     }
 }
 
-void FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
+Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bool force = false)
 {
     bool prevIsInFrameInlineFlow = ctx.isInFrameInlineFlow();
     bool didSplitBlock = false;
@@ -229,7 +229,7 @@ void FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bo
         if (!isVisible) {
             current->clearNeedsFrameTreeBuild();
             FrameTreeBuilder::clearTree(current);
-            return;
+            return nullptr;
         }
         bool isHTMLElement = current->isElement() && current->asElement()->isHTMLElement();
         if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLImageElement()) {
@@ -251,8 +251,8 @@ void FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bo
             shouldSkipChildren = true;
         } else if (display == DisplayValue::TableDisplayValue) {
             // table has its own frametree builder
-            FrameTable::buildFrameTable(current, ctx, force);
-            return;
+            FrameTable* table = FrameTable::buildFrameTable(current, ctx, force);
+            return table;
         } else {
             if (display == DisplayValue::BlockDisplayValue || display == DisplayValue::InlineBlockDisplayValue) {
                 currentFrame = new FrameBlockBox(current, nullptr);
@@ -261,7 +261,7 @@ void FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bo
                     currentFrame = new FrameText(current, current->style(), ctx.currentDecorationData());
                 } else if (current->isComment()) {
                     FrameTreeBuilder::clearTree(current);
-                    return;
+                    return nullptr;
                 } else {
                     currentFrame = new FrameInline(current);
                     ctx.setIsInFrameInlineFlow(true);
@@ -342,7 +342,7 @@ void FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bo
 
     // display == none
     if (!currentFrame) {
-        return;
+        return nullptr;
     }
 
     if (currentFrame->style()->display() == InlineBlockDisplayValue || !currentFrame->isNormalFlow()) {
@@ -397,6 +397,8 @@ void FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, bo
     }
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
     ctx.setCurrentTextDecorationData(textDecoBack);
+
+    return currentFrame;
 }
 
 void FrameTreeBuilder::buildFrameTree(Document* document)

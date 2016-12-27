@@ -41,17 +41,7 @@ FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode,
     ctx.mergeTextDecorationData(tableCaption->style());
 
     for(Node* c = captionNode->firstChild(); c; c = c->nextSibling()) {
-        Frame* content;
-        if (c->isCharacterData() && c->asCharacterData()->isText()) {
-            content = new FrameText(c, c->style(), ctx.currentDecorationData());
-        } else if (c->isComment()) {
-            continue;
-        }
-
-        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
-                                                     content, c, ctx);
-        STARFISH_ASSERT(content->parent());
-        c->setFrame(content);
+        FrameTreeBuilder::buildTree(c, ctx, force);
     }
 
     ctx.setCurrentBlockContainer(lastContext);
