@@ -829,38 +829,38 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
             else
                 specificity.c++;
             */
-    } else if (token->isFunction()) {
-        s = s->concat(token->m_value);
-        if (token->isFunction(String::createASCIIString(":not("))) {
-            if (!canNegate)
-                return String::emptyString;
-            token = getToken(true, true);
-            String* simpleSelector = parseSimpleSelector(token, isFirstInChain, false, validSelector);
-            if (simpleSelector->length() == 0)
-                return String::emptyString;
-            else {
-                // s += simpleSelector.selector;
-                s = s->concat(simpleSelector);
-                token = getToken(true, true);
-                if (token->isSymbol(')'))
-                    s = s->concat(String::createASCIIString(")"));
-                else
+        } else if (token->isFunction()) {
+            s = s->concat(token->m_value);
+            if (token->isFunction(String::createASCIIString(":not("))) {
+                if (!canNegate)
                     return String::emptyString;
+                token = getToken(true, true);
+                String* simpleSelector = parseSimpleSelector(token, isFirstInChain, false, validSelector);
+                if (simpleSelector->length() == 0)
+                    return String::emptyString;
+                else {
+                    // s += simpleSelector.selector;
+                    s = s->concat(simpleSelector);
+                    token = getToken(true, true);
+                    if (token->isSymbol(')'))
+                        s = s->concat(String::createASCIIString(")"));
+                    else
+                        return String::emptyString;
+                }
+                // specificity.c++;
+            } else {
+                while (true) {
+                    token = getToken(false, true);
+                    if (token->isSymbol(')')) {
+                        s = s->concat(String::createASCIIString(")"));
+                        break;
+                    } else
+                        s = s->concat(token->m_value);
+                }
+                // specificity.c++;
             }
-            // specificity.c++;
-        } else {
-            while (true) {
-                token = getToken(false, true);
-                if (token->isSymbol(')')) {
-                    s = s->concat(String::createASCIIString(")"));
-                    break;
-                } else
-                    s = s->concat(token->m_value);
-            }
-            // specificity.c++;
-        }
-    } else
-        return String::emptyString;
+        } else
+            return String::emptyString;
     } else if (token->isSymbol('[')) {
         s = s->concat(String::createASCIIString("["));
         token = getToken(true, true);
@@ -876,37 +876,37 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
                     return String::emptyString;
             } else
                 ungetToken();
-    } else if (token->isSymbol('|')) {
-        s = s->concat(String::createASCIIString("|"));
-        token = getToken(true, true);
-        if (token->isIdent())
-            s = s->concat(token->m_value);
-        else
+        } else if (token->isSymbol('|')) {
+            s = s->concat(String::createASCIIString("|"));
+            token = getToken(true, true);
+            if (token->isIdent())
+                s = s->concat(token->m_value);
+            else
+                return String::emptyString;
+        } else
             return String::emptyString;
-    } else
-        return String::emptyString;
 
-    // nothing, =, *=, $=, ^=, |=
-    token = getToken(true, true);
-    if (token->isIncludes()
-        || token->isDashmatch()
-        || token->isBeginsmatch()
-        || token->isEndsmatch()
-        || token->isContainsmatch()
-        || token->isSymbol('=')) {
-        s = s->concat(token->m_value);
+        // nothing, =, *=, $=, ^=, |=
         token = getToken(true, true);
-        if (token->isString() || token->isIdent()) {
+        if (token->isIncludes()
+            || token->isDashmatch()
+            || token->isBeginsmatch()
+            || token->isEndsmatch()
+            || token->isContainsmatch()
+            || token->isSymbol('=')) {
             s = s->concat(token->m_value);
             token = getToken(true, true);
-        } else
-            return String::emptyString;
+            if (token->isString() || token->isIdent()) {
+                s = s->concat(token->m_value);
+                token = getToken(true, true);
+            } else
+                return String::emptyString;
 
-        if (token->isSymbol(']')) {
-            s = s->concat(token->m_value);
-            // specificity.c++;
-        } else
-            return String::emptyString;
+            if (token->isSymbol(']')) {
+                s = s->concat(token->m_value);
+                // specificity.c++;
+            } else
+                return String::emptyString;
         } else if (token->isSymbol(']')) {
             s = s->concat(token->m_value);
             // specificity.c++;
@@ -922,96 +922,11 @@ String* CSSParser::parseSimpleSelector(CSSToken* token, bool isFirstInChain, boo
     return String::emptyString;
 }
 
-String* CSSParser::parseSelector(CSSToken* aToken, bool aParseSelectorOnly, bool& validSelector)
+void CSSParser::parseSelector(std::vector<CSSSelectorList *, gc_allocator_ignore_off_page<CSSSelectorList *>>& list, bool& validSelector)
 {
-    String* s = String::emptyString;
-    // var specificity = {a: 0, b: 0, c: 0, d: 0}; // CSS 2.1 section 6.4.3
-    bool isFirstInChain = true;
-    CSSToken* token = aToken;
-    bool valid = false;
-    bool combinatorFound = false;
-    bool commaFound = false;
-
-    while (token->isSGMLComment() || token->isWhiteSpace()) {
-        token = getToken(false, true);
-    }
-
-    while (true) {
-        if (!token->isNotNull()) {
-            if (aParseSelectorOnly) {
-                // return {selector: s, specificity: specificity };
-                return s;
-            }
-            return String::emptyString;
-        }
-
-        if (!aParseSelectorOnly && token->isSymbol('{')) {
-            // end of selector
-            valid = !combinatorFound;
-            // don't unget if invalid since addUnknownRule is going to restore state anyway
-            if (valid)
-                ungetToken();
-            break;
-        }
-
-        if (token->isSymbol(',')) { // group of selectors
-            s = s->concat(token->m_value);
-            isFirstInChain = true;
-            combinatorFound = false;
-            token = getToken(false, true);
-            commaFound = true;
-            continue;
-        } else if (!combinatorFound && (token->isWhiteSpace() || token->isSymbol('>') || token->isSymbol('+') || token->isSymbol('~'))) {
-            // now combinators and grouping...
-            if (token->isWhiteSpace()) {
-                s = s->concat(String::spaceString);
-                CSSToken* nextToken = lookAhead(true, true);
-                if (!nextToken->isNotNull()) {
-                    if (aParseSelectorOnly)
-                        // return {selector: s, specificity: specificity };
-                        return s;
-                    return String::emptyString;
-                }
-                if (nextToken->isSymbol(String::createASCIIString(">"))
-                    || nextToken->isSymbol(String::createASCIIString("+"))
-                    || nextToken->isSymbol(String::createASCIIString("~"))) {
-                    token = getToken(true, true);
-                    s = s->concat(token->m_value);
-                    s = s->concat(String::spaceString);
-                    combinatorFound = true;
-                }
-            } else {
-                s = s->concat(token->m_value);
-                combinatorFound = true;
-            }
-            isFirstInChain = true;
-            token = getToken(true, true);
-            continue;
-        } else {
-            commaFound = false;
-            String* simpleSelector = parseSimpleSelector(token, isFirstInChain, true, validSelector);
-            if (!simpleSelector->length())
-                break; // error
-            s = s->concat(simpleSelector);
-            // specificity.b += simpleSelector.specificity.b;
-            // specificity.c += simpleSelector.specificity.c;
-            // specificity.d += simpleSelector.specificity.d;
-            isFirstInChain = false;
-            combinatorFound = false;
-        }
-        token = getToken(false, true);
-    }
-
-    if (commaFound) {
-        valid = false;
-    }
-
-    validSelector = valid;
-    if (valid) {
-        // return {selector: s, specificity: specificity };
-        return s;
-    }
-    return String::emptyString;
+    validSelector = parseComplexSelectorList(list);
+    if (!validSelector)
+        list.clear();
 }
 
 CSSSelector::RelationType CSSParser::parseCombinator()
@@ -1062,7 +977,7 @@ CSSSelector* CSSParser::getPseudoSelector()
     if (token->isSymbol(':'))
         colons++;
 
-    token = getToken(true, true);
+    token = getToken(false, true);
     if (!token->isIdent() && !token->isFunction())
         return nullptr;
 
@@ -1074,7 +989,7 @@ CSSSelector* CSSParser::getPseudoSelector()
     selector->updatePseudoType(value, hasArguments);
 
     if (token->isIdent()) {
-        token = getToken(true, true);
+        token = getToken(false, true);
 
         if (selector->pseudoType() == CSSSelector::PseudoNone)
             return nullptr;
@@ -1097,7 +1012,11 @@ CSSSelector* CSSParser::getClassSelector()
 {
     CSSSelector* selector = new CSSSelector();
 
-    CSSToken* token = getToken(true, true);
+    CSSToken* token = getToken(false, true);
+
+    if (!token->isIdent())
+        return nullptr;
+
     selector->setSelectorText(token->m_value);
     selector->setType(CSSSelector::Type::Class);
     selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
@@ -1112,7 +1031,11 @@ CSSSelector* CSSParser::getIdSelector()
 {
     CSSSelector* selector = new CSSSelector();
 
-    CSSToken* token = getToken(true, true);
+    CSSToken* token = getToken(false, true);
+
+    if (!token->isIdent())
+        return nullptr;
+
     selector->setSelectorText(token->m_value);
     selector->setType(CSSSelector::Type::Id);
     selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
@@ -1281,15 +1204,14 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
     }
 }
 
-void CSSParser::parseComplexSelectorList(CSSStyleSheet* aOwner, CSSStyleDeclaration* declarations, std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>* sList, bool isQueryingSelector)
+bool CSSParser::parseComplexSelectorList(std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>>& listOfSelectorList)
 {
     CSSSelectorList* selectorList = new CSSSelectorList();
     parseComplexSelector(selectorList);
 
     if (selectorList->size() == 0)
-        return;
+        return false;
 
-    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> listOfSelectorList;
     listOfSelectorList.push_back(selectorList);
 
     CSSToken* token = currentToken();
@@ -1301,25 +1223,16 @@ void CSSParser::parseComplexSelectorList(CSSStyleSheet* aOwner, CSSStyleDeclarat
         CSSSelectorList* nextSelectorList = new CSSSelectorList();
         parseComplexSelector(nextSelectorList);
         if (nextSelectorList->size() == 0)
-            return;
+            return false;
 
         listOfSelectorList.push_back(nextSelectorList);
-
-        token = getToken(true, true);
+        token = currentToken();
     }
 
     if (m_failedParsing)
-        return;
+        return false;
 
-    if (isQueryingSelector) {
-        sList->assign(listOfSelectorList.begin(), listOfSelectorList.end());
-    } else {
-        unsigned size = listOfSelectorList.size();
-        for (unsigned i = 0; i < size; ++i) {
-            CSSStyleRule* rule = new CSSStyleRule(listOfSelectorList.at(i), m_document, declarations);
-            aOwner->addRule(rule);
-        }
-    }
+    return true;
 }
 
 String* CSSParser::parseDefaultPropertyValue(CSSToken* token)
@@ -1546,17 +1459,17 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
     preserveState();
     // first let's see if we have a selector here...
     bool validSelector = true;
-    String* selector = parseSelector(aToken, isQueryingSelector, validSelector);
+
+    std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> list;
+    parseSelector(list, validSelector);
+
+
     bool valid = false;
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(m_document);
     // var declarations = [];
-    if (selector->length()) {
-        selector = selector->trim();
-        // selector = this.trim11(selector.selector);
-        String* s = selector;
-        CSSToken* token = getToken(true, true);
+    if (list.size()) {
+        CSSToken* token = currentToken();
         if (token->isSymbol('{')) {
-            s = s->concat(String::createASCIIString(" { "));
             CSSToken* token = getToken(true, false);
             while (true) {
                 if (!token->isNotNull()) {
@@ -1564,7 +1477,6 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
                     break;
                 }
                 if (token->isSymbol('}')) {
-                    s = s->concat(String::createASCIIString(" } "));
                     valid = true;
                     break;
                 } else {
@@ -1596,14 +1508,6 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
     }
 
     if (valid) {
-        String::Vector tokens;
-        selector->split(',', tokens);
-        for (unsigned i = 0; i < tokens.size(); i++) {
-            // Declarations with bad selectors are ignored
-            // Reference : css21/syntax/bad-selector-001.htm
-            if (tokens[i]->length() == 0 || tokens[i]->containsOnlyWhitespace())
-                return;
-        }
         if (isQueryingSelector) {
             sList->assign(list.begin(), list.end());
         } else {
