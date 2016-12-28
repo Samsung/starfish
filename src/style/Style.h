@@ -1601,6 +1601,9 @@ public:
     ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
 
 protected:
+    void apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle);
+    void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent);
+
     Document& m_document;
     float m_mediumFontSize;
     std::vector<CSSStyleSheet*, gc_allocator_ignore_off_page<CSSStyleSheet*> > m_sheets;
