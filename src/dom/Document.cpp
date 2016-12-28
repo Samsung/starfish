@@ -315,7 +315,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         userAgentStyleSheet->addRule(rule);
     }
 
-        {
+    {
         CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("colgroup"), CSSSelector::PseudoType::PseudoNone, document());
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::Display);
@@ -326,7 +326,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         rule->styleDeclaration()->addValuePair(pair);
         userAgentStyleSheet->addRule(rule);
     }
-
 
     {
         CSSStyleRule* rule = new CSSStyleRule(CSSSelector::Type::Tag, String::createASCIIString("h1"), CSSSelector::PseudoType::PseudoNone, document());

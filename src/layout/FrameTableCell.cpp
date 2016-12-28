@@ -30,7 +30,6 @@ FrameTableCell::FrameTableCell(Node* node, ComputedStyle* style)
 FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
                                                     FrameTreeBuilderContext& ctx,
                                                     bool force) {
-    printf("FrameTableCell::buildFrameTableCell\n");
     FrameTableCell* tableCell = new FrameTableCell(cellNode, nullptr);
     cellNode->setFrame(tableCell);
 
@@ -48,7 +47,6 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
 
 void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    printf("FrameTableCell::layout\n");
     FrameBlockBox::layout(ctx, resolveWhat);
 }
 
