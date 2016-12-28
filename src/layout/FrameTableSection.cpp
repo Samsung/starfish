@@ -31,7 +31,6 @@ FrameTableSection::FrameTableSection(Node* node, ComputedStyle* style)
 FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
                                                              FrameTreeBuilderContext& ctx,
                                                              bool force) {
-    printf("FrameTableSection::buildFrameTableSection\n");
     FrameTableSection* tableSection = new FrameTableSection(sectionNode, nullptr);
     sectionNode->setFrame(tableSection);
 

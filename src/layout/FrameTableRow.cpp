@@ -31,7 +31,6 @@ FrameTableRow::FrameTableRow(Node* node, ComputedStyle* style)
 FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
                                                  FrameTreeBuilderContext& ctx,
                                                  bool force) {
-    printf("FrameTableRow::buildFrameTableRow\n");
     FrameTableRow* tableRow = new FrameTableRow(rowNode, nullptr);
     rowNode->setFrame(tableRow);
 
@@ -67,7 +66,6 @@ void FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
 
 void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    printf("FrameTableRow::layout\n");
     FrameBlockBox::layout(ctx, resolveWhat);
 
 }
