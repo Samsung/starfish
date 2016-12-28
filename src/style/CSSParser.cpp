@@ -935,21 +935,22 @@ CSSSelector::RelationType CSSParser::parseCombinator()
 
     CSSToken* token = currentToken();
     while (token->isWhiteSpace()) {
-        token = getToken(false, true);
+        token = getToken(true, true);
         fallbackResult = CSSSelector::Descendant;
     }
 
-    if (fallbackResult == CSSSelector::Descendant)
-        return fallbackResult;
-
-    if (token->isSymbol('+'))
+    if (token->isSymbol('+')) {
+        token = getToken(true, true);
         return CSSSelector::DirectAdjacent;
-    else if (token->isSymbol('~'))
+    } else if (token->isSymbol('~')) {
+        token = getToken(true, true);
         return CSSSelector::IndirectAdjacent;
-    else if (token->isSymbol('>'))
+    } else if (token->isSymbol('>')) {
+        token = getToken(true, true);
         return CSSSelector::Child;
-
-    return fallbackResult;
+    } else {
+        return fallbackResult;
+    }
 }
 
 String* CSSParser::determineNamespace(String* prefix)
@@ -1456,7 +1457,6 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
 
     std::vector<CSSSelectorList*, gc_allocator_ignore_off_page<CSSSelectorList*>> list;
     parseSelector(list, validSelector);
-
 
     bool valid = false;
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(m_document);
