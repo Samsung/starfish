@@ -30,31 +30,34 @@ public:
 
     static FrameTable* buildFrameTable(Node* tableNode,
                                        FrameTreeBuilderContext& ctx,
-                                       bool force);
+                                       bool force = false);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 
-    virtual bool isFrameTable()
-    {
-        return true;
-    }
+    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
     virtual const char* name()
     {
         return "FrameTable";
     }
 
+    virtual bool isFrameTable()
+    {
+        return true;
+    }
+
     virtual bool hasBlockFlow()
     {
+        // FrameTable always contains blockflow
         Frame* child = firstChild();
-
-        if (!child) {
-            return true;
-        } else {
-            DisplayValue display = child->style()->originalDisplay();
-            return (display == BlockDisplayValue ||
-                    display == TableCaptionDisplayValue) && child->isNormalFlow();
+        if (child) {
+            STARFISH_ASSERT(child->isNormalFlow());
+            // Only FrameTableCaption or FrameTableSection can exist as children
+            // of FrameTable
+            STARFISH_ASSERT(child->isFrameTableCaption() || child->isFrameTableSection());
         }
+
+        return true;
     }
 
 private:

@@ -21,9 +21,40 @@
 
 namespace StarFish {
 
+class FrameTreeBuilderContext;
+
 class FrameTableSection : public FrameBlockBox {
 public:
     FrameTableSection(Node* node, ComputedStyle* style);
+
+    static FrameTableSection* buildFrameTableSection(Node* sectionNode,
+                                                     FrameTreeBuilderContext& ctx,
+                                                     bool force = false);
+
+    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+
+    virtual const char* name()
+    {
+        return "FrameTableSection";
+    }
+
+    virtual bool isFrameTableSection()
+    {
+        return true;
+    }
+
+    virtual bool hasBlockFlow()
+    {
+        // FrameTableSection always contains blockflow
+        Frame* child = firstChild();
+        if (!child) {
+            STARFISH_ASSERT(child->isNormalFlow());
+            // Only TableRow can exist as children of TableSection
+            STARFISH_ASSERT(child->isFrameTableRow());
+        }
+
+        return true;
+    }
 
 private:
 

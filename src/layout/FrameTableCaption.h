@@ -29,7 +29,7 @@ public:
 
     static FrameTableCaption* buildFrameTableCaption(Node* captionNode,
                                                      FrameTreeBuilderContext& ctx,
-                                                     bool force);
+                                                     bool force = false);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 

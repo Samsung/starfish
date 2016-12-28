@@ -30,7 +30,7 @@ FrameTableCaption::FrameTableCaption(Node* node, ComputedStyle* style)
 
 FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode,
                                                              FrameTreeBuilderContext& ctx,
-                                                             bool force = false)
+                                                             bool force)
 {
     FrameTableCaption* tableCaption = new FrameTableCaption(captionNode, nullptr);
     captionNode->setFrame(tableCaption);

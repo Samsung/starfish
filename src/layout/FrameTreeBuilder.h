@@ -31,6 +31,9 @@ class FrameInline;
 
 class FrameTable;
 class FrameTableCaption;
+class FrameTableSection;
+class FrameTableRow;
+class FrameTableCell;
 
 class FrameTreeBuilderContext {
 public:
@@ -53,9 +56,15 @@ protected:
 };
 
 class FrameTreeBuilder {
-    // table layout algorithm needs to call buildTree()
+    // To make code more readable and maintainable, table-related code are
+    // in separate FrameTableXXX files. To reuse the FrameTree building
+    // algorithm, the following FrameTableXXX classes need to access
+    // buildTree(). Hence, they are declared as friends of FrameTreeBuilder.
     friend FrameTable;
     friend FrameTableCaption;
+    friend FrameTableSection;
+    friend FrameTableRow;
+    friend FrameTableCell;
 
 public:
     static void buildFrameTree(Document* document);
