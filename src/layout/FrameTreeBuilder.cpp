@@ -142,7 +142,11 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
     }
 
     bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue ||
-                        currentFrame->style()->originalDisplay() == TableDisplayValue;
+                        currentFrame->isFrameTable() ||
+                        currentFrame->isFrameTableCaption() ||
+                        currentFrame->isFrameTableSection() ||
+                        currentFrame->isFrameTableRow() ||
+                        currentFrame->isFrameTableCell();
     if (!isBlockChild || (!currentFrame->isNormalFlow())) {
         if (currentNode->parentNode()->style()->display() == InlineDisplayValue) {
             auto iter = ctx.frameInlineItem().find(currentNode->parentNode());

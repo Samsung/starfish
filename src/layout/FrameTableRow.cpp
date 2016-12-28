@@ -15,42 +15,42 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTableSection.h"
+#include "FrameTableRow.h"
 
 #include "FrameTreeBuilder.h"
-#include "FrameTableRow.h"
+#include "FrameTableCell.h"
 
 namespace StarFish {
 
-FrameTableSection::FrameTableSection(Node* node, ComputedStyle* style)
+FrameTableRow::FrameTableRow(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }
 
-FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
-                                                             FrameTreeBuilderContext& ctx,
-                                                             bool force) {
-    printf("FrameTableSection::buildFrameTableSection\n");
-    FrameTableSection* tableSection = new FrameTableSection(sectionNode, nullptr);
-    sectionNode->setFrame(tableSection);
+FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
+                                                 FrameTreeBuilderContext& ctx,
+                                                 bool force) {
+    printf("FrameTableRow::buildFrameTableRow\n");
+    FrameTableRow* tableRow = new FrameTableRow(rowNode, nullptr);
+    rowNode->setFrame(tableRow);
 
     FrameBlockBox* lastContext = ctx.currentBlockContainer();
-    ctx.setCurrentBlockContainer(tableSection);
+    ctx.setCurrentBlockContainer(tableRow);
 
-    for (Node* c = sectionNode->firstChild(); c; c = c->nextSibling()) {
-        tableSection->addChild(c, ctx, force);
+    for (Node* c = rowNode->firstChild(); c; c = c->nextSibling()) {
+        tableRow->addChild(c, ctx, force);
     }
 
     ctx.setCurrentBlockContainer(lastContext);
 
-    return tableSection;
+    return tableRow;
 }
 
-void FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+void FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
     Frame* childFrame;
-    if (!child->isTableRow()) {
+    if (!child->isTableCell()) {
         // TODO
         if (child->isCharacterData() || child->isComment()) {
             return;
@@ -59,10 +59,17 @@ void FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool
         }
     }
 
-    childFrame = FrameTableRow::buildFrameTableRow(child, ctx, force);
+    childFrame = FrameTableCell::buildFrameTableCell(child, ctx, force);
     FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
                                                  childFrame, child, ctx);
     STARFISH_ASSERT(childFrame->parent());
+}
+
+void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+{
+    printf("FrameTableRow::layout\n");
+    FrameBlockBox::layout(ctx, resolveWhat);
+
 }
 
 }

@@ -17,8 +17,9 @@
 #include "StarFishConfig.h"
 #include "FrameTable.h"
 
-#include "FrameTableCaption.h"
 #include "FrameTreeBuilder.h"
+#include "FrameTableCaption.h"
+#include "FrameTableSection.h"
 
 namespace StarFish {
 
@@ -31,7 +32,7 @@ FrameTable::FrameTable(Node* node, ComputedStyle* style)
 
 FrameTable* FrameTable::buildFrameTable(Node* tableNode,
                                         FrameTreeBuilderContext& ctx,
-                                        bool force = false)
+                                        bool force)
 {
     FrameTable* tableWrapper = new FrameTable(tableNode, nullptr);
     FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
@@ -43,22 +44,52 @@ FrameTable* FrameTable::buildFrameTable(Node* tableNode,
     ctx.setCurrentBlockContainer(tableWrapper);
     ctx.mergeTextDecorationData(tableWrapper->style());
 
-    // Create either FrameTableCaptions or a FrameTableSection
     for (Node* c = tableNode->firstChild(); c; c = c->nextSibling()) {
-        if (c->style()->display() == DisplayValue::TableCaptionDisplayValue) {
-            FrameTableCaption* captionFrame =
-                    FrameTableCaption::buildFrameTableCaption(c, ctx, force);
-
-            FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
-                                                         captionFrame, c, ctx);
-            STARFISH_ASSERT(captionFrame->parent());
-            tableWrapper->m_captions.push_back(captionFrame);
-        }
+        tableWrapper->addChild(c, ctx, force);
     }
 
     ctx.setCurrentBlockContainer(lastContext);
 
     return tableWrapper;
+}
+
+void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+{
+    bool wrapInAnnoymousSection = false;
+    Frame* childFrame;
+
+    if (child->isTableCaption()) {
+        childFrame = FrameTableCaption::buildFrameTableCaption(child, ctx, force);
+        m_captions.push_back(childFrame->asFrameTableCaption());
+    } else if (child->isTableCol()) {
+        // TODO
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    } else if (child->isTableSection()) {
+        switch(child->style()->display()) {
+        case DisplayValue::TableHeaderGroupDisplayValue:
+            // TODO
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            break;
+        case DisplayValue::TableFooterGroupDisplayValue:
+            // TODO
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            break;
+        case DisplayValue::TableRowGroupDisplayValue:
+            childFrame = FrameTableSection::buildFrameTableSection(child, ctx, force);
+            break;
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else {
+        wrapInAnnoymousSection = true;
+    }
+
+    if (!wrapInAnnoymousSection) {
+        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
+                                                     childFrame, child, ctx);
+        STARFISH_ASSERT(childFrame->parent());
+    }
+
 }
 
 void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)

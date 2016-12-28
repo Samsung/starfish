@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishFrameTableCaption__
-#define __StarFishFrameTableCaption__
+#ifndef __StarFishFrameTableRow__
+#define __StarFishFrameTableRow__
 
 #include "layout/FrameBlockBox.h"
 
@@ -23,23 +23,37 @@ namespace StarFish {
 
 class FrameTreeBuilderContext;
 
-class FrameTableCaption : public FrameBlockBox {
+class FrameTableRow : public FrameBlockBox {
 public:
-    FrameTableCaption(Node* node, ComputedStyle* style);
+    FrameTableRow(Node* node, ComputedStyle* style);
 
-    static FrameTableCaption* buildFrameTableCaption(Node* captionNode,
-                                                     FrameTreeBuilderContext& ctx,
-                                                     bool force = false);
-
+    static FrameTableRow* buildFrameTableRow(Node* cellNode,
+                                             FrameTreeBuilderContext& ctx,
+                                             bool force = false);
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
+    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
     virtual const char* name()
     {
-        return "FrameTableCaption";
+        return "FrameTableRow";
     }
 
-    virtual bool isFrameTableCaption()
+    virtual bool isFrameTableRow()
     {
+        return true;
+    }
+
+    virtual bool hasBlockFlow()
+    {
+        // TableRow always contains blockflow
+        Frame* child = firstChild();
+        if (!child) {
+            STARFISH_ASSERT(child->isNormalFlow());
+            // Only TableCell can exist as children of TableRow
+            STARFISH_ASSERT(child->isFrameTableCell());
+        }
+
         return true;
     }
 

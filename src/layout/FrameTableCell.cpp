@@ -15,43 +15,42 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTableCaption.h"
+#include "FrameTableCell.h"
 
 #include "FrameTreeBuilder.h"
 
 namespace StarFish {
 
-FrameTableCaption::FrameTableCaption(Node* node, ComputedStyle* style)
+FrameTableCell::FrameTableCell(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
-                    (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }
 
-FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode,
-                                                             FrameTreeBuilderContext& ctx,
-                                                             bool force)
-{
-    FrameTableCaption* tableCaption = new FrameTableCaption(captionNode, nullptr);
-    captionNode->setFrame(tableCaption);
+FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
+                                                    FrameTreeBuilderContext& ctx,
+                                                    bool force) {
+    printf("FrameTableCell::buildFrameTableCell\n");
+    FrameTableCell* tableCell = new FrameTableCell(cellNode, nullptr);
+    cellNode->setFrame(tableCell);
 
-    // Caption establishes a new block context
     FrameBlockBox* lastContext = ctx.currentBlockContainer();
-    ctx.setCurrentBlockContainer(tableCaption);
-    ctx.mergeTextDecorationData(tableCaption->style());
+    ctx.setCurrentBlockContainer(tableCell);
 
-    for(Node* c = captionNode->firstChild(); c; c = c->nextSibling()) {
+    for(Node* c = cellNode->firstChild(); c; c = c->nextSibling()) {
         FrameTreeBuilder::buildTree(c, ctx, force);
     }
 
     ctx.setCurrentBlockContainer(lastContext);
 
-    return tableCaption;
+    return tableCell;
 }
 
-void FrameTableCaption::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
+    printf("FrameTableCell::layout\n");
     FrameBlockBox::layout(ctx, resolveWhat);
 }
+
 
 }

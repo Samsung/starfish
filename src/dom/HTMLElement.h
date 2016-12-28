@@ -35,6 +35,16 @@ namespace StarFish {
         F(Span) \
         F(BR) \
         F(Object) \
+        F(Table) \
+        F(Caption) \
+        F(TBody) \
+        F(TD) \
+        F(TFoot) \
+        F(THead) \
+        F(TH) \
+        F(TR) \
+        F(Col) \
+        F(ColGroup) \
         F(Unknown)
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA

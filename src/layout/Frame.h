@@ -35,6 +35,8 @@ class FrameReplaced;
 class FrameInline;
 class FrameDocument;
 class FrameTable;
+class FrameTableCaption;
+class FrameTableSection;
 class LineBox;
 
 enum PaintingStage {
@@ -546,6 +548,21 @@ public:
         return false;
     }
 
+    virtual bool isFrameTableSection()
+    {
+        return false;
+    }
+
+    virtual bool isFrameTableRow()
+    {
+        return false;
+    }
+
+    virtual bool isFrameTableCell()
+    {
+        return false;
+    }
+
     FrameText* asFrameText()
     {
         STARFISH_ASSERT(isFrameText());
@@ -554,7 +571,8 @@ public:
 
     FrameBox* asFrameBox()
     {
-        STARFISH_ASSERT(isFrameBox() || isFrameTable() || isFrameTableCaption());
+        STARFISH_ASSERT(isFrameBox() || isFrameTable() || isFrameTableCaption() ||
+                        isFrameTableSection() || isFrameTableRow() || isFrameTableCell());
         return (FrameBox*)this;
     }
 
@@ -580,6 +598,12 @@ public:
     {
         STARFISH_ASSERT(isFrameTable());
         return (FrameTable*)this;
+    }
+
+    FrameTableCaption* asFrameTableCaption()
+    {
+        STARFISH_ASSERT(isFrameTableCaption());
+        return (FrameTableCaption*)this;
     }
 
     ComputedStyle* style()
