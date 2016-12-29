@@ -9,7 +9,12 @@ if cat error_report | grep 'ERROR'; then
 fi
 
 echo "checking... make internal_test"
-make internal_test > prepush_test_result
+make internal_test_gitlab_prerequisite div=4
+make internal_test_fast > prepush_test_result
+make internal_test_part1 >> prepush_test_result
+make internal_test_part2 >> prepush_test_result
+make internal_test_part3 >> prepush_test_result
+make internal_test_part4 >> prepush_test_result
 if cat prepush_test_result |grep 'FAIL'; then
  echo "$RED[FAIL] make internal_test$RESET"
  exit 1
