@@ -20,15 +20,56 @@ build:
 
 # run tests using the binary built before
 
-test_internal_test:
+test_internal_test_fast1:
   stage: test
   before_script:
     - git submodule deinit -f .
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
+    - make internal_test_gitlab_prerequisite div=4
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_fast
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part1
+  dependencies:
+  - build
+
+test_internal_test2:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+    - make internal_test_gitlab_prerequisite div=4
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part2
+  dependencies:
+  - build
+
+test_internal_test3:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+    - make internal_test_gitlab_prerequisite div=4
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part3
+  dependencies:
+  - build
+
+test_internal_test4:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+    - make internal_test_gitlab_prerequisite div=4
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part4
   dependencies:
   - build
 
