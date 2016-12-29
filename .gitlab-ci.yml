@@ -1,20 +1,13 @@
-# This file is a template, and might need editing before it works on your project.
-# use the official gcc image, based on debian
-# can use verions as well, like gcc:5.2
-# see https://hub.docker.com/_/gcc/
 image: gcc
 
 build:
   stage: build
-  # instead of calling g++ directly you can also use some build toolkit like make
-  # install the necessary build tools when needed
-  before_script: 
+  before_script:
     - git submodule deinit -f .
     - git submodule init
     - git submodule update
     - ./build_third_party.sh
-  script: 
-    - make install_pixel_test_dep
+  script:
     - make x64.exe.release -j
   artifacts:
     paths:
@@ -24,15 +17,102 @@ build:
       - third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so.56
       - third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54
       #- out/
-  # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
-  # cache:
-  #   paths:
-  #     - "*.o"
 
 # run tests using the binary built before
-test:
+
+test_internal_test:
   stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a ./tool/reftest/pre-push
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test
+  dependencies:
+  - build
+
+test_regression_test_blink:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_dom
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_html
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_css
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_etc
+  dependencies:
+  - build
+
+test_regression_test_webkit:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_html
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_css
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_etc
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_dom
+  dependencies:
+  - build
+
+test_regression_test_wpt:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_dom
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_html
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_dom_events
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_progress_events
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_page_visibility
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_xhr
+  dependencies:
+  - build
+
+test_regression_test_dom:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_dom_conformance_test
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_dom_conformance_test
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_dom_conformance_test
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_gecko_dom_conformance_test
+  dependencies:
+  - build
+
+test_regression_test_css:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make pixel_test_css_all
+  dependencies:
+  - build
+
+test_regression_test_font:
+  stage: test
+  before_script:
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - make install_pixel_test_dep
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a make font_dependent_test_css
   dependencies:
   - build
