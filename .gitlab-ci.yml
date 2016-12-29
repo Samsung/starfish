@@ -1,0 +1,37 @@
+# This file is a template, and might need editing before it works on your project.
+# use the official gcc image, based on debian
+# can use verions as well, like gcc:5.2
+# see https://hub.docker.com/_/gcc/
+image: gcc
+
+build:
+  stage: build
+  # instead of calling g++ directly you can also use some build toolkit like make
+  # install the necessary build tools when needed
+  before_script: 
+    - git submodule deinit -f .
+    - git submodule init
+    - git submodule update
+    - ./build_third_party.sh
+  script: 
+    - make x64.exe.release -j
+  artifacts:
+    paths:
+      - StarFish
+      - out/x64/exe/release/StarFish
+      - third_party/libav/out/linux/x64/release/libavformat/libavformat.so.56
+      - third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so.56
+      - third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54
+      #- out/
+  # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
+  # cache:
+  #   paths:
+  #     - "*.o"
+
+# run tests using the binary built before
+test:
+  stage: test
+  script:
+    - xvfb-run -s "-screen 0 1920x1080x24" -a ./tool/reftest/pre-push
+  dependencies:
+  - build
