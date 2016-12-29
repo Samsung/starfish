@@ -88,8 +88,15 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
         FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
                                                      childFrame, child, ctx);
         STARFISH_ASSERT(childFrame->parent());
+        return;
     }
 
+    if (child->isCharacterData() || child->isComment()) {
+        // TODO
+        return;
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 }
 
 void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
