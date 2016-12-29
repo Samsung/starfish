@@ -8,7 +8,7 @@ build:
     - git submodule update
     - ./build_third_party.sh
   script:
-    - make x64.exe.release -j
+    - make x64.exe.release -j8
   artifacts:
     paths:
       - StarFish
