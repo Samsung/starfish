@@ -14,6 +14,7 @@ build:
     - git submodule update
     - ./build_third_party.sh
   script: 
+    - make install_pixel_test_dep
     - make x64.exe.release -j
   artifacts:
     paths:
