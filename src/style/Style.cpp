@@ -571,6 +571,27 @@ unsigned CSSSelector::specificityForOneSelector() const
     return 0;
 }
 
+
+bool CSSSelector::isSimple(CSSSelectorList* selectorList)
+{
+    if (pseudoSelectorArguments().size() || type() == CSSSelector::PseudoElement)
+        return false;
+
+    if (selectorList->size() == 1)
+        return true;
+//
+//    if (m_selector->match() == CSSSelector::Tag) {
+//        // We can't check against anyQName() here because namespace may not be nullAtom.
+//        // Example:
+//        //     @namespace "http://www.w3.org/2000/svg";
+//        //     svg:not(:root) { ...
+//        if (m_selector->tagQName().localName() == starAtom)
+//            return m_tagHistory->isSimple();
+//    }
+
+    return false;
+}
+
 CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArguments)
 {
     if (name == nullptr || !name->isASCIIString())
@@ -610,7 +631,7 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoAfter;
     else if (name->equals(String::fromUTF8("lang")))
         return CSSSelector::PseudoType::PseudoLang;
-    else if (name->equals(String::fromUTF8("not")))
+    else if (name->equals(String::fromUTF8("not(")))
         return CSSSelector::PseudoType::PseudoNot;
     else if (name->equals(String::fromUTF8("selection")))
         return CSSSelector::PseudoType::PseudoSelection;
