@@ -980,7 +980,6 @@ CSSSelector* CSSParser::getPseudoSelector()
         colons++;
     }
 
-    // token = currentToken();
     if (!token->isIdent() && !token->isFunction())
         return nullptr;
 
@@ -998,6 +997,41 @@ CSSSelector* CSSParser::getPseudoSelector()
 
     // TODO: handle pseudo-* selectors of function type
     // For examples, not(), lang(), nth-*() ans so on.
+
+    if (selector->pseudoType() == CSSSelector::PseudoNone)
+        return nullptr;
+
+    getToken(true, true);
+
+    switch (selector->pseudoType()) {
+    case CSSSelector::PseudoNot:
+        {
+            CSSSelectorList* selectorList = new CSSSelectorList();
+            parseCompoundSelector(selectorList);
+
+            if (selectorList->size() != 1)
+                return nullptr;
+
+            CSSSelector* innerSelector = selectorList->at(0);
+            if (innerSelector->pseudoSelectorArguments().size() || innerSelector->type() == CSSSelector::PseudoElement)
+                return nullptr;
+
+            selector->setPseudoSelectorArguments(innerSelector);
+            getToken(false, true);
+
+            return selector;
+        }
+    case CSSSelector::PseudoLang:
+        {
+            return selector;
+        }
+    case CSSSelector::PseudoNthChild:
+        {
+            return selector;
+        }
+    default:
+        break;
+    }
 
     return nullptr;
 }
@@ -1112,20 +1146,15 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         selectorList->at(selectorList->size() - 1)->setRelation(CSSSelector::None);
 
     if (elementName) {
-        CSSSelector* selector = new CSSSelector();
-        selector->setSelectorText(elementName->toLower());
+        if (elementName->equals(String::fromUTF8("*")) && selectorList->size() > 0)
+            return;
 
+        CSSSelector* selector = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector
+            , CSSSelector::PseudoType::PseudoNone, elementName->toLower());
         if (elementName->equals(String::fromUTF8("*")))
             selector->setType(CSSSelector::Type::Universal);
-        else
-            selector->setType(CSSSelector::Type::Tag);
-
-        if (selectorList->size() > 0)
-            selector->setRelation(CSSSelector::SubSelector);
-        else
+        if (selectorList->size() == 0)
             selector->setRelation(CSSSelector::None);
-
-        selector->setPseudoType(CSSSelector::PseudoType::PseudoNone);
 
         selectorList->insertFront(selector);
     }

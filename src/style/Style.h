@@ -1279,6 +1279,7 @@ protected:
     Element* m_element;
 };
 
+class CSSSelectorList;
 class CSSSelector : public gc {
 public:
     enum Type {
@@ -1409,6 +1410,18 @@ public:
         m_relationIsAffectedByPseudoContent = true;
     }
 
+    void setPseudoSelectorArguments(CSSSelector* selector)
+    {
+        m_pseudoSelectorArguments.push_back(selector);
+    }
+
+    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& pseudoSelectorArguments()
+    {
+        return m_pseudoSelectorArguments;
+    }
+
+    bool isSimple(CSSSelectorList* selectorList);
+
     // http://www.w3.org/TR/css3-selectors/#specificity
     unsigned specificityForOneSelector() const;
 
@@ -1423,6 +1436,7 @@ protected:
     String* m_selectorText;
     AttributeMatchType m_attributeMatch;
     unsigned m_relationIsAffectedByPseudoContent;
+    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_pseudoSelectorArguments;
 };
 
 class CSSSelectorList : public gc {
