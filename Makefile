@@ -714,7 +714,6 @@ install_pixel_test_dep:
 	cp test/tool/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts/
 	cp test/tool/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts/
 	fc-cache -fv
-	./set_nodewebkit_env.sh
 	fc-match SamsungOne
 
 install_inspector_nwjs:
