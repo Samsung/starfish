@@ -12,3 +12,4 @@ Demo.regression
 *.png_
 result.csv
 *.class
+tool/reftest/internal_part*
