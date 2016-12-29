@@ -25,7 +25,7 @@ function main {
     elif [[ "$1" = *".htm" || "$1" = *".html" ||
             "$1" = "blink_fast_css" || "$1" = "blink_fast_etc" ||
             "$1" = "webkit_fast_css" || "$1" = "webkit_fast_etc" ||
-            "$1" = "internal_test" ]]; then
+            "$1" = "internal_"* ]]; then
         tc=$1
     elif [[ "$1" = *".res" ]]; then
         tc=$(cat $1)
@@ -164,6 +164,19 @@ function main {
         TESTSUITENAME="Internal Tests"
         TESTSUITE=7
         tc=$(cat tool/reftest/internal.res)
+        doTest "$@"
+        TESTSUITE=8
+        tc=$(cat tool/reftest/internal_manual.res)
+        doTest "$@"
+    elif [[ "$1" = "internal_part"* ]]; then
+        TESTSUITENAME="Internal Tests"
+        TESTSUITE=7
+        tc=$(cat tool/reftest/$1.res)
+        doTest "$@"
+    elif [[ "$1" = "internal_fast" ]]; then
+        TESTSUITENAME="Internal Tests"
+        TESTSUITE=7
+        tc=$(cat tool/reftest/internal_fast.res)
         doTest "$@"
         TESTSUITE=8
         tc=$(cat tool/reftest/internal_manual.res)

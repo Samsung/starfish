@@ -757,7 +757,22 @@ pixel_test_css_all:
 	@diff out/wpt_css_passed.res out/wpt_css_passed.orig
 
 internal_test:
+	cat tool/reftest/internal_fast.res tool/reftest/internal_slow.res > tool/reftest/internal.res
 	./tool/reftest/reftest.sh internal_test
+	rm tool/reftest/internal.res
+
+internal_test_gitlab_prerequisite:
+	./tool/reftest/internal.sh $(div)
+internal_test_part1:
+	./tool/reftest/reftest.sh internal_part1
+internal_test_part2:
+	./tool/reftest/reftest.sh internal_part2
+internal_test_part3:
+	./tool/reftest/reftest.sh internal_part3
+internal_test_part4:
+	./tool/reftest/reftest.sh internal_part4
+internal_test_fast:
+	./tool/reftest/reftest.sh internal_fast
 
 reftest:
 	./tool/reftest/reftest.sh $(tc) $(regression)
