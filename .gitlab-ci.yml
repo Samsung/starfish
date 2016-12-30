@@ -28,9 +28,16 @@ test_internal_test_fast1:
     - git submodule update
     - make install_pixel_test_dep
     - make internal_test_gitlab_prerequisite div=4
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_fast
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part1
+    - make internal_test_fast | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make internal_test_part1 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -42,8 +49,15 @@ test_internal_test2:
     - git submodule update
     - make install_pixel_test_dep
     - make internal_test_gitlab_prerequisite div=4
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part2
+    - make internal_test_part2 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -55,8 +69,15 @@ test_internal_test3:
     - git submodule update
     - make install_pixel_test_dep
     - make internal_test_gitlab_prerequisite div=4
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part3
+    - make internal_test_part3 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -68,8 +89,15 @@ test_internal_test4:
     - git submodule update
     - make install_pixel_test_dep
     - make internal_test_gitlab_prerequisite div=4
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make internal_test_part4
+    - make internal_test_part4 | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -80,11 +108,18 @@ test_regression_test_blink:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_dom
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_html
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_css
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_fast_etc
+    - make regression_test_blink_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_blink_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_blink_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_blink_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -95,11 +130,18 @@ test_regression_test_webkit:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_html
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_css
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_etc
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_fast_dom
+    - make regression_test_webkit_fast_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_webkit_fast_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_webkit_fast_etc | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_webkit_fast_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -110,13 +152,20 @@ test_regression_test_wpt:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_dom
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_html
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_dom_events
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_progress_events
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_page_visibility
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_wpt_xhr
+    - make regression_test_wpt_dom | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_wpt_html | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_wpt_dom_events | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_wpt_progress_events | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_wpt_page_visibility | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_wpt_xhr | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -126,11 +175,18 @@ test_regression_test_dom:
     - git submodule deinit -f .
     - git submodule init
     - git submodule update
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_dom_conformance_test
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_webkit_dom_conformance_test
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_blink_dom_conformance_test
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make regression_test_gecko_dom_conformance_test
+    - make regression_test_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_webkit_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_blink_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
+    - make regression_test_gecko_dom_conformance_test | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -141,8 +197,15 @@ test_regression_test_css:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make pixel_test_css_all
+    - make pixel_test_css_all | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
 
@@ -153,7 +216,14 @@ test_regression_test_font:
     - git submodule init
     - git submodule update
     - make install_pixel_test_dep
+    - mkdir -p xvfb-tmp.fbdir
+    - Xvfb :99 -screen 0 1920x1080x24 -fbdir ./xvfb-tmp.fbdir &
+    - export DISPLAY=:99
+  after_script:
+    - unset DISPLAY
+    - rm -rf ./xvfb-tmp.fbdir
+    - killall Xvfb
   script:
-    - xvfb-run -s "-screen 0 1920x1080x24" -a make font_dependent_test_css
+    - make font_dependent_test_css | tee prepush_test_result; if cat prepush_test_result |grep 'FAIL' > /dev/null; then  exit 1; fi
   dependencies:
   - build
