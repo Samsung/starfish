@@ -1,7 +1,7 @@
-image: gcc
-
 build:
   stage: build
+  tags:
+    - main_build
   before_script:
     - git submodule deinit -f .
     - git submodule init
