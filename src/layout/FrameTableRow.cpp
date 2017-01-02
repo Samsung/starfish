@@ -25,7 +25,8 @@ namespace StarFish {
 FrameTableRow::FrameTableRow(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
+                    (node != nullptr && style == nullptr));
 }
 
 FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
@@ -37,8 +38,15 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
     FrameBlockBox* lastContext = ctx.currentBlockContainer();
     ctx.setCurrentBlockContainer(tableRow);
 
+    unsigned i = 0;
     for (Node* c = rowNode->firstChild(); c; c = c->nextSibling()) {
-        tableRow->addChild(c, ctx, force);
+        FrameTableCell* tableCell = tableRow->addChild(c, ctx, force);
+        // TODO: need to calculate absoluteColumnIndex
+        // After implementing anonymous boxes, replace the null check with assert()
+        if (tableCell) {
+            tableCell->setAbsoluteColumnIndex(i);
+            i++;
+        }
     }
 
     ctx.setCurrentBlockContainer(lastContext);
@@ -46,13 +54,13 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
     return tableRow;
 }
 
-void FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
-    Frame* childFrame;
+    FrameTableCell* childFrame;
     if (!child->isTableCell()) {
         // TODO
         if (child->isCharacterData() || child->isComment()) {
-            return;
+            return nullptr;
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -62,6 +70,7 @@ void FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ctx, bool for
     FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
                                                  childFrame, child, ctx);
     STARFISH_ASSERT(childFrame->parent());
+    return childFrame;
 }
 
 void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)

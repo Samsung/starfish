@@ -37,6 +37,7 @@ class FrameDocument;
 class FrameTable;
 class FrameTableCaption;
 class FrameTableSection;
+class FrameTableCell;
 class LineBox;
 
 enum PaintingStage {
@@ -604,6 +605,12 @@ public:
     {
         STARFISH_ASSERT(isFrameTableCaption());
         return (FrameTableCaption*)this;
+    }
+
+    FrameTableCell* asFrameTableCell()
+    {
+        STARFISH_ASSERT(isFrameTableCell());
+        return (FrameTableCell*)this;
     }
 
     ComputedStyle* style()

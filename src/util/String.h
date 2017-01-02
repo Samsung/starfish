@@ -552,6 +552,11 @@ public:
     {
     }
 
+    StringView(String* string)
+        : StringView(string, 0, string->length())
+    {
+    }
+
     String* substring() const
     {
         return m_string->substring(m_start, m_end - m_start);

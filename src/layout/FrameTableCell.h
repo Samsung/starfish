@@ -42,8 +42,21 @@ public:
         return true;
     }
 
-private:
+    void setAbsoluteColumnIndex(unsigned column)
+    {
+        m_absoluteColumnIndex = column;
+    }
 
+    unsigned absoluteColumnIndex()
+    {
+        return m_absoluteColumnIndex;
+    }
+
+private:
+    LayoutUnit minimumCellWidth(LayoutContext& ctx);
+    LayoutUnit maximumCellWidth(LayoutContext& ctx);
+
+    unsigned m_absoluteColumnIndex;
 };
 
 }

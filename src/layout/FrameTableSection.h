@@ -22,6 +22,24 @@
 namespace StarFish {
 
 class FrameTreeBuilderContext;
+class FrameTableRow;
+class FrameTableCell;
+
+struct CellStruct {
+    CellStruct() : cell(nullptr) {}
+    CellStruct(FrameTableCell* cell_) : cell(cell_) {}
+
+    FrameTableCell* cell;
+};
+
+struct RowStruct {
+    RowStruct() : tableRow(nullptr) {}
+    RowStruct(FrameTableRow* tableRow);
+
+    FrameTableRow* tableRow;
+    std::vector<CellStruct,
+                gc_allocator_ignore_off_page<CellStruct>> cells;
+};
 
 class FrameTableSection : public FrameBlockBox {
 public:
@@ -31,7 +49,7 @@ public:
                                                      FrameTreeBuilderContext& ctx,
                                                      bool force = false);
 
-    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    FrameTableRow* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
     virtual const char* name()
     {
@@ -56,8 +74,14 @@ public:
         return true;
     }
 
-private:
+    std::vector<RowStruct, gc_allocator_ignore_off_page<RowStruct>>& grid()
+    {
+        return m_grid;
+    }
 
+private:
+    std::vector<RowStruct,
+                gc_allocator_ignore_off_page<RowStruct>> m_grid;
 };
 
 }

@@ -22,6 +22,7 @@
 namespace StarFish {
 
 class FrameTreeBuilderContext;
+class FrameTableCell;
 
 class FrameTableRow : public FrameBlockBox {
 public:
@@ -32,7 +33,7 @@ public:
                                              bool force = false);
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 
-    void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    FrameTableCell* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
     virtual const char* name()
     {
@@ -46,7 +47,7 @@ public:
 
     virtual bool hasBlockFlow()
     {
-        // TableRow always contains blockflow
+        // FIXME: TableRow always contains a blockflow
         Frame* child = firstChild();
         if (!child) {
             STARFISH_ASSERT(child->isNormalFlow());
@@ -57,7 +58,18 @@ public:
         return true;
     }
 
+    void setRowIndex(unsigned rowIndex)
+    {
+        m_rowIndex = rowIndex;
+    }
+
+    unsigned rowIndex()
+    {
+        return m_rowIndex;
+    }
+
 private:
+    unsigned m_rowIndex;
 
 };
 
