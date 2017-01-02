@@ -2447,126 +2447,14 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
 
 void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent)
 {
-    // TODO: Consider page's specificity.
     // first sheet is must user-agent style sheet!
     for (unsigned i = 0; i < m_sheets.size(); i++) {
         CSSStyleSheet* sheet = m_sheets[i];
         sheet->sortRulesBySpecificity();
 
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            bool isMatched = false;
-            bool needToCheck = true;
-            unsigned idx = 0;
             CSSSelectorList* selectorList = sheet->rules()[j]->m_selectorList;
-            CSSSelector* selector = selectorList->at(idx);
-            CSSSelector::RelationType prevRelation = CSSSelector::RelationType::None;
-            Element* e = element;
-
-            while (e && needToCheck) {
-                switch (selector->relation()) {
-                case CSSSelector::RelationType::None:
-                    {
-                    bool isOneSelectorMatched = false;
-                    if (selector->type() == CSSSelector::Type::Universal) {
-                        isOneSelectorMatched = true;
-                    } else if (selector->type() == CSSSelector::Type::Tag) {
-                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->localName());
-                    } else if (selector->type() == CSSSelector::Type::Id) {
-                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->id());
-                    } else if (selector->type() == CSSSelector::Type::Class) {
-                        auto className = e->classNames();
-                        for (unsigned f = 0; f < className.size(); f++) {
-                            if (selector->selectorText()->equals(className[f])) {
-                                isOneSelectorMatched = true;
-                                break;
-                            }
-                        }
-                    }
-                    // Pseudo-classes/elements
-                    // TODO: Consider combinators + pseudo-classes/elements.
-                    if (isOneSelectorMatched) {
-                        if (selector->pseudoType() == CSSSelector::PseudoType::PseudoNone) {
-                            isMatched = true;
-                        } else if ((e->state() & Node::NodeState::NodeStateActive) && selector->pseudoType() == CSSSelector::PseudoType::PseudoActive) {
-                            isMatched = true;
-                        } else if ((e->state() & Node::NodeState::NodeStateHovered) && selector->pseudoType() == CSSSelector::PseudoType::PseudoHover) {
-                            isMatched = true;
-                        } else if  (selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstChild || selector->pseudoType() == CSSSelector::PseudoType::PseudoLastChild) {
-                            if (e->parentElement()) {
-                                Element* child = selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstChild ? e->parentElement()->firstElementChild() : e->parentElement()->lastElementChild();
-                                if (child && e == child)
-                                    isMatched = true;
-                            }
-                        } else if (selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstOfType || selector->pseudoType() == CSSSelector::PseudoType::PseudoLastOfType) {
-                            if (e->parentElement()) {
-                                Element* child = selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstOfType ? e->parentElement()->firstElementChild() : e->parentElement()->lastElementChild();
-                                while (child) {
-                                    if (e->tagName()->equalsWithoutCase(child->tagName())) {
-                                        if (e == child)
-                                            isMatched = true;
-                                        break;
-                                    } else {
-                                        child = selector->pseudoType() == CSSSelector::PseudoType::PseudoFirstOfType ? child->nextElementSibling() : child->previousElementSibling();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // Consider combinator
-                    if (!isMatched && prevRelation == CSSSelector::RelationType::Descendant) {
-                        e = e->parentElement();
-                    } else {
-                        needToCheck = false;
-                    }
-                    break;
-                    }
-
-                // TODO: Consider all case. (e.g., Universal#id, Universal.class, nested subselector, etc.)
-                case CSSSelector::RelationType::SubSelector:
-                    if (selector->selectorText()->equalsWithoutCase(e->localName())) {
-                        selector = selectorList->at(++idx);
-                    } else if (prevRelation == CSSSelector::RelationType::Descendant) {
-                        e = e->parentElement();
-                    } else {
-                        needToCheck = false;
-                    }
-                    break;
-
-                case CSSSelector::RelationType::Descendant:
-                    {
-                    bool isOneSelectorMatched = false;
-                    if (selector->type() == CSSSelector::Type::Universal) {
-                        isOneSelectorMatched = true;
-                    } else if (selector->type() == CSSSelector::Type::Tag) {
-                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->localName());
-                    } else if (selector->type() == CSSSelector::Type::Id) {
-                        isOneSelectorMatched = selector->selectorText()->equalsWithoutCase(e->id());
-                    } else if (selector->type() == CSSSelector::Type::Class) {
-                        auto className = e->classNames();
-                        for (unsigned f = 0; f < className.size(); f++) {
-                            if (selector->selectorText()->equals(className[f])) {
-                                isOneSelectorMatched = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (isOneSelectorMatched) {
-                        selector = selectorList->at(++idx);
-                    } else if (idx == 0) {
-                        needToCheck = false;
-                    }
-                    prevRelation = CSSSelector::RelationType::Descendant;
-                    e = e->parentElement();
-                    break;
-                    }
-
-                default:
-                    needToCheck = false;
-                    break;
-                }
-            }
-
-            if (isMatched) {
+            if (matchSelector(element, selectorList) == Match::SelectorMatches) {
                 auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
                 apply(sheet->url(), cssValues, ret, parent);
             }
@@ -2578,6 +2466,99 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, Computed
         auto inlineCssValues = element->inlineStyleWithoutCreation()->m_cssValues;
         apply(element->document()->documentURI(), inlineCssValues, ret, parent);
     }
+}
+
+StyleResolver::Match StyleResolver::matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx)
+{
+    STARFISH_ASSERT(idx < selectorList->size());
+
+    CSSSelector* selector = selectorList->at(idx);
+    if (!checkOne(element, selector))
+        return Match::SelectorFailsLocally;
+
+    if (selector->isLastInTagHistory())
+        return Match::SelectorMatches;
+
+    Match match;
+    if (selector->relation() == CSSSelector::SubSelector) {
+        match = matchSelector(element, selectorList, ++idx);
+    } else {
+        match = matchForRelation(element, selectorList, selector->relation(), ++idx);
+    }
+    return match;
+}
+
+StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx)
+{
+    STARFISH_ASSERT(idx < selectorList->size());
+
+    CSSSelector* selector = selectorList->at(idx);
+    switch (relation) {
+    case CSSSelector::RelationType::Descendant:
+        {
+        Match match;
+        Element* parent = element->parentElement();
+        while (parent) {
+            match = matchSelector(parent, selectorList, idx);
+            if (match == Match::SelectorMatches)
+                break;
+            else
+                parent = parent->parentElement();
+        }
+        return match;
+        }
+    case CSSSelector::RelationType::Child:
+        // TODO
+        return Match::SelectorFailsCompletely;
+    case CSSSelector::RelationType::DirectAdjacent:
+        // TODO
+        return Match::SelectorFailsCompletely;
+    case CSSSelector::RelationType::IndirectAdjacent:
+        // TODO
+        return Match::SelectorFailsCompletely;
+    default:
+        return Match::SelectorFailsCompletely;
+    }
+}
+
+bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
+{
+    switch (selector->type()) {
+    case CSSSelector::Universal:
+        return true;
+    case CSSSelector::Tag:
+        return element->localName()->equalsWithoutCase(selector->selectorText());
+    case CSSSelector::Id:
+        return element->id()->equalsWithoutCase(selector->selectorText());
+    case CSSSelector::Class:
+        return element->hasClassName(selector->selectorText());
+    case CSSSelector::PseudoClass:
+        return checkPseudoClass(element, selector);
+    case CSSSelector::PseudoElement:
+        return checkPseudoElement(element, selector);
+    default:
+        // TODO: check attribute selectors.
+        return false;
+    }
+}
+
+bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
+{
+    switch (selector->pseudoType()) {
+    case CSSSelector::PseudoType::PseudoHover:
+        return element->state() & Node::NodeState::NodeStateHovered ? true : false;
+    case CSSSelector::PseudoType::PseudoActive:
+        return element->state() & Node::NodeState::NodeStateActive ? true : false;
+    default:
+        return false;
+    }
+    return true;
+}
+
+bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector)
+{
+    // TODO
+    return false;
 }
 
 void resolveDOMStyleInner(StyleResolver* resolver, Element* element, ComputedStyle* parentStyle, bool inheritedStyleChanged = false)

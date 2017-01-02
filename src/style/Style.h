@@ -1580,6 +1580,13 @@ protected:
 
 class StyleResolver {
 public:
+    enum Match {
+        SelectorMatches, // The selector matches the element
+        SelectorFailsLocally, // The selector fails for the element.
+        SelectorFailsAllSiblings, // The selector fails for the element and any sibling of the element
+        SelectorFailsCompletely // The selector fails for the element or ancestor of the element
+    };
+
     StyleResolver(Document& document);
     void addSheet(CSSStyleSheet* sheet);
     void removeSheet(CSSStyleSheet* sheet)
@@ -1603,6 +1610,13 @@ public:
 protected:
     void apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle);
     void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent);
+
+    Match matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx = 0);
+    Match matchForRelation(Element* element, CSSSelectorList* selectorList, CSSSelector::RelationType relation, unsigned idx);
+
+    bool checkOne(Element* element, CSSSelector* selector);
+    bool checkPseudoClass(Element* element, CSSSelector* selector);
+    bool checkPseudoElement(Element* element, CSSSelector* selector);
 
     Document& m_document;
     float m_mediumFontSize;
