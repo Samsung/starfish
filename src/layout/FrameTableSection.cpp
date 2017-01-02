@@ -19,13 +19,25 @@
 
 #include "FrameTreeBuilder.h"
 #include "FrameTableRow.h"
+#include "FrameTableCell.h"
 
 namespace StarFish {
+
+RowStruct::RowStruct(FrameTableRow* tableRow_)
+    : tableRow(tableRow_)
+{
+    for (Frame* cell = tableRow->firstChild(); cell; cell = cell->next()) {
+        if (cell->isFrameTableCell()) {
+            cells.push_back(CellStruct(cell->asFrameTableCell()));
+        }
+    }
+}
 
 FrameTableSection::FrameTableSection(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
+                    (node != nullptr && style == nullptr));
 }
 
 FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
@@ -37,8 +49,18 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
     FrameBlockBox* lastContext = ctx.currentBlockContainer();
     ctx.setCurrentBlockContainer(tableSection);
 
+    unsigned i = 0;
     for (Node* c = sectionNode->firstChild(); c; c = c->nextSibling()) {
-        tableSection->addChild(c, ctx, force);
+        FrameTableRow* tableRow = tableSection->addChild(c, ctx, force);
+        // TODO: After implementing anonymous boxes, replace the null check
+        // with assert()
+        if (tableRow) {
+            tableRow->setRowIndex(i);
+            i++;
+
+            RowStruct row(tableRow);
+            tableSection->grid().push_back(row);
+        }
     }
 
     ctx.setCurrentBlockContainer(lastContext);
@@ -46,13 +68,13 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
     return tableSection;
 }
 
-void FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
-    Frame* childFrame;
+    FrameTableRow* childFrame;
     if (!child->isTableRow()) {
         // TODO
         if (child->isCharacterData() || child->isComment()) {
-            return;
+            return nullptr;
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -62,6 +84,7 @@ void FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool
     FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
                                                  childFrame, child, ctx);
     STARFISH_ASSERT(childFrame->parent());
+    return childFrame;
 }
 
 }

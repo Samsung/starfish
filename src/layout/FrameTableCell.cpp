@@ -18,6 +18,7 @@
 #include "FrameTableCell.h"
 
 #include "FrameTreeBuilder.h"
+#include "FrameText.h"
 
 namespace StarFish {
 
@@ -36,7 +37,7 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
     FrameBlockBox* lastContext = ctx.currentBlockContainer();
     ctx.setCurrentBlockContainer(tableCell);
 
-    for(Node* c = cellNode->firstChild(); c; c = c->nextSibling()) {
+    for (Node* c = cellNode->firstChild(); c; c = c->nextSibling()) {
         FrameTreeBuilder::buildTree(c, ctx, force);
     }
 
@@ -48,7 +49,54 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
 void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, resolveWhat);
+
+    LayoutUnit minContentWidth;
+    LayoutUnit maxContentWidth;
+
+    if (style()->width().isAuto()) {
+        minContentWidth = minimumCellWidth(ctx);
+        maxContentWidth = maximumCellWidth(ctx);
+    } else if (style()->width().isFixed()) {
+        LayoutUnit width = LayoutUnit::fromPixel(style()->width().fixed());
+        minContentWidth = std::max(width, minimumCellWidth(ctx));
+        maxContentWidth = std::max(width, maximumCellWidth(ctx));
+    } else if (style()->width().isPercent()) {
+        // TODO
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 }
 
+LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
+{
+    LayoutUnit maxWidthSoFar;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        LayoutUnit width;
+        if (c->isFrameText()) {
+            width = c->asFrameText()->minimumContentWidth(ctx);
+        } else {
+            // TODO
+        }
+        maxWidthSoFar = std::max(maxWidthSoFar, width);
+    }
+
+    return maxWidthSoFar;
+}
+
+LayoutUnit FrameTableCell::maximumCellWidth(LayoutContext& ctx)
+{
+    LayoutUnit maxWidthSoFar;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        LayoutUnit width;
+        if (c->isFrameText()) {
+            width = c->asFrameText()->maximumContentWidth(ctx);
+        } else {
+            // TODO
+        }
+        maxWidthSoFar = std::max(maxWidthSoFar, width);
+    }
+
+    return maxWidthSoFar;
+}
 
 }
