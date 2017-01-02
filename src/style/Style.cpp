@@ -2480,7 +2480,7 @@ StyleResolver::Match StyleResolver::matchSelector(Element* element, CSSSelectorL
         return Match::SelectorMatches;
 
     Match match;
-    if (selector->relation() == CSSSelector::SubSelector) {
+    if (selector->relation() == CSSSelector::RelationType::SubSelector) {
         match = matchSelector(element, selectorList, ++idx);
     } else {
         match = matchForRelation(element, selectorList, selector->relation(), ++idx);
@@ -2524,17 +2524,17 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
 bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
 {
     switch (selector->type()) {
-    case CSSSelector::Universal:
+    case CSSSelector::Type::Universal:
         return true;
-    case CSSSelector::Tag:
+    case CSSSelector::Type::Tag:
         return element->localName()->equalsWithoutCase(selector->selectorText());
-    case CSSSelector::Id:
+    case CSSSelector::Type::Id:
         return element->id()->equalsWithoutCase(selector->selectorText());
-    case CSSSelector::Class:
+    case CSSSelector::Type::Class:
         return element->hasClassName(selector->selectorText());
-    case CSSSelector::PseudoClass:
+    case CSSSelector::Type::PseudoClass:
         return checkPseudoClass(element, selector);
-    case CSSSelector::PseudoElement:
+    case CSSSelector::Type::PseudoElement:
         return checkPseudoElement(element, selector);
     default:
         // TODO: check attribute selectors.
