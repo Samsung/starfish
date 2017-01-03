@@ -400,6 +400,13 @@ class CSSToken;
 class CSSScanner;
 class CSSParser {
 public:
+
+    enum NumericSign {
+        NoSign,
+        PlusSign,
+        MinusSign,
+    };
+
     CSSParser(Document* document)
         : m_document(document)
     {
@@ -435,6 +442,7 @@ protected:
     String* determineNamespace(String* prefix);
     void prependTypeSelectorIfNeeded(String* namespacePrefix, String* elementName, CSSSelector* compoundSelector);
     unsigned extractCompoundFlags(CSSSelector* simpleSelector);
+    bool getANPlusB(std::pair<int, int>& result);
 
 
     String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector);

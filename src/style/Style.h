@@ -1337,6 +1337,7 @@ public:
         , m_selectorText(String::emptyString)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
+        , m_argument(nullptr)
     {
     }
 
@@ -1347,6 +1348,7 @@ public:
         , m_selectorText(text)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
+        , m_argument(nullptr)
     {
     }
 
@@ -1410,14 +1412,40 @@ public:
         m_relationIsAffectedByPseudoContent = true;
     }
 
-    void setPseudoSelectorArguments(CSSSelector* selector)
+    void setPseudoSelectorList(CSSSelector* selector)
     {
-        m_pseudoSelectorArguments.push_back(selector);
+        m_pseudoSelectorList.push_back(selector);
     }
 
-    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& pseudoSelectorArguments()
+    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& pseudoSelectorList()
     {
-        return m_pseudoSelectorArguments;
+        return m_pseudoSelectorList;
+    }
+
+    String* argument()
+    {
+        return m_argument;
+    }
+
+    void setArgument(String* value)
+    {
+        m_argument = value;
+    }
+
+    int nthAValue()
+    {
+        return m_nth.m_a;
+    }
+
+    int nthBValue()
+    {
+        return m_nth.m_b;
+    }
+
+    void setNth(int a, int b)
+    {
+        m_nth.m_a = a;
+        m_nth.m_b = b;
     }
 
     bool isSimple(CSSSelectorList* selectorList);
@@ -1436,7 +1464,12 @@ protected:
     String* m_selectorText;
     AttributeMatchType m_attributeMatch;
     unsigned m_relationIsAffectedByPseudoContent;
-    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_pseudoSelectorArguments;
+    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_pseudoSelectorList;
+    String* m_argument;
+    struct {
+        int m_a; // Used for :nth-*
+        int m_b; // Used for :nth-*
+    } m_nth;
 };
 
 class CSSSelectorList : public gc {
