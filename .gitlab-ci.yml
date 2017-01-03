@@ -16,6 +16,9 @@ build:
       - third_party/libav/out/linux/x64/release/libavformat/libavformat.so.56
       - third_party/libav/out/linux/x64/release/libavcodec/libavcodec.so.56
       - third_party/libav/out/linux/x64/release/libavutil/libavutil.so.54
+      - /usr/lib/x86_64-linux-gnu/libicui18n.so.52
+      - /usr/lib/x86_64-linux-gnu/libicuuc.so.52
+      - /usr/lib/x86_64-linux-gnu/libicudata.so.52
       #- out/
 
 # run tests using the binary built before
