@@ -45,7 +45,7 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
         // After implementing anonymous boxes, replace the null check with assert()
         if (tableCell) {
             tableCell->setAbsoluteColumnIndex(i);
-            i++;
+            i += tableCell->colspan();
         }
     }
 
@@ -76,7 +76,6 @@ FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ct
 void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, resolveWhat);
-
 }
 
 }

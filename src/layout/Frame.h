@@ -37,6 +37,7 @@ class FrameDocument;
 class FrameTable;
 class FrameTableCaption;
 class FrameTableSection;
+class FrameTableRow;
 class FrameTableCell;
 class LineBox;
 
@@ -605,6 +606,18 @@ public:
     {
         STARFISH_ASSERT(isFrameTableCaption());
         return (FrameTableCaption*)this;
+    }
+
+    FrameTableSection* asFrameTableSection()
+    {
+        STARFISH_ASSERT(isFrameTableSection());
+        return (FrameTableSection*)this;
+    }
+
+    FrameTableRow* asFrameTableRow()
+    {
+        STARFISH_ASSERT(isFrameTableRow());
+        return (FrameTableRow*)this;
     }
 
     FrameTableCell* asFrameTableCell()

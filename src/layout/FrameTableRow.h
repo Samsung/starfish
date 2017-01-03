@@ -28,13 +28,6 @@ class FrameTableRow : public FrameBlockBox {
 public:
     FrameTableRow(Node* node, ComputedStyle* style);
 
-    static FrameTableRow* buildFrameTableRow(Node* cellNode,
-                                             FrameTreeBuilderContext& ctx,
-                                             bool force = false);
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-
-    FrameTableCell* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
-
     virtual const char* name()
     {
         return "FrameTableRow";
@@ -43,6 +36,18 @@ public:
     virtual bool isFrameTableRow()
     {
         return true;
+    }
+
+    static FrameTableRow* buildFrameTableRow(Node* cellNode,
+                                             FrameTreeBuilderContext& ctx,
+                                             bool force = false);
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
+    FrameTableCell* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+
+    FrameTableSection* tableSection()
+    {
+        return parent()->asFrameTableSection();
     }
 
     virtual bool hasBlockFlow()

@@ -50,16 +50,13 @@ void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resol
 {
     FrameBlockBox::layout(ctx, resolveWhat);
 
-    LayoutUnit minContentWidth;
-    LayoutUnit maxContentWidth;
-
     if (style()->width().isAuto()) {
-        minContentWidth = minimumCellWidth(ctx);
-        maxContentWidth = maximumCellWidth(ctx);
+        m_minContentWidth = minimumCellWidth(ctx);
+        m_maxContentWidth = maximumCellWidth(ctx);
     } else if (style()->width().isFixed()) {
         LayoutUnit width = LayoutUnit::fromPixel(style()->width().fixed());
-        minContentWidth = std::max(width, minimumCellWidth(ctx));
-        maxContentWidth = std::max(width, maximumCellWidth(ctx));
+        m_minContentWidth = std::max(width, minimumCellWidth(ctx));
+        m_maxContentWidth = std::max(width, maximumCellWidth(ctx));
     } else if (style()->width().isPercent()) {
         // TODO
     } else {
@@ -69,7 +66,7 @@ void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resol
 
 LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
 {
-    LayoutUnit maxWidthSoFar;
+    LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         LayoutUnit width;
         if (c->isFrameText()) {
@@ -85,7 +82,7 @@ LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
 
 LayoutUnit FrameTableCell::maximumCellWidth(LayoutContext& ctx)
 {
-    LayoutUnit maxWidthSoFar;
+    LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         LayoutUnit width;
         if (c->isFrameText()) {
@@ -97,6 +94,23 @@ LayoutUnit FrameTableCell::maximumCellWidth(LayoutContext& ctx)
     }
 
     return maxWidthSoFar;
+}
+
+int FrameTableCell::colspan()
+{
+    String* colspan;
+    if (node()->asElement()->asHTMLElement()->isHTMLTDElement()) {
+        colspan = node()->asElement()->asHTMLElement()->asHTMLTDElement()->colspan();
+    } else if (node()->asElement()->asHTMLElement()->isHTMLTHElement()) {
+        colspan = node()->asElement()->asHTMLElement()->asHTMLTHElement()->colspan();
+    } else {
+        // Should not be here
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    int num = String::parseInt(colspan);
+    // If colspan is not defined, use 1 as the default value
+    return num == 0? 1: num;
 }
 
 }

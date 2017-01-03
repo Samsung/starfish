@@ -41,6 +41,11 @@ struct RowStruct {
                 gc_allocator_ignore_off_page<CellStruct>> cells;
 };
 
+struct ColStruct {
+    LayoutUnit minContentWidth;
+    LayoutUnit maxContentWidth;
+};
+
 class FrameTableSection : public FrameBlockBox {
 public:
     FrameTableSection(Node* node, ComputedStyle* style);
@@ -48,6 +53,7 @@ public:
     static FrameTableSection* buildFrameTableSection(Node* sectionNode,
                                                      FrameTreeBuilderContext& ctx,
                                                      bool force = false);
+    void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 
     FrameTableRow* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
@@ -80,6 +86,7 @@ public:
     }
 
 private:
+    // represent the logical table structure
     std::vector<RowStruct,
                 gc_allocator_ignore_off_page<RowStruct>> m_grid;
 };
