@@ -574,7 +574,7 @@ unsigned CSSSelector::specificityForOneSelector() const
 
 bool CSSSelector::isSimple(CSSSelectorList* selectorList)
 {
-    if (pseudoSelectorArguments().size() || type() == CSSSelector::PseudoElement)
+    if (pseudoSelectorList().size() || type() == CSSSelector::PseudoElement)
         return false;
 
     if (selectorList->size() == 1)
@@ -609,10 +609,8 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoFirstLine;
     else if (name->equals(String::fromUTF8("first-letter")))
         return CSSSelector::PseudoType::PseudoFirstLetter;
-    else if (name->equals(String::fromUTF8("nth-child")))
-        return CSSSelector::PseudoType::PseudoFirstLine;
-    else if (name->equals(String::fromUTF8("first-letter")))
-        return CSSSelector::PseudoType::PseudoFirstLetter;
+    else if (name->equals(String::fromUTF8("nth-child(")))
+        return CSSSelector::PseudoType::PseudoNthChild;
     else if (name->equals(String::fromUTF8("link")))
         return CSSSelector::PseudoType::PseudoLink;
     else if (name->equals(String::fromUTF8("hover")))
@@ -629,7 +627,7 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoBefore;
     else if (name->equals(String::fromUTF8("after")))
         return CSSSelector::PseudoType::PseudoAfter;
-    else if (name->equals(String::fromUTF8("lang")))
+    else if (name->equals(String::fromUTF8("lang(")))
         return CSSSelector::PseudoType::PseudoLang;
     else if (name->equals(String::fromUTF8("not(")))
         return CSSSelector::PseudoType::PseudoNot;

@@ -989,7 +989,7 @@ CSSSelector* CSSParser::getPseudoSelector()
     selector->updatePseudoType(token->m_value->toLower(), token->isFunction());
 
     if (token->isIdent()) {
-        token = getToken(false, true);
+        token = getToken(true, true);
         if (selector->pseudoType() == CSSSelector::PseudoNone)
             return nullptr;
         return selector;
@@ -1013,20 +1013,38 @@ CSSSelector* CSSParser::getPseudoSelector()
                 return nullptr;
 
             CSSSelector* innerSelector = selectorList->at(0);
-            if (innerSelector->pseudoSelectorArguments().size() || innerSelector->type() == CSSSelector::PseudoElement)
+            if (innerSelector->pseudoSelectorList().size() || innerSelector->type() == CSSSelector::PseudoElement)
                 return nullptr;
 
-            selector->setPseudoSelectorArguments(innerSelector);
+            selector->setPseudoSelectorList(innerSelector);
             getToken(false, true);
 
             return selector;
         }
     case CSSSelector::PseudoLang:
         {
+            CSSToken* token = currentToken();
+            if (!token->isIdent())
+                return nullptr;
+
+            selector->setArgument(token->m_value);
+            token = getToken(true, true);
+            if (!token->isSymbol(')'))
+                return nullptr;
+            getToken(false, true);
+
             return selector;
         }
     case CSSSelector::PseudoNthChild:
         {
+            std::pair<int, int> ab;
+
+            if (!getANPlusB(ab))
+                return nullptr;
+            token = getToken(true, true);
+            if (!token->isSymbol(')'))
+                return nullptr;
+            selector->setNth(ab.first, ab.second);
             return selector;
         }
     default:
@@ -1034,6 +1052,99 @@ CSSSelector* CSSParser::getPseudoSelector()
     }
 
     return nullptr;
+}
+
+bool CSSParser::getANPlusB(std::pair<int, int>& result)
+{
+    CSSToken* token = currentToken();
+
+    // in case of only number
+    if (token->isNumber() && !token->m_value->contains(".")) {
+        result = std::make_pair(0, String::parseInt(token->m_value));
+        return true;
+    }
+
+    // in case of string (odd and even)
+    if (token->isIdent()) {
+        if (token->m_value->equals(String::fromUTF8("odd"))) {
+            result = std::make_pair(2, 1);
+            return true;
+        }
+        if (token->m_value->equals(String::fromUTF8("even"))) {
+            result = std::make_pair(2, 0);
+            return true;
+        }
+    }
+
+    String* nString = String::emptyString;
+
+    // in case of 'an + b'
+    if (token->isSymbol('+') && lookAhead(false, true)->isIdent()) { // +n
+        result.first = 1;
+        nString = getToken(false, true)->m_value;
+    } else if (token->isDimension() && !token->m_value->contains(".")) { // an+b
+        result.first = String::parseInt(token->m_value);
+        size_t pos = token->m_value->find("n");
+        if (pos < 0)
+            return false;
+        nString = token->m_value->substring(pos, token->m_value->length()-pos);
+    } else if (token->isIdent()) { // -n or n
+        if (token->m_value->charAt(0) == '-') { // -n
+            result.first = -1;
+            nString = token->m_value->substring(1, 1);
+        } else { // n
+            result.first = 1;
+            nString = token->m_value;
+        }
+    }
+
+    while (lookAhead(false, true)->isWhiteSpace())
+        token = getToken(false, true);
+
+    if (nString->equals(String::emptyString) || nString->toLower()->charAt(0) != 'n')
+        return false;
+    if (nString->length() > 1 && nString->charAt(1) != '-')
+        return false;
+    if (nString->length() > 2) {
+        // TODO: return result after checking whether nString is valid.
+        result.second = String::parseInt(nString->substring(1, nString->length() - 1));
+        return true;
+    }
+
+    NumericSign sign = nString->length() == 1 ? NoSign : MinusSign;
+    if (sign == NoSign && lookAhead(false, true)->isSymbol() && !lookAhead(false, true)->isSymbol(')')) {
+        token = getToken(true, true);
+        if (token->isSymbol('+')) {
+            sign = PlusSign;
+            if (lookAhead(false, true)->m_value->charAt(0) == '+'
+                || lookAhead(false, true)->m_value->charAt(0) == '-')
+                return false;
+        } else if (token->isSymbol('-')) {
+            if (lookAhead(false, true)->m_value->charAt(0) == '+'
+                || lookAhead(false, true)->m_value->charAt(0) == '-')
+                return false;
+            sign = MinusSign;
+        } else {
+            return false;
+        }
+        while (lookAhead(false, true)->isWhiteSpace())
+            token = getToken(false, true);
+    }
+
+    if (sign == NoSign && !lookAhead(false, true)->isNumber()) {
+        result.second = 0;
+        return true;
+    }
+
+    CSSToken* b = getToken(false, true);
+    if (!b->isNumber() || b->m_value->contains("."))
+        return false;
+//    if ((b.numericSign() == NoSign) == (sign == NoSign))
+//        return false;
+    result.second = String::parseInt(b->m_value);
+    if (sign == MinusSign)
+        result.second = -result.second;
+    return true;
 }
 
 CSSSelector* CSSParser::getAttributeSelector()
