@@ -48,9 +48,8 @@
 #include "HTMLSpanElement.h"
 
 #include "HTMLTableElement.h"
-#include "HTMLTHElement.h"
 #include "HTMLTRElement.h"
-#include "HTMLTDElement.h"
+#include "HTMLTableCellElement.h"
 #include "HTMLCaptionElement.h"
 #include "HTMLColGroupElement.h"
 #include "HTMLColElement.h"

@@ -211,6 +211,8 @@ public:
     QualifiedName m_charset;
     QualifiedName m_content;
     QualifiedName m_lang;
+    QualifiedName m_colspan;
+    QualifiedName m_rowspan;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;
