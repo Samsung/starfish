@@ -37,6 +37,13 @@ public:
         return "FrameTableCell";
     }
 
+    FrameTableRow* row()
+    {
+        return parent()->asFrameTableRow();
+    }
+
+    int colspan();
+
     virtual bool isFrameTableCell()
     {
         return true;
@@ -52,11 +59,24 @@ public:
         return m_absoluteColumnIndex;
     }
 
+    LayoutUnit minContentWidth()
+    {
+        return m_minContentWidth;
+    }
+
+    LayoutUnit maxContentWidth()
+    {
+        return m_maxContentWidth;
+    }
+
 private:
     LayoutUnit minimumCellWidth(LayoutContext& ctx);
     LayoutUnit maximumCellWidth(LayoutContext& ctx);
 
-    unsigned m_absoluteColumnIndex;
+    unsigned m_absoluteColumnIndex; // starts with 0
+    LayoutUnit m_minContentWidth;
+    LayoutUnit m_maxContentWidth;
+
 };
 
 }

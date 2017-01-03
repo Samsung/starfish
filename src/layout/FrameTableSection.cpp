@@ -87,4 +87,40 @@ FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext&
     return childFrame;
 }
 
+void FrameTableSection::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+{
+    FrameBlockBox::layout(ctx, resolveWhat);
+
+    // 1. get max logical column size
+    unsigned logicalColSize = 0;
+    for (unsigned i = 0; i < m_grid.size(); i++) {
+        RowStruct& row = m_grid[i];
+        logicalColSize = std::max<unsigned>(logicalColSize, row.cells.size());
+    }
+
+    // 2. get min/max column width for each column that does not have a colspan
+    std::vector<ColStruct,
+                gc_allocator_ignore_off_page<ColStruct>> logicalColumns;
+    for (unsigned c = 0; c < logicalColSize; c++) {
+        LayoutUnit minContentWidthSoFar = 0;
+        LayoutUnit maxContentWidthSoFar = 0;
+        for (unsigned r = 0; r < m_grid.size(); r++) {
+            RowStruct& row = m_grid[r];
+            if (c < row.cells.size()) {
+                FrameTableCell* cell = row.cells[c].cell;
+                minContentWidthSoFar =
+                    std::max(minContentWidthSoFar, cell->minContentWidth());
+                maxContentWidthSoFar =
+                    std::max(maxContentWidthSoFar, cell->maxContentWidth());
+            }
+        }
+        ColStruct col;
+        col.minContentWidth = minContentWidthSoFar;
+        col.maxContentWidth = maxContentWidthSoFar;
+        logicalColumns.push_back(col);
+    }
+
+    // 3. TODO: increase column widths to fit the columns with colspans.
+}
+
 }
