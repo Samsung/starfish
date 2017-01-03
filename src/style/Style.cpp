@@ -2549,6 +2549,10 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return element->state() & Node::NodeState::NodeStateHovered ? true : false;
     case CSSSelector::PseudoType::PseudoActive:
         return element->state() & Node::NodeState::NodeStateActive ? true : false;
+    case CSSSelector::PseudoType::PseudoFirstChild:
+        return element->previousElementSibling() == nullptr ? true : false;
+    case CSSSelector::PseudoType::PseudoLastChild:
+        return element->nextElementSibling() == nullptr ? true : false;
     default:
         return false;
     }
