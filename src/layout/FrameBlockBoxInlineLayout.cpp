@@ -384,30 +384,73 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
     return ascenderInOut - descenderInOut;
 }
 
-static FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
+static FrameBox* findFirstInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
 {
-    FrameBox* result = nullptr;
-
     auto iter = b->boxes().begin();
     while (iter != b->boxes().end()) {
         FrameBox* f = *iter;
         if (f->asFrameBox()->isInlineBox()) {
             InlineBox* ib = f->asFrameBox()->asInlineBox();
             if (ib->isInlineNonReplacedBox()) {
-                auto r = findLastInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
+                auto r = findFirstInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
                 if (r) {
-                    result = r;
+                    return r;
                 }
             } else {
-                result = ib;
+                return ib;
             }
         } else if (f->isNormalFlow()) {
-            result = *iter;
+            return *iter;
         }
         iter++;
     }
 
-    return result;
+    return nullptr;
+}
+
+static FrameBox* findFirstInlineBox(LineBox* lb)
+{
+    for (size_t i = 0; i < lb->boxes().size(); i++) {
+        if (lb->boxes()[i]->isInlineBox()) {
+            InlineBox* b = lb->boxes()[i]->asInlineBox();
+            if (b->isInlineNonReplacedBox()) {
+                auto r = findFirstInlineBoxNonReplacedBoxCase(b->asInlineNonReplacedBox());
+                if (r) {
+                    return r;
+                }
+            } else {
+                return b;
+            }
+        } else if (lb->boxes()[i]->isNormalFlow()) {
+            return lb->boxes()[i];
+        }
+    }
+
+    return nullptr;
+}
+
+static FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
+{
+    auto iter = b->boxes().rbegin();
+    while (iter != b->boxes().rend()) {
+        FrameBox* f = *iter;
+        if (f->asFrameBox()->isInlineBox()) {
+            InlineBox* ib = f->asFrameBox()->asInlineBox();
+            if (ib->isInlineNonReplacedBox()) {
+                auto r = findLastInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
+                if (r) {
+                    return r;
+                }
+            } else {
+                return ib;
+            }
+        } else if (f->isNormalFlow()) {
+            return *iter;
+        }
+        iter++;
+    }
+
+    return nullptr;
 }
 
 static FrameBox* findLastInlineBox(LineBox* lb)
@@ -1330,6 +1373,18 @@ LayoutUnit LineFormattingContext::layoutChildInlineBox(Box* parent, LayoutUnit s
 void LineFormattingContext::removeDanglingSpaceFromLine()
 {
     LineBox* lineBox = currentLine();
+
+    FrameBox* first = nullptr;
+    while ((first = findFirstInlineBox(lineBox)) && first->isInlineBox() && first->asInlineBox()->isInlineTextBox()) {
+        const StringView& sv = first->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
+        if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ') {
+            removeBoxFromLine(first);
+            m_currentLineWidth -= first->width();
+        } else {
+            break;
+        }
+    }
+
     FrameBox* last = nullptr;
     while ((last = findLastInlineBox(lineBox)) && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
         const StringView& sv = last->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
