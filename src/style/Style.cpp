@@ -1126,6 +1126,26 @@ String* CSSStyleValuePair::toString()
             return String::fromUTF8("block");
         case DisplayValue::InlineBlockDisplayValue:
             return String::fromUTF8("inline-block");
+        case DisplayValue::TableDisplayValue:
+            return String::fromUTF8("table");
+        case DisplayValue::InlineTableDisplayValue:
+            return String::fromUTF8("inline-table");
+        case DisplayValue::TableRowGroupDisplayValue:
+            return String::fromUTF8("table-row-group");
+        case DisplayValue::TableHeaderGroupDisplayValue:
+            return String::fromUTF8("table-header-group");
+        case DisplayValue::TableFooterGroupDisplayValue:
+            return String::fromUTF8("table-footer-group");
+        case DisplayValue::TableRowDisplayValue:
+            return String::fromUTF8("table-row");
+        case DisplayValue::TableColumnGroupDisplayValue:
+            return String::fromUTF8("table-column-group");
+        case DisplayValue::TableColumnDisplayValue:
+            return String::fromUTF8("table-column");
+        case DisplayValue::TableCellDisplayValue:
+            return String::fromUTF8("table-cell");
+        case DisplayValue::TableCaptionDisplayValue:
+            return String::fromUTF8("table-caption");
         case DisplayValue::NoneDisplayValue:
             return String::fromUTF8("none");
         default:
@@ -3241,6 +3261,26 @@ bool CSSStyleValuePair::updateValueDisplay(std::vector<String*, gc_allocator_ign
         m_value.m_display = DisplayValue::InlineDisplayValue;
     } else if (STRING_VALUE_IS_STRING("inline-block")) {
         m_value.m_display = DisplayValue::InlineBlockDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table")) {
+        m_value.m_display = DisplayValue::TableDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("inline-table")) {
+        m_value.m_display = DisplayValue::InlineTableDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-row-group")) {
+        m_value.m_display = DisplayValue::TableRowGroupDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-header-group")) {
+        m_value.m_display = DisplayValue::TableHeaderGroupDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-footer-group")) {
+        m_value.m_display = DisplayValue::TableFooterGroupDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-row")) {
+        m_value.m_display = DisplayValue::TableRowDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-column-group")) {
+        m_value.m_display = DisplayValue::TableColumnGroupDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-column")) {
+        m_value.m_display = DisplayValue::TableColumnDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-cell")) {
+        m_value.m_display = DisplayValue::TableCellDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("table-caption")) {
+        m_value.m_display = DisplayValue::TableCaptionDisplayValue;
     } else if (STRING_VALUE_IS_STRING("none")) {
         m_value.m_display = DisplayValue::NoneDisplayValue;
     } else {
