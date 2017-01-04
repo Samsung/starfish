@@ -1310,19 +1310,24 @@ void LineFormattingContext::layoutLineBoxDueToFloatBox(FrameBlockBox* box)
     STARFISH_ASSERT(box->style()->floating() != NoneFloatValue);
     if (box->style()->floating() == LeftFloatValue) {
         m_hasFloat |= HasLeft;
-        m_accumulatedFloatLeftWidth += (box->width() + box->marginWidth());
-        if (m_accumulatedFloatLeftWidth > m_lineBoxX - m_originalLineBoxX) {
-            m_lineBoxWidth -= (m_accumulatedFloatLeftWidth - m_lineBoxX + m_originalLineBoxX);
-            m_lineBoxX = m_originalLineBoxX + m_accumulatedFloatLeftWidth;
+        if (box->height() == 0 && box->marginHeight() == 0) {
+        } else {
+            m_accumulatedFloatLeftWidth += (box->width() + box->marginWidth());
+            if (m_accumulatedFloatLeftWidth > m_lineBoxX - m_originalLineBoxX) {
+                m_lineBoxWidth -= (m_accumulatedFloatLeftWidth - m_lineBoxX + m_originalLineBoxX);
+                m_lineBoxX = m_originalLineBoxX + m_accumulatedFloatLeftWidth;
+            }
         }
     } else {
         m_hasFloat |= HasRight;
-        m_accumulatedFloatRightWidth += (box->width() + box->marginWidth());
-
-        if (m_accumulatedFloatRightWidth >
-            m_originalLineBoxX + m_originalLineBoxWidth - m_lineBoxX - m_lineBoxWidth) {
-            m_lineBoxWidth -=
-                (m_accumulatedFloatRightWidth - m_originalLineBoxX - m_originalLineBoxWidth + m_lineBoxX + m_lineBoxWidth);
+        if (box->height() == 0 && box->marginHeight() == 0) {
+        } else {
+            m_accumulatedFloatRightWidth += (box->width() + box->marginWidth());
+            if (m_accumulatedFloatRightWidth >
+                m_originalLineBoxX + m_originalLineBoxWidth - m_lineBoxX - m_lineBoxWidth) {
+                m_lineBoxWidth -=
+                    (m_accumulatedFloatRightWidth - m_originalLineBoxX - m_originalLineBoxWidth + m_lineBoxX + m_lineBoxWidth);
+            }
         }
     }
     box->setY(m_floatBoxY);
@@ -1343,6 +1348,8 @@ LayoutUnit LineFormattingContext::layoutChildInlineBox(Box* parent, LayoutUnit s
                 childBox->setX(x);
             } else if (childBox->style()->floating() == LeftFloatValue) {
                 STARFISH_ASSERT(parent->isLineBox() && childBox->layoutParent() == currentLine());
+                if (childBox->height() == 0 && childBox->marginHeight() == 0)
+                    continue;
                 childBox->setX(leftFloatX + childBox->marginLeft() - m_accumulatedFloatLeftWidth);
                 leftFloatX += childBox->width() + childBox->marginWidth();
                 m_layoutContext.registerFloatingBoxes(childBox->asFrameBlockBox());
@@ -1360,6 +1367,8 @@ LayoutUnit LineFormattingContext::layoutChildInlineBox(Box* parent, LayoutUnit s
         if (childBox->isNormalFlow()) {
             break;
         } else if (childBox->style()->floating() == RightFloatValue) {
+            if (childBox->height() == 0 && childBox->marginHeight() == 0)
+                continue;
             STARFISH_ASSERT(parent->isLineBox() && childBox->layoutParent() == currentLine());
             rightFloatX -= childBox->width() + childBox->marginWidth();
             childBox->setX(rightFloatX + childBox->marginLeft());
