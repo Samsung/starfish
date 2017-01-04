@@ -1364,6 +1364,26 @@ void Node::dumpStyle()
         printf("display: block, ");
     } else if (m_style->display() == InlineBlockDisplayValue) {
         printf("display: inline-block, ");
+    } else if (m_style->display() == TableDisplayValue) {
+        printf("display: table, ");
+    } else if (m_style->display() == InlineTableDisplayValue) {
+        printf("display: inline-table, ");
+    } else if (m_style->display() == TableRowGroupDisplayValue) {
+        printf("display: table-row-group, ");
+    } else if (m_style->display() == TableHeaderGroupDisplayValue) {
+        printf("display: table-header-group, ");
+    } else if (m_style->display() == TableFooterGroupDisplayValue) {
+        printf("display: table-footer-group, ");
+    } else if (m_style->display() == TableRowDisplayValue) {
+        printf("display: table-row, ");
+    } else if (m_style->display() == TableColumnGroupDisplayValue) {
+        printf("display: table-column-group, ");
+    } else if (m_style->display() == TableColumnDisplayValue) {
+        printf("display: table-column, ");
+    } else if (m_style->display() == TableCellDisplayValue) {
+        printf("display: table-cell, ");
+    } else if (m_style->display() == TableCaptionDisplayValue) {
+        printf("display: table-caption, ");
     } else if (m_style->display() == NoneDisplayValue) {
         printf("display: none, ");
     }
