@@ -553,16 +553,14 @@ unsigned CSSSelector::specificityForOneSelector() const
 {
     unsigned specificity = 0;
 
-    // For now, we support only the pseudo class selector.
-    if (m_pseudotype != PseudoNone)
-        specificity += 0x000100;
-
     switch (m_type) {
     case Tag:
+    case PseudoElement:
         return specificity + 0x000001;
     case Id:
         return specificity + 0x010000;
     case Class:
+    case PseudoClass:
         return specificity + 0x000100;
     default:
         break;
@@ -570,7 +568,6 @@ unsigned CSSSelector::specificityForOneSelector() const
 
     return 0;
 }
-
 
 bool CSSSelector::isSimple(CSSSelectorList* selectorList)
 {
