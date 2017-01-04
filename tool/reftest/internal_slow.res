@@ -14,6 +14,7 @@ test/internal-test/css/border/border_left_color.html
 test/internal-test/css/border/border_right_color.html
 test/internal-test/css/border/border_top_color.html
 test/internal-test/css/clear/clear-internal-test-1.html
+test/internal-test/css/clear/linebox-relayout.html
 test/internal-test/css/display/display-internal-test-with-image-element-10.html
 test/internal-test/css/display/display-internal-test-with-image-element-11.html
 test/internal-test/css/display/display-internal-test-with-image-element-12.html
