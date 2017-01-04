@@ -633,6 +633,8 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoNot;
     else if (name->equals(String::fromUTF8("selection")))
         return CSSSelector::PseudoType::PseudoSelection;
+    else if (name->equals(String::fromUTF8("root")))
+        return CSSSelector::PseudoType::PseudoRoot;
     else
         return CSSSelector::PseudoNone;
 }
@@ -725,7 +727,7 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
 //    case PseudoReadOnly:
 //    case PseudoReadWrite:
 //    case PseudoRequired:
-//    case PseudoRoot:
+    case PseudoRoot:
 //    case PseudoScope:
 //    case PseudoSingleButton:
 //    case PseudoSpatialNavigationFocus:
@@ -2547,6 +2549,8 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return element->state() & Node::NodeState::NodeStateHovered ? true : false;
     case CSSSelector::PseudoType::PseudoActive:
         return element->state() & Node::NodeState::NodeStateActive ? true : false;
+    case CSSSelector::PseudoType::PseudoRoot:
+        return element == element->document()->documentElement();
     case CSSSelector::PseudoType::PseudoFirstChild:
         return element->previousElementSibling() == nullptr ? true : false;
     case CSSSelector::PseudoType::PseudoLastChild:
