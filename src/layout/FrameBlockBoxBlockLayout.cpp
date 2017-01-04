@@ -76,8 +76,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
         }
 
-        if (child->isEstablishesBlockFormattingContext()) {
-            bool widthIsAuto = child->style()->width().isAuto();
+        if (child->isFrameReplaced() || child->isEstablishesBlockFormattingContext()) {
+            bool hasToStretchWidth = child->style()->width().isAuto() && !child->isFrameReplaced();
             bool floatAffected = false;
             LayoutLocation loc = absolutePoint(ctx.frameDocument());
             // TODO: Consider Rtl
@@ -93,11 +93,11 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             if (floatAffected) {
                 LayoutUnit width = boundaries.second - boundaries.first;
                 LayoutUnit yDiff;
-                if ((widthIsAuto && child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() > 0)
+                if ((hasToStretchWidth && child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() > 0)
                     || (width > child->asFrameBox()->width())
                     || ((yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y(), child->asFrameBox()->height())) == 0)) {
                     child->asFrameBox()->moveY(selfLoc.y() - originalY);
-                    if (widthIsAuto) {
+                    if (hasToStretchWidth) {
                         child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
                         child->asFrameBox()->setContentWidth(child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width());
                     } else {
