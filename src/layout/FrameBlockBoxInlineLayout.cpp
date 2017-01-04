@@ -1493,19 +1493,28 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool hasMor
     // If there are no more inline boxes appended to the line box, the height for content depends on
     // if the block container box established new block formatting context, but still
     // for the positioning of following floating boxes, y position should be considered.
-    if (hasMoreInlineBoxes && !m_block.isEstablishesBlockFormattingContext()) {
-        lineBox->setHeight(height);
+    if (hasMoreInlineBoxes || m_pendingInlineBoxes.size() > 0) {
         if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
-            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
-        }
-    } else {
-        if (hasMoreInlineBoxes) {
-            height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, BothClearValue));
-        } else if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
             height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
             lineBox->markHeightComputed();
         }
         lineBox->setHeight(height);
+    } else {
+        if (m_block.isEstablishesBlockFormattingContext()) {
+            if (m_pendingFloatBoxes.size() == 0) {
+                height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, BothClearValue));
+                lineBox->markHeightComputed();
+            } else if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
+                height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+                lineBox->markHeightComputed();
+            }
+            lineBox->setHeight(height);
+        } else {
+            lineBox->setHeight(height);
+            if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
+                height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+            }
+        }
     }
 
     return height;
@@ -1631,12 +1640,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
     // white space from above function `removeDanglingSpaceFromLine`
     insertPendingFloatingBoxes(isInLineBox, false, false, 0, false);
     computeHorizontalProperties();
-    LayoutUnit yDiff;
-    if (m_pendingInlineBoxes.size() > 0) {
-        yDiff = computeLineBoxHeight(dueToBr, false);
-    } else {
-        yDiff = computeLineBoxHeight(dueToBr, isLastLine);
-    }
+    LayoutUnit yDiff = computeLineBoxHeight(dueToBr, !isLastLine);
 
     insertPendingAboslutePositionedBoxes();
     m_lineBoxY += yDiff;
