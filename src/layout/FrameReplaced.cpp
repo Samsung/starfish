@@ -103,99 +103,7 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         LayoutUnit intrinsicWidth, intrinsicHeight;
         computeBorderMarginPadding(parentContentWidth);
 
-        if (isNormalFlow()) {
-            Length parentContentHeight;
-            if (ctx.parentHasFixedHeight(this)) {
-                parentContentHeight = Length(Length::Fixed, ctx.parentFixedHeight(this));
-            } else {
-                parentContentHeight = Length(Length::Auto);
-            }
-            computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth, parentContentHeight);
-
-            if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
-                setContentWidth(0);
-                setContentHeight(0);
-            } else if (style()->width().isAuto() && style()->height().isAuto()) {
-                setContentWidth(intrinsicWidth);
-                setContentHeight(intrinsicHeight);
-            } else if (style()->width().isSpecified() && style()->height().isAuto()) {
-                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
-                LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
-                setContentWidth(w);
-                setContentHeight(h);
-            } else if (style()->width().isAuto() && style()->height().isSpecified()) {
-                if (style()->height().isFixed()) {
-                    LayoutUnit h = style()->height().fixed();
-                    LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                    setContentWidth(w);
-                    setContentHeight(h);
-                } else {
-                    STARFISH_ASSERT(style()->height().isPercent());
-                    if (ctx.parentHasFixedHeight(this)) {
-                        LayoutUnit h = style()->height().percent() * ctx.parentFixedHeight(this);
-                        LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                        setContentWidth(w);
-                        setContentHeight(h);
-                    } else {
-                        setContentWidth(intrinsicWidth);
-                        setContentHeight(intrinsicHeight);
-                    }
-                }
-            } else {
-                STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
-                setContentWidth(style()->width().specifiedValue(ctx.parentContentWidth(this)));
-                if (style()->height().isFixed()) {
-                    setContentHeight(style()->height().fixed());
-                } else {
-                    if (ctx.parentHasFixedHeight(this))
-                        setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
-                    else
-                        setContentHeight(intrinsicHeight);
-                }
-            }
-
-            if (style()->display() == BlockDisplayValue && style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
-                LayoutUnit remain = parentContentWidth;
-                remain -= contentWidth();
-                remain -= borderWidth();
-                remain -= paddingWidth();
-                if (remain > 0) {
-                    setMarginLeft(remain / 2);
-                    setMarginRight(remain / 2);
-                }
-            }
-
-            if (style()->display() == BlockDisplayValue) {
-                if (style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
-                    LayoutUnit remain = parentContentWidth;
-                    remain -= contentWidth();
-                    remain -= borderWidth();
-                    remain -= paddingWidth();
-                    if (remain > 0) {
-                        setMarginLeft(remain / 2);
-                        setMarginRight(remain / 2);
-                    }
-                } else if (style()->marginLeft().isAuto() && !style()->marginRight().isAuto()) {
-                    LayoutUnit remain = parentContentWidth;
-                    remain -= contentWidth();
-                    remain -= borderWidth();
-                    remain -= paddingWidth();
-                    remain -= marginRight();
-                    if (remain > 0) {
-                        setMarginLeft(remain);
-                    }
-                } else if (!style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
-                    LayoutUnit remain = parentContentWidth;
-                    remain -= contentWidth();
-                    remain -= borderWidth();
-                    remain -= paddingWidth();
-                    remain -= marginLeft();
-                    if (remain > 0) {
-                        setMarginRight(remain);
-                    }
-                }
-            }
-        } else {
+        if (style() && style()->position() == AbsolutePositionValue) {
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             LayoutUnit parentHeight = cb->contentHeight() + cb->paddingHeight();
 
@@ -313,13 +221,107 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             if (style()->left().isAuto() && style()->right().isAuto() && direction == DirectionValue::RtlDirectionValue) {
                 moveX(-this->width());
             }
+        } else {
+            Length parentContentHeight;
+            if (ctx.parentHasFixedHeight(this)) {
+                parentContentHeight = Length(Length::Fixed, ctx.parentFixedHeight(this));
+            } else {
+                parentContentHeight = Length(Length::Auto);
+            }
+            computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth, parentContentHeight);
+
+            if ((intrinsicWidth == 0 || intrinsicHeight == 0) && (style()->width().isAuto() || style()->height().isAuto())) {
+                setContentWidth(0);
+                setContentHeight(0);
+            } else if (style()->width().isAuto() && style()->height().isAuto()) {
+                setContentWidth(intrinsicWidth);
+                setContentHeight(intrinsicHeight);
+            } else if (style()->width().isSpecified() && style()->height().isAuto()) {
+                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
+                LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
+                setContentWidth(w);
+                setContentHeight(h);
+            } else if (style()->width().isAuto() && style()->height().isSpecified()) {
+                if (style()->height().isFixed()) {
+                    LayoutUnit h = style()->height().fixed();
+                    LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
+                    setContentWidth(w);
+                    setContentHeight(h);
+                } else {
+                    STARFISH_ASSERT(style()->height().isPercent());
+                    if (ctx.parentHasFixedHeight(this)) {
+                        LayoutUnit h = style()->height().percent() * ctx.parentFixedHeight(this);
+                        LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
+                        setContentWidth(w);
+                        setContentHeight(h);
+                    } else {
+                        setContentWidth(intrinsicWidth);
+                        setContentHeight(intrinsicHeight);
+                    }
+                }
+            } else {
+                STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
+                LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
+                setContentWidth(w);
+                if (style()->height().isFixed()) {
+                    setContentHeight(style()->height().fixed());
+                } else {
+                    if (ctx.parentHasFixedHeight(this)) {
+                        setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
+                    } else {
+                        LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
+                        setContentHeight(h);
+                    }
+                }
+            }
+
+            if (style()->floating() == NoneFloatValue && style()->display() == BlockDisplayValue
+                && style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+                LayoutUnit remain = parentContentWidth;
+                remain -= contentWidth();
+                remain -= borderWidth();
+                remain -= paddingWidth();
+                if (remain > 0) {
+                    setMarginLeft(remain / 2);
+                    setMarginRight(remain / 2);
+                }
+            }
+
+            if (style()->floating() == NoneFloatValue && style()->display() == BlockDisplayValue) {
+                if (style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    if (remain > 0) {
+                        setMarginLeft(remain / 2);
+                        setMarginRight(remain / 2);
+                    }
+                } else if (style()->marginLeft().isAuto() && !style()->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    remain -= marginRight();
+                    if (remain > 0) {
+                        setMarginLeft(remain);
+                    }
+                } else if (!style()->marginLeft().isAuto() && style()->marginRight().isAuto()) {
+                    LayoutUnit remain = parentContentWidth;
+                    remain -= contentWidth();
+                    remain -= borderWidth();
+                    remain -= paddingWidth();
+                    remain -= marginLeft();
+                    if (remain > 0) {
+                        setMarginRight(remain);
+                    }
+                }
+            }
         }
     }
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
-        if (isNormalFlow()) {
-
-        } else {
+        if (style() && style()->position() == AbsolutePositionValue) {
             FrameBox* cb = ctx.containingBlock(this)->asFrameBox();
             FrameBox* parent = Frame::layoutParent()->asFrameBox();
             LayoutLocation l1, l2;

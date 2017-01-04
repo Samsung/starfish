@@ -547,7 +547,7 @@ public:
     void insertPendingAboslutePositionedBoxes();
     void insertPendingInlineBoxesDueToFloatinBoxes();
     void initLineBox(LineBox* lineBox, LayoutUnit height);
-    void layoutLineBoxDueToFloatBox(FrameBlockBox* box);
+    void layoutLineBoxDueToFloatBox(FrameBox* box);
     void removeDanglingSpaceFromLine();
     void removeAllInlineBoxes();
     void sortInlineBoxes();
@@ -603,7 +603,7 @@ public:
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 
     std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
-    std::vector<FrameBlockBox*> m_pendingFloatBoxes;
+    std::vector<FrameBox*> m_pendingFloatBoxes;
     std::vector<FrameBox*> m_pendingInlineBoxes;
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;

@@ -1151,7 +1151,7 @@ static void insertInlineBoxInOrder(LineFormattingContext* ctx, std::vector<Frame
 }
 
 static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width, LayoutUnit unprocessedWidth);
-static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBlockBox* f)
+static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBox* f)
 {
     LineBox* lineBox = ctx->currentLine();
     return ((ctx->m_absPosition.y() + lineBox->y() + ctx->m_floatBoxY >= ctx->m_layoutContext.lastTopLoc(ctx->m_block.style()->floating()))
@@ -1180,7 +1180,7 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool is
 
     auto iter = m_pendingFloatBoxes.begin();
     while (iter != m_pendingFloatBoxes.end()) {
-        FrameBlockBox* box = *iter;
+        FrameBox* box = *iter;
         if (leftEmpty && box->style()->floating() == LeftFloatValue) {
             if (rightEmpty || (box->style()->clear() == LeftClearValue || box->style()->clear() == NoneClearValue)) {
                 m_hasFloat = m_hasFloat & (~HasLeft);
@@ -1305,7 +1305,7 @@ void LineFormattingContext::initLineBox(LineBox* lineBox, LayoutUnit height)
     lineBox->setWidth(m_lineBoxWidth);
 }
 
-void LineFormattingContext::layoutLineBoxDueToFloatBox(FrameBlockBox* box)
+void LineFormattingContext::layoutLineBoxDueToFloatBox(FrameBox* box)
 {
     STARFISH_ASSERT(box->style()->floating() != NoneFloatValue);
     if (box->style()->floating() == LeftFloatValue) {
@@ -1352,7 +1352,7 @@ LayoutUnit LineFormattingContext::layoutChildInlineBox(Box* parent, LayoutUnit s
                     continue;
                 childBox->setX(leftFloatX + childBox->marginLeft() - m_accumulatedFloatLeftWidth);
                 leftFloatX += childBox->width() + childBox->marginWidth();
-                m_layoutContext.registerFloatingBoxes(childBox->asFrameBlockBox());
+                m_layoutContext.registerFloatingBoxes(childBox);
             } else {
                 STARFISH_ASSERT(parent->isLineBox() && childBox->layoutParent() == currentLine()
                     && childBox->style()->floating() == RightFloatValue);
@@ -1372,7 +1372,7 @@ LayoutUnit LineFormattingContext::layoutChildInlineBox(Box* parent, LayoutUnit s
             STARFISH_ASSERT(parent->isLineBox() && childBox->layoutParent() == currentLine());
             rightFloatX -= childBox->width() + childBox->marginWidth();
             childBox->setX(rightFloatX + childBox->marginLeft());
-            m_layoutContext.registerFloatingBoxes(childBox->asFrameBlockBox());
+            m_layoutContext.registerFloatingBoxes(childBox);
         }
     }
 
@@ -1557,9 +1557,9 @@ void LineFormattingContext::insertPendingInlineBoxesDueToFloatinBoxes()
                 continue;
             }
         } else {
-            if (canInsertFloatingBox(this, box->asFrameBlockBox())
+            if (canInsertFloatingBox(this, box)
                 && dontBreakLine(this, box, box->width() + box->marginWidth(), 0)) {
-                layoutLineBoxDueToFloatBox(box->asFrameBlockBox());
+                layoutLineBoxDueToFloatBox(box);
 
                 box->setLayoutParent(currentLine());
                 currentLine()->boxes().push_back(box);
@@ -1913,13 +1913,25 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
             }
 
             r->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
-        insertReplacedBox:
-            if (dontBreakLine(&lineFormattingContext, r, r->width() + r->marginWidth(), unprocessedWidth)) {
-                lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
-                gotInlineBoxCallback(r);
+
+            if (r->style()->floating() != NoneFloatValue) {
+                if (lineFormattingContext.m_pendingFloatBoxes.size() == 0
+                    && canInsertFloatingBox(&lineFormattingContext, r)
+                    && dontBreakLine(&lineFormattingContext, r, r->width() + r->marginWidth(), unprocessedWidth)) {
+                    lineFormattingContext.layoutLineBoxDueToFloatBox(r);
+                    gotInlineBoxCallback(r);
+                } else {
+                    lineFormattingContext.m_pendingFloatBoxes.push_back(r);
+                }
             } else {
-                lineBreakCallback(false);
-                goto insertReplacedBox;
+                insertReplacedBox:
+                if (dontBreakLine(&lineFormattingContext, r, r->width() + r->marginWidth(), unprocessedWidth)) {
+                    lineFormattingContext.m_currentLineWidth += (r->width() + r->marginWidth());
+                    gotInlineBoxCallback(r);
+                } else {
+                    lineBreakCallback(false);
+                    goto insertReplacedBox;
+                }
             }
         } else if (f->isFrameBlockBox()) {
             FrameBlockBox* r = f->asFrameBlockBox();
