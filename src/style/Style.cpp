@@ -2539,19 +2539,45 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
     }
 }
 
+static bool isFirstOfType(Element* element)
+{
+    Node* ret = Traverse::previousSibling(element, [&element](Node* sibling) {
+        if (sibling->isElement() && sibling->localName()->equalsWithoutCase(element->localName()))
+            return true;
+        else
+            return false;
+    });
+    return !ret;
+}
+
+static bool isLastOfType(Element* element)
+{
+    Node* ret = Traverse::nextSibling(element, [&element](Node* sibling) {
+        if (sibling->isElement() && sibling->localName()->equalsWithoutCase(element->localName()))
+            return true;
+        else
+            return false;
+    });
+    return !ret;
+}
+
 bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
 {
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
-        return element->state() & Node::NodeState::NodeStateHovered ? true : false;
+        return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
-        return element->state() & Node::NodeState::NodeStateActive ? true : false;
+        return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoRoot:
         return element == element->document()->documentElement();
     case CSSSelector::PseudoType::PseudoFirstChild:
-        return element->previousElementSibling() == nullptr ? true : false;
+        return !element->previousElementSibling();
     case CSSSelector::PseudoType::PseudoLastChild:
-        return element->nextElementSibling() == nullptr ? true : false;
+        return !element->nextElementSibling();
+    case CSSSelector::PseudoType::PseudoFirstOfType:
+        return isFirstOfType(element);
+    case CSSSelector::PseudoType::PseudoLastOfType:
+        return isLastOfType(element);
     default:
         return false;
     }
