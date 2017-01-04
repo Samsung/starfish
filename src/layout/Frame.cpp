@@ -88,7 +88,7 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
     }
 }
 
-FloatingBoxInfo::FloatingBoxInfo(FrameBlockBox* box, LayoutLocation loc)
+FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutLocation loc)
     : m_box(box)
     , m_loc(loc)
 {
@@ -103,7 +103,7 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBlockBox* box, LayoutLocation loc)
     }
 }
 
-void LayoutContext::registerFloatingBoxes(FrameBlockBox* box)
+void LayoutContext::registerFloatingBoxes(FrameBox* box)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     LayoutLocation loc = box->absolutePoint(m_frameDocument);

@@ -113,7 +113,7 @@ public:
         m_blockFormattingContextInfo.pop_back();
     }
 
-    void registerFloatingBoxes(FrameBlockBox* box);
+    void registerFloatingBoxes(FrameBox* box);
     void unregisterFloatingBoxes(LayoutUnit yPosition);
     LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition, ClearValue clearValue);
     LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height);
@@ -289,8 +289,8 @@ private:
 
 class FloatingBoxInfo {
 public:
-    FloatingBoxInfo(FrameBlockBox* box, LayoutLocation loc);
-    FrameBlockBox* box() { return m_box; }
+    FloatingBoxInfo(FrameBox* box, LayoutLocation loc);
+    FrameBox* box() { return m_box; }
     bool isLeft() { return m_isLeft; }
     LayoutLocation loc() { return m_loc; }
     LayoutUnit top() { return m_top; }
@@ -298,7 +298,7 @@ public:
     LayoutUnit horizontalBoundary() { return m_horizontalBoundary; }
 
 private:
-    FrameBlockBox* m_box;
+    FrameBox* m_box;
     bool m_isLeft;
     LayoutLocation m_loc;
     LayoutUnit m_top;
