@@ -1,3 +1,4 @@
+image: 10.113.64.54:5000/starfish
 build:
   stage: build
   tags:
