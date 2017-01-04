@@ -123,7 +123,7 @@ void LayoutContext::unregisterFloatingBoxes(LayoutUnit yPosition)
     auto iter = c.m_floatBoxes->begin();
     while (iter != c.m_floatBoxes->end()) {
         FloatingBoxInfo f = *iter;
-        if (f.bottom() > yPosition) {
+        if (f.bottom() < yPosition) {
             iter = c.m_floatBoxes->erase(iter);
         } else {
             iter++;
