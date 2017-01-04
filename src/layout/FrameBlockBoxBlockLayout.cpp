@@ -37,6 +37,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         Length marginLeft = child->style()->marginLeft();
         Length marginRight = child->style()->marginRight();
         LayoutUnit mX = 0;
+        bool clearAffected = false;
+
         if (direction == LtrDirectionValue) {
             mX = child->asFrameBox()->marginLeft();
             child->asFrameBox()->setX(paddingLeft() + borderLeft() + mX);
@@ -64,6 +66,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 child->asFrameBox()->setY(normalFlowHeight + top);
                 if (height > child->asFrameBox()->marginTop()) {
                     child->asFrameBox()->moveY(height);
+                    clearAffected = true;
                 } else {
                     child->asFrameBox()->moveY(child->asFrameBox()->marginTop());
                 }
@@ -115,7 +118,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
         child->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
 
-        if (!child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
+        if (clearAffected || !child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
             if (maxNormalFlowBottom < child->asFrameBox()->height() + child->asFrameBox()->y())
                 maxNormalFlowBottom = child->asFrameBox()->height() + child->asFrameBox()->y();
             normalFlowHeight = child->asFrameBox()->height() + child->asFrameBox()->y() - top;
