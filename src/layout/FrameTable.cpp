@@ -23,6 +23,29 @@
 
 namespace StarFish {
 
+class TableFormattingContextBlock {
+public:
+    TableFormattingContextBlock(Frame* frm, LayoutContext& ctx)
+        : m_ctx(ctx)
+        , m_needs(false)
+    {
+        if (frm->isEstablishesBlockFormattingContext()) {
+            m_needs = true;
+            m_ctx.establishBlockFormattingContext(frm->isNormalFlow());
+        }
+    }
+
+    ~TableFormattingContextBlock()
+    {
+        if (m_needs) {
+            m_ctx.removeBlockFormattingContext();
+        }
+    }
+
+    LayoutContext& m_ctx;
+    bool m_needs;
+};
+
 FrameTable::FrameTable(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
@@ -101,7 +124,91 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 
 void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    FrameBlockBox::layout(ctx, resolveWhat);
+    // This method is called by FrameBlockBox::layout() to do table layout.
+    // Table starts its own layout algorithm that has minimum interaction with
+    // the existing layout algorithm.
+    //
+    // In brief,
+    // after establishes a table context, we calculate the width of the table,
+    // and place cells in rows and columns. To do so, we calculate x positions
+    // of cells first, and then calculate the y positions of cells.
+    TableFormattingContextBlock context(this, ctx);
+
+    if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
+        calContentWidth(ctx);
+        layoutWidth(ctx);
+    }
+    if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
+        layoutHeight(ctx);
+    }
+}
+
+void FrameTable::calContentWidth(LayoutContext& ctx)
+{
+    // We traverse the table to calculate min/max content width of the table
+    // before we perform table layout.
+    m_columnWidths.clear();
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSection()) {
+            c->asFrameTableSection()->calContentWidth(ctx);
+            collectColumnWidths(m_columnWidths, c->asFrameTableSection()->columnWidths());
+        }
+    }
+
+    // TODO: need to consider the width of the parent here
+    LayoutUnit contentWidth;
+    for (auto &col : m_columnWidths) {
+        contentWidth += col.maxContentWidth;
+    }
+
+    setContentWidth(contentWidth);
+    computeBorderMarginPadding(contentWidth);
+}
+
+void FrameTable::layoutWidth(LayoutContext& ctx)
+{
+    // The width of the caption is limited by the max width of the
+    // FrameTableSection. Hence, captions can only be placed after calculating
+    // the width of the table, which has already been done by calContentWidth()
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSection()) {
+            c->asFrameTableSection()->layoutWidth(ctx);
+        } else if (c->isFrameTableCaption()) {
+            c->asFrameTableCaption()->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+        } else {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+}
+
+void FrameTable::layoutHeight(LayoutContext& ctx)
+{
+    LayoutUnit ySoFar = 0;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSection()) {
+            c->asFrameTableSection()->layoutHeight(ctx);
+        } else if (c->isFrameTableCaption()) {
+            c->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+        }
+        c->asFrameBox()->setY(ySoFar);
+        ySoFar += c->asFrameBox()->height();
+    }
+
+    setHeight(ySoFar);
+}
+
+void FrameTable::collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar,
+                                     GCVector<ColStruct>& columnWidths)
+{
+    // FIXME: absolute at this stage
+    // Need to consider absolute and logical columns
+    if (columnWidthsSoFar.empty()) {
+        for (auto &col : columnWidths) {
+            columnWidthsSoFar.push_back(col);
+        }
+    } else {
+        // TODO: need to consider multiple table sections here
+    }
 }
 
 }

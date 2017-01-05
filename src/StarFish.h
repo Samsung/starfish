@@ -26,6 +26,10 @@ namespace StarFish {
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef unsigned long long DOMTimeStamp;
 
+// typedef of GC-aware vector
+template <typename T>
+using GCVector = std::vector<T, gc_allocator_ignore_off_page<T>>;
+
 class MessageLoop;
 class Window;
 class ScriptBindingInstance;

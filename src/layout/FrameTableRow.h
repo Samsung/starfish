@@ -41,7 +41,9 @@ public:
     static FrameTableRow* buildFrameTableRow(Node* cellNode,
                                              FrameTreeBuilderContext& ctx,
                                              bool force = false);
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void calContentWidth(LayoutContext& ctx);
+    void layoutWidth(LayoutContext& ctx);
+    void layoutHeight(LayoutContext& ctx);
 
     FrameTableCell* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
@@ -52,6 +54,7 @@ public:
 
     virtual bool hasBlockFlow()
     {
+        // TODO: Fix it after finishing table context properly
         // FIXME: TableRow always contains a blockflow
         Frame* child = firstChild();
         if (!child) {
@@ -74,6 +77,8 @@ public:
     }
 
 private:
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
     unsigned m_rowIndex;
 
 };

@@ -22,8 +22,10 @@
 namespace StarFish {
 
 class FrameTreeBuilderContext;
+class FrameTable;
 class FrameTableRow;
 class FrameTableCell;
+class ColStruct;
 
 struct CellStruct {
     CellStruct() : cell(nullptr) {}
@@ -37,13 +39,7 @@ struct RowStruct {
     RowStruct(FrameTableRow* tableRow);
 
     FrameTableRow* tableRow;
-    std::vector<CellStruct,
-                gc_allocator_ignore_off_page<CellStruct>> cells;
-};
-
-struct ColStruct {
-    LayoutUnit minContentWidth;
-    LayoutUnit maxContentWidth;
+    GCVector<CellStruct> cells;
 };
 
 class FrameTableSection : public FrameBlockBox {
@@ -53,7 +49,9 @@ public:
     static FrameTableSection* buildFrameTableSection(Node* sectionNode,
                                                      FrameTreeBuilderContext& ctx,
                                                      bool force = false);
-    void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void calContentWidth(LayoutContext& ctx);
+    void layoutWidth(LayoutContext& ctx);
+    void layoutHeight(LayoutContext& ctx);
 
     FrameTableRow* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
@@ -69,6 +67,7 @@ public:
 
     virtual bool hasBlockFlow()
     {
+        // TODO: Fix it after finishing table context properly
         // FrameTableSection always contains blockflow
         Frame* child = firstChild();
         if (!child) {
@@ -80,15 +79,27 @@ public:
         return true;
     }
 
-    std::vector<RowStruct, gc_allocator_ignore_off_page<RowStruct>>& grid()
+    FrameTable* table()
+    {
+        return parent()->asFrameTable();
+    }
+
+    GCVector<RowStruct>& grid()
     {
         return m_grid;
     }
 
+    GCVector<ColStruct>& columnWidths()
+    {
+        return m_columnWidths;
+    }
+
 private:
+    void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
     // represent the logical table structure
-    std::vector<RowStruct,
-                gc_allocator_ignore_off_page<RowStruct>> m_grid;
+    GCVector<RowStruct> m_grid;
+    GCVector<ColStruct> m_columnWidths;
 };
 
 }

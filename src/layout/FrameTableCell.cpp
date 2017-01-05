@@ -25,7 +25,8 @@ namespace StarFish {
 FrameTableCell::FrameTableCell(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
+                    (node != nullptr && style == nullptr));
 }
 
 FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
@@ -46,9 +47,10 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
     return tableCell;
 }
 
-void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCell::calContentWidth(LayoutContext& ctx,
+                                     Frame::LayoutWantToResolve resolveWhat)
 {
-    FrameBlockBox::layout(ctx, resolveWhat);
+    FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
     if (style()->width().isAuto()) {
         m_minContentWidth = minimumCellWidth(ctx);
@@ -64,6 +66,22 @@ void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resol
     }
 }
 
+void FrameTableCell::layoutWidth(LayoutContext& ctx)
+{
+
+}
+
+void FrameTableCell::layoutHeight(LayoutContext& ctx)
+{
+    FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+}
+
+void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+{
+    // This method should not be called, as table uses its own layout algorithm
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
 LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
 {
     LayoutUnit maxWidthSoFar = 0;
@@ -72,7 +90,7 @@ LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
         if (c->isFrameText()) {
             width = c->asFrameText()->minimumContentWidth(ctx);
         } else {
-            // TODO
+            // TODO: measure width for other frameboxes
         }
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
