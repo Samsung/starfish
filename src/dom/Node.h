@@ -372,23 +372,23 @@ public:
     virtual bool isTableSection() const
     {
         switch (style()->display()) {
-            case DisplayValue::TableHeaderGroupDisplayValue:
-            case DisplayValue::TableFooterGroupDisplayValue:
-            case DisplayValue::TableRowGroupDisplayValue:
-                return true;
-            default:
-                return false;
+        case DisplayValue::TableHeaderGroupDisplayValue:
+        case DisplayValue::TableFooterGroupDisplayValue:
+        case DisplayValue::TableRowGroupDisplayValue:
+            return true;
+        default:
+            return false;
         }
     }
 
     virtual bool isTableCol() const
     {
         switch (style()->display()) {
-            case DisplayValue::TableColumnGroupDisplayValue:
-            case DisplayValue::TableColumnDisplayValue:
-                return true;
-            default:
-                return false;
+        case DisplayValue::TableColumnGroupDisplayValue:
+        case DisplayValue::TableColumnDisplayValue:
+            return true;
+        default:
+            return false;
         }
     }
 
