@@ -23,6 +23,29 @@ namespace StarFish {
 
 class FrameTableCaption;
 class FrameTreeBuilderContext;
+class TableFormattingContextBlock;
+
+// Table has the following table structure
+//
+//                 FrameTable
+//                 |         |
+//   FrameTableCaption     FrameTableSection
+//                           |
+//                         FrameTableRow
+//                           |
+//                         FrameTableCell
+//
+// FrameTableCaption, FrameTableSection, FrameTableRow, FrameTableCell are
+// the only child nodes that can appear under FrameTable.
+// When other nodes appear, anonymous nodes are created
+//
+// Table has its own table layout algorithm, that has minimum interaction
+// with the existing box layout algorithm.
+
+struct ColStruct {
+    LayoutUnit minContentWidth;
+    LayoutUnit maxContentWidth;
+};
 
 class FrameTable : public FrameBlockBox {
 public:
@@ -33,6 +56,9 @@ public:
                                        bool force = false);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void calContentWidth(LayoutContext& ctx);
+    void layoutWidth(LayoutContext& ctx);
+    void layoutHeight(LayoutContext& ctx);
 
     void addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
@@ -60,10 +86,17 @@ public:
         return true;
     }
 
-private:
-    std::vector<FrameTableCaption*,
-                gc_allocator_ignore_off_page<FrameTableCaption*>> m_captions;
+    GCVector<ColStruct>& columnWidths()
+    {
+        return m_columnWidths;
+    }
 
+private:
+    void collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar,
+                             GCVector<ColStruct>& columnWidths);
+
+    GCVector<FrameTableCaption*> m_captions;
+    GCVector<ColStruct> m_columnWidths;
 };
 
 }

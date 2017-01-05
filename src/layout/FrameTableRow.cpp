@@ -18,6 +18,8 @@
 #include "FrameTableRow.h"
 
 #include "FrameTreeBuilder.h"
+#include "FrameTable.h"
+#include "FrameTableSection.h"
 #include "FrameTableCell.h"
 
 namespace StarFish {
@@ -73,9 +75,58 @@ FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ct
     return childFrame;
 }
 
+void FrameTableRow::calContentWidth(LayoutContext& ctx)
+{
+    // We traverse the cells first to calculate min/max cell width
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCell()) {
+            c->asFrameTableCell()->calContentWidth(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+        } else {
+            // Only FrameTableCell should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+}
+
+void FrameTableRow::layoutWidth(LayoutContext& ctx)
+{
+    int i=0;
+    LayoutUnit xSoFar = 0;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCell()) {
+            c->asFrameBox()->setX(xSoFar);
+            LayoutUnit cellWidth = tableSection()->table()->
+                                       columnWidths()[i].maxContentWidth;
+            c->asFrameTableCell()->setContentWidth(cellWidth);
+            xSoFar += cellWidth;
+            i++;
+        } else {
+            // Only FrameTableCell should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+}
+
+void FrameTableRow::layoutHeight(LayoutContext& ctx)
+{
+    LayoutUnit maxYSoFar = 0;
+    // We traverse the cells first to calculate min/max cell width
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCell()) {
+            c->asFrameTableCell()->layoutHeight(ctx);
+            maxYSoFar = std::max(maxYSoFar, c->asFrameBox()->height());
+        } else {
+            // Only FrameTableCell should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+    setHeight(maxYSoFar);
+}
+
 void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
-    FrameBlockBox::layout(ctx, resolveWhat);
+    // This method should not be called, as table uses its own layout algorithm
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
 }

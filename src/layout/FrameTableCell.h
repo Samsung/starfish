@@ -30,7 +30,9 @@ public:
     static FrameTableCell* buildFrameTableCell(Node* cellNode,
                                                FrameTreeBuilderContext& ctx,
                                                bool force = false);
-    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void calContentWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void layoutWidth(LayoutContext& ctx);
+    void layoutHeight(LayoutContext& ctx);
 
     virtual const char* name()
     {
@@ -70,6 +72,8 @@ public:
     }
 
 private:
+    virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+
     LayoutUnit minimumCellWidth(LayoutContext& ctx);
     LayoutUnit maximumCellWidth(LayoutContext& ctx);
 

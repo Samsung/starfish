@@ -20,6 +20,7 @@
 #include "FrameInline.h"
 #include "FrameDocument.h"
 #include "FrameTable.h"
+#include "FrameTableCell.h"
 
 namespace StarFish {
 
@@ -369,7 +370,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 marginInfo.setMargin(0, 0);
 
             while (child) {
-                if (child->isNormalFlow()) {
+                if (child->isNormalFlow() && child->style()->display() == BlockDisplayValue) {
                     child->asFrameBox()->setMarginCollapseResult(MarginCollapseResult());
                     child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
                     LayoutUnit posTop = marginInfo.positiveMargin(), negTop = marginInfo.negativeMargin();
@@ -417,7 +418,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     if (marginInfo.atTopSideOfBlock() && !child->asFrameBox()->isSelfCollapsingBlock(ctx)) {
                         marginInfo.setAtTopSideOfBlock(false);
                     }
+                } else if (child->isNormalFlow() && child->isFrameTable()) {
+                    // All table-related layout is performed in FrameTable::layout() from now on
+                    child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
                 }
+
                 child = child->next();
             }
 
@@ -441,8 +446,16 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
     LayoutUnit contentHeight;
     LayoutRect visibleRect(0, 0, 0, 0);
+
     if (hasBlockFlow()) {
-        contentHeight = layoutBlock(ctx);
+        switch(style()->display()) {
+        case BlockDisplayValue:
+        case TableCellDisplayValue: // Table cell can start a new block
+            contentHeight = layoutBlock(ctx);
+            break;
+        default:
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     } else {
         contentHeight = layoutInline(ctx);
     }

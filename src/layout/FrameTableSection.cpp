@@ -18,6 +18,7 @@
 #include "FrameTableSection.h"
 
 #include "FrameTreeBuilder.h"
+#include "FrameTable.h"
 #include "FrameTableRow.h"
 #include "FrameTableCell.h"
 
@@ -68,7 +69,8 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
     return tableSection;
 }
 
-FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+FrameTableRow* FrameTableSection::addChild(Node* child,
+                                           FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableRow* childFrame;
     if (!child->isTableRow()) {
@@ -87,9 +89,17 @@ FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext&
     return childFrame;
 }
 
-void FrameTableSection::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableSection::calContentWidth(LayoutContext& ctx)
 {
-    FrameBlockBox::layout(ctx, resolveWhat);
+    // 0. We traverse the cells first to determine min/max cell size
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableRow()) {
+            c->asFrameTableRow()->calContentWidth(ctx);
+        } else {
+            // Only FrameTableRow should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
 
     // 1. get max logical column size
     unsigned logicalColSize = 0;
@@ -99,8 +109,7 @@ void FrameTableSection::layout(LayoutContext& ctx, Frame::LayoutWantToResolve re
     }
 
     // 2. get min/max column width for each column that does not have a colspan
-    std::vector<ColStruct,
-                gc_allocator_ignore_off_page<ColStruct>> logicalColumns;
+    m_columnWidths.clear();
     for (unsigned c = 0; c < logicalColSize; c++) {
         LayoutUnit minContentWidthSoFar = 0;
         LayoutUnit maxContentWidthSoFar = 0;
@@ -117,10 +126,44 @@ void FrameTableSection::layout(LayoutContext& ctx, Frame::LayoutWantToResolve re
         ColStruct col;
         col.minContentWidth = minContentWidthSoFar;
         col.maxContentWidth = maxContentWidthSoFar;
-        logicalColumns.push_back(col);
+        m_columnWidths.push_back(col);
     }
 
     // 3. TODO: increase column widths to fit the columns with colspans.
+}
+
+void FrameTableSection::layoutWidth(LayoutContext& ctx)
+{
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableRow()) {
+            c->asFrameTableRow()->layoutWidth(ctx);
+        } else {
+            // Only FrameTableRow should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+}
+
+void FrameTableSection::layoutHeight(LayoutContext& ctx)
+{
+    LayoutUnit ySoFar = 0;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableRow()) {
+            c->asFrameTableRow()->layoutHeight(ctx);
+            c->asFrameBox()->setY(ySoFar);
+            ySoFar += c->asFrameBox()->height();
+        } else {
+            // Only FrameTableRow should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
+    setHeight(ySoFar);
+}
+
+void FrameTableSection::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+{
+    // This method should not be called, as table uses its own layout algorithm
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
 }
