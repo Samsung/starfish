@@ -94,7 +94,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 LayoutUnit width = boundaries.second - boundaries.first;
                 LayoutUnit yDiff;
                 if ((hasToStretchWidth && child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() > 0)
-                    || (width > child->asFrameBox()->width())
+                    || (width >= child->asFrameBox()->width())
                     || ((yDiff = ctx.heightDueTofloatingBoxes(selfLoc.y(), child->asFrameBox()->height())) == 0)) {
                     child->asFrameBox()->moveY(selfLoc.y() - originalY);
                     if (hasToStretchWidth) {
