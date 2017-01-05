@@ -2493,28 +2493,40 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
     switch (relation) {
     case CSSSelector::RelationType::Descendant:
         {
-        Match match;
         Element* parent = element->parentElement();
         while (parent) {
-            match = matchSelector(parent, selectorList, idx);
-            if (match == Match::SelectorMatches)
-                break;
-            else
-                parent = parent->parentElement();
+            if (matchSelector(parent, selectorList, idx) == Match::SelectorMatches)
+                return Match::SelectorMatches;
+            parent = parent->parentElement();
         }
-        return match;
+        return Match::SelectorFailsCompletely;
         }
     case CSSSelector::RelationType::Child:
-        if (matchSelector(element->parentElement(), selectorList, idx) == Match::SelectorMatches)
+        {
+        Element* parent = element->parentElement();
+        if (parent && matchSelector(parent, selectorList, idx) == Match::SelectorMatches)
             return Match::SelectorMatches;
         else
             return Match::SelectorFailsCompletely;
+        }
     case CSSSelector::RelationType::DirectAdjacent:
-        // TODO
-        return Match::SelectorFailsCompletely;
+        {
+        Element* previousSibling = element->previousElementSibling();
+        if (previousSibling && matchSelector(previousSibling, selectorList, idx) == Match::SelectorMatches)
+            return Match::SelectorMatches;
+        else
+            return Match::SelectorFailsCompletely;
+        }
     case CSSSelector::RelationType::IndirectAdjacent:
-        // TODO
+        {
+        Element* previousSibling = element->previousElementSibling();
+        while (previousSibling) {
+            if (matchSelector(previousSibling, selectorList, idx) == Match::SelectorMatches)
+                return Match::SelectorMatches;
+            previousSibling = previousSibling->previousElementSibling();
+        }
         return Match::SelectorFailsCompletely;
+        }
     default:
         return Match::SelectorFailsCompletely;
     }
