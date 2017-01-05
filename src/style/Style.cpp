@@ -2505,8 +2505,10 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
         return match;
         }
     case CSSSelector::RelationType::Child:
-        // TODO
-        return Match::SelectorFailsCompletely;
+        if (matchSelector(element->parentElement(), selectorList, idx) == Match::SelectorMatches)
+            return Match::SelectorMatches;
+        else
+            return Match::SelectorFailsCompletely;
     case CSSSelector::RelationType::DirectAdjacent:
         // TODO
         return Match::SelectorFailsCompletely;
