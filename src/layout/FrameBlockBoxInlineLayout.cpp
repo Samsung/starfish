@@ -2683,9 +2683,17 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 });
             } else if (f->isFrameBlockBox()) {
                 LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
-                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
-                f->computePreferredWidth(newCtx);
-                LayoutUnit w = newCtx.result() + mbp;
+                Length width = f->style()->width();
+                LayoutUnit w;
+                if (width.isAuto()) {
+                    ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
+                    f->computePreferredWidth(newCtx);
+                    w = newCtx.result() + mbp;
+                } else if (width.isFixed()) {
+                    w = width.fixed() + mbp;
+                } else if (width.isPercent()) {
+                    w = (contentWidth() + paddingWidth()) * width.percent();
+                }
                 ctx.setResult(w);
 
                 if (whiteSpaceCanBreak) {
