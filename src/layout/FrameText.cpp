@@ -27,8 +27,8 @@ LayoutUnit FrameText::minimumContentWidth(LayoutContext& ctx)
     // length among these words
     LayoutUnit maxWidthSoFar = 0;
     textDividerForLayout(ctx.starFish(), text(),
-                        [&](String* srcTxt, size_t offset, size_t nextOffset,
-                            bool isWhiteSpace, bool canBreak) {
+                         [&](String* srcTxt, size_t offset, size_t nextOffset,
+                             bool isWhiteSpace, bool canBreak) {
         maxWidthSoFar =
             std::max(maxWidthSoFar,
                      style()->font()->measureText(StringView(srcTxt,
