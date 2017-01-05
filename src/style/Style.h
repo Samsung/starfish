@@ -1309,6 +1309,7 @@ public:
         PseudoFirstOfType,
         PseudoLastChild,
         PseudoLastOfType,
+        PseudoOnlyChild,
         PseudoFirstLine,
         PseudoFirstLetter,
         PseudoNthChild,

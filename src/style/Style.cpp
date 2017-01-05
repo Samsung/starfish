@@ -602,6 +602,8 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoLastChild;
     else if (name->equals(String::fromUTF8("last-of-type")))
         return CSSSelector::PseudoType::PseudoLastOfType;
+    else if (name->equals(String::fromUTF8("only-child")))
+        return CSSSelector::PseudoType::PseudoOnlyChild;
     else if (name->equals(String::fromUTF8("first-line")))
         return CSSSelector::PseudoType::PseudoFirstLine;
     else if (name->equals(String::fromUTF8("first-letter")))
@@ -715,7 +717,7 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
 //    case PseudoNthLastChild:
 //    case PseudoNthLastOfType:
 //    case PseudoNthOfType:
-//    case PseudoOnlyChild:
+    case PseudoOnlyChild:
 //    case PseudoOnlyOfType:
 //    case PseudoOptional:
 //    case PseudoPlaceholderShown:
@@ -2553,6 +2555,16 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
     }
 }
 
+static bool isFirstChild(Element* element)
+{
+    return !element->previousElementSibling();
+}
+
+static bool isLastChild(Element* element)
+{
+    return !element->nextElementSibling();
+}
+
 static bool isFirstOfType(Element* element)
 {
     Node* ret = Traverse::previousSibling(element, [&element](Node* sibling) {
@@ -2585,13 +2597,15 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
     case CSSSelector::PseudoType::PseudoRoot:
         return element == element->document()->documentElement();
     case CSSSelector::PseudoType::PseudoFirstChild:
-        return !element->previousElementSibling();
+        return isFirstChild(element);
     case CSSSelector::PseudoType::PseudoLastChild:
-        return !element->nextElementSibling();
+        return isLastChild(element);
     case CSSSelector::PseudoType::PseudoFirstOfType:
         return isFirstOfType(element);
     case CSSSelector::PseudoType::PseudoLastOfType:
         return isLastOfType(element);
+    case CSSSelector::PseudoType::PseudoOnlyChild:
+        return isFirstChild(element) && isLastChild(element);
     default:
         return false;
     }
