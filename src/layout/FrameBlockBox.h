@@ -543,7 +543,7 @@ public:
     }
 
     void registerInlineContent();
-    void insertPendingFloatingBoxes(bool isInlineBox, bool isLastLine, bool skipFinishLine, LayoutUnit floatYDiff, bool onlyAllowBeforeCurrentLine);
+    void insertPendingFloatingBoxes(bool isInlineBox, bool isLastLine, bool skipFinishLine, LayoutUnit floatYDiff);
     void insertPendingAboslutePositionedBoxes();
     void insertPendingInlineBoxesDueToFloatinBoxes();
     void initLineBox(LineBox* lineBox, LayoutUnit height);

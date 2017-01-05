@@ -1161,8 +1161,9 @@ static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBox* f)
         || (f->style()->clear() == BothClearValue && ctx->m_hasFloat == LineFormattingContext::HasNone)));
 }
 
-void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool isLastLine, bool skipFinishLine, LayoutUnit floatYDiff, bool onlyAllowBeforeCurrentLine)
+void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool isLastLine, bool skipFinishLine, LayoutUnit floatYDiff)
 {
+    bool onlyAllowBeforeCurrentLine = m_pendingInlineBoxes.size() > 0;
     bool leftEmpty = false;
     bool rightEmpty = false;
 
@@ -1598,7 +1599,8 @@ void LineFormattingContext::resetLineBox()
     m_accumulatedFloatLeftWidth = 0;
     m_accumulatedFloatRightWidth = 0;
     m_floatBoxY = 0;
-    m_pendingFloatBoxNumsBeforeCurrentLine = m_pendingFloatBoxes.size();
+    if (m_pendingInlineBoxes.size() == 0)
+        m_pendingFloatBoxNumsBeforeCurrentLine = m_pendingFloatBoxes.size();
     m_shouldLineBreakForabsolutePositionedBlock = false;
 }
 
@@ -1623,7 +1625,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
             m_accumulatedFloatRightWidth = 0;
             m_floatBoxY = 0;
             m_shouldLineBreakForabsolutePositionedBlock = false;
-            insertPendingFloatingBoxes(isInLineBox, false, false, floatHeight, true);
+            insertPendingFloatingBoxes(isInLineBox, false, false, floatHeight);
             insertPendingInlineBoxesDueToFloatinBoxes();
 
             if (m_pendingInlineBoxes.size() > 0) {
@@ -1638,7 +1640,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
     removeDanglingSpaceFromLine();
     // Should check if there has enough space for pending block box due to removing
     // white space from above function `removeDanglingSpaceFromLine`
-    insertPendingFloatingBoxes(isInLineBox, false, false, 0, false);
+    insertPendingFloatingBoxes(isInLineBox, false, false, 0);
     computeHorizontalProperties();
     LayoutUnit yDiff = computeLineBoxHeight(dueToBr, !isLastLine);
 
@@ -1650,7 +1652,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
             breakLine(dueToBr, isInLineBox, isLastLine, true);
         }
         if (m_pendingFloatBoxes.size() > 0) {
-            insertPendingFloatingBoxes(isInLineBox, isLastLine, true, 0, false);
+            insertPendingFloatingBoxes(isInLineBox, isLastLine, true, 0);
         }
     }
 }
@@ -1666,7 +1668,7 @@ void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool isLas
 
     resetLineBox();
 
-    insertPendingFloatingBoxes(isInLineBox, isLastLine, false, 0, true);
+    insertPendingFloatingBoxes(isInLineBox, isLastLine, false, 0);
     insertPendingInlineBoxesDueToFloatinBoxes();
 
     if (m_pendingInlineBoxes.size() > 0) {
