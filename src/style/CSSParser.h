@@ -443,6 +443,9 @@ protected:
     void prependTypeSelectorIfNeeded(String* namespacePrefix, String* elementName, CSSSelector* compoundSelector);
     unsigned extractCompoundFlags(CSSSelector* simpleSelector);
     bool getANPlusB(std::pair<int, int>& result);
+    CSSSelector::Type getAttributeMatch(CSSToken* token);
+    CSSSelector::AttributeMatchType getAttributeFlags();
+    String* getStringWithoutQuotationMarks(String* str);
 
 
     String* parseSimpleSelector(CSSToken* token, bool isFirstInChain, bool canNegate, bool& validSelector);

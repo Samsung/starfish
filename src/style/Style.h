@@ -1289,7 +1289,15 @@ public:
         Id,
         Class,
         PseudoClass, // FIXME: This type is not used but SelectorQuery use this type.
-        PseudoElement
+        PseudoElement,
+        AttributeExact, // Example: E[foo="bar"]
+        AttributeSet, // Example: E[foo]
+        AttributeHyphen, // Example: E[foo|="bar"]
+        AttributeList, // Example: E[foo~="bar"]
+        AttributeContain, // css3: E[foo*="bar"]
+        AttributeBegin, // css3: E[foo^="bar"]
+        AttributeEnd, // css3: E[foo$="bar"]
+        FirstAttributeSelectorMatch = AttributeExact,
     };
 
     enum RelationType {
@@ -1336,9 +1344,11 @@ public:
         , m_relation(None)
         , m_pseudotype(PseudoNone)
         , m_selectorText(String::emptyString)
+        , m_attribute(String::emptyString)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
-        , m_argument(nullptr)
+        , m_argument(String::emptyString)
+        , m_value(String::emptyString)
     {
     }
 
@@ -1347,10 +1357,17 @@ public:
         , m_relation(relation)
         , m_pseudotype(pseudo)
         , m_selectorText(text)
+        , m_attribute(String::emptyString)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
-        , m_argument(nullptr)
+        , m_argument(String::emptyString)
+        , m_value(String::emptyString)
     {
+    }
+
+    bool isAttributeSelector() const
+    {
+        return m_type >= FirstAttributeSelectorMatch;
     }
 
     Type type() const
@@ -1413,14 +1430,15 @@ public:
         m_relationIsAffectedByPseudoContent = true;
     }
 
-    void setPseudoSelectorList(CSSSelector* selector)
-    {
-        m_pseudoSelectorList.push_back(selector);
-    }
-
     std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& pseudoSelectorList()
     {
         return m_pseudoSelectorList;
+    }
+
+    void setPseudoSelectorList(CSSSelector* selector)
+    {
+        STARFISH_ASSERT(m_type != Tag);
+        m_pseudoSelectorList.push_back(selector);
     }
 
     String* argument()
@@ -1430,6 +1448,7 @@ public:
 
     void setArgument(String* value)
     {
+        STARFISH_ASSERT(m_type != Tag);
         m_argument = value;
     }
 
@@ -1445,9 +1464,26 @@ public:
 
     void setNth(int a, int b)
     {
+        STARFISH_ASSERT(m_type != Tag);
         m_nth.m_a = a;
         m_nth.m_b = b;
     }
+
+    String* attribute()
+    {
+        STARFISH_ASSERT(isAttributeSelector());
+        return m_attribute;
+    }
+
+    void setAttribute(String* value, AttributeMatchType matchType)
+    {
+        STARFISH_ASSERT(m_type != Tag);
+        m_attribute = value;
+        m_attributeMatch = matchType;
+    }
+
+    String* value();
+    void setValue(String* value, bool matchLowerCase = false);
 
     bool isSimple(CSSSelectorList* selectorList);
 
@@ -1463,6 +1499,7 @@ protected:
     RelationType m_relation;
     PseudoType m_pseudotype;
     String* m_selectorText;
+    String* m_attribute;
     AttributeMatchType m_attributeMatch;
     unsigned m_relationIsAffectedByPseudoContent;
     std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_pseudoSelectorList;
@@ -1471,6 +1508,8 @@ protected:
         int m_a; // Used for :nth-*
         int m_b; // Used for :nth-*
     } m_nth;
+    String* m_value;
+
 };
 
 class CSSSelectorList : public gc {

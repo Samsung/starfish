@@ -475,13 +475,15 @@ bool SelectorQuery::checkOne(const SelectorCheckingContext& context, MatchResult
         return element.hasId() && element.id()->equals(selector[0]->selectorText());
 
     // Attribute selectors
-    /*case CSSSelector::AttributeExact:
+    case CSSSelector::AttributeExact:
     case CSSSelector::AttributeSet:
     case CSSSelector::AttributeHyphen:
     case CSSSelector::AttributeList:
     case CSSSelector::AttributeContain:
     case CSSSelector::AttributeBegin:
     case CSSSelector::AttributeEnd:
+        break;
+        /*
         return anyAttributeMatches(element, selector.match(), selector);
     */
     case CSSSelector::PseudoClass:

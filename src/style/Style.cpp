@@ -589,6 +589,18 @@ bool CSSSelector::isSimple(CSSSelectorList* selectorList)
     return false;
 }
 
+String* CSSSelector::value()
+{
+    STARFISH_ASSERT(m_type != Tag);
+    return m_value;
+}
+
+void CSSSelector::setValue(String* value, bool matchLowerCase)
+{
+    STARFISH_ASSERT(m_type != Tag);
+    m_value = value;
+}
+
 CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArguments)
 {
     if (name == nullptr || !name->isASCIIString())
