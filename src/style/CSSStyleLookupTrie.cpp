@@ -29,9 +29,19 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         }
         break;
     case 4:
+        // Font
         // Left
-        if (memcmp(data, "left", 4) == 0) {
-            return CSSStyleKind::Left;
+        switch (data[0]) {
+        case 'f':
+            if (memcmp(data, "font", 4) == 0) {
+                return CSSStyleKind::Font;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "left", 4) == 0) {
+                return CSSStyleKind::Left;
+            }
+            break;
         }
         break;
     case 5:
@@ -475,8 +485,17 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         }
         break;
     case 4:
-        if (memcmp(data, "left", 4) == 0) {
-            return CSSStyleKind::Left;
+        switch (data[0]) {
+        case 'f':
+            if (memcmp(data, "font", 4) == 0) {
+                return CSSStyleKind::Font;
+            }
+            break;
+        case 'l':
+            if (memcmp(data, "left", 4) == 0) {
+                return CSSStyleKind::Left;
+            }
+            break;
         }
         break;
     case 5:
