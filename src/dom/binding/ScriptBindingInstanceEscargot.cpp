@@ -6454,6 +6454,13 @@ escargot::ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBinding
         return toJSString(originalObj->getHost());
     }, nullptr);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        LocationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("hostname"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        return toJSString(originalObj->getHostname());
+    }, nullptr);
+
     return LocationFunction;
 }
 
