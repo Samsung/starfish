@@ -48,6 +48,11 @@ public:
         return url()->getHref();
     }
 
+    String* getHost()
+    {
+        return url()->getHost();
+    }
+
     String* getPathname()
     {
         return url()->getPathname();
