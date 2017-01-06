@@ -2557,12 +2557,12 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
 
 static bool isFirstChild(Element* element)
 {
-    return !element->previousElementSibling();
+    return element->parentElement() ? !element->previousElementSibling() : false;
 }
 
 static bool isLastChild(Element* element)
 {
-    return !element->nextElementSibling();
+    return element->parentElement() ? !element->nextElementSibling() : false;
 }
 
 static bool isFirstOfType(Element* element)
