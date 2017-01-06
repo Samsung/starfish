@@ -116,14 +116,16 @@ LayoutUnit FrameTableCell::maximumCellWidth(LayoutContext& ctx)
 
 int FrameTableCell::colspan()
 {
-    String* colspan;
+    String* colspan = String::emptyString;
     if (node()->asElement()->asHTMLElement()->isHTMLTDElement()) {
         colspan = node()->asElement()->asHTMLElement()->asHTMLTDElement()->colspan();
     } else if (node()->asElement()->asHTMLElement()->isHTMLTHElement()) {
         colspan = node()->asElement()->asHTMLElement()->asHTMLTHElement()->colspan();
     } else {
-        // Should not be here
-        // STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        // colspan is only accepted when HTML element is either <td> or <th>,
+        // hence it is not applied when used in other elements.
+        // e.g., <div style="display: table-cell" colspan="2">
+        // In this case, we ignore the colspan value
     }
 
     int num = String::parseInt(colspan);
