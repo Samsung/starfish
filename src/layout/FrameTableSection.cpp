@@ -69,6 +69,16 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
     return tableSection;
 }
 
+FrameTableSection* FrameTableSection::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+{
+    ComputedStyle* style = new ComputedStyle(parent->style());
+    style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
+    style->loadResources(parentNode);
+    style->arrangeStyleValues(parent->style(),parentNode);
+
+    return new FrameTableSection(nullptr, style);
+}
+
 FrameTableRow* FrameTableSection::addChild(Node* child,
                                            FrameTreeBuilderContext& ctx, bool force)
 {
@@ -78,7 +88,36 @@ FrameTableRow* FrameTableSection::addChild(Node* child,
         if (child->isCharacterData() || child->isComment()) {
             return nullptr;
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            // simple case to generate anonymous table object
+            if (child->isTableCell()) {
+                Frame* last = ctx.currentBlockContainer()->lastChild();
+                FrameTableRow* anonymous;
+                if (last == nullptr || last->node() != nullptr) {
+                    anonymous = FrameTableRow::createAnonymousWithParent(ctx.currentBlockContainer(), ctx.currentBlockContainer()->node());
+                    ctx.currentBlockContainer()->appendChild(anonymous);
+                    childFrame = anonymous;
+                } else if (last && last->isFrameTableRow() && last->node() == nullptr) {
+                    // last node was placed at anonymous table row
+                    // and current node that is tableCell must be placed at same anonymous table row
+                    anonymous = last->asFrameTableRow();
+                    childFrame = nullptr;
+                } else {
+                    // TODO
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+                FrameBlockBox* lastContext = ctx.currentBlockContainer();
+                ctx.setCurrentBlockContainer(anonymous);
+                ctx.mergeTextDecorationData(anonymous->style());
+                FrameTableCell* childFrameCell = FrameTableCell::buildFrameTableCell(child, ctx, force);
+
+                FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrameCell, child, ctx);
+                ctx.setCurrentBlockContainer(lastContext);
+                STARFISH_ASSERT(childFrameCell->parent());
+                return childFrame;
+            } else {
+                // TODO
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
         }
     }
 

@@ -20,6 +20,7 @@
 #include "FrameTreeBuilder.h"
 #include "FrameTableCaption.h"
 #include "FrameTableSection.h"
+#include "FrameTableRow.h"
 
 namespace StarFish {
 
@@ -118,7 +119,31 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
         // TODO
         return;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        // simple case to generate anonymous table object
+        if (wrapInAnnoymousSection && child->isTableRow()) {
+            Frame* last = ctx.currentBlockContainer()->lastChild();
+            FrameTableSection* anonymous;
+            if (last == nullptr || last->node() != nullptr) {
+                anonymous = FrameTableSection::createAnonymousWithParent(ctx.currentBlockContainer(), ctx.currentBlockContainer()->node());
+                ctx.currentBlockContainer()->appendChild(anonymous);
+            } else if (last && last->isFrameTableSection() && last->node() == nullptr) {
+                // last node was placed at anonymous table section
+                // and current node that is tableRow must be placed at same anonymous table section
+                anonymous = last->asFrameTableSection();
+            }
+            FrameBlockBox* lastContext = ctx.currentBlockContainer();
+            ctx.setCurrentBlockContainer(anonymous);
+            ctx.mergeTextDecorationData(anonymous->style());
+
+            FrameTableRow* childFrameRow = FrameTableRow::buildFrameTableRow(child, ctx, force);
+            FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrameRow, child, ctx);
+            ctx.setCurrentBlockContainer(lastContext);
+            STARFISH_ASSERT(childFrameRow->parent());
+            return;
+        } else {
+            // TODO
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
     }
 }
 
