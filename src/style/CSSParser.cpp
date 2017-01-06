@@ -1066,11 +1066,11 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
 
     // in case of string (odd and even)
     if (token->isIdent()) {
-        if (token->m_value->equals(String::fromUTF8("odd"))) {
+        if (token->m_value->equalsWithoutCase(String::fromUTF8("odd"))) {
             result = std::make_pair(2, 1);
             return true;
         }
-        if (token->m_value->equals(String::fromUTF8("even"))) {
+        if (token->m_value->equalsWithoutCase(String::fromUTF8("even"))) {
             result = std::make_pair(2, 0);
             return true;
         }
@@ -1147,10 +1147,109 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
     return true;
 }
 
+CSSSelector::Type CSSParser::getAttributeMatch(CSSToken* token)
+{
+    if (token->isIncludes()) {
+        return CSSSelector::AttributeList;
+    } else if (token->isDashmatch()) {
+        return CSSSelector::AttributeHyphen;
+    } else if (token->isBeginsmatch()) {
+        return CSSSelector::AttributeBegin;
+    } else if (token->isEndsmatch()) {
+        return CSSSelector::AttributeEnd;
+    } else if (token->isContainsmatch()) {
+        return CSSSelector::AttributeContain;
+    } else if (token->isSymbol('=')) {
+        return CSSSelector::AttributeExact;
+    } else {
+        m_failedParsing = true;
+        return CSSSelector::AttributeExact;
+    }
+}
+
+CSSSelector::AttributeMatchType CSSParser::getAttributeFlags()
+{
+    if (!lookAhead(false, true)->isIdent())
+        return CSSSelector::CaseSensitive;
+    CSSToken* flag = getToken(true, true);
+    if (flag->m_value->equalsWithoutCase("i"))
+        return CSSSelector::CaseInsensitive;
+    m_failedParsing = true;
+    return CSSSelector::CaseSensitive;
+}
+
+String* CSSParser::getStringWithoutQuotationMarks(String* value)
+{
+    const char* curPos = value->utf8Data();
+    const char* endPos = curPos + value->length();
+
+    while (String::isSpaceOrNewline(*curPos) && curPos < endPos)
+        curPos++;
+
+    int len = 0;
+    char mark = '\0';
+    if (*curPos == '\\')
+        curPos++;
+    if (*curPos == '"' || *curPos == '\'') {
+        mark = *curPos;
+        curPos++;
+    }
+    const char* start = curPos;
+    while (*curPos != mark && curPos < endPos) {
+        curPos++;
+        len++;
+    }
+    if (mark != '\0' && mark == *curPos) {
+        if (*(curPos - 1) == '\\')
+            len--;
+        curPos++;
+        while (String::isSpaceOrNewline(*curPos) && curPos < endPos)
+            curPos++;
+    }
+
+    return String::fromUTF8(start, len);
+}
+
 CSSSelector* CSSParser::getAttributeSelector()
 {
-    // TODO: implement logic for getting attribute selector
-    return nullptr;
+    CSSToken* token = getToken(true, true);
+
+    String* attributeName = nullptr;
+    if (!parseName(&attributeName))
+        return nullptr;
+
+    while (currentToken()->isWhiteSpace())
+        getToken(false, true);
+
+    CSSSelector* selector = new CSSSelector();
+    if (currentToken()->isSymbol(']')) {
+        selector->setAttribute(attributeName, CSSSelector::AttributeMatchType::CaseSensitive);
+        selector->setRelation(CSSSelector::RelationType::SubSelector);
+        selector->setType(CSSSelector::Type::AttributeSet);
+        return selector;
+    }
+
+    attributeName = attributeName->toLower();
+    selector->setType(getAttributeMatch(currentToken()));
+
+    CSSToken* attributeValue = getToken(true, true);
+    if (!attributeValue->isIdent() && !attributeValue->isString())
+        return nullptr;
+
+    selector->setRelation(CSSSelector::RelationType::SubSelector);
+    selector->setValue(getStringWithoutQuotationMarks(attributeValue->m_value));
+    if (selector->value()->equals(String::emptyString))
+        return nullptr;
+
+    selector->setAttribute(attributeName, getAttributeFlags());
+
+    token = getToken(false, false);
+    getToken(false, false);
+
+    if (!token->isSymbol(']'))
+        return nullptr;
+
+    return selector;
 }
 
 CSSSelector* CSSParser::getClassSelector()
@@ -1307,6 +1406,9 @@ void CSSParser::parseComplexSelector(CSSSelectorList* selectorList)
 
         previousCompoundFlags |= extractCompoundFlags(simple);
     }
+
+    if (m_failedParsing)
+        return;
 
     CSSSelectorList* secondSelectorList = new CSSSelectorList();
 
