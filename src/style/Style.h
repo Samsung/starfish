@@ -471,7 +471,8 @@ class CSSStyleDeclaration;
     F(BackgroundRepeat, backgroundRepeat, "background-repeat")     \
     F(BackgroundPosition, backgroundPosition, "background-position") \
     F(Margin, margin, "margin")                                    \
-    F(Padding, padding, "padding")
+    F(Padding, padding, "padding") \
+    F(Font, font, "font")
 
 #define GEN_FOURSIDE(F) \
     F(Top, top) \
@@ -1006,6 +1007,10 @@ public:
     bool updateValueUnitUrlOrNone(String* token);
     bool updateValueUnitMargin(String* token);
     bool updateValueUnitPadding(String* token);
+    bool updateValueUnitFontSize(String* token);
+    bool updateValueUnitFontStyle(String* token);
+    bool updateValueUnitFontWeight(String* token);
+    bool updateValueUnitLineHeight(String* token);
 
 protected:
     KeyKind m_keyKind;
@@ -1132,6 +1137,7 @@ public:
     String* Background();
     String* BackgroundRepeat();
     String* BackgroundPosition();
+    String* Font();
 #define ATTRIBUTE_GETTER(name, ...)                                              \
     String* name()                                                               \
     {                                                                            \
@@ -1185,6 +1191,7 @@ public:
     void setBorderWidth(String* value);
     void setBorderStyle(String* value);
     void setBorderColor(String* value);
+    void setFont(String* value);
 
 #define ATTRIBUTE_SETTER(name, ...)                                                    \
     void set##name(String* value)                                                      \

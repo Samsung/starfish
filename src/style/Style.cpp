@@ -549,6 +549,76 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator_ignore_of
     return true;
 }
 
+static bool parseFontShorthand(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens,
+    CSSStyleValuePair* _Style,
+    // UNSUPPORTED CSSStyleValuePair* _Variant,
+    CSSStyleValuePair* _Weight,
+    // UNSUPPORTED CSSStyleValuePair* _Stretch,
+    CSSStyleValuePair* _Size,
+    CSSStyleValuePair* _LineHeight
+    // UNSUPPORTED CSSStyleValuePair* _Family
+    )
+{
+    // [font-style|font-weight] font-size[/line-height] font-family
+    size_t len = tokens->size();
+    if (len < 1)
+        return false;
+
+    _Style->setValueKind(CSSStyleValuePair::ValueKind::FontStyleValueKind);
+    _Style->setValue(FontStyleValue::NormalFontStyleValue);
+    _Weight->setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+    _Weight->setValue(FontWeightValue::NormalFontWeightValue);
+    _LineHeight->setValueKind(CSSStyleValuePair::ValueKind::Normal);
+
+    bool hasStyle = false, hasWeight = false, hasSize = false, hasLineHeight = false;
+    CSSStyleValuePair temp;
+    bool hasSizePrev = false, shouldLineHeight = false;
+    size_t pos = 0;
+
+    while (pos < len) {
+        String* token = tokens->at(pos++);
+        if (hasSizePrev) {
+            hasSizePrev = false;
+            if (token->equals("/")) {
+                shouldLineHeight = true;
+                continue;
+            }
+        }
+        if (shouldLineHeight) {
+            shouldLineHeight = false;
+            if (temp.updateValueUnitLineHeight(token)) {
+                hasLineHeight = true;
+                *_LineHeight = temp;
+                continue;
+            }
+        } else if (!hasSize && !hasStyle && temp.updateValueUnitFontStyle(token)) {
+            hasStyle = true;
+            *_Style = temp;
+            continue;
+        } else if (!hasSize && !hasWeight && temp.updateValueUnitFontWeight(token)) {
+            hasWeight = true;
+            *_Weight = temp;
+            continue;
+        } else if (!hasSize && temp.updateValueUnitFontSize(token)) {
+            hasSizePrev = true;
+            hasSize = true;
+            *_Size = temp;
+            continue;
+        } else if (hasSize /* for font-family */) {
+            // NOTE
+            // Code for the time we support font-family
+            //
+            // fontFamilyCandidate.push_back(token);
+            continue;
+        }
+        return false;
+    }
+    if (!hasSize /* || !hasFamily */) {
+        return false;
+    }
+    return true;
+}
+
 unsigned CSSSelector::specificityForOneSelector() const
 {
     unsigned specificity = 0;
@@ -1539,6 +1609,101 @@ void CSSStyleDeclaration::setBackground(String* value)
 #undef APPEND_NEW_LAYER
 }
 
+String* CSSStyleDeclaration::Font()
+{
+    String* result = String::emptyString;
+    String* style = FontStyle();
+    String* weight = FontWeight();
+    String* size = FontSize();
+    String* lineHeight = LineHeight();
+
+    if (style->length() == 0
+        || weight->length() == 0
+        || size->length() == 0
+        || lineHeight->length() == 0) {
+        return String::emptyString;
+    }
+    int maxCount = 4;
+    int initialCount = 0;
+    int inheritCount = 0;
+    initialCount += (style->equals(String::initialString) ? 1 : 0);
+    initialCount += (weight->equals(String::initialString) ? 1 : 0);
+    initialCount += (size->equals(String::initialString) ? 1 : 0);
+    initialCount += (lineHeight->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (style->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (weight->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (size->equals(String::inheritString) ? 1 : 0);
+    inheritCount += (lineHeight->equals(String::inheritString) ? 1 : 0);
+
+    if (initialCount == maxCount) {
+        return String::initialString;
+    }
+    if (inheritCount == maxCount) {
+        return String::inheritString;
+    }
+    if (initialCount > 0 || inheritCount > 0) {
+        return String::emptyString;
+    }
+
+    bool first = true;
+    // 1. style
+    if (!style->equals("normal")) {
+        result = result->concat(style);
+        first = false;
+    }
+    // 2. weight
+    if (!weight->equals("normal")) {
+        if (first) {
+            result = weight;
+            first = false;
+        } else {
+            result = result->concat(String::spaceString)->concat(weight);
+        }
+    }
+    // 3. size
+    if (first) {
+        first = false;
+        result = size;
+    } else {
+        result = result->concat(String::spaceString)->concat(size);
+    }
+    // 4. lineHeight
+    if (!lineHeight->equals("normal")) {
+        result = result->concat(String::fromUTF8("/"))->concat(lineHeight);
+    }
+    return result;
+}
+
+void CSSStyleDeclaration::setFont(String* value)
+{
+    if (value->length() == 0) {
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::FontSize);
+        removeCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight);
+        return;
+    }
+
+    std::vector<String*, gc_allocator_ignore_off_page<String*> > tokens;
+    tokenizeCSSValue(&tokens, value, String::fromUTF8("/"));
+    if (tokens.size() == 0) {
+        return;
+    }
+
+    CSSStyleValuePair v, style /*, variant*/, weight /*, stretch*/, size, lineHeight /*, fontFamily*/;
+    if (v.updateValueCommon(&tokens)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, v);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, v);
+    } else if (parseFontShorthand(&tokens, &style, &weight, &size, &lineHeight)) {
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, style);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, weight);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, size);
+        addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, lineHeight);
+    }
+}
+
 #define ADD_PAIRS(PRE, ...) \
     addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Top##__VA_ARGS__, top); \
     addCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Right##__VA_ARGS__, right); \
@@ -1600,11 +1765,14 @@ void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator_ign
 
     std::string str;
     bool inParenthesis = false;
+    bool inQuotes = false;
     bool isWhiteSpaceState = false;
     for (size_t i = 0; i < length; i++) {
         if (data[i] == '(') {
             inParenthesis = true;
         } else if (data[i] == ')') {
+        } else if (data[i] == '"') {
+            inQuotes = !inQuotes;
         }
 
         if (isWhiteSpaceState && String::isSpaceOrNewline(data[i]))
@@ -1612,7 +1780,7 @@ void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator_ign
 
         isWhiteSpaceState = false;
         str += data[i];
-        if (inParenthesis && String::isSpaceOrNewline(data[i])) {
+        if ((inParenthesis || inQuotes) && String::isSpaceOrNewline(data[i])) {
             str[str.length()-1] = ' ';
             isWhiteSpaceState = true;
             continue;
@@ -1622,7 +1790,7 @@ void CSSStyleDeclaration::tokenizeCSSValue(std::vector<String*, gc_allocator_ign
             hasSepChar = true;
         }
 
-        if (!inParenthesis && (String::isSpaceOrNewline(data[i]) || hasSepChar)) {
+        if (!inParenthesis && !inQuotes && (String::isSpaceOrNewline(data[i]) || hasSepChar)) {
             String* newToken = String::fromUTF8(str.data(), str.length() - 1)->toLower();
             if (!newToken->containsOnlyWhitespace())
                 tokens->push_back(newToken);
@@ -2932,7 +3100,11 @@ bool CSSStyleValuePair::updateValueFontStyle(std::vector<String*, gc_allocator_i
     if (tokens->size() != 1)
         return false;
 
-    String* value = (*tokens)[0];
+    return updateValueUnitFontStyle(tokens->at(0));
+}
+
+bool CSSStyleValuePair::updateValueUnitFontStyle(String* value)
+{
     m_valueKind = CSSStyleValuePair::ValueKind::FontStyleValueKind;
     if (STRING_VALUE_IS_STRING("normal")) {
         m_value.m_fontStyle = FontStyleValue::NormalFontStyleValue;
@@ -3233,12 +3405,15 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(std::vector<String*, gc_allo
 
 bool CSSStyleValuePair::updateValueFontSize(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
 {
-    // absolute-size | relative-size | length | percentage | inherit // initial value -> medium
-    //        O      |       O       |   O    |    O       |    O
     if (tokens->size() != 1)
         return false;
+    return updateValueUnitFontSize(tokens->at(0));
+}
 
-    String* value = tokens->at(0);
+bool CSSStyleValuePair::updateValueUnitFontSize(String* value)
+{
+    // absolute-size | relative-size | length | percentage | inherit // initial value -> medium
+    //        O      |       O       |   O    |    O       |    O
     m_valueKind = CSSStyleValuePair::ValueKind::FontSizeValueKind;
     if (STRING_VALUE_IS_STRING("xx-small")) {
         m_value.m_fontSize = FontSizeValue::XXSmallFontSizeValue;
@@ -3266,11 +3441,14 @@ bool CSSStyleValuePair::updateValueFontSize(std::vector<String*, gc_allocator_ig
 
 bool CSSStyleValuePair::updateValueLineHeight(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
 {
-    // <normal> | number | length | percentage | inherit
     if (tokens->size() != 1)
         return false;
+    return updateValueUnitLineHeight(tokens->at(0));
+}
 
-    String* value = tokens->at(0);
+bool CSSStyleValuePair::updateValueUnitLineHeight(String* value)
+{
+    // <normal> | number | length | percentage | inherit
     float result = 0.f;
     if (STRING_VALUE_IS_STRING("normal")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Normal;
@@ -3565,8 +3743,11 @@ bool CSSStyleValuePair::updateValueFontWeight(std::vector<String*, gc_allocator_
 {
     if (tokens->size() != 1)
         return false;
+    return updateValueUnitFontWeight(tokens->at(0));
+}
 
-    String* value = tokens->at(0);
+bool CSSStyleValuePair::updateValueUnitFontWeight(String* value)
+{
     m_valueKind = CSSStyleValuePair::ValueKind::FontWeightValueKind;
 
     // <normal> | bold | bolder | lighter | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | inherit // initial -> normal
