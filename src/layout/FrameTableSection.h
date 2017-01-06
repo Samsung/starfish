@@ -49,6 +49,8 @@ public:
     static FrameTableSection* buildFrameTableSection(Node* sectionNode,
                                                      FrameTreeBuilderContext& ctx,
                                                      bool force = false);
+    static FrameTableSection* createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode);
+
     void calContentWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);

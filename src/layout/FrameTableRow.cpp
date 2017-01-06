@@ -56,6 +56,16 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
     return tableRow;
 }
 
+FrameTableRow* FrameTableRow::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+{
+    ComputedStyle* style = new ComputedStyle(parent->style());
+    style->setDisplay(DisplayValue::TableRowDisplayValue);
+    style->loadResources(parentNode);
+    style->arrangeStyleValues(parent->style(), parentNode);
+
+    return new FrameTableRow(nullptr, style);
+}
+
 FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableCell* childFrame;
