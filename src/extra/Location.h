@@ -53,6 +53,11 @@ public:
         return url()->getHost();
     }
 
+    String* getHostname()
+    {
+        return url()->getHostname();
+    }
+
     String* getPathname()
     {
         return url()->getPathname();
