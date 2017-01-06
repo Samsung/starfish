@@ -2709,7 +2709,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     currentLineWidth += w;
                 }
 
-                ctx.setIsWhiteSpaceAtLast(false);
+                ctx.setIsWhiteSpaceAtLast(true);
             } else if (f->isFrameLineBreak()) {
                 // linebreaks
                 ctx.setResult(currentLineWidth);
