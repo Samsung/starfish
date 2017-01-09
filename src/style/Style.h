@@ -1295,7 +1295,7 @@ public:
         Tag,
         Id,
         Class,
-        PseudoClass, // FIXME: This type is not used but SelectorQuery use this type.
+        PseudoClass,
         PseudoElement,
         AttributeExact, // Example: E[foo="bar"]
         AttributeSet, // Example: E[foo]

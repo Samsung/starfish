@@ -858,6 +858,10 @@ unsigned CSSSelectorList::specificity() const
         CSSSelector* selector = m_selectors[i];
         temp = total + selector->specificityForOneSelector();
 
+        // The negation pseudo-class has another simple selector in own data structure.
+        if (selector->type() == CSSSelector::Type::PseudoClass && selector->pseudoType() == CSSSelector::PseudoType::PseudoNot)
+            temp += total + selector->pseudoSelectorList().at(0)->specificityForOneSelector();
+
         // Clamp each component to its max in the case of overflow.
         if ((temp & idMask) < (total & idMask))
             total |= idMask;
@@ -2798,7 +2802,8 @@ static bool isEmpty(Element* element)
 static unsigned nthChildIndex(Element* element)
 {
     int index = 1;
-    auto matchingRule = [&element](Node* sibling) {
+    auto matchingRule = [&element](Node* sibling)
+    {
         if (sibling->isElement())
             return true;
         else
@@ -2835,6 +2840,9 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return isEmpty(element);
     case CSSSelector::PseudoNthChild:
         return selector->matchNth(nthChildIndex(element));
+    case CSSSelector::PseudoType::PseudoNot:
+        STARFISH_ASSERT(selector->pseudoSelectorList().size() <= 1);
+        return !checkOne(element, selector->pseudoSelectorList().at(0));
     default:
         return false;
     }
