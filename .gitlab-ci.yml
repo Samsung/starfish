@@ -89,6 +89,8 @@ test_regression_test_blink:
   - build
 
 test_regression_test_webkit:
+  tags:
+    - shell_executor
   stage: test
   before_script:
     - git submodule deinit -f .
