@@ -1044,7 +1044,10 @@ CSSSelector* CSSParser::getPseudoSelector()
             token = getToken(true, true);
             if (!token->isSymbol(')'))
                 return nullptr;
+            getToken(false, true);
+
             selector->setNth(ab.first, ab.second);
+
             return selector;
         }
     default:

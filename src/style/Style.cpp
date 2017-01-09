@@ -659,6 +659,20 @@ bool CSSSelector::isSimple(CSSSelectorList* selectorList)
     return false;
 }
 
+bool CSSSelector::matchNth(int count)
+{
+    if (!nthAValue())
+        return count == nthBValue();
+    if (nthAValue() > 0) {
+        if (count < nthBValue())
+            return false;
+        return (count - nthBValue()) % nthAValue() == 0;
+    }
+    if (count > nthBValue())
+        return false;
+    return (nthBValue() - count) % (-nthAValue()) == 0;
+}
+
 String* CSSSelector::value()
 {
     STARFISH_ASSERT(m_type != Tag);
@@ -2771,6 +2785,7 @@ static bool isLastOfType(Element* element)
     return !ret;
 }
 
+
 static bool isEmpty(Element* element)
 {
     for (Node* node = element->firstChild(); node; node = node->nextSibling()) {
@@ -2778,6 +2793,21 @@ static bool isEmpty(Element* element)
             return false;
     }
     return true;
+}
+
+static unsigned nthChildIndex(Element* element)
+{
+    int index = 1;
+    auto matchingRule = [&element](Node* sibling) {
+        if (sibling->isElement())
+            return true;
+        else
+            return false;
+    };
+    for (Node* sibling = Traverse::previousSibling(element, matchingRule); sibling; sibling = Traverse::previousSibling(sibling, matchingRule))
+        index++;
+
+    return index;
 }
 
 bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
@@ -2803,6 +2833,8 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return isFirstOfType(element) && isLastOfType(element);
     case CSSSelector::PseudoType::PseudoEmpty:
         return isEmpty(element);
+    case CSSSelector::PseudoNthChild:
+        return selector->matchNth(nthChildIndex(element));
     default:
         return false;
     }
