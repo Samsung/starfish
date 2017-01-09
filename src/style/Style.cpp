@@ -2816,7 +2816,7 @@ static unsigned nthChildIndex(Element* element)
             return false;
     };
     for (Node* sibling = Traverse::previousSibling(element, matchingRule); sibling; sibling = Traverse::previousSibling(sibling, matchingRule))
-        index++;
+        ++index;
 
     return index;
 }
@@ -2824,7 +2824,6 @@ static unsigned nthChildIndex(Element* element)
 static unsigned nthOfTypeIndex(Element* element)
 {
     int index = 1;
-
     auto matchingRule = [&element](Node* sibling)
     {
         if (sibling->isElement())
@@ -2832,11 +2831,45 @@ static unsigned nthOfTypeIndex(Element* element)
         else
             return false;
     };
-
     String* tag = element->tagName();
     for (Node* sibling = Traverse::previousSibling(element, matchingRule); sibling; sibling = Traverse::previousSibling(sibling, matchingRule)) {
         if (sibling->asElement()->tagName()->equals(tag))
-            index++;
+            ++index;
+    }
+
+    return index;
+}
+
+static unsigned nthLastChildIndex(Element* element)
+{
+    int index = 1;
+    auto matchingRule = [&element](Node* sibling)
+    {
+        if (sibling->isElement())
+            return true;
+        else
+            return false;
+    };
+    for (Node* sibling = Traverse::nextSibling(element, matchingRule); sibling; sibling = Traverse::nextSibling(sibling, matchingRule))
+        ++index;
+
+    return index;
+}
+
+static unsigned nthLastOfTypeIndex(Element* element)
+{
+    int index = 1;
+    auto matchingRule = [&element](Node* sibling)
+    {
+        if (sibling->isElement())
+            return true;
+        else
+            return false;
+    };
+    String* tag = element->tagName();
+    for (Node* sibling = Traverse::nextSibling(element, matchingRule); sibling; sibling = Traverse::nextSibling(sibling, matchingRule)) {
+        if (sibling->asElement()->tagName()->equals(tag))
+            ++index;
     }
 
     return index;
@@ -2866,17 +2899,30 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
     case CSSSelector::PseudoType::PseudoEmpty:
         return isEmpty(element);
     case CSSSelector::PseudoNthChild:
-        return selector->matchNth(nthChildIndex(element));
+        if (Node* parent = element->parentElement())
+            return selector->matchNth(nthChildIndex(element));
+        break;
     case CSSSelector::PseudoNthOfType:
-        return selector->matchNth(nthOfTypeIndex(element));
+        if (Node* parent = element->parentElement())
+            return selector->matchNth(nthOfTypeIndex(element));
+        break;
+    case CSSSelector::PseudoNthLastChild:
+        if (Node* parent = element->parentElement())
+            return selector->matchNth(nthLastChildIndex(element));
+        break;
+    case CSSSelector::PseudoNthLastOfType:
+        if (Node* parent = element->parentElement())
+            return selector->matchNth(nthLastOfTypeIndex(element));
+        break;
     case CSSSelector::PseudoType::PseudoNot:
-        // STARFISH_ASSERT(selector->pseudoSelectorList().size() <= 1);
-        // return !checkOne(element, selector->pseudoSelectorList().at(0));
+        STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
+        return !checkOne(element, selector->pseudoSelectorList().at(0));
         return false;
     default:
-        return false;
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        break;
     }
-    return true;
+    return false;
 }
 
 bool StyleResolver::checkPseudoElement(Element* element, CSSSelector* selector)
