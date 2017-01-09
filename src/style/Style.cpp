@@ -616,6 +616,8 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoLastOfType;
     else if (name->equals(String::fromUTF8("only-child")))
         return CSSSelector::PseudoType::PseudoOnlyChild;
+    else if (name->equals(String::fromUTF8("only-of-type")))
+        return CSSSelector::PseudoType::PseudoOnlyOfType;
     else if (name->equals(String::fromUTF8("first-line")))
         return CSSSelector::PseudoType::PseudoFirstLine;
     else if (name->equals(String::fromUTF8("first-letter")))
@@ -730,7 +732,7 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
 //    case PseudoNthLastOfType:
 //    case PseudoNthOfType:
     case PseudoOnlyChild:
-//    case PseudoOnlyOfType:
+    case PseudoOnlyOfType:
 //    case PseudoOptional:
 //    case PseudoPlaceholderShown:
 //    case PseudoOutOfRange:
@@ -2618,6 +2620,8 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return isLastOfType(element);
     case CSSSelector::PseudoType::PseudoOnlyChild:
         return isFirstChild(element) && isLastChild(element);
+    case CSSSelector::PseudoType::PseudoOnlyOfType:
+        return isFirstOfType(element) && isLastOfType(element);
     default:
         return false;
     }
