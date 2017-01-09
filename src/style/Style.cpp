@@ -688,6 +688,8 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoOnlyChild;
     else if (name->equals(String::fromUTF8("only-of-type")))
         return CSSSelector::PseudoType::PseudoOnlyOfType;
+    else if (name->equals(String::fromUTF8("empty")))
+        return CSSSelector::PseudoType::PseudoEmpty;
     else if (name->equals(String::fromUTF8("first-line")))
         return CSSSelector::PseudoType::PseudoFirstLine;
     else if (name->equals(String::fromUTF8("first-letter")))
@@ -2693,7 +2695,7 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
         else
             return Match::SelectorFailsCompletely;
         }
-    case CSSSelector::RelationType::DirectAdjacent:
+    case CSSSelector::RelationType::AdjacentSibling:
         {
         Element* previousSibling = element->previousElementSibling();
         if (previousSibling && matchSelector(previousSibling, selectorList, idx) == Match::SelectorMatches)
@@ -2701,7 +2703,7 @@ StyleResolver::Match StyleResolver::matchForRelation(Element* element, CSSSelect
         else
             return Match::SelectorFailsCompletely;
         }
-    case CSSSelector::RelationType::IndirectAdjacent:
+    case CSSSelector::RelationType::GeneralSibling:
         {
         Element* previousSibling = element->previousElementSibling();
         while (previousSibling) {
@@ -2769,6 +2771,15 @@ static bool isLastOfType(Element* element)
     return !ret;
 }
 
+static bool isEmpty(Element* element)
+{
+    for (Node* node = element->firstChild(); node; node = node->nextSibling()) {
+        if (node->isElement() || (node->isText() && node->asText()->textContent()->length() > 0))
+            return false;
+    }
+    return true;
+}
+
 bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
 {
     switch (selector->pseudoType()) {
@@ -2790,6 +2801,8 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return isFirstChild(element) && isLastChild(element);
     case CSSSelector::PseudoType::PseudoOnlyOfType:
         return isFirstOfType(element) && isLastOfType(element);
+    case CSSSelector::PseudoType::PseudoEmpty:
+        return isEmpty(element);
     default:
         return false;
     }
