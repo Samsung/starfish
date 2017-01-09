@@ -983,6 +983,9 @@ CSSSelector* CSSParser::getPseudoSelector()
     if (!token->isIdent() && !token->isFunction())
         return nullptr;
 
+    if (token->isIdent() && token->m_value->indexOf('(') != SIZE_MAX)
+        return nullptr;
+
     CSSSelector* selector = new CSSSelector();
     selector->setType(colons == 1 ? CSSSelector::Type::PseudoClass: CSSSelector::Type::PseudoElement);
     selector->setRelation(CSSSelector::RelationType::SubSelector);
