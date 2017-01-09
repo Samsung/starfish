@@ -710,6 +710,12 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoFirstLetter;
     else if (name->equals(String::fromUTF8("nth-child(")))
         return CSSSelector::PseudoType::PseudoNthChild;
+    else if (name->equals(String::fromUTF8("nth-last-child(")))
+        return CSSSelector::PseudoType::PseudoNthLastChild;
+    else if (name->equals(String::fromUTF8("nth-of-type(")))
+        return CSSSelector::PseudoType::PseudoNthOfType;
+    else if (name->equals(String::fromUTF8("nth-last-of-type(")))
+        return CSSSelector::PseudoType::PseudoNthLastOfType;
     else if (name->equals(String::fromUTF8("link")))
         return CSSSelector::PseudoType::PseudoLink;
     else if (name->equals(String::fromUTF8("hover")))
@@ -814,9 +820,9 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
 //    case PseudoNoButton:
     case PseudoNot:
     case PseudoNthChild:
-//    case PseudoNthLastChild:
-//    case PseudoNthLastOfType:
-//    case PseudoNthOfType:
+    case PseudoNthLastChild:
+    case PseudoNthLastOfType:
+    case PseudoNthOfType:
     case PseudoOnlyChild:
     case PseudoOnlyOfType:
 //    case PseudoOptional:
@@ -2815,6 +2821,27 @@ static unsigned nthChildIndex(Element* element)
     return index;
 }
 
+static unsigned nthOfTypeIndex(Element* element)
+{
+    int index = 1;
+
+    auto matchingRule = [&element](Node* sibling)
+    {
+        if (sibling->isElement())
+            return true;
+        else
+            return false;
+    };
+
+    String* tag = element->tagName();
+    for (Node* sibling = Traverse::previousSibling(element, matchingRule); sibling; sibling = Traverse::previousSibling(sibling, matchingRule)) {
+        if (sibling->asElement()->tagName()->equals(tag))
+            index++;
+    }
+
+    return index;
+}
+
 bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
 {
     switch (selector->pseudoType()) {
@@ -2840,6 +2867,8 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return isEmpty(element);
     case CSSSelector::PseudoNthChild:
         return selector->matchNth(nthChildIndex(element));
+    case CSSSelector::PseudoNthOfType:
+        return selector->matchNth(nthOfTypeIndex(element));
     case CSSSelector::PseudoType::PseudoNot:
         // STARFISH_ASSERT(selector->pseudoSelectorList().size() <= 1);
         // return !checkOne(element, selector->pseudoSelectorList().at(0));
