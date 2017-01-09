@@ -1036,6 +1036,9 @@ CSSSelector* CSSParser::getPseudoSelector()
             return selector;
         }
     case CSSSelector::PseudoNthChild:
+    case CSSSelector::PseudoNthLastChild:
+    case CSSSelector::PseudoNthOfType:
+    case CSSSelector::PseudoNthLastOfType:
         {
             std::pair<int, int> ab;
 
