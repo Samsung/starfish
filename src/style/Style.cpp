@@ -2841,8 +2841,9 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
     case CSSSelector::PseudoNthChild:
         return selector->matchNth(nthChildIndex(element));
     case CSSSelector::PseudoType::PseudoNot:
-        STARFISH_ASSERT(selector->pseudoSelectorList().size() <= 1);
-        return !checkOne(element, selector->pseudoSelectorList().at(0));
+        // STARFISH_ASSERT(selector->pseudoSelectorList().size() <= 1);
+        // return !checkOne(element, selector->pseudoSelectorList().at(0));
+        return false;
     default:
         return false;
     }
