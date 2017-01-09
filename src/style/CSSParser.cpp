@@ -931,23 +931,23 @@ void CSSParser::parseSelector(std::vector<CSSSelectorList *, gc_allocator_ignore
 
 CSSSelector::RelationType CSSParser::parseCombinator()
 {
-    CSSSelector::RelationType fallbackResult = CSSSelector::SubSelector;
+    CSSSelector::RelationType fallbackResult = CSSSelector::RelationType::SubSelector;
 
     CSSToken* token = currentToken();
     while (token->isWhiteSpace()) {
         token = getToken(true, true);
-        fallbackResult = CSSSelector::Descendant;
+        fallbackResult = CSSSelector::RelationType::Descendant;
     }
 
     if (token->isSymbol('+')) {
         token = getToken(true, true);
-        return CSSSelector::DirectAdjacent;
+        return CSSSelector::RelationType::AdjacentSibling;
     } else if (token->isSymbol('~')) {
         token = getToken(true, true);
-        return CSSSelector::IndirectAdjacent;
+        return CSSSelector::RelationType::GeneralSibling;
     } else if (token->isSymbol('>')) {
         token = getToken(true, true);
-        return CSSSelector::Child;
+        return CSSSelector::RelationType::Child;
     } else {
         return fallbackResult;
     }

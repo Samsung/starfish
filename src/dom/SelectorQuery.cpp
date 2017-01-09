@@ -294,10 +294,10 @@ void SelectorQuery::findTraverseRootsAndExecute(Node& rootNode, std::vector<Elem
             return;
         }
 
-        if ((*it)->relation() == CSSSelector::SubSelector)
+        if ((*it)->relation() == CSSSelector::RelationType::SubSelector)
             continue;
         isRightmostSelector = false;
-        if ((*it)->relation() == CSSSelector::DirectAdjacent || (*it)->relation() == CSSSelector::IndirectAdjacent)
+        if ((*it)->relation() == CSSSelector::RelationType::AdjacentSibling || (*it)->relation() == CSSSelector::RelationType::GeneralSibling)
             startFromParent = true;
         else
             startFromParent = false;
@@ -520,7 +520,7 @@ SelectorQuery::Match SelectorQuery::matchForRelation(const SelectorCheckingConte
     nextContext.previousElement = context.element;
 
     switch (relation) {
-    case CSSSelector::Descendant:
+    case CSSSelector::RelationType::Descendant:
         for (nextContext.element = context.element->parentElement(); nextContext.element; nextContext.element = nextContext.element->parentElement()) {
             Match match = matchSelector(nextContext, result);
             if (match == SelectorMatches || match == SelectorFailsCompletely)
@@ -530,7 +530,7 @@ SelectorQuery::Match SelectorQuery::matchForRelation(const SelectorCheckingConte
             */
         }
         return SelectorFailsCompletely;
-    case CSSSelector::Child:
+    case CSSSelector::RelationType::Child:
         /*{
             if (context.selector->relationIsAffectedByPseudoContent())
                 return matchForPseudoContent(nextContext, *context.element, result);
@@ -543,10 +543,10 @@ SelectorQuery::Match SelectorQuery::matchForRelation(const SelectorCheckingConte
                 return SelectorFailsCompletely;
             return matchSelector(nextContext, result);
         }*/
-    case CSSSelector::DirectAdjacent:
-    case CSSSelector::IndirectAdjacent:
-    case CSSSelector::SubSelector:
-    case CSSSelector::None:
+    case CSSSelector::RelationType::AdjacentSibling:
+    case CSSSelector::RelationType::GeneralSibling:
+    case CSSSelector::RelationType::SubSelector:
+    case CSSSelector::RelationType::None:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         break;
     }

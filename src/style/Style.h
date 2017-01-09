@@ -1312,8 +1312,8 @@ public:
         SubSelector, // No combinator
         Descendant, // "Space" combinator
         Child, // > combinator
-        DirectAdjacent, // + combinator
-        IndirectAdjacent // ~ combinator
+        AdjacentSibling, // + combinator
+        GeneralSibling // ~ combinator
     };
 
     enum PseudoType {
