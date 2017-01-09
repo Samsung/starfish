@@ -1477,6 +1477,8 @@ public:
         m_nth.m_b = b;
     }
 
+    bool matchNth(int count);
+
     String* attribute()
     {
         STARFISH_ASSERT(isAttributeSelector());
