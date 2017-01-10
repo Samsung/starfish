@@ -216,6 +216,18 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::BorderCollapse);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::BorderCollapseValueKind);
+        data.m_borderCollapse = BorderCollapseValue::SeparateBorderCollapseValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::BorderSpacing);
+        pair.setValueKind(CSSStyleValuePair::Length);
+        pair.setLengthValue("2px");
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 

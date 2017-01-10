@@ -92,6 +92,7 @@ LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
         } else {
             // TODO: measure width for other frameboxes
         }
+        width += paddingLeft() + paddingRight();
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
 
@@ -108,6 +109,7 @@ LayoutUnit FrameTableCell::maximumCellWidth(LayoutContext& ctx)
         } else {
             // TODO
         }
+        width += paddingLeft() + paddingRight();
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
 

@@ -353,6 +353,11 @@ enum BorderWidthValue {
     ThickBorderWidthValue,
 };
 
+enum BorderCollapseValue {
+    SeparateBorderCollapseValue,
+    CollapseBorderCollapseValue,
+};
+
 enum TextDecorationValue {
     NoneTextDecorationValue,
     UnderLineTextDecorationValue,
@@ -408,6 +413,10 @@ class CSSStyleDeclaration;
 // https://www.w3.org/TR/css3-transforms
 // https://www.w3.org/TR/css3-background
 // https://www.w3.org/TR/css3-color
+//
+// The following are for internal use only
+// * border-horizontal-spacing
+// * border-vertical-spacing
 #define FOR_EACH_STYLE_ATTRIBUTE(F)                                \
     F(Color, color, "color")                                       \
     F(Direction, direction, "direction")                           \
@@ -452,6 +461,8 @@ class CSSStyleDeclaration;
     F(BorderRightWidth, borderRightWidth, "border-right-width")    \
     F(BorderBottomWidth, borderBottomWidth, "border-bottom-width") \
     F(BorderLeftWidth, borderLeftWidth, "border-left-width")       \
+    F(BorderCollapse, borderCollapse, "border-collapse")           \
+    F(BorderSpacing, borderSpacing, "border-spacing")              \
     F(TextAlign, textAlign, "text-align")                          \
     F(Transform, transform, "transform")                           \
     F(TransformOrigin, transformOrigin, "transform-origin")        \
@@ -648,6 +659,9 @@ public:
 
         BorderStyleValueKind,
         BorderWidthValueKind,
+
+        // table
+        BorderCollapseValueKind,
 
         OverflowValueKind,
         TextDecorationValueKind,
@@ -894,6 +908,12 @@ public:
         return m_value.m_namedColor;
     }
 
+    BorderCollapseValue borderCollapseValue()
+    {
+        STARFISH_ASSERT(m_valueKind == BorderCollapseValueKind);
+        return m_value.m_borderCollapse;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -922,6 +942,7 @@ public:
         CSSTransformFunctions* m_transforms;
         ::StarFish::Color m_color;
         NamedColorValue m_namedColor;
+        BorderCollapseValue m_borderCollapse;
         ValueData(int v) { m_floatValue = v; }
         ValueData(float v) { m_floatValue = v; }
         ValueData(DisplayValue v) { m_display = v; }
@@ -947,6 +968,7 @@ public:
         ValueData(CSSTransformFunctions* v) { m_transforms = v; }
         ValueData(::StarFish::Color v) { m_color = v; }
         ValueData(NamedColorValue v) { m_namedColor = v; }
+        ValueData(BorderCollapseValue v) { m_borderCollapse = v; }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)

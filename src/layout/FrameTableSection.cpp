@@ -173,29 +173,51 @@ void FrameTableSection::calContentWidth(LayoutContext& ctx)
 
 void FrameTableSection::layoutWidth(LayoutContext& ctx)
 {
+    LayoutUnit xSoFar =
+        LayoutUnit::fromPixel(table()->style()->borderLeftWidth().fixed());
+    LayoutUnit maxWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableRow()) {
             c->asFrameTableRow()->layoutWidth(ctx);
+            c->asFrameBox()->setX(xSoFar);
+            maxWidth = std::max(maxWidth, c->asFrameBox()->width());
         } else {
             // Only FrameTableRow should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+
+    // The width of all rows should be the same, so ideally, the maxWidth
+    // should be the same as the width of any row.
+    setWidth(table()->style()->borderLeftWidth().fixed() +
+             maxWidth +
+             table()->style()->borderRightWidth().fixed());
 }
 
 void FrameTableSection::layoutHeight(LayoutContext& ctx)
 {
-    LayoutUnit ySoFar = 0;
+    LayoutUnit ySoFar =
+        LayoutUnit::fromPixel(table()->style()->borderTopWidth().fixed());
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(table()->style()->borderSpacing().fixed());
+
+    if (firstChild()) {
+        ySoFar += borderSpacing;
+    }
+
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableRow()) {
-            c->asFrameTableRow()->layoutHeight(ctx);
             c->asFrameBox()->setY(ySoFar);
+            c->asFrameTableRow()->layoutHeight(ctx);
             ySoFar += c->asFrameBox()->height();
+            ySoFar += borderSpacing;
         } else {
             // Only FrameTableRow should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+
+    ySoFar += LayoutUnit::fromPixel(table()->style()->borderBottomWidth().fixed());
     setHeight(ySoFar);
 }
 

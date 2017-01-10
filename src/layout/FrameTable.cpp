@@ -179,15 +179,6 @@ void FrameTable::calContentWidth(LayoutContext& ctx)
             collectColumnWidths(m_columnWidths, c->asFrameTableSection()->columnWidths());
         }
     }
-
-    // TODO: need to consider the width of the parent here
-    LayoutUnit contentWidth;
-    for (auto &col : m_columnWidths) {
-        contentWidth += col.maxContentWidth;
-    }
-
-    setContentWidth(contentWidth);
-    computeBorderMarginPadding(contentWidth);
 }
 
 void FrameTable::layoutWidth(LayoutContext& ctx)
@@ -195,15 +186,23 @@ void FrameTable::layoutWidth(LayoutContext& ctx)
     // The width of the caption is limited by the max width of the
     // FrameTableSection. Hence, captions can only be placed after calculating
     // the width of the table, which has already been done by calContentWidth()
+    LayoutUnit maxWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSection()) {
             c->asFrameTableSection()->layoutWidth(ctx);
+            maxWidth = std::max(maxWidth, c->asFrameBox()->width());
         } else if (c->isFrameTableCaption()) {
             c->asFrameTableCaption()->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+
+    // The width of all table sections should be the same,
+    // so getting the max width should be the same as the width of
+    // any table sections.
+    setWidth(maxWidth);
+    computeBorderMarginPadding(width());
 }
 
 void FrameTable::layoutHeight(LayoutContext& ctx)
