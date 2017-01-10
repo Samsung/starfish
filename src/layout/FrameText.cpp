@@ -27,13 +27,11 @@ LayoutUnit FrameText::minimumContentWidth(LayoutContext& ctx)
     // length among these words
     LayoutUnit maxWidthSoFar = 0;
     textDividerForLayout(ctx.starFish(), text(),
-                         [&](String* srcTxt, size_t offset, size_t nextOffset,
-                             bool isWhiteSpace, bool canBreak) {
-        maxWidthSoFar =
-            std::max(maxWidthSoFar,
-                     style()->font()->measureText(StringView(srcTxt,
-                                                             offset, nextOffset)));
-    });
+        [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak)
+        {
+            maxWidthSoFar =
+                std::max(maxWidthSoFar, style()->font()->measureText(StringView(srcTxt, offset, nextOffset)));
+        });
 
     return maxWidthSoFar;
 }
@@ -47,6 +45,5 @@ LayoutUnit FrameText::maximumContentWidth(LayoutContext& ctx)
     // TODO
     return style()->font()->measureText(StringView(text()));
 }
-
 
 }

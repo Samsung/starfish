@@ -51,9 +51,7 @@ class FrameTable : public FrameBlockBox {
 public:
     FrameTable(Node* node, ComputedStyle* style);
 
-    static FrameTable* buildFrameTable(Node* tableNode,
-                                       FrameTreeBuilderContext& ctx,
-                                       bool force = false);
+    static FrameTable* buildFrameTable(Node* tableNode, FrameTreeBuilderContext& ctx, bool force = false);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     void calContentWidth(LayoutContext& ctx);
@@ -92,8 +90,7 @@ public:
     }
 
 private:
-    void collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar,
-                             GCVector<ColStruct>& columnWidths);
+    void collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar, GCVector<ColStruct>& columnWidths);
 
     GCVector<FrameTableCaption*> m_captions;
     GCVector<ColStruct> m_columnWidths;

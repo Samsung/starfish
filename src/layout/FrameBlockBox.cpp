@@ -342,8 +342,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             computeContentWidth();
         }
 
-        if ((isFrameBlockBox() && asFrameBlockBox()->hasBlockFlow()) ||
-            (isFrameTable() && asFrameTable()->hasBlockFlow())) {
+        if ((isFrameBlockBox() && asFrameBlockBox()->hasBlockFlow())
+            || (isFrameTable() && asFrameTable()->hasBlockFlow())) {
             Frame* child = firstChild();
             bool hasOnlySelfCollapsing = true;
 
@@ -448,7 +448,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     LayoutRect visibleRect(0, 0, 0, 0);
 
     if (hasBlockFlow()) {
-        switch(style()->display()) {
+        switch (style()->display()) {
         case BlockDisplayValue:
         case TableCellDisplayValue: // Table cell can start a new block
             contentHeight = layoutBlock(ctx);

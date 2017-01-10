@@ -28,14 +28,17 @@ class FrameTableCell;
 class ColStruct;
 
 struct CellStruct {
-    CellStruct() : cell(nullptr) {}
-    CellStruct(FrameTableCell* cell_) : cell(cell_) {}
+    CellStruct()
+        : cell(nullptr) { }
+    CellStruct(FrameTableCell* cell_)
+        : cell(cell_) { }
 
     FrameTableCell* cell;
 };
 
 struct RowStruct {
-    RowStruct() : tableRow(nullptr) {}
+    RowStruct()
+        : tableRow(nullptr) { }
     RowStruct(FrameTableRow* tableRow);
 
     FrameTableRow* tableRow;
@@ -47,8 +50,7 @@ public:
     FrameTableSection(Node* node, ComputedStyle* style);
 
     static FrameTableSection* buildFrameTableSection(Node* sectionNode,
-                                                     FrameTreeBuilderContext& ctx,
-                                                     bool force = false);
+        FrameTreeBuilderContext& ctx, bool force = false);
     static FrameTableSection* createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode);
 
     void calContentWidth(LayoutContext& ctx);

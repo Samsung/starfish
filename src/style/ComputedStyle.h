@@ -811,7 +811,7 @@ protected:
         DirectionValue m_direction : 2;
         WhiteSpaceValue m_whiteSpace : 1;
         VisibilityValue m_visibility : 1;
-        BorderCollapseValue m_borderCollapse: 1;  // table
+        BorderCollapseValue m_borderCollapse: 1; // table
         Length m_borderSpacing;
     } m_inheritedStyles;
 

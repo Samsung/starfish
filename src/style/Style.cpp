@@ -2397,7 +2397,7 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
         case CSSStyleValuePair::KeyKind::BorderCollapse:
             // separate | collapse | initial | inherit
 
-            switch(cssValues[k].valueKind()) {
+            switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Inherit:
                 style->m_inheritedStyles.m_borderCollapse =
                     parentStyle->m_inheritedStyles.m_borderCollapse;
@@ -2415,7 +2415,7 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
         case CSSStyleValuePair::KeyKind::BorderSpacing:
             // Length | initial | inherit
 
-            switch(cssValues[k].valueKind()) {
+            switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Inherit:
                 style->m_inheritedStyles.m_borderSpacing =
                     parentStyle->m_inheritedStyles.m_borderSpacing;

@@ -38,9 +38,7 @@ public:
         return true;
     }
 
-    static FrameTableRow* buildFrameTableRow(Node* cellNode,
-                                             FrameTreeBuilderContext& ctx,
-                                             bool force = false);
+    static FrameTableRow* buildFrameTableRow(Node* cellNode, FrameTreeBuilderContext& ctx, bool force = false);
     static FrameTableRow* createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode);
 
     void calContentWidth(LayoutContext& ctx);
