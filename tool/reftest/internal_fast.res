@@ -6,6 +6,13 @@ test/internal-test/css/color/color_keyword_1.html
 test/internal-test/css/color/color_keyword_2.html
 test/internal-test/css/color/color_keyword_3.html
 test/internal-test/css/color/color_rgb_rgba_hex.html
+test/internal-test/css/clear/ignore-margin-collapse.html
+test/internal-test/css/clear/ignore-margin-collapse2.html
+test/internal-test/css/clear/ignore-margin-collapse3.html
+test/internal-test/css/clear/ignore-margin-collapse4.html
+test/internal-test/css/clear/ignore-margin-collapse5.html
+test/internal-test/css/clear/ignore-margin-collapse6.html
+test/internal-test/css/clear/ignore-margin-collapse7.html
 test/internal-test/css/display/block.html
 test/internal-test/css/display/block-inline-basic.html
 test/internal-test/css/invalid_value/color-invalid.html

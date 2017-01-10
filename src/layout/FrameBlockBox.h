@@ -326,28 +326,54 @@ public:
         m_canCollapseBottomWithChildren = m_canCollapseWithChildren && !bottomBorderPadding && height.isAuto();
         m_atTopSideOfBlock = true;
     }
+
+    void setMaxPositiveMarginTop(LayoutUnit m)
+    {
+        m_maxPositiveMarginTop = m;
+    }
+
+    LayoutUnit maxPositiveMarginTop()
+    {
+        return m_maxPositiveMarginTop;
+    }
+
+    void setMaxNegativeMarginTop(LayoutUnit m)
+    {
+        m_maxNegativeMarginTop = m;
+    }
+
+    LayoutUnit maxNegativeMarginTop()
+    {
+        return m_maxNegativeMarginTop;
+    }
+
     void setPositiveMargin(LayoutUnit m)
     {
         m_positiveMargin = m;
     }
+
     LayoutUnit positiveMargin()
     {
         return m_positiveMargin;
     }
+
     void setNegativeMargin(LayoutUnit m)
     {
         m_negativeMargin = m;
     }
+
     LayoutUnit negativeMargin()
     {
         return m_negativeMargin;
     }
+
     void setMargin(LayoutUnit pos, LayoutUnit neg)
     {
         STARFISH_ASSERT(pos >= 0 && neg >= 0);
         m_positiveMargin = pos;
         m_negativeMargin = neg;
     }
+
     void setMargin(LayoutUnit val)
     {
         if (val >= 0) {
@@ -356,32 +382,42 @@ public:
             setMargin(0, -val);
         }
     }
+
     bool canCollapseTopWithChildren()
     {
         return m_canCollapseTopWithChildren;
     }
+
     void setAtTopSideOfBlock(bool b) { m_atTopSideOfBlock = b; }
+
     bool atTopSideOfBlock() { return m_atTopSideOfBlock; }
+
     bool canCollapseWithMarginTop()
     {
         return m_atTopSideOfBlock && m_canCollapseTopWithChildren;
     }
+
     bool canCollapseWithMarginBottom()
     {
         return m_canCollapseBottomWithChildren;
     }
+
     bool canCollapseBottomWithChildren()
     {
         return m_canCollapseBottomWithChildren;
     }
+
     void setCanCollapseBottomWithChildren(bool v)
     {
         m_canCollapseBottomWithChildren = v;
     }
+
     bool m_canCollapseWithChildren;
     bool m_canCollapseTopWithChildren;
     bool m_canCollapseBottomWithChildren;
     bool m_atTopSideOfBlock;
+    LayoutUnit m_maxPositiveMarginTop;
+    LayoutUnit m_maxNegativeMarginTop;
     LayoutUnit m_positiveMargin;
     LayoutUnit m_negativeMargin;
 };
@@ -393,6 +429,8 @@ class FrameBlockBox : public FrameBox {
 public:
     FrameBlockBox(Node* node, ComputedStyle* style)
         : FrameBox(node, style)
+        , m_marginInfo(nullptr)
+        , m_heightComputed(false)
     {
         STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
     }
@@ -428,6 +466,26 @@ public:
             }
         }
         return true;
+    }
+
+    void setMarginInfo(MarginInfo * marginInfo)
+    {
+        m_marginInfo = marginInfo;
+    }
+
+    MarginInfo* marginInfo()
+    {
+        return m_marginInfo;
+    }
+
+    void markHeightComputed(bool b)
+    {
+        m_heightComputed = b;
+    }
+
+    bool heightComputed()
+    {
+        return m_heightComputed;
     }
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
@@ -475,8 +533,12 @@ public:
     {
         if (isEstablishesBlockFormattingContext())
             return false;
+
         if (!isNecessaryBlockBox())
             return true;
+
+        if (heightComputed())
+            return false;
 
         if (paddingHeight() || borderHeight()) {
             return false;
@@ -508,7 +570,10 @@ public:
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
+
     std::vector<LineBox*, gc_allocator_ignore_off_page<LineBox*> > m_lineBoxes;
+    MarginInfo* m_marginInfo;
+    bool m_heightComputed;
 };
 
 struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {

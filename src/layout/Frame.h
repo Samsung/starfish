@@ -119,11 +119,14 @@ public:
     }
 
     void registerFloatingBoxes(FrameBox* box);
-    void unregisterFloatingBoxes(LayoutUnit yPosition);
-    LayoutUnit maxHeightDueTofloatingBoxes(LayoutUnit yPosition, ClearValue clearValue);
-    LayoutUnit heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height);
+    void unregisterFloatingBoxes(size_t from);
+    LayoutUnit clearedDistanceToFloatBottom(LayoutUnit yPosition, ClearValue clearValue, size_t* idx = nullptr);
+    LayoutUnit nextDistanceToFloatBottom(LayoutUnit yPosition, LayoutUnit height);
+    void resetLastTopLoc(size_t to);
     LayoutUnit lastTopLoc(FloatValue floating);
     std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right);
+    size_t floatBoxesSize();
+    void reCacheFloatBoxes(size_t from);
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
@@ -222,42 +225,57 @@ public:
     {
         m_blockFormattingContextInfo.back().m_maxPositiveMarginTop = m;
     }
+
     LayoutUnit maxPositiveMarginTop()
     {
         return m_blockFormattingContextInfo.back().m_maxPositiveMarginTop;
     }
+
     void setMaxNegativeMarginTop(LayoutUnit m)
     {
         m_blockFormattingContextInfo.back().m_maxNegativeMarginTop = m;
     }
+
     LayoutUnit maxNegativeMarginTop()
     {
         return m_blockFormattingContextInfo.back().m_maxNegativeMarginTop;
     }
+
     void setMaxMarginTop(LayoutUnit pos, LayoutUnit neg)
     {
         STARFISH_ASSERT(pos >= 0 && neg >= 0);
         m_blockFormattingContextInfo.back().m_maxPositiveMarginTop = pos;
         m_blockFormattingContextInfo.back().m_maxNegativeMarginTop = neg;
     }
+
+    void setMaxPositiveMarginBottom(LayoutUnit m)
+    {
+        m_blockFormattingContextInfo.back().m_maxPositiveMarginBottom = m;
+    }
+
     LayoutUnit maxPositiveMarginBottom()
     {
         return m_blockFormattingContextInfo.back().m_maxPositiveMarginBottom;
     }
+
     void setMaxNegativeMarginBottom(LayoutUnit m)
     {
         m_blockFormattingContextInfo.back().m_maxNegativeMarginBottom = m;
     }
+
     LayoutUnit maxNegativeMarginBottom()
     {
         return m_blockFormattingContextInfo.back().m_maxNegativeMarginBottom;
     }
+
     void setMaxMarginBottom(LayoutUnit pos, LayoutUnit neg)
     {
         STARFISH_ASSERT(pos >= 0 && neg >= 0);
         m_blockFormattingContextInfo.back().m_maxPositiveMarginBottom = pos;
         m_blockFormattingContextInfo.back().m_maxNegativeMarginBottom = neg;
     }
+
+    bool canFloatCollapseWithMarginTop(size_t idx);
 
 private:
     struct BlockFormattingContext {
@@ -294,8 +312,10 @@ private:
 
 class FloatingBoxInfo {
 public:
-    FloatingBoxInfo(FrameBox* box, LayoutLocation loc);
+    FloatingBoxInfo(FrameBox* box, LayoutContext* ctx);
+    void reCache(LayoutContext* ctx);
     FrameBox* box() { return m_box; }
+    bool canLayoutParentCollapseWithMarginTop() { return m_canLayoutParentCollapseWithMarginTop; }
     bool isLeft() { return m_isLeft; }
     LayoutLocation loc() { return m_loc; }
     LayoutUnit top() { return m_top; }
@@ -305,6 +325,7 @@ public:
 private:
     FrameBox* m_box;
     bool m_isLeft;
+    bool m_canLayoutParentCollapseWithMarginTop;
     LayoutLocation m_loc;
     LayoutUnit m_top;
     LayoutUnit m_bottom;
