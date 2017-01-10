@@ -1249,7 +1249,7 @@ String* CSSStyleValuePair::toString()
     case CSSStyleValuePair::ValueKind::Cover:
         return String::fromUTF8("cover");
     case CSSStyleValuePair::ValueKind::Contain:
-        return String::fromUTF8("contain");    
+        return String::fromUTF8("contain");
     case CSSStyleValuePair::ValueKind::BackgroundRepeatValueKind:
         switch (backgroundRepeatValue()) {
         case RepeatRepeatValue:
@@ -2394,6 +2394,42 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 */
             }
             break;
+        case CSSStyleValuePair::KeyKind::BorderCollapse:
+            // separate | collapse | initial | inherit
+
+            switch(cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->m_inheritedStyles.m_borderCollapse =
+                    parentStyle->m_inheritedStyles.m_borderCollapse;
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->m_inheritedStyles.m_borderCollapse =
+                    BorderCollapseValue::SeparateBorderCollapseValue;
+                break;
+            default:
+                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::BorderCollapseValueKind == cssValues[k].valueKind());
+                style->m_inheritedStyles.m_borderCollapse =
+                    cssValues[k].borderCollapseValue();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::BorderSpacing:
+            // Length | initial | inherit
+
+            switch(cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->m_inheritedStyles.m_borderSpacing =
+                    parentStyle->m_inheritedStyles.m_borderSpacing;
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                // TODO: need to get the value from the default style sheet
+                style->m_inheritedStyles.m_borderSpacing = Length(Length::Fixed, 2);
+                break;
+            default:
+                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::Length == cssValues[k].valueKind());
+                style->m_inheritedStyles.m_borderSpacing =
+                    convertValueToLength(cssValues[k].valueKind(), cssValues[k].value());
+            }
+            break;
         case CSSStyleValuePair::KeyKind::LineHeight:
             // <normal> | number | length | percentage | inherit
             if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
@@ -2413,7 +2449,7 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
-#define ADD_RESOLVE_STYLE_POS(POS, pos) \
+#define ADD_RESOLVE_STYLE_POS(POS, pos)       \
         case CSSStyleValuePair::KeyKind::POS: \
             if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
                 style->set##POS(parentStyle->pos()); \
@@ -4155,6 +4191,32 @@ bool CSSStyleValuePair::updateValueZIndex(std::vector<String*, gc_allocator_igno
     return true;
 }
 
+bool CSSStyleValuePair::updateValueBorderCollapse(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    if (tokens->size() != 1) {
+        return false;
+    }
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::BorderCollapseValueKind;
+    if (STRING_VALUE_IS_STRING("separate")) {
+        m_value.m_borderCollapse = BorderCollapseValue::SeparateBorderCollapseValue;
+    } else if (STRING_VALUE_IS_STRING("collapse")) {
+        m_value.m_borderCollapse = BorderCollapseValue::CollapseBorderCollapseValue;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueBorderSpacing(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    if (tokens->size() != 1 && tokens->size() != 2) {
+        return false;
+    }
+    String* value = (*tokens)[0];
+    return updateValueLengthOrPercentOrAuto(value, false);
+}
 
 #ifdef STARFISH_ENABLE_TEST
 void dump(Node* node, unsigned depth)

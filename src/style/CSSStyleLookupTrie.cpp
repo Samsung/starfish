@@ -313,7 +313,13 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Vertical-Align
         // Letter-Spacing
         // Padding-Bottom
+        // Border-Spacing
         switch (data[0]) {
+        case 'b':
+            if (memcmp(data, "border-spacing", 14) == 0) {
+                return CSSStyleKind::BorderSpacing;
+            }
+            break;
         case 'v':
             if (memcmp(data, "vertical-align", 14) == 0) {
                 return CSSStyleKind::VerticalAlign;
@@ -329,6 +335,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
     case 15:
         // Text-Decoration
         // Background-Size
+        // Border-Collapse
         switch (data[0]) {
         case 't':
             if (memcmp(data, "text-decoration", 15) == 0) {
@@ -338,6 +345,9 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'b':
             if (memcmp(data, "background-size", 15) == 0) {
                 return CSSStyleKind::BackgroundSize;
+            }
+            if (memcmp(data, "border-collapse", 15) == 0) {
+                return CSSStyleKind::BorderCollapse;
             }
             break;
         }
@@ -714,6 +724,10 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
         break;
     case 13:
         switch (data[0]) {
+            if (memcmp(data, "borderSpacing", 13) == 0) {
+                return CSSStyleKind::BorderSpacing;
+            }
+            break;
         case 'v':
             if (memcmp(data, "verticalAlign", 13) == 0) {
                 return CSSStyleKind::VerticalAlign;
@@ -744,6 +758,9 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderTopWidth", 14) == 0) {
                 return CSSStyleKind::BorderTopWidth;
+            }
+            if (memcmp(data, "borderCollapse", 14) == 0) {
+                return CSSStyleKind::BorderCollapse;
             }
             break;
         }

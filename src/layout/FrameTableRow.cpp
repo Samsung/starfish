@@ -100,21 +100,33 @@ void FrameTableRow::calContentWidth(LayoutContext& ctx)
 
 void FrameTableRow::layoutWidth(LayoutContext& ctx)
 {
-    int i=0;
     LayoutUnit xSoFar = 0;
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(tableSection()->table()->style()->borderSpacing().fixed());
+
+    if (firstChild()) {
+        xSoFar += borderSpacing;
+    }
+
+    int i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCell()) {
-            c->asFrameBox()->setX(xSoFar);
-            LayoutUnit cellWidth = tableSection()->table()->
-                                       columnWidths()[i].maxContentWidth;
-            c->asFrameTableCell()->setContentWidth(cellWidth);
+            FrameBox* cell = c->asFrameTableCell();
+            cell->setX(xSoFar);
+            xSoFar += cell->borderLeft() + cell->paddingLeft();
+            LayoutUnit cellWidth = tableSection()->table()-> columnWidths()[i].maxContentWidth;
+            cell->setContentWidth(cellWidth);
             xSoFar += cellWidth;
+            xSoFar += cell->paddingRight() + cell->borderRight();
+            xSoFar += borderSpacing;
             i++;
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+
+    setWidth(xSoFar);
 }
 
 void FrameTableRow::layoutHeight(LayoutContext& ctx)
@@ -123,8 +135,10 @@ void FrameTableRow::layoutHeight(LayoutContext& ctx)
     // We traverse the cells first to calculate min/max cell width
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCell()) {
-            c->asFrameTableCell()->layoutHeight(ctx);
-            maxYSoFar = std::max(maxYSoFar, c->asFrameBox()->height());
+            FrameTableCell* cell = c->asFrameTableCell();
+            cell->layoutHeight(ctx);
+            LayoutUnit cellHeight = cell->height();
+            maxYSoFar = std::max(maxYSoFar, cellHeight);
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
