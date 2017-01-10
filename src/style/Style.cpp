@@ -2917,7 +2917,6 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
     case CSSSelector::PseudoType::PseudoNot:
         STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
         return !checkOne(element, selector->pseudoSelectorList().at(0));
-        return false;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         break;
