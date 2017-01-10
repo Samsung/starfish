@@ -27,13 +27,12 @@ namespace StarFish {
 FrameTableRow::FrameTableRow(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
-                    (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr)
+        || (node != nullptr && style == nullptr));
 }
 
 FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
-                                                 FrameTreeBuilderContext& ctx,
-                                                 bool force) {
+    FrameTreeBuilderContext& ctx, bool force) {
     FrameTableRow* tableRow = new FrameTableRow(rowNode, nullptr);
     rowNode->setFrame(tableRow);
 
@@ -79,8 +78,7 @@ FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ct
     }
 
     childFrame = FrameTableCell::buildFrameTableCell(child, ctx, force);
-    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
-                                                 childFrame, child, ctx);
+    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
     STARFISH_ASSERT(childFrame->parent());
     return childFrame;
 }

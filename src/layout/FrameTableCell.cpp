@@ -25,13 +25,12 @@ namespace StarFish {
 FrameTableCell::FrameTableCell(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
-                    (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr)
+        || (node != nullptr && style == nullptr));
 }
 
-FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
-                                                    FrameTreeBuilderContext& ctx,
-                                                    bool force) {
+FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode, FrameTreeBuilderContext& ctx, bool force)
+{
     FrameTableCell* tableCell = new FrameTableCell(cellNode, nullptr);
     cellNode->setFrame(tableCell);
 
@@ -47,8 +46,7 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode,
     return tableCell;
 }
 
-void FrameTableCell::calContentWidth(LayoutContext& ctx,
-                                     Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCell::calContentWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 

@@ -24,13 +24,10 @@ namespace StarFish {
 FrameTableCaption::FrameTableCaption(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
-                    (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }
 
-FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode,
-                                                             FrameTreeBuilderContext& ctx,
-                                                             bool force)
+FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableCaption* tableCaption = new FrameTableCaption(captionNode, nullptr);
     captionNode->setFrame(tableCaption);
@@ -40,7 +37,7 @@ FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode,
     ctx.setCurrentBlockContainer(tableCaption);
     ctx.mergeTextDecorationData(tableCaption->style());
 
-    for(Node* c = captionNode->firstChild(); c; c = c->nextSibling()) {
+    for (Node* c = captionNode->firstChild(); c; c = c->nextSibling()) {
         FrameTreeBuilder::buildTree(c, ctx, force);
     }
 

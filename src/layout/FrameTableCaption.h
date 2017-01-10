@@ -28,8 +28,7 @@ public:
     FrameTableCaption(Node* node, ComputedStyle* style);
 
     static FrameTableCaption* buildFrameTableCaption(Node* captionNode,
-                                                     FrameTreeBuilderContext& ctx,
-                                                     bool force = false);
+        FrameTreeBuilderContext& ctx, bool force = false);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 

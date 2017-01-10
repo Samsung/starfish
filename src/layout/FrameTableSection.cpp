@@ -37,13 +37,11 @@ RowStruct::RowStruct(FrameTableRow* tableRow_)
 FrameTableSection::FrameTableSection(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
-                    (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }
 
-FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode,
-                                                             FrameTreeBuilderContext& ctx,
-                                                             bool force) {
+FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode, FrameTreeBuilderContext& ctx, bool force)
+{
     FrameTableSection* tableSection = new FrameTableSection(sectionNode, nullptr);
     sectionNode->setFrame(tableSection);
 
@@ -74,13 +72,12 @@ FrameTableSection* FrameTableSection::createAnonymousWithParent(FrameBlockBox* p
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
     style->loadResources(parentNode);
-    style->arrangeStyleValues(parent->style(),parentNode);
+    style->arrangeStyleValues(parent->style(), parentNode);
 
     return new FrameTableSection(nullptr, style);
 }
 
-FrameTableRow* FrameTableSection::addChild(Node* child,
-                                           FrameTreeBuilderContext& ctx, bool force)
+FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableRow* childFrame;
     if (!child->isTableRow()) {
@@ -122,8 +119,7 @@ FrameTableRow* FrameTableSection::addChild(Node* child,
     }
 
     childFrame = FrameTableRow::buildFrameTableRow(child, ctx, force);
-    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
-                                                 childFrame, child, ctx);
+    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
     STARFISH_ASSERT(childFrame->parent());
     return childFrame;
 }
@@ -190,8 +186,7 @@ void FrameTableSection::layoutWidth(LayoutContext& ctx)
     // The width of all rows should be the same, so ideally, the maxWidth
     // should be the same as the width of any row.
     setWidth(table()->style()->borderLeftWidth().fixed() +
-             maxWidth +
-             table()->style()->borderRightWidth().fixed());
+        maxWidth + table()->style()->borderRightWidth().fixed());
 }
 
 void FrameTableSection::layoutHeight(LayoutContext& ctx)

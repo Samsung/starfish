@@ -50,17 +50,15 @@ public:
 FrameTable::FrameTable(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr) ||
-                    (node != nullptr && style == nullptr));
+    STARFISH_ASSERT((node == nullptr && style != nullptr)
+        || (node != nullptr && style == nullptr));
 }
 
-FrameTable* FrameTable::buildFrameTable(Node* tableNode,
-                                        FrameTreeBuilderContext& ctx,
-                                        bool force)
+FrameTable* FrameTable::buildFrameTable(Node* tableNode, FrameTreeBuilderContext& ctx, bool force)
 {
+
     FrameTable* tableWrapper = new FrameTable(tableNode, nullptr);
-    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
-                                                 tableWrapper, tableNode, ctx);
+    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), tableWrapper, tableNode, ctx);
     tableNode->setFrame(tableWrapper);
 
     // Table establishes a new block context
@@ -89,7 +87,7 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
         // TODO
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     } else if (child->isTableSection()) {
-        switch(child->style()->display()) {
+        switch (child->style()->display()) {
         case DisplayValue::TableHeaderGroupDisplayValue:
             // TODO
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -109,8 +107,7 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
     }
 
     if (!wrapInAnnoymousSection) {
-        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(),
-                                                     childFrame, child, ctx);
+        FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
         STARFISH_ASSERT(childFrame->parent());
         return;
     }
@@ -221,8 +218,7 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 }
 
-void FrameTable::collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar,
-                                     GCVector<ColStruct>& columnWidths)
+void FrameTable::collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar, GCVector<ColStruct>& columnWidths)
 {
     // FIXME: absolute at this stage
     // Need to consider absolute and logical columns

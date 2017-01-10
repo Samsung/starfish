@@ -573,8 +573,8 @@ public:
 
     FrameBox* asFrameBox()
     {
-        STARFISH_ASSERT(isFrameBox() || isFrameTable() || isFrameTableCaption() ||
-                        isFrameTableSection() || isFrameTableRow() || isFrameTableCell());
+        STARFISH_ASSERT(isFrameBox() || isFrameTable() || isFrameTableCaption()
+            || isFrameTableSection() || isFrameTableRow() || isFrameTableCell());
         return (FrameBox*)this;
     }
 
