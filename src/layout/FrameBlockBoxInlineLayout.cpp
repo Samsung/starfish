@@ -1445,26 +1445,26 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool hasMor
         // If there are no more inline boxes appended to the line box, the height for content depends on
         // if the block container box established new block formatting context, but still
         // for the positioning of following floating boxes, y position should be considered.
-        if (hasMoreInlineBoxes || m_pendingInlineBoxes.size() > 0) {
+        if (hasMoreInlineBoxes) {
             if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
-                height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+                height = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, height);
                 lineBox->markHeightComputed();
             }
             lineBox->setHeight(height);
         } else {
             if (m_block.isEstablishesBlockFormattingContext()) {
                 if (m_pendingFloatBoxes.size() == 0) {
-                    height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, BothClearValue));
+                    height = std::max(height, m_layoutContext.clearedDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, BothClearValue));
                     lineBox->markHeightComputed();
                 } else if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
-                    height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+                    height = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, height);
                     lineBox->markHeightComputed();
                 }
                 lineBox->setHeight(height);
             } else {
                 lineBox->setHeight(height);
                 if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
-                    height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+                    height = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, height);
                 }
             }
         }
@@ -1605,18 +1605,18 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
     reComputeVerticalProperties:
     LayoutUnit height = computeVerticalProperties(back, m_block.style(), ascender, descender, *this, dueToBr, isInLineBox);
     if (m_hasFloat != HasNone) {
-        LayoutUnit floatHeight = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, 0);
-        if ((!firstChecked || m_pendingFloatBoxNumsBeforeCurrentLine > 0) && floatHeight != 0 && height > floatHeight) {
+        LayoutUnit nextDistanceToFloatBottom = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, 0);
+        if ((!firstChecked || m_pendingFloatBoxNumsBeforeCurrentLine > 0) && nextDistanceToFloatBottom != 0 && height > nextDistanceToFloatBottom) {
             removeAllInlineBoxes();
             m_hasFloat = HasNone;
-            initLineBox(back, floatHeight + 1);
+            initLineBox(back, nextDistanceToFloatBottom + 1);
             firstChecked = true;
             m_currentLineWidth = 0;
             m_accumulatedFloatLeftWidth = 0;
             m_accumulatedFloatRightWidth = 0;
             m_floatBoxY = 0;
             m_shouldLineBreakForabsolutePositionedBlock = false;
-            insertPendingFloatingBoxes(isInLineBox, false, false, floatHeight);
+            insertPendingFloatingBoxes(isInLineBox, false, false, nextDistanceToFloatBottom);
             insertPendingInlineBoxesDueToFloatinBoxes();
 
             if (m_pendingInlineBoxes.size() > 0) {
@@ -2179,7 +2179,12 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 
     LayoutRect visibleRect(0, 0, 0, 0);
     LayoutUnit inlineContentWidth = contentWidth();
-    LineFormattingContext lineFormattingContext(*this, ctx, paddingLeft() + borderLeft(), paddingTop() + borderTop(), inlineContentWidth);
+    LayoutUnit top = paddingTop() + borderTop();
+    LayoutUnit bottom = paddingBottom() + borderBottom();
+    LayoutUnit left = paddingLeft() + borderLeft();
+    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() || isFrameDocument(), style()->height());
+    setMarginInfo(&marginInfo);
+    LineFormattingContext lineFormattingContext(*this, ctx, left, top, inlineContentWidth);
     LayoutUnit unused;
 
     // compute directions
@@ -2570,12 +2575,11 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
         } else {
             Frame* child = firstChild();
             while (child) {
-                if (child->isNormalFlow()) {
-                    LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
-                    ComputePreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
-                    child->computePreferredWidth(newCtx);
-                    ctx.setResult(newCtx.result() + mbp);
-                }
+                STARFISH_ASSERT(child->isNormalFlow());
+                LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
+                ComputePreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
+                child->computePreferredWidth(newCtx);
+                ctx.setResult(newCtx.result() + mbp);
                 child = child->next();
             }
         }

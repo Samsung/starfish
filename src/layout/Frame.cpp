@@ -88,12 +88,26 @@ Frame* LayoutContext::containingBlock(Frame* currentFrame)
     }
 }
 
-FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutLocation loc)
+FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     : m_box(box)
-    , m_loc(loc)
 {
     STARFISH_ASSERT(box->style()->floating() != NoneFloatValue);
     m_isLeft = box->style()->floating() == LeftFloatValue;
+    Frame* parent = box->layoutParent();
+    while (parent) {
+        if (parent->isFrameBlockBox() && parent->node()) {
+            m_canLayoutParentCollapseWithMarginTop = parent->asFrameBlockBox()->marginInfo()->canCollapseWithMarginTop();
+            break;
+        }
+
+        parent = parent->layoutParent();
+    }
+    reCache(ctx);
+}
+
+void FloatingBoxInfo::reCache(LayoutContext* ctx)
+{
+    m_loc = m_box->absolutePoint(ctx->frameDocument());
     m_top = m_loc.y() - m_box->marginTop();
     m_bottom = m_loc.y() + m_box->height() + m_box->marginBottom();
     if (m_isLeft) {
@@ -106,28 +120,17 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutLocation loc)
 void LayoutContext::registerFloatingBoxes(FrameBox* box)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
-    LayoutLocation loc = box->absolutePoint(m_frameDocument);
-    FloatingBoxInfo fbi = FloatingBoxInfo(box, loc);
+    FloatingBoxInfo fbi = FloatingBoxInfo(box, this);
     c.m_floatBoxes->push_back(fbi);
-    if (fbi.isLeft()) {
-        c.m_lastLeftTopFloatBoxLoc = fbi.loc().y();
-    } else {
-        c.m_lastRightFloatTopLoc = fbi.loc().y();
-    }
 }
 
-void LayoutContext::unregisterFloatingBoxes(LayoutUnit yPosition)
+void LayoutContext::unregisterFloatingBoxes(size_t from)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
-    auto iter = c.m_floatBoxes->begin();
+    auto iter = c.m_floatBoxes->begin() + from;
     while (iter != c.m_floatBoxes->end()) {
-        FloatingBoxInfo f = *iter;
-        if (f.bottom() < yPosition) {
-            iter = c.m_floatBoxes->erase(iter);
-        } else {
-            iter++;
-        }
+        iter = c.m_floatBoxes->erase(iter);
     }
 }
 
@@ -146,97 +149,150 @@ static bool floatAffected(LayoutUnit yPosition, LayoutUnit height, FloatingBoxIn
     }
 }
 
-LayoutUnit LayoutContext::maxHeightDueTofloatingBoxes(LayoutUnit yPosition, ClearValue clearValue)
+LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, ClearValue clearValue, size_t* idx)
 {
     bool hasLeft = false, hasRight = false;
-    LayoutUnit maxLeftHeight;
-    LayoutUnit maxRightHeight;
+    LayoutUnit clearedDistanceToLeftFloatBottom;
+    LayoutUnit clearedDistanceToRightFloatBottom;
+    size_t leftIdx = 0, rightIdx = 0;
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     if (clearValue == BothClearValue) {
-        for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+        for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
             FloatingBoxInfo f = c.m_floatBoxes->at(i);
             if (f.isLeft()) {
                 if (!hasLeft) {
-                    maxLeftHeight = f.bottom();
+                    clearedDistanceToLeftFloatBottom = f.bottom();
                     hasLeft = true;
+                    leftIdx = i;
                 } else {
-                    maxLeftHeight = std::max(maxLeftHeight, f.bottom());
+                    if (clearedDistanceToLeftFloatBottom < f.bottom()) {
+                        leftIdx = i;
+                        clearedDistanceToLeftFloatBottom = f.bottom();
+                    }
                 }
             } else {
                 if (!hasRight) {
-                    maxRightHeight = f.bottom();
+                    clearedDistanceToRightFloatBottom = f.bottom();
                     hasRight = true;
+                    rightIdx = i;
                 } else {
-                    maxRightHeight = std::max(maxRightHeight, f.bottom());
+                    if (clearedDistanceToRightFloatBottom < f.bottom()) {
+                        rightIdx = i;
+                        clearedDistanceToRightFloatBottom = f.bottom();
+                    }
                 }
             }
         }
 
         if (hasLeft) {
             if (hasRight) {
-                return std::max(maxLeftHeight, maxRightHeight) - yPosition;
+                if (clearedDistanceToLeftFloatBottom < clearedDistanceToRightFloatBottom) {
+                    if (idx) {
+                        *idx = rightIdx;
+                    }
+                    return clearedDistanceToRightFloatBottom - yPosition;
+                } else {
+                    if (idx) {
+                        *idx = leftIdx;
+                    }
+                    return clearedDistanceToLeftFloatBottom - yPosition;
+                }
             } else {
-                return maxLeftHeight - yPosition;
+                if (idx) {
+                    *idx = leftIdx;
+                }
+                return clearedDistanceToLeftFloatBottom - yPosition;
             }
         } else {
             if (hasRight) {
-                return maxRightHeight - yPosition;
+                if (idx) {
+                    *idx = rightIdx;
+                }
+                return clearedDistanceToRightFloatBottom - yPosition;
             } else {
+                if (idx) {
+                    *idx = SIZE_MAX;
+                }
                 return 0;
             }
         }
     } else if (clearValue == LeftClearValue) {
-        for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+        for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
             FloatingBoxInfo f = c.m_floatBoxes->at(i);
             if (f.isLeft()) {
                 if (!hasLeft) {
-                    maxLeftHeight = f.bottom();
+                    clearedDistanceToLeftFloatBottom = f.bottom();
                     hasLeft = true;
+                    leftIdx = i;
                 } else {
-                    maxLeftHeight = std::max(maxLeftHeight, f.bottom());
+                    if (clearedDistanceToLeftFloatBottom < f.bottom()) {
+                        leftIdx = i;
+                        clearedDistanceToLeftFloatBottom = f.bottom();
+                    }
                 }
             }
         }
 
         if (hasLeft) {
-            return maxLeftHeight - yPosition;
+            if (idx) {
+                *idx = leftIdx;
+            }
+            return clearedDistanceToLeftFloatBottom - yPosition;
         } else {
+            if (idx) {
+                *idx = SIZE_MAX;
+            }
             return 0;
         }
-    } else {
-        for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+    } else if (clearValue == RightClearValue) {
+        for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
             FloatingBoxInfo f = c.m_floatBoxes->at(i);
             if (!f.isLeft()) {
                 if (!hasRight) {
-                    maxRightHeight = f.bottom();
+                    clearedDistanceToRightFloatBottom = f.bottom();
                     hasRight = true;
+                    rightIdx = i;
                 } else {
-                    maxRightHeight = std::max(maxRightHeight, f.bottom());
+                    if (clearedDistanceToRightFloatBottom < f.bottom()) {
+                        rightIdx = i;
+                        clearedDistanceToRightFloatBottom = f.bottom();
+                    }
                 }
             }
         }
 
         if (hasRight) {
-            return maxRightHeight - yPosition;
+            if (idx) {
+                *idx = rightIdx;
+            }
+            return clearedDistanceToRightFloatBottom - yPosition;
         } else {
+            if (idx) {
+                *idx = SIZE_MAX;
+            }
             return 0;
         }
+    } else {
+        if (idx) {
+            *idx = SIZE_MAX;
+        }
+        return 0;
     }
 }
 
-LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutUnit height)
+LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, LayoutUnit height)
 {
     bool hasLeft = false, hasRight = false;
-    LayoutUnit lastLeftHeight;
-    LayoutUnit lastRightHeight;
+    LayoutUnit lastDistanceToLeftFloatBottom;
+    LayoutUnit lastDistanceToRightFloatBottom;
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
 #ifndef NDEBUG
     LayoutUnit leftX, rightX, leftY, rightY;
 #endif
 
-    for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+    for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
         FloatingBoxInfo f = c.m_floatBoxes->at(i);
         if (floatAffected(yPosition, height, f)) {
             if (f.isLeft()) {
@@ -253,7 +309,7 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutU
                 leftX = f.loc().x() - f.box()->marginLeft();
 #endif
                 hasLeft = true;
-                lastLeftHeight = f.bottom();
+                lastDistanceToLeftFloatBottom = f.bottom();
             } else {
 #ifndef NDEBUG
                 if (hasRight) {
@@ -268,20 +324,20 @@ LayoutUnit LayoutContext::heightDueTofloatingBoxes(LayoutUnit yPosition, LayoutU
                 rightX = f.loc().x() - f.box()->marginLeft();
 #endif
                 hasRight = true;
-                lastRightHeight = f.bottom();
+                lastDistanceToRightFloatBottom = f.bottom();
             }
         }
     }
 
     if (hasLeft) {
         if (hasRight) {
-            return std::min(lastLeftHeight, lastRightHeight) - yPosition;
+            return std::min(lastDistanceToLeftFloatBottom, lastDistanceToRightFloatBottom) - yPosition;
         } else {
-            return lastLeftHeight - yPosition;
+            return lastDistanceToLeftFloatBottom - yPosition;
         }
     } else {
         if (hasRight) {
-            return lastRightHeight - yPosition;
+            return lastDistanceToRightFloatBottom - yPosition;
         } else {
             return 0;
         }
@@ -292,7 +348,7 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit 
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
-    for (size_t i = 0; i < c.m_floatBoxes->size(); i ++) {
+    for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
         FloatingBoxInfo f = c.m_floatBoxes->at(i);
         if (floatAffected(yPosition, height, f)) {
             LayoutUnit x = f.horizontalBoundary();
@@ -311,6 +367,31 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit 
     return std::make_pair(left, right);
 }
 
+void LayoutContext::resetLastTopLoc(size_t to)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+    bool leftChecked = false, rightChecked = false;
+
+    for (size_t i = c.m_floatBoxes->size() - 1; i != SIZE_MAX && i >= to; i--) {
+        FloatingBoxInfo fbi = c.m_floatBoxes->at(i);
+        if (fbi.isLeft()) {
+            if (!leftChecked) {
+                c.m_lastLeftTopFloatBoxLoc = fbi.loc().y();
+                leftChecked = true;
+                if (rightChecked)
+                    return;
+            }
+        } else {
+            if (!rightChecked) {
+                c.m_lastRightFloatTopLoc = fbi.loc().y();
+                rightChecked = true;
+                if (leftChecked)
+                    return;
+            }
+        }
+    }
+}
+
 LayoutUnit LayoutContext::lastTopLoc(FloatValue floating)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
@@ -320,6 +401,36 @@ LayoutUnit LayoutContext::lastTopLoc(FloatValue floating)
     } else {
         return c.m_lastRightFloatTopLoc;
     }
+}
+
+size_t LayoutContext::floatBoxesSize()
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    return c.m_floatBoxes->size();
+}
+
+void LayoutContext::reCacheFloatBoxes(size_t from)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    for (size_t i = from; i < c.m_floatBoxes->size(); i++) {
+        FloatingBoxInfo fbi = c.m_floatBoxes->at(i);
+        fbi.reCache(this);
+    }
+
+    resetLastTopLoc(from);
+}
+
+bool LayoutContext::canFloatCollapseWithMarginTop(size_t idx)
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    if (idx == SIZE_MAX)
+        return false;
+
+    FloatingBoxInfo fbi = c.m_floatBoxes->at(idx);
+    return fbi.canLayoutParentCollapseWithMarginTop();
 }
 
 LayoutUnit LayoutContext::parentContentWidth(Frame* currentFrame)
@@ -378,7 +489,7 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
 void LayoutContext::registerYPositionForVerticalAlignInlineBlock(LineBox* lb)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
-    for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i ++) {
+    for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i++) {
         (*c.m_registeredYPositionForVerticalAlignInlineBlock)[c.m_inlineBlockBoxStack->at(i)] = lb->absolutePoint(c.m_inlineBlockBoxStack->at(i)).y() + lb->ascender();
     }
 }
