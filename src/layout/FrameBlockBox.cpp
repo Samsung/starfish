@@ -447,15 +447,9 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     LayoutUnit contentHeight;
     LayoutRect visibleRect(0, 0, 0, 0);
 
-    if (hasBlockFlow()) {
-        switch (style()->display()) {
-        case BlockDisplayValue:
-        case TableCellDisplayValue: // Table cell can start a new block
-            contentHeight = layoutBlock(ctx);
-            break;
-        default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+    if (hasBlockFlow()
+        || (hasBlockFlow() && style()->display() == TableCellDisplayValue)) {
+        contentHeight = layoutBlock(ctx);
     } else {
         contentHeight = layoutInline(ctx);
     }
