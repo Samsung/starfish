@@ -191,12 +191,11 @@ void FrameTableSection::layoutWidth(LayoutContext& ctx)
 
 void FrameTableSection::layoutHeight(LayoutContext& ctx)
 {
-    LayoutUnit ySoFar =
-        LayoutUnit::fromPixel(table()->style()->borderTopWidth().fixed());
+    LayoutUnit ySoFar = 0;
     LayoutUnit borderSpacing =
         LayoutUnit::fromPixel(table()->style()->borderSpacing().fixed());
 
-    if (firstChild()) {
+    if (isFirstTableSection()) {
         ySoFar += borderSpacing;
     }
 
@@ -212,8 +211,21 @@ void FrameTableSection::layoutHeight(LayoutContext& ctx)
         }
     }
 
-    ySoFar += LayoutUnit::fromPixel(table()->style()->borderBottomWidth().fixed());
     setHeight(ySoFar);
+}
+
+bool FrameTableSection::isFirstTableSection()
+{
+    for (Frame* c = table()->firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSection()) {
+            if (c == this) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return false;
 }
 
 void FrameTableSection::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)

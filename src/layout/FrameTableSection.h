@@ -100,7 +100,7 @@ public:
 
 private:
     void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-
+    bool isFirstTableSection();
     // represent the logical table structure
     GCVector<RowStruct> m_grid;
     GCVector<ColStruct> m_columnWidths;
