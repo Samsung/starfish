@@ -384,51 +384,6 @@ static LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* 
     return ascenderInOut - descenderInOut;
 }
 
-static FrameBox* findFirstInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
-{
-    auto iter = b->boxes().begin();
-    while (iter != b->boxes().end()) {
-        FrameBox* f = *iter;
-        if (f->asFrameBox()->isInlineBox()) {
-            InlineBox* ib = f->asFrameBox()->asInlineBox();
-            if (ib->isInlineNonReplacedBox()) {
-                auto r = findFirstInlineBoxNonReplacedBoxCase(ib->asInlineNonReplacedBox());
-                if (r) {
-                    return r;
-                }
-            } else {
-                return ib;
-            }
-        } else if (f->isNormalFlow()) {
-            return *iter;
-        }
-        iter++;
-    }
-
-    return nullptr;
-}
-
-static FrameBox* findFirstInlineBox(LineBox* lb)
-{
-    for (size_t i = 0; i < lb->boxes().size(); i++) {
-        if (lb->boxes()[i]->isInlineBox()) {
-            InlineBox* b = lb->boxes()[i]->asInlineBox();
-            if (b->isInlineNonReplacedBox()) {
-                auto r = findFirstInlineBoxNonReplacedBoxCase(b->asInlineNonReplacedBox());
-                if (r) {
-                    return r;
-                }
-            } else {
-                return b;
-            }
-        } else if (lb->boxes()[i]->isNormalFlow()) {
-            return lb->boxes()[i];
-        }
-    }
-
-    return nullptr;
-}
-
 static FrameBox* findLastInlineBoxNonReplacedBoxCase(InlineNonReplacedBox* b)
 {
     auto iter = b->boxes().rbegin();
@@ -1217,7 +1172,7 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool is
         }
 
         // TODO: considering unprocessedWidth
-        if (((onlyAllowBeforeCurrentLine && m_pendingFloatBoxNumsBeforeCurrentLine > 0) || !onlyAllowBeforeCurrentLine)
+        if ((m_pendingFloatBoxNumsBeforeCurrentLine > 0 || !onlyAllowBeforeCurrentLine)
             && canInsertFloatingBox(this, box)
             && dontBreakLine(this, box, box->width() + box->marginWidth(), 0)) {
             layoutLineBoxDueToFloatBox(box);
@@ -1384,17 +1339,6 @@ void LineFormattingContext::removeDanglingSpaceFromLine()
 {
     LineBox* lineBox = currentLine();
 
-    FrameBox* first = nullptr;
-    while ((first = findFirstInlineBox(lineBox)) && first->isInlineBox() && first->asInlineBox()->isInlineTextBox()) {
-        const StringView& sv = first->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
-        if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ') {
-            removeBoxFromLine(first);
-            m_currentLineWidth -= first->width();
-        } else {
-            break;
-        }
-    }
-
     FrameBox* last = nullptr;
     while ((last = findLastInlineBox(lineBox)) && last->isInlineBox() && last->asInlineBox()->isInlineTextBox()) {
         const StringView& sv = last->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
@@ -1526,9 +1470,16 @@ void LineFormattingContext::removeAllInlineBoxes()
     LineBox* lineBox = currentLine();
     auto iter = lineBox->boxes().begin();
 
+    size_t index = m_pendingInlineBoxes.size();
+
     while (iter != lineBox->boxes().end()) {
         (*iter)->setY(0); // already its y position is somehow determined, so we have to reset the y value.
-        m_pendingInlineBoxes.insert(m_pendingInlineBoxes.begin(), *iter);
+        if (index == 0) {
+            m_pendingInlineBoxes.push_back(*iter);
+        } else {
+            m_pendingInlineBoxes.insert(m_pendingInlineBoxes.begin() + index, *iter);
+            index++;
+        }
         iter = lineBox->boxes().erase(iter);
     }
 }
@@ -1550,11 +1501,21 @@ void LineFormattingContext::sortInlineBoxes()
 
 void LineFormattingContext::insertPendingInlineBoxesDueToFloatinBoxes()
 {
+    bool firstWhite = true;
     auto iter = m_pendingInlineBoxes.begin();
 
     while (iter != m_pendingInlineBoxes.end()) {
         FrameBox* box = *iter;
 
+        if (firstWhite && box->isInlineBox() && box->asInlineBox()->isInlineTextBox()) {
+            const StringView& sv = box->asInlineBox()->asInlineTextBox()->textRun().m_stringView;
+            if (sv.length() == 1 && sv.originalString()->charAt(sv.start()) == ' ') {
+                iter = m_pendingInlineBoxes.erase(iter);
+                continue;
+            }
+        }
+
+        firstWhite = false;
         if (box->style()->floating() == NoneFloatValue) {
             // TODO: considering unprocessedWidth
             if (dontBreakLine(this, box, box->width() + box->marginWidth(), 0)) {
