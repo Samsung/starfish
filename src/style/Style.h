@@ -358,6 +358,11 @@ enum BorderCollapseValue {
     CollapseBorderCollapseValue,
 };
 
+enum CaptionSideValue {
+    TopCaptionSideValue,
+    BottomCaptionSideValue,
+};
+
 enum TextDecorationValue {
     NoneTextDecorationValue,
     UnderLineTextDecorationValue,
@@ -463,6 +468,7 @@ class CSSStyleDeclaration;
     F(BorderLeftWidth, borderLeftWidth, "border-left-width")       \
     F(BorderCollapse, borderCollapse, "border-collapse")           \
     F(BorderSpacing, borderSpacing, "border-spacing")              \
+    F(CaptionSide, CaptionSide, "caption-side")                    \
     F(TextAlign, textAlign, "text-align")                          \
     F(Transform, transform, "transform")                           \
     F(TransformOrigin, transformOrigin, "transform-origin")        \
@@ -662,6 +668,7 @@ public:
 
         // table
         BorderCollapseValueKind,
+        CaptionSideValueKind,
 
         OverflowValueKind,
         TextDecorationValueKind,
@@ -914,6 +921,12 @@ public:
         return m_value.m_borderCollapse;
     }
 
+    CaptionSideValue captionSideValue()
+    {
+        STARFISH_ASSERT(m_valueKind == CaptionSideValueKind);
+        return m_value.m_captionSide;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -943,6 +956,7 @@ public:
         ::StarFish::Color m_color;
         NamedColorValue m_namedColor;
         BorderCollapseValue m_borderCollapse;
+        CaptionSideValue m_captionSide;
         ValueData(int v) { m_floatValue = v; }
         ValueData(float v) { m_floatValue = v; }
         ValueData(DisplayValue v) { m_display = v; }
@@ -969,6 +983,7 @@ public:
         ValueData(::StarFish::Color v) { m_color = v; }
         ValueData(NamedColorValue v) { m_namedColor = v; }
         ValueData(BorderCollapseValue v) { m_borderCollapse = v; }
+        ValueData(CaptionSideValue v) { m_captionSide = v; }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)

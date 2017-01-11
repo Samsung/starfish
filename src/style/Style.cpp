@@ -2430,6 +2430,21 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                     convertValueToLength(cssValues[k].valueKind(), cssValues[k].value());
             }
             break;
+        case CSSStyleValuePair::KeyKind::CaptionSide:
+            // top | bottom | initial | inherit
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                style->m_inheritedStyles.m_captionSide =
+                    parentStyle->m_inheritedStyles.m_captionSide;
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->m_inheritedStyles.m_captionSide = CaptionSideValue::TopCaptionSideValue;
+                break;
+            default:
+                STARFISH_ASSERT(CSSStyleValuePair::ValueKind::CaptionSideValueKind == cssValues[k].valueKind());
+                style->m_inheritedStyles.m_captionSide = cssValues[k].captionSideValue();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::LineHeight:
             // <normal> | number | length | percentage | inherit
             if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
@@ -4191,7 +4206,7 @@ bool CSSStyleValuePair::updateValueZIndex(std::vector<String*, gc_allocator_igno
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderCollapse(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+bool CSSStyleValuePair::updateValueBorderCollapse(GCVector<String*>* tokens)
 {
     if (tokens->size() != 1) {
         return false;
@@ -4209,13 +4224,31 @@ bool CSSStyleValuePair::updateValueBorderCollapse(std::vector<String*, gc_alloca
     return true;
 }
 
-bool CSSStyleValuePair::updateValueBorderSpacing(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+bool CSSStyleValuePair::updateValueBorderSpacing(GCVector<String*>* tokens)
 {
     if (tokens->size() != 1 && tokens->size() != 2) {
         return false;
     }
     String* value = (*tokens)[0];
     return updateValueLengthOrPercentOrAuto(value, false);
+}
+
+bool CSSStyleValuePair::updateValueCaptionSide(GCVector<String*>* tokens)
+{
+    if (tokens->size() != 1) {
+        return false;
+    }
+
+    String* value = (*tokens)[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::CaptionSideValueKind;
+    if (STRING_VALUE_IS_STRING("top")) {
+        m_value.m_captionSide = CaptionSideValue::TopCaptionSideValue;
+    } else if (STRING_VALUE_IS_STRING("bottom")) {
+        m_value.m_captionSide = CaptionSideValue::BottomCaptionSideValue;
+    } else {
+        return false;
+    }
+    return true;
 }
 
 #ifdef STARFISH_ENABLE_TEST
