@@ -49,9 +49,9 @@ class FrameTableSection : public FrameBlockBox {
 public:
     FrameTableSection(Node* node, ComputedStyle* style);
 
-    static FrameTableSection* buildFrameTableSection(Node* sectionNode,
+    static FrameTableSection* buildFrameTableSection(Node* current,
         FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableSection* createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode);
+    static FrameTableSection* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     void calContentWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);

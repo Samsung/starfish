@@ -172,7 +172,7 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
 
             STARFISH_ASSERT(last);
 
-            if (last->node()) {
+            if (last->node() || (last->isFrameTable() && last->isAnonymous())) {
                 FrameBox* blockBox = createAnonymouseBlockBox(frameBlockBox, currentNode);
                 blockBox->appendChild(currentFrame);
                 frameBlockBox->appendChild(blockBox);
@@ -253,9 +253,16 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
         } else if (isHTMLElement && current->asElement()->asHTMLElement()->isHTMLObjectElement()) {
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
-        } else if (display == DisplayValue::TableDisplayValue) {
+        } else if (display == DisplayValue::TableDisplayValue
+        || display == TableRowGroupDisplayValue
+        || display == TableRowDisplayValue
+        || display == TableCellDisplayValue
+        || display == TableCaptionDisplayValue) {
             // table has its own frametree builder
+            // return nullptr, if buildFrameTable reuse before anonymous table wrapper
             FrameTable* table = FrameTable::buildFrameTable(current, ctx, force);
+            if (table != nullptr)
+                FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), table, current, ctx);
             return table;
         } else {
             if (display == DisplayValue::BlockDisplayValue || display == DisplayValue::InlineBlockDisplayValue) {

@@ -90,7 +90,7 @@ public:
 
     float fixed() const
     {
-        STARFISH_ASSERT(m_type == Fixed);
+        // STARFISH_ASSERT(m_type == Fixed);
         return m_data;
     }
 

@@ -364,6 +364,17 @@ public:
         return false;
     }
 
+    virtual bool isTable() const
+    {
+        switch (style()->display()) {
+        case DisplayValue::TableDisplayValue:
+        case DisplayValue::InlineTableDisplayValue:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     virtual bool isTableCaption() const
     {
         return style()->display() == DisplayValue::TableCaptionDisplayValue;

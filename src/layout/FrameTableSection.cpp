@@ -40,39 +40,85 @@ FrameTableSection::FrameTableSection(Node* node, ComputedStyle* style)
     STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }
 
-FrameTableSection* FrameTableSection::buildFrameTableSection(Node* sectionNode, FrameTreeBuilderContext& ctx, bool force)
+FrameTableSection* FrameTableSection::buildFrameTableSection(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableSection* tableSection = new FrameTableSection(sectionNode, nullptr);
-    sectionNode->setFrame(tableSection);
+    FrameTableSection* tableSection;
+    if (current->isTableSection()) {
+        FrameTableSection* tableSection = new FrameTableSection(current, nullptr);
+        current->setFrame(tableSection);
 
-    FrameBlockBox* lastContext = ctx.currentBlockContainer();
-    ctx.setCurrentBlockContainer(tableSection);
+        FrameBlockBox* lastContext = ctx.currentBlockContainer();
+        ctx.setCurrentBlockContainer(tableSection);
 
-    unsigned i = 0;
-    for (Node* c = sectionNode->firstChild(); c; c = c->nextSibling()) {
-        FrameTableRow* tableRow = tableSection->addChild(c, ctx, force);
-        // TODO: After implementing anonymous boxes, replace the null check
-        // with assert()
-        if (tableRow) {
-            tableRow->setRowIndex(i);
-            i++;
+        unsigned i = 0;
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            FrameTableRow* tableRow = tableSection->addChild(c, ctx, force);
+            // TODO: After implementing anonymous boxes, replace the null check
+            // with assert()
+            if (tableRow) {
+                tableRow->setRowIndex(i);
+                i++;
+                RowStruct row(tableRow);
+                tableSection->grid().push_back(row);
+            }
+        }
+        ctx.setCurrentBlockContainer(lastContext);
+        return tableSection;
+    } else if (current->isTableSection() == false) {
+        // current node is not tablesection then make anonymous section or
+        // reuse before anonymous section
+        FrameBlockBox* parent = ctx.currentBlockContainer();
+        Frame* before = parent->lastChild();
 
+        if (before && before->isAnonymous() && before->isFrameTableSection()) {
+            tableSection = before->asFrameTableSection();
+        } else {
+            tableSection = FrameTableSection::createAnonymousWithParent(parent, current);
+        }
+        ctx.setCurrentBlockContainer(tableSection);
+        ctx.mergeTextDecorationData(tableSection->style());
+
+        FrameTableRow* tableRow;
+        if (current->isTableRow()) {
+            tableRow = tableSection->addChild(current, ctx, force);
+        } else {
+            // return nullptr, if buildFrameTableRow reuse before anonymous row
+            tableRow = FrameTableRow::buildFrameTableRow(current, ctx, force);
+            if (tableRow != nullptr) {
+                tableSection->appendChild(tableRow);
+            }
+        }
+        if (tableRow != nullptr) {
+            tableRow->setRowIndex(tableSection->grid().size());
             RowStruct row(tableRow);
             tableSection->grid().push_back(row);
+
+            STARFISH_ASSERT(tableRow->parent());
         }
+        ctx.setCurrentBlockContainer(parent);
+
+        return tableSection->parent() ? nullptr : tableSection;
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
-
-    ctx.setCurrentBlockContainer(lastContext);
-
-    return tableSection;
 }
 
-FrameTableSection* FrameTableSection::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+FrameTableCell* FrameTableCell::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+{
+    ComputedStyle* style = new ComputedStyle(parent->style());
+    style->setDisplay(DisplayValue::TableRowDisplayValue);
+    style->loadResources(parentNode);
+    style->arrangeStyleValues(parent->style(), parentNode);
+
+    return new FrameTableCell(nullptr, style);
+}
+
+FrameTableSection* FrameTableSection::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
-    style->loadResources(parentNode);
-    style->arrangeStyleValues(parent->style(), parentNode);
+    style->loadResources(node);
+    style->arrangeStyleValues(parent->style(), node);
 
     return new FrameTableSection(nullptr, style);
 }
@@ -85,36 +131,7 @@ FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext&
         if (child->isCharacterData() || child->isComment()) {
             return nullptr;
         } else {
-            // simple case to generate anonymous table object
-            if (child->isTableCell()) {
-                Frame* last = ctx.currentBlockContainer()->lastChild();
-                FrameTableRow* anonymous;
-                if (last == nullptr || last->node() != nullptr) {
-                    anonymous = FrameTableRow::createAnonymousWithParent(ctx.currentBlockContainer(), ctx.currentBlockContainer()->node());
-                    ctx.currentBlockContainer()->appendChild(anonymous);
-                    childFrame = anonymous;
-                } else if (last && last->isFrameTableRow() && last->node() == nullptr) {
-                    // last node was placed at anonymous table row
-                    // and current node that is tableCell must be placed at same anonymous table row
-                    anonymous = last->asFrameTableRow();
-                    childFrame = nullptr;
-                } else {
-                    // TODO
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-                }
-                FrameBlockBox* lastContext = ctx.currentBlockContainer();
-                ctx.setCurrentBlockContainer(anonymous);
-                ctx.mergeTextDecorationData(anonymous->style());
-                FrameTableCell* childFrameCell = FrameTableCell::buildFrameTableCell(child, ctx, force);
-
-                FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrameCell, child, ctx);
-                ctx.setCurrentBlockContainer(lastContext);
-                STARFISH_ASSERT(childFrameCell->parent());
-                return childFrame;
-            } else {
-                // TODO
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            }
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
 
