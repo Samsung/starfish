@@ -211,6 +211,7 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     // 1. place captions with caption-side: top
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() == CaptionSideValue::TopCaptionSideValue) {
+            caption->setWidth(width());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar);
             ySoFar += caption->height();
@@ -230,6 +231,7 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     // 3. place captions with caption-side: bottom
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() == CaptionSideValue::BottomCaptionSideValue) {
+            caption->setWidth(width());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar);
             ySoFar += caption->height();
