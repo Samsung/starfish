@@ -51,7 +51,8 @@ class FrameTable : public FrameBlockBox {
 public:
     FrameTable(Node* node, ComputedStyle* style);
 
-    static FrameTable* buildFrameTable(Node* tableNode, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTable* buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTable* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     void calContentWidth(LayoutContext& ctx);

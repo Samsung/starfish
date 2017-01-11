@@ -28,6 +28,8 @@ public:
     FrameTableCell(Node* node, ComputedStyle* style);
 
     static FrameTableCell* buildFrameTableCell(Node* cellNode, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableCell* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+
     void calContentWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);

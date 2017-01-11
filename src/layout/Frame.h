@@ -853,6 +853,11 @@ public:
         return m_node->isElement() && m_node->asElement()->isHTMLElement() && m_node->asElement()->asHTMLElement()->isHTMLBodyElement();
     }
 
+    bool isAnonymous() const
+    {
+        return m_node == nullptr ? true : false;
+    }
+
     Element* offsetParent();
 
 protected:

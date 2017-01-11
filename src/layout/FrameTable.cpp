@@ -20,7 +20,6 @@
 #include "FrameTreeBuilder.h"
 #include "FrameTableCaption.h"
 #include "FrameTableSection.h"
-#include "FrameTableRow.h"
 
 namespace StarFish {
 
@@ -54,24 +53,71 @@ FrameTable::FrameTable(Node* node, ComputedStyle* style)
         || (node != nullptr && style == nullptr));
 }
 
-FrameTable* FrameTable::buildFrameTable(Node* tableNode, FrameTreeBuilderContext& ctx, bool force)
+FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTable* tableWrapper = new FrameTable(tableNode, nullptr);
-    FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), tableWrapper, tableNode, ctx);
-    tableNode->setFrame(tableWrapper);
+    FrameTable* tableWrapper;
+    if (current->isTable()) {
+        // if current node is table then make wrapper and current node owns this wrapper
+        tableWrapper = new FrameTable(current, nullptr);
+        current->setFrame(tableWrapper);
 
-    // Table establishes a new block context
-    FrameBlockBox* lastContext = ctx.currentBlockContainer();
-    ctx.setCurrentBlockContainer(tableWrapper);
-    ctx.mergeTextDecorationData(tableWrapper->style());
+        // Table establishes a new block context
+        FrameBlockBox* lastContext = ctx.currentBlockContainer();
+        ctx.setCurrentBlockContainer(tableWrapper);
+        ctx.mergeTextDecorationData(tableWrapper->style());
 
-    for (Node* c = tableNode->firstChild(); c; c = c->nextSibling()) {
-        tableWrapper->addChild(c, ctx, force);
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            tableWrapper->addChild(c, ctx, force);
+        }
+
+        ctx.setCurrentBlockContainer(lastContext);
+        return tableWrapper;
+    } else if (current->isTable() == false) {
+        // if current node is not table wrapper node then make anonymous wrapper or
+        // reuse before anonymous wrapper
+        FrameBlockBox* parent = ctx.currentBlockContainer();
+        Frame* before = parent->lastChild();
+
+        // NEED TO DISCUSSION : StarFish generate anonymous block box which has only wihtespace,
+        // below code treat above situation
+        while (before->isAnonymous() && before->firstChild()->isFrameText()
+            && before->firstChild()->asFrameText()->text()->containsOnlyWhitespace()) {
+            before = before->previous();
+        }
+
+        if (before && before->isAnonymous() && before->isFrameTable()) {
+            tableWrapper = before->asFrameTable();
+        } else {
+            tableWrapper = FrameTable::createAnonymousWithParent(parent, current);
+        }
+        ctx.setCurrentBlockContainer(tableWrapper);
+        ctx.mergeTextDecorationData(tableWrapper->style());
+
+        if (current->isTableCaption()) {
+            tableWrapper->addChild(current, ctx, force);
+        } else {
+            // TODO : Treat of two or more sections
+            // return nullptr, if buildFrameTableSection reuse before anonymouse section
+            FrameTableSection* section = FrameTableSection::buildFrameTableSection(current, ctx, force);
+            if (section != nullptr) {
+                tableWrapper->appendChild(section);
+            }
+        }
+        ctx.setCurrentBlockContainer(parent);
+        return tableWrapper->parent()? nullptr : tableWrapper;
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
+}
 
-    ctx.setCurrentBlockContainer(lastContext);
+FrameTable* FrameTable::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
+{
+    ComputedStyle* style = new ComputedStyle(parent->style());
+    style->setDisplay(DisplayValue::TableRowDisplayValue);
+    style->loadResources(node);
+    style->arrangeStyleValues(parent->style(), node);
 
-    return tableWrapper;
+    return new FrameTable(nullptr, style);
 }
 
 void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
@@ -110,31 +156,7 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
         // TODO
         return;
     } else {
-        // simple case to generate anonymous table object
-        if (wrapInAnnoymousSection && child->isTableRow()) {
-            Frame* last = ctx.currentBlockContainer()->lastChild();
-            FrameTableSection* anonymous;
-            if (last == nullptr || last->node() != nullptr) {
-                anonymous = FrameTableSection::createAnonymousWithParent(ctx.currentBlockContainer(), ctx.currentBlockContainer()->node());
-                ctx.currentBlockContainer()->appendChild(anonymous);
-            } else if (last && last->isFrameTableSection() && last->node() == nullptr) {
-                // last node was placed at anonymous table section
-                // and current node that is tableRow must be placed at same anonymous table section
-                anonymous = last->asFrameTableSection();
-            }
-            FrameBlockBox* lastContext = ctx.currentBlockContainer();
-            ctx.setCurrentBlockContainer(anonymous);
-            ctx.mergeTextDecorationData(anonymous->style());
-
-            FrameTableRow* childFrameRow = FrameTableRow::buildFrameTableRow(child, ctx, force);
-            FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrameRow, child, ctx);
-            ctx.setCurrentBlockContainer(lastContext);
-            STARFISH_ASSERT(childFrameRow->parent());
-            return;
-        } else {
-            // TODO
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
 

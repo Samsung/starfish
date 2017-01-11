@@ -31,36 +31,79 @@ FrameTableRow::FrameTableRow(Node* node, ComputedStyle* style)
         || (node != nullptr && style == nullptr));
 }
 
-FrameTableRow* FrameTableRow::buildFrameTableRow(Node* rowNode,
-    FrameTreeBuilderContext& ctx, bool force) {
-    FrameTableRow* tableRow = new FrameTableRow(rowNode, nullptr);
-    rowNode->setFrame(tableRow);
+FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
+    FrameTreeBuilderContext& ctx, bool force)
+{
+    if (current->isTableRow()) {
+        FrameTableRow* tableRow;
+        tableRow = new FrameTableRow(current, nullptr);
+        current->setFrame(tableRow);
 
-    FrameBlockBox* lastContext = ctx.currentBlockContainer();
-    ctx.setCurrentBlockContainer(tableRow);
-
-    unsigned i = 0;
-    for (Node* c = rowNode->firstChild(); c; c = c->nextSibling()) {
-        FrameTableCell* tableCell = tableRow->addChild(c, ctx, force);
-        // TODO: need to calculate absoluteColumnIndex
-        // After implementing anonymous boxes, replace the null check with assert()
-        if (tableCell) {
-            tableCell->setAbsoluteColumnIndex(i);
-            i += tableCell->colspan();
+        FrameBlockBox* lastContext = ctx.currentBlockContainer();
+        ctx.setCurrentBlockContainer(tableRow);
+        unsigned i = 0;
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            FrameTableCell* tableCell = tableRow->addChild(c, ctx, force);
+            // TODO: need to calculate absoluteColumnIndex
+            // After implementing anonymous boxes, replace the null check with assert()
+            if (tableCell) {
+                tableCell->setAbsoluteColumnIndex(i);
+                i += tableCell->colspan();
+            }
         }
+        ctx.setCurrentBlockContainer(lastContext);
+        return tableRow;
+    } else if (current->isTableRow() == false) {
+        FrameTableRow* tableRow;
+        // current node is not tableRow then make anonymous Row or
+        // reuse before anonymous Row
+        FrameBlockBox* parent = ctx.currentBlockContainer();
+        Frame* before = parent->lastChild();
+        if (before && before->isAnonymous() && before->isFrameTableRow()) {
+            tableRow = before->asFrameTableRow();
+        } else {
+            tableRow = FrameTableRow::createAnonymousWithParent(parent, current);
+        }
+        ctx.setCurrentBlockContainer(tableRow);
+        ctx.mergeTextDecorationData(tableRow->style());
+        FrameTableCell* tableCell;
+
+        unsigned cellIndex = 0;
+        for (Frame* c = tableRow->firstChild(); c; c = c->next()) {
+            if (c->isFrameTableCell())
+                cellIndex += c->asFrameTableCell()->colspan();
+        }
+
+        if (current->isTableCell()) {
+            tableCell = tableRow->addChild(current, ctx, force);
+        } else {
+            // return nullptr, if buildFrameTableCell resuse before anonymous cell
+            tableCell = FrameTableCell::buildFrameTableCell(current, ctx, force);
+            if (tableCell != nullptr)
+                tableRow->appendChild(tableCell);
+        }
+        if (tableCell != nullptr) {
+            tableCell->setAbsoluteColumnIndex(cellIndex);
+            STARFISH_ASSERT(tableCell->parent());
+        }
+        ctx.setCurrentBlockContainer(parent);
+
+        if (tableRow->parent()) {
+            parent->asFrameTableSection()->grid()[tableRow->rowIndex()].cells.push_back(CellStruct(tableCell->asFrameTableCell()));
+            return nullptr;
+        }
+        return tableRow;
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
-
-    ctx.setCurrentBlockContainer(lastContext);
-
-    return tableRow;
 }
 
-FrameTableRow* FrameTableRow::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+FrameTableRow* FrameTableRow::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowDisplayValue);
-    style->loadResources(parentNode);
-    style->arrangeStyleValues(parent->style(), parentNode);
+    style->loadResources(node);
+    style->arrangeStyleValues(parent->style(), node);
 
     return new FrameTableRow(nullptr, style);
 }
@@ -99,8 +142,7 @@ void FrameTableRow::calContentWidth(LayoutContext& ctx)
 void FrameTableRow::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
-    LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(tableSection()->table()->style()->borderSpacing().fixed());
+    LayoutUnit borderSpacing = LayoutUnit::fromPixel(tableSection()->table()->style()->borderSpacing().fixed());
 
     if (firstChild()) {
         xSoFar += borderSpacing;
@@ -112,7 +154,7 @@ void FrameTableRow::layoutWidth(LayoutContext& ctx)
             FrameBox* cell = c->asFrameTableCell();
             cell->setX(xSoFar);
             xSoFar += cell->borderLeft() + cell->paddingLeft();
-            LayoutUnit cellWidth = tableSection()->table()-> columnWidths()[i].maxContentWidth;
+            LayoutUnit cellWidth = tableSection()->table()->columnWidths()[i].maxContentWidth;
             cell->setContentWidth(cellWidth);
             xSoFar += cellWidth;
             xSoFar += cell->paddingRight() + cell->borderRight();
@@ -150,5 +192,4 @@ void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     // This method should not be called, as table uses its own layout algorithm
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
-
 }
