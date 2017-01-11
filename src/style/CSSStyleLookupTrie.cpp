@@ -255,6 +255,7 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Padding-Left
         // Margin-Right
         // unicode-bidi
+        // caption-side
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "border-style", 12) == 0) {
@@ -268,6 +269,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "border-right", 12) == 0) {
                 return CSSStyleKind::BorderRight;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "caption-sidet", 12) == 0) {
+                return CSSStyleKind::CaptionSide;
             }
             break;
         case 'p':
@@ -684,6 +690,11 @@ CSSStyleKind lookupCSSStyleCamelCase(const char* data, unsigned length)
             }
             if (memcmp(data, "borderRight", 11) == 0) {
                 return CSSStyleKind::BorderRight;
+            }
+            break;
+        case 'c':
+            if (memcmp(data, "captionSide", 11) == 0) {
+                return CSSStyleKind::CaptionSide;
             }
             break;
         case 'p':

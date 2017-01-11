@@ -780,6 +780,16 @@ public:
         return m_inheritedStyles.m_borderSpacing;
     }
 
+    BorderCollapseValue borderCollapse()
+    {
+        return m_inheritedStyles.m_borderCollapse;
+    }
+
+    CaptionSideValue captionSide()
+    {
+        return m_inheritedStyles.m_captionSide;
+    }
+
 protected:
     void initNonInheritedStyles()
     {
@@ -812,7 +822,8 @@ protected:
         WhiteSpaceValue m_whiteSpace : 1;
         VisibilityValue m_visibility : 1;
         BorderCollapseValue m_borderCollapse: 1; // table
-        Length m_borderSpacing;
+        Length m_borderSpacing; // table
+        CaptionSideValue m_captionSide : 1; // table
     } m_inheritedStyles;
 
     FloatValue m_float : 2;
