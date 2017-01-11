@@ -56,7 +56,6 @@ FrameTable::FrameTable(Node* node, ComputedStyle* style)
 
 FrameTable* FrameTable::buildFrameTable(Node* tableNode, FrameTreeBuilderContext& ctx, bool force)
 {
-
     FrameTable* tableWrapper = new FrameTable(tableNode, nullptr);
     FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), tableWrapper, tableNode, ctx);
     tableNode->setFrame(tableWrapper);
@@ -87,15 +86,10 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
         // TODO
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     } else if (child->isTableSection()) {
+        // Only [TableHeaderGroup | TableFooterGroup | TableRowGroup] should appear
         switch (child->style()->display()) {
         case DisplayValue::TableHeaderGroupDisplayValue:
-            // TODO
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            break;
         case DisplayValue::TableFooterGroupDisplayValue:
-            // TODO
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-            break;
         case DisplayValue::TableRowGroupDisplayValue:
             childFrame = FrameTableSection::buildFrameTableSection(child, ctx, force);
             break;
@@ -204,7 +198,8 @@ void FrameTable::layoutWidth(LayoutContext& ctx)
 
 void FrameTable::layoutHeight(LayoutContext& ctx)
 {
-    LayoutUnit ySoFar = 0;
+    LayoutUnit ySoFar = LayoutUnit::fromPixel(style()->borderTopWidth().fixed());
+
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSection()) {
             c->asFrameTableSection()->layoutHeight(ctx);
@@ -215,6 +210,7 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
         ySoFar += c->asFrameBox()->height();
     }
 
+    ySoFar += LayoutUnit::fromPixel(style()->borderBottomWidth().fixed());
     setHeight(ySoFar);
 }
 
@@ -223,11 +219,16 @@ void FrameTable::collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar, GCV
     // FIXME: absolute at this stage
     // Need to consider absolute and logical columns
     if (columnWidthsSoFar.empty()) {
-        for (auto &col : columnWidths) {
-            columnWidthsSoFar.push_back(col);
-        }
+        columnWidthsSoFar = columnWidths;
     } else {
-        // TODO: need to consider multiple table sections here
+        // Update to support colspans
+        STARFISH_ASSERT(columnWidthsSoFar.size() == columnWidths.size());
+        for (unsigned i = 0; i < columnWidths.size(); i++) {
+            ColStruct& colSoFar = columnWidthsSoFar[i];
+            ColStruct& col = columnWidths[i];
+            colSoFar.maxContentWidth = std::max(colSoFar.maxContentWidth, col.maxContentWidth);
+            colSoFar.minContentWidth = std::max(colSoFar.minContentWidth, col.minContentWidth);
+        }
     }
 }
 
