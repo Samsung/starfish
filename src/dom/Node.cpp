@@ -505,10 +505,10 @@ static void didInsertNode(Node* self, Node* child)
 
     if (self->isInDocumentScope() && self->document()->doesParticipateInRendering()) {
         notifyNodeInsertedToDocumentTree(self, child);
-        child->setNeedsStyleRecalc();
+        self->setNeedsStyleRecalc();
+        self->setChildrenNeedsStyleRecalc();
         child->setNeedsFrameTreeBuild();
     }
-
 }
 
 Node* Node::appendChild(Node* child)

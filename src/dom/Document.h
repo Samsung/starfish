@@ -286,6 +286,19 @@ void Node::setNeedsStyleRecalc()
     m_document->window()->setNeedsStyleRecalc();
 }
 
+void Node::setChildrenNeedsStyleRecalc()
+{
+    if (!document()->doesParticipateInRendering())
+        return;
+
+    Node* child = firstChild();
+    while (child) {
+        child->m_needsStyleRecalc = true;
+        child->setChildrenNeedsStyleRecalc();
+        child = child->nextSibling();
+    }
+}
+
 void Node::setNeedsLayout()
 {
     if (!document()->doesParticipateInRendering())
