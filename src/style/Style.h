@@ -1694,7 +1694,7 @@ public:
     ComputedStyle* resolveStyle(Element* node, ComputedStyle* parent);
 
 protected:
-    void apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle);
+    void apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant = false);
     void matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent);
 
     Match matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx = 0);

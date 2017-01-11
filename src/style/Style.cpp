@@ -1888,7 +1888,7 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
     return style;
 }
 
-void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle)
+void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant)
 {
     for (unsigned k = 0; k < cssValues.size(); k++) {
         switch (cssValues[k].keyKind()) {
