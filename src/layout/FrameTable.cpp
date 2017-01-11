@@ -198,16 +198,42 @@ void FrameTable::layoutWidth(LayoutContext& ctx)
 
 void FrameTable::layoutHeight(LayoutContext& ctx)
 {
-    LayoutUnit ySoFar = LayoutUnit::fromPixel(style()->borderTopWidth().fixed());
+    // Table is placed in the follow order:
+    // 1. Captions that has property "caption-side: top"
+    //    If there are multiple captions, place them in document order
+    // 2. Table sections in document order
+    // 3. Captions that has property "caption-side: bottom"
+    //    If there are multiple captions, place them in document order
 
+    LayoutUnit ySoFar = LayoutUnit::fromPixel(style()->borderTopWidth().fixed());
+    LayoutUnit topCaptionHeightsSoFar = 0;
+
+    // 1. place captions with caption-side: top
+    for (auto& caption : m_captions) {
+        if (caption->style()->captionSide() == CaptionSideValue::TopCaptionSideValue) {
+            caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+            caption->setY(ySoFar);
+            ySoFar += caption->height();
+            topCaptionHeightsSoFar += caption->height();
+        }
+    }
+
+    // 2. place table sections
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSection()) {
             c->asFrameTableSection()->layoutHeight(ctx);
-        } else if (c->isFrameTableCaption()) {
-            c->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+            c->asFrameBox()->setY(ySoFar);
+            ySoFar += c->asFrameBox()->height();
         }
-        c->asFrameBox()->setY(ySoFar);
-        ySoFar += c->asFrameBox()->height();
+    }
+
+    // 3. place captions with caption-side: bottom
+    for (auto& caption : m_captions) {
+        if (caption->style()->captionSide() == CaptionSideValue::BottomCaptionSideValue) {
+            caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
+            caption->setY(ySoFar);
+            ySoFar += caption->height();
+        }
     }
 
     ySoFar += LayoutUnit::fromPixel(style()->borderBottomWidth().fixed());
