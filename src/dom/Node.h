@@ -490,6 +490,9 @@ public:
         m_childNeedsStyleRecalc = false;
     }
 
+    // This function sets the dirty flag only for children.
+    inline void setChildrenNeedsStyleRecalc();
+
     void setNeedsFrameTreeBuild();
 
     bool needsFrameTreeBuild()
