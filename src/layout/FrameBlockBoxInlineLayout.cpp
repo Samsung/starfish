@@ -1109,7 +1109,7 @@ static bool dontBreakLine(LineFormattingContext* ctx, Frame* f, LayoutUnit width
 static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBox* f)
 {
     LineBox* lineBox = ctx->currentLine();
-    return ((ctx->m_absPosition.y() + lineBox->y() + ctx->m_floatBoxY >= ctx->m_layoutContext.lastTopLoc(ctx->m_block.style()->floating()))
+    return ((ctx->m_absPosition.y() + lineBox->y() + ctx->m_floatBoxY >= ctx->m_layoutContext.lastTopLoc(f->style()->floating()))
         && ((f->style()->clear() == NoneClearValue)
         || (f->style()->clear() == LeftClearValue && (ctx->m_hasFloat & LineFormattingContext::HasLeft) == 0)
         || (f->style()->clear() == RightClearValue && (ctx->m_hasFloat & LineFormattingContext::HasRight) == 0)
@@ -1432,34 +1432,44 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(bool dueToBr, bool hasMor
 
     if (m_hasFloat == HasNone) {
         lineBox->setHeight(height);
-        return height;
-    }
-
-    // If there are no more inline boxes appended to the line box, the height for content depends on
-    // if the block container box established new block formatting context, but still
-    // for the positioning of following floating boxes, y position should be considered.
-    if (hasMoreInlineBoxes || m_pendingInlineBoxes.size() > 0) {
-        if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
-            height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
-            lineBox->markHeightComputed();
-        }
-        lineBox->setHeight(height);
     } else {
-        if (m_block.isEstablishesBlockFormattingContext()) {
-            if (m_pendingFloatBoxes.size() == 0) {
-                height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, BothClearValue));
-                lineBox->markHeightComputed();
-            } else if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
+        // If there are no more inline boxes appended to the line box, the height for content depends on
+        // if the block container box established new block formatting context, but still
+        // for the positioning of following floating boxes, y position should be considered.
+        if (hasMoreInlineBoxes || m_pendingInlineBoxes.size() > 0) {
+            if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
                 height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
                 lineBox->markHeightComputed();
             }
             lineBox->setHeight(height);
         } else {
-            lineBox->setHeight(height);
-            if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
-                height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+            if (m_block.isEstablishesBlockFormattingContext()) {
+                if (m_pendingFloatBoxes.size() == 0) {
+                    height = std::max(height, m_layoutContext.maxHeightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, BothClearValue));
+                    lineBox->markHeightComputed();
+                } else if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
+                    height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+                    lineBox->markHeightComputed();
+                }
+                lineBox->setHeight(height);
+            } else {
+                lineBox->setHeight(height);
+                if (!dueToBr && (m_currentLineWidth == 0 || height == 0)) {
+                    height = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+                }
             }
         }
+    }
+
+    if (!hasMoreInlineBoxes && height == 0 && m_pendingFloatBoxes.size() > 0) {
+        // if there are only pending float box and the height which y diff for the next linebox is zero,
+        // then it goes infinite loop. It happens because 2 things. First, the rule that float box can't be inserted
+        // into the line box when the last top position of float box whose direction is the same with the
+        // direction of float box we are trying to insert. Second, this kind of float box can't be
+        // detected by using current y position of line box and its height.
+        LayoutUnit curYPos = m_absPosition.y() + m_lineBoxY;
+        LayoutUnit yToPos = m_layoutContext.lastTopLoc(m_pendingFloatBoxes.at(0)->style()->floating());
+        height = yToPos - curYPos;
     }
 
     return height;
@@ -1603,7 +1613,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
     // white space from above function `removeDanglingSpaceFromLine`
     insertPendingFloatingBoxes(isInLineBox, false, false, 0);
     computeHorizontalProperties();
-    LayoutUnit yDiff = computeLineBoxHeight(dueToBr, !isLastLine);
+    LayoutUnit yDiff = computeLineBoxHeight(dueToBr, !isLastLine || m_pendingInlineBoxes.size() > 0);
 
     insertPendingAboslutePositionedBoxes();
     m_lineBoxY += yDiff;
