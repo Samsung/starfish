@@ -1585,7 +1585,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
     reComputeVerticalProperties:
     LayoutUnit height = computeVerticalProperties(back, m_block.style(), ascender, descender, *this, dueToBr, isInLineBox);
     if (m_hasFloat != HasNone) {
-        LayoutUnit floatHeight = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, height);
+        LayoutUnit floatHeight = m_layoutContext.heightDueTofloatingBoxes(m_absPosition.y() + m_lineBoxY, 0);
         if ((!firstChecked || m_pendingFloatBoxNumsBeforeCurrentLine > 0) && floatHeight != 0 && height > floatHeight) {
             removeAllInlineBoxes();
             m_hasFloat = HasNone;
@@ -1919,7 +1919,6 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                 unprocessedWidth = unprocessedStartingWidth;
             }
 
-            LayoutLocation originalLoc = lineFormattingContext.m_absPosition;
             if (f->style()->display() == DisplayValue::InlineBlockDisplayValue) {
                 lineFormattingContext.m_shouldLineBreakForabsolutePositionedBlock = true;
                 // inline-block
