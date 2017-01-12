@@ -25,7 +25,7 @@ class FrameTreeBuilderContext;
 class FrameTable;
 class FrameTableRow;
 class FrameTableCell;
-class ColStruct;
+class ColSizeStruct;
 
 struct CellStruct {
     CellStruct()
@@ -53,7 +53,7 @@ public:
         FrameTreeBuilderContext& ctx, bool force = false);
     static FrameTableSection* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
-    void calContentWidth(LayoutContext& ctx);
+    void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
@@ -85,7 +85,7 @@ public:
         return m_grid;
     }
 
-    GCVector<ColStruct>& columnWidths()
+    GCVector<ColSizeStruct>& columnWidths()
     {
         return m_columnWidths;
     }
@@ -95,7 +95,7 @@ private:
     bool isFirstTableSection();
     // represent the logical table structure
     GCVector<RowStruct> m_grid;
-    GCVector<ColStruct> m_columnWidths;
+    GCVector<ColSizeStruct> m_columnWidths;
 };
 
 }

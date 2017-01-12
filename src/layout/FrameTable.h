@@ -42,9 +42,9 @@ class TableFormattingContextBlock;
 // Table has its own table layout algorithm, that has minimum interaction
 // with the existing box layout algorithm.
 
-struct ColStruct {
-    LayoutUnit minContentWidth;
-    LayoutUnit maxContentWidth;
+struct ColSizeStruct {
+    LayoutUnit minCellWidth;
+    LayoutUnit maxCellWidth;
 };
 
 class FrameTable : public FrameBlockBox {
@@ -55,7 +55,7 @@ public:
     static FrameTable* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-    void calContentWidth(LayoutContext& ctx);
+    void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
@@ -85,16 +85,16 @@ public:
         return true;
     }
 
-    GCVector<ColStruct>& columnWidths()
+    GCVector<ColSizeStruct>& columnWidths()
     {
         return m_columnWidths;
     }
 
 private:
-    void collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar, GCVector<ColStruct>& columnWidths);
+    void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths);
 
     GCVector<FrameTableCaption*> m_captions;
-    GCVector<ColStruct> m_columnWidths;
+    GCVector<ColSizeStruct> m_columnWidths;
 };
 
 }
