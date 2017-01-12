@@ -56,22 +56,11 @@ FrameTable::FrameTable(Node* node, ComputedStyle* style)
 FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTable* tableWrapper;
+    FrameBlockBox* parent = ctx.currentBlockContainer();
     if (current->isTable()) {
         // if current node is table then make wrapper and current node owns this wrapper
         tableWrapper = new FrameTable(current, nullptr);
         current->setFrame(tableWrapper);
-
-        // Table establishes a new block context
-        FrameBlockBox* lastContext = ctx.currentBlockContainer();
-        ctx.setCurrentBlockContainer(tableWrapper);
-        ctx.mergeTextDecorationData(tableWrapper->style());
-
-        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            tableWrapper->addChild(c, ctx, force);
-        }
-
-        ctx.setCurrentBlockContainer(lastContext);
-        return tableWrapper;
     } else if (current->isTable() == false) {
         // if current node is not table wrapper node then make anonymous wrapper or
         // reuse before anonymous wrapper
@@ -90,24 +79,24 @@ FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& 
         } else {
             tableWrapper = FrameTable::createAnonymousWithParent(parent, current);
         }
-        ctx.setCurrentBlockContainer(tableWrapper);
-        ctx.mergeTextDecorationData(tableWrapper->style());
 
-        if (current->isTableCaption()) {
-            tableWrapper->addChild(current, ctx, force);
-        } else {
-            // TODO : Treat of two or more sections
-            // return nullptr, if buildFrameTableSection reuse before anonymouse section
-            FrameTableSection* section = FrameTableSection::buildFrameTableSection(current, ctx, force);
-            if (section != nullptr) {
-                tableWrapper->appendChild(section);
-            }
-        }
-        ctx.setCurrentBlockContainer(parent);
-        return tableWrapper->parent()? nullptr : tableWrapper;
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }
+    // Table establishes a new block context
+    ctx.setCurrentBlockContainer(tableWrapper);
+    ctx.mergeTextDecorationData(tableWrapper->style());
+
+    if (current->isTable()) {
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            tableWrapper->addChild(c, ctx, force);
+        }
+    } else {
+        tableWrapper->addChild(current, ctx, force);
+    }
+
+    ctx.setCurrentBlockContainer(parent);
+    return tableWrapper->parent()? nullptr : tableWrapper;
 }
 
 FrameTable* FrameTable::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
