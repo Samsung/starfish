@@ -2757,8 +2757,6 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
     if (hasBlockFlow()) {
         FrameBox::paintChildrenWith(ctx);
     } else {
-        PaintingInlineStage last = ctx.m_paintingInlineStage;
-
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
             PaintingInlineStage s = PaintingInlineLevelElements;
             while (s != PaintingInlineStageEnd) {
@@ -2777,8 +2775,6 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
                 s = (PaintingInlineStage)(s + 1);
             }
         }
-
-        ctx.m_paintingInlineStage = last;
     }
 }
 

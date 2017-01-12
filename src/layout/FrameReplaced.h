@@ -96,11 +96,17 @@ public:
         if (isEstablishesStackingContext())
             return;
 
-
-        if (isPositionedElement() && ctx.m_paintingStage == PaintingPositionedElements) {
-            paintBackgroundAndBorders(ctx.m_canvas);
-            paintReplaced(ctx.m_canvas);
-        } else if (!isPositionedElement()) {
+        if (isPositionedElement()) {
+            if (ctx.m_paintingStage == PaintingPositionedElements) {
+                paintBackgroundAndBorders(ctx.m_canvas);
+                paintReplaced(ctx.m_canvas);
+            }
+        } else if (style()->floating() != NoneFloatValue) {
+            if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
+                paintBackgroundAndBorders(ctx.m_canvas);
+                paintReplaced(ctx.m_canvas);
+            }
+        } else {
             if (ctx.m_paintingStage == PaintingNormalFlowBlock) {
                 if (style()->display() != DisplayValue::InlineDisplayValue) {
                     paintBackgroundAndBorders(ctx.m_canvas);

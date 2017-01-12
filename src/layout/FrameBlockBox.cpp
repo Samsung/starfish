@@ -845,7 +845,7 @@ void FrameBlockBox::paint(PaintingContext& ctx)
             ctx.m_paintingStage = PaintingNormalFlowInline;
         }
     } else if (style()->floating() != NoneFloatValue) {
-        if (ctx.m_paintingStage == PaintingNonPositionedFloats) {
+        if (ctx.m_paintingStage == PaintingNonPositionedFloats && ctx.m_paintingInlineStage == PaintingInlineBlock) {
             paintBackgroundAndBorders(ctx.m_canvas);
             PaintingStage s = PaintingStage::PaintingNormalFlowBlock;
             while (s != PaintingStageEnd) {
