@@ -153,7 +153,7 @@ void FrameTableRow::layoutWidth(LayoutContext& ctx)
         if (c->isFrameTableCell()) {
             FrameBox* cell = c->asFrameTableCell();
             cell->setX(xSoFar);
-            LayoutUnit cellWidth = tableSection()->table()-> columnWidths()[i].maxCellWidth;
+            LayoutUnit cellWidth = tableSection()->table()-> columnWidths()[i].cellWidth;
             cell->setWidth(cellWidth);
             xSoFar += cellWidth;
             xSoFar += borderSpacing;
@@ -169,20 +169,28 @@ void FrameTableRow::layoutWidth(LayoutContext& ctx)
 
 void FrameTableRow::layoutHeight(LayoutContext& ctx)
 {
-    LayoutUnit maxYSoFar = 0;
+    LayoutUnit maxHeightSoFar = 0;
     // We traverse the cells first to calculate min/max cell width
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCell()) {
             FrameTableCell* cell = c->asFrameTableCell();
             cell->layoutHeight(ctx);
             LayoutUnit cellHeight = cell->height();
-            maxYSoFar = std::max(maxYSoFar, cellHeight);
+            maxHeightSoFar = std::max(maxHeightSoFar, cellHeight);
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
-    setHeight(maxYSoFar);
+
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCell()) {
+            FrameTableCell* cell = c->asFrameTableCell();
+            cell->setHeight(maxHeightSoFar);
+        }
+    }
+
+    setHeight(maxHeightSoFar);
 }
 
 void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
