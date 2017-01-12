@@ -131,7 +131,17 @@ FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext&
         if (child->isCharacterData() || child->isComment()) {
             return nullptr;
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            // return nullptr, if buildFrameTableRow reuse before anonymous row
+            childFrame = FrameTableRow::buildFrameTableRow(child, ctx, force);
+            if (childFrame != nullptr) {
+                FrameTableSection* tableSection = ctx.currentBlockContainer()->asFrameTableSection();
+                tableSection->appendChild(childFrame);
+                childFrame->setRowIndex(tableSection->grid().size());
+                RowStruct row(childFrame);
+                tableSection->grid().push_back(row);
+                STARFISH_ASSERT(childFrame->parent());
+            }
+            return childFrame;
         }
     }
 
