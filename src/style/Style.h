@@ -650,6 +650,7 @@ public:
 
     CSSStyleValuePair()
         : m_value(0.0f)
+        , m_flagImportant(false)
     {
     }
 
@@ -673,6 +674,16 @@ public:
     void setValueKind(ValueKind kind)
     {
         m_valueKind = kind;
+    }
+
+    bool flagImportant()
+    {
+        return m_flagImportant;
+    }
+
+    void setFlagImportant(bool isImportant)
+    {
+        m_flagImportant = isImportant;
     }
 
     bool updateValueCommon(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens);
@@ -931,6 +942,7 @@ public:
     CSSStyleValuePair(ValueKind kind, ValueData value)
         : m_valueKind(kind)
         , m_value(value)
+        , m_flagImportant(false)
     {
     }
 
@@ -1016,6 +1028,7 @@ protected:
     KeyKind m_keyKind;
     ValueKind m_valueKind;
     ValueData m_value;
+    bool m_flagImportant;
 };
 
 class ValueList : public gc {
@@ -1178,23 +1191,23 @@ public:
         }
     }
 
-    void setBorder(String* value);
-    void setBorderTop(String* value);
-    void setBorderRight(String* value);
-    void setBorderBottom(String* value);
-    void setBorderLeft(String* value);
-    void setBackground(String* value);
-    void setBackgroundRepeat(String* value);
-    void setBackgroundPosition(String* value);
-    void setMargin(String* value);
-    void setPadding(String* value);
-    void setBorderWidth(String* value);
-    void setBorderStyle(String* value);
-    void setBorderColor(String* value);
-    void setFont(String* value);
+    void setBorder(String* value, bool isImportant);
+    void setBorderTop(String* value, bool isImportant);
+    void setBorderRight(String* value, bool isImportant);
+    void setBorderBottom(String* value, bool isImportant);
+    void setBorderLeft(String* value, bool isImportant);
+    void setBackground(String* value, bool isImportant);
+    void setBackgroundRepeat(String* value, bool isImportant);
+    void setBackgroundPosition(String* value, bool isImportant);
+    void setMargin(String* value, bool isImportant);
+    void setPadding(String* value, bool isImportant);
+    void setBorderWidth(String* value, bool isImportant);
+    void setBorderStyle(String* value, bool isImportant);
+    void setBorderColor(String* value, bool isImportant);
+    void setFont(String* value, bool isImportant);
 
 #define ATTRIBUTE_SETTER(name, ...)                                                    \
-    void set##name(String* value)                                                      \
+    void set##name(String* value, bool isImportant)                                      \
     {                                                                                  \
         if (value->length() == 0) {                                                    \
             removeCSSValuePair(CSSStyleValuePair::KeyKind::name);                      \
@@ -1204,6 +1217,7 @@ public:
         tokenizeCSSValue(&tokens, value, String::fromUTF8(","));                       \
         CSSStyleValuePair ret;                                                         \
         if (ret.updateValueCommon(&tokens) || ret.updateValue##name(&tokens)) {        \
+            ret.setFlagImportant(isImportant);                                               \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);                    \
         }                                                                              \
     }
@@ -1663,6 +1677,28 @@ protected:
     std::vector<CSSStyleRule*, gc_allocator_ignore_off_page<CSSStyleRule*> > m_rules;
     Node* m_origin;
 };
+
+class Declarations {
+public:
+    unsigned size()
+    {
+        return m_declarations.size();
+    }
+
+    CSSStyleDeclaration* declaration(unsigned idx)
+    {
+        return m_declarations[idx];
+    }
+
+    void addDeclaration(CSSStyleDeclaration* declaration)
+    {
+        m_declarations.push_back(declaration);
+    }
+
+protected:
+    std::vector<CSSStyleDeclaration*, gc_allocator_ignore_off_page<CSSStyleDeclaration*> > m_declarations;
+};
+
 
 class StyleResolver {
 public:

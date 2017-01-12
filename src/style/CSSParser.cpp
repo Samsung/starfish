@@ -1640,7 +1640,7 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                 }
 #define SET_ATTR(name, nameLower, nameCSSCase) \
                 else if (kind == CSSStyleKind::name) { \
-                    declaration->set##name(value);\
+                    declaration->set##name(value, priority);\
                 }
                 FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
                 else {
