@@ -43,13 +43,27 @@ FrameTableSection::FrameTableSection(Node* node, ComputedStyle* style)
 FrameTableSection* FrameTableSection::buildFrameTableSection(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameTableSection* tableSection;
+    FrameBlockBox* parent = ctx.currentBlockContainer();
+
     if (current->isTableSection()) {
-        FrameTableSection* tableSection = new FrameTableSection(current, nullptr);
+        tableSection = new FrameTableSection(current, nullptr);
         current->setFrame(tableSection);
+    } else {
+        // current node is not tablesection then make anonymous section or
+        // reuse before anonymous section
+        Frame* before = parent->lastChild();
 
-        FrameBlockBox* lastContext = ctx.currentBlockContainer();
-        ctx.setCurrentBlockContainer(tableSection);
+        if (before && before->isAnonymous() && before->isFrameTableSection()) {
+            tableSection = before->asFrameTableSection();
+        } else {
+            tableSection = FrameTableSection::createAnonymousWithParent(parent, current);
+        }
+    }
 
+    ctx.setCurrentBlockContainer(tableSection);
+    ctx.mergeTextDecorationData(tableSection->style());
+
+    if (current->isTableSection()) {
         unsigned i = 0;
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             FrameTableRow* tableRow = tableSection->addChild(c, ctx, force);
@@ -62,45 +76,21 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* current, Fram
                 tableSection->grid().push_back(row);
             }
         }
-        ctx.setCurrentBlockContainer(lastContext);
-        return tableSection;
-    } else if (current->isTableSection() == false) {
-        // current node is not tablesection then make anonymous section or
-        // reuse before anonymous section
-        FrameBlockBox* parent = ctx.currentBlockContainer();
-        Frame* before = parent->lastChild();
-
-        if (before && before->isAnonymous() && before->isFrameTableSection()) {
-            tableSection = before->asFrameTableSection();
-        } else {
-            tableSection = FrameTableSection::createAnonymousWithParent(parent, current);
-        }
-        ctx.setCurrentBlockContainer(tableSection);
-        ctx.mergeTextDecorationData(tableSection->style());
-
+    } else if (tableSection->isAnonymous()) {
         FrameTableRow* tableRow;
-        if (current->isTableRow()) {
-            tableRow = tableSection->addChild(current, ctx, force);
-        } else {
-            // return nullptr, if buildFrameTableRow reuse before anonymous row
-            tableRow = FrameTableRow::buildFrameTableRow(current, ctx, force);
-            if (tableRow != nullptr) {
-                tableSection->appendChild(tableRow);
-            }
-        }
+        tableRow = tableSection->addChild(current, ctx, force);
         if (tableRow != nullptr) {
             tableRow->setRowIndex(tableSection->grid().size());
             RowStruct row(tableRow);
             tableSection->grid().push_back(row);
-
             STARFISH_ASSERT(tableRow->parent());
         }
-        ctx.setCurrentBlockContainer(parent);
-
-        return tableSection->parent() ? nullptr : tableSection;
     } else {
         STARFISH_ASSERT_NOT_REACHED();
     }
+
+    ctx.setCurrentBlockContainer(parent);
+    return tableSection->parent() ? nullptr : tableSection;
 }
 
 FrameTableCell* FrameTableCell::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
