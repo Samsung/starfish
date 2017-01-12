@@ -1170,6 +1170,7 @@ public:
             if (m_cssValues.at(i).keyKind() == name) {
                 m_cssValues.at(i).setValueKind(ret.valueKind());
                 m_cssValues.at(i).setValue(ret.value());
+                m_cssValues.at(i).setFlagImportant(ret.flagImportant());
                 notifyNeedsStyleRecalc();
                 return;
             }

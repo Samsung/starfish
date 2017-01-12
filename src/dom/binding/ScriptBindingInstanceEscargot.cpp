@@ -5286,9 +5286,20 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
                 escargot::ESValue prop = instance->currentExecutionContext()->readArgument(0);
                 escargot::ESValue val = instance->currentExecutionContext()->readArgument(1);
 
-                String* name = toBrowserString(prop.toString());
+                String* name = toBrowserString(prop.toString())->toLower();
                 const char* c = name->utf8Data();
                 CSSStyleKind kind = lookupCSSStyle(c, strlen(c));
+
+                bool isImportant = false;
+                if (instance->currentExecutionContext()->argumentCount() == 3) {
+                    String* pri = toBrowserString(instance->currentExecutionContext()->readArgument(2).toString())->toLower();
+                    if (!pri->equals(String::emptyString)){
+                        if (pri->equals(String::fromUTF8("important")))
+                            isImportant = true;
+                        else
+                            return escargot::ESValue();
+                    }
+                }
 
                 if (kind == CSSStyleKind::Unknown) {
                 } else {
@@ -5297,7 +5308,7 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
                     }
 #define SET_ATTR(name, nameLower, nameCSSCase) \
                     else if (kind == CSSStyleKind::name) { \
-                        decl->set##name(toBrowserString(val), false); \
+                        decl->set##name(toBrowserString(val), isImportant); \
                     }
                     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
                 }

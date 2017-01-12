@@ -1611,7 +1611,7 @@ void CSSParser::parseDeclaration(CSSToken* aToken, CSSStyleDeclaration* declarat
                     if (token->isIdent(String::createASCIIString("important"))) {
                         priority = true;
                         token = getToken(true, true);
-                        if (token->isSymbol(';') || token->isSymbol('}')) {
+                        if (token->isSymbol(';') || token->isSymbol('}') || token->m_type == CSSToken::NULL_TYPE) {
                             if (token->isSymbol('}'))
                                 ungetToken();
                         } else
