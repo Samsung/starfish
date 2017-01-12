@@ -34,16 +34,33 @@ FrameTableRow::FrameTableRow(Node* node, ComputedStyle* style)
 FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
     FrameTreeBuilderContext& ctx, bool force)
 {
+    FrameBlockBox* parent = ctx.currentBlockContainer();
+    FrameTableRow* tableRow;
+
     if (current->isTableRow()) {
-        FrameTableRow* tableRow;
         tableRow = new FrameTableRow(current, nullptr);
         current->setFrame(tableRow);
+    } else if (current->isTableRow() == false) {
+        // current node is not tableRow then make anonymous Row or
+        // reuse last anonymous Row
+        Frame* before = parent->lastChild();
+        if (before && before->isAnonymous() && before->isFrameTableRow()) {
+            tableRow = before->asFrameTableRow();
+        } else {
+            tableRow = FrameTableRow::createAnonymousWithParent(parent, current);
+        }
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
+    }
 
-        FrameBlockBox* lastContext = ctx.currentBlockContainer();
-        ctx.setCurrentBlockContainer(tableRow);
+    ctx.setCurrentBlockContainer(tableRow);
+    ctx.mergeTextDecorationData(tableRow->style());
+
+    FrameTableCell* tableCell;
+    if (current->isTableRow()) {
         unsigned i = 0;
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            FrameTableCell* tableCell = tableRow->addChild(c, ctx, force);
+            tableCell = tableRow->addChild(c, ctx, force);
             // TODO: need to calculate absoluteColumnIndex
             // After implementing anonymous boxes, replace the null check with assert()
             if (tableCell) {
@@ -51,51 +68,26 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
                 i += tableCell->colspan();
             }
         }
-        ctx.setCurrentBlockContainer(lastContext);
-        return tableRow;
-    } else if (current->isTableRow() == false) {
-        FrameTableRow* tableRow;
-        // current node is not tableRow then make anonymous Row or
-        // reuse before anonymous Row
-        FrameBlockBox* parent = ctx.currentBlockContainer();
-        Frame* before = parent->lastChild();
-        if (before && before->isAnonymous() && before->isFrameTableRow()) {
-            tableRow = before->asFrameTableRow();
-        } else {
-            tableRow = FrameTableRow::createAnonymousWithParent(parent, current);
-        }
-        ctx.setCurrentBlockContainer(tableRow);
-        ctx.mergeTextDecorationData(tableRow->style());
-        FrameTableCell* tableCell;
-
-        unsigned cellIndex = 0;
-        for (Frame* c = tableRow->firstChild(); c; c = c->next()) {
-            if (c->isFrameTableCell())
-                cellIndex += c->asFrameTableCell()->colspan();
-        }
-
-        if (current->isTableCell()) {
-            tableCell = tableRow->addChild(current, ctx, force);
-        } else {
-            // return nullptr, if buildFrameTableCell resuse before anonymous cell
-            tableCell = FrameTableCell::buildFrameTableCell(current, ctx, force);
-            if (tableCell != nullptr)
-                tableRow->appendChild(tableCell);
-        }
+    } else if (tableRow->isAnonymous()) {
+        //set cell index value if reuse last anonymous table row
+        tableCell = tableRow->addChild(current, ctx, force);
         if (tableCell != nullptr) {
+            unsigned cellIndex = 0;
+            for (Frame* c = tableRow->firstChild(); c; c = c->next()) {
+                if (c->isFrameTableCell())
+                    cellIndex += c->asFrameTableCell()->colspan();
+            }
             tableCell->setAbsoluteColumnIndex(cellIndex);
             STARFISH_ASSERT(tableCell->parent());
         }
-        ctx.setCurrentBlockContainer(parent);
-
-        if (tableRow->parent()) {
-            parent->asFrameTableSection()->grid()[tableRow->rowIndex()].cells.push_back(CellStruct(tableCell->asFrameTableCell()));
-            return nullptr;
-        }
-        return tableRow;
-    } else {
-        STARFISH_ASSERT_NOT_REACHED();
     }
+
+    ctx.setCurrentBlockContainer(parent);
+    if (tableRow->parent()) {
+        parent->asFrameTableSection()->grid()[tableRow->rowIndex()].cells.push_back(CellStruct(tableCell->asFrameTableCell()));
+        return nullptr;
+    }
+    return tableRow;
 }
 
 FrameTableRow* FrameTableRow::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
@@ -116,7 +108,12 @@ FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ct
         if (child->isCharacterData() || child->isComment()) {
             return nullptr;
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            // return nullptr, if buildFrameTableCell resuse before anonymous cell
+            childFrame = FrameTableCell::buildFrameTableCell(child, ctx, force);
+            if (childFrame != nullptr) {
+                ctx.currentBlockContainer()->appendChild(childFrame);
+            }
+            return childFrame;
         }
     }
 
