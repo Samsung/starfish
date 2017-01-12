@@ -180,13 +180,71 @@ void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWh
 
 void FrameTable::calCellWidth(LayoutContext& ctx)
 {
-    // We traverse the table to calculate min/max cell widths of the table
-    // before we perform table layout.
+    // 1. We traverse the table to calculate min/max cell widths of the table
+    //    before we perform table layout.
     m_columnWidths.clear();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSection()) {
             c->asFrameTableSection()->calCellWidth(ctx);
             collectColumnWidths(m_columnWidths, c->asFrameTableSection()->columnWidths());
+        }
+    }
+
+    // 2. Determine the column size of the table
+    //    If the parent's width is smaller than the max table width,
+    //    the with of the table is adjusted to somewhere between min/max table
+    //    width.
+    //    If the parent's width >= the max table width,
+    //    max table width is used
+
+    // 2.1 calculate the table width
+    LayoutUnit borderSpacing = LayoutUnit::fromPixel(style()->borderSpacing().fixed());
+    LayoutUnit tableWidth = 0;
+    tableWidth += LayoutUnit::fromPixel(style()->borderLeftWidth().fixed());
+    tableWidth += LayoutUnit::fromPixel(style()->borderRightWidth().fixed());
+    tableWidth += borderSpacing;
+    for (auto& colSize : m_columnWidths) {
+        tableWidth += colSize.maxCellWidth + borderSpacing;
+    }
+
+    LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
+    if (tableWidth > parentContentWidth) {
+        LayoutUnit availableWidth = parentContentWidth;
+        availableWidth -= LayoutUnit::fromPixel(style()->borderLeftWidth().fixed());
+        availableWidth -= LayoutUnit::fromPixel(style()->borderRightWidth().fixed());
+        availableWidth -= borderSpacing + (borderSpacing * m_columnWidths.size());
+
+        // 2.2 Calculate the ratio of which each column is to be reduced.
+        //     The cell width is:
+        //     minCellWidth <= cellWidth <= maxCellWidth
+        LayoutUnit totalCellWidths = 0;
+        for (auto& col : m_columnWidths) {
+            totalCellWidths += col.maxCellWidth;
+        }
+
+        for (auto& col : m_columnWidths) {
+            // FIXME: LayoutUnit has a rounding error bug when division is
+            // performed. To workaround, we convert LayoutUnit to double,
+            // do calculation, and convert back to LayoutUnit.
+            // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth / totalCellWidths);
+            LayoutUnit newCellWidth(availableWidth.toDouble() *
+                (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
+
+            if (newCellWidth.floor() < col.minCellWidth) {
+                col.cellWidth = col.minCellWidth;
+                availableWidth -= col.minCellWidth;
+                totalCellWidths -= col.maxCellWidth;
+            }
+        }
+
+        for (auto& col : m_columnWidths) {
+            if (col.cellWidth != col.minCellWidth) {
+                // To workaround the rounding error in LayoutUnit
+                // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth / totalCellWidths);
+                LayoutUnit newCellWidth(availableWidth.toDouble() *
+                    (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
+                col.cellWidth = std::max(col.minCellWidth.toInt(), newCellWidth.floor());
+            }
         }
     }
 }
@@ -275,6 +333,7 @@ void FrameTable::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
             ColSizeStruct& col = columnWidths[i];
             colSoFar.maxCellWidth = std::max(colSoFar.maxCellWidth, col.maxCellWidth);
             colSoFar.minCellWidth = std::max(colSoFar.minCellWidth, col.minCellWidth);
+            colSoFar.cellWidth = colSoFar.maxCellWidth;
         }
     }
 }

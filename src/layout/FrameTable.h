@@ -45,6 +45,7 @@ class TableFormattingContextBlock;
 struct ColSizeStruct {
     LayoutUnit minCellWidth;
     LayoutUnit maxCellWidth;
+    LayoutUnit cellWidth;
 };
 
 class FrameTable : public FrameBlockBox {
