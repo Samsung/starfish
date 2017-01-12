@@ -97,7 +97,7 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutLocation loc)
     m_top = m_loc.y() - m_box->marginTop();
     m_bottom = m_loc.y() + m_box->height() + m_box->marginBottom();
     if (m_isLeft) {
-        m_horizontalBoundary = m_loc.x() + m_box->contentWidth() + m_box->borderRight() + m_box->paddingRight() + m_box->marginRight();
+        m_horizontalBoundary = m_loc.x() + m_box->width() + m_box->marginRight();
     } else {
         m_horizontalBoundary = m_loc.x() - m_box->marginLeft();
     }
