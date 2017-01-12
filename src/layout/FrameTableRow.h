@@ -54,15 +54,7 @@ public:
 
     virtual bool hasBlockFlow()
     {
-        // TODO: Fix it after finishing table context properly
         // FIXME: TableRow always contains a blockflow
-        Frame* child = firstChild();
-        if (!child) {
-            STARFISH_ASSERT(child->isNormalFlow());
-            // Only TableCell can exist as children of TableRow
-            STARFISH_ASSERT(child->isFrameTableCell());
-        }
-
         return true;
     }
 
