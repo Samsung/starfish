@@ -240,6 +240,13 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableCaptionDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::TextAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::SideValueKind);
+        data.m_side = SideValue::CenterSideValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
