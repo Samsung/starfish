@@ -261,8 +261,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table wrapper
             FrameTable* table = FrameTable::buildFrameTable(current, ctx, force);
-            if (table != nullptr)
+            if (table && current->isTable()) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), table, current, ctx);
+            } else if (table && table->isAnonymous()) {
+                ctx.currentBlockContainer()->appendChild(table);
+            }
             return table;
         } else {
             if (display == DisplayValue::BlockDisplayValue || display == DisplayValue::InlineBlockDisplayValue) {
