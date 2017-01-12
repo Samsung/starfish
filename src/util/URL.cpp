@@ -382,6 +382,28 @@ String* URL::getProtocol()
     return m_urlString->substring(0, m_protocolEnd)->toLower();
 }
 
+void URL::setProtocol(String* newProtocol)
+{
+    if (newProtocol->length()) {
+        m_urlString = newProtocol->concat(m_urlString->substring(m_protocolEnd - 1, m_urlString->length() - m_protocolEnd + 1));
+    }
+
+    if (m_urlString->startsWith("file", false)) {
+        m_protocol = FILE_PROTOCOL;
+    } else if (m_urlString->startsWith("https", false)) {
+        m_protocol = HTTPS_PROTOCOL;
+    } else if (m_urlString->startsWith("http", false)) {
+        m_protocol = HTTP_PROTOCOL;
+    } else if (m_urlString->startsWith("blob", false)) {
+        m_protocol = BLOB_PROTOCOL;
+    } else if (m_urlString->startsWith("data", false)) {
+        m_protocol = DATA_PROTOCOL;
+    } else {
+        m_protocol = UNKNOWN;
+    }
+    resolvePositions();
+}
+
 String* URL::getUsername()
 {
     return m_urlString->substring(m_userStart, m_userEnd - m_userStart);

@@ -113,6 +113,7 @@ public:
     void setSearch(String* newPath);
     String* getHash();
     void setHash(String* newPath);
+    void setProtocol(String* newProtocol);
 
 protected:
     void resolvePositions();
