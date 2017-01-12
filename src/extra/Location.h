@@ -50,7 +50,13 @@ public:
 
     String* getHost()
     {
-        return url()->getHost();
+        String* hostname = url()->getHostname();
+        String* port = url()->getPort();
+        if (!port->equals(String::emptyString) && !hostname->equals(String::emptyString)) {
+            return (hostname->concat(String::fromUTF8(":")))->concat(port);
+        } else {
+            return hostname;
+        }
     }
 
     String* getHostname()
