@@ -1039,7 +1039,7 @@ static void addBorderCSSValuePairs(CSSStyleDeclaration* target,
     addBorderLeftCSSValuePairs(target, width, style, color);
 }
 
-void CSSStyleDeclaration::setBorder(String* value)
+void CSSStyleDeclaration::setBorder(String* value, bool isImportant)
 {
     if (value->length() == 0) {
         removeBorderCSSValuePairs(this);
@@ -1051,14 +1051,18 @@ void CSSStyleDeclaration::setBorder(String* value)
 
     CSSStyleValuePair v, width, style, color;
     if (v.updateValueCommon(&tokens)) {
+        v.setFlagImportant(isImportant);
         addBorderCSSValuePairs(this, v, v, v);
     } else if (parseBorderShorthand(&tokens, &width, &style, &color)) {
+        width.setFlagImportant(isImportant);
+        style.setFlagImportant(isImportant);
+        color.setFlagImportant(isImportant);
         addBorderCSSValuePairs(this, width, style, color);
     }
 }
 
 #define ADD_SET_BORDER(POS, ...) \
-void CSSStyleDeclaration::setBorder##POS(String* value) \
+void CSSStyleDeclaration::setBorder##POS(String* value, bool isImportant) \
 { \
     if (value->length() == 0) { \
         removeBorder##POS##CSSValuePairs(this); \
@@ -1070,8 +1074,12 @@ void CSSStyleDeclaration::setBorder##POS(String* value) \
     \
     CSSStyleValuePair v, width, style, color; \
     if (v.updateValueCommon(&tokens)) { \
+        v.setFlagImportant(isImportant);                                               \
         addBorder##POS##CSSValuePairs(this, v, v, v); \
     } else if (parseBorderShorthand(&tokens, &width, &style, &color)) { \
+        width.setFlagImportant(isImportant); \
+        style.setFlagImportant(isImportant); \
+        color.setFlagImportant(isImportant); \
         addBorder##POS##CSSValuePairs(this, width, style, color); \
     } \
 }
@@ -1406,7 +1414,7 @@ String* CSSStyleDeclaration::BackgroundRepeat()
     return String::emptyString;
 }
 
-void CSSStyleDeclaration::setBackgroundRepeat(String* value)
+void CSSStyleDeclaration::setBackgroundRepeat(String* value, bool isImportant)
 {
     if (value->length() == 0) {
         removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
@@ -1419,9 +1427,12 @@ void CSSStyleDeclaration::setBackgroundRepeat(String* value)
 
     CSSStyleValuePair c, x, y;
     if (c.updateValueCommon(&tokens)) {
+        c.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, c);
     } else if (parseBackgroundRepeatShorhand(&tokens, &x, &y)) {
+        x.setFlagImportant(isImportant);
+        y.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatX, x);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundRepeatY, y);
     }
@@ -1444,7 +1455,7 @@ String* CSSStyleDeclaration::BackgroundPosition()
     return positionX->concat(String::spaceString)->concat(positionY);
 }
 
-void CSSStyleDeclaration::setBackgroundPosition(String* value)
+void CSSStyleDeclaration::setBackgroundPosition(String* value, bool isImportant)
 {
     if (value->length() == 0) {
         removeCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX);
@@ -1457,9 +1468,12 @@ void CSSStyleDeclaration::setBackgroundPosition(String* value)
 
     CSSStyleValuePair c, x, y;
     if (c.updateValueCommon(&tokens)) {
+        c.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, c);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, c);
     } else if (parseBackgroundPositionShorhand(&tokens, &x, &y)) {
+        x.setFlagImportant(isImportant);
+        y.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionX, x);
         addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundPositionY, y);
     }
@@ -1560,7 +1574,7 @@ static void addBackgroundCSSValuePairs(CSSStyleDeclaration* target,
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, size);
 }
 
-void CSSStyleDeclaration::setBackground(String* value)
+void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
 {
     if (value->length() == 0) {
         removeBackgroundCSSValuePairs(this);
@@ -1576,6 +1590,7 @@ void CSSStyleDeclaration::setBackground(String* value)
     // TODO: should check comma-seperated input
     CSSStyleValuePair v, color, image, repeatX, repeatY, positionX, positionY, size;
     if (v.updateValueCommon(&tokens)) {
+        v.setFlagImportant(isImportant);
         addBackgroundCSSValuePairs(this, v, v, v, v, v, v, v);
     } else {
 
@@ -1630,6 +1645,13 @@ void CSSStyleDeclaration::setBackground(String* value)
             cntLayer++;
             layer.clear();
         }
+        color.setFlagImportant(isImportant);
+        image.setFlagImportant(isImportant);
+        repeatX.setFlagImportant(isImportant);
+        repeatY.setFlagImportant(isImportant);
+        positionX.setFlagImportant(isImportant);
+        positionY.setFlagImportant(isImportant);
+        size.setFlagImportant(isImportant);
         addBackgroundCSSValuePairs(this, color, image, repeatX, repeatY, positionX, positionY, size);
     }
 #undef APPEND_NEW_LAYER
@@ -1700,7 +1722,7 @@ String* CSSStyleDeclaration::Font()
     return result;
 }
 
-void CSSStyleDeclaration::setFont(String* value)
+void CSSStyleDeclaration::setFont(String* value, bool isImportant)
 {
     if (value->length() == 0) {
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle);
@@ -1718,11 +1740,16 @@ void CSSStyleDeclaration::setFont(String* value)
 
     CSSStyleValuePair v, style /*, variant*/, weight /*, stretch*/, size, lineHeight /*, fontFamily*/;
     if (v.updateValueCommon(&tokens)) {
+        v.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::LineHeight, v);
     } else if (parseFontShorthand(&tokens, &style, &weight, &size, &lineHeight)) {
+        style.setFlagImportant(isImportant);
+        weight.setFlagImportant(isImportant);
+        size.setFlagImportant(isImportant);
+        lineHeight.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontStyle, style);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontWeight, weight);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontSize, size);
@@ -1741,7 +1768,7 @@ void CSSStyleDeclaration::setFont(String* value)
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Bottom##__VA_ARGS__); \
     removeCSSValuePair(CSSStyleValuePair::KeyKind::PRE##Left##__VA_ARGS__);
 #define ATTRIBUTE_SETTER_FOURSIDE(PRE, ...) \
-void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value) \
+void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value, bool isImportant) \
 { \
     if (value->length() == 0) { \
         RM_PAIRS(PRE, __VA_ARGS__); \
@@ -1752,6 +1779,7 @@ void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value) \
     \
     CSSStyleValuePair c, top, right, bottom, left; \
     if (c.updateValueCommon(&tokens)) { \
+        c.setFlagImportant(isImportant); \
         top = right = bottom = left = c; \
         ADD_PAIRS(PRE, __VA_ARGS__); \
         return; \
@@ -1763,6 +1791,7 @@ void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value) \
     std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> > result; \
     for (size_t i = 0; i < len; i++) { \
         CSSStyleValuePair v; \
+        v.setFlagImportant(isImportant); \
         if (!v.updateValueUnit##PRE##__VA_ARGS__(tokens[i])) { \
             return; \
         } \
@@ -1772,6 +1801,10 @@ void CSSStyleDeclaration::set##PRE##__VA_ARGS__(String* value) \
     right = len < 2 ? top : result[1]; \
     bottom = len < 3 ? top : result[2]; \
     left = len < 4 ? right : result[3]; \
+    top.setFlagImportant(isImportant); \
+    right.setFlagImportant(isImportant); \
+    bottom.setFlagImportant(isImportant); \
+    left.setFlagImportant(isImportant); \
     ADD_PAIRS(PRE, __VA_ARGS__); \
 }
 ATTRIBUTE_SETTER_FOURSIDE(Margin);
@@ -1891,6 +1924,9 @@ ComputedStyle* StyleResolver::resolveStyle(Element* element, ComputedStyle* pare
 void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> >& cssValues, ComputedStyle* style, ComputedStyle* parentStyle, bool isImportant)
 {
     for (unsigned k = 0; k < cssValues.size(); k++) {
+        if (isImportant != cssValues[k].flagImportant())
+            continue;
+
         switch (cssValues[k].keyKind()) {
         case CSSStyleValuePair::KeyKind::Display:
             if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
@@ -2654,25 +2690,43 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
 
 void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, ComputedStyle* parent)
 {
-    // first sheet is must user-agent style sheet!
+    Declarations userAgentDeclarations;
+    Declarations authorDeclarations;
+
     for (unsigned i = 0; i < m_sheets.size(); i++) {
         CSSStyleSheet* sheet = m_sheets[i];
-        sheet->sortRulesBySpecificity();
-
         for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            CSSSelectorList* selectorList = sheet->rules()[j]->m_selectorList;
+            CSSSelectorList* selectorList = sheet->rules()[j]->selectorList();
             if (matchSelector(element, selectorList) == Match::SelectorMatches) {
-                auto cssValues = sheet->rules()[j]->styleDeclaration()->m_cssValues;
-                apply(sheet->url(), cssValues, ret, parent);
+                if (i == 0)
+                    userAgentDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
+                else
+                    authorDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
             }
         }
     }
 
+    URL* url = element->document()->documentURI();
+
+    for (unsigned i = 0; i < userAgentDeclarations.size(); i++)
+        apply(url, userAgentDeclarations.declaration(i)->m_cssValues, ret, parent, false);
+
+    for (unsigned i = 0; i < authorDeclarations.size(); i++)
+        apply(url, authorDeclarations.declaration(i)->m_cssValues, ret, parent, false);
+
     // inline style
-    if (element->inlineStyleWithoutCreation()) {
-        auto inlineCssValues = element->inlineStyleWithoutCreation()->m_cssValues;
-        apply(element->document()->documentURI(), inlineCssValues, ret, parent);
-    }
+    if (element->inlineStyleWithoutCreation())
+        apply(url, element->inlineStyleWithoutCreation()->m_cssValues, ret, parent, false);
+
+    for (unsigned i = 0; i < authorDeclarations.size(); i++)
+        apply(url, authorDeclarations.declaration(i)->m_cssValues, ret, parent, true);
+
+    for (unsigned i = 0; i < userAgentDeclarations.size(); i++)
+        apply(url, userAgentDeclarations.declaration(i)->m_cssValues, ret, parent, true);
+
+    // inline style
+    if (element->inlineStyleWithoutCreation())
+        apply(url, element->inlineStyleWithoutCreation()->m_cssValues, ret, parent, true);
 }
 
 StyleResolver::Match StyleResolver::matchSelector(Element* element, CSSSelectorList* selectorList, unsigned idx)

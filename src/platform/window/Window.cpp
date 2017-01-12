@@ -618,6 +618,7 @@ void Window::layoutIfNeeds()
         if (m_needsStyleRecalcForWholeDocument) {
             for (size_t i = 0; i < document()->styleResolver()->sheets().size(); i ++) {
                 document()->styleResolver()->sheets()[i]->parseSheetIfneeds();
+                document()->styleResolver()->sheets()[i]->sortRulesBySpecificity();
             }
         }
 

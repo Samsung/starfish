@@ -5297,7 +5297,7 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
                     }
 #define SET_ATTR(name, nameLower, nameCSSCase) \
                     else if (kind == CSSStyleKind::name) { \
-                        decl->set##name(toBrowserString(val)); \
+                        decl->set##name(toBrowserString(val), false); \
                     }
                     FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
                 }
