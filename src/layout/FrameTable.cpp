@@ -155,6 +155,14 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
     if (child->isCharacterData() || child->isComment()) {
         // TODO
         return;
+    } else if (wrapInAnnoymousSection) {
+        // return nullptr, if buildFrameTableSection reuse before anonymouse section
+        childFrame = FrameTableSection::buildFrameTableSection(child, ctx, force);
+        if (childFrame != nullptr) {
+            ctx.currentBlockContainer()->appendChild(childFrame);
+            STARFISH_ASSERT(childFrame->parent());
+        }
+        return;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
