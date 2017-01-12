@@ -87,7 +87,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             LayoutUnit originalY = selfLoc.y();
             positionEstablishedBlockFormatContextBox:
             std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.floatingBoxBoundary(selfLoc.y(),
-                child->asFrameBox()->height() + child->asFrameBox()->marginHeight(), leftBoundary, rightBoundary);
+                child->asFrameBox()->height(), leftBoundary, rightBoundary);
             floatAffected |= boundaries.first != leftBoundary || boundaries.second != rightBoundary;
 
             if (floatAffected) {
