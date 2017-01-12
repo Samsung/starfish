@@ -39,7 +39,8 @@ public:
         initScriptWrappable(this);
     }
 
-    URL* url() {
+    URL* url()
+    {
         return m_starFish->window()->document()->documentURI();
     }
 
@@ -64,6 +65,11 @@ public:
         return url()->getHostname();
     }
 
+    String* getProtocol()
+    {
+        return url()->getProtocol();
+    }
+
     String* getPathname()
     {
         return url()->getPathname();
@@ -82,6 +88,12 @@ public:
     void setHref(String* newURL)
     {
         setLocation(newURL);
+    }
+
+    void setProtocol(String* newProtocol)
+    {
+        url()->setProtocol(newProtocol);
+        setLocation(url()->urlString());
     }
 
     void setPathname(String* newPath, bool needRemovingDots = true)

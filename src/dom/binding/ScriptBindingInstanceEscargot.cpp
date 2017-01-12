@@ -6472,6 +6472,22 @@ escargot::ESFunctionObject* bindingLocation(ScriptBindingInstance* scriptBinding
         return toJSString(originalObj->getHostname());
     }, nullptr);
 
+    defineNativeAccessorPropertyButNeedToGenerateJSFunction(
+        LocationFunction->protoType().asESPointer()->asESObject(), escargot::ESString::create("protocol"),
+        [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        return toJSString(originalObj->getProtocol());
+    }, [](escargot::ESVMInstance* instance) -> escargot::ESValue {
+        GENERATE_THIS_AND_CHECK_TYPE(ScriptWrappable::Type::LocationObject, LocationObj);
+        int argCount = instance->currentExecutionContext()->argumentCount();
+        if (argCount < 1) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        } else {
+            originalObj->setProtocol(String::fromUTF8(instance->currentExecutionContext()->readArgument(0).toString()->utf8Data()));
+        }
+        return escargot::ESValue();
+    });
+
     return LocationFunction;
 }
 
