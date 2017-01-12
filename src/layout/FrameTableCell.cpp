@@ -46,17 +46,17 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode, FrameTreeBui
     return tableCell;
 }
 
-void FrameTableCell::calContentWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCell::calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
     if (style()->width().isAuto()) {
-        m_minContentWidth = minimumCellWidth(ctx);
-        m_maxContentWidth = maximumCellWidth(ctx);
+        m_minCellWidth = calMinCellWidth(ctx);
+        m_maxCellWidth = calMaxCellWidth(ctx);
     } else if (style()->width().isFixed()) {
         LayoutUnit width = LayoutUnit::fromPixel(style()->width().fixed());
-        m_minContentWidth = std::max(width, minimumCellWidth(ctx));
-        m_maxContentWidth = std::max(width, maximumCellWidth(ctx));
+        m_minCellWidth = std::max(width, calMinCellWidth(ctx));
+        m_maxCellWidth = std::max(width, calMaxCellWidth(ctx));
     } else if (style()->width().isPercent()) {
         // TODO
     } else {
@@ -80,7 +80,7 @@ void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resol
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
+LayoutUnit FrameTableCell::calMinCellWidth(LayoutContext& ctx)
 {
     LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -91,13 +91,14 @@ LayoutUnit FrameTableCell::minimumCellWidth(LayoutContext& ctx)
             // TODO: measure width for other frameboxes
         }
         width += paddingLeft() + paddingRight();
+        width += borderLeft() + borderRight();
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
 
     return maxWidthSoFar;
 }
 
-LayoutUnit FrameTableCell::maximumCellWidth(LayoutContext& ctx)
+LayoutUnit FrameTableCell::calMaxCellWidth(LayoutContext& ctx)
 {
     LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -108,6 +109,7 @@ LayoutUnit FrameTableCell::maximumCellWidth(LayoutContext& ctx)
             // TODO
         }
         width += paddingLeft() + paddingRight();
+        width += borderLeft() + borderRight();
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
 

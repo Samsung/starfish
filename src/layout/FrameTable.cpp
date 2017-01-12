@@ -170,7 +170,7 @@ void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWh
     TableFormattingContextBlock context(this, ctx);
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
-        calContentWidth(ctx);
+        calCellWidth(ctx);
         layoutWidth(ctx);
     }
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
@@ -178,14 +178,14 @@ void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWh
     }
 }
 
-void FrameTable::calContentWidth(LayoutContext& ctx)
+void FrameTable::calCellWidth(LayoutContext& ctx)
 {
-    // We traverse the table to calculate min/max content width of the table
+    // We traverse the table to calculate min/max cell widths of the table
     // before we perform table layout.
     m_columnWidths.clear();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSection()) {
-            c->asFrameTableSection()->calContentWidth(ctx);
+            c->asFrameTableSection()->calCellWidth(ctx);
             collectColumnWidths(m_columnWidths, c->asFrameTableSection()->columnWidths());
         }
     }
@@ -217,7 +217,7 @@ void FrameTable::layoutWidth(LayoutContext& ctx)
 
 void FrameTable::layoutHeight(LayoutContext& ctx)
 {
-    // Table is placed in the follow order:
+    // Table is placed in the following order:
     // 1. Captions that has property "caption-side: top"
     //    If there are multiple captions, place them in document order
     // 2. Table sections in document order
@@ -261,7 +261,7 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 }
 
-void FrameTable::collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar, GCVector<ColStruct>& columnWidths)
+void FrameTable::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths)
 {
     // FIXME: absolute at this stage
     // Need to consider absolute and logical columns
@@ -271,10 +271,10 @@ void FrameTable::collectColumnWidths(GCVector<ColStruct>& columnWidthsSoFar, GCV
         // Update to support colspans
         STARFISH_ASSERT(columnWidthsSoFar.size() == columnWidths.size());
         for (unsigned i = 0; i < columnWidths.size(); i++) {
-            ColStruct& colSoFar = columnWidthsSoFar[i];
-            ColStruct& col = columnWidths[i];
-            colSoFar.maxContentWidth = std::max(colSoFar.maxContentWidth, col.maxContentWidth);
-            colSoFar.minContentWidth = std::max(colSoFar.minContentWidth, col.minContentWidth);
+            ColSizeStruct& colSoFar = columnWidthsSoFar[i];
+            ColSizeStruct& col = columnWidths[i];
+            colSoFar.maxCellWidth = std::max(colSoFar.maxCellWidth, col.maxCellWidth);
+            colSoFar.minCellWidth = std::max(colSoFar.minCellWidth, col.minCellWidth);
         }
     }
 }

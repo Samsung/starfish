@@ -126,12 +126,12 @@ FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ct
     return childFrame;
 }
 
-void FrameTableRow::calContentWidth(LayoutContext& ctx)
+void FrameTableRow::calCellWidth(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCell()) {
-            c->asFrameTableCell()->calContentWidth(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+            c->asFrameTableCell()->calCellWidth(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -153,11 +153,9 @@ void FrameTableRow::layoutWidth(LayoutContext& ctx)
         if (c->isFrameTableCell()) {
             FrameBox* cell = c->asFrameTableCell();
             cell->setX(xSoFar);
-            xSoFar += cell->borderLeft() + cell->paddingLeft();
-            LayoutUnit cellWidth = tableSection()->table()->columnWidths()[i].maxContentWidth;
-            cell->setContentWidth(cellWidth);
+            LayoutUnit cellWidth = tableSection()->table()-> columnWidths()[i].maxCellWidth;
+            cell->setWidth(cellWidth);
             xSoFar += cellWidth;
-            xSoFar += cell->paddingRight() + cell->borderRight();
             xSoFar += borderSpacing;
             i++;
         } else {

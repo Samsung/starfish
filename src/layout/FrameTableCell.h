@@ -30,7 +30,7 @@ public:
     static FrameTableCell* buildFrameTableCell(Node* cellNode, FrameTreeBuilderContext& ctx, bool force = false);
     static FrameTableCell* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
-    void calContentWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
@@ -61,25 +61,25 @@ public:
         return m_absoluteColumnIndex;
     }
 
-    LayoutUnit minContentWidth()
+    LayoutUnit minCellWidth()
     {
-        return m_minContentWidth;
+        return m_minCellWidth;
     }
 
-    LayoutUnit maxContentWidth()
+    LayoutUnit maxCellWidth()
     {
-        return m_maxContentWidth;
+        return m_maxCellWidth;
     }
 
 private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 
-    LayoutUnit minimumCellWidth(LayoutContext& ctx);
-    LayoutUnit maximumCellWidth(LayoutContext& ctx);
+    LayoutUnit calMinCellWidth(LayoutContext& ctx);
+    LayoutUnit calMaxCellWidth(LayoutContext& ctx);
 
     unsigned m_absoluteColumnIndex; // starts with 0
-    LayoutUnit m_minContentWidth;
-    LayoutUnit m_maxContentWidth;
+    LayoutUnit m_minCellWidth;
+    LayoutUnit m_maxCellWidth;
 
 };
 

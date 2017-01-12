@@ -151,12 +151,12 @@ FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext&
     return childFrame;
 }
 
-void FrameTableSection::calContentWidth(LayoutContext& ctx)
+void FrameTableSection::calCellWidth(LayoutContext& ctx)
 {
     // 0. We traverse the cells first to determine min/max cell size
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableRow()) {
-            c->asFrameTableRow()->calContentWidth(ctx);
+            c->asFrameTableRow()->calCellWidth(ctx);
         } else {
             // Only FrameTableRow should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -173,21 +173,21 @@ void FrameTableSection::calContentWidth(LayoutContext& ctx)
     // 2. get min/max column width for each column that does not have a colspan
     m_columnWidths.clear();
     for (unsigned c = 0; c < logicalColSize; c++) {
-        LayoutUnit minContentWidthSoFar = 0;
-        LayoutUnit maxContentWidthSoFar = 0;
+        LayoutUnit minCellWidthSoFar = 0;
+        LayoutUnit maxCellWidthSoFar = 0;
         for (unsigned r = 0; r < m_grid.size(); r++) {
             RowStruct& row = m_grid[r];
             if (c < row.cells.size()) {
                 FrameTableCell* cell = row.cells[c].cell;
-                minContentWidthSoFar =
-                    std::max(minContentWidthSoFar, cell->minContentWidth());
-                maxContentWidthSoFar =
-                    std::max(maxContentWidthSoFar, cell->maxContentWidth());
+                minCellWidthSoFar =
+                    std::max(minCellWidthSoFar, cell->minCellWidth());
+                maxCellWidthSoFar =
+                    std::max(maxCellWidthSoFar, cell->maxCellWidth());
             }
         }
-        ColStruct col;
-        col.minContentWidth = minContentWidthSoFar;
-        col.maxContentWidth = maxContentWidthSoFar;
+        ColSizeStruct col;
+        col.minCellWidth = minCellWidthSoFar;
+        col.maxCellWidth = maxCellWidthSoFar;
         m_columnWidths.push_back(col);
     }
 

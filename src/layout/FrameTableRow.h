@@ -41,7 +41,7 @@ public:
     static FrameTableRow* buildFrameTableRow(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
     static FrameTableRow* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
-    void calContentWidth(LayoutContext& ctx);
+    void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
