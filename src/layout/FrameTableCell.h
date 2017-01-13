@@ -27,7 +27,7 @@ class FrameTableCell : public FrameBlockBox {
 public:
     FrameTableCell(Node* node, ComputedStyle* style);
 
-    static FrameTableCell* buildFrameTableCell(Node* cellNode, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableCell* buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
     static FrameTableCell* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     void calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);

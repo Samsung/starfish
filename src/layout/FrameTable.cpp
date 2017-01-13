@@ -61,7 +61,7 @@ FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& 
         // if current node is table then make wrapper and current node owns this wrapper
         tableWrapper = new FrameTable(current, nullptr);
         current->setFrame(tableWrapper);
-    } else if (current->isTable() == false) {
+    } else {
         // if current node is not table wrapper node then make anonymous wrapper or
         // reuse before anonymous wrapper
         FrameBlockBox* parent = ctx.currentBlockContainer();
@@ -80,9 +80,8 @@ FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& 
             tableWrapper = FrameTable::createAnonymousWithParent(parent, current);
         }
 
-    } else {
-        STARFISH_ASSERT_NOT_REACHED();
     }
+
     // Table establishes a new block context
     ctx.setCurrentBlockContainer(tableWrapper);
     ctx.mergeTextDecorationData(tableWrapper->style());
@@ -91,8 +90,10 @@ FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& 
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             tableWrapper->addChild(c, ctx, force);
         }
-    } else {
+    } else if (tableWrapper->isAnonymous()){
         tableWrapper->addChild(current, ctx, force);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
 
     ctx.setCurrentBlockContainer(parent);
