@@ -48,6 +48,7 @@ public:
 
 FrameTable::FrameTable(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
+    , m_tableRect(0, 0, 0, 0)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr)
         || (node != nullptr && style == nullptr));
@@ -283,7 +284,7 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     // 3. Captions that has property "caption-side: bottom"
     //    If there are multiple captions, place them in document order
 
-    LayoutUnit ySoFar = LayoutUnit::fromPixel(style()->borderTopWidth().fixed());
+    LayoutUnit ySoFar = 0;
     LayoutUnit topCaptionHeightsSoFar = 0;
 
     // 1. place captions with caption-side: top
@@ -298,6 +299,9 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     }
 
     // 2. place table sections
+    m_tableRect.setX(0);
+    m_tableRect.setY(ySoFar);
+    ySoFar += LayoutUnit::fromPixel(style()->borderTopWidth().fixed());
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSection()) {
             c->asFrameTableSection()->layoutHeight(ctx);
@@ -305,6 +309,9 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
             ySoFar += c->asFrameBox()->height();
         }
     }
+    ySoFar += LayoutUnit::fromPixel(style()->borderBottomWidth().fixed());
+    m_tableRect.setWidth(width());
+    m_tableRect.setHeight(ySoFar - m_tableRect.y());
 
     // 3. place captions with caption-side: bottom
     for (auto& caption : m_captions) {
@@ -316,7 +323,6 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
         }
     }
 
-    ySoFar += LayoutUnit::fromPixel(style()->borderBottomWidth().fixed());
     setHeight(ySoFar);
 }
 
@@ -337,6 +343,127 @@ void FrameTable::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
             colSoFar.cellWidth = colSoFar.maxCellWidth;
         }
     }
+}
+
+// Table draws the border around the TableFrameSections
+void FrameTable::paintBackgroundAndBorders(Canvas* canvas)
+{
+    // Fill in the table with background color
+    LayoutRect bgRect(m_tableRect.x() + borderLeft(), m_tableRect.y() + borderTop(),
+        m_tableRect.width() - borderWidth(), m_tableRect.height() - borderHeight());
+    paintBackground(canvas, style(), bgRect, m_tableRect, false);
+
+    canvas->save();
+
+    if (style()->hasBorderImageData()) {
+        // Draw image borders at the four corners as shown below.
+        //   ______________
+        //  |_|          |_|
+        //  |              |
+        //  |              |
+        //  |_            _|
+        //  |_|__________|_|
+        //
+
+        double bWidth = style()->surround()->border.top().width().specifiedValue(height());
+        double bImgWidth = style()->surround()->border.image().widths().top().specifiedValue(bWidth);
+        double bImgSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
+
+        size_t imgWidth = style()->surround()->border.image().imageData()->width();
+        size_t imgHeight = style()->surround()->border.image().imageData()->height();
+
+        size_t lSlice = style()->surround()->border.image().slices().left().specifiedValue(width());
+        size_t tSlice = style()->surround()->border.image().slices().top().specifiedValue(height());
+        size_t rSlice = style()->surround()->border.image().slices().right().specifiedValue(width());
+        size_t bSlice = style()->surround()->border.image().slices().bottom().specifiedValue(height());
+
+        ImageData* imgData = style()->surround()->border.image().imageData();
+
+        if (bImgSlice > imgWidth || bImgSlice > imgHeight)
+            bImgSlice = std::min(imgWidth, imgHeight);
+
+        double value = std::min((float)width() / (bImgWidth*2), (float)height() / (bImgWidth*2));
+        if (value < 1)
+            bImgWidth *= value;
+
+        double scale = bImgWidth / bImgSlice;
+        bool isFill = false;
+
+        if ((lSlice + rSlice > imgWidth) || (tSlice + bSlice > imgHeight)) {
+            float drawRect = std::min((float)width(), (float)height()) / 2.0;
+
+            if (drawRect > bImgWidth)
+                drawRect = bImgWidth;
+
+            // left-top
+            canvas->drawBorderImage(imgData,
+                Rect(m_tableRect.x(), m_tableRect.y(), drawRect, drawRect), lSlice, tSlice, 0, 0, scale, isFill);
+            // right-top
+            canvas->drawBorderImage(imgData,
+                Rect((float)m_tableRect.width() - drawRect, m_tableRect.y(), drawRect, drawRect), 0, tSlice, rSlice, 0, scale, isFill);
+            // right-bottom
+            canvas->drawBorderImage(imgData,
+                Rect((float)m_tableRect.width() - drawRect, (float)(m_tableRect.y() + m_tableRect.height()) - drawRect, drawRect, drawRect), 0, 0, rSlice, bSlice, scale, isFill);
+            // left-bottom
+            canvas->drawBorderImage(imgData,
+                Rect(m_tableRect.x(), (float)(m_tableRect.y() + m_tableRect.height()) - drawRect, drawRect, drawRect), lSlice, 0, 0, bSlice, scale, isFill);
+        } else {
+            isFill = style()->surround()->border.image().sliceFill();
+            canvas->drawBorderImage(imgData,
+                Rect(m_tableRect.x(), m_tableRect.y(),
+                    m_tableRect.width(), m_tableRect.height()), lSlice, tSlice, rSlice, bSlice, scale, isFill);
+        }
+    } else if (style()->hasBorderStyle()) {
+        // Draw trapezium-like borders around FrameTableSections
+        // The area for FrameTableSections is obtained from m_tableRect,
+        // which has been already calculated in layoutHeight();
+        //    _______________
+        //   |\_____________/|
+        //   ||             ||
+        //   ||             ||
+        //   ||             ||
+        //   ||_____________||
+        //   |/_____________\|
+        //
+
+        // top
+        canvas->setColor(style()->borderTopColor());
+        canvas->drawRect(
+            LayoutLocation(m_tableRect.x(), m_tableRect.y()),
+            LayoutLocation(m_tableRect.x() + m_tableRect.width(), m_tableRect.y()),
+            LayoutLocation(m_tableRect.x() + m_tableRect.width() - borderRight(), m_tableRect.y() + borderTop()),
+            LayoutLocation(m_tableRect.x() + borderLeft(), m_tableRect.y() + borderTop())
+        );
+
+        // right
+        canvas->setColor(style()->borderRightColor());
+        canvas->drawRect(
+            LayoutLocation(m_tableRect.x() + m_tableRect.width() - borderRight(), m_tableRect.y() + borderTop()),
+            LayoutLocation(m_tableRect.x() + m_tableRect.width(), m_tableRect.y()),
+            LayoutLocation(m_tableRect.x() + m_tableRect.width(), m_tableRect.y() + m_tableRect.height()),
+            LayoutLocation(m_tableRect.x() + m_tableRect.width() - borderRight(), m_tableRect.y() + m_tableRect.height() - borderBottom())
+        );
+
+        // bottom
+        canvas->setColor(style()->borderBottomColor());
+        canvas->drawRect(
+            LayoutLocation(m_tableRect.x() + borderLeft(), m_tableRect.y() + m_tableRect.height() - borderBottom()),
+            LayoutLocation(m_tableRect.x() + m_tableRect.width() - borderRight(), m_tableRect.y() + m_tableRect.height() - borderBottom()),
+            LayoutLocation(m_tableRect.x() + m_tableRect.width(), m_tableRect.y() + m_tableRect.height()),
+            LayoutLocation(m_tableRect.x(), m_tableRect.y() + m_tableRect.height())
+        );
+
+        // left
+        canvas->setColor(style()->borderLeftColor());
+        canvas->drawRect(
+            LayoutLocation(m_tableRect.x(), m_tableRect.y()),
+            LayoutLocation(m_tableRect.x() + borderLeft(), m_tableRect.y() + borderTop()),
+            LayoutLocation(m_tableRect.x() + borderLeft(), m_tableRect.y() + m_tableRect.height() - borderBottom()),
+            LayoutLocation(m_tableRect.x(), m_tableRect.y() + m_tableRect.height())
+        );
+    }
+
+    canvas->restore();
 }
 
 }
