@@ -40,7 +40,7 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
     if (current->isTableRow()) {
         tableRow = new FrameTableRow(current, nullptr);
         current->setFrame(tableRow);
-    } else if (current->isTableRow() == false) {
+    } else {
         // current node is not tableRow then make anonymous Row or
         // reuse last anonymous Row
         Frame* before = parent->lastChild();
@@ -49,8 +49,6 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
         } else {
             tableRow = FrameTableRow::createAnonymousWithParent(parent, current);
         }
-    } else {
-        STARFISH_ASSERT_NOT_REACHED();
     }
 
     ctx.setCurrentBlockContainer(tableRow);
@@ -80,6 +78,8 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
             tableCell->setAbsoluteColumnIndex(cellIndex);
             STARFISH_ASSERT(tableCell->parent());
         }
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
 
     ctx.setCurrentBlockContainer(parent);

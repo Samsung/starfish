@@ -29,21 +29,40 @@ FrameTableCell::FrameTableCell(Node* node, ComputedStyle* style)
         || (node != nullptr && style == nullptr));
 }
 
-FrameTableCell* FrameTableCell::buildFrameTableCell(Node* cellNode, FrameTreeBuilderContext& ctx, bool force)
+FrameTableCell* FrameTableCell::buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableCell* tableCell = new FrameTableCell(cellNode, nullptr);
-    cellNode->setFrame(tableCell);
+    FrameBlockBox* parent = ctx.currentBlockContainer();
+    FrameTableCell* tableCell;
 
-    FrameBlockBox* lastContext = ctx.currentBlockContainer();
+    if (current->isTableCell()) {
+        tableCell = new FrameTableCell(current, nullptr);
+        current->setFrame(tableCell);
+    } else {
+        // current node is not tableRow then make anonymous Row or
+        // reuse last anonymous Cell
+        Frame* before = parent->lastChild();
+        if (before && before->isAnonymous() && before->isFrameTableCell()) {
+            tableCell = before->asFrameTableCell();
+        } else {
+            tableCell = FrameTableCell::createAnonymousWithParent(parent, current);
+        }
+    }
     ctx.setCurrentBlockContainer(tableCell);
+    ctx.mergeTextDecorationData(tableCell->style());
 
-    for (Node* c = cellNode->firstChild(); c; c = c->nextSibling()) {
-        FrameTreeBuilder::buildTree(c, ctx, force);
+    if(current->isTableCell()) {
+        for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
+            FrameTreeBuilder::buildTree(c, ctx, force);
+        }
+    } else if(tableCell->isAnonymous()){
+        Frame* childFrame = FrameTreeBuilder::buildTree(current, ctx, force);
+    } else {
+        STARFISH_ASSERT_NOT_REACHED();
     }
 
-    ctx.setCurrentBlockContainer(lastContext);
+    ctx.setCurrentBlockContainer(parent);
 
-    return tableCell;
+    return tableCell->parent() ? nullptr : tableCell;
 }
 
 void FrameTableCell::calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
@@ -119,7 +138,10 @@ LayoutUnit FrameTableCell::calMaxCellWidth(LayoutContext& ctx)
 int FrameTableCell::colspan()
 {
     String* colspan = String::emptyString;
-    if (node()->asElement()->asHTMLElement()->isHTMLTDElement()) {
+    if (isAnonymous()) {
+        // FIX ME
+        return 1;
+    } else if (node()->asElement()->asHTMLElement()->isHTMLTDElement()) {
         colspan = node()->asElement()->asHTMLElement()->asHTMLTDElement()->colspan();
     } else if (node()->asElement()->asHTMLElement()->isHTMLTHElement()) {
         colspan = node()->asElement()->asHTMLElement()->asHTMLTHElement()->colspan();
