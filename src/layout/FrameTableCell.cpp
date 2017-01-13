@@ -50,11 +50,11 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* current, FrameTreeBuil
     ctx.setCurrentBlockContainer(tableCell);
     ctx.mergeTextDecorationData(tableCell->style());
 
-    if(current->isTableCell()) {
+    if (current->isTableCell()) {
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             FrameTreeBuilder::buildTree(c, ctx, force);
         }
-    } else if(tableCell->isAnonymous()){
+    } else if (tableCell->isAnonymous()) {
         Frame* childFrame = FrameTreeBuilder::buildTree(current, ctx, force);
     } else {
         STARFISH_ASSERT_NOT_REACHED();

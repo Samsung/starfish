@@ -91,7 +91,7 @@ FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& 
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
             tableWrapper->addChild(c, ctx, force);
         }
-    } else if (tableWrapper->isAnonymous()){
+    } else if (tableWrapper->isAnonymous()) {
         tableWrapper->addChild(current, ctx, force);
     } else {
         STARFISH_ASSERT_NOT_REACHED();

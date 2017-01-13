@@ -67,7 +67,7 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
             }
         }
     } else if (tableRow->isAnonymous()) {
-        //set cell index value if reuse last anonymous table row
+        // set cell index value if reuse last anonymous table row
         tableCell = tableRow->addChild(current, ctx, force);
         if (tableCell != nullptr) {
             unsigned cellIndex = 0;
