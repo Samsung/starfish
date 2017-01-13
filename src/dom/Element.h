@@ -235,7 +235,7 @@ public:
     CSSStyleDeclaration* inlineStyle()
     {
         if (m_inlineStyle == nullptr) {
-            m_inlineStyle = new CSSStyleDeclaration(document(), this);
+            m_inlineStyle = new CSSStyleDeclaration(document(), this, CSSStyleDeclaration::InlineStyle);
         }
         return m_inlineStyle;
     }

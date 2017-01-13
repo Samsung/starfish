@@ -1088,11 +1088,18 @@ class CSSStyleDeclaration : public ScriptWrappable {
     friend class StyleResolver;
 
 public:
-    CSSStyleDeclaration(Document* document, Element* element = NULL)
+    enum StyleType {
+        ExternalStyle,
+        InternalStyle,
+        InlineStyle,
+    };
+
+    CSSStyleDeclaration(Document* document, Element* element = NULL, StyleType styleType = InternalStyle)
         : ScriptWrappable(this)
         , m_document(document)
     {
         m_element = element;
+        m_styleType = styleType;
     }
 
     void addValuePair(CSSStyleValuePair p)
@@ -1135,6 +1142,16 @@ public:
         return ScriptWrappable::Type::CSSStyleDeclarationObject;
     }
 
+    StyleType styleType()
+    {
+        return m_styleType;
+    }
+
+    void setStyleType(StyleType styleType)
+    {
+        m_styleType = styleType;
+    }
+
     String* generateCSSText();
 
 
@@ -1168,10 +1185,14 @@ public:
     {
         for (unsigned i = 0; i < m_cssValues.size(); i++) {
             if (m_cssValues.at(i).keyKind() == name) {
-                m_cssValues.at(i).setValueKind(ret.valueKind());
-                m_cssValues.at(i).setValue(ret.value());
-                m_cssValues.at(i).setFlagImportant(ret.flagImportant());
-                notifyNeedsStyleRecalc();
+                if (styleType() == StyleType::InlineStyle || ret.flagImportant() == true
+                    || (ret.flagImportant() == false && m_cssValues.at(i).flagImportant() == false)) {
+                    m_cssValues.at(i).setValueKind(ret.valueKind());
+                    m_cssValues.at(i).setValue(ret.value());
+                    m_cssValues.at(i).setFlagImportant(ret.flagImportant());
+                    notifyNeedsStyleRecalc();
+                }
+
                 return;
             }
         }
@@ -1299,6 +1320,7 @@ protected:
     std::vector<CSSStyleValuePair, gc_allocator_ignore_off_page<CSSStyleValuePair> > m_cssValues;
     Document* m_document;
     Element* m_element;
+    StyleType m_styleType;
 };
 
 class CSSSelectorList;
