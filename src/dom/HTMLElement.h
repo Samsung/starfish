@@ -102,8 +102,8 @@ public:
         return m_hasDirAttribute;
     }
 
-    int tabIndex() override;
-    bool supportsFocus() override;
+    int tabIndex();
+    bool supportsFocus();
     LayoutRect offsetRect();
     uint32_t offsetWidth()
     {

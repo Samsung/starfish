@@ -577,6 +577,7 @@ void Document::notifyDomContentLoaded()
     m_resourceLoader.notifyEndParseDocument();
     m_documentBuilder = nullptr;
 
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     // Trigger HTMLMediaElement's preload
     // FIXME : Should consider detached HTMLMediaElements as well
     std::vector<Element*, gc_allocator_ignore_off_page<Element*>> mediaElements;
@@ -590,6 +591,7 @@ void Document::notifyDomContentLoaded()
         HTMLMediaElement* target = mediaElements[i]->asHTMLElement()->asHTMLMediaElement();
         target->onDOMContentLoaded();
     }
+#endif
 
     STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
     if (m_compatibilityMode != NoQuirksMode) {

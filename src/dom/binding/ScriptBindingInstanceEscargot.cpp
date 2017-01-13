@@ -5293,7 +5293,7 @@ escargot::ESFunctionObject* bindingCSSStyleDeclaration(ScriptBindingInstance* sc
                 bool isImportant = false;
                 if (instance->currentExecutionContext()->argumentCount() == 3) {
                     String* pri = toBrowserString(instance->currentExecutionContext()->readArgument(2).toString())->toLower();
-                    if (!pri->equals(String::emptyString)){
+                    if (!pri->equals(String::emptyString)) {
                         if (pri->equals(String::fromUTF8("important")))
                             isImportant = true;
                         else
