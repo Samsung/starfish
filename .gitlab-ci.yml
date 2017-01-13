@@ -10,6 +10,7 @@ build:
     - ./build_third_party.sh
   script:
     - make x64.exe.release -j
+    - make tidy; if cat error_report | grep 'ERROR' > /dev/null; then exit 1; fi
   artifacts:
     paths:
       - StarFish
