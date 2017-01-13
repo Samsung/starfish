@@ -231,7 +231,7 @@ void FrameTable::calCellWidth(LayoutContext& ctx)
             LayoutUnit newCellWidth(availableWidth.toDouble() *
                 (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
 
-            if (newCellWidth.floor() < col.minCellWidth) {
+            if (newCellWidth.round() < col.minCellWidth) {
                 col.cellWidth = col.minCellWidth;
                 availableWidth -= col.minCellWidth;
                 totalCellWidths -= col.maxCellWidth;
@@ -244,7 +244,7 @@ void FrameTable::calCellWidth(LayoutContext& ctx)
                 // LayoutUnit newCellWidth = availableWidth * (col.maxCellWidth / totalCellWidths);
                 LayoutUnit newCellWidth(availableWidth.toDouble() *
                     (col.maxCellWidth.toDouble() / totalCellWidths.toDouble()));
-                col.cellWidth = std::max(col.minCellWidth.toInt(), newCellWidth.floor());
+                col.cellWidth = std::max(col.minCellWidth.toInt(), newCellWidth.round());
             }
         }
     }
