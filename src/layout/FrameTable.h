@@ -91,11 +91,17 @@ public:
         return m_columnWidths;
     }
 
+    virtual void paintBackgroundAndBorders(Canvas* canvas);
+
 private:
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths);
 
     GCVector<FrameTableCaption*> m_captions;
     GCVector<ColSizeStruct> m_columnWidths;
+
+    // Border and background is drawn around FrameTableSections not FrameTable
+    // Keep track of FrameTableSections for border and background
+    LayoutRect m_tableRect;
 };
 
 }
