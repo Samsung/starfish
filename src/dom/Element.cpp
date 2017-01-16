@@ -384,6 +384,25 @@ Attr* Element::ensureAttr(QualifiedName name)
     return returnAttr;
 }
 
+String* Element::getLaunguage()
+{
+    Node* n = this;
+    String* value = String::emptyString;
+
+    do {
+        if (n->isElement()) {
+            value = n->asElement()->getAttribute(n->document()->window()->starFish()->staticStrings()->m_lang);
+        } else if (n->isDocument()) {
+            // TODO: checking the MIME content-language
+            // value = document()->contentLanguage();
+        }
+
+        n = n->parentNode();
+    } while (n && value->equals(String::emptyString));
+
+    return value;
+}
+
 void Element::setFocus(bool flag)
 {
     if (flag == focused())
