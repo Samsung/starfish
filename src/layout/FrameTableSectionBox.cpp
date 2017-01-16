@@ -187,8 +187,7 @@ void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
 
 void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 {
-    LayoutUnit xSoFar =
-        LayoutUnit::fromPixel(tableBox()->style()->borderLeftWidth().fixed());
+    LayoutUnit xSoFar = tableBox()->borderLeft();
     LayoutUnit maxWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableRowBox()) {
@@ -203,8 +202,7 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 
     // The width of all rows should be the same, so ideally, the maxWidth
     // should be the same as the width of any row.
-    setWidth(tableBox()->style()->borderLeftWidth().fixed() +
-        maxWidth + tableBox()->style()->borderRightWidth().fixed());
+    setWidth(tableBox()->borderLeft() + maxWidth + tableBox()->borderRight());
 }
 
 void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
