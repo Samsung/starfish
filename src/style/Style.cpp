@@ -2970,7 +2970,7 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         break;
     case CSSSelector::PseudoType::PseudoLang:
         {
-            String* value = element->getAttribute(element->document()->window()->starFish()->staticStrings()->m_lang);
+            String* value = element->getLaunguage();
             String* argument = selector->argument();
 
             if (value->equals(String::emptyString) || !value->startsWith(argument, false))

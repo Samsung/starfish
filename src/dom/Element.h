@@ -266,6 +266,8 @@ public:
     inline bool hasClass() { return m_classNames.size() > 0; }
     inline bool hasId() { return !m_id->equals(String::emptyString); }
 
+    String* getLaunguage();
+
 protected:
     // clientRect is differ with clientBoundingRect.
     // this function is only for client{Left, Top, Width, Top}
