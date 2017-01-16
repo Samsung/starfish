@@ -34,11 +34,11 @@ class FrameBlockBox;
 class FrameReplaced;
 class FrameInline;
 class FrameDocument;
-class FrameTable;
-class FrameTableCaption;
-class FrameTableSection;
-class FrameTableRow;
-class FrameTableCell;
+class FrameTableBox;
+class FrameTableCaptionBox;
+class FrameTableSectionBox;
+class FrameTableRowBox;
+class FrameTableCellBox;
 class LineBox;
 
 enum PaintingStage {
@@ -540,27 +540,27 @@ public:
         return false;
     }
 
-    virtual bool isFrameTable()
+    virtual bool isFrameTableBox()
     {
         return false;
     }
 
-    virtual bool isFrameTableCaption()
+    virtual bool isFrameTableCaptionBox()
     {
         return false;
     }
 
-    virtual bool isFrameTableSection()
+    virtual bool isFrameTableSectionBox()
     {
         return false;
     }
 
-    virtual bool isFrameTableRow()
+    virtual bool isFrameTableRowBox()
     {
         return false;
     }
 
-    virtual bool isFrameTableCell()
+    virtual bool isFrameTableCellBox()
     {
         return false;
     }
@@ -573,8 +573,8 @@ public:
 
     FrameBox* asFrameBox()
     {
-        STARFISH_ASSERT(isFrameBox() || isFrameTable() || isFrameTableCaption()
-            || isFrameTableSection() || isFrameTableRow() || isFrameTableCell());
+        STARFISH_ASSERT(isFrameBox() || isFrameTableBox() || isFrameTableCaptionBox()
+            || isFrameTableSectionBox() || isFrameTableRowBox() || isFrameTableCellBox());
         return (FrameBox*)this;
     }
 
@@ -596,34 +596,34 @@ public:
         return (FrameInline*)this;
     }
 
-    FrameTable* asFrameTable()
+    FrameTableBox* asFrameTableBox()
     {
-        STARFISH_ASSERT(isFrameTable());
-        return (FrameTable*)this;
+        STARFISH_ASSERT(isFrameTableBox());
+        return (FrameTableBox*)this;
     }
 
-    FrameTableCaption* asFrameTableCaption()
+    FrameTableCaptionBox* asFrameTableCaptionBox()
     {
-        STARFISH_ASSERT(isFrameTableCaption());
-        return (FrameTableCaption*)this;
+        STARFISH_ASSERT(isFrameTableCaptionBox());
+        return (FrameTableCaptionBox*)this;
     }
 
-    FrameTableSection* asFrameTableSection()
+    FrameTableSectionBox* asFrameTableSectionBox()
     {
-        STARFISH_ASSERT(isFrameTableSection());
-        return (FrameTableSection*)this;
+        STARFISH_ASSERT(isFrameTableSectionBox());
+        return (FrameTableSectionBox*)this;
     }
 
-    FrameTableRow* asFrameTableRow()
+    FrameTableRowBox* asFrameTableRowBox()
     {
-        STARFISH_ASSERT(isFrameTableRow());
-        return (FrameTableRow*)this;
+        STARFISH_ASSERT(isFrameTableRowBox());
+        return (FrameTableRowBox*)this;
     }
 
-    FrameTableCell* asFrameTableCell()
+    FrameTableCellBox* asFrameTableCellBox()
     {
-        STARFISH_ASSERT(isFrameTableCell());
-        return (FrameTableCell*)this;
+        STARFISH_ASSERT(isFrameTableCellBox());
+        return (FrameTableCellBox*)this;
     }
 
     ComputedStyle* style()

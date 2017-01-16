@@ -15,36 +15,36 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTableCell.h"
+#include "FrameTableCellBox.h"
 
 #include "FrameTreeBuilder.h"
 #include "FrameText.h"
 
 namespace StarFish {
 
-FrameTableCell::FrameTableCell(Node* node, ComputedStyle* style)
+FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr)
         || (node != nullptr && style == nullptr));
 }
 
-FrameTableCell* FrameTableCell::buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force)
+FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
     FrameBlockBox* parent = ctx.currentBlockContainer();
-    FrameTableCell* tableCell;
+    FrameTableCellBox* tableCell;
 
     if (current->isTableCell()) {
-        tableCell = new FrameTableCell(current, nullptr);
+        tableCell = new FrameTableCellBox(current, nullptr);
         current->setFrame(tableCell);
     } else {
         // current node is not tableRow then make anonymous Row or
         // reuse last anonymous Cell
         Frame* before = parent->lastChild();
-        if (before && before->isAnonymous() && before->isFrameTableCell()) {
-            tableCell = before->asFrameTableCell();
+        if (before && before->isAnonymous() && before->isFrameTableCellBox()) {
+            tableCell = before->asFrameTableCellBox();
         } else {
-            tableCell = FrameTableCell::createAnonymousWithParent(parent, current);
+            tableCell = FrameTableCellBox::createAnonymousWithParent(parent, current);
         }
     }
     ctx.setCurrentBlockContainer(tableCell);
@@ -65,7 +65,7 @@ FrameTableCell* FrameTableCell::buildFrameTableCell(Node* current, FrameTreeBuil
     return tableCell->parent() ? nullptr : tableCell;
 }
 
-void FrameTableCell::calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCellBox::calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
 
@@ -83,23 +83,23 @@ void FrameTableCell::calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve
     }
 }
 
-void FrameTableCell::layoutWidth(LayoutContext& ctx)
+void FrameTableCellBox::layoutWidth(LayoutContext& ctx)
 {
 
 }
 
-void FrameTableCell::layoutHeight(LayoutContext& ctx)
+void FrameTableCellBox::layoutHeight(LayoutContext& ctx)
 {
     FrameBlockBox::layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
 }
 
-void FrameTableCell::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCellBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     // This method should not be called, as table uses its own layout algorithm
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-LayoutUnit FrameTableCell::calMinCellWidth(LayoutContext& ctx)
+LayoutUnit FrameTableCellBox::calMinCellWidth(LayoutContext& ctx)
 {
     LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -117,7 +117,7 @@ LayoutUnit FrameTableCell::calMinCellWidth(LayoutContext& ctx)
     return maxWidthSoFar;
 }
 
-LayoutUnit FrameTableCell::calMaxCellWidth(LayoutContext& ctx)
+LayoutUnit FrameTableCellBox::calMaxCellWidth(LayoutContext& ctx)
 {
     LayoutUnit maxWidthSoFar = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
@@ -135,7 +135,7 @@ LayoutUnit FrameTableCell::calMaxCellWidth(LayoutContext& ctx)
     return maxWidthSoFar;
 }
 
-int FrameTableCell::colspan()
+int FrameTableCellBox::colspan()
 {
     String* colspan = String::emptyString;
     if (isAnonymous()) {

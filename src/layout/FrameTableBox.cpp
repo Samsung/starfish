@@ -15,11 +15,11 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTable.h"
+#include "FrameTableBox.h"
 
 #include "FrameTreeBuilder.h"
-#include "FrameTableCaption.h"
-#include "FrameTableSection.h"
+#include "FrameTableCaptionBox.h"
+#include "FrameTableSectionBox.h"
 
 namespace StarFish {
 
@@ -46,7 +46,7 @@ public:
     bool m_needs;
 };
 
-FrameTable::FrameTable(Node* node, ComputedStyle* style)
+FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
     , m_tableRect(0, 0, 0, 0)
 {
@@ -54,13 +54,13 @@ FrameTable::FrameTable(Node* node, ComputedStyle* style)
         || (node != nullptr && style == nullptr));
 }
 
-FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force)
+FrameTableBox* FrameTableBox::buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTable* tableWrapper;
+    FrameTableBox* tableWrapper;
     FrameBlockBox* parent = ctx.currentBlockContainer();
     if (current->isTable()) {
         // if current node is table then make wrapper and current node owns this wrapper
-        tableWrapper = new FrameTable(current, nullptr);
+        tableWrapper = new FrameTableBox(current, nullptr);
         current->setFrame(tableWrapper);
     } else {
         // if current node is not table wrapper node then make anonymous wrapper or
@@ -75,10 +75,10 @@ FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& 
             before = before->previous();
         }
 
-        if (before && before->isAnonymous() && before->isFrameTable()) {
-            tableWrapper = before->asFrameTable();
+        if (before && before->isAnonymous() && before->isFrameTableBox()) {
+            tableWrapper = before->asFrameTableBox();
         } else {
-            tableWrapper = FrameTable::createAnonymousWithParent(parent, current);
+            tableWrapper = FrameTableBox::createAnonymousWithParent(parent, current);
         }
 
     }
@@ -101,24 +101,24 @@ FrameTable* FrameTable::buildFrameTable(Node* current, FrameTreeBuilderContext& 
     return tableWrapper->parent()? nullptr : tableWrapper;
 }
 
-FrameTable* FrameTable::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
+FrameTableBox* FrameTableBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowDisplayValue);
     style->loadResources(node);
     style->arrangeStyleValues(parent->style(), node);
 
-    return new FrameTable(nullptr, style);
+    return new FrameTableBox(nullptr, style);
 }
 
-void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+void FrameTableBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
     bool wrapInAnnoymousSection = false;
     Frame* childFrame;
 
     if (child->isTableCaption()) {
-        childFrame = FrameTableCaption::buildFrameTableCaption(child, ctx, force);
-        m_captions.push_back(childFrame->asFrameTableCaption());
+        childFrame = FrameTableCaptionBox::buildFrameTableCaptionBox(child, ctx, force);
+        m_captions.push_back(childFrame->asFrameTableCaptionBox());
     } else if (child->isTableCol()) {
         // TODO
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -128,7 +128,7 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
         case DisplayValue::TableHeaderGroupDisplayValue:
         case DisplayValue::TableFooterGroupDisplayValue:
         case DisplayValue::TableRowGroupDisplayValue:
-            childFrame = FrameTableSection::buildFrameTableSection(child, ctx, force);
+            childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
             break;
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -148,7 +148,7 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
         return;
     } else if (wrapInAnnoymousSection) {
         // return nullptr, if buildFrameTableSection reuse before anonymouse section
-        childFrame = FrameTableSection::buildFrameTableSection(child, ctx, force);
+        childFrame = FrameTableSectionBox::buildFrameTableSectionBox(child, ctx, force);
         if (childFrame != nullptr) {
             ctx.currentBlockContainer()->appendChild(childFrame);
             STARFISH_ASSERT(childFrame->parent());
@@ -159,7 +159,7 @@ void FrameTable::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
     }
 }
 
-void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     // This method is called by FrameBlockBox::layout() to do table layout.
     // Table starts its own layout algorithm that has minimum interaction with
@@ -180,15 +180,15 @@ void FrameTable::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWh
     }
 }
 
-void FrameTable::calCellWidth(LayoutContext& ctx)
+void FrameTableBox::calCellWidth(LayoutContext& ctx)
 {
     // 1. We traverse the table to calculate min/max cell widths of the table
     //    before we perform table layout.
     m_columnWidths.clear();
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSection()) {
-            c->asFrameTableSection()->calCellWidth(ctx);
-            collectColumnWidths(m_columnWidths, c->asFrameTableSection()->columnWidths());
+        if (c->isFrameTableSectionBox()) {
+            c->asFrameTableSectionBox()->calCellWidth(ctx);
+            collectColumnWidths(m_columnWidths, c->asFrameTableSectionBox()->columnWidths());
         }
     }
 
@@ -253,18 +253,18 @@ void FrameTable::calCellWidth(LayoutContext& ctx)
     }
 }
 
-void FrameTable::layoutWidth(LayoutContext& ctx)
+void FrameTableBox::layoutWidth(LayoutContext& ctx)
 {
     // The width of the caption is limited by the max width of the
     // FrameTableSection. Hence, captions can only be placed after calculating
     // the width of the table, which has already been done by calContentWidth()
     LayoutUnit maxWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSection()) {
-            c->asFrameTableSection()->layoutWidth(ctx);
+        if (c->isFrameTableSectionBox()) {
+            c->asFrameTableSectionBox()->layoutWidth(ctx);
             maxWidth = std::max(maxWidth, c->asFrameBox()->width());
-        } else if (c->isFrameTableCaption()) {
-            c->asFrameTableCaption()->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+        } else if (c->isFrameTableCaptionBox()) {
+            c->asFrameTableCaptionBox()->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -277,7 +277,7 @@ void FrameTable::layoutWidth(LayoutContext& ctx)
     computeBorderMarginPadding(width());
 }
 
-void FrameTable::layoutHeight(LayoutContext& ctx)
+void FrameTableBox::layoutHeight(LayoutContext& ctx)
 {
     // Table is placed in the following order:
     // 1. Captions that has property "caption-side: top"
@@ -304,9 +304,9 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     ySoFar += borderTop();
     ySoFar += paddingTop();
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSection()) {
+        if (c->isFrameTableSectionBox()) {
             c->asFrameBox()->setX(paddingLeft());
-            c->asFrameTableSection()->layoutHeight(ctx);
+            c->asFrameTableSectionBox()->layoutHeight(ctx);
             c->asFrameBox()->setY(ySoFar);
             ySoFar += c->asFrameBox()->height();
         }
@@ -330,7 +330,7 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 }
 
-void FrameTable::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths)
+void FrameTableBox::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths)
 {
     // FIXME: absolute at this stage
     // Need to consider absolute and logical columns
@@ -350,7 +350,7 @@ void FrameTable::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar,
 }
 
 // Table draws the border around the TableFrameSections
-void FrameTable::paintBackgroundAndBorders(Canvas* canvas)
+void FrameTableBox::paintBackgroundAndBorders(Canvas* canvas)
 {
     // Fill in the table with background color
     LayoutRect bgRect(m_tableRect.x() + borderLeft(), m_tableRect.y() + borderTop(),

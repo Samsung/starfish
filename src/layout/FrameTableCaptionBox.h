@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishFrameTableCaption__
-#define __StarFishFrameTableCaption__
+#ifndef __StarFishFrameTableCaptionBox__
+#define __StarFishFrameTableCaptionBox__
 
 #include "layout/FrameBlockBox.h"
 
@@ -23,11 +23,11 @@ namespace StarFish {
 
 class FrameTreeBuilderContext;
 
-class FrameTableCaption : public FrameBlockBox {
+class FrameTableCaptionBox : public FrameBlockBox {
 public:
-    FrameTableCaption(Node* node, ComputedStyle* style);
+    FrameTableCaptionBox(Node* node, ComputedStyle* style);
 
-    static FrameTableCaption* buildFrameTableCaption(Node* captionNode,
+    static FrameTableCaptionBox* buildFrameTableCaptionBox(Node* captionNode,
         FrameTreeBuilderContext& ctx, bool force = false);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
@@ -37,7 +37,7 @@ public:
         return "FrameTableCaption";
     }
 
-    virtual bool isFrameTableCaption()
+    virtual bool isFrameTableCaptionBox()
     {
         return true;
     }

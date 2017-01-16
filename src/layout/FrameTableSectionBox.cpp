@@ -15,48 +15,48 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTableSection.h"
+#include "FrameTableSectionBox.h"
 
 #include "FrameTreeBuilder.h"
-#include "FrameTable.h"
-#include "FrameTableRow.h"
-#include "FrameTableCell.h"
+#include "FrameTableBox.h"
+#include "FrameTableRowBox.h"
+#include "FrameTableCellBox.h"
 
 namespace StarFish {
 
-RowStruct::RowStruct(FrameTableRow* tableRow_)
+RowStruct::RowStruct(FrameTableRowBox* tableRow_)
     : tableRow(tableRow_)
 {
     for (Frame* cell = tableRow->firstChild(); cell; cell = cell->next()) {
-        if (cell->isFrameTableCell()) {
-            cells.push_back(CellStruct(cell->asFrameTableCell()));
+        if (cell->isFrameTableCellBox()) {
+            cells.push_back(CellStruct(cell->asFrameTableCellBox()));
         }
     }
 }
 
-FrameTableSection::FrameTableSection(Node* node, ComputedStyle* style)
+FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }
 
-FrameTableSection* FrameTableSection::buildFrameTableSection(Node* current, FrameTreeBuilderContext& ctx, bool force)
+FrameTableSectionBox* FrameTableSectionBox::buildFrameTableSectionBox(Node* current, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableSection* tableSection;
+    FrameTableSectionBox* tableSection;
     FrameBlockBox* parent = ctx.currentBlockContainer();
 
     if (current->isTableSection()) {
-        tableSection = new FrameTableSection(current, nullptr);
+        tableSection = new FrameTableSectionBox(current, nullptr);
         current->setFrame(tableSection);
     } else {
         // current node is not tablesection then make anonymous section or
         // reuse before anonymous section
         Frame* before = parent->lastChild();
 
-        if (before && before->isAnonymous() && before->isFrameTableSection()) {
-            tableSection = before->asFrameTableSection();
+        if (before && before->isAnonymous() && before->isFrameTableSectionBox()) {
+            tableSection = before->asFrameTableSectionBox();
         } else {
-            tableSection = FrameTableSection::createAnonymousWithParent(parent, current);
+            tableSection = FrameTableSectionBox::createAnonymousWithParent(parent, current);
         }
     }
 
@@ -66,7 +66,7 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* current, Fram
     if (current->isTableSection()) {
         unsigned i = 0;
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
-            FrameTableRow* tableRow = tableSection->addChild(c, ctx, force);
+            FrameTableRowBox* tableRow = tableSection->addChild(c, ctx, force);
             // TODO: After implementing anonymous boxes, replace the null check
             // with assert()
             if (tableRow) {
@@ -77,7 +77,7 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* current, Fram
             }
         }
     } else if (tableSection->isAnonymous()) {
-        FrameTableRow* tableRow;
+        FrameTableRowBox* tableRow;
         tableRow = tableSection->addChild(current, ctx, force);
         if (tableRow != nullptr) {
             tableRow->setRowIndex(tableSection->grid().size());
@@ -93,38 +93,38 @@ FrameTableSection* FrameTableSection::buildFrameTableSection(Node* current, Fram
     return tableSection->parent() ? nullptr : tableSection;
 }
 
-FrameTableCell* FrameTableCell::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
+FrameTableCellBox* FrameTableCellBox::createAnonymousWithParent(FrameBlockBox* parent, Node* parentNode)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowDisplayValue);
     style->loadResources(parentNode);
     style->arrangeStyleValues(parent->style(), parentNode);
 
-    return new FrameTableCell(nullptr, style);
+    return new FrameTableCellBox(nullptr, style);
 }
 
-FrameTableSection* FrameTableSection::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
+FrameTableSectionBox* FrameTableSectionBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowGroupDisplayValue);
     style->loadResources(node);
     style->arrangeStyleValues(parent->style(), node);
 
-    return new FrameTableSection(nullptr, style);
+    return new FrameTableSectionBox(nullptr, style);
 }
 
-FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+FrameTableRowBox* FrameTableSectionBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableRow* childFrame;
+    FrameTableRowBox* childFrame;
     if (!child->isTableRow()) {
         // TODO
         if (child->isCharacterData() || child->isComment()) {
             return nullptr;
         } else {
             // return nullptr, if buildFrameTableRow reuse before anonymous row
-            childFrame = FrameTableRow::buildFrameTableRow(child, ctx, force);
+            childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
             if (childFrame != nullptr) {
-                FrameTableSection* tableSection = ctx.currentBlockContainer()->asFrameTableSection();
+                FrameTableSectionBox* tableSection = ctx.currentBlockContainer()->asFrameTableSectionBox();
                 tableSection->appendChild(childFrame);
                 childFrame->setRowIndex(tableSection->grid().size());
                 RowStruct row(childFrame);
@@ -135,18 +135,18 @@ FrameTableRow* FrameTableSection::addChild(Node* child, FrameTreeBuilderContext&
         }
     }
 
-    childFrame = FrameTableRow::buildFrameTableRow(child, ctx, force);
+    childFrame = FrameTableRowBox::buildFrameTableRow(child, ctx, force);
     FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
     STARFISH_ASSERT(childFrame->parent());
     return childFrame;
 }
 
-void FrameTableSection::calCellWidth(LayoutContext& ctx)
+void FrameTableSectionBox::calCellWidth(LayoutContext& ctx)
 {
     // 0. We traverse the cells first to determine min/max cell size
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRow()) {
-            c->asFrameTableRow()->calCellWidth(ctx);
+        if (c->isFrameTableRowBox()) {
+            c->asFrameTableRowBox()->calCellWidth(ctx);
         } else {
             // Only FrameTableRow should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -168,7 +168,7 @@ void FrameTableSection::calCellWidth(LayoutContext& ctx)
         for (unsigned r = 0; r < m_grid.size(); r++) {
             RowStruct& row = m_grid[r];
             if (c < row.cells.size()) {
-                FrameTableCell* cell = row.cells[c].cell;
+                FrameTableCellBox* cell = row.cells[c].cell;
                 minCellWidthSoFar =
                     std::max(minCellWidthSoFar, cell->minCellWidth());
                 maxCellWidthSoFar =
@@ -185,14 +185,14 @@ void FrameTableSection::calCellWidth(LayoutContext& ctx)
     // 3. TODO: increase column widths to fit the columns with colspans.
 }
 
-void FrameTableSection::layoutWidth(LayoutContext& ctx)
+void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar =
-        LayoutUnit::fromPixel(table()->style()->borderLeftWidth().fixed());
+        LayoutUnit::fromPixel(tableBox()->style()->borderLeftWidth().fixed());
     LayoutUnit maxWidth = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRow()) {
-            c->asFrameTableRow()->layoutWidth(ctx);
+        if (c->isFrameTableRowBox()) {
+            c->asFrameTableRowBox()->layoutWidth(ctx);
             c->asFrameBox()->setX(xSoFar);
             maxWidth = std::max(maxWidth, c->asFrameBox()->width());
         } else {
@@ -203,24 +203,24 @@ void FrameTableSection::layoutWidth(LayoutContext& ctx)
 
     // The width of all rows should be the same, so ideally, the maxWidth
     // should be the same as the width of any row.
-    setWidth(table()->style()->borderLeftWidth().fixed() +
-        maxWidth + table()->style()->borderRightWidth().fixed());
+    setWidth(tableBox()->style()->borderLeftWidth().fixed() +
+        maxWidth + tableBox()->style()->borderRightWidth().fixed());
 }
 
-void FrameTableSection::layoutHeight(LayoutContext& ctx)
+void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit ySoFar = 0;
     LayoutUnit borderSpacing =
-        LayoutUnit::fromPixel(table()->style()->borderSpacing().fixed());
+        LayoutUnit::fromPixel(tableBox()->style()->borderSpacing().fixed());
 
     if (isFirstTableSection()) {
         ySoFar += borderSpacing;
     }
 
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableRow()) {
+        if (c->isFrameTableRowBox()) {
             c->asFrameBox()->setY(ySoFar);
-            c->asFrameTableRow()->layoutHeight(ctx);
+            c->asFrameTableRowBox()->layoutHeight(ctx);
             ySoFar += c->asFrameBox()->height();
             ySoFar += borderSpacing;
         } else {
@@ -232,10 +232,10 @@ void FrameTableSection::layoutHeight(LayoutContext& ctx)
     setHeight(ySoFar);
 }
 
-bool FrameTableSection::isFirstTableSection()
+bool FrameTableSectionBox::isFirstTableSection()
 {
-    for (Frame* c = table()->firstChild(); c; c = c->next()) {
-        if (c->isFrameTableSection()) {
+    for (Frame* c = tableBox()->firstChild(); c; c = c->next()) {
+        if (c->isFrameTableSectionBox()) {
             if (c == this) {
                 return true;
             } else {
@@ -246,7 +246,7 @@ bool FrameTableSection::isFirstTableSection()
     return false;
 }
 
-void FrameTableSection::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableSectionBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     // This method should not be called, as table uses its own layout algorithm
     STARFISH_RELEASE_ASSERT_NOT_REACHED();

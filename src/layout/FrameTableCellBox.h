@@ -14,8 +14,8 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishFrameTableCell__
-#define __StarFishFrameTableCell__
+#ifndef __StarFishFrameTableCellBox__
+#define __StarFishFrameTableCellBox__
 
 #include "layout/FrameBlockBox.h"
 
@@ -23,12 +23,12 @@ namespace StarFish {
 
 class FrameTreeBuilderContext;
 
-class FrameTableCell : public FrameBlockBox {
+class FrameTableCellBox : public FrameBlockBox {
 public:
-    FrameTableCell(Node* node, ComputedStyle* style);
+    FrameTableCellBox(Node* node, ComputedStyle* style);
 
-    static FrameTableCell* buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableCell* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableCellBox* buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableCellBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     void calCellWidth(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     void layoutWidth(LayoutContext& ctx);
@@ -39,14 +39,14 @@ public:
         return "FrameTableCell";
     }
 
-    FrameTableRow* row()
+    FrameTableRowBox* rowBox()
     {
-        return parent()->asFrameTableRow();
+        return parent()->asFrameTableRowBox();
     }
 
     int colspan();
 
-    virtual bool isFrameTableCell()
+    virtual bool isFrameTableCellBox()
     {
         return true;
     }
