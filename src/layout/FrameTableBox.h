@@ -43,6 +43,12 @@ class TableFormattingContextBlock;
 // with the existing box layout algorithm.
 
 struct ColSizeStruct {
+    ColSizeStruct()
+        : minCellWidth(LayoutUnit())
+        , maxCellWidth(LayoutUnit())
+        , cellWidth(LayoutUnit())
+    { }
+
     LayoutUnit minCellWidth;
     LayoutUnit maxCellWidth;
     LayoutUnit cellWidth;
