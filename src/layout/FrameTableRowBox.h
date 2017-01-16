@@ -14,42 +14,42 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishFrameTableRow__
-#define __StarFishFrameTableRow__
+#ifndef __StarFishFrameTableRowBox__
+#define __StarFishFrameTableRowBox__
 
 #include "layout/FrameBlockBox.h"
 
 namespace StarFish {
 
 class FrameTreeBuilderContext;
-class FrameTableCell;
+class FrameTableCellBox;
 
-class FrameTableRow : public FrameBlockBox {
+class FrameTableRowBox : public FrameBlockBox {
 public:
-    FrameTableRow(Node* node, ComputedStyle* style);
+    FrameTableRowBox(Node* node, ComputedStyle* style);
 
     virtual const char* name()
     {
         return "FrameTableRow";
     }
 
-    virtual bool isFrameTableRow()
+    virtual bool isFrameTableRowBox()
     {
         return true;
     }
 
-    static FrameTableRow* buildFrameTableRow(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableRow* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableRowBox* buildFrameTableRow(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableRowBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
-    FrameTableCell* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    FrameTableCellBox* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
-    FrameTableSection* tableSection()
+    FrameTableSectionBox* tableSectionBox()
     {
-        return parent()->asFrameTableSection();
+        return parent()->asFrameTableSectionBox();
     }
 
     virtual bool hasBlockFlow()

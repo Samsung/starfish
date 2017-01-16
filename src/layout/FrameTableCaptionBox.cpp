@@ -15,21 +15,21 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTableCaption.h"
+#include "FrameTableCaptionBox.h"
 
 #include "FrameTreeBuilder.h"
 
 namespace StarFish {
 
-FrameTableCaption::FrameTableCaption(Node* node, ComputedStyle* style)
+FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }
 
-FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode, FrameTreeBuilderContext& ctx, bool force)
+FrameTableCaptionBox* FrameTableCaptionBox::buildFrameTableCaptionBox(Node* captionNode, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableCaption* tableCaption = new FrameTableCaption(captionNode, nullptr);
+    FrameTableCaptionBox* tableCaption = new FrameTableCaptionBox(captionNode, nullptr);
     captionNode->setFrame(tableCaption);
 
     // Caption establishes a new block context
@@ -46,7 +46,7 @@ FrameTableCaption* FrameTableCaption::buildFrameTableCaption(Node* captionNode, 
     return tableCaption;
 }
 
-void FrameTableCaption::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableCaptionBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     FrameBlockBox::layout(ctx, resolveWhat);
 }

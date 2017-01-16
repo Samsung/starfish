@@ -29,11 +29,11 @@ class ComputedStyle;
 class FrameTextTextDecorationData;
 class FrameInline;
 
-class FrameTable;
-class FrameTableCaption;
-class FrameTableSection;
-class FrameTableRow;
-class FrameTableCell;
+class FrameTableBox;
+class FrameTableCaptionBox;
+class FrameTableSectionBox;
+class FrameTableRowBox;
+class FrameTableCellBox;
 
 class FrameTreeBuilderContext {
 public:
@@ -60,11 +60,11 @@ class FrameTreeBuilder {
     // in separate FrameTableXXX files. To reuse the FrameTree building
     // algorithm, the following FrameTableXXX classes need to access
     // buildTree(). Hence, they are declared as friends of FrameTreeBuilder.
-    friend FrameTable;
-    friend FrameTableCaption;
-    friend FrameTableSection;
-    friend FrameTableRow;
-    friend FrameTableCell;
+    friend FrameTableBox;
+    friend FrameTableCaptionBox;
+    friend FrameTableSectionBox;
+    friend FrameTableRowBox;
+    friend FrameTableCellBox;
 
 public:
     static void buildFrameTree(Document* document);

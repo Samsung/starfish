@@ -14,30 +14,30 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishFrameTable__
-#define __StarFishFrameTable__
+#ifndef __StarFishFrameTableBox__
+#define __StarFishFrameTableBox__
 
 #include "layout/FrameBlockBox.h"
 
 namespace StarFish {
 
-class FrameTableCaption;
+class FrameTableCaptionBox;
 class FrameTreeBuilderContext;
 class TableFormattingContextBlock;
 
 // Table has the following table structure
 //
-//                 FrameTable
+//                 FrameTableBox
 //                 |         |
-//   FrameTableCaption     FrameTableSection
+//   FrameTableCaptionBox  FrameTableSectionBox
 //                           |
-//                         FrameTableRow
+//                         FrameTableRowBox
 //                           |
-//                         FrameTableCell
+//                         FrameTableCellBox
 //
-// FrameTableCaption, FrameTableSection, FrameTableRow, FrameTableCell are
-// the only child nodes that can appear under FrameTable.
-// When other nodes appear, anonymous nodes are created
+// FrameTableCaptionBox, FrameTableSectionBox, FrameTableRowBox,
+// FrameTableCellBox are the only child nodes that can appear under
+// FrameTableBox. When other nodes appear, anonymous nodes are created.
 //
 // Table has its own table layout algorithm, that has minimum interaction
 // with the existing box layout algorithm.
@@ -48,12 +48,12 @@ struct ColSizeStruct {
     LayoutUnit cellWidth;
 };
 
-class FrameTable : public FrameBlockBox {
+class FrameTableBox : public FrameBlockBox {
 public:
-    FrameTable(Node* node, ComputedStyle* style);
+    FrameTableBox(Node* node, ComputedStyle* style);
 
-    static FrameTable* buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTable* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableBox* buildFrameTable(Node* current, FrameTreeBuilderContext& ctx, bool force = false);
+    static FrameTableBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
     void calCellWidth(LayoutContext& ctx);
@@ -67,7 +67,7 @@ public:
         return "FrameTable";
     }
 
-    virtual bool isFrameTable()
+    virtual bool isFrameTableBox()
     {
         return true;
     }
@@ -80,7 +80,7 @@ public:
             STARFISH_ASSERT(child->isNormalFlow());
             // Only FrameTableCaption or FrameTableSection can exist as children
             // of FrameTable
-            STARFISH_ASSERT(child->isFrameTableCaption() || child->isFrameTableSection());
+            STARFISH_ASSERT(child->isFrameTableCaptionBox() || child->isFrameTableSectionBox());
         }
 
         return true;
@@ -96,7 +96,7 @@ public:
 private:
     void collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoFar, GCVector<ColSizeStruct>& columnWidths);
 
-    GCVector<FrameTableCaption*> m_captions;
+    GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<ColSizeStruct> m_columnWidths;
 
     // Border and background is drawn around FrameTableSections not FrameTable

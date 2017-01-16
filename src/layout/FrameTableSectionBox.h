@@ -14,57 +14,57 @@
  *    limitations under the License.
  */
 
-#ifndef __StarFishFrameTableSection__
-#define __StarFishFrameTableSection__
+#ifndef __StarFishFrameTableSectionBox__
+#define __StarFishFrameTableSectionBox__
 
 #include "layout/FrameBlockBox.h"
 
 namespace StarFish {
 
 class FrameTreeBuilderContext;
-class FrameTable;
-class FrameTableRow;
-class FrameTableCell;
+class FrameTableBox;
+class FrameTableRowBox;
+class FrameTableCellBox;
 class ColSizeStruct;
 
 struct CellStruct {
     CellStruct()
         : cell(nullptr) { }
-    CellStruct(FrameTableCell* cell_)
+    CellStruct(FrameTableCellBox* cell_)
         : cell(cell_) { }
 
-    FrameTableCell* cell;
+    FrameTableCellBox* cell;
 };
 
 struct RowStruct {
     RowStruct()
         : tableRow(nullptr) { }
-    RowStruct(FrameTableRow* tableRow);
+    RowStruct(FrameTableRowBox* tableRow);
 
-    FrameTableRow* tableRow;
+    FrameTableRowBox* tableRow;
     GCVector<CellStruct> cells;
 };
 
-class FrameTableSection : public FrameBlockBox {
+class FrameTableSectionBox : public FrameBlockBox {
 public:
-    FrameTableSection(Node* node, ComputedStyle* style);
+    FrameTableSectionBox(Node* node, ComputedStyle* style);
 
-    static FrameTableSection* buildFrameTableSection(Node* current,
+    static FrameTableSectionBox* buildFrameTableSectionBox(Node* current,
         FrameTreeBuilderContext& ctx, bool force = false);
-    static FrameTableSection* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
+    static FrameTableSectionBox* createAnonymousWithParent(FrameBlockBox* parent, Node* node);
 
     void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
-    FrameTableRow* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
+    FrameTableRowBox* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
     virtual const char* name()
     {
         return "FrameTableSection";
     }
 
-    virtual bool isFrameTableSection()
+    virtual bool isFrameTableSectionBox()
     {
         return true;
     }
@@ -75,9 +75,9 @@ public:
         return true;
     }
 
-    FrameTable* table()
+    FrameTableBox* tableBox()
     {
-        return parent()->asFrameTable();
+        return parent()->asFrameTableBox();
     }
 
     GCVector<RowStruct>& grid()

@@ -15,46 +15,46 @@
  */
 
 #include "StarFishConfig.h"
-#include "FrameTableRow.h"
+#include "FrameTableRowBox.h"
 
 #include "FrameTreeBuilder.h"
-#include "FrameTable.h"
-#include "FrameTableSection.h"
-#include "FrameTableCell.h"
+#include "FrameTableBox.h"
+#include "FrameTableCellBox.h"
+#include "FrameTableSectionBox.h"
 
 namespace StarFish {
 
-FrameTableRow::FrameTableRow(Node* node, ComputedStyle* style)
+FrameTableRowBox::FrameTableRowBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr)
         || (node != nullptr && style == nullptr));
 }
 
-FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
+FrameTableRowBox* FrameTableRowBox::buildFrameTableRow(Node* current,
     FrameTreeBuilderContext& ctx, bool force)
 {
     FrameBlockBox* parent = ctx.currentBlockContainer();
-    FrameTableRow* tableRow;
+    FrameTableRowBox* tableRow;
 
     if (current->isTableRow()) {
-        tableRow = new FrameTableRow(current, nullptr);
+        tableRow = new FrameTableRowBox(current, nullptr);
         current->setFrame(tableRow);
     } else {
         // current node is not tableRow then make anonymous Row or
         // reuse last anonymous Row
         Frame* before = parent->lastChild();
-        if (before && before->isAnonymous() && before->isFrameTableRow()) {
-            tableRow = before->asFrameTableRow();
+        if (before && before->isAnonymous() && before->isFrameTableRowBox()) {
+            tableRow = before->asFrameTableRowBox();
         } else {
-            tableRow = FrameTableRow::createAnonymousWithParent(parent, current);
+            tableRow = FrameTableRowBox::createAnonymousWithParent(parent, current);
         }
     }
 
     ctx.setCurrentBlockContainer(tableRow);
     ctx.mergeTextDecorationData(tableRow->style());
 
-    FrameTableCell* tableCell;
+    FrameTableCellBox* tableCell;
     if (current->isTableRow()) {
         unsigned i = 0;
         for (Node* c = current->firstChild(); c; c = c->nextSibling()) {
@@ -72,8 +72,8 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
         if (tableCell != nullptr) {
             unsigned cellIndex = 0;
             for (Frame* c = tableRow->firstChild(); c; c = c->next()) {
-                if (c->isFrameTableCell())
-                    cellIndex += c->asFrameTableCell()->colspan();
+                if (c->isFrameTableCellBox())
+                    cellIndex += c->asFrameTableCellBox()->colspan();
             }
             tableCell->setAbsoluteColumnIndex(cellIndex);
             STARFISH_ASSERT(tableCell->parent());
@@ -84,32 +84,32 @@ FrameTableRow* FrameTableRow::buildFrameTableRow(Node* current,
 
     ctx.setCurrentBlockContainer(parent);
     if (tableRow->parent()) {
-        parent->asFrameTableSection()->grid()[tableRow->rowIndex()].cells.push_back(CellStruct(tableCell->asFrameTableCell()));
+        parent->asFrameTableSectionBox()->grid()[tableRow->rowIndex()].cells.push_back(CellStruct(tableCell->asFrameTableCellBox()));
         return nullptr;
     }
     return tableRow;
 }
 
-FrameTableRow* FrameTableRow::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
+FrameTableRowBox* FrameTableRowBox::createAnonymousWithParent(FrameBlockBox* parent, Node* node)
 {
     ComputedStyle* style = new ComputedStyle(parent->style());
     style->setDisplay(DisplayValue::TableRowDisplayValue);
     style->loadResources(node);
     style->arrangeStyleValues(parent->style(), node);
 
-    return new FrameTableRow(nullptr, style);
+    return new FrameTableRowBox(nullptr, style);
 }
 
-FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
+FrameTableCellBox* FrameTableRowBox::addChild(Node* child, FrameTreeBuilderContext& ctx, bool force)
 {
-    FrameTableCell* childFrame;
+    FrameTableCellBox* childFrame;
     if (!child->isTableCell()) {
         // TODO
         if (child->isCharacterData() || child->isComment()) {
             return nullptr;
         } else {
             // return nullptr, if buildFrameTableCell resuse before anonymous cell
-            childFrame = FrameTableCell::buildFrameTableCell(child, ctx, force);
+            childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
             if (childFrame != nullptr) {
                 ctx.currentBlockContainer()->appendChild(childFrame);
             }
@@ -117,18 +117,18 @@ FrameTableCell* FrameTableRow::addChild(Node* child, FrameTreeBuilderContext& ct
         }
     }
 
-    childFrame = FrameTableCell::buildFrameTableCell(child, ctx, force);
+    childFrame = FrameTableCellBox::buildFrameTableCell(child, ctx, force);
     FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), childFrame, child, ctx);
     STARFISH_ASSERT(childFrame->parent());
     return childFrame;
 }
 
-void FrameTableRow::calCellWidth(LayoutContext& ctx)
+void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
 {
     // We traverse the cells first to calculate min/max cell width
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCell()) {
-            c->asFrameTableCell()->calCellWidth(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+        if (c->isFrameTableCellBox()) {
+            c->asFrameTableCellBox()->calCellWidth(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         } else {
             // Only FrameTableCell should appear
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -136,10 +136,10 @@ void FrameTableRow::calCellWidth(LayoutContext& ctx)
     }
 }
 
-void FrameTableRow::layoutWidth(LayoutContext& ctx)
+void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(tableSection()->table()->style()->borderSpacing().fixed());
+    LayoutUnit borderSpacing = LayoutUnit::fromPixel(tableSectionBox()->tableBox()->style()->borderSpacing().fixed());
 
     if (firstChild()) {
         xSoFar += borderSpacing;
@@ -147,10 +147,10 @@ void FrameTableRow::layoutWidth(LayoutContext& ctx)
 
     int i = 0;
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCell()) {
-            FrameBox* cell = c->asFrameTableCell();
+        if (c->isFrameTableCellBox()) {
+            FrameBox* cell = c->asFrameTableCellBox();
             cell->setX(xSoFar);
-            LayoutUnit cellWidth = tableSection()->table()-> columnWidths()[i].cellWidth;
+            LayoutUnit cellWidth = tableSectionBox()->tableBox()-> columnWidths()[i].cellWidth;
             cell->setWidth(cellWidth);
             xSoFar += cellWidth;
             xSoFar += borderSpacing;
@@ -164,13 +164,13 @@ void FrameTableRow::layoutWidth(LayoutContext& ctx)
     setWidth(xSoFar);
 }
 
-void FrameTableRow::layoutHeight(LayoutContext& ctx)
+void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit maxHeightSoFar = 0;
     // We traverse the cells first to calculate min/max cell width
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCell()) {
-            FrameTableCell* cell = c->asFrameTableCell();
+        if (c->isFrameTableCellBox()) {
+            FrameTableCellBox* cell = c->asFrameTableCellBox();
             cell->layoutHeight(ctx);
             LayoutUnit cellHeight = cell->height();
             maxHeightSoFar = std::max(maxHeightSoFar, cellHeight);
@@ -181,8 +181,8 @@ void FrameTableRow::layoutHeight(LayoutContext& ctx)
     }
 
     for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameTableCell()) {
-            FrameTableCell* cell = c->asFrameTableCell();
+        if (c->isFrameTableCellBox()) {
+            FrameTableCellBox* cell = c->asFrameTableCellBox();
             cell->setHeight(maxHeightSoFar);
         }
     }
@@ -190,7 +190,7 @@ void FrameTableRow::layoutHeight(LayoutContext& ctx)
     setHeight(maxHeightSoFar);
 }
 
-void FrameTableRow::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameTableRowBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
 {
     // This method should not be called, as table uses its own layout algorithm
     STARFISH_RELEASE_ASSERT_NOT_REACHED();

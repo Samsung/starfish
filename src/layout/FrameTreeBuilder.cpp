@@ -26,7 +26,7 @@
 #include "FrameDocument.h"
 #include "FrameReplaced.h"
 #include "FrameReplacedImage.h"
-#include "FrameTable.h"
+#include "FrameTableBox.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "FrameReplacedVideo.h"
 #endif
@@ -142,11 +142,11 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
     }
 
     bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue
-        || currentFrame->isFrameTable()
-        || currentFrame->isFrameTableCaption()
-        || currentFrame->isFrameTableSection()
-        || currentFrame->isFrameTableRow()
-        || currentFrame->isFrameTableCell();
+        || currentFrame->isFrameTableBox()
+        || currentFrame->isFrameTableCaptionBox()
+        || currentFrame->isFrameTableSectionBox()
+        || currentFrame->isFrameTableRowBox()
+        || currentFrame->isFrameTableCellBox();
     if (!isBlockChild || (!currentFrame->isNormalFlow())) {
         if (currentNode->parentNode()->style()->display() == InlineDisplayValue) {
             auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
@@ -172,7 +172,7 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
 
             STARFISH_ASSERT(last);
 
-            if (last->node() || (last->isFrameTable() && last->isAnonymous())) {
+            if (last->node() || (last->isFrameTableBox() && last->isAnonymous())) {
                 FrameBox* blockBox = createAnonymouseBlockBox(frameBlockBox, currentNode);
                 blockBox->appendChild(currentFrame);
                 frameBlockBox->appendChild(blockBox);
@@ -260,7 +260,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
         || display == TableCaptionDisplayValue) {
             // table has its own frametree builder
             // return nullptr, if buildFrameTable reuse before anonymous table wrapper
-            FrameTable* table = FrameTable::buildFrameTable(current, ctx, force);
+            FrameTableBox* table = FrameTableBox::buildFrameTable(current, ctx, force);
             if (table && current->isTable()) {
                 FrameTreeBuilder::frameBlockBoxChildInserter(ctx.currentBlockContainer(), table, current, ctx);
             } else if (table && table->isAnonymous()) {
