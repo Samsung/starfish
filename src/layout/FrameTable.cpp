@@ -202,8 +202,9 @@ void FrameTable::calCellWidth(LayoutContext& ctx)
     // 2.1 calculate the table width
     LayoutUnit borderSpacing = LayoutUnit::fromPixel(style()->borderSpacing().fixed());
     LayoutUnit tableWidth = 0;
-    tableWidth += LayoutUnit::fromPixel(style()->borderLeftWidth().fixed());
-    tableWidth += LayoutUnit::fromPixel(style()->borderRightWidth().fixed());
+    tableWidth += marginLeft() + marginRight();
+    tableWidth += borderLeft() + borderRight();
+    tableWidth += paddingLeft() + paddingRight();
     tableWidth += borderSpacing;
     for (auto& colSize : m_columnWidths) {
         tableWidth += colSize.maxCellWidth + borderSpacing;
@@ -212,8 +213,9 @@ void FrameTable::calCellWidth(LayoutContext& ctx)
     LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
     if (tableWidth > parentContentWidth) {
         LayoutUnit availableWidth = parentContentWidth;
-        availableWidth -= LayoutUnit::fromPixel(style()->borderLeftWidth().fixed());
-        availableWidth -= LayoutUnit::fromPixel(style()->borderRightWidth().fixed());
+        availableWidth -= marginLeft() + marginRight();
+        availableWidth -= borderLeft() + borderRight();
+        availableWidth -= paddingLeft() + paddingRight();
         availableWidth -= borderSpacing + (borderSpacing * m_columnWidths.size());
 
         // 2.2 Calculate the ratio of which each column is to be reduced.
@@ -284,44 +286,46 @@ void FrameTable::layoutHeight(LayoutContext& ctx)
     // 3. Captions that has property "caption-side: bottom"
     //    If there are multiple captions, place them in document order
 
-    LayoutUnit ySoFar = 0;
-    LayoutUnit topCaptionHeightsSoFar = 0;
+    LayoutUnit ySoFar = marginTop();
 
     // 1. place captions with caption-side: top
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() == CaptionSideValue::TopCaptionSideValue) {
-            caption->setWidth(width());
+            caption->setWidth(paddingLeft() + width() + paddingRight());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar);
             ySoFar += caption->height();
-            topCaptionHeightsSoFar += caption->height();
         }
     }
 
     // 2. place table sections
     m_tableRect.setX(0);
     m_tableRect.setY(ySoFar);
-    ySoFar += LayoutUnit::fromPixel(style()->borderTopWidth().fixed());
+    ySoFar += borderTop();
+    ySoFar += paddingTop();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableSection()) {
+            c->asFrameBox()->setX(paddingLeft());
             c->asFrameTableSection()->layoutHeight(ctx);
             c->asFrameBox()->setY(ySoFar);
             ySoFar += c->asFrameBox()->height();
         }
     }
-    ySoFar += LayoutUnit::fromPixel(style()->borderBottomWidth().fixed());
-    m_tableRect.setWidth(width());
+    ySoFar += paddingBottom();
+    ySoFar += borderBottom();
+    m_tableRect.setWidth(paddingLeft() + width() + paddingRight());
     m_tableRect.setHeight(ySoFar - m_tableRect.y());
 
     // 3. place captions with caption-side: bottom
     for (auto& caption : m_captions) {
         if (caption->style()->captionSide() == CaptionSideValue::BottomCaptionSideValue) {
-            caption->setWidth(width());
+            caption->setWidth(paddingLeft() + width() + paddingRight());
             caption->layout(ctx, Frame::LayoutWantToResolve::ResolveHeight);
             caption->setY(ySoFar);
             ySoFar += caption->height();
         }
     }
+    ySoFar += marginBottom();
 
     setHeight(ySoFar);
 }
