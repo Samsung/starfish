@@ -337,11 +337,13 @@ void FrameTableBox::collectColumnWidths(GCVector<ColSizeStruct>& columnWidthsSoF
     if (columnWidthsSoFar.empty()) {
         columnWidthsSoFar = columnWidths;
     } else {
-        // Update to support colspans
-        STARFISH_ASSERT(columnWidthsSoFar.size() == columnWidths.size());
+        // FIXME: Update to support colspans
         for (unsigned i = 0; i < columnWidths.size(); i++) {
-            ColSizeStruct& colSoFar = columnWidthsSoFar[i];
             ColSizeStruct& col = columnWidths[i];
+            if (columnWidthsSoFar.size() == i) {
+                columnWidthsSoFar.push_back(ColSizeStruct());
+            }
+            ColSizeStruct& colSoFar = columnWidthsSoFar[i];
             colSoFar.maxCellWidth = std::max(colSoFar.maxCellWidth, col.maxCellWidth);
             colSoFar.minCellWidth = std::max(colSoFar.minCellWidth, col.minCellWidth);
             colSoFar.cellWidth = colSoFar.maxCellWidth;
