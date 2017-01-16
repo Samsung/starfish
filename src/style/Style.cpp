@@ -2968,6 +2968,18 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         if (Node* parent = element->parentElement())
             return selector->matchNth(nthLastOfTypeIndex(element));
         break;
+    case CSSSelector::PseudoType::PseudoLang:
+        {
+            String* value = element->getAttribute(element->document()->window()->starFish()->staticStrings()->m_lang);
+            String* argument = selector->argument();
+
+            if (value->equals(String::emptyString) || !value->startsWith(argument, false))
+                break;
+            if (value->length() != argument->length() && value->charAt(argument->length()) != '-')
+                break;
+
+            return true;
+        }
     case CSSSelector::PseudoType::PseudoNot:
         STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
         return !checkOne(element, selector->pseudoSelectorList().at(0));
