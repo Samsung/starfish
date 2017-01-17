@@ -488,7 +488,7 @@ void NetworkRequest::send(String* body)
     if (m_url->isFileURL()) {
         // this area doesn't require lock.
         // reading file does not require thread
-        String* path = m_url->urlStringWithoutSearchPart();
+        String* path = m_url->getUrlPathString();
         String* filePath = path->substring(7, path->length() - 7);
 
         if (m_isSync) {

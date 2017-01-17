@@ -208,6 +208,10 @@ public:
     void setActiveNodeWithMouseMove(Node *n);
     void releaseActiveNodeWithMouseMove();
 
+    void processUrlFragment(String* name);
+    void setCSSTarget(Node* n);
+    void releaseCSSTarget();
+
     void pause();
     void resume();
     void close();
@@ -314,6 +318,7 @@ protected:
     Node* m_activeNodeWithTouchMove;
     Node* m_focusedNode;
     Node* m_relatedTarget;
+    Node* m_cssTarget;
     Location m_touchDownPoint;
     int m_ctrlKeyDown;
     int m_shiftKeyDown;

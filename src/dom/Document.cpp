@@ -737,6 +737,11 @@ void Document::notifyDomContentLoaded()
         STARFISH_LOG_ERROR("%s is not specified standard mode doctype. currently, StarFish could not support quirks mode.\n", m_documentURI->urlString()->utf8Data());
         STARFISH_LOG_ERROR("You could got unexpected rendering result. please use standard mode doctype[<!DOCTYPE html>]\n");
     }
+
+    // if there is a fragment identifier, set cssTarget.
+    String* fragment = documentURI()->getHash();
+    if (!fragment->equals(String::emptyString))
+        window()->processUrlFragment(fragment->substring(1, fragment->length()-1));
 }
 
 void Document::close()

@@ -1422,6 +1422,7 @@ public:
         PseudoActive,
         PseudoEnabled,
         PseudoDisabled,
+        PseudoTarget,
         PseudoBefore,
         PseudoAfter,
         PseudoLang,

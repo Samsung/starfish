@@ -316,7 +316,8 @@ public:
         NodeStateNormal = 0,
         NodeStateActive = 1 << 0,
         NodeStateFocused = 1 << 1,
-        NodeStateHovered = 1 << 2
+        NodeStateHovered = 1 << 2,
+        NodeStateTarget = 1 << 3,
     };
 
     virtual bool isNode() const

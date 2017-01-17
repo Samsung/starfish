@@ -728,6 +728,8 @@ CSSSelector::PseudoType CSSSelector::parsePseudoType(String* name, bool hasArgum
         return CSSSelector::PseudoType::PseudoEnabled;
     else if (name->equals(String::fromUTF8("disabled")))
         return CSSSelector::PseudoType::PseudoDisabled;
+    else if (name->equals(String::fromUTF8("target")))
+        return CSSSelector::PseudoType::PseudoTarget;
     else if (name->equals(String::fromUTF8("before")))
         return CSSSelector::PseudoType::PseudoBefore;
     else if (name->equals(String::fromUTF8("after")))
@@ -837,7 +839,7 @@ void CSSSelector::updatePseudoType(String* name, bool hasArguments)
 //    case PseudoSingleButton:
 //    case PseudoSpatialNavigationFocus:
 //    case PseudoStart:
-//    case PseudoTarget:
+    case PseudoTarget:
     case PseudoNone:
 //    case PseudoUnresolved:
 //    case PseudoValid:
@@ -3007,6 +3009,10 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
         return element->state() & Node::NodeState::NodeStateActive;
+    case CSSSelector::PseudoType::PseudoFocus:
+        return element->state() & Node::NodeState::NodeStateFocused;
+    case CSSSelector::PseudoType::PseudoTarget:
+        return element->state() & Node::NodeState::NodeStateTarget;
     case CSSSelector::PseudoType::PseudoRoot:
         return element == element->document()->documentElement();
     case CSSSelector::PseudoType::PseudoFirstChild:
