@@ -2076,6 +2076,40 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
             break;
+        case CSSStyleValuePair::KeyKind::MaxWidth:
+            if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_maxWidth = parentStyle->m_maxWidth;
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                style->m_maxWidth = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                style->m_maxWidth = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
+                style->m_maxWidth = cssValues[k].lengthValue().toLength();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+                style->m_maxWidth = Length(Length::Percent, cssValues[k].percentageValue());
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
+                style->m_maxHeight = Length();
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::MinWidth:
+            if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_minWidth = parentStyle->m_minWidth;
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                style->m_minWidth = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                style->m_minWidth = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
+                style->m_minWidth = cssValues[k].lengthValue().toLength();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+                style->m_minWidth = Length(Length::Percent, cssValues[k].percentageValue());
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
+                style->m_maxHeight = Length();
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
         case CSSStyleValuePair::KeyKind::Height:
             if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
                 style->m_height = parentStyle->m_height;
@@ -2087,6 +2121,40 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 style->m_height = cssValues[k].lengthValue().toLength();
             } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
                 style->m_height = Length(Length::Percent, cssValues[k].percentageValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::MaxHeight:
+            if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_maxHeight = parentStyle->m_maxHeight;
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                style->m_maxHeight = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                style->m_maxHeight = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
+                style->m_maxHeight = cssValues[k].lengthValue().toLength();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+                style->m_maxHeight = Length(Length::Percent, cssValues[k].percentageValue());
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
+                style->m_maxHeight = Length();
+            } else {
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::MinHeight:
+            if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
+                style->m_minHeight = parentStyle->m_minHeight;
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Initial) {
+                style->m_minHeight = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Auto) {
+                style->m_minHeight = Length();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Length) {
+                style->m_minHeight = cssValues[k].lengthValue().toLength();
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Percentage) {
+                style->m_minHeight = Length(Length::Percent, cssValues[k].percentageValue());
+            } else if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::None) {
+                style->m_maxHeight = Length();
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
@@ -3632,11 +3700,28 @@ bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(String* token, bool all
     return updateValueLengthOrPercent(token, allowNegative);
 }
 
+bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(String* token, bool allowNegative)
+{
+    if (token->equals("none")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::None;
+        return true;
+    }
+    return updateValueLengthOrPercentOrAuto(token, allowNegative);
+}
+
 bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative)
 {
     if (tokens->size() != 1)
         return false;
     return updateValueLengthOrPercentOrAuto(tokens->at(0), allowNegative);
+}
+
+bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative)
+{
+    if (tokens->size() != 1) {
+        return false;
+    }
+    return updateValueLengthOrPercentOrAutoOrNone(tokens->at(0), allowNegative);
 }
 
 bool CSSStyleValuePair::updateValueBorderImageWidth(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
@@ -3874,9 +3959,29 @@ bool CSSStyleValuePair::updateValueWidth(std::vector<String*, gc_allocator_ignor
     return updateValueLengthOrPercentOrAuto(tokens, false);
 }
 
+bool CSSStyleValuePair::updateValueMaxWidth(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
+}
+
+bool CSSStyleValuePair::updateValueMinWidth(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
+}
+
 bool CSSStyleValuePair::updateValueHeight(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
 {
     return updateValueLengthOrPercentOrAuto(tokens, false);
+}
+
+bool CSSStyleValuePair::updateValueMaxHeight(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
+}
+
+bool CSSStyleValuePair::updateValueMinHeight(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
+{
+    return updateValueLengthOrPercentOrAutoOrNone(tokens, false);
 }
 
 bool CSSStyleValuePair::updateValueVerticalAlign(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)

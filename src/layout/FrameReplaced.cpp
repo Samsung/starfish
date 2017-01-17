@@ -142,28 +142,25 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 setContentWidth(0);
                 setContentHeight(0);
             } else if (style()->width().isAuto() && style()->height().isAuto()) {
-                setContentWidth(intrinsicWidth);
-                setContentHeight(intrinsicHeight);
+                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight, parentContentWidth, parentHeight);
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
                 LayoutUnit w = style()->width().specifiedValue(cb->contentWidth());
                 LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
-                setContentWidth(w);
-                setContentHeight(h);
+                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
             } else if (style()->width().isAuto() && style()->height().isSpecified()) {
                 LayoutUnit h = style()->height().specifiedValue(cb->contentHeight());
                 LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                setContentWidth(w);
-                setContentHeight(h);
+                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
             } else {
                 STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
-                setContentWidth(style()->width().specifiedValue(cb->contentWidth()));
                 if (style()->height().isFixed()) {
-                    setContentHeight(style()->height().fixed());
+                    applyMinMaxValueIfNeeds(style()->width().specifiedValue(cb->contentWidth()), style()->height().fixed(), parentContentWidth, parentHeight);
                 } else {
-                    if (ctx.parentHasFixedHeight(this))
-                        setContentHeight(style()->height().specifiedValue(cb->contentHeight()));
-                    else
-                        setContentHeight(intrinsicHeight);
+                    if (ctx.parentHasFixedHeight(this)) {
+                        applyMinMaxValueIfNeeds(style()->width().specifiedValue(cb->contentWidth()), style()->height().specifiedValue(cb->contentHeight()), parentContentWidth, parentHeight);
+                    } else {
+                        applyMinMaxValueIfNeeds(style()->width().specifiedValue(cb->contentWidth()), intrinsicHeight,  parentContentWidth, parentHeight, true, false);
+                    }
                 }
             }
 
@@ -222,11 +219,16 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 moveX(-this->width());
             }
         } else {
+            LayoutUnit parentHeight;
             Length parentContentHeight;
-            if (ctx.parentHasFixedHeight(this)) {
+            bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+            if (parentHasFixedHeight) {
                 parentContentHeight = Length(Length::Fixed, ctx.parentFixedHeight(this));
+                parentHasFixedHeight = true;
+                parentHeight = ctx.parentFixedHeight(this);
             } else {
                 parentContentHeight = Length(Length::Auto);
+                parentHasFixedHeight = false;
             }
             computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth, parentContentHeight);
 
@@ -234,43 +236,37 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                 setContentWidth(0);
                 setContentHeight(0);
             } else if (style()->width().isAuto() && style()->height().isAuto()) {
-                setContentWidth(intrinsicWidth);
-                setContentHeight(intrinsicHeight);
+                applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight, parentContentWidth, parentHeight, true, parentHasFixedHeight);
             } else if (style()->width().isSpecified() && style()->height().isAuto()) {
                 LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
                 LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
-                setContentWidth(w);
-                setContentHeight(h);
+                applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight, true, parentHasFixedHeight);
             } else if (style()->width().isAuto() && style()->height().isSpecified()) {
                 if (style()->height().isFixed()) {
                     LayoutUnit h = style()->height().fixed();
                     LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                    setContentWidth(w);
-                    setContentHeight(h);
+                    applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight, true, parentHasFixedHeight);
                 } else {
                     STARFISH_ASSERT(style()->height().isPercent());
                     if (ctx.parentHasFixedHeight(this)) {
                         LayoutUnit h = style()->height().percent() * ctx.parentFixedHeight(this);
                         LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-                        setContentWidth(w);
-                        setContentHeight(h);
+                        applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight);
                     } else {
-                        setContentWidth(intrinsicWidth);
-                        setContentHeight(intrinsicHeight);
+                        applyMinMaxValueIfNeeds(intrinsicWidth, intrinsicHeight, parentContentWidth, parentHeight, true, false);
                     }
                 }
             } else {
                 STARFISH_ASSERT(style()->width().isSpecified() && style()->height().isSpecified());
                 LayoutUnit w = style()->width().specifiedValue(ctx.parentContentWidth(this));
-                setContentWidth(w);
                 if (style()->height().isFixed()) {
-                    setContentHeight(style()->height().fixed());
+                    applyMinMaxValueIfNeeds(w, style()->height().fixed(), parentContentWidth, parentHeight, true, parentHasFixedHeight);
                 } else {
                     if (ctx.parentHasFixedHeight(this)) {
-                        setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
+                        applyMinMaxValueIfNeeds(w, style()->height().percent() * ctx.parentFixedHeight(this), parentContentWidth, parentHeight);
                     } else {
                         LayoutUnit h = w * (intrinsicHeight / intrinsicWidth);
-                        setContentHeight(h);
+                        applyMinMaxValueIfNeeds(w, h, parentContentWidth, parentHeight, true, false);
                     }
                 }
             }
