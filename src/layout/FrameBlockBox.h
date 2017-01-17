@@ -550,7 +550,7 @@ public:
     void layoutLineBoxDueToFloatBox(FrameBox* box);
     void removeDanglingSpaceFromLine();
     void removeAllInlineBoxes();
-    void sortInlineBoxes();
+    void sortInlineBoxes(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& tempBoxes, bool onlyNormalFlow);
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();

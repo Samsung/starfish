@@ -1357,7 +1357,14 @@ void LineFormattingContext::computeHorizontalProperties()
 {
     LineBox* back = m_block.m_lineBoxes.back();
 
+    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > tempBoxes;
+    back->boxes().swap(tempBoxes);
+
+    sortInlineBoxes(tempBoxes, true);
+
     resolveBidi(*this, m_block.style()->direction(), back->boxes());
+
+    sortInlineBoxes(tempBoxes, false);
 
     back->setX(m_lineBoxX);
     back->setWidth(m_lineBoxWidth);
@@ -1496,19 +1503,30 @@ void LineFormattingContext::removeAllInlineBoxes()
     }
 }
 
-void LineFormattingContext::sortInlineBoxes()
+void LineFormattingContext::sortInlineBoxes(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& tempBoxes, bool allowNotFloating)
 {
-    std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> > newBoxes;
-
     LineBox* lineBox = currentLine();
-    auto iter = lineBox->boxes().begin();
+    auto iter = tempBoxes.begin();
 
-    while (iter != lineBox->boxes().end()) {
-        insertInlineBoxInOrder(this, newBoxes, *iter);
-        iter = lineBox->boxes().erase(iter);
+    if (allowNotFloating) {
+        while (iter != tempBoxes.end()) {
+            if ((*iter)->style()->floating() == NoneFloatValue) {
+                insertInlineBoxInOrder(this, lineBox->boxes(), *iter);
+                iter = tempBoxes.erase(iter);
+            } else {
+                iter++;
+            }
+        }
+    } else {
+        while (iter != tempBoxes.end()) {
+            if ((*iter)->style()->floating() != NoneFloatValue) {
+                insertInlineBoxInOrder(this, lineBox->boxes(), *iter);
+                iter = tempBoxes.erase(iter);
+            } else {
+                iter++;
+            }
+        }
     }
-
-    currentLine()->boxes().swap(newBoxes);
 }
 
 void LineFormattingContext::insertPendingInlineBoxesDueToFloatinBoxes()
@@ -1609,7 +1627,6 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
 
     back->m_ascender = ascender;
     back->m_descender = descender;
-    sortInlineBoxes();
     removeDanglingSpaceFromLine();
     // Should check if there has enough space for pending block box due to removing
     // white space from above function `removeDanglingSpaceFromLine`
