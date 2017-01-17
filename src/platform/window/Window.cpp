@@ -1243,6 +1243,42 @@ void Window::releaseActiveNodeWithMouseMove()
     m_activeNodeWithTouchMove = nullptr;
 }
 
+void Window::processUrlFragment(String* name)
+{
+    Node* n = document()->getElementById(name);
+    if (n) {
+        setCSSTarget(n);
+        return;
+    }
+
+    Node* anchor = Traverse::findDescendant(document(), [&](Node* child) {
+        if (child->isElement() && child->asElement()->isHTMLElement()
+            && child->asElement()->asHTMLElement()->isHTMLAnchorElement()
+            && child->asElement()->asHTMLElement()->asHTMLAnchorElement()->name().localName()->equals(name)) {
+            return true;
+        } else
+            return false;
+    });
+
+    if (anchor)
+        setCSSTarget(anchor);
+}
+
+void Window::setCSSTarget(Node* n)
+{
+    releaseCSSTarget();
+
+    m_cssTarget = n;
+    if (m_cssTarget)
+        m_cssTarget->setState(Node::NodeStateTarget, true);
+}
+
+void Window::releaseCSSTarget()
+{
+    if (m_cssTarget)
+        m_cssTarget->setState(Node::NodeStateTarget, false);
+}
+
 void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
 {
     // STARFISH_LOG_INFO("Window::dispatchTouchEvent %f %f kind %d\n", x, y, (int)kind);
@@ -1498,6 +1534,7 @@ void Window::close()
 
     m_focusedNode = nullptr;
     m_relatedTarget = nullptr;
+    m_cssTarget = nullptr;
 
     m_activeNodeWithTouchDown = nullptr;
 

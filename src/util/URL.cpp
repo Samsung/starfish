@@ -325,6 +325,19 @@ String* URL::urlStringWithoutSearchPart() const
     }
 }
 
+String* URL::getUrlPathString() const
+{
+    size_t search = m_urlString->lastIndexOf('?');
+    size_t hash = m_urlString->lastIndexOf('#');
+    size_t min = search > hash ? hash : search;
+
+    if (min != SIZE_MAX) {
+        return m_urlString->substring(0, min);
+    } else {
+        return m_urlString;
+    }
+}
+
 String* URL::createObjectURL(Blob* blob)
 {
     BlobURLStore store;
