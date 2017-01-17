@@ -443,7 +443,11 @@ class CSSStyleDeclaration;
     F(Left, left, "left")                                          \
     F(Right, right, "right")                                       \
     F(Width, width, "width")                                       \
+    F(MaxWidth, maxWidth, "max-width")                             \
+    F(MinWidth, minWidth, "min-width")                             \
     F(Height, height, "height")                                    \
+    F(MaxHeight, maxHeight, "max-height")                          \
+    F(MinHeight, minHeight, "min-height")                          \
     F(FontSize, fontSize, "font-size")                             \
     F(FontStyle, fontStyle, "font-style")                          \
     F(Position, position, "position")                              \
@@ -1052,7 +1056,9 @@ public:
     bool updateValueLengthOrPercent(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercent(String* token, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
+    bool updateValueLengthOrPercentOrAutoOrNone(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative);
     bool updateValueLengthOrPercentOrAuto(String* token, bool allowNegative);
+    bool updateValueLengthOrPercentOrAutoOrNone(String* token, bool allowNegative);
 
     bool updateValueBackgroundImage(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowComma);
     bool updateValueBackgroundSize(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowComma);

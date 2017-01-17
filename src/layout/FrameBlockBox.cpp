@@ -65,7 +65,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(style);
                     PreferredWidthContext p(ctx, parentContentWidth - mbp, 0);
                     computePreferredWidth(p);
-                    setContentWidth(p.preferredWidth());
+                    applyMinMaxWidthIfNeeds(p.preferredWidth(), parentContentWidth);
                 } else {
                     LayoutUnit remainWidth = parentContentWidth;
                     remainWidth -= marginWidth();
@@ -73,13 +73,16 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     remainWidth -= paddingWidth();
                     if (remainWidth < 0)
                         remainWidth = 0;
-                    setContentWidth(remainWidth);
+                    applyMinMaxWidthIfNeeds(remainWidth, parentContentWidth);
                 }
             } else if (style->width().isFixed()) {
-                setContentWidth(style->width().fixed());
+                if (ctx.blockContainer(this)->style()->width().isFixed())
+                    applyMinMaxWidthIfNeeds(style->width().fixed(), parentContentWidth);
+                else
+                    applyMinMaxWidthIfNeeds(style->width().fixed(), style->width().fixed());
             } else {
                 STARFISH_ASSERT(style->width().isPercent());
-                setContentWidth(parentContentWidth * style->width().percent());
+                applyMinMaxWidthIfNeeds(parentContentWidth * style->width().percent(), parentContentWidth);
             }
 
             if (style->display() == BlockDisplayValue) {
@@ -189,11 +192,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
                     PreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
                     computePreferredWidth(p);
-                    setContentWidth(p.preferredWidth());
+                    applyMinMaxWidthIfNeeds(p.preferredWidth(), containgBlockContentWidth);
                 } else if (width.isFixed()) {
-                    setContentWidth(width.fixed());
+                    applyMinMaxWidthIfNeeds(width.fixed(), containgBlockContentWidth);
                 } else if (width.isPercent()) {
-                    setContentWidth(containgBlockContentWidth * width.percent());
+                    applyMinMaxWidthIfNeeds(containgBlockContentWidth * width.percent(), containgBlockContentWidth);
                 }
             };
 
@@ -324,11 +327,11 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
 
                     PreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
                     computePreferredWidth(p);
-                    setContentWidth(p.preferredWidth());
+                    applyMinMaxWidthIfNeeds(p.preferredWidth(), containgBlockContentWidth);
                 } else if (width.isFixed()) {
-                    setContentWidth(width.fixed());
+                    applyMinMaxWidthIfNeeds(width.fixed(), containgBlockContentWidth);
                 } else if (width.isPercent()) {
-                    setContentWidth(containgBlockContentWidth * width.percent());
+                    applyMinMaxWidthIfNeeds(containgBlockContentWidth * width.percent(), containgBlockContentWidth);
                 }
             };
 
@@ -401,8 +404,8 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         } else if (top.isAuto() && height.isAuto() && !bottom.isAuto()) {
             // 'top' and 'height' are 'auto' and 'bottom' is not 'auto', then the height is based on the content per 10.6.7
             // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'top'
-            setContentHeight(contentHeight);
-            setAbsY(parentHeight - contentHeight - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
+            applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
+            setAbsY(parentHeight - asFrameBox()->contentHeight() - paddingHeight() - borderHeight() - bottom.specifiedValue(parentHeight));
         } else if (top.isAuto() && bottom.isAuto() && !height.isAuto()) {
             // 'top' and 'bottom' are 'auto' and 'height' is not 'auto', then set 'top' to the static position
             // set 'auto' values for 'margin-top' and 'margin-bottom' to 0, and solve for 'bottom'
@@ -428,9 +431,9 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
         }
 
         if (height.isAuto()) {
-            setContentHeight(contentHeight);
+            applyMinMaxHeightIfNeeds(contentHeight, parentHeight);
         } else {
-            setContentHeight(height.specifiedValue(parentHeight));
+            applyMinMaxHeightIfNeeds(height.specifiedValue(parentHeight), parentHeight);
         }
 
         if (!marginTop.isAuto() && !marginBottom.isAuto()) {
@@ -444,15 +447,24 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     } else {
         // Normal Flow or Float box
         // 10.6.6 Complicated cases
+        LayoutUnit newHeight;
         if (style()->height().isAuto()) {
-            setContentHeight(contentHeight);
+            if (ctx.parentHasFixedHeight(this)) {
+                applyMinMaxHeightIfNeeds(contentHeight, ctx.parentFixedHeight(this));
+            } else {
+                applyMinMaxHeightIfNeeds(contentHeight, contentHeight, false);
+            }
         } else if (style()->height().isFixed()) {
-            setContentHeight(style()->height().fixed());
+            if (ctx.parentHasFixedHeight(this)) {
+                applyMinMaxHeightIfNeeds(style()->height().fixed(), ctx.parentFixedHeight(this));
+            } else {
+                applyMinMaxHeightIfNeeds(style()->height().fixed(), contentHeight, false);
+            }
         } else {
             if (ctx.parentHasFixedHeight(this)) {
-                setContentHeight(style()->height().percent() * ctx.parentFixedHeight(this));
+                applyMinMaxHeightIfNeeds(style()->height().percent() * ctx.parentFixedHeight(this), ctx.parentFixedHeight(this));
             } else {
-                setContentHeight(contentHeight);
+                applyMinMaxHeightIfNeeds(contentHeight, contentHeight, false);
             }
         }
     }

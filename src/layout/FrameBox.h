@@ -95,6 +95,16 @@ public:
     void setWidth(LayoutUnit width) { m_frameRect.setWidth(width); }
     void setHeight(LayoutUnit height) { m_frameRect.setHeight(height); }
 
+    void applyMinMaxWidthIfNeeds(LayoutUnit width, LayoutUnit parentWidth, bool parentHasFixedValue = true)
+    {
+        setContentWidth(minMaxWidthAppliedIfNeeds(width, parentWidth, parentHasFixedValue));
+    }
+
+    void applyMinMaxHeightIfNeeds(LayoutUnit height, LayoutUnit parentHeight, bool parentHasFixedValue = true)
+    {
+        setContentHeight(minMaxHeightAppliedIfNeeds(height, parentHeight, parentHasFixedValue));
+    }
+
     void setContentWidth(LayoutUnit width) { m_frameRect.setWidth(width + paddingWidth() + borderWidth()); }
     void setContentHeight(LayoutUnit height) { m_frameRect.setHeight(height + paddingHeight() + borderHeight()); }
 
@@ -622,6 +632,45 @@ public:
     }
 
 protected:
+    LayoutUnit minMaxWidthAppliedIfNeeds(LayoutUnit width, LayoutUnit parentWidth, bool parentHasFixedValue)
+    {
+        ComputedStyle* style = Frame::style();
+        if (style->minWidth().isSpecified()) {
+            if (!parentHasFixedValue&&style->minWidth().isPercent())
+                return width;
+            LayoutUnit minWidth = style->minWidth().specifiedValue(parentWidth);
+            if (minWidth > width)
+                return minWidth;
+        }
+        if (style->maxWidth().isSpecified()) {
+            if (!parentHasFixedValue&&style->maxWidth().isPercent())
+                return width;
+            LayoutUnit maxWidth = style->maxWidth().specifiedValue(parentWidth);
+            if (maxWidth < width)
+                return maxWidth;
+        }
+        return width;
+    }
+
+    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutUnit height, LayoutUnit parentHeight, bool parentHasFixedValue)
+    {
+        ComputedStyle* style = Frame::style();
+        if (style->minHeight().isSpecified()) {
+            if (!parentHasFixedValue&&style->minHeight().isPercent())
+                return height;
+            LayoutUnit minHeight = style->minHeight().specifiedValue(parentHeight);
+            if (minHeight > height)
+                return minHeight;
+        }
+        if (style->maxHeight().isSpecified()) {
+            if (!parentHasFixedValue&&style->maxHeight().isPercent())
+                return height;
+            LayoutUnit maxHeight = style->maxHeight().specifiedValue(parentHeight);
+            if (maxHeight < height)
+                return maxHeight;
+        }
+        return height;
+    }
     // content + padding + border
     LayoutRect m_frameRect;
 

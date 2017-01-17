@@ -1082,12 +1082,18 @@ CSSStyleDeclaration* Node::getComputedStyle()
             p.setValue(style->getter().percent());                    \
         } else if (style->getter().isAuto()) {                        \
             p.setValueKind(CSSStyleValuePair::ValueKind::Auto);       \
+        } else {                                                      \
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);       \
         }                                                             \
         d->addValuePair(p);                                           \
     }
 
     ADD_LENGTH_PAIR(Width, width)
+    ADD_LENGTH_PAIR(MaxWidth, maxWidth)
+    ADD_LENGTH_PAIR(MinWidth, minWidth)
     ADD_LENGTH_PAIR(Height, height)
+    ADD_LENGTH_PAIR(MaxHeight, maxHeight)
+    ADD_LENGTH_PAIR(MinHeight, minHeight)
     ADD_LENGTH_PAIR(LineHeight, lineHeight)
     ADD_LENGTH_PAIR(Top, top)
     ADD_LENGTH_PAIR(Right, right)

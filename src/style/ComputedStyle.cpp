@@ -191,7 +191,11 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle, Node* current
     m_inheritedStyles.m_letterSpacing.changeToFixedIfNeeded(baseFontSize, font());
     m_inheritedStyles.m_lineHeight.changeToFixedIfNeeded(baseFontSize, font());
     m_width.changeToFixedIfNeeded(baseFontSize, font());
+    m_minWidth.changeToFixedIfNeeded(baseFontSize, font());
+    m_maxWidth.changeToFixedIfNeeded(baseFontSize, font());
     m_height.changeToFixedIfNeeded(baseFontSize, font());
+    m_minHeight.changeToFixedIfNeeded(baseFontSize, font());
+    m_maxHeight.changeToFixedIfNeeded(baseFontSize, font());
     m_verticalAlignLength.changeToFixedIfNeeded(baseFontSize, font());
     if (m_transforms) {
         size_t sz = m_transforms->size();
@@ -281,7 +285,19 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle, ComputedStyle* newStyl
     if (newStyle->m_width != oldStyle->m_width)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
+    if (newStyle->m_minWidth != oldStyle->m_minWidth)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_maxWidth != oldStyle->m_maxWidth)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
     if (newStyle->m_height != oldStyle->m_height)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_minHeight != oldStyle->m_minHeight)
+        damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+
+    if (newStyle->m_maxHeight != oldStyle->m_maxHeight)
         damage = (ComputedStyleDamage)(ComputedStyleDamage::ComputedStyleDamageLayout | damage);
 
     if (newStyle->m_unicodeBidi != oldStyle->m_unicodeBidi)

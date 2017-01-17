@@ -103,9 +103,29 @@ public:
         return m_width;
     }
 
+    Length maxWidth()
+    {
+        return m_maxWidth;
+    }
+
+    Length minWidth()
+    {
+        return m_minWidth;
+    }
+
     void setWidth(const Length& l)
     {
         m_width = l;
+    }
+
+    void setMaxWidth(const Length& l)
+    {
+        m_maxWidth = l;
+    }
+
+    void setMinWidth(const Length& l)
+    {
+        m_minWidth = l;
     }
 
     Length height()
@@ -113,9 +133,29 @@ public:
         return m_height;
     }
 
+    Length maxHeight()
+    {
+        return m_maxHeight;
+    }
+
+    Length minHeight()
+    {
+        return m_minHeight;
+    }
+
     void setHeight(const Length& l)
     {
         m_height = l;
+    }
+
+    void setMaxHeight(const Length& l)
+    {
+        m_maxHeight = l;
+    }
+
+    void setMinHeight(const Length& l)
+    {
+        m_minHeight = l;
     }
 
     void setColor(Color r)
@@ -838,7 +878,11 @@ protected:
     bool m_zIndexSpecifiedByUser : 1;
 
     Length m_width;
+    Length m_minWidth;
+    Length m_maxWidth;
     Length m_height;
+    Length m_minHeight;
+    Length m_maxHeight;
     Length m_verticalAlignLength;
 
     float m_opacity;

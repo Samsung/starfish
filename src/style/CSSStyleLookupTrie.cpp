@@ -172,6 +172,14 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::Direction;
             }
             break;
+        case 'm':
+            if (memcmp(data, "max-width", 9) == 0) {
+                return CSSStyleKind::MaxWidth;
+            }
+            if (memcmp(data, "min-width", 9) == 0) {
+                return CSSStyleKind::MinWidth;
+            }
+            break;
         }
         break;
     case 10:
@@ -181,6 +189,8 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         // Text-Align
         // Margin-Top
         // Visibility
+        // Max-Height
+        // Min-Height
         switch (data[0]) {
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
@@ -203,6 +213,12 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
         case 'm':
             if (memcmp(data, "margin-top", 10) == 0) {
                 return CSSStyleKind::MarginTop;
+            }
+            if (memcmp(data, "max-height", 10) == 0) {
+                return CSSStyleKind::MaxHeight;
+            }
+            if (memcmp(data, "min-height", 10) == 0) {
+                return CSSStyleKind::MinHeight;
             }
             break;
         case 'v':

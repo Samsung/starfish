@@ -74,6 +74,25 @@ public:
         return (FrameReplacedVideo*)this;
     }
 
+    void applyMinMaxValueIfNeeds(LayoutUnit width, LayoutUnit height, LayoutUnit parentWidth, LayoutUnit parentHeight, bool parentWidthHasFixedValue = true, bool parentHeightHasFixedValue = true)
+    {
+        LayoutUnit newWidth = minMaxWidthAppliedIfNeeds(width, parentWidth, parentWidthHasFixedValue);
+        LayoutUnit newHeight = minMaxHeightAppliedIfNeeds(height, parentWidth, parentHeightHasFixedValue);
+        if (width != newWidth || height != newHeight) {
+            if (height == 0 || newHeight == 0) {
+                setContentWidth(newWidth);
+                return;
+            }
+            if (newWidth < newHeight) {
+                newHeight = newWidth * (height / width);
+            } else if (newWidth > newHeight) {
+                newWidth = newHeight * (width / height);
+            }
+        }
+        setContentWidth(newWidth);
+        setContentHeight(newHeight);
+    }
+
     virtual const char* name()
     {
         return "FrameReplaced";
