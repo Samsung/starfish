@@ -209,7 +209,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             floatAffected = false;
             LayoutLocation loc = absolutePoint(ctx.frameDocument());
             // TODO: Consider Rtl
-            LayoutUnit leftBoundary = loc.x();
+            LayoutUnit leftBoundary = loc.x() + paddingLeft() + borderLeft();
             LayoutUnit rightBoundary = leftBoundary + contentWidth();
             LayoutLocation selfLoc = child->asFrameBox()->absolutePoint(ctx.frameDocument());
             LayoutUnit originalY = selfLoc.y();
