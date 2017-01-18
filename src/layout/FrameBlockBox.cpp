@@ -62,10 +62,10 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             ComputedStyle* style = Frame::style();
             if (style->width().isAuto()) {
                 if (m_flags.m_shouldComputePreferredWidth) {
-                    LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(style);
-                    ComputePreferredWidthContext p(ctx, parentContentWidth - mbp, 0);
+                    LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(style);
+                    PreferredWidthContext p(ctx, parentContentWidth - mbp, 0);
                     computePreferredWidth(p);
-                    setContentWidth(p.result());
+                    setContentWidth(p.preferredWidth());
                 } else {
                     LayoutUnit remainWidth = parentContentWidth;
                     remainWidth -= marginWidth();
@@ -187,9 +187,9 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     if (parentWidthForComputePreferredWidth < 0)
                         parentWidthForComputePreferredWidth = 0;
 
-                    ComputePreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
+                    PreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
                     computePreferredWidth(p);
-                    setContentWidth(p.result());
+                    setContentWidth(p.preferredWidth());
                 } else if (width.isFixed()) {
                     setContentWidth(width.fixed());
                 } else if (width.isPercent()) {
@@ -322,9 +322,9 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
                     if (parentWidthForComputePreferredWidth < 0)
                         parentWidthForComputePreferredWidth = 0;
 
-                    ComputePreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
+                    PreferredWidthContext p(ctx, parentWidthForComputePreferredWidth, 0);
                     computePreferredWidth(p);
-                    setContentWidth(p.result());
+                    setContentWidth(p.preferredWidth());
                 } else if (width.isFixed()) {
                     setContentWidth(width.fixed());
                 } else if (width.isPercent()) {

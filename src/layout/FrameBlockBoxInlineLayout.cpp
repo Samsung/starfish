@@ -2565,7 +2565,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
     return self;
 }
 
-void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
+void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 {
     LayoutUnit remainWidth = ctx.lastKnownWidth();
     LayoutUnit minWidth;
@@ -2577,16 +2577,16 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
     if (hasBlockFlow()) {
         if (style()->width().isFixed()) {
             minWidth += style()->width().fixed();
-            ctx.setMinimumWidth(minWidth);
-            ctx.setResult(minWidth);
+            ctx.updatePreferredMinWidth(minWidth);
+            ctx.updatePreferredWidth(minWidth);
         } else {
             Frame* child = firstChild();
             while (child) {
                 STARFISH_ASSERT(child->isNormalFlow());
-                LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
-                ComputePreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
+                LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
+                PreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
                 child->computePreferredWidth(newCtx);
-                ctx.setResult(newCtx.result() + mbp);
+                ctx.updatePreferredWidth(newCtx.preferredWidth() + mbp);
                 child = child->next();
             }
         }
@@ -2627,13 +2627,13 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                         w = f->style()->font()->measureText(StringView(srcTxt, offset, nextOffset));
                     }
 
-                    ctx.setMinimumWidth(w);
+                    ctx.updatePreferredMinWidth(w);
 
                     if (whiteSpaceCanBreak) {
                         if (currentLineWidth + w < remainWidth) {
                             currentLineWidth += w;
                         } else {
-                            ctx.setResult(remainWidth);
+                            ctx.updatePreferredWidth(remainWidth);
                             if (isWhiteSpace) {
                                 currentLineWidth = 0;
                             } else {
@@ -2647,19 +2647,19 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                     ctx.setIsWhiteSpaceAtLast(isWhiteSpace);
                 });
             } else if (f->isFrameBlockBox()) {
-                LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
+                LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
                 Length width = f->style()->width();
                 LayoutUnit w;
                 if (width.isAuto()) {
-                    ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
+                    PreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
                     f->computePreferredWidth(newCtx);
-                    w = newCtx.result() + mbp;
+                    w = newCtx.preferredWidth() + mbp;
                 } else if (width.isFixed()) {
                     w = width.fixed() + mbp;
                 } else if (width.isPercent()) {
                     w = (contentWidth() + paddingWidth()) * width.percent();
                 }
-                ctx.setResult(w);
+                ctx.updatePreferredWidth(w);
 
                 if (whiteSpaceCanBreak) {
                     if (f->style()->floating() == NoneFloatValue || ((f->style()->clear() == NoneClearValue)
@@ -2669,11 +2669,11 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                         if (currentLineWidth + w < remainWidth) {
                             currentLineWidth += w;
                         } else {
-                            ctx.setResult(remainWidth);
+                            ctx.updatePreferredWidth(remainWidth);
                             currentLineWidth = w;
                         }
                     } else {
-                        ctx.setResult(currentLineWidth);
+                        ctx.updatePreferredWidth(currentLineWidth);
                         hasFloat = LineFormattingContext::HasNone;
                         currentLineWidth = w;
                     }
@@ -2690,7 +2690,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 ctx.setIsWhiteSpaceAtLast(true);
             } else if (f->isFrameLineBreak()) {
                 // linebreaks
-                ctx.setResult(currentLineWidth);
+                ctx.updatePreferredWidth(currentLineWidth);
                 currentLineWidth = 0;
 
                 ctx.setIsWhiteSpaceAtLast(false);
@@ -2702,7 +2702,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                             if (currentLineWidth + l.fixed() < remainWidth) {
                                 currentLineWidth += l.fixed();
                             } else {
-                                ctx.setResult(remainWidth);
+                                ctx.updatePreferredWidth(remainWidth);
                                 currentLineWidth = l.fixed();
                             }
                         } else {
@@ -2722,17 +2722,17 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
             } else {
                 STARFISH_ASSERT(f->isFrameReplaced());
 
-                LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
-                ComputePreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
+                LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
+                PreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
                 f->computePreferredWidth(newCtx);
-                LayoutUnit w = newCtx.result() + mbp;
-                ctx.setResult(w);
+                LayoutUnit w = newCtx.preferredWidth() + mbp;
+                ctx.updatePreferredWidth(w);
 
                 if (whiteSpaceCanBreak) {
                     if (currentLineWidth + w < remainWidth) {
                         currentLineWidth += w;
                     } else {
-                        ctx.setResult(remainWidth);
+                        ctx.updatePreferredWidth(remainWidth);
                         currentLineWidth = w;
                     }
                 } else {
@@ -2756,7 +2756,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
             computeInlineLayout(c);
             c = c->next();
         }
-        ctx.setResult(currentLineWidth);
+        ctx.updatePreferredWidth(currentLineWidth);
     }
 }
 

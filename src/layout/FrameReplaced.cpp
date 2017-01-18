@@ -366,7 +366,7 @@ void FrameReplaced::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     }
 }
 
-void FrameReplaced::computePreferredWidth(ComputePreferredWidthContext& ctx)
+void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 {
     LayoutUnit parentContentWidth = ctx.layoutContext().blockContainer(this)->asFrameBox()->contentWidth();
     LayoutUnit intrinsicWidth, intrinsicHeight;
@@ -379,28 +379,28 @@ void FrameReplaced::computePreferredWidth(ComputePreferredWidthContext& ctx)
     computeIntrinsicSize(intrinsicWidth, intrinsicHeight, parentContentWidth, parentContentHeight);
 
     if (style()->width().isAuto() && style()->height().isAuto()) {
-        ctx.setResult(intrinsicWidth);
-        ctx.setMinimumWidth(intrinsicWidth);
+        ctx.updatePreferredWidth(intrinsicWidth);
+        ctx.updatePreferredMinWidth(intrinsicWidth);
     } else if (style()->width().isSpecified()) {
         if (style()->width().isFixed()) {
-            ctx.setResult(style()->width().fixed());
-            ctx.setMinimumWidth(style()->width().fixed());
+            ctx.updatePreferredWidth(style()->width().fixed());
+            ctx.updatePreferredMinWidth(style()->width().fixed());
         } else {
-            ctx.setResult(intrinsicWidth);
-            ctx.setMinimumWidth(intrinsicWidth);
+            ctx.updatePreferredWidth(intrinsicWidth);
+            ctx.updatePreferredMinWidth(intrinsicWidth);
         }
     } else if (style()->height().isSpecified()) {
         if (style()->height().isFixed()) {
             LayoutUnit h = style()->height().fixed();
             LayoutUnit w = h * (intrinsicWidth / intrinsicHeight);
-            ctx.setResult(w);
-            ctx.setMinimumWidth(w);
+            ctx.updatePreferredWidth(w);
+            ctx.updatePreferredMinWidth(w);
         } else {
-            ctx.setResult(intrinsicWidth);
-            ctx.setMinimumWidth(intrinsicWidth);
+            ctx.updatePreferredWidth(intrinsicWidth);
+            ctx.updatePreferredMinWidth(intrinsicWidth);
         }
     } else {
-        ctx.setResult(intrinsicWidth);
+        ctx.updatePreferredWidth(intrinsicWidth);
     }
 }
 

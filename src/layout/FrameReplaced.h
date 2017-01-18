@@ -80,7 +80,7 @@ public:
     }
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-    virtual void computePreferredWidth(ComputePreferredWidthContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
     virtual void computeIntrinsicSize(LayoutUnit& intrinsicWidth, LayoutUnit& intrinsicHeight, LayoutUnit parentContentWidth, Length parentContentHeight);
 
     virtual IntrinsicSize intrinsicSize() = 0;
