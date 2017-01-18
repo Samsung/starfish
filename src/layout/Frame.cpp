@@ -299,7 +299,7 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
 #ifndef NDEBUG
                 if (hasLeft) {
                     if (leftY == f.top()) {
-                        STARFISH_ASSERT(f.loc().x() > leftX);
+                        STARFISH_ASSERT(f.loc().x() >= leftX);
                     } else {
                         leftY = f.top();
                         leftX = f.loc().x() - f.box()->marginLeft();
@@ -314,7 +314,7 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
 #ifndef NDEBUG
                 if (hasRight) {
                     if (rightY == f.top()) {
-                        STARFISH_ASSERT(f.loc().x() < rightX);
+                        STARFISH_ASSERT(f.loc().x() <= rightX);
                     } else {
                         rightY = f.top();
                         rightX = f.loc().x() - f.box()->marginLeft();
