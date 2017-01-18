@@ -650,7 +650,7 @@ public:
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
     bool m_shouldLineBreakForabsolutePositionedBlock;
-    enum Float {
+    enum HasFloat {
         HasNone,
         HasLeft,
         HasRight,
