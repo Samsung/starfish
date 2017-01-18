@@ -152,6 +152,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
             cell->setX(xSoFar);
             LayoutUnit cellWidth = tableSectionBox()->tableBox()-> columnWidths()[i].cellWidth;
             cell->setWidth(cellWidth);
+            cell->asFrameTableCellBox()->layoutWidth(ctx);
             xSoFar += cellWidth;
             xSoFar += borderSpacing;
             i++;

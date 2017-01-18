@@ -85,7 +85,14 @@ void FrameTableCellBox::calCellWidth(LayoutContext& ctx, Frame::LayoutWantToReso
 
 void FrameTableCellBox::layoutWidth(LayoutContext& ctx)
 {
-
+    // layout blockboxes to fit them into the width of this cell.
+    // The width of cell has been calculated in calCellWidth()
+    // in the first iteration
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameBlockBox()) {
+            c->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
+        }
+    }
 }
 
 void FrameTableCellBox::layoutHeight(LayoutContext& ctx)
@@ -105,9 +112,16 @@ LayoutUnit FrameTableCellBox::calMinCellWidth(LayoutContext& ctx)
     for (Frame* c = firstChild(); c; c = c->next()) {
         LayoutUnit width;
         if (c->isFrameText()) {
-            width = c->asFrameText()->minimumContentWidth(ctx);
+            width = c->asFrameText()->preferredMinWidth(ctx);
+        } else if (c->isFrameBlockBox()) {
+            // LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(style());
+            // ComputePreferredWidthContext p(ctx, parentContentWidth - mbp, 0);
+            // mininum width of the FrameBlockBox
+            ComputePreferredWidthContext p(ctx, 0, 0);
+            computePreferredWidth(p);
+            width = p.result();
         } else {
-            // TODO: measure width for other frameboxes
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
         width += paddingLeft() + paddingRight();
         width += borderLeft() + borderRight();
@@ -119,16 +133,23 @@ LayoutUnit FrameTableCellBox::calMinCellWidth(LayoutContext& ctx)
 
 LayoutUnit FrameTableCellBox::calMaxCellWidth(LayoutContext& ctx)
 {
+    return calPreferredFrameWidth(ctx, this);
+}
+
+LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx, FrameBlockBox* b)
+{
     LayoutUnit maxWidthSoFar = 0;
-    for (Frame* c = firstChild(); c; c = c->next()) {
+    for (Frame* c = b->firstChild(); c; c = c->next()) {
         LayoutUnit width;
         if (c->isFrameText()) {
-            width = c->asFrameText()->maximumContentWidth(ctx);
-        } else {
-            // TODO
+            width = c->asFrameText()->preferredWidth(ctx);
+        } else if (c->isFrameBlockBox()) {
+            width = calPreferredFrameWidth(ctx, c->asFrameBlockBox());
         }
-        width += paddingLeft() + paddingRight();
-        width += borderLeft() + borderRight();
+
+        width += b->marginLeft() + b->marginRight();
+        width += b->borderLeft() + b->borderRight();
+        width += b->paddingLeft() + b->paddingRight();
         maxWidthSoFar = std::max(maxWidthSoFar, width);
     }
 

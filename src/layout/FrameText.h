@@ -75,8 +75,8 @@ public:
         return result;
     }
 
-    LayoutUnit minimumContentWidth(LayoutContext& ctx);
-    LayoutUnit maximumContentWidth(LayoutContext& ctx);
+    LayoutUnit preferredMinWidth(LayoutContext& ctx);
+    LayoutUnit preferredWidth(LayoutContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)

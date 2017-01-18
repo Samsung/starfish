@@ -76,6 +76,7 @@ private:
 
     LayoutUnit calMinCellWidth(LayoutContext& ctx);
     LayoutUnit calMaxCellWidth(LayoutContext& ctx);
+    static LayoutUnit calPreferredFrameWidth(LayoutContext& ctx, FrameBlockBox* box);
 
     unsigned m_absoluteColumnIndex; // starts with 0
     LayoutUnit m_minCellWidth;
