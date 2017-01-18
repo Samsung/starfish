@@ -62,7 +62,11 @@ public:
                 if (s != SIZE_MAX) {
                     String* h = getAttribute(s)->trim();
                     if (h->length()) {
-                        document()->window()->navigateAsync(URL::createURL(document()->documentURI()->urlString(), h));
+                        if (h->startsWith("#")) {
+                            document()->window()->navigateAsync(URL::createURL(document()->documentURI()->urlString()->substring(0, document()->documentURI()->urlString()->indexOf('#')), h));
+                        } else {
+                            document()->window()->navigateAsync(URL::createURL(document()->documentURI()->urlString(), h));
+                        }
                     } else {
                         document()->window()->navigateAsync(document()->documentURI());
                     }

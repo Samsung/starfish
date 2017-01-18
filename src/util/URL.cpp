@@ -327,8 +327,8 @@ String* URL::urlStringWithoutSearchPart() const
 
 String* URL::getUrlPathString() const
 {
-    size_t search = m_urlString->lastIndexOf('?');
-    size_t hash = m_urlString->lastIndexOf('#');
+    size_t search = m_urlString->indexOf('?');
+    size_t hash = m_urlString->indexOf('#');
     size_t min = search > hash ? hash : search;
 
     if (min != SIZE_MAX) {
