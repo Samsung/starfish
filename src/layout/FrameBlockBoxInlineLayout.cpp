@@ -2585,6 +2585,7 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
         }
     } else {
         LayoutUnit currentLineWidth = 0;
+        int hasFloat = LineFormattingContext::HasNone;
         std::function<void(Frame*)> computeInlineLayout = [&](Frame* f)
         {
             // current
@@ -2654,14 +2655,29 @@ void FrameBlockBox::computePreferredWidth(ComputePreferredWidthContext& ctx)
                 ctx.setResult(w);
 
                 if (whiteSpaceCanBreak) {
-                    if (currentLineWidth + w < remainWidth) {
-                        currentLineWidth += w;
+                    if (f->style()->floating() == NoneFloatValue || ((f->style()->clear() == NoneClearValue)
+                        || (f->style()->clear() == LeftClearValue && (hasFloat & LineFormattingContext::HasLeft) == 0)
+                        || (f->style()->clear() == RightClearValue && (hasFloat & LineFormattingContext::HasRight) == 0)
+                        || (f->style()->clear() == BothClearValue && (hasFloat & LineFormattingContext::HasNone)))) {
+                        if (currentLineWidth + w < remainWidth) {
+                            currentLineWidth += w;
+                        } else {
+                            ctx.setResult(remainWidth);
+                            currentLineWidth = w;
+                        }
                     } else {
-                        ctx.setResult(remainWidth);
+                        ctx.setResult(currentLineWidth);
+                        hasFloat = LineFormattingContext::HasNone;
                         currentLineWidth = w;
                     }
                 } else {
                     currentLineWidth += w;
+                }
+
+                if (f->style()->floating() == LeftFloatValue) {
+                    hasFloat |= LineFormattingContext::HasLeft;
+                } else if (f->style()->floating() == RightFloatValue) {
+                    hasFloat |= LineFormattingContext::HasRight;
                 }
 
                 ctx.setIsWhiteSpaceAtLast(true);
