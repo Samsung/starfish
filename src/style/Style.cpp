@@ -3020,29 +3020,35 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
     case CSSSelector::PseudoType::PseudoLastChild:
         return isLastChild(element);
     case CSSSelector::PseudoType::PseudoFirstOfType:
-        return isFirstOfType(element);
+        if (element->parentElement())
+            return isFirstOfType(element);
+        break;
     case CSSSelector::PseudoType::PseudoLastOfType:
-        return isLastOfType(element);
+        if (element->parentElement())
+            return isLastOfType(element);
+        break;
     case CSSSelector::PseudoType::PseudoOnlyChild:
         return isFirstChild(element) && isLastChild(element);
     case CSSSelector::PseudoType::PseudoOnlyOfType:
-        return isFirstOfType(element) && isLastOfType(element);
+        if (element->parentElement())
+            return isFirstOfType(element) && isLastOfType(element);
+        break;
     case CSSSelector::PseudoType::PseudoEmpty:
         return isEmpty(element);
     case CSSSelector::PseudoNthChild:
-        if (Node* parent = element->parentElement())
+        if (element->parentElement())
             return selector->matchNth(nthChildIndex(element));
         break;
     case CSSSelector::PseudoNthOfType:
-        if (Node* parent = element->parentElement())
+        if (element->parentElement())
             return selector->matchNth(nthOfTypeIndex(element));
         break;
     case CSSSelector::PseudoNthLastChild:
-        if (Node* parent = element->parentElement())
+        if (element->parentElement())
             return selector->matchNth(nthLastChildIndex(element));
         break;
     case CSSSelector::PseudoNthLastOfType:
-        if (Node* parent = element->parentElement())
+        if (element->parentElement())
             return selector->matchNth(nthLastOfTypeIndex(element));
         break;
     case CSSSelector::PseudoType::PseudoLang:
