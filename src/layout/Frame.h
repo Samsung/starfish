@@ -332,14 +332,14 @@ private:
     LayoutUnit m_horizontalBoundary;
 };
 
-class ComputePreferredWidthContext {
+class PreferredWidthContext {
 public:
-    ComputePreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth, LayoutUnit minimumWidth)
+    PreferredWidthContext(LayoutContext& lc, LayoutUnit lastKnownWidth, LayoutUnit minimumWidth)
         : m_layoutContext(lc)
     {
-        m_result = 0;
+        m_preferredWidthSoFar = 0;
         m_lastKnownWidth = lastKnownWidth;
-        m_minimumWidth = minimumWidth;
+        m_preferredMinWidthSoFar = minimumWidth;
     }
 
     LayoutContext& layoutContext()
@@ -347,19 +347,24 @@ public:
         return m_layoutContext;
     }
 
-    void setResult(LayoutUnit r)
+    void updatePreferredWidth(LayoutUnit r)
     {
-        m_result = std::max(m_result, r);
+        m_preferredWidthSoFar = std::max(m_preferredWidthSoFar, r);
     }
 
-    LayoutUnit result() const
+    LayoutUnit preferredWidth() const
     {
-        return std::max(m_result, m_minimumWidth);
+        return std::max(m_preferredWidthSoFar, m_preferredMinWidthSoFar);
     }
 
-    void setMinimumWidth(LayoutUnit w)
+    void updatePreferredMinWidth(LayoutUnit w)
     {
-        m_minimumWidth = std::max(m_minimumWidth, w);
+        m_preferredMinWidthSoFar = std::max(m_preferredMinWidthSoFar, w);
+    }
+
+    LayoutUnit preferredMinWidth() const
+    {
+        return m_preferredMinWidthSoFar;
     }
 
     LayoutUnit lastKnownWidth()
@@ -397,9 +402,9 @@ public:
 
 private:
     LayoutContext& m_layoutContext;
-    LayoutUnit m_result;
+    LayoutUnit m_preferredWidthSoFar;
     LayoutUnit m_lastKnownWidth;
-    LayoutUnit m_minimumWidth;
+    LayoutUnit m_preferredMinWidthSoFar;
     bool m_isWhiteSpaceAtLast;
 };
 
@@ -774,7 +779,7 @@ public:
         return false;
     }
 
-    virtual void computePreferredWidth(ComputePreferredWidthContext& ctx)
+    virtual void computePreferredWidth(PreferredWidthContext& ctx)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

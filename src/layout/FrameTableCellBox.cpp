@@ -114,12 +114,10 @@ LayoutUnit FrameTableCellBox::calMinCellWidth(LayoutContext& ctx)
         if (c->isFrameText()) {
             width = c->asFrameText()->preferredMinWidth(ctx);
         } else if (c->isFrameBlockBox()) {
-            // LayoutUnit mbp = ComputePreferredWidthContext::computeMinimumWidthDueToMBP(style());
-            // ComputePreferredWidthContext p(ctx, parentContentWidth - mbp, 0);
-            // mininum width of the FrameBlockBox
-            ComputePreferredWidthContext p(ctx, 0, 0);
-            computePreferredWidth(p);
-            width = p.result();
+            LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
+            PreferredWidthContext p(ctx, 0, 0);
+            c->computePreferredWidth(p);
+            width = p.preferredMinWidth();
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }

@@ -489,7 +489,7 @@ public:
     }
 
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
-    virtual void computePreferredWidth(ComputePreferredWidthContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx);
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth);
