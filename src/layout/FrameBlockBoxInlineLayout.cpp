@@ -1209,9 +1209,9 @@ void LineFormattingContext::insertPendingAboslutePositionedBoxes()
             lineBox->boxes().push_back(box);
             box->setLayoutParent(lineBox);
             if (dir == DirectionValue::LtrDirectionValue)
-                box->setX(0);
+                box->setX(m_leftBoundary - m_absPosition.x() - m_lineBoxX);
             else
-                box->setX(lineBox->width());
+                box->setX(m_rightBoundary - m_absPosition.x() - m_lineBoxX);
             if (m_absolutePositionedBoxes[i].second)
                 box->setY(lineBox->height());
             else
