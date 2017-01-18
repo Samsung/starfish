@@ -207,7 +207,6 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             bool hasToStretchWidth = shouldStretchWidth(child);
             reLayoutNeeded = false;
             floatAffected = false;
-            LayoutLocation loc = absolutePoint(ctx.frameDocument());
             // TODO: Consider Rtl
             LayoutUnit leftBoundary = loc.x() + paddingLeft() + borderLeft();
             LayoutUnit rightBoundary = leftBoundary + contentWidth();
@@ -321,6 +320,14 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     }
 
     normalFlowHeight = maxNormalFlowBottom - top + m_marginCollapseResult.m_normalFlowHeightAdvance;
+
+    if (isEstablishesBlockFormattingContext()) {
+        LayoutUnit clearedDistanceToFloatBottom = ctx.clearedDistanceToFloatBottom(loc.y(), BothClearValue);
+        if (clearedDistanceToFloatBottom > normalFlowHeight) {
+            normalFlowHeight = clearedDistanceToFloatBottom;
+        }
+    }
+
     return normalFlowHeight;
 }
 
