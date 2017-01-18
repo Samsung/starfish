@@ -168,6 +168,14 @@ public:
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
 
+    LayoutUnit boxWidth()
+    {
+        LayoutUnit boxWidth = width() + marginWidth();
+        if (boxWidth < 0)
+            return 0;
+        return boxWidth;
+    }
+
     void setMarginCollapseResult(const MarginCollapseResult& r)
     {
         m_marginCollapseResult = r;
