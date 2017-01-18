@@ -503,9 +503,11 @@ public:
         if (state == NodeStateNormal) {
             m_state = 0;
             setNeedsStyleRecalc();
+            setChildrenNeedsStyleRecalc();
         } else if (!(m_state & state) == enable) {
             m_state ^= state;
             setNeedsStyleRecalc();
+            setChildrenNeedsStyleRecalc();
         }
     }
 
