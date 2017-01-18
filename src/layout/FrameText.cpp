@@ -21,7 +21,7 @@
 
 namespace StarFish {
 
-LayoutUnit FrameText::minimumContentWidth(LayoutContext& ctx)
+LayoutUnit FrameText::preferredMinWidth(LayoutContext& ctx)
 {
     // We measure the width of each word in the text, and get the maximum
     // length among these words
@@ -36,14 +36,22 @@ LayoutUnit FrameText::minimumContentWidth(LayoutContext& ctx)
     return maxWidthSoFar;
 }
 
-LayoutUnit FrameText::maximumContentWidth(LayoutContext& ctx)
+LayoutUnit FrameText::preferredWidth(LayoutContext& ctx)
 {
     // We measure the width of the text, as if no line breaks, except where
     // explicit, occurred.
-    LayoutUnit maxWidthSoFar = 0;
+    LayoutUnit widthSoFar = 0;
+    textDividerForLayout(ctx.starFish(), text()->trim(),
+        [&](String* srcTxt, size_t offset, size_t nextOffset, bool isWhiteSpace, bool canBreak)
+        {
+            if (isWhiteSpace) {
+                widthSoFar += style()->font()->spaceWidth();
+            } else {
+                widthSoFar += style()->font()->measureText(StringView(srcTxt, offset, nextOffset));
+            }
+        });
 
-    // TODO
-    return style()->font()->measureText(StringView(text()));
+    return widthSoFar;
 }
 
 }
