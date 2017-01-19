@@ -176,6 +176,15 @@ public:
         return boxWidth;
     }
 
+    LayoutUnit boxHeight()
+    {
+        LayoutUnit boxHeight = height() + marginHeight();
+        if (boxHeight < 0) {
+            return 0;
+        }
+        return boxHeight;
+    }
+
     void setMarginCollapseResult(const MarginCollapseResult& r)
     {
         m_marginCollapseResult = r;
@@ -604,6 +613,16 @@ public:
         }
     }
 
+    void setInlineBoxIndex(size_t inlineBoxIdx)
+    {
+        m_inlineBoxIndex = inlineBoxIdx;
+    }
+
+    size_t inlineBoxIndex()
+    {
+        return m_inlineBoxIndex;
+    }
+
 protected:
     // content + padding + border
     LayoutRect m_frameRect;
@@ -611,6 +630,8 @@ protected:
     LayoutBoxSurroundData m_padding, m_border, m_margin;
     MarginCollapseResult m_marginCollapseResult;
     StackingContext* m_stackingContext;
+
+    size_t m_inlineBoxIndex;
 };
 
 }

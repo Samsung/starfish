@@ -164,7 +164,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
         child->asFrameBox()->setY(normalFlowHeight + top + advanceY);
 
-        size_t floatSize = ctx.floatBoxesSize();
+        size_t floatSize = ctx.floatingBoxesSize();
         clearedDistanceToFloatBottom = ctx.clearedDistanceToFloatBottom(yAbsPosition + advanceY, BothClearValue);
         // TODO : Study more cases which can make margin collapse ignored.
         bool ignoreMarginCollapse = (clearAffected && marginInfo.canCollapseWithMarginTop() && ctx.canFloatCollapseWithMarginTop(floatIdx))
@@ -199,7 +199,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 child->asFrameBox()->setY(normalFlowHeight + top + advanceY);
                 // if the y position of box has any changes, then the cached position of float boxes which it is going to be used next time
                 // should also be recached.
-                ctx.reCacheFloatBoxes(floatSize);
+                ctx.reCacheFloatingBoxes(floatSize);
             }
         }
 
@@ -213,7 +213,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             LayoutLocation selfLoc = child->asFrameBox()->absolutePoint(ctx.frameDocument());
             LayoutUnit originalY = selfLoc.y();
             rePositionFloatAvoidingFrameBox:
-            std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.floatingBoxBoundary(selfLoc.y(),
+            std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.horizontalBoundaryBetweenfloatingBoxes(selfLoc.y(),
                 child->asFrameBox()->height(), leftBoundary, rightBoundary);
             if ((boundaries.first != leftBoundary && selfLoc.x() < boundaries.first)
                 || (boundaries.second != rightBoundary && selfLoc.x() + child->asFrameBox()->width() > boundaries.second)) {

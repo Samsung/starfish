@@ -13,6 +13,7 @@ test/internal-test/css/clear/ignore-margin-collapse4.html
 test/internal-test/css/clear/ignore-margin-collapse5.html
 test/internal-test/css/clear/ignore-margin-collapse6.html
 test/internal-test/css/clear/ignore-margin-collapse7.html
+test/internal-test/css/clear/small-height-continuous-clear.html
 test/internal-test/css/display/block.html
 test/internal-test/css/display/block-inline-basic.html
 test/internal-test/css/invalid_value/color-invalid.html
