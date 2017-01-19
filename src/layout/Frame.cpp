@@ -117,11 +117,12 @@ void FloatingBoxInfo::reCache(LayoutContext* ctx)
     }
 }
 
-void LayoutContext::registerFloatingBoxes(FrameBox* box)
+void LayoutContext::registerFloatingBox(FrameBox* box)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     FloatingBoxInfo fbi = FloatingBoxInfo(box, this);
     c.m_floatBoxes->push_back(fbi);
+    c.m_topLocOfFloatBox = fbi.top();
 }
 
 void LayoutContext::unregisterFloatingBoxes(size_t from)
@@ -159,7 +160,7 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
 
     if (clearValue == BothClearValue) {
         for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-            FloatingBoxInfo f = c.m_floatBoxes->at(i);
+            FloatingBoxInfo& f = c.m_floatBoxes->at(i);
             if (f.isLeft()) {
                 if (!hasLeft) {
                     clearedDistanceToLeftFloatBottom = f.bottom();
@@ -219,7 +220,7 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
         }
     } else if (clearValue == LeftClearValue) {
         for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-            FloatingBoxInfo f = c.m_floatBoxes->at(i);
+            FloatingBoxInfo& f = c.m_floatBoxes->at(i);
             if (f.isLeft()) {
                 if (!hasLeft) {
                     clearedDistanceToLeftFloatBottom = f.bottom();
@@ -247,7 +248,7 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
         }
     } else if (clearValue == RightClearValue) {
         for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-            FloatingBoxInfo f = c.m_floatBoxes->at(i);
+            FloatingBoxInfo& f = c.m_floatBoxes->at(i);
             if (!f.isLeft()) {
                 if (!hasRight) {
                     clearedDistanceToRightFloatBottom = f.bottom();
@@ -293,7 +294,7 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
 #endif
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-        FloatingBoxInfo f = c.m_floatBoxes->at(i);
+        FloatingBoxInfo& f = c.m_floatBoxes->at(i);
         if (floatAffected(yPosition, height, f)) {
             if (f.isLeft()) {
 #ifndef NDEBUG
@@ -344,12 +345,12 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
     }
 }
 
-std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right)
+std::pair<LayoutUnit, LayoutUnit> LayoutContext::horizontalBoundaryBetweenfloatingBoxes(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-        FloatingBoxInfo f = c.m_floatBoxes->at(i);
+        FloatingBoxInfo& f = c.m_floatBoxes->at(i);
         if (floatAffected(yPosition, height, f)) {
             LayoutUnit x = f.horizontalBoundary();
             if (f.isLeft()) {
@@ -367,59 +368,41 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::floatingBoxBoundary(LayoutUnit 
     return std::make_pair(left, right);
 }
 
-void LayoutContext::resetLastTopLoc(size_t to)
-{
-    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
-    bool leftChecked = false, rightChecked = false;
-
-    for (size_t i = c.m_floatBoxes->size() - 1; i != SIZE_MAX && i >= to; i--) {
-        FloatingBoxInfo fbi = c.m_floatBoxes->at(i);
-        if (fbi.isLeft()) {
-            if (!leftChecked) {
-                c.m_lastLeftTopFloatBoxLoc = fbi.loc().y();
-                leftChecked = true;
-                if (rightChecked)
-                    return;
-            }
-        } else {
-            if (!rightChecked) {
-                c.m_lastRightFloatTopLoc = fbi.loc().y();
-                rightChecked = true;
-                if (leftChecked)
-                    return;
-            }
-        }
-    }
-}
-
-LayoutUnit LayoutContext::lastTopLoc(FloatValue floating)
+void LayoutContext::resetLastTopLoc()
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
-    if (floating == LeftFloatValue) {
-        return c.m_lastLeftTopFloatBoxLoc;
-    } else {
-        return c.m_lastRightFloatTopLoc;
+    if (c.m_floatBoxes->size() == 0) {
+        return;
     }
+
+    c.m_topLocOfFloatBox = (*c.m_floatBoxes->rbegin()).top();
 }
 
-size_t LayoutContext::floatBoxesSize()
+LayoutUnit LayoutContext::lastTopLoc()
+{
+    BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    return c.m_topLocOfFloatBox;
+}
+
+size_t LayoutContext::floatingBoxesSize()
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     return c.m_floatBoxes->size();
 }
 
-void LayoutContext::reCacheFloatBoxes(size_t from)
+void LayoutContext::reCacheFloatingBoxes(size_t from)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     for (size_t i = from; i < c.m_floatBoxes->size(); i++) {
-        FloatingBoxInfo fbi = c.m_floatBoxes->at(i);
+        FloatingBoxInfo& fbi = c.m_floatBoxes->at(i);
         fbi.reCache(this);
     }
 
-    resetLastTopLoc(from);
+    resetLastTopLoc();
 }
 
 bool LayoutContext::canFloatCollapseWithMarginTop(size_t idx)
@@ -429,7 +412,7 @@ bool LayoutContext::canFloatCollapseWithMarginTop(size_t idx)
     if (idx == SIZE_MAX)
         return false;
 
-    FloatingBoxInfo fbi = c.m_floatBoxes->at(idx);
+    FloatingBoxInfo& fbi = c.m_floatBoxes->at(idx);
     return fbi.canLayoutParentCollapseWithMarginTop();
 }
 

@@ -590,32 +590,60 @@ struct DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine {
     bool m_isFirstEdgeProcessed;
 };
 
+struct FloatingBoxLayoutContext {
+    int m_hasFloat;
+    LayoutUnit m_y;
+    LayoutUnit m_accumulatedLeftFloatBoxWidth;
+    LayoutUnit m_accumulatedRightFloatBoxWidth;
+    LayoutUnit m_originalLineBoxX;
+    LayoutUnit m_originalLineBoxWidth;
+
+    FloatingBoxLayoutContext(int hasFloat, LayoutUnit y, LayoutUnit originalLineBoxX, LayoutUnit originalLineBoxWidth)
+        : m_hasFloat(hasFloat), m_y(y), m_originalLineBoxX(originalLineBoxX), m_originalLineBoxWidth(originalLineBoxWidth)
+    { }
+};
+
 class LineFormattingContext {
+private:
+    void resetLineBox();
+    void registerInlineContent();
+    LayoutUnit inlineBlockAscender(FrameBlockBox* box)
+    {
+        STARFISH_ASSERT(m_inlineBlockAscender.find(box) != m_inlineBlockAscender.end());
+        return m_inlineBlockAscender[box];
+    }
+
+    void computeHorizontalProperties();
+    LayoutUnit computeLineBoxHeight(bool dueToBr, bool hasMoreInlineBoxes);
+
+    void insertPendingFloatingBoxes(bool isInlineBox, bool isLastLine, bool skipFinishLine);
+    void insertPendingAbsolutePositionedBoxes();
+    void insertPendingInlineBoxesDueToFloatingBoxes();
+    void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
+
+    void removeDanglingSpaceFromLine();
+    void removeAllInlineBoxes();
+
+    void reCacheFloatingBoxes(LayoutUnit xDiff);
+    void makeFloatingBoxLayoutContext(LayoutUnit yDiff);
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
-    LayoutUnit computeLineBoxHeight(bool dueToBr, bool hasMoreInlineBoxes);
-    void resetLineBox();
+    LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, bool dueToBr, bool isLineBox);
+
+    void markInlineBoxIndex(FrameBox* box);
     void finishLine(bool dueToBr, bool isInLineBox, bool isLastLine);
     void breakLine(bool dueToBr, bool isInLineBox, bool isLastLine, bool skipFinishLine);
+    void makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameBox* box);
     template <typename Box>
-    LayoutUnit layoutChildInlineBox(Box* parent, LayoutUnit start);
-    void computeHorizontalProperties();
+    LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
 
     bool isBreakedLineWithoutBR(size_t idx)
     {
         return m_breakedLinesSet.find(idx) != m_breakedLinesSet.end();
     }
 
-    void registerInlineContent();
-    void insertPendingFloatingBoxes(bool isInlineBox, bool isLastLine, bool skipFinishLine, LayoutUnit floatYDiff);
-    void insertPendingAboslutePositionedBoxes();
-    void insertPendingInlineBoxesDueToFloatinBoxes();
-    void initLineBox(LineBox* lineBox, LayoutUnit height);
-    void layoutLineBoxDueToFloatBox(FrameBox* box);
-    void removeDanglingSpaceFromLine();
-    void removeAllInlineBoxes();
-    void sortInlineBoxes(std::vector<FrameBox*, gc_allocator_ignore_off_page<FrameBox*> >& tempBoxes, bool onlyNormalFlow);
+    void insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
     LineBox* currentLine()
     {
         return m_block.m_lineBoxes.back();
@@ -626,26 +654,24 @@ public:
         m_inlineBlockAscender[box] = ascender;
     }
 
-    LayoutUnit inlineBlockAscender(FrameBlockBox* box)
+    bool hasFloatingBoxAlreadyInLineBox(Frame* f)
     {
-        STARFISH_ASSERT(m_inlineBlockAscender.find(box) != m_inlineBlockAscender.end());
-        return m_inlineBlockAscender[box];
-    }
-
-    bool hasFloatBoxAlreadyInLineBox()
-    {
-        return m_hasFloat != HasNone;
+        if (f->style()->position() != AbsolutePositionValue && f->style()->floating() != NoneFloatValue) {
+            FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.rbegin());
+            return fbCtx.m_hasFloat != HasNone;
+        } else {
+            FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.begin());
+            return fbCtx.m_hasFloat != HasNone;
+        }
     }
 
     LayoutUnit m_leftBoundary;
     LayoutUnit m_rightBoundary;
     LayoutLocation m_absPosition;
-    LayoutUnit m_originalLineBoxX;
     LayoutUnit m_lineBoxX;
     LayoutUnit m_lineBoxY;
     LayoutUnit m_currentLineWidth;
     LayoutUnit m_lineBoxWidth;
-    LayoutUnit m_originalLineBoxWidth;
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
@@ -655,11 +681,9 @@ public:
         HasLeft,
         HasRight,
     };
-    int m_hasFloat;
-    size_t m_pendingFloatBoxNumsBeforeCurrentLine;
-    LayoutUnit m_accumulatedFloatLeftWidth;
-    LayoutUnit m_accumulatedFloatRightWidth;
-    LayoutUnit m_floatBoxY;
+    size_t m_inlineBoxIndex;
+    size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
+    size_t m_floatingBoxesSizeBeforeCurrentLine;
 
     std::set<size_t> m_breakedLinesSet;
 
@@ -667,8 +691,9 @@ public:
     // frame tree has strong reference already
     std::unordered_map<FrameBlockBox*, LayoutUnit> m_inlineBlockAscender;
 
+    std::vector<FloatingBoxLayoutContext> m_floatingBoxLayoutContexts;
     std::vector<std::pair<FrameBox*, bool> > m_absolutePositionedBoxes;
-    std::vector<FrameBox*> m_pendingFloatBoxes;
+    std::vector<FrameBox*> m_pendingFloatingBoxes;
     std::vector<FrameBox*> m_pendingInlineBoxes;
 
     std::unordered_map<FrameInline*, DataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine> m_dataForRestoreLeftRightOfMBPAfterResolveBidiLinePerLine;

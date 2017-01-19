@@ -118,15 +118,16 @@ public:
         m_blockFormattingContextInfo.pop_back();
     }
 
-    void registerFloatingBoxes(FrameBox* box);
+    void registerFloatingBox(FrameBox* box);
     void unregisterFloatingBoxes(size_t from);
     LayoutUnit clearedDistanceToFloatBottom(LayoutUnit yPosition, ClearValue clearValue, size_t* idx = nullptr);
     LayoutUnit nextDistanceToFloatBottom(LayoutUnit yPosition, LayoutUnit height);
-    void resetLastTopLoc(size_t to);
-    LayoutUnit lastTopLoc(FloatValue floating);
-    std::pair<LayoutUnit, LayoutUnit> floatingBoxBoundary(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right);
-    size_t floatBoxesSize();
-    void reCacheFloatBoxes(size_t from);
+    void resetLastTopLoc();
+    LayoutUnit lastTopLoc();
+    std::pair<LayoutUnit, LayoutUnit> horizontalBoundaryBetweenfloatingBoxes(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right);
+    size_t floatingBoxesSize();
+    void reCacheFloatingBoxes(size_t from);
+    void reCacheFloatingBoxesByXDiff(size_t from, LayoutUnit xDiff);
     LayoutUnit parentContentWidth(Frame* currentFrame);
     bool parentHasFixedHeight(Frame* currentFrame);
     LayoutUnit parentFixedHeight(Frame* currentFrame);
@@ -294,8 +295,7 @@ private:
         LayoutUnit m_maxNegativeMarginTop;
         LayoutUnit m_maxPositiveMarginBottom;
         LayoutUnit m_maxNegativeMarginBottom;
-        LayoutUnit m_lastLeftTopFloatBoxLoc;
-        LayoutUnit m_lastRightFloatTopLoc;
+        LayoutUnit m_topLocOfFloatBox;
         std::vector<FrameBlockBox*>* m_inlineBlockBoxStack;
         std::vector<FloatingBoxInfo>* m_floatBoxes;
         std::unordered_map<FrameBlockBox*, LayoutUnit>* m_registeredYPositionForVerticalAlignInlineBlock;
