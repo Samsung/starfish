@@ -909,7 +909,7 @@ public:
         return m_value.m_color;
     }
 
-    NamedColorValue namedColorValue()
+    NamedColor::NamedColorValue namedColorValue()
     {
         STARFISH_ASSERT(m_valueKind == NamedColorValueKind);
         return m_value.m_namedColor;
@@ -954,7 +954,7 @@ public:
         TextDecorationValue m_textDecoration;
         CSSTransformFunctions* m_transforms;
         ::StarFish::Color m_color;
-        NamedColorValue m_namedColor;
+        NamedColor::NamedColorValue m_namedColor;
         BorderCollapseValue m_borderCollapse;
         CaptionSideValue m_captionSide;
         ValueData(int v) { m_floatValue = v; }
@@ -981,7 +981,7 @@ public:
         ValueData(TextDecorationValue v) { m_textDecoration = v; }
         ValueData(CSSTransformFunctions* v) { m_transforms = v; }
         ValueData(::StarFish::Color v) { m_color = v; }
-        ValueData(NamedColorValue v) { m_namedColor = v; }
+        ValueData(NamedColor::NamedColorValue v) { m_namedColor = v; }
         ValueData(BorderCollapseValue v) { m_borderCollapse = v; }
         ValueData(CaptionSideValue v) { m_captionSide = v; }
     };

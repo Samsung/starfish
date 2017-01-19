@@ -228,6 +228,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setLengthValue("2px");
         rule->styleDeclaration()->addValuePair(pair);
 
+        pair.setKeyKind(CSSStyleValuePair::BorderTopColor);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::ColorValueKind);
+        data.m_color = NamedColor::namedColorToColor(NamedColor::NamedColorValue::grayNamedColor);
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
@@ -259,6 +265,13 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableHeaderGroupDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::VerticalAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::VerticalAlignValueKind);
+        data.m_verticalAlign = VerticalAlignValue::MiddleVAlignValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
@@ -271,6 +284,13 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableRowGroupDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::VerticalAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::VerticalAlignValueKind);
+        data.m_verticalAlign = VerticalAlignValue::MiddleVAlignValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
@@ -283,6 +303,13 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableFooterGroupDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::VerticalAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::VerticalAlignValueKind);
+        data.m_verticalAlign = VerticalAlignValue::MiddleVAlignValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
@@ -295,6 +322,13 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableCellDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::FontWeight);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::FontWeightValueKind);
+        data.m_fontWeight = FontWeightValue::BoldFontWeightValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
