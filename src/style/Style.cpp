@@ -140,43 +140,6 @@ static Length convertValueToLength(CSSStyleValuePair::ValueKind kind, CSSStyleVa
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-static String* namedColorToString(NamedColorValue namedColor)
-{
-    switch (namedColor) {
-#define ADD_COLOR_ITEM(name, ...) \
-    case NamedColorValue::name##NamedColor: \
-        return String::createASCIIString(#name);
-
-        NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
-#undef ADD_COLOR_ITEM
-    case NamedColorValue::currentColor:
-        return String::createASCIIString("currentColor");
-    default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-static Color namedColorToColor(NamedColorValue namedColor)
-{
-    switch (namedColor) {
-#define ADD_COLOR_ITEM(name, value) \
-    case NamedColorValue::name##NamedColor: \
-        { \
-            char r = (value & 0xff0000) >> 16; \
-            char g = (value & 0xff00) >> 8; \
-            char b = (value & 0xff); \
-            char a = 255; \
-            return Color(r, g, b, a); \
-        }
-
-        NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
-#undef ADD_COLOR_ITEM
-    default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    return Color();
-}
-
 static void setComputedStyleBackgroundPositionX(ComputedStyle* style, CSSStyleValuePair& value, unsigned int layer = 0)
 {
     if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial) {
@@ -1117,7 +1080,7 @@ String* CSSStyleValuePair::toString()
     case CSSStyleValuePair::ValueKind::ColorValueKind:
         return colorValue().toString();
     case CSSStyleValuePair::ValueKind::NamedColorValueKind:
-        return namedColorToString(namedColorValue());
+        return NamedColor::namedColorToString(namedColorValue());
     case CSSStyleValuePair::ValueKind::UrlValueKind:
         return String::fromUTF8("url(\"")->concat(urlStringValue())->concat(String::fromUTF8("\")"));
     case CSSStyleValuePair::ValueKind::DisplayValueKind:
@@ -2120,10 +2083,10 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 style->setColor(cssValues[k].colorValue());
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::NamedColorValueKind);
-                if (cssValues[k].namedColorValue() == NamedColorValue::currentColor) {
+                if (cssValues[k].namedColorValue() == NamedColor::NamedColorValue::currentColor) {
                     style->m_inheritedStyles.m_color = parentStyle->m_inheritedStyles.m_color;
                 } else {
-                    style->setColor(namedColorToColor(cssValues[k].namedColorValue()));
+                    style->setColor(NamedColor::namedColorToColor(cssValues[k].namedColorValue()));
                 }
             }
             break;
@@ -2267,12 +2230,12 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 style->setBackgroundColor(cssValues[k].colorValue());
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::NamedColorValueKind);
-                if (cssValues[k].namedColorValue() == NamedColorValue::currentColor) {
+                if (cssValues[k].namedColorValue() == NamedColor::NamedColorValue::currentColor) {
                     // currentColor : represents the calculated value of the element's color property
                     // --> change to valid value when arrangeStyleValues()
                     style->setBackgroundColorToCurrentColor();
                 } else {
-                    style->setBackgroundColor(namedColorToColor(cssValues[k].namedColorValue()));
+                    style->setBackgroundColor(NamedColor::namedColorToColor(cssValues[k].namedColorValue()));
                 }
             }
             break;
@@ -2629,10 +2592,10 @@ void StyleResolver::apply(URL* origin, std::vector<CSSStyleValuePair, gc_allocat
                 style->setBorder##POS##Color(cssValues[k].colorValue()); \
             } else { \
                 STARFISH_ASSERT(cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::NamedColorValueKind); \
-                if (cssValues[k].namedColorValue() == NamedColorValue::currentColor) { \
+                if (cssValues[k].namedColorValue() == NamedColor::NamedColorValue::currentColor) { \
                     style->clearBorder##POS##Color();   \
                 } else { \
-                    style->setBorder##POS##Color(namedColorToColor(cssValues[k].namedColorValue())); \
+                    style->setBorder##POS##Color(NamedColor::namedColorToColor(cssValues[k].namedColorValue())); \
                 } \
             } \
             break;

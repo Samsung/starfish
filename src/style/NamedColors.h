@@ -17,6 +17,13 @@
 #ifndef __StarFishNamedColors__
 #define __StarFishNamedColors__
 
+namespace StarFish {
+
+class String;
+class Color;
+
+class NamedColor {
+public:
 // https://www.w3.org/TR/css3-color/
 #define NAMED_COLOR_FOR_EACH(F) \
     F(black   , 0x000000) \
@@ -177,6 +184,10 @@ enum NamedColorValue {
     currentColor,
 };
 
-bool parseNamedColor(const char* str, size_t length, NamedColorValue& ret);
+static bool parseNamedColor(const char* str, size_t length, NamedColorValue& ret);
+static String* namedColorToString(NamedColorValue namedColor);
+static Color namedColorToColor(NamedColorValue namedColor);
+};
 
+}
 #endif

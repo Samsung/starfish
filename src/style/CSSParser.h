@@ -376,13 +376,13 @@ public:
         return true;
     }
 
-    static bool parseNamedColor(String* str, NamedColorValue* ret)
+    static bool parseNamedColor(String* str, NamedColor::NamedColorValue* ret)
     {
         if (str->equals(String::fromUTF8("currentcolor"))) {
-            *ret = NamedColorValue::currentColor;
+            *ret = NamedColor::NamedColorValue::currentColor;
             return true;
         }
-        return ::parseNamedColor(str->utf8Data(), str->length(), *ret);
+        return NamedColor::parseNamedColor(str->utf8Data(), str->length(), *ret);
     }
 
     char* m_startPos;
