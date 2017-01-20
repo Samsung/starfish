@@ -1431,8 +1431,8 @@ public:
     };
 
     enum AttributeMatchType {
-        CaseSensitive,
         CaseInsensitive,
+        CaseSensitive,
     };
 
     CSSSelector()
@@ -1440,11 +1440,11 @@ public:
         , m_relation(None)
         , m_pseudotype(PseudoNone)
         , m_selectorText(String::emptyString)
-        , m_attribute(String::emptyString)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
         , m_argument(String::emptyString)
         , m_value(String::emptyString)
+        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::emptyAtomicString()))
     {
     }
 
@@ -1453,11 +1453,11 @@ public:
         , m_relation(relation)
         , m_pseudotype(pseudo)
         , m_selectorText(text)
-        , m_attribute(String::emptyString)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
         , m_argument(String::emptyString)
         , m_value(String::emptyString)
+        , m_attribute(QualifiedName(AtomicString::emptyAtomicString(), AtomicString::emptyAtomicString()))
     {
     }
 
@@ -1567,13 +1567,13 @@ public:
 
     bool matchNth(int count);
 
-    String* attribute()
+    QualifiedName& attribute()
     {
         STARFISH_ASSERT(isAttributeSelector());
         return m_attribute;
     }
 
-    void setAttribute(String* value, AttributeMatchType matchType)
+    void setAttribute(QualifiedName& value, AttributeMatchType matchType)
     {
         STARFISH_ASSERT(m_type != Tag);
         m_attribute = value;
@@ -1597,7 +1597,6 @@ protected:
     RelationType m_relation;
     PseudoType m_pseudotype;
     String* m_selectorText;
-    String* m_attribute;
     AttributeMatchType m_attributeMatch;
     unsigned m_relationIsAffectedByPseudoContent;
     std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_pseudoSelectorList;
@@ -1607,7 +1606,7 @@ protected:
         int m_b; // Used for :nth-*
     } m_nth;
     String* m_value;
-
+    QualifiedName m_attribute;
 };
 
 class CSSSelectorList : public gc {

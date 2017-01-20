@@ -1596,6 +1596,97 @@ static void addBackgroundCSSValuePairs(CSSStyleDeclaration* target,
     target->addCSSValuePair(CSSStyleValuePair::KeyKind::BackgroundSize, size);
 }
 
+static bool attributeValueMatches(String* attrValue, CSSSelector::Type type, String* selectorValue, CSSSelector::AttributeMatchType caseSensitivity)
+{
+    if (attrValue->equals(String::emptyString))
+        return false;
+
+    switch (type) {
+    case CSSSelector::AttributeSet: // Example: E[foo]
+        return true;
+    case CSSSelector::AttributeExact: // Example: E[foo="bar"]
+        if (caseSensitivity)
+            return selectorValue->equals(attrValue);
+        return selectorValue->equalsWithoutCase(attrValue);
+    case CSSSelector::AttributeList: // Example: E[foo~="bar"]
+        {
+            if (selectorValue->equals(String::emptyString))
+                return false;
+
+            unsigned startSearchAt = 0;
+            while (true) {
+                size_t foundPos = attrValue->find(selectorValue, startSearchAt, caseSensitivity);
+                if (foundPos == SIZE_MAX)
+                    return false;
+                if (!foundPos || String::isASCIISpace(attrValue->charAt(foundPos - 1))) {
+                    unsigned endStr = foundPos + selectorValue->length();
+                    if (endStr == attrValue->length() || String::isASCIISpace(attrValue->charAt(endStr)))
+                        break; // We found a match.
+                }
+
+                // No match. Keep looking.
+                startSearchAt = foundPos + 1;
+            }
+            return true;
+        }
+    case CSSSelector::AttributeHyphen: // Example: E[foo|="bar"]
+        if (attrValue->length() < selectorValue->length())
+            return false;
+        if (!attrValue->startsWith(selectorValue, caseSensitivity))
+            return false;
+        // It they start the same, check for exact match or following '-':
+        if (attrValue->length() != selectorValue->length() && attrValue->charAt(selectorValue->length()) != '-')
+            return false;
+        return true;
+    case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
+    case CSSSelector::AttributeBegin: // css3: E[foo^="bar"]
+    case CSSSelector::AttributeEnd: // css3: E[foo$="bar"]
+        return true;
+    default:
+        break;
+    }
+
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return true;
+}
+
+static bool anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector)
+{
+    QualifiedName& selectorAttr = selector->attribute();
+    STARFISH_ASSERT(!selectorAttr.localName()->equals(String::fromUTF8("*")));
+
+    String* selectorValue = selector->value();
+
+    size_t idx = element->hasAttribute(selectorAttr);
+    if (idx == SIZE_MAX)
+        return false;
+
+    CSSSelector::AttributeMatchType caseSensitivity = selector->attributeMatch();
+    if (attributeValueMatches(element->getAttribute(idx), type, selectorValue, caseSensitivity))
+        return true;
+
+    if (caseSensitivity == CSSSelector::CaseInsensitive) {
+        if (!selectorAttr.namespaceURI()->equals(String::fromUTF8("*")))
+            return false;
+    }
+
+//    // Legacy dictates that values of some attributes should be compared in
+//    // a case-insensitive manner regardless of whether the case insensitive
+//    // flag is set or not.
+//    bool legacyCaseInsensitive = element.document().isHTMLDocument() && !HTMLDocument::isCaseSensitiveAttribute(selectorAttr);
+//
+//    // If case-insensitive, re-check, and count if result differs.
+//    // See http://code.google.com/p/chromium/issues/detail?id=327060
+//    if (legacyCaseInsensitive && attributeValueMatches(attributeItem, match, selectorValue, TextCaseASCIIInsensitive)) {
+//        UseCounter::count(element.document(), UseCounter::CaseInsensitiveAttrSelectorMatch);
+//        return true;
+//    }
+//    if (selectorAttr.namespaceURI() != starAtom)
+//        return false;
+
+    return false;
+}
+
 void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
 {
     if (value->length() == 0) {
@@ -2880,6 +2971,14 @@ bool StyleResolver::checkOne(Element* element, CSSSelector* selector)
         return element->id()->equalsWithoutCase(selector->selectorText());
     case CSSSelector::Type::Class:
         return element->hasClassName(selector->selectorText());
+    case CSSSelector::AttributeExact: // Example: E[foo="bar"]
+    case CSSSelector::AttributeSet: // Example: E[foo]
+    case CSSSelector::AttributeHyphen: // Example: E[foo|="bar"]
+    case CSSSelector::AttributeList: // Example: E[foo~="bar"]
+    case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
+    case CSSSelector::AttributeBegin: // css3: E[foo^="bar"]
+    case CSSSelector::AttributeEnd: // css3: E[foo$="bar"]
+        return anyAttributeMatches(element, selector->type(), selector);
     case CSSSelector::Type::PseudoClass:
         return checkPseudoClass(element, selector);
     case CSSSelector::Type::PseudoElement:
