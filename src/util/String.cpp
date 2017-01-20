@@ -849,18 +849,18 @@ bool String::startsWith(String* str, bool caseSensitive)
 
 size_t String::find(String* str, size_t pos)
 {
-    const size_t srcStrLen = str->length();
-    const size_t size = length();
+    const size_t srcLen = str->length();
+    const size_t dstLen = length();
 
-    if (srcStrLen == 0)
-        return pos <= size ? pos : -1;
+    if (srcLen == 0)
+        return pos <= dstLen ? pos : SIZE_MAX;
 
-    if (srcStrLen <= size) {
+    if (srcLen <= dstLen) {
         char32_t src0 = str->charAt(0);
-        for (; pos <= size - srcStrLen; ++pos) {
+        for (; pos <= dstLen - srcLen; ++pos) {
             if (charAt(pos) == src0) {
                 bool same = true;
-                for (size_t k = 1; k < srcStrLen; k++) {
+                for (size_t k = 1; k < srcLen; k++) {
                     if (charAt(pos + k) != str->charAt(k)) {
                         same = false;
                         break;
@@ -871,23 +871,23 @@ size_t String::find(String* str, size_t pos)
             }
         }
     }
-    return -1;
+    return SIZE_MAX;
 }
 
 size_t String::find(const char* str, size_t pos)
 {
-    const size_t srcStrLen = strlen(str);
-    const size_t size = length();
+    const size_t srcLen = strlen(str);
+    const size_t dstLen = length();
 
-    if (srcStrLen == 0)
-        return pos <= size ? pos : -1;
+    if (srcLen == 0)
+        return pos <= dstLen ? pos : SIZE_MAX;
 
-    if (srcStrLen <= size) {
+    if (srcLen <= dstLen) {
         char32_t src0 = (char32_t) str[0];
-        for (; pos <= size - srcStrLen; ++pos) {
+        for (; pos <= dstLen - srcLen; ++pos) {
             if (charAt(pos) == src0) {
                 bool same = true;
-                for (size_t k = 1; k < srcStrLen; k++) {
+                for (size_t k = 1; k < srcLen; k++) {
                     if (charAt(pos + k) != (char32_t)str[k]) {
                         same = false;
                         break;
@@ -898,7 +898,53 @@ size_t String::find(const char* str, size_t pos)
             }
         }
     }
-    return -1;
+    return SIZE_MAX;
+}
+
+size_t String::find(String* str, size_t pos, bool caseSensitive)
+{
+    const size_t srcLen = str->length();
+    const size_t dstLen = length();
+
+    if (srcLen == 0)
+        return pos <= dstLen ? pos : SIZE_MAX;
+
+    if (caseSensitive) {
+        if (srcLen <= dstLen) {
+            char32_t src0 = str->charAt(0);
+            for (; pos <= dstLen - srcLen; ++pos) {
+                if (charAt(pos) == src0) {
+                    bool same = true;
+                    for (size_t k = 1; k < srcLen; k++) {
+                        if (charAt(pos + k) != str->charAt(k)) {
+                            same = false;
+                            break;
+                        }
+                    }
+                    if (same)
+                        return pos;
+                }
+            }
+        }
+    } else {
+        if (srcLen <= dstLen) {
+            char32_t src0 = str->charAt(0);
+            for (; pos <= dstLen - srcLen; ++pos) {
+                if (charAt(pos) == src0) {
+                    bool same = true;
+                    for (size_t k = 1; k < srcLen; k++) {
+                        if (tolower(charAt(pos + k)) != tolower(str->charAt(k))) {
+                            same = false;
+                            break;
+                        }
+                    }
+                    if (same)
+                        return pos;
+                }
+            }
+        }
+    }
+    return SIZE_MAX;
 }
 
 bool String::contains(const char* str, bool caseSensitive)

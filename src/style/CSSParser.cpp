@@ -1230,15 +1230,19 @@ CSSSelector* CSSParser::getAttributeSelector()
     while (currentToken()->isWhiteSpace())
         getToken(false, true);
 
+    attributeName = attributeName->toLower();
+    QualifiedName attrQualifiedName = QualifiedName(AtomicString::emptyAtomicString(), AtomicString::createAtomicString(m_document->window()->starFish(), attributeName));
+
     CSSSelector* selector = new CSSSelector();
     if (currentToken()->isSymbol(']')) {
-        selector->setAttribute(attributeName, CSSSelector::AttributeMatchType::CaseSensitive);
+        selector->setAttribute(attrQualifiedName, CSSSelector::AttributeMatchType::CaseSensitive);
         selector->setRelation(CSSSelector::RelationType::SubSelector);
         selector->setType(CSSSelector::Type::AttributeSet);
+
+        getToken(true, false);
         return selector;
     }
 
-    attributeName = attributeName->toLower();
     selector->setType(getAttributeMatch(currentToken()));
 
     CSSToken* attributeValue = getToken(true, true);
@@ -1250,7 +1254,7 @@ CSSSelector* CSSParser::getAttributeSelector()
     if (selector->value()->equals(String::emptyString))
         return nullptr;
 
-    selector->setAttribute(attributeName, getAttributeFlags());
+    selector->setAttribute(attrQualifiedName, getAttributeFlags());
 
     token = getToken(false, false);
     getToken(false, false);
