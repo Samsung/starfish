@@ -616,10 +616,20 @@ void Window::layoutIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleRecalcForWholeDocument) {
-            for (size_t i = 0; i < document()->styleResolver()->sheets().size(); i ++) {
+#ifdef STARFISH_ENABLE_TIMER
+    Timer t("parse sheet");
+#endif
+            document()->styleResolver()->sheets()[0]->parseSheetIfneeds();
+            document()->styleResolver()->sheets()[0]->sortRulesBySpecificity();
+
+            document()->styleResolver()->removeAllRules();
+            for (size_t i = 1; i < document()->styleResolver()->sheets().size(); i ++) {
                 document()->styleResolver()->sheets()[i]->parseSheetIfneeds();
-                document()->styleResolver()->sheets()[i]->sortRulesBySpecificity();
+                for (size_t j = 0; j < document()->styleResolver()->sheets()[i]->rules().size(); j++) {
+                    document()->styleResolver()->allRules()->addRule(document()->styleResolver()->sheets()[i]->rules()[j]);
+                }
             }
+            document()->styleResolver()->allRules()->sortRulesBySpecificity();
         }
 
         // resolve style
@@ -1145,7 +1155,7 @@ void Window::setActiveNode(Node* n)
 {
     Node* t = n;
     while (t) {
-        t->setState(Node::NodeStateActive, true);
+        t->setState(Node::NodeStateActive, Node::ChildrenOrSiblingsAffectedByActive, true);
         m_activeNodes.push_back(t);
         t = t->parentNode();
     }
@@ -1155,7 +1165,7 @@ void Window::setActiveNode(Node* n)
 void Window::releaseActiveNode()
 {
     for (size_t i = 0; i < m_activeNodes.size() ; i ++) {
-        m_activeNodes[i]->setState(Node::NodeStateActive, false);
+        m_activeNodes[i]->setState(Node::NodeStateActive, Node::ChildrenOrSiblingsAffectedByActive, false);
     }
     m_activeNodes.clear();
     m_activeNodes.shrink_to_fit();
@@ -1180,7 +1190,7 @@ void Window::setFocusedNode(Node* n)
         return;
     }
 
-    m->setState(Node::NodeStateFocused, true);
+    m->setState(Node::NodeStateFocused, Node::ChildrenOrSiblingsAffectedByFocus, true);
 
     Node* t = m_focusedNode;
     String* eventType;
@@ -1219,14 +1229,14 @@ void Window::setFocusedNode(Node* n)
 void Window::releaseFocusedNode()
 {
     if (m_relatedTarget)
-        m_relatedTarget->setState(Node::NodeStateFocused, false);
+        m_relatedTarget->setState(Node::NodeStateFocused, Node::ChildrenOrSiblingsAffectedByFocus, false);
 }
 
 void Window::setActiveNodeWithMouseMove(Node *n)
 {
     Node* t = n;
     while (t) {
-        t->setState(Node::NodeStateHovered, true);
+        t->setState(Node::NodeStateHovered, Node::ChildrenOrSiblingsAffectedByHover, true);
         m_hoveredNodes.push_back(t);
         t = t->parentNode();
     }
@@ -1236,7 +1246,7 @@ void Window::setActiveNodeWithMouseMove(Node *n)
 void Window::releaseActiveNodeWithMouseMove()
 {
     for (size_t i = 0; i < m_hoveredNodes.size() ; i ++) {
-        m_hoveredNodes[i]->setState(Node::NodeStateHovered, false);
+        m_hoveredNodes[i]->setState(Node::NodeStateHovered, Node::ChildrenOrSiblingsAffectedByHover, false);
     }
     m_hoveredNodes.clear();
     m_hoveredNodes.shrink_to_fit();
@@ -1270,13 +1280,13 @@ void Window::setCSSTarget(Node* n)
 
     m_cssTarget = n;
     if (m_cssTarget)
-        m_cssTarget->setState(Node::NodeStateTarget, true);
+        m_cssTarget->setState(Node::NodeStateTarget, Node::NotAffected, true);
 }
 
 void Window::releaseCSSTarget()
 {
     if (m_cssTarget)
-        m_cssTarget->setState(Node::NodeStateTarget, false);
+        m_cssTarget->setState(Node::NodeStateTarget, Node::NotAffected, false);
 }
 
 void Window::dispatchTouchEvent(float x, float y, TouchEventKind kind)
@@ -1362,6 +1372,7 @@ void Window::dispatchMouseEvent(float x, float y, MouseEventKind kind)
             m_activeNodeWithTouchDown = nullptr;
         }
         Node* node = hitTest(x, y);
+
         if (!node) {
             return;
         }

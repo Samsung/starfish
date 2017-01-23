@@ -115,6 +115,7 @@ protected:
         m_lastChild = nullptr;
 
         m_state = NodeStateNormal;
+        m_restyleFlags = 0;
 
         m_inParsing = false;
         m_needsStyleRecalc = true;
@@ -160,6 +161,24 @@ public:
         DOCUMENT_POSITION_CONTAINS = 0x08,
         DOCUMENT_POSITION_CONTAINED_BY = 0x10,
         DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x20,
+    };
+
+    enum DynamicRestyleFlags {
+        NotAffected = 0,
+        ChildrenOrSiblingsAffectedByFocus = 1 << 0,
+        ChildrenOrSiblingsAffectedByHover = 1 << 1,
+        ChildrenOrSiblingsAffectedByActive = 1 << 2,
+        ChildrenOrSiblingsAffectedByDrag = 1 << 3,
+        ChildrenAffectedByFirstChildRules = 1 << 4,
+        ChildrenAffectedByLastChildRules = 1 << 5,
+        ChildrenAffectedByDirectAdjacentRules = 1 << 6,
+        ChildrenAffectedByIndirectAdjacentRules = 1 << 7,
+        ChildrenAffectedByForwardPositionalRules = 1 << 8,
+        ChildrenAffectedByBackwardPositionalRules = 1 << 9,
+        AffectedByFirstChildRules = 1 << 10,
+        AffectedByLastChildRules = 1 << 11,
+
+        NumberOfDynamicRestyleFlags = 12,
     };
 
     virtual NodeType nodeType() = 0;
@@ -498,16 +517,40 @@ public:
 
     virtual Node* clone() = 0;
 
-    void setState(NodeState state, bool enable)
+    bool childrenOrSiblingsAffectedByDynamicEvent(DynamicRestyleFlags mask) const
+    {
+        return m_restyleFlags & mask;
+    }
+
+    void setChildrenOrSiblingsAffectedByDynamicEvent(DynamicRestyleFlags mask)
+    {
+        m_restyleFlags |= mask;
+    }
+
+    bool hasRestyleFlags() const
+    {
+        return m_restyleFlags;
+    }
+
+    void setState(NodeState state, DynamicRestyleFlags mask, bool enable)
     {
         if (state == NodeStateNormal) {
             m_state = 0;
+            m_restyleFlags = 0;
             setNeedsStyleRecalc();
-            setChildrenNeedsStyleRecalc();
+
+            if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
+                setChildrenNeedsStyleRecalc();
+                setSiblingsNeedsStyleRecalc();
+            }
         } else if (!(m_state & state) == enable) {
             m_state ^= state;
             setNeedsStyleRecalc();
-            setChildrenNeedsStyleRecalc();
+
+            if (childrenOrSiblingsAffectedByDynamicEvent(mask)) {
+                setChildrenNeedsStyleRecalc();
+                setSiblingsNeedsStyleRecalc();
+            }
         }
     }
 
@@ -544,6 +587,8 @@ public:
 
     // This function sets the dirty flag only for children.
     inline void setChildrenNeedsStyleRecalc();
+
+    inline void setSiblingsNeedsStyleRecalc();
 
     void setNeedsFrameTreeBuild();
 
@@ -678,6 +723,7 @@ protected:
     bool m_hasDirAttribute : 1;
 
     int m_state;
+    int m_restyleFlags;
 
     RareNodeMembers* m_rareNodeMembers;
 private:
