@@ -71,6 +71,8 @@ public:
         return m_maxCellWidth;
     }
 
+    void applyVerticalAlign();
+
 private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 

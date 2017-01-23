@@ -20,6 +20,7 @@
 #include "FrameTreeBuilder.h"
 #include "FrameTableCaptionBox.h"
 #include "FrameTableSectionBox.h"
+#include "FrameTableCellBox.h"
 
 namespace StarFish {
 

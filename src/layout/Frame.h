@@ -536,6 +536,11 @@ public:
         return false;
     }
 
+    virtual bool isLineBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameBlockBox()
     {
         return false;

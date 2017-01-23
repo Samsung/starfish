@@ -329,6 +329,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
+        pair.setKeyKind(CSSStyleValuePair::VerticalAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
@@ -341,6 +346,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableCellDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::VerticalAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
@@ -353,6 +364,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         data.m_display = DisplayValue::TableRowDisplayValue;
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
+
+        pair.setKeyKind(CSSStyleValuePair::VerticalAlign);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::Inherit);
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
