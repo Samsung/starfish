@@ -154,6 +154,50 @@ LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx, FrameBl
     return maxWidthSoFar;
 }
 
+void FrameTableCellBox::applyVerticalAlign()
+{
+    // 1. Cal the sum of heights of all child boxes
+    // TODO: impl a child box iterator for better readability
+    LayoutUnit contentHeightSoFar = 0;
+    if (hasBlockFlow()) {
+        for (Frame* c = firstChild(); c; c = c->next()) {
+            if (c->isFrameBlockBox()) {
+                contentHeightSoFar += c->asFrameBox()->height();
+            }
+        }
+    } else {
+        for (auto& b : m_lineBoxes) {
+            contentHeightSoFar += b->height();
+        }
+    }
+
+    // 2. Cal y pos where the first child box will be positioned
+    LayoutUnit yPosOffset = 0;
+    switch (style()->verticalAlign()) {
+    case VerticalAlignValue::MiddleVAlignValue:
+        yPosOffset = LayoutUnit(height().toDouble() / 2 - contentHeightSoFar.toDouble() / 2);
+        break;
+    default:
+        break;
+    }
+
+    // 3. Set the y pos of all child boxes starting from the yPosOffset
+    LayoutUnit newYPosSoFar = yPosOffset.round();
+    if (hasBlockFlow()) {
+        for (Frame* c = firstChild(); c; c = c->next()) {
+            if (c->isFrameBlockBox()) {
+                c->asFrameBox()->setY(newYPosSoFar);
+                newYPosSoFar += c->asFrameBox()->height();
+            }
+        }
+    } else {
+        for (auto& b : m_lineBoxes) {
+            b->setY(newYPosSoFar);
+            newYPosSoFar += b->height();
+        }
+    }
+}
+
 int FrameTableCellBox::colspan()
 {
     String* colspan = String::emptyString;

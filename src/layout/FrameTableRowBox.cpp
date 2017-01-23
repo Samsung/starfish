@@ -139,7 +139,8 @@ void FrameTableRowBox::calCellWidth(LayoutContext& ctx)
 void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
     LayoutUnit xSoFar = 0;
-    LayoutUnit borderSpacing = LayoutUnit::fromPixel(tableSectionBox()->tableBox()->style()->borderSpacing().fixed());
+    LayoutUnit borderSpacing =
+        LayoutUnit::fromPixel(tableSectionBox()->tableBox()->style()->borderSpacing().fixed());
 
     if (firstChild()) {
         xSoFar += borderSpacing;
@@ -168,7 +169,8 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit maxHeightSoFar = 0;
-    // We traverse the cells first to calculate min/max cell width
+    // 1. We make the second iteration of cells to layout cells
+    //    and calculate the width of each cell
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             FrameTableCellBox* cell = c->asFrameTableCellBox();
@@ -181,6 +183,7 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
         }
     }
 
+    // 2. The height of each cell is set to the max height of the cells
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             FrameTableCellBox* cell = c->asFrameTableCellBox();
@@ -189,6 +192,18 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
     }
 
     setHeight(maxHeightSoFar);
+
+    // 3. Place the contents of each cell according to the vertical-align of
+    //    each cell
+    // TODO: 3.1 find baseline
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCellBox()) {
+            c->asFrameTableCellBox()->applyVerticalAlign();
+        } else {
+            // Only FrameTableCell should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    }
 }
 
 void FrameTableRowBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
