@@ -350,8 +350,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
     LayoutUnit contentHeight;
     LayoutRect visibleRect(0, 0, 0, 0);
 
-    if (hasBlockFlow()
-        || (hasBlockFlow() && style()->display() == TableCellDisplayValue)) {
+    if (hasBlockFlow()) {
         contentHeight = layoutBlock(ctx);
     } else {
         contentHeight = layoutInline(ctx);
