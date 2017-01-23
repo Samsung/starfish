@@ -299,6 +299,18 @@ void Node::setChildrenNeedsStyleRecalc()
     }
 }
 
+void Node::setSiblingsNeedsStyleRecalc()
+{
+    if (!document()->doesParticipateInRendering())
+        return;
+
+    Node* node = nextSibling();
+    while (node) {
+        node->m_needsStyleRecalc = true;
+        node = node->nextSibling();
+    }
+}
+
 void Node::setNeedsLayout()
 {
     if (!document()->doesParticipateInRendering())

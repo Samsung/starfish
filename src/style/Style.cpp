@@ -1958,6 +1958,13 @@ StyleResolver::StyleResolver(Document& document)
 {
 }
 
+CSSStyleSheet* StyleResolver::allRules()
+{
+    if (!m_allRules)
+        m_allRules = new CSSStyleSheet(&m_document, String::emptyString);
+    return m_allRules;
+}
+
 ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 {
     ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
@@ -2820,18 +2827,22 @@ void StyleResolver::matchAllRules(Element* element, ComputedStyle* ret, Computed
     Declarations userAgentDeclarations;
     Declarations authorDeclarations;
 
-    for (unsigned i = 0; i < m_sheets.size(); i++) {
-        CSSStyleSheet* sheet = m_sheets[i];
-        for (unsigned j = 0; j < sheet->rules().size(); j++) {
-            CSSSelectorList* selectorList = sheet->rules()[j]->selectorList();
-            if (matchSelector(element, selectorList) == Match::SelectorMatches) {
-                if (i == 0)
-                    userAgentDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
-                else
-                    authorDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
-            }
+    CSSStyleSheet* sheet = m_sheets[0];
+    for (unsigned j = 0; j < sheet->rules().size(); j++) {
+        CSSSelectorList* selectorList = sheet->rules()[j]->selectorList();
+        if (matchSelector(element, selectorList) == Match::SelectorMatches) {
+            userAgentDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
         }
     }
+
+    sheet = allRules();
+    for (unsigned j = 0; j < sheet->rules().size(); j++) {
+        CSSSelectorList* selectorList = sheet->rules()[j]->selectorList();
+        if (matchSelector(element, selectorList) == Match::SelectorMatches) {
+            authorDeclarations.addDeclaration(sheet->rules()[j]->styleDeclaration());
+        }
+    }
+
 
     URL* url = element->document()->documentURI();
 
@@ -3068,10 +3079,13 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
 {
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
+        element->setChildrenOrSiblingsAffectedByDynamicEvent(Node::ChildrenOrSiblingsAffectedByHover);
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
+        element->setChildrenOrSiblingsAffectedByDynamicEvent(Node::ChildrenOrSiblingsAffectedByActive);
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
+        element->setChildrenOrSiblingsAffectedByDynamicEvent(Node::ChildrenOrSiblingsAffectedByFocus);
         return element->state() & Node::NodeState::NodeStateFocused;
     case CSSSelector::PseudoType::PseudoTarget:
         return element->state() & Node::NodeState::NodeStateTarget;

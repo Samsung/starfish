@@ -1792,6 +1792,14 @@ public:
         return m_sheets;
     }
 
+    CSSStyleSheet* allRules();
+    void removeAllRules()
+    {
+        if (!m_allRules)
+            return;
+        m_allRules = nullptr;
+    }
+
     void resolveDOMStyle(Document* document, bool force = false);
 #ifdef STARFISH_ENABLE_TEST
     void dumpDOMStyle(Document* document);
@@ -1813,6 +1821,7 @@ protected:
     Document& m_document;
     float m_mediumFontSize;
     std::vector<CSSStyleSheet*, gc_allocator_ignore_off_page<CSSStyleSheet*> > m_sheets;
+    CSSStyleSheet* m_allRules;
 };
 }
 
