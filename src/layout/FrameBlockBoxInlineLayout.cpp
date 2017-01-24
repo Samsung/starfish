@@ -41,7 +41,7 @@ static LayoutUnit computeLineHeight(ComputedStyle* style)
     return fontSize;
 }
 
-LayoutUnit LineFormattingContext::computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, bool dueToBr, bool isLineBox)
+LayoutUnit LineFormattingContext::computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, bool dueToBr)
 {
     LayoutUnit maxAscender = ascenderInOut;
     LayoutUnit maxDescender = descenderInOut;
@@ -59,7 +59,7 @@ LayoutUnit LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
         boxes = &parentBox->asInlineBox()->asInlineNonReplacedBox()->boxes();
     }
 
-    if (isLineBox) {
+    if (parentBox->isLineBox()) {
         if (!boxes->size()) {
             if (dueToBr) {
                 ascenderInOut = maxAscender;
@@ -243,7 +243,7 @@ LayoutUnit LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
         }
     }
 
-    if (!isLineBox && !hasNormalFlowChild && parentBox->width() == 0 && parentBox->marginLeft() == 0 && parentBox->marginRight() == 0 && parentBox->style()->hasNormalLineHeight()) {
+    if (!parentBox->isLineBox() && !hasNormalFlowChild && parentBox->width() == 0 && parentBox->marginLeft() == 0 && parentBox->marginRight() == 0 && parentBox->style()->hasNormalLineHeight()) {
         parentBox->asInlineBox()->asInlineNonReplacedBox()->markCollapsed();
         ascenderInOut = pascender;
         descenderInOut = pdescender;
@@ -1093,7 +1093,7 @@ void LineFormattingContext::makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameB
     makeFloatingBoxLayoutContext(clearedDistanceToFloatBottom);
 }
 
-void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool isLastLine, bool skipFinishLine)
+void LineFormattingContext::insertPendingFloatingBoxes(bool isLastLine, bool skipFinishLine)
 {
     bool onlyAllowBeforeCurrentLine = m_pendingInlineBoxes.size() > 0;
 
@@ -1116,7 +1116,7 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isInLineBox, bool is
             }
         } else {
             if (isLastLine) {
-                breakLine(false, isInLineBox, isLastLine, skipFinishLine);
+                breakLine(false, isLastLine, skipFinishLine);
                 return;
             } else {
                 break;
@@ -1507,14 +1507,14 @@ void LineFormattingContext::reCacheFloatingBoxes(LayoutUnit xDiff)
     m_layoutContext.reCacheFloatingBoxes(m_floatingBoxesSizeBeforeCurrentLine);
 }
 
-void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLastLine)
+void LineFormattingContext::finishLine(bool dueToBr, bool isLastLine)
 {
     LayoutUnit ascender;
     LayoutUnit descender;
     LineBox* back = currentLine();
 
     reComputeVerticalProperties:
-    LayoutUnit height = computeVerticalProperties(back, m_block.style(), ascender, descender, dueToBr, isInLineBox);
+    LayoutUnit height = computeVerticalProperties(back, m_block.style(), ascender, descender, dueToBr);
     std::pair<LayoutUnit, LayoutUnit> boundaries =
         m_layoutContext.horizontalBoundaryBetweenfloatingBoxes(m_absPosition.y() + m_lineBoxY, height, m_leftBoundary, m_rightBoundary);
 
@@ -1537,7 +1537,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
         FloatingBoxLayoutContext* lastFbCtx = &(*m_floatingBoxLayoutContexts.rbegin());
         if (nextDistanceToFloatBottom != 0 && height > nextDistanceToFloatBottom && nextDistanceToFloatBottom > lastFbCtx->m_y) {
             makeFloatingBoxLayoutContext(nextDistanceToFloatBottom);
-            insertPendingFloatingBoxes(isInLineBox, false, false);
+            insertPendingFloatingBoxes(false, false);
             removeAllInlineBoxes();
             m_currentLineWidth = 0;
             insertPendingInlineBoxesDueToFloatingBoxes();
@@ -1551,7 +1551,7 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
     removeDanglingSpaceFromLine();
     // Should check if there has enough space for pending block box due to removing
     // white space from above function `removeDanglingSpaceFromLine`
-    insertPendingFloatingBoxes(isInLineBox, false, false);
+    insertPendingFloatingBoxes(false, false);
     computeHorizontalProperties();
 
     LayoutUnit yDiff = computeLineBoxHeight(dueToBr, !isLastLine || m_pendingInlineBoxes.size() > 0);
@@ -1561,32 +1561,32 @@ void LineFormattingContext::finishLine(bool dueToBr, bool isInLineBox, bool isLa
 
     if (isLastLine) {
         if (m_pendingInlineBoxes.size() > 0) {
-            breakLine(dueToBr, isInLineBox, isLastLine, true);
+            breakLine(dueToBr, isLastLine, true);
         }
         if (m_pendingFloatingBoxes.size() > 0) {
-            insertPendingFloatingBoxes(isInLineBox, isLastLine, true);
+            insertPendingFloatingBoxes(isLastLine, true);
         }
     }
 }
 
-void LineFormattingContext::breakLine(bool dueToBr, bool isInLineBox, bool isLastLine, bool skipFinishLine)
+void LineFormattingContext::breakLine(bool dueToBr, bool isLastLine, bool skipFinishLine)
 {
     if (dueToBr == false)
         m_breakedLinesSet.insert(m_block.m_lineBoxes.size() - 1);
 
     if (!skipFinishLine) {
-        finishLine(dueToBr, isInLineBox, isLastLine);
+        finishLine(dueToBr, isLastLine);
     }
 
     resetLineBox();
 
-    insertPendingFloatingBoxes(isInLineBox, isLastLine, false);
+    insertPendingFloatingBoxes(isLastLine, false);
     insertPendingInlineBoxesDueToFloatingBoxes();
 
     if (m_pendingInlineBoxes.size() > 0) {
-        breakLine(dueToBr, isInLineBox, isLastLine, false);
+        breakLine(dueToBr, isLastLine, false);
     } else if (isLastLine) {
-        finishLine(dueToBr, isInLineBox, isLastLine);
+        finishLine(dueToBr, isLastLine);
     }
 }
 
@@ -2129,7 +2129,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         ib->setLayoutParent(lineFormattingContext.currentLine());
     }, [&](bool dueToBr)
     {
-        lineFormattingContext.breakLine(dueToBr, true, false, false);
+        lineFormattingContext.breakLine(dueToBr, false, false);
     }, [&](FrameInline* f)
     {
         InlineNonReplacedBox* inlineBox = new InlineNonReplacedBox(f->node(), f->node()->style(), nullptr, f->asFrameInline());
@@ -2167,7 +2167,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         }
     });
 
-    lineFormattingContext.finishLine(false, true, true);
+    lineFormattingContext.finishLine(false, true);
     STARFISH_ASSERT(lineFormattingContext.m_pendingFloatingBoxes.size() == 0 && lineFormattingContext.m_pendingInlineBoxes.size() == 0);
 
     if (m_lineBoxes.size() && m_lineBoxes.back()->boxes().size() == 0) {
@@ -2299,7 +2299,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             iter++;
         }
 
-        lineFormattingContext.breakLine(false, false, false, false);
+        lineFormattingContext.breakLine(false, false, false);
 
         bool first = true;
         iter = stack.rbegin();
@@ -2395,7 +2395,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
             LayoutUnit ascender = std::max(selfForFinishLayout->style()->font()->metrics().m_ascender, blockBox->style()->font()->metrics().m_ascender);
             LayoutUnit descender = std::min(selfForFinishLayout->style()->font()->metrics().m_descender, blockBox->style()->font()->metrics().m_descender);
 
-            lineFormattingContext.computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, dueToBr, false);
+            lineFormattingContext.computeVerticalProperties(selfForFinishLayout, selfForFinishLayout->style(), ascender, descender, dueToBr);
             selfForFinishLayout->m_ascender = ascender;
             selfForFinishLayout->m_descender = descender;
 
@@ -2447,7 +2447,7 @@ InlineNonReplacedBox* InlineNonReplacedBox::layoutInline(InlineNonReplacedBox* s
     {
         if (!self->boxes().size() && !layoutParentBox) {
             lineFormattingContext.currentLine()->boxes().erase(std::find(lineFormattingContext.currentLine()->boxes().begin(), lineFormattingContext.currentLine()->boxes().end(), self));
-            lineFormattingContext.breakLine(dueToBr, false, false, false);
+            lineFormattingContext.breakLine(dueToBr, false, false);
             lineFormattingContext.currentLine()->boxes().push_back(self);
             self->setLayoutParent(lineFormattingContext.currentLine());
         } else {
