@@ -16,6 +16,7 @@
 
 #include "StarFishConfig.h"
 #include "FrameTableCellBox.h"
+#include "FrameTableRowBox.h"
 
 #include "FrameTreeBuilder.h"
 #include "FrameText.h"
@@ -157,8 +158,11 @@ LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx, FrameBl
 void FrameTableCellBox::applyVerticalAlign()
 {
     // 1. Cal the content height of all child boxes
+    //    Also calculate the ascender of the first line. It is use
+    //    in "vertical-align: baseline"
     LayoutUnit contentHeight = 0;
-    if (hasBlockFlow()) {
+    LayoutUnit ascenderOfTheFirstLineBox = 0;
+    if (hasBlockFlow() && firstChild()) {
         STARFISH_ASSERT(firstChild()->isFrameBlockBox());
         STARFISH_ASSERT(lastChild()->isFrameBlockBox());
         FrameBlockBox* firstBox = firstChild()->asFrameBlockBox();
@@ -166,6 +170,9 @@ void FrameTableCellBox::applyVerticalAlign()
         LayoutUnit yStart = (firstBox->y() - firstBox->marginTop());
         LayoutUnit yEnd = lastBox->y() + lastBox->height() + lastBox->marginBottom();
         contentHeight = yEnd - yStart;
+        if (!firstBox->lineBoxes().empty()) {
+            ascenderOfTheFirstLineBox = firstBox->lineBoxes()[0]->ascender();
+        }
     } else {
         if (!m_lineBoxes.empty()) {
             LineBox* firstBox = m_lineBoxes[0];
@@ -173,6 +180,7 @@ void FrameTableCellBox::applyVerticalAlign()
             LayoutUnit yStart = firstBox->y();
             LayoutUnit yEnd = lastBox->y() + lastBox->height();
             contentHeight = yEnd - yStart;
+            ascenderOfTheFirstLineBox = firstBox->ascender();
         }
     }
 
@@ -188,11 +196,16 @@ void FrameTableCellBox::applyVerticalAlign()
     case VerticalAlignValue::MiddleVAlignValue:
         yPosOffset = LayoutUnit((height() - borderHeight() - paddingHeight() - contentHeight).toDouble() / 2);
         break;
+    case VerticalAlignValue::BaselineVAlignValue: {
+        yPosOffset = rowBox()->baseline() - ascenderOfTheFirstLineBox;
+        yPosOffset -= borderTop() + paddingTop();
+        break;
+    }
     default:
         break;
     }
 
-    // 3. Move all child boxes by the yPosOffset
+    // 3. Move all child boxes by yPosOffset
     if (hasBlockFlow()) {
         for (Frame* c = firstChild(); c; c = c->next()) {
             if (c->isFrameBlockBox()) {
@@ -204,6 +217,33 @@ void FrameTableCellBox::applyVerticalAlign()
             b->moveY(yPosOffset.round());
         }
     }
+}
+
+LayoutUnit FrameTableCellBox::calBaseline()
+{
+    // baseline is only calculated when this cell has "vertical-align: baseline"
+    if (style()->verticalAlign() != VerticalAlignValue::BaselineVAlignValue) {
+        return 0;
+    }
+
+    LineBox* firstLineBox = nullptr;
+    if (hasBlockFlow() && firstChild()) {
+        STARFISH_ASSERT(firstChild()->isFrameBlockBox());
+        FrameBlockBox* box = firstChild()->asFrameBlockBox();
+        if (!box->lineBoxes().empty()) {
+            firstLineBox = box->lineBoxes()[0];
+        }
+    } else {
+        if (!m_lineBoxes.empty()) {
+            firstLineBox = m_lineBoxes[0];
+        }
+    }
+
+    if (firstLineBox == nullptr) {
+        return 0;
+    }
+
+    return firstLineBox->y() + firstLineBox->ascender();
 }
 
 int FrameTableCellBox::colspan()

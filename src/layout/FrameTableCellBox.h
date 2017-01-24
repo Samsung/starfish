@@ -72,6 +72,7 @@ public:
     }
 
     void applyVerticalAlign();
+    LayoutUnit calBaseline();
 
 private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);

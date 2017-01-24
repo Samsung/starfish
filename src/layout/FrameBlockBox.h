@@ -567,6 +567,11 @@ public:
         return false;
     }
 
+    GCVector<LineBox*>& lineBoxes()
+    {
+        return m_lineBoxes;
+    }
+
 protected:
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);

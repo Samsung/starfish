@@ -44,6 +44,12 @@ public:
     void calCellWidth(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
+    LayoutUnit calBaseline();
+
+    LayoutUnit baseline()
+    {
+        return m_baseline;
+    }
 
     FrameTableCellBox* addChild(Node* child, FrameTreeBuilderContext& ctx, bool force);
 
@@ -74,7 +80,7 @@ private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 
     unsigned m_rowIndex;
-
+    LayoutUnit m_baseline;
 };
 
 }

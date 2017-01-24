@@ -195,7 +195,7 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
 
     // 3. Place the contents of each cell according to the vertical-align of
     //    each cell
-    // TODO: 3.1 find baseline
+    m_baseline = calBaseline();
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             c->asFrameTableCellBox()->applyVerticalAlign();
@@ -204,6 +204,18 @@ void FrameTableRowBox::layoutHeight(LayoutContext& ctx)
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+}
+
+LayoutUnit FrameTableRowBox::calBaseline()
+{
+    LayoutUnit maxSoFar = 0;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameTableCellBox()) {
+            maxSoFar = std::max(maxSoFar, c->asFrameTableCellBox()->calBaseline());
+        }
+    }
+
+    return maxSoFar;
 }
 
 void FrameTableRowBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
