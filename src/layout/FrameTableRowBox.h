@@ -68,6 +68,8 @@ public:
         return m_rowIndex;
     }
 
+    virtual void paintBackgroundAndBorders(Canvas* canvas);
+
 private:
     virtual void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
 
