@@ -156,44 +156,52 @@ LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx, FrameBl
 
 void FrameTableCellBox::applyVerticalAlign()
 {
-    // 1. Cal the sum of heights of all child boxes
-    // TODO: impl a child box iterator for better readability
-    LayoutUnit contentHeightSoFar = 0;
+    // 1. Cal the content height of all child boxes
+    LayoutUnit contentHeight = 0;
     if (hasBlockFlow()) {
-        for (Frame* c = firstChild(); c; c = c->next()) {
-            if (c->isFrameBlockBox()) {
-                contentHeightSoFar += c->asFrameBox()->height();
-            }
-        }
+        STARFISH_ASSERT(firstChild()->isFrameBlockBox());
+        STARFISH_ASSERT(lastChild()->isFrameBlockBox());
+        FrameBlockBox* firstBox = firstChild()->asFrameBlockBox();
+        FrameBlockBox* lastBox = lastChild()->asFrameBlockBox();
+        LayoutUnit yStart = (firstBox->y() - firstBox->marginTop());
+        LayoutUnit yEnd = lastBox->y() + lastBox->height() + lastBox->marginBottom();
+        contentHeight = yEnd - yStart;
     } else {
-        for (auto& b : m_lineBoxes) {
-            contentHeightSoFar += b->height();
+        if (!m_lineBoxes.empty()) {
+            LineBox* firstBox = m_lineBoxes[0];
+            LineBox* lastBox = m_lineBoxes[m_lineBoxes.size()-1];
+            LayoutUnit yStart = firstBox->y();
+            LayoutUnit yEnd = lastBox->y() + lastBox->height();
+            contentHeight = yEnd - yStart;
         }
     }
 
     // 2. Cal y pos where the first child box will be positioned
     LayoutUnit yPosOffset = 0;
     switch (style()->verticalAlign()) {
+    case VerticalAlignValue::TopVAlignValue:
+        yPosOffset = 0;
+        break;
+    case VerticalAlignValue::BottomVAlignValue:
+        yPosOffset = height() - borderBottom() - paddingBottom() - contentHeight;
+        break;
     case VerticalAlignValue::MiddleVAlignValue:
-        yPosOffset = LayoutUnit(height().toDouble() / 2 - contentHeightSoFar.toDouble() / 2);
+        yPosOffset = LayoutUnit((height() - borderHeight() - paddingHeight() - contentHeight).toDouble() / 2);
         break;
     default:
         break;
     }
 
-    // 3. Set the y pos of all child boxes starting from the yPosOffset
-    LayoutUnit newYPosSoFar = yPosOffset.round();
+    // 3. Move all child boxes by the yPosOffset
     if (hasBlockFlow()) {
         for (Frame* c = firstChild(); c; c = c->next()) {
             if (c->isFrameBlockBox()) {
-                c->asFrameBox()->setY(newYPosSoFar);
-                newYPosSoFar += c->asFrameBox()->height();
+                c->asFrameBox()->moveY(yPosOffset.round());
             }
         }
     } else {
         for (auto& b : m_lineBoxes) {
-            b->setY(newYPosSoFar);
-            newYPosSoFar += b->height();
+            b->moveY(yPosOffset.round());
         }
     }
 }
