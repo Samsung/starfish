@@ -38,6 +38,8 @@ public:
 
     virtual Element* createElement(AtomicString localName, bool shouldCheckName);
     static Element* createHTMLElement(Document* document, AtomicString localName);
+
+    static bool isCaseSensitiveAttribute(Document& document, const QualifiedName& attributeName);
 protected:
 };
 

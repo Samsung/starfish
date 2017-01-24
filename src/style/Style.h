@@ -1817,6 +1817,7 @@ protected:
     bool checkOne(Element* element, CSSSelector* selector);
     bool checkPseudoClass(Element* element, CSSSelector* selector);
     bool checkPseudoElement(Element* element, CSSSelector* selector);
+    bool anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector);
 
     Document& m_document;
     float m_mediumFontSize;
