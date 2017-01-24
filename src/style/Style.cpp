@@ -1613,39 +1613,42 @@ static bool attributeValueMatches(String* attrValue, CSSSelector::Type type, Str
     return true;
 }
 
-static bool anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector)
+bool StyleResolver::anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector)
 {
     QualifiedName& selectorAttr = selector->attribute();
-    STARFISH_ASSERT(!selectorAttr.localName()->equals(String::fromUTF8("*")));
+    STARFISH_ASSERT(!(selectorAttr.localName()->equals(String::fromUTF8("*"))));
 
     String* selectorValue = selector->value();
 
     size_t idx = element->hasAttribute(selectorAttr);
-    if (idx == SIZE_MAX)
+    if (idx == SIZE_MAX) {
         return false;
-
-    CSSSelector::AttributeMatchType caseSensitivity = selector->attributeMatch();
-    if (attributeValueMatches(element->getAttribute(idx), type, selectorValue, caseSensitivity))
-        return true;
-
-    if (caseSensitivity == CSSSelector::CaseInsensitive) {
-        if (!selectorAttr.namespaceURI()->equals(String::fromUTF8("*")))
-            return false;
     }
 
-//    // Legacy dictates that values of some attributes should be compared in
-//    // a case-insensitive manner regardless of whether the case insensitive
-//    // flag is set or not.
-//    bool legacyCaseInsensitive = element.document().isHTMLDocument() && !HTMLDocument::isCaseSensitiveAttribute(selectorAttr);
-//
-//    // If case-insensitive, re-check, and count if result differs.
-//    // See http://code.google.com/p/chromium/issues/detail?id=327060
-//    if (legacyCaseInsensitive && attributeValueMatches(attributeItem, match, selectorValue, TextCaseASCIIInsensitive)) {
-//        UseCounter::count(element.document(), UseCounter::CaseInsensitiveAttrSelectorMatch);
-//        return true;
-//    }
-//    if (selectorAttr.namespaceURI() != starAtom)
-//        return false;
+    CSSSelector::AttributeMatchType caseSensitivity = selector->attributeMatch();
+    if (attributeValueMatches(element->getAttribute(idx), type, selectorValue, caseSensitivity)) {
+        return true;
+    }
+
+    if (caseSensitivity == CSSSelector::CaseInsensitive) {
+        if (!selectorAttr.namespaceURI()->equals(String::fromUTF8("*"))) {
+            return false;
+        }
+    }
+
+    // Legacy dictates that values of some attributes should be compared in
+    // a case-insensitive manner regardless of whether the case insensitive
+    // flag is set or not.
+    bool legacyCaseInsensitive = !HTMLDocument::isCaseSensitiveAttribute(m_document, selectorAttr);
+
+    // If case-insensitive, re-check, and count if result differs.
+    // See http://code.google.com/p/chromium/issues/detail?id=327060
+    if (legacyCaseInsensitive && attributeValueMatches(element->getAttribute(idx), type, selectorValue, CSSSelector::CaseInsensitive)) {
+        return true;
+    }
+    if (!selectorAttr.namespaceURI()->equals(String::fromUTF8("*"))) {
+        return false;
+    }
 
     return false;
 }

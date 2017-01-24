@@ -119,4 +119,42 @@ Element* HTMLDocument::createElement(AtomicString localName, bool shouldCheckNam
     return HTMLDocument::createHTMLElement(this, localName);
 }
 
+typedef std::unordered_map<String*, size_t, std::hash<String*>, std::equal_to<String*>,
+    gc_allocator_ignore_off_page<std::pair<String*, size_t>>> AttributeSet;
+static AttributeSet* createHtmlCaseInsensitiveAttributesSet(Document& document)
+{
+    // This is the list of attributes in HTML 4.01 with values marked as "[CI]" or case-insensitive
+    AttributeSet* attrSet = new AttributeSet();
+    StaticStrings* str = document.window()->starFish()->staticStrings();
+
+    const QualifiedName* caseInsesitiveAttributes[] = {
+        /* &accept_charsetAttr, &acceptAttr, &alignAttr, &alinkAttr, &axisAttr,
+        &bgcolorAttr, */
+        &str->m_charset, /* &checkedAttr, &clearAttr, &codetypeAttr, */ &str->m_color, /* &compactAttr,
+        &declareAttr, &deferAttr, */ &str->m_dir, /* &directionAttr, */ &str->m_disabled,
+        /* &enctypeAttr, */
+        &str->m_face, /* &frameAttr,
+        &hreflangAttr, &http_equivAttr, */
+        &str->m_lang, /* &languageAttr, &linkAttr,
+        &mediaAttr, &methodAttr, &multipleAttr,
+        &nohrefAttr, &noresizeAttr, &noshadeAttr, &nowrapAttr,
+        &readonlyAttr, */ &str->m_rel, /* &revAttr, &rulesAttr,
+        &scopeAttr, &scrollingAttr, &selectedAttr, &shapeAttr,
+        &targetAttr, &textAttr, */ &str->m_type,
+        /* &valignAttr, &valuetypeAttr, &vlinkAttr */
+    };
+
+    for (const QualifiedName* attr : caseInsesitiveAttributes) {
+        attrSet->insert(std::make_pair(attr->localName(), 1));
+    }
+
+    return attrSet;
+}
+
+bool HTMLDocument::isCaseSensitiveAttribute(Document& document, const QualifiedName& attributeName)
+{
+    static AttributeSet* caseInsensitiveAttrSet = createHtmlCaseInsensitiveAttributesSet(document);
+    return caseInsensitiveAttrSet->find(attributeName.localName()) == caseInsensitiveAttrSet->end();
+}
+
 }

@@ -177,8 +177,6 @@ public:
         ChildrenAffectedByBackwardPositionalRules = 1 << 9,
         AffectedByFirstChildRules = 1 << 10,
         AffectedByLastChildRules = 1 << 11,
-
-        NumberOfDynamicRestyleFlags = 12,
     };
 
     virtual NodeType nodeType() = 0;
