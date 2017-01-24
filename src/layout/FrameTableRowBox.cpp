@@ -251,22 +251,22 @@ void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
 
         ImageData* imgData = style()->surround()->border.image().imageData();
 
-        if (bImgSlice > imgWidth || bImgSlice > imgHeight)
+        if (bImgSlice > imgWidth || bImgSlice > imgHeight) {
             bImgSlice = std::min(imgWidth, imgHeight);
-
+        }
         double value = std::min((float)width() / (bImgWidth*2), (float)height() / (bImgWidth*2));
-        if (value < 1)
+        if (value < 1) {
             bImgWidth *= value;
-
+        }
         double scale = bImgWidth / bImgSlice;
         bool isFill = false;
 
         if ((lSlice + rSlice > imgWidth) || (tSlice + bSlice > imgHeight)) {
             float drawRect = std::min((float)width(), (float)height()) / 2.0;
 
-            if (drawRect > bImgWidth)
+            if (drawRect > bImgWidth) {
                 drawRect = bImgWidth;
-
+            }
             // left-top
             canvas->drawBorderImage(imgData, Rect(0, 0, drawRect, drawRect), lSlice, tSlice, 0, 0, scale, isFill);
             // right-top
@@ -301,7 +301,6 @@ void FrameTableRowBox::paintBackgroundAndBorders(Canvas* canvas)
             canvas->setColor(style()->borderLeftColor());
             canvas->drawRect(LayoutRect(0, 0, borderLeft(), height()));
         } else {
-
             // top
             canvas->setColor(style()->borderTopColor());
             canvas->drawRect(
