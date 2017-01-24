@@ -621,7 +621,7 @@ private:
     void computeHorizontalProperties();
     LayoutUnit computeLineBoxHeight(bool dueToBr, bool hasMoreInlineBoxes);
 
-    void insertPendingFloatingBoxes(bool isInlineBox, bool isLastLine, bool skipFinishLine);
+    void insertPendingFloatingBoxes(bool isLastLine, bool skipFinishLine);
     void insertPendingAbsolutePositionedBoxes();
     void insertPendingInlineBoxesDueToFloatingBoxes();
     void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
@@ -634,11 +634,11 @@ private:
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
-    LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, bool dueToBr, bool isLineBox);
+    LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, bool dueToBr);
 
     void markInlineBoxIndex(FrameBox* box);
-    void finishLine(bool dueToBr, bool isInLineBox, bool isLastLine);
-    void breakLine(bool dueToBr, bool isInLineBox, bool isLastLine, bool skipFinishLine);
+    void finishLine(bool dueToBr, bool isLastLine);
+    void breakLine(bool dueToBr, bool isLastLine, bool skipFinishLine);
     void makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameBox* box);
     template <typename Box>
     LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
