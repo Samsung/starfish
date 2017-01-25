@@ -1377,7 +1377,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             selector->setRelation(CSSSelector::None);
         }
 
-        selectorList->insertFront(selector);
+        selectorList->pushFront(selector);
     }
 }
 
