@@ -20,6 +20,7 @@
 #include "layout/FrameBox.h"
 #include "layout/FrameReplaced.h"
 #include "layout/FrameInline.h"
+#include "layout/FrameLineBreak.h"
 #include "layout/FrameText.h"
 
 namespace StarFish {
@@ -608,6 +609,15 @@ struct FloatingBoxLayoutContext {
     { }
 };
 
+struct FontHeights {
+    LayoutUnit m_ascender;
+    LayoutUnit m_descender;
+
+    FontHeights(LayoutUnit ascender, LayoutUnit descender)
+        : m_ascender(ascender), m_descender(descender)
+    { }
+};
+
 class LineFormattingContext {
 private:
     void resetLineBox();
@@ -619,7 +629,7 @@ private:
     }
 
     void computeHorizontalProperties();
-    LayoutUnit computeLineBoxHeight(bool dueToBr, bool hasMoreInlineBoxes);
+    LayoutUnit computeLineBoxHeight(FrameLineBreak* br, bool hasMoreInlineBoxes);
 
     void insertPendingFloatingBoxes(bool isLastLine, bool skipFinishLine);
     void insertPendingAbsolutePositionedBoxes();
@@ -634,19 +644,21 @@ private:
 public:
     LineFormattingContext(FrameBlockBox& block, LayoutContext& ctx, const LayoutUnit& lineBoxX, const LayoutUnit& lineBoxY, const LayoutUnit& lineBoxWidth);
 
-    LayoutUnit computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, LayoutUnit& ascenderInOut, LayoutUnit& descenderInOut, bool dueToBr);
+    FontHeights computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, bool dueToBr);
 
     void markInlineBoxIndex(FrameBox* box);
-    void finishLine(bool dueToBr, bool isLastLine);
-    void breakLine(bool dueToBr, bool isLastLine, bool skipFinishLine);
+    void finishLine(FrameLineBreak* br, bool isLastLine);
+    void breakLine(FrameLineBreak* br, bool isLastLine, bool skipFinishLine);
     void makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameBox* box);
     template <typename Box>
     LayoutUnit layoutInlineBoxes(Box* parent, LayoutUnit start);
 
+    /*
     bool isBreakedLineWithoutBR(size_t idx)
     {
         return m_breakedLinesSet.find(idx) != m_breakedLinesSet.end();
     }
+    */
 
     void insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
     LineBox* currentLine()
@@ -680,7 +692,8 @@ public:
     size_t m_currentLine;
     FrameBlockBox& m_block;
     LayoutContext& m_layoutContext;
-    bool m_shouldLineBreakForabsolutePositionedBlock;
+    bool m_shouldLineBreakForAbsolutePositionedBox;
+    bool m_shouldLineBreakForBr;
     enum HasFloat {
         HasNone,
         HasLeft,
@@ -690,7 +703,7 @@ public:
     size_t m_pendingFloatingBoxNumsBeforeCurrentLine;
     size_t m_floatingBoxesSizeBeforeCurrentLine;
 
-    std::set<size_t> m_breakedLinesSet;
+    // std::set<size_t> m_breakedLinesSet;
 
     // we dont need gc_allocater here
     // frame tree has strong reference already

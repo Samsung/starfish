@@ -33,6 +33,7 @@ class FrameBox;
 class FrameBlockBox;
 class FrameReplaced;
 class FrameInline;
+class FrameLineBreak;
 class FrameDocument;
 class FrameTableBox;
 class FrameTableCaptionBox;
@@ -625,6 +626,12 @@ public:
     {
         STARFISH_ASSERT(isFrameInline());
         return (FrameInline*)this;
+    }
+
+    FrameLineBreak* asFrameLineBreak()
+    {
+        STARFISH_ASSERT(isFrameLineBreak());
+        return (FrameLineBreak*)this;
     }
 
     FrameTableBox* asFrameTableBox()

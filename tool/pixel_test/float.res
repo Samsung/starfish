@@ -192,7 +192,7 @@ vendor/webkit_original/fast/block/float/024.html
 vendor/webkit_original/fast/block/float/029.html
 #vendor/webkit_original/fast/block/float/030.html
 #vendor/webkit_original/fast/block/float/031.html
-#vendor/webkit_original/fast/block/float/br-with-clear.html
+vendor/webkit_original/fast/block/float/br-with-clear.html
 vendor/webkit_original/fast/block/float/clamped-right-float.html
 vendor/webkit_original/fast/block/float/clear-element-too-wide-for-containing-block.html
 vendor/webkit_original/fast/block/float/clear-negative-margin-top.html
@@ -213,7 +213,7 @@ vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-004.htm
 vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-006.html
 vendor/webkit_original/fast/block/float/floats-wrap-inside-inline-007.html
 vendor/webkit_original/fast/block/float/float-with-anonymous-previous-sibling.html
-#vendor/webkit_original/fast/block/float/independent-align-positioning.html
+vendor/webkit_original/fast/block/float/independent-align-positioning.html
 vendor/webkit_original/fast/block/float/intruding-float-add-in-sibling-block-on-static-position2.html
 vendor/webkit_original/fast/block/float/intruding-float-add-in-sibling-block-on-static-position.html
 vendor/webkit_original/fast/block/float/intruding-float-remove-from-sibling-block-on-absolute-position2.html
@@ -241,8 +241,8 @@ vendor/webkit_original/fast/block/float/previous-sibling-float-002.html
 #vendor/webkit_original/fast/block/float/shrink-to-fit-width.html
 #vendor/blink_original/fast/block/float/add-inlines-in-block-children-block.html
 vendor/blink_original/fast/block/float/avoid-floats-with-negative-margins.html
-#vendor/blink_original/fast/block/float/br-with-clear-3.html
-#vendor/blink_original/fast/block/float/br-with-clear-4.html
+vendor/blink_original/fast/block/float/br-with-clear-3.html
+vendor/blink_original/fast/block/float/br-with-clear-4.html
 #vendor/blink_original/fast/block/float/nested-floats-expand-formatting-context.html
 #vendor/blink_original/fast/block/float/overlapping-floats-paint-hittest-order-1.html
 #vendor/blink_original/fast/block/float/overlapping-floats-paint-hittest-order-2.html
@@ -291,6 +291,6 @@ vendor/gecko_original/layout/reftests/floats/other-float-outside-rule-3-right.ht
 vendor/gecko_original/layout/reftests/floats/other-float-outside-rule-7-left.html
 vendor/gecko_original/layout/reftests/floats/other-float-outside-rule-7-right.html
 vendor/gecko_original/layout/reftests/floats/relative-float-1.html
-#vendor/gecko_original/layout/reftests/floats/relative-float-2.html
+vendor/gecko_original/layout/reftests/floats/relative-float-2.html
 vendor/gecko_original/layout/reftests/floats/zero-height-float-base.html
 #vendor/gecko_original/layout/reftests/floats/zero-height-float.html
