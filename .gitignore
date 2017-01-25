@@ -1,15 +1,28 @@
-.*
+# Build generated
 out
 StarFish
-cscope.files
-cscope.out
-tags
-result.xml
+*.pyc
+*.class
+
+# Node releated
 node_modules
 test/tool/pixel_test/bin/nodejs
+
+# Test suite generated
 Demo.regression
-*.pyc
+tmp[0-9]*
+tool/reftest/internal.res
 *.png_
 result.csv
-*.class
+result.xml
 tool/reftest/internal_part*
+error_report
+
+# Build tools generated
+tags
+cscope.files
+cscope.out
+
+# Etc
+core
+.*
