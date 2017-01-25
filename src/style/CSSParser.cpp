@@ -1251,9 +1251,6 @@ CSSSelector* CSSParser::getAttributeSelector()
 
     selector->setRelation(CSSSelector::RelationType::SubSelector);
     selector->setValue(getStringWithoutQuotationMarks(attributeValue->m_value));
-    if (selector->value()->equals(String::emptyString))
-        return nullptr;
-
     selector->setAttribute(attrQualifiedName, getAttributeFlags());
 
     token = getToken(false, false);

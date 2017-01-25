@@ -594,6 +594,13 @@ unsigned CSSSelector::specificityForOneSelector() const
         return specificity + 0x010000;
     case Class:
     case PseudoClass:
+    case CSSSelector::AttributeExact: // Example: E[foo="bar"]
+    case CSSSelector::AttributeSet: // Example: E[foo]
+    case CSSSelector::AttributeHyphen: // Example: E[foo|="bar"]
+    case CSSSelector::AttributeList: // Example: E[foo~="bar"]
+    case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
+    case CSSSelector::AttributeBegin: // css3: E[foo^="bar"]
+    case CSSSelector::AttributeEnd: // css3: E[foo$="bar"]
         return specificity + 0x000100;
     default:
         break;
@@ -1610,7 +1617,7 @@ static bool attributeValueMatches(String* attrValue, CSSSelector::Type type, Str
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return true;
+    return false;
 }
 
 bool StyleResolver::anyAttributeMatches(Element* element, CSSSelector::Type type, CSSSelector* selector)
