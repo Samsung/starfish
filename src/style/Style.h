@@ -1448,10 +1448,10 @@ public:
     {
     }
 
-    CSSSelector(Type type, RelationType relation, PseudoType pseudo, String* text)
+    CSSSelector(Type type, RelationType relation, String* text)
         : m_type(type)
         , m_relation(relation)
-        , m_pseudotype(pseudo)
+        , m_pseudotype(PseudoNone)
         , m_selectorText(text)
         , m_attributeMatch(CaseInsensitive)
         , m_relationIsAffectedByPseudoContent(false)
@@ -1662,11 +1662,11 @@ class CSSStyleRule : public ScriptWrappable {
     friend class StyleResolver;
 
 public:
-    CSSStyleRule(CSSSelector::Type type, String* selectorText, CSSSelector::PseudoType pseudoType, Document* document)
+    CSSStyleRule(CSSSelector::Type type, String* selectorText, Document* document)
         : ScriptWrappable(this)
         , m_document(document)
     {
-        CSSSelector* selector = new CSSSelector(type, CSSSelector::RelationType::None, pseudoType, selectorText);
+        CSSSelector* selector = new CSSSelector(type, CSSSelector::RelationType::None, selectorText);
         CSSSelectorList* selectorList = new CSSSelectorList(selector);
         m_selectorList = selectorList;
         m_styleDeclaration = new CSSStyleDeclaration(document);
