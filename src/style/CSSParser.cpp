@@ -1271,7 +1271,7 @@ CSSSelector* CSSParser::getClassSelector()
     if (!token->isIdent())
         return nullptr;
 
-    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Class, CSSSelector::SubSelector, CSSSelector::PseudoType::PseudoNone, token->m_value);
+    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Class, CSSSelector::SubSelector, token->m_value);
     getToken(false, true);
 
     return selector;
@@ -1283,7 +1283,7 @@ CSSSelector* CSSParser::getIdSelector()
     if (!token->isIdent())
         return nullptr;
 
-    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Id, CSSSelector::SubSelector, CSSSelector::PseudoType::PseudoNone, token->m_value);
+    CSSSelector* selector = new CSSSelector(CSSSelector::Type::Id, CSSSelector::SubSelector, token->m_value);
     getToken(false, true);
 
     return selector;
@@ -1372,12 +1372,13 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         if (elementName->equals(String::fromUTF8("*")) && selectorList->size() > 0)
             return;
 
-        CSSSelector* selector = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector
-            , CSSSelector::PseudoType::PseudoNone, elementName->toLower());
-        if (elementName->equals(String::fromUTF8("*")))
+        CSSSelector* selector = new CSSSelector(CSSSelector::Type::Tag, CSSSelector::RelationType::SubSelector, elementName->toLower());
+        if (elementName->equals(String::fromUTF8("*"))) {
             selector->setType(CSSSelector::Type::Universal);
-        if (selectorList->size() == 0)
+        }
+        if (selectorList->size() == 0) {
             selector->setRelation(CSSSelector::None);
+        }
 
         selectorList->insertFront(selector);
     }
