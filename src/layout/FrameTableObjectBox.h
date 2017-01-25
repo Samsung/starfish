@@ -30,6 +30,7 @@ public:
     virtual const char* name() = 0;
 
 protected:
+    void paintBorders(Canvas* canvas, LayoutRect& rect);
 
 };
 
