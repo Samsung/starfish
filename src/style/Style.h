@@ -1620,9 +1620,9 @@ public:
         m_selectors.push_back(selector);
     }
 
-    void insertFront(CSSSelector* selector)
+    void pushFront(CSSSelector* selector)
     {
-        m_selectors.insert(m_selectors.begin(), selector);
+        m_selectors.push_front(selector);
     }
 
     void pushBack(CSSSelector* selector)
@@ -1645,7 +1645,7 @@ public:
         return m_selectors.size();
     }
 
-    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& selectors()
+    std::deque<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> >& selectors()
     {
         return m_selectors;
     }
@@ -1655,7 +1655,7 @@ public:
     unsigned specificity() const;
 
 protected:
-    std::vector<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_selectors;
+    std::deque<CSSSelector*, gc_allocator_ignore_off_page<CSSSelector*> > m_selectors;
 };
 
 class CSSStyleRule : public ScriptWrappable {
