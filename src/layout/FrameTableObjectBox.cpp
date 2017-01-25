@@ -22,8 +22,7 @@ namespace StarFish {
 FrameTableObjectBox::FrameTableObjectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr)
-        || (node != nullptr && style == nullptr));
+
 }
 
 // Draws the border around the area defined by "rect"
