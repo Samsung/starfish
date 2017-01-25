@@ -35,7 +35,7 @@ RowStruct::RowStruct(FrameTableRowBox* tableRow_)
 }
 
 FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
-    : FrameBlockBox(node, style)
+    : FrameTableObjectBox(node, style)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr) || (node != nullptr && style == nullptr));
 }

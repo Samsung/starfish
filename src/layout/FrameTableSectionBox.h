@@ -17,7 +17,7 @@
 #ifndef __StarFishFrameTableSectionBox__
 #define __StarFishFrameTableSectionBox__
 
-#include "layout/FrameBlockBox.h"
+#include "layout/FrameTableObjectBox.h"
 
 namespace StarFish {
 
@@ -45,7 +45,7 @@ struct RowStruct {
     GCVector<CellStruct> cells;
 };
 
-class FrameTableSectionBox : public FrameBlockBox {
+class FrameTableSectionBox : public FrameTableObjectBox {
 public:
     FrameTableSectionBox(Node* node, ComputedStyle* style);
 

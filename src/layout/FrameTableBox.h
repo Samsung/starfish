@@ -17,7 +17,7 @@
 #ifndef __StarFishFrameTableBox__
 #define __StarFishFrameTableBox__
 
-#include "layout/FrameBlockBox.h"
+#include "layout/FrameTableObjectBox.h"
 
 namespace StarFish {
 
@@ -54,7 +54,7 @@ struct ColSizeStruct {
     LayoutUnit cellWidth;
 };
 
-class FrameTableBox : public FrameBlockBox {
+class FrameTableBox : public FrameTableObjectBox {
 public:
     FrameTableBox(Node* node, ComputedStyle* style);
 
