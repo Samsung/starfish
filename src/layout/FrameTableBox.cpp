@@ -47,7 +47,7 @@ public:
 };
 
 FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
-    : FrameBlockBox(node, style)
+    : FrameTableObjectBox(node, style)
     , m_tableRect(0, 0, 0, 0)
 {
     STARFISH_ASSERT((node == nullptr && style != nullptr)

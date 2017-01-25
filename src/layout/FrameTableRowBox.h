@@ -17,14 +17,14 @@
 #ifndef __StarFishFrameTableRowBox__
 #define __StarFishFrameTableRowBox__
 
-#include "layout/FrameBlockBox.h"
+#include "layout/FrameTableObjectBox.h"
 
 namespace StarFish {
 
 class FrameTreeBuilderContext;
 class FrameTableCellBox;
 
-class FrameTableRowBox : public FrameBlockBox {
+class FrameTableRowBox : public FrameTableObjectBox {
 public:
     FrameTableRowBox(Node* node, ComputedStyle* style);
 
