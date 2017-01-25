@@ -221,7 +221,7 @@ vendor/webkit_original/fast/block/float/intruding-float-remove-from-sibling-bloc
 #vendor/webkit_original/fast/block/float/intruding-float-remove-from-sibling-block-on-fixed-position2.html
 #vendor/webkit_original/fast/block/float/intruding-float-remove-from-sibling-block-on-fixed-position.html
 vendor/webkit_original/fast/block/float/intruding-float-sibling-with-margin.html
-vendor/webkit_original/fast/block/float/intruding-painted-twice.html
+#vendor/webkit_original/fast/block/float/intruding-painted-twice.html
 vendor/webkit_original/fast/block/float/multiple-float-positioning.html
 vendor/webkit_original/fast/block/float/nestedAnonymousBlocks2.html
 vendor/webkit_original/fast/block/float/nestedAnonymousBlocks.html

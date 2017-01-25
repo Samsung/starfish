@@ -1397,11 +1397,9 @@ void LineFormattingContext::removeAllInlineBoxes()
 {
     LineBox* lineBox = currentLine();
     auto iter = lineBox->boxes().begin();
-#ifndef NDEBUG
-    size_t lastInlineboxIndex = SIZE_MAX;
-#endif
 
-    size_t index = m_pendingInlineBoxes.size();
+    bool hasAlreadyPendingInlineBoxes = (m_pendingInlineBoxes.size() > 0);
+    size_t index = 0;
 
     while (iter != lineBox->boxes().end()) {
         if ((*iter)->style()->floating() != NoneFloatValue && (*iter)->style()->position() != AbsolutePositionValue) {
@@ -1410,22 +1408,37 @@ void LineFormattingContext::removeAllInlineBoxes()
         }
 
         (*iter)->setY(0); // already its y position is somehow determined, so we have to reset the value.
-        if (index == 0) {
+        if (!hasAlreadyPendingInlineBoxes) {
             m_pendingInlineBoxes.push_back(*iter);
         } else {
             m_pendingInlineBoxes.insert(m_pendingInlineBoxes.begin() + index, *iter);
             index++;
         }
-#ifndef NDEBUG
-        if (lastInlineboxIndex) {
-            lastInlineboxIndex = (*iter)->inlineBoxIndex();
-        } else {
-            STARFISH_ASSERT((*iter)->inlineBoxIndex() > lastInlineboxIndex);
-        }
-#endif
 
         iter = lineBox->boxes().erase(iter);
     }
+
+#ifndef NDEBUG
+    iter = lineBox->boxes().begin();
+    // LineBox should only contain floating boxes.
+    while (iter != lineBox->boxes().end()) {
+        STARFISH_ASSERT((*iter)->style()->floating() != NoneFloatValue);
+        iter++;
+    }
+
+    // Pending inline boxes should be put by the order as they were initially inserted into the line box.
+    size_t lastInlineboxIndex = SIZE_MAX;
+    auto iter2 = m_pendingInlineBoxes.begin();
+
+    while (iter2 != m_pendingInlineBoxes.end()) {
+        if (lastInlineboxIndex != SIZE_MAX) {
+            STARFISH_ASSERT((*iter2)->inlineBoxIndex() > lastInlineboxIndex);
+        }
+
+        lastInlineboxIndex = (*iter2)->inlineBoxIndex();
+        iter2++;
+    }
+#endif
 }
 
 void LineFormattingContext::insertPendingInlineBoxes()
