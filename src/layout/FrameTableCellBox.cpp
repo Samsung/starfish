@@ -26,8 +26,7 @@ namespace StarFish {
 FrameTableCellBox::FrameTableCellBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr)
-        || (node != nullptr && style == nullptr));
+
 }
 
 FrameTableCellBox* FrameTableCellBox::buildFrameTableCell(Node* current, FrameTreeBuilderContext& ctx, bool force)
@@ -158,7 +157,7 @@ LayoutUnit FrameTableCellBox::calPreferredFrameWidth(LayoutContext& ctx, FrameBl
 void FrameTableCellBox::applyVerticalAlign()
 {
     // 1. Cal the content height of all child boxes
-    //    Also calculate the ascender of the first line. It is use
+    //    Also calculate the ascender of the first line. It is used
     //    in "vertical-align: baseline"
     LayoutUnit contentHeight = 0;
     LayoutUnit ascenderOfTheFirstLineBox = 0;
@@ -167,7 +166,7 @@ void FrameTableCellBox::applyVerticalAlign()
         STARFISH_ASSERT(lastChild()->isFrameBlockBox());
         FrameBlockBox* firstBox = firstChild()->asFrameBlockBox();
         FrameBlockBox* lastBox = lastChild()->asFrameBlockBox();
-        LayoutUnit yStart = (firstBox->y() - firstBox->marginTop());
+        LayoutUnit yStart = firstBox->y() - firstBox->marginTop();
         LayoutUnit yEnd = lastBox->y() + lastBox->height() + lastBox->marginBottom();
         contentHeight = yEnd - yStart;
         if (!firstBox->lineBoxes().empty()) {
@@ -196,11 +195,10 @@ void FrameTableCellBox::applyVerticalAlign()
     case VerticalAlignValue::MiddleVAlignValue:
         yPosOffset = LayoutUnit((height() - borderHeight() - paddingHeight() - contentHeight).toDouble() / 2);
         break;
-    case VerticalAlignValue::BaselineVAlignValue: {
+    case VerticalAlignValue::BaselineVAlignValue:
         yPosOffset = rowBox()->baseline() - ascenderOfTheFirstLineBox;
         yPosOffset -= borderTop() + paddingTop();
         break;
-    }
     default:
         break;
     }

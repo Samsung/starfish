@@ -27,8 +27,7 @@ namespace StarFish {
 FrameTableRowBox::FrameTableRowBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)
 {
-    STARFISH_ASSERT((node == nullptr && style != nullptr)
-        || (node != nullptr && style == nullptr));
+
 }
 
 FrameTableRowBox* FrameTableRowBox::buildFrameTableRow(Node* current,
@@ -212,6 +211,9 @@ LayoutUnit FrameTableRowBox::calBaseline()
     for (Frame* c = firstChild(); c; c = c->next()) {
         if (c->isFrameTableCellBox()) {
             maxSoFar = std::max(maxSoFar, c->asFrameTableCellBox()->calBaseline());
+        } else {
+            // Only FrameTableCell should appear
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
 
