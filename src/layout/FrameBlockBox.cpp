@@ -312,7 +312,7 @@ void FrameBlockBox::layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolv
             Length marginRight = style()->marginRight();
             Length width = style()->width();
 
-            LayoutUnit containgBlockContentWidth = cb->contentWidth() + cb->paddingWidth();
+            LayoutUnit containgBlockContentWidth = cb->contentWidth();
 
             auto computeContentWidth = [&]()
             {

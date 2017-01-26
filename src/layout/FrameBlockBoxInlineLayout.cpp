@@ -2495,21 +2495,31 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         return;
     }
 
-    if (hasBlockFlow()) {
-        if (style()->width().isFixed()) {
-            minWidth += style()->width().fixed();
-            ctx.updatePreferredMinWidth(minWidth);
-            ctx.updatePreferredWidth(minWidth);
+    LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(style());
+    Length width = style()->width();
+    LayoutUnit w;
+
+    if (width.isSpecified()) {
+        if (width.isFixed()) {
+            w = width.fixed();
         } else {
-            Frame* child = firstChild();
-            while (child) {
-                STARFISH_ASSERT(child->isNormalFlow());
-                LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
-                PreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
-                child->computePreferredWidth(newCtx);
-                ctx.updatePreferredWidth(newCtx.preferredWidth() + mbp);
-                child = child->next();
-            }
+            LayoutUnit parentContentWidth = ctx.layoutContext().parentContentWidth(this);
+            w = parentContentWidth * width.percent() - mbp;
+        }
+        ctx.updatePreferredMinWidth(w);
+        ctx.updatePreferredWidth(w);
+        return;
+    }
+
+    if (hasBlockFlow()) {
+        Frame* child = firstChild();
+        while (child) {
+            STARFISH_ASSERT(child->isNormalFlow());
+            LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(child->style());
+            PreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
+            child->computePreferredWidth(newCtx);
+            ctx.updatePreferredWidth(newCtx.preferredWidth() + mbp);
+            child = child->next();
         }
     } else {
         LayoutUnit currentLineWidth = 0;
@@ -2569,17 +2579,9 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 });
             } else if (f->isFrameBlockBox()) {
                 LayoutUnit mbp = PreferredWidthContext::computeMinimumWidthDueToMBP(f->style());
-                Length width = f->style()->width();
-                LayoutUnit w;
-                if (width.isAuto()) {
-                    PreferredWidthContext newCtx(ctx.layoutContext(), remainWidth - mbp, 0);
-                    f->computePreferredWidth(newCtx);
-                    w = newCtx.preferredWidth() + mbp;
-                } else if (width.isFixed()) {
-                    w = width.fixed() + mbp;
-                } else if (width.isPercent()) {
-                    w = (contentWidth() + paddingWidth()) * width.percent();
-                }
+                PreferredWidthContext newCtx(ctx.layoutContext(), ctx.lastKnownWidth() - mbp, 0);
+                f->computePreferredWidth(newCtx);
+                LayoutUnit w = newCtx.preferredWidth() + mbp;
                 ctx.updatePreferredWidth(w);
 
                 if (whiteSpaceCanBreak) {
