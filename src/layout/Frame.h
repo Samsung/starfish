@@ -501,10 +501,6 @@ public:
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->opacity() != 1);
             m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (style->hasTransforms(this));
 
-            // FIXME
-            // this is not necessery but, we need to compute clip rect when composite used
-            m_flags.m_isEstablishesStackingContext = m_flags.m_isEstablishesStackingContext || (shouldApplyOverflow());
-
             m_flags.m_needsGraphicsBuffer = style->opacity() != 1 || style->hasTransforms(this);
         }
 

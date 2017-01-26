@@ -546,8 +546,6 @@ public:
                     if (p->isEstablishesStackingContext()) {
                         if (p->isRootElement())
                             break;
-                        if (p->shouldApplyOverflow())
-                            break;
                         if (p->needsGraphicsBuffer())
                             break;
                         if (!p->isPositionedElement())
