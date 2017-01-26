@@ -145,6 +145,11 @@ CSSStyleKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleKind::Overflow;
             }
             break;
+        case 'c':
+            if (memcmp(data, "cssFloat", 8) == 0) {
+                return CSSStyleKind::Float;
+            }
+            break;
         }
         break;
     case 9:
