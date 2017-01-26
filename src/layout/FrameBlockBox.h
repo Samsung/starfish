@@ -631,9 +631,9 @@ private:
     void computeHorizontalProperties();
     LayoutUnit computeLineBoxHeight(FrameLineBreak* br, bool hasMoreInlineBoxes);
 
-    void insertPendingFloatingBoxes(bool isLastLine, bool skipFinishLine);
+    void insertPendingFloatingBoxes();
     void insertPendingAbsolutePositionedBoxes();
-    void insertPendingInlineBoxesDueToFloatingBoxes();
+    void insertPendingInlineBoxes();
     void layoutLineBox(LayoutUnit yDiff, LayoutUnit height);
 
     void removeDanglingSpaceFromLine();

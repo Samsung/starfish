@@ -43,6 +43,8 @@ static LayoutUnit computeLineHeight(ComputedStyle* style)
 
 FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox, ComputedStyle* parentStyle, bool dueToBr)
 {
+    LayoutUnit ascender = parentStyle->font()->metrics().m_ascender;
+    LayoutUnit descender = parentStyle->font()->metrics().m_descender;
     bool hasBoxOtherThanText = false;
     bool hasBoxOtherThanCollapsedInlineNonReplacedBox = false;
     bool hasNormalFlowChild = false;
@@ -53,9 +55,6 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
     } else {
         boxes = &parentBox->asInlineBox()->asInlineNonReplacedBox()->boxes();
     }
-
-    LayoutUnit pascender = parentStyle->font()->metrics().m_ascender;
-    LayoutUnit pdescender = parentStyle->font()->metrics().m_descender;
 
     // 1. set relative y-pos from baseline (only if it needs)
     // 2. find max ascender and descender
@@ -93,20 +92,20 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
                     maxAscenderSoFar = std::max(halfHeight + halfXHeight, maxAscenderSoFar);
                     maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::SubVAlignValue) {
-                    rb->setY(pdescender + rb->ascender());
-                    maxAscenderSoFar = std::max(pdescender + rb->ascender(), maxAscenderSoFar);
-                    maxDescenderSoFar = std::min(pdescender + rb->decender(), maxDescenderSoFar);
+                    rb->setY(descender + rb->ascender());
+                    maxAscenderSoFar = std::max(descender + rb->ascender(), maxAscenderSoFar);
+                    maxDescenderSoFar = std::min(descender + rb->decender(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::SuperVAlignValue) {
                     // Placing a superscript is font and browser dependent.
                     // We place superscript above the baseline by 1/2 of ascender (following blink)
                     // (i.e, the baseline of superscript is aligned with 1/2 of the ascender)
-                    rb->setY(pascender / 2 + rb->ascender());
-                    maxAscenderSoFar = std::max(pascender / 2 + rb->ascender(), maxAscenderSoFar);
-                    maxDescenderSoFar = std::min(pascender / 2 + rb->decender(), maxDescenderSoFar);
+                    rb->setY(ascender / 2 + rb->ascender());
+                    maxAscenderSoFar = std::max(ascender / 2 + rb->ascender(), maxAscenderSoFar);
+                    maxDescenderSoFar = std::min(ascender / 2 + rb->decender(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    maxDescenderSoFar = std::min(pascender - rb->height(), maxDescenderSoFar);
+                    maxDescenderSoFar = std::min(ascender - rb->height(), maxDescenderSoFar);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    maxAscenderSoFar = std::max(pdescender + rb->height(), maxAscenderSoFar);
+                    maxAscenderSoFar = std::max(descender + rb->height(), maxAscenderSoFar);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
                     Length len = box->style()->verticalAlignLength();
                     LayoutUnit y;
@@ -139,15 +138,15 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
                 maxAscenderSoFar = std::max(halfHeight + halfXHeight, maxAscenderSoFar);
                 maxDescenderSoFar = std::min(-1 * (halfHeight - halfXHeight), maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
-                box->setY(pdescender + boxHeight);
-                maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
+                box->setY(descender + boxHeight);
+                maxAscenderSoFar = std::max(descender + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::SuperVAlignValue) {
-                box->setY(pascender / 2 + boxHeight);
-                maxAscenderSoFar = std::max(pascender / 2 + boxHeight, maxAscenderSoFar);
+                box->setY(ascender / 2 + boxHeight);
+                maxAscenderSoFar = std::max(ascender / 2 + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                maxDescenderSoFar = std::min(pascender - boxHeight, maxDescenderSoFar);
+                maxDescenderSoFar = std::min(ascender - boxHeight, maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
+                maxAscenderSoFar = std::max(descender + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 Length len = box->style()->verticalAlignLength();
                 LayoutUnit amount;
@@ -193,9 +192,9 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
                 // TODO : Need Implement Here
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                maxDescenderSoFar = std::min(pascender - boxHeight, maxDescenderSoFar);
+                maxDescenderSoFar = std::min(ascender - boxHeight, maxDescenderSoFar);
             } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                maxAscenderSoFar = std::max(pdescender + boxHeight, maxAscenderSoFar);
+                maxAscenderSoFar = std::max(descender + boxHeight, maxAscenderSoFar);
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 LayoutUnit ascender = inlineBlockAscender(box->asFrameBlockBox());
                 Length len = box->style()->verticalAlignLength();
@@ -231,14 +230,14 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
             if (parentBox->width() == 0 && parentBox->marginLeft() == 0 && parentBox->marginRight() == 0
                 && parentBox->style()->hasNormalLineHeight()) {
                 parentBox->asInlineBox()->asInlineNonReplacedBox()->markCollapsed();
-                return FontHeights {pascender, pdescender};
+                return FontHeights {ascender, descender};
             }
         }
     }
 
     // Consider parent's font ascender/descender
-    LayoutUnit maxAscender = std::max(maxAscenderSoFar, pascender);
-    LayoutUnit maxDescender = std::min(maxDescenderSoFar, pdescender);
+    LayoutUnit maxAscender = std::max(maxAscenderSoFar, ascender);
+    LayoutUnit maxDescender = std::min(maxDescenderSoFar, descender);
 
     // If maxDescenderSoFar is initial value(=intMaxForLayoutUnit), set it to 0.
     maxDescenderSoFar = maxDescenderSoFar.toInt() == intMaxForLayoutUnit ? LayoutUnit(0) : maxDescenderSoFar;
@@ -343,9 +342,9 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
                     // pascender / 2 + ib->asInlineNonReplacedBox()->ascender()
                     f->setY(maxAscender - f->y() + marginTop);
                 } else if (va == VerticalAlignValue::TextTopVAlignValue) {
-                    f->setY(maxAscender - pascender + marginTop);
+                    f->setY(maxAscender - ascender + marginTop);
                 } else if (va == VerticalAlignValue::TextBottomVAlignValue) {
-                    f->setY(maxAscender - pdescender - f->height() - marginBottom);
+                    f->setY(maxAscender - descender - f->height() - marginBottom);
                 } else if (va == VerticalAlignValue::NumericVAlignValue) {
                     f->setY(maxAscender - f->y() + marginTop);
                 } else {
@@ -1075,7 +1074,7 @@ void LineFormattingContext::makeFloatingBoxLayoutContextDueToClearIfNeeds(FrameB
     makeFloatingBoxLayoutContext(clearedDistanceToFloatBottom);
 }
 
-void LineFormattingContext::insertPendingFloatingBoxes(bool isLastLine, bool skipFinishLine)
+void LineFormattingContext::insertPendingFloatingBoxes()
 {
     bool onlyAllowBeforeCurrentLine = m_pendingInlineBoxes.size() > 0;
 
@@ -1096,14 +1095,11 @@ void LineFormattingContext::insertPendingFloatingBoxes(bool isLastLine, bool ski
             if (m_pendingFloatingBoxNumsBeforeCurrentLine == SIZE_MAX) {
                 m_pendingFloatingBoxNumsBeforeCurrentLine = 0;
             }
-        } else {
-            if (isLastLine) {
-                breakLine(nullptr, isLastLine, skipFinishLine);
-                return;
-            } else {
-                break;
-            }
+
+            continue;
         }
+
+        break;
     }
 }
 
@@ -1432,7 +1428,7 @@ void LineFormattingContext::removeAllInlineBoxes()
     }
 }
 
-void LineFormattingContext::insertPendingInlineBoxesDueToFloatingBoxes()
+void LineFormattingContext::insertPendingInlineBoxes()
 {
     bool firstWhite = true;
     auto iter = m_pendingInlineBoxes.begin();
@@ -1518,21 +1514,21 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
         if (oldLineBoxX != m_lineBoxX)
             reCacheFloatingBoxes(oldLineBoxX - m_lineBoxX);
         m_currentLineWidth = 0;
-        insertPendingInlineBoxesDueToFloatingBoxes();
+        insertPendingInlineBoxes();
 
         goto reComputeVerticalProperties;
     }
 
     FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.begin();
-    if (fbCtx.m_hasFloat != HasNone) {
+    if (fbCtx.m_hasFloat != HasNone && m_pendingFloatingBoxes.size() > 0) {
         LayoutUnit nextDistanceToFloatBottom = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, 0);
         FloatingBoxLayoutContext* lastFbCtx = &(*m_floatingBoxLayoutContexts.rbegin());
         if (nextDistanceToFloatBottom != 0 && height > nextDistanceToFloatBottom && nextDistanceToFloatBottom > lastFbCtx->m_y) {
             makeFloatingBoxLayoutContext(nextDistanceToFloatBottom);
-            insertPendingFloatingBoxes(false, false);
+            insertPendingFloatingBoxes();
             removeAllInlineBoxes();
             m_currentLineWidth = 0;
-            insertPendingInlineBoxesDueToFloatingBoxes();
+            insertPendingInlineBoxes();
 
             goto reComputeVerticalProperties;
         }
@@ -1543,7 +1539,7 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
     removeDanglingSpaceFromLine();
     // Should check if there has enough space for pending block box due to removing
     // white space from above function `removeDanglingSpaceFromLine`
-    insertPendingFloatingBoxes(false, false);
+    insertPendingFloatingBoxes();
     computeHorizontalProperties();
 
     LayoutUnit yDiff = computeLineBoxHeight(br, !isLastLine || m_pendingInlineBoxes.size() > 0);
@@ -1552,11 +1548,8 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
     m_lineBoxY += yDiff;
 
     if (isLastLine) {
-        if (m_pendingInlineBoxes.size() > 0) {
+        if (m_pendingInlineBoxes.size() > 0 || m_pendingFloatingBoxes.size() > 0) {
             breakLine(nullptr, isLastLine, true);
-        }
-        if (m_pendingFloatingBoxes.size() > 0) {
-            insertPendingFloatingBoxes(isLastLine, true);
         }
     }
 }
@@ -1572,8 +1565,8 @@ void LineFormattingContext::breakLine(FrameLineBreak* br, bool isLastLine, bool 
 
     resetLineBox();
 
-    insertPendingFloatingBoxes(isLastLine, false);
-    insertPendingInlineBoxesDueToFloatingBoxes();
+    insertPendingFloatingBoxes();
+    insertPendingInlineBoxes();
 
     if (m_pendingInlineBoxes.size() > 0) {
         breakLine(nullptr, isLastLine, false);
