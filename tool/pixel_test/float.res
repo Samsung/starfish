@@ -235,7 +235,7 @@ vendor/webkit_original/fast/block/float/overhanging-float-remove-from-absolute-p
 vendor/webkit_original/fast/block/float/overhanging-tall-block.html
 vendor/webkit_original/fast/block/float/overlapping-floats-with-overflow-hidden.html
 vendor/webkit_original/fast/block/float/previous-sibling-abspos-001.html
-#vendor/webkit_original/fast/block/float/previous-sibling-abspos-002.html
+vendor/webkit_original/fast/block/float/previous-sibling-abspos-002.html
 vendor/webkit_original/fast/block/float/previous-sibling-float-001.html
 vendor/webkit_original/fast/block/float/previous-sibling-float-002.html
 #vendor/webkit_original/fast/block/float/shrink-to-fit-width.html
