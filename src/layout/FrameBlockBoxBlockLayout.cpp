@@ -319,14 +319,14 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         ctx.setMaxMarginBottom(0, 0);
     }
 
-    normalFlowHeight = maxNormalFlowBottom - top + m_marginCollapseResult.m_normalFlowHeightAdvance;
-
     if (isEstablishesBlockFormattingContext()) {
         LayoutUnit clearedDistanceToFloatBottom = ctx.clearedDistanceToFloatBottom(loc.y(), BothClearValue);
-        if (clearedDistanceToFloatBottom > normalFlowHeight) {
-            normalFlowHeight = clearedDistanceToFloatBottom;
+        if (clearedDistanceToFloatBottom > maxNormalFlowBottom) {
+            maxNormalFlowBottom = clearedDistanceToFloatBottom;
         }
     }
+
+    normalFlowHeight = maxNormalFlowBottom - top + m_marginCollapseResult.m_normalFlowHeightAdvance;
 
     return normalFlowHeight;
 }
