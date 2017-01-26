@@ -196,7 +196,7 @@ vendor/webkit_original/fast/block/float/br-with-clear.html
 vendor/webkit_original/fast/block/float/clamped-right-float.html
 vendor/webkit_original/fast/block/float/clear-element-too-wide-for-containing-block.html
 vendor/webkit_original/fast/block/float/clear-negative-margin-top.html
-#vendor/webkit_original/fast/block/float/dynamic-unfloat-pref-width.html
+vendor/webkit_original/fast/block/float/dynamic-unfloat-pref-width.html
 vendor/webkit_original/fast/block/float/fit_line_below_floats.html
 vendor/webkit_original/fast/block/float/float-not-removed-from-next-sibling3.html
 #vendor/webkit_original/fast/block/float/float-not-removed-from-next-sibling4.html
@@ -239,7 +239,7 @@ vendor/webkit_original/fast/block/float/previous-sibling-abspos-002.html
 vendor/webkit_original/fast/block/float/previous-sibling-float-001.html
 vendor/webkit_original/fast/block/float/previous-sibling-float-002.html
 #vendor/webkit_original/fast/block/float/shrink-to-fit-width.html
-#vendor/blink_original/fast/block/float/add-inlines-in-block-children-block.html
+vendor/blink_original/fast/block/float/add-inlines-in-block-children-block.html
 vendor/blink_original/fast/block/float/avoid-floats-with-negative-margins.html
 vendor/blink_original/fast/block/float/br-with-clear-3.html
 vendor/blink_original/fast/block/float/br-with-clear-4.html
