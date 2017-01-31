@@ -791,61 +791,85 @@ bool String::equalsWithoutCase(const String* str) const
     return false;
 }
 
-bool String::startsWith(const char* str, bool caseSensitive)
+bool String::isASCIIStringData(const char* str)
 {
-    // is string is all ascii??
-    STARFISH_ASSERT(String::createASCIIString(str));
-    bool result = true;
-    size_t len = length();
-    size_t strLen = strlen(str);
-    if (strLen > len)
-        return false;
-
-    if (caseSensitive) {
-        for (size_t i = 0; i < strLen; i++) {
-            if ((char32_t)str[i] != charAt(i)) {
-                result = false;
-                break;
-            }
+    const char* p = str;
+    while (*p) {
+        if (!isASCII(*p)) {
+            return false;
         }
-    } else {
-        for (size_t i = 0; i < strLen; i++) {
-            if (tolower(str[i]) != tolower(charAt(i))) {
-                result = false;
-                break;
-            }
-        }
+        p++;
     }
 
-    return result;
+    return true;
+}
+
+bool String::startsWith(const char* str, bool caseSensitive)
+{
+    STARFISH_ASSERT(isASCIIStringData(str));
+    return startsWith(createASCIIString(str), caseSensitive);
 }
 
 bool String::startsWith(String* str, bool caseSensitive)
 {
-    bool result = true;
     size_t len = length();
     size_t strLen = str->length();
-    if (strLen > len)
+    if (strLen > len) {
         return false;
+    }
 
     if (caseSensitive) {
         for (size_t i = 0; i < strLen; i++) {
             if (str->charAt(i) != charAt(i)) {
-                result = false;
-                break;
+                return false;
             }
         }
     } else {
         for (size_t i = 0; i < strLen; i++) {
             if (tolower(str->charAt(i)) != tolower(charAt(i))) {
-                result = false;
-                break;
+                return false;
             }
         }
     }
 
-    return result;
+    return true;
 }
+
+bool String::endsWith(const char* str, bool caseSensitive)
+{
+    STARFISH_ASSERT(isASCIIStringData(str));
+    return endsWith(createASCIIString(str), caseSensitive);
+}
+
+bool String::endsWith(String* str, bool caseSensitive)
+{
+    size_t len = length();
+    size_t strLen = str->length();
+
+    if (strLen > len) {
+        return false;
+    }
+
+    size_t startOffset = len - strLen;
+
+    if (caseSensitive) {
+        for (size_t i = 0; i < strLen; i++) {
+            if (str->charAt(i) != charAt(i + startOffset)) {
+                return false;
+            }
+        }
+    } else {
+        for (size_t i = 0; i < strLen; i++) {
+            if (tolower(str->charAt(i)) != tolower(charAt(i + startOffset))) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
 
 size_t String::find(String* str, size_t pos)
 {
