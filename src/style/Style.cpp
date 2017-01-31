@@ -1580,7 +1580,7 @@ static bool attributeValueMatches(String* attrValue, CSSSelector::Type type, Str
         return selectorValue->equalsWithoutCase(attrValue);
     case CSSSelector::AttributeList: // Example: E[foo~="bar"]
         {
-            if (selectorValue->equals(String::emptyString))
+            if (selectorValue->equals(String::emptyString) || selectorValue->containsWhitespace())
                 return false;
 
             unsigned startSearchAt = 0;
