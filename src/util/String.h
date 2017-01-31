@@ -255,6 +255,20 @@ public:
         return c <= 0x7F ? isASCIISpace(c) : u_charDirection(c) == U_WHITE_SPACE_NEUTRAL;
     }
 
+    bool containsWhitespace(size_t start = 0, size_t end = SIZE_MAX)
+    {
+        if (end == SIZE_MAX) {
+            end = length();
+        }
+
+        for (size_t i = start; i < end; i ++) {
+            if (isASCIISpace(charAt(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool containsOnlyWhitespace(size_t start = 0, size_t end = SIZE_MAX)
     {
         if (end == SIZE_MAX) {
