@@ -55,6 +55,11 @@ typedef std::basic_string<char32_t, std::char_traits<char32_t>, gc_allocator_ign
 class StringDataASCII;
 class String;
 
+template<typename CharType> inline bool isASCII(CharType c)
+{
+    return !(c & ~0x7F);
+}
+
 template<typename CharType> inline bool isASCIIUpper(CharType c)
 {
     return c >= 'A' && c <= 'Z';
@@ -316,6 +321,7 @@ public:
     {
         return m_isASCIIString;
     }
+
     String* concat(String* str);
     void split(char delim, Vector& tokens);
     String* trim();
@@ -346,6 +352,9 @@ public:
 
     bool startsWith(const char* str, bool caseSensitive = true);
     bool startsWith(String* str, bool caseSensitive = true);
+
+    bool endsWith(const char* str, bool caseSensitive = true);
+    bool endsWith(String* str, bool caseSensitive = true);
 
     size_t find(const char* str, size_t pos = 0);
     size_t find(String* str, size_t pos = 0);
@@ -388,6 +397,8 @@ protected:
     }
 
     size_t m_isASCIIString;
+
+    bool isASCIIStringData(const char* str);
 
 #ifndef NDEBUG
     union {

@@ -1575,23 +1575,27 @@ static bool attributeValueMatches(String* attrValue, CSSSelector::Type type, Str
     case CSSSelector::AttributeSet: // Example: E[foo]
         return true;
     case CSSSelector::AttributeExact: // Example: E[foo="bar"]
-        if (caseSensitivity)
+        if (caseSensitivity) {
             return selectorValue->equals(attrValue);
+        }
         return selectorValue->equalsWithoutCase(attrValue);
     case CSSSelector::AttributeList: // Example: E[foo~="bar"]
         {
-            if (selectorValue->equals(String::emptyString) || selectorValue->containsWhitespace())
+            if (selectorValue->equals(String::emptyString) || selectorValue->containsWhitespace()) {
                 return false;
+            }
 
             unsigned startSearchAt = 0;
             while (true) {
                 size_t foundPos = attrValue->find(selectorValue, startSearchAt, caseSensitivity);
-                if (foundPos == SIZE_MAX)
+                if (foundPos == SIZE_MAX) {
                     return false;
+                }
                 if (!foundPos || String::isASCIISpace(attrValue->charAt(foundPos - 1))) {
                     unsigned endStr = foundPos + selectorValue->length();
-                    if (endStr == attrValue->length() || String::isASCIISpace(attrValue->charAt(endStr)))
+                    if (endStr == attrValue->length() || String::isASCIISpace(attrValue->charAt(endStr))) {
                         break; // We found a match.
+                    }
                 }
 
                 // No match. Keep looking.
@@ -1600,18 +1604,32 @@ static bool attributeValueMatches(String* attrValue, CSSSelector::Type type, Str
             return true;
         }
     case CSSSelector::AttributeHyphen: // Example: E[foo|="bar"]
-        if (attrValue->length() < selectorValue->length())
+        if (attrValue->length() < selectorValue->length()) {
             return false;
-        if (!attrValue->startsWith(selectorValue, caseSensitivity))
+        }
+        if (!attrValue->startsWith(selectorValue, caseSensitivity)) {
             return false;
+        }
         // It they start the same, check for exact match or following '-':
-        if (attrValue->length() != selectorValue->length() && attrValue->charAt(selectorValue->length()) != '-')
+        if (attrValue->length() != selectorValue->length() && attrValue->charAt(selectorValue->length()) != '-') {
             return false;
+        }
         return true;
     case CSSSelector::AttributeContain: // css3: E[foo*="bar"]
+        if (selectorValue->equals(String::emptyString)) {
+            return false;
+        }
+        return attrValue->contains(selectorValue, caseSensitivity);
     case CSSSelector::AttributeBegin: // css3: E[foo^="bar"]
+        if (selectorValue->equals(String::emptyString)) {
+            return false;
+        }
+        return attrValue->startsWith(selectorValue, caseSensitivity);
     case CSSSelector::AttributeEnd: // css3: E[foo$="bar"]
-        return true;
+        if (selectorValue->equals(String::emptyString)) {
+            return false;
+        }
+        return attrValue->endsWith(selectorValue, caseSensitivity);
     default:
         break;
     }
