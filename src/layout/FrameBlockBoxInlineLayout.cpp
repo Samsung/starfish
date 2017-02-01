@@ -1146,7 +1146,7 @@ void LineFormattingContext::layoutLineBox(LayoutUnit yDiff, LayoutUnit height)
     LineBox* lineBox = currentLine();
     int hasFloat = HasNone;
     std::pair<LayoutUnit, LayoutUnit> boundaries =
-        m_layoutContext.horizontalBoundaryBetweenfloatingBoxes(m_absPosition.y() + m_lineBoxY + yDiff, height, m_leftBoundary, m_rightBoundary);
+        m_layoutContext.horizontalBoundaryBetweenFloatingBoxes(m_absPosition.y() + m_lineBoxY + yDiff, height, m_leftBoundary, m_rightBoundary);
     if (boundaries.first > m_leftBoundary) {
         hasFloat |= HasLeft;
         m_lineBoxX = boundaries.first - m_absPosition.x();
@@ -1353,8 +1353,7 @@ static LayoutUnit distanceToNextLineBox(LineFormattingContext* ctx, FrameLineBre
 LayoutUnit LineFormattingContext::computeLineBoxHeight(FrameLineBreak* br, bool hasMoreInlineBoxes)
 {
     LineBox* lineBox = currentLine();
-    LayoutUnit height = lineBox->m_ascender - lineBox->m_descender;
-    lineBox->setHeight(height);
+    LayoutUnit height = lineBox->height();
     FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.rbegin());
 
     if (fbCtx.m_hasFloat != HasNone) {
@@ -1407,7 +1406,9 @@ void LineFormattingContext::removeAllInlineBoxes()
             continue;
         }
 
-        (*iter)->setY(0); // already its y position is somehow determined, so we have to reset the value.
+        // already its x, y positions are somehow determined, so we have to reset the values.
+        (*iter)->setX(0);
+        (*iter)->setY(0);
         if (!hasAlreadyPendingInlineBoxes) {
             m_pendingInlineBoxes.push_back(*iter);
         } else {
@@ -1509,6 +1510,31 @@ void LineFormattingContext::reCacheFloatingBoxes(LayoutUnit xDiff)
     m_layoutContext.reCacheFloatingBoxes(m_floatingBoxesSizeBeforeCurrentLine);
 }
 
+bool LineFormattingContext::isAnyOfInlineBoxesCollidedWithFloatingBoxes()
+{
+    LineBox* lineBox = currentLine();
+    auto iter = lineBox->boxes().begin();
+
+    while (iter != lineBox->boxes().end()) {
+        if ((*iter)->style()->floating() != NoneFloatValue && (*iter)->style()->position() != AbsolutePositionValue) {
+            iter++;
+            continue;
+        }
+
+        FrameBox* box = *iter;
+
+        // Check boundary as if inline boxes are not vertical aligned yet, so we don't consider box->y() here.
+        if (m_layoutContext.isCollidedWithFloatingBoxes(LayoutLocation(m_absPosition.x() + m_lineBoxX + box->x(), m_absPosition.y() + m_lineBoxY),
+            box, m_leftBoundary, m_rightBoundary)) {
+            return true;
+        }
+
+        iter++;
+    }
+
+    return false;
+}
+
 void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
 {
     LineBox* back = currentLine();
@@ -1516,24 +1542,9 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
     reComputeVerticalProperties:
     FontHeights fontHeights = computeVerticalProperties(back, m_block.style(), br != nullptr);
     LayoutUnit height = fontHeights.m_ascender - fontHeights.m_descender;
-    std::pair<LayoutUnit, LayoutUnit> boundaries =
-        m_layoutContext.horizontalBoundaryBetweenfloatingBoxes(m_absPosition.y() + m_lineBoxY, height, m_leftBoundary, m_rightBoundary);
-
-    if ((boundaries.first != m_leftBoundary && m_absPosition.x() + m_lineBoxX < boundaries.first)
-        || (boundaries.second != m_rightBoundary && m_absPosition.x() + m_lineBoxX + m_lineBoxWidth > boundaries.second)) {
-        removeAllInlineBoxes();
-        LayoutUnit oldLineBoxX = m_lineBoxX;
-        layoutLineBox(0, height);
-        if (oldLineBoxX != m_lineBoxX)
-            reCacheFloatingBoxes(oldLineBoxX - m_lineBoxX);
-        m_currentLineWidth = 0;
-        insertPendingInlineBoxes();
-
-        goto reComputeVerticalProperties;
-    }
 
     FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.begin();
-    if (fbCtx.m_hasFloat != HasNone && m_pendingFloatingBoxes.size() > 0) {
+    if (fbCtx.m_hasFloat != HasNone && m_pendingFloatingBoxes.size() > 0 && height > 0) {
         LayoutUnit nextDistanceToFloatBottom = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, 0);
         FloatingBoxLayoutContext* lastFbCtx = &(*m_floatingBoxLayoutContexts.rbegin());
         if (nextDistanceToFloatBottom != 0 && height > nextDistanceToFloatBottom && nextDistanceToFloatBottom > lastFbCtx->m_y) {
@@ -1549,11 +1560,28 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
 
     back->m_ascender = fontHeights.m_ascender;
     back->m_descender = fontHeights.m_descender;
+    back->setHeight(back->m_ascender - back->m_descender);
     removeDanglingSpaceFromLine();
     // Should check if there has enough space for pending block box due to removing
     // white space from above function `removeDanglingSpaceFromLine`
     insertPendingFloatingBoxes();
     computeHorizontalProperties();
+
+    if (m_layoutContext.isCollidedWithFloatingBoxes(LayoutLocation(m_absPosition.x() + m_lineBoxX, m_absPosition.y() + m_lineBoxY),
+        back, m_leftBoundary, m_rightBoundary)) {
+        if (isAnyOfInlineBoxesCollidedWithFloatingBoxes()) {
+            removeAllInlineBoxes();
+            LayoutUnit oldLineBoxX = m_lineBoxX;
+            layoutLineBox(0, height);
+            if (oldLineBoxX != m_lineBoxX) {
+                reCacheFloatingBoxes(oldLineBoxX - m_lineBoxX);
+            }
+            m_currentLineWidth = 0;
+            insertPendingInlineBoxes();
+
+            goto reComputeVerticalProperties;
+        }
+    }
 
     LayoutUnit yDiff = computeLineBoxHeight(br, !isLastLine || m_pendingInlineBoxes.size() > 0);
 

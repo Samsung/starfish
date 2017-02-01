@@ -213,7 +213,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             LayoutLocation selfLoc = child->asFrameBox()->absolutePoint(ctx.frameDocument());
             LayoutUnit originalY = selfLoc.y();
             rePositionFloatAvoidingFrameBox:
-            std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.horizontalBoundaryBetweenfloatingBoxes(selfLoc.y(),
+            std::pair<LayoutUnit, LayoutUnit> boundaries = ctx.horizontalBoundaryBetweenFloatingBoxes(selfLoc.y(),
                 child->asFrameBox()->height(), leftBoundary, rightBoundary);
             if ((boundaries.first != leftBoundary && selfLoc.x() < boundaries.first)
                 || (boundaries.second != rightBoundary && selfLoc.x() + child->asFrameBox()->width() > boundaries.second)) {
