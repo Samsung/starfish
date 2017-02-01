@@ -191,7 +191,7 @@ vendor/webkit_original/fast/block/float/021.html
 vendor/webkit_original/fast/block/float/024.html
 vendor/webkit_original/fast/block/float/029.html
 #vendor/webkit_original/fast/block/float/030.html
-#vendor/webkit_original/fast/block/float/031.html
+vendor/webkit_original/fast/block/float/031.html
 vendor/webkit_original/fast/block/float/br-with-clear.html
 vendor/webkit_original/fast/block/float/clamped-right-float.html
 vendor/webkit_original/fast/block/float/clear-element-too-wide-for-containing-block.html
