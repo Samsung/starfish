@@ -226,7 +226,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 if ((hasToStretchWidth && child->asFrameBox()->contentWidth() + width - child->asFrameBox()->width() > 0)
                     || (width >= child->asFrameBox()->width())
                     || ((nextDistanceToFloatBottom = ctx.nextDistanceToFloatBottom(selfLoc.y(), child->asFrameBox()->height())) == 0)) {
-                    child->asFrameBox()->moveY(selfLoc.y() - originalY);
+                    LayoutUnit yDiff = selfLoc.y() - originalY;
+                    child->asFrameBox()->moveY(yDiff);
                     if (hasToStretchWidth) {
                         child->asFrameBox()->moveX(boundaries.first - selfLoc.x());
                         reLayoutNeeded = width != child->asFrameBox()->width();
@@ -238,6 +239,13 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
 
                         if (boundaries.second != rightBoundary && selfLoc.x() + child->asFrameBox()->width() > boundaries.second) {
                             child->asFrameBox()->moveX(boundaries.second - selfLoc.x() - child->asFrameBox()->width());
+                        }
+                    }
+
+                    if (yDiff > 0) {
+                        if (marginInfo.canCollapseWithMarginTop()) {
+                            marginInfo.setMaxPositiveMarginTop(oldMaxPositiveMarginTop);
+                            marginInfo.setMaxNegativeMarginTop(oldMaxNegativeMarginTop);
                         }
                     }
 
