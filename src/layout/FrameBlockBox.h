@@ -639,6 +639,7 @@ private:
     void removeDanglingSpaceFromLine();
     void removeAllInlineBoxes();
 
+    bool isAnyOfInlineBoxesCollidedWithFloatingBoxes();
     void reCacheFloatingBoxes(LayoutUnit xDiff);
     void makeFloatingBoxLayoutContext(LayoutUnit yDiff);
 public:

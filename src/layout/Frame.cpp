@@ -345,7 +345,7 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
     }
 }
 
-std::pair<LayoutUnit, LayoutUnit> LayoutContext::horizontalBoundaryBetweenfloatingBoxes(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right)
+std::pair<LayoutUnit, LayoutUnit> LayoutContext::horizontalBoundaryBetweenFloatingBoxes(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
@@ -366,6 +366,15 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::horizontalBoundaryBetweenfloati
     }
 
     return std::make_pair(left, right);
+}
+
+bool LayoutContext::isCollidedWithFloatingBoxes(LayoutLocation loc, FrameBox* box, LayoutUnit leftBoundary, LayoutUnit rightBoundary)
+{
+    std::pair<LayoutUnit, LayoutUnit> boundaries =
+        horizontalBoundaryBetweenFloatingBoxes(loc.y(), box->height(), leftBoundary, rightBoundary);
+
+    return (leftBoundary != boundaries.first && loc.x() < boundaries.first)
+        || (rightBoundary != boundaries.second && loc.x() + box->width() > boundaries.second);
 }
 
 void LayoutContext::resetLastTopLoc()

@@ -125,7 +125,8 @@ public:
     LayoutUnit nextDistanceToFloatBottom(LayoutUnit yPosition, LayoutUnit height);
     void resetLastTopLoc();
     LayoutUnit lastTopLoc();
-    std::pair<LayoutUnit, LayoutUnit> horizontalBoundaryBetweenfloatingBoxes(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right);
+    std::pair<LayoutUnit, LayoutUnit> horizontalBoundaryBetweenFloatingBoxes(LayoutUnit yPosition, LayoutUnit height, LayoutUnit left, LayoutUnit right);
+    bool isCollidedWithFloatingBoxes(LayoutLocation loc, FrameBox* box, LayoutUnit leftBoundary, LayoutUnit rightBoundary);
     size_t floatingBoxesSize();
     void reCacheFloatingBoxes(size_t from);
     void reCacheFloatingBoxesByXDiff(size_t from, LayoutUnit xDiff);
