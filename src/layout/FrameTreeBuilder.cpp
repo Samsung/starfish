@@ -142,11 +142,7 @@ void FrameTreeBuilder::frameBlockBoxChildInserter(FrameBlockBox* frameBlockBox, 
     }
 
     bool isBlockChild = currentFrame->style()->originalDisplay() == BlockDisplayValue
-        || currentFrame->isFrameTableBox()
-        || currentFrame->isFrameTableCaptionBox()
-        || currentFrame->isFrameTableSectionBox()
-        || currentFrame->isFrameTableRowBox()
-        || currentFrame->isFrameTableCellBox();
+        || (currentFrame->isFrameTableObjectBox() && currentFrame->style()->originalDisplay() != InlineTableDisplayValue);
     if (!isBlockChild || (!currentFrame->isNormalFlow())) {
         if (currentNode->parentNode()->style()->display() == InlineDisplayValue) {
             auto iter = ctx.frameInlineItem().find(currentNode->parentNode());
@@ -254,6 +250,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx, 
             currentFrame = new FrameReplacedObject(current);
             shouldSkipChildren = true;
         } else if (display == DisplayValue::TableDisplayValue
+        || display == InlineTableDisplayValue
         || display == TableRowGroupDisplayValue
         || display == TableRowDisplayValue
         || display == TableCellDisplayValue

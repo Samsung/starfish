@@ -161,7 +161,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
             } else {
                 STARFISH_RELEASE_ASSERT_NOT_REACHED();
             }
-        } else if (box->isFrameBlockBox() && box->style()->display() == InlineBlockDisplayValue) {
+        } else if (box->isFrameBlockBox() && (box->style()->display() == InlineBlockDisplayValue || box->style()->display() == InlineTableDisplayValue)) {
             hasBoxOtherThanText = true;
             hasBoxOtherThanCollapsedInlineNonReplacedBox = true;
             LayoutUnit boxHeight = box->boxHeight();
@@ -321,7 +321,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
                            */
                         f->setY(maxAscender - f->height() - marginBottom);
                     } else {
-                        STARFISH_ASSERT(f->isFrameBlockBox() && f->style()->display() == InlineBlockDisplayValue);
+                        STARFISH_ASSERT(f->isFrameBlockBox() && (f->style()->display() == InlineBlockDisplayValue || f->style()->display() == InlineTableDisplayValue));
                         LayoutUnit ascender = inlineBlockAscender(f->asFrameBlockBox());
                         if (ascender == f->height()) {
                             f->setY(maxAscender - ascender - marginBottom);
@@ -1820,10 +1820,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                     goto insertReplacedBox;
                 }
             }
-        } else if (f->isFrameTableBox()) {
-            // Todo: support inline table here
-
-        } else if (f->isFrameBlockBox()) {
+        } else if (f->isFrameBlockBox() || f->isFrameTableBox()) {
             FrameBlockBox* r = f->asFrameBlockBox();
             LayoutUnit unprocessedWidth;
             if (lastContent == f) {
@@ -1832,7 +1829,7 @@ void inlineBoxGenerator(FrameBox* layoutParent, Frame* origin, LayoutContext& ct
                 unprocessedWidth = unprocessedStartingWidth;
             }
 
-            if (f->style()->display() == DisplayValue::InlineBlockDisplayValue) {
+            if (f->style()->display() == DisplayValue::InlineBlockDisplayValue || f->style()->display() == DisplayValue::InlineTableDisplayValue) {
                 lineFormattingContext.m_shouldLineBreakForAbsolutePositionedBox = true;
                 // inline-block
                 ctx.pushInlineBlockBox(r);
