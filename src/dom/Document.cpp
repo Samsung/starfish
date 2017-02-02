@@ -234,6 +234,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
         pair.setValue(data);
         rule->styleDeclaration()->addValuePair(pair);
 
+        pair.setKeyKind(CSSStyleValuePair::TableLayout);
+        pair.setValueKind(CSSStyleValuePair::ValueKind::TableLayoutValueKind);
+        data.m_tableLayout = TableLayoutValue::AutoTableLayoutValue;
+        pair.setValue(data);
+        rule->styleDeclaration()->addValuePair(pair);
+
         userAgentStyleSheet->addRule(rule);
     }
 
