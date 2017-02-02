@@ -363,6 +363,11 @@ enum CaptionSideValue {
     BottomCaptionSideValue,
 };
 
+enum TableLayoutValue {
+    AutoTableLayoutValue,
+    FixedTableLayoutValue,
+};
+
 enum TextDecorationValue {
     NoneTextDecorationValue,
     UnderLineTextDecorationValue,
@@ -486,6 +491,7 @@ class CSSStyleDeclaration;
     F(BackgroundPositionY, backgroundPositionY, "background-position-y") \
     F(Opacity, opacity, "opacity")                                 \
     F(FontWeight, fontWeight, "font-weight")                       \
+    F(TableLayout, tableLayout, "table-layout")                    \
     F(UnicodeBidi, unicodeBidi, "unicode-bidi")
 
 #define FOR_EACH_STYLE_ATTRIBUTE_TOTAL(F)                          \
@@ -673,6 +679,7 @@ public:
         // table
         BorderCollapseValueKind,
         CaptionSideValueKind,
+        TableLayoutValueKind,
 
         OverflowValueKind,
         TextDecorationValueKind,
@@ -931,6 +938,12 @@ public:
         return m_value.m_captionSide;
     }
 
+    TableLayoutValue tableLayoutValue()
+    {
+        STARFISH_ASSERT(m_valueKind == TableLayoutValueKind);
+        return m_value.m_tableLayout;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -961,6 +974,7 @@ public:
         NamedColor::NamedColorValue m_namedColor;
         BorderCollapseValue m_borderCollapse;
         CaptionSideValue m_captionSide;
+        TableLayoutValue m_tableLayout;
         ValueData(int v) { m_floatValue = v; }
         ValueData(float v) { m_floatValue = v; }
         ValueData(DisplayValue v) { m_display = v; }
@@ -988,6 +1002,7 @@ public:
         ValueData(NamedColor::NamedColorValue v) { m_namedColor = v; }
         ValueData(BorderCollapseValue v) { m_borderCollapse = v; }
         ValueData(CaptionSideValue v) { m_captionSide = v; }
+        ValueData(TableLayoutValue v) { m_tableLayout = v; }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
