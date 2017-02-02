@@ -3,7 +3,7 @@
 ## Building
 
 ``` sh
-git clone git@10.113.64.74:StarFish/starfish.git
+git clone git@10.113.64.74:StarFish/starfish2.git
 cd starfish
 ./build_third_party.sh
 make [x86|x64|tizen_mobile_arm|tizen_wearable_arm].[exe|lib].[debug|release] -j
