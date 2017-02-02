@@ -1332,53 +1332,26 @@ void LineFormattingContext::computeHorizontalProperties()
     registerInlineContent();
 }
 
-static LayoutUnit distanceToNextLineBox(LineFormattingContext* ctx, FrameLineBreak* br)
-{
-    LineBox* lineBox = ctx->currentLine();
-    LayoutUnit distance = lineBox->height();
-
-    if (br != nullptr) {
-        distance = std::max(lineBox->height(),
-            ctx->m_layoutContext.clearedDistanceToFloatBottom(ctx->m_absPosition.y() + ctx->m_lineBoxY, br->style()->clear()));
-    } else {
-        if (ctx->m_currentLineWidth == 0 || lineBox->height() == 0) {
-            distance = ctx->m_layoutContext.nextDistanceToFloatBottom(ctx->m_absPosition.y() + ctx->m_lineBoxY, lineBox->height());
-            lineBox->markHeightComputed();
-        }
-    }
-
-    return distance;
-}
-
-LayoutUnit LineFormattingContext::computeLineBoxHeight(FrameLineBreak* br, bool hasMoreInlineBoxes)
+LayoutUnit LineFormattingContext::distanceToNextLineBox(FrameLineBreak* br, bool hasMoreInlineBoxes)
 {
     LineBox* lineBox = currentLine();
-    LayoutUnit height = lineBox->height();
+    STARFISH_ASSERT(lineBox != nullptr);
+    LayoutUnit distance = lineBox->height();
     FloatingBoxLayoutContext& fbCtx = (*m_floatingBoxLayoutContexts.rbegin());
 
     if (fbCtx.m_hasFloat != HasNone) {
-        // If there are no more inline boxes appended to the line box, the height for content depends on
-        // if the block container box established new block formatting context, but still
-        // for the positioning of following floating boxes, y position should be considered.
-        if (hasMoreInlineBoxes) {
-            height = distanceToNextLineBox(this, br);
-            lineBox->setHeight(height);
+        if (br != nullptr) {
+            distance = std::max(lineBox->height(),
+                m_layoutContext.clearedDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, br->style()->clear()));
+            lineBox->setHeight(distance);
         } else {
-            if (m_block.isEstablishesBlockFormattingContext()) {
-                if (m_pendingFloatingBoxes.size() == 0) {
-                    height = std::max(height, m_layoutContext.clearedDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, BothClearValue));
-                    lineBox->markHeightComputed();
-                } else {
-                    height = distanceToNextLineBox(this, br);
-                }
-                lineBox->setHeight(height);
-            } else {
-                height = distanceToNextLineBox(this, br);
+            if (m_currentLineWidth == 0 || lineBox->height() == 0) {
+                distance = m_layoutContext.nextDistanceToFloatBottom(m_absPosition.y() + m_lineBoxY, lineBox->height());
             }
         }
     }
 
-    if (!hasMoreInlineBoxes && height == 0 && m_pendingFloatingBoxes.size() > 0) {
+    if (!hasMoreInlineBoxes && distance == 0 && m_pendingFloatingBoxes.size() > 0) {
         // if there are only pending float box and the height which y diff for the next linebox is zero,
         // then it goes infinite loop. It happens because 2 things. First, the rule that float box can't be inserted
         // into the line box when the last top position of float box whose direction is the same with the
@@ -1386,10 +1359,10 @@ LayoutUnit LineFormattingContext::computeLineBoxHeight(FrameLineBreak* br, bool 
         // detected by using current y position of line box and its height.
         LayoutUnit curYPos = m_absPosition.y() + m_lineBoxY;
         LayoutUnit yToPos = m_layoutContext.lastTopLoc();
-        height = yToPos - curYPos;
+        distance = yToPos - curYPos;
     }
 
-    return height;
+    return distance;
 }
 
 void LineFormattingContext::removeAllInlineBoxes()
@@ -1560,7 +1533,7 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
 
     back->m_ascender = fontHeights.m_ascender;
     back->m_descender = fontHeights.m_descender;
-    back->setHeight(back->m_ascender - back->m_descender);
+    back->setHeight(height);
     removeDanglingSpaceFromLine();
     // Should check if there has enough space for pending block box due to removing
     // white space from above function `removeDanglingSpaceFromLine`
@@ -1583,7 +1556,7 @@ void LineFormattingContext::finishLine(FrameLineBreak* br, bool isLastLine)
         }
     }
 
-    LayoutUnit yDiff = computeLineBoxHeight(br, !isLastLine || m_pendingInlineBoxes.size() > 0);
+    LayoutUnit yDiff = distanceToNextLineBox(br, !isLastLine || m_pendingInlineBoxes.size() > 0);
 
     insertPendingAbsolutePositionedBoxes();
     m_lineBoxY += yDiff;
@@ -2204,20 +2177,24 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     lineFormattingContext.finishLine(nullptr, true);
     STARFISH_ASSERT(lineFormattingContext.m_pendingFloatingBoxes.size() == 0 && lineFormattingContext.m_pendingInlineBoxes.size() == 0);
 
-    if (m_lineBoxes.size() && m_lineBoxes.back()->boxes().size() == 0) {
-        m_lineBoxes.erase(m_lineBoxes.end() - 1);
-    }
-
     size_t p = m_lineBoxes.size();
     while (p--) {
         LineBox* lineBox = m_lineBoxes[p];
-        if (!lineBox->heightComputed() && lineBox->boxes().size() == 1 && lineBox->boxes()[0]->isInlineBox() && lineBox->boxes()[0]->asInlineBox()->isInlineNonReplacedBox() && lineBox->boxes()[0]->width() == 0 && lineBox->boxes()[0]->marginLeft() == 0 && lineBox->boxes()[0]->marginRight() == 0) {
+        STARFISH_ASSERT(lineBox != nullptr);
+
+        if (lineBox->boxes().size() == 0 && lineBox->height() == 0) {
             m_lineBoxes.erase(m_lineBoxes.begin() + p);
+            continue;
+        }
+
+        if (lineBox->boxes().size() == 1 && lineBox->boxes()[0]->isInlineBox() && lineBox->boxes()[0]->asInlineBox()->isInlineNonReplacedBox() && lineBox->boxes()[0]->width() == 0 && lineBox->boxes()[0]->marginLeft() == 0 && lineBox->boxes()[0]->marginRight() == 0) {
+            m_lineBoxes.erase(m_lineBoxes.begin() + p);
+            continue;
         }
     }
 
-    LayoutUnit contentHeight = 0;
     for (size_t i = 0; i < m_lineBoxes.size(); i++) {
+        STARFISH_ASSERT(m_lineBoxes[i] != nullptr);
         LineBox& b = *m_lineBoxes[i];
         STARFISH_ASSERT(b.isLineBox());
 
@@ -2234,11 +2211,29 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                 }
             }
         }
-
-        contentHeight += b.m_frameRect.height();
     }
 
-    return contentHeight;
+    p = m_lineBoxes.size();
+    LayoutUnit lineBoxBottom;
+    while (p--) {
+        LineBox* lineBox = m_lineBoxes[p];
+        STARFISH_ASSERT(lineBox != nullptr);
+
+        if (lineBox->height() != 0) {
+            lineBoxBottom = lineBox->y() + lineBox->height();
+            break;
+        }
+    }
+
+    if (isEstablishesBlockFormattingContext()) {
+        lineBoxBottom = std::max(lineBoxBottom, ctx.clearedDistanceToFloatBottom(lineFormattingContext.m_absPosition.y(), BothClearValue));
+    }
+
+    if (lineBoxBottom > 0) {
+        return lineBoxBottom - top;
+    }
+
+    return LayoutUnit(0);
 }
 
 struct InlineNonReplacedBoxMBPStore {
