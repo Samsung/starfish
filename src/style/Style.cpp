@@ -229,7 +229,7 @@ bool CSSStyleValuePair::updateValueCommon(std::vector<String*, gc_allocator_igno
     // NOTE: set common value (e.g. initial, inherit, "")
     if (tokens->size() != 1)
         return false;
-    const char* value = tokens->at(0)->utf8Data();
+    const char* value = (*tokens)[0]->utf8Data();
     if (VALUE_IS_INHERIT()) {
         m_valueKind = CSSStyleValuePair::ValueKind::Inherit;
     } else if (VALUE_IS_INITIAL()) {
@@ -294,7 +294,7 @@ static bool parseBackgroundRepeatShorhand(std::vector<String*, gc_allocator_igno
     retx->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
     rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
     for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = tokens->at(i);
+        String* value = (*tokens)[i];
         if (value->equals(",")) {
             if (!allowComma || i == 0 || i == tokens->size() - 1)
                 return false;
@@ -307,7 +307,7 @@ static bool parseBackgroundRepeatShorhand(std::vector<String*, gc_allocator_igno
         }
         if (len == 1) {
             CSSStyleValuePair x, y;
-            if (parseBackgroundRepeatShorhand(tokens->at(i - 1), &x, &y)) {
+            if (parseBackgroundRepeatShorhand((*tokens)[i - 1], &x, &y)) {
                 retx->multiValue()->append(x);
                 rety->multiValue()->append(y);
             } else {
@@ -315,7 +315,7 @@ static bool parseBackgroundRepeatShorhand(std::vector<String*, gc_allocator_igno
             }
         } else if (len == 2) {
             CSSStyleValuePair x, y;
-            if (x.updateValueUnitBackgroundRepeat(tokens->at(i - 2)) && y.updateValueUnitBackgroundRepeat(tokens->at(i - 1))) {
+            if (x.updateValueUnitBackgroundRepeat((*tokens)[i - 2]) && y.updateValueUnitBackgroundRepeat((*tokens)[i - 1])) {
                 retx->multiValue()->append(x);
                 rety->multiValue()->append(y);
             } else
@@ -338,7 +338,7 @@ static bool parseBackgroundPositionShorhand(std::vector<String*, gc_allocator_ig
     rety->setValueList(new ValueList(ValueList::Separator::CommaSeparator));
 
     for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = tokens->at(i);
+        String* value = (*tokens)[i];
         if (value->equals(",")) {
             if (!allowComma || i == 0 || i == tokens->size() - 1)
                 return false;
@@ -353,7 +353,7 @@ static bool parseBackgroundPositionShorhand(std::vector<String*, gc_allocator_ig
         CSSStyleValuePair ret;
         CSSStyleValuePair x, y;
         if (len == 1) {
-            String* tok = tokens->at(i - 1);
+            String* tok = (*tokens)[i - 1];
             if (x.updateValueUnitBackgroundPositionX(tok)) {
                 y = CSSStyleValuePair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
             } else if (y.updateValueUnitBackgroundPositionY(tok)) {
@@ -371,8 +371,8 @@ static bool parseBackgroundPositionShorhand(std::vector<String*, gc_allocator_ig
             // background-position: bottom 20px  <- (X) [enum-y length] !!!
             // background-position: 20px right   <- (X) [length enum-x] !!!
             bool checker = true;
-            String* tok1 = tokens->at(i - 2);
-            String* tok2 = tokens->at(i - 1);
+            String* tok1 = (*tokens)[i - 2];
+            String* tok2 = (*tokens)[i - 1];
             CSSStyleValuePair::ValueKind sideKind = CSSStyleValuePair::ValueKind::SideValueKind;
             checker &= x.updateValueUnitBackgroundPositionX(tok1);
             checker &= y.updateValueUnitBackgroundPositionY(tok2);
@@ -444,7 +444,7 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator_ignore_of
     for (size_t i = 0; i < len; i++) {
         if (hasPositionPrev) {
             hasPositionPrev = false;
-            if (tokens->at(i)->equals("/")) {
+            if ((*tokens)[i]->equals("/")) {
                 shouldSize = true;
                 continue;
             }
@@ -453,8 +453,8 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator_ignore_of
         // e.g. background: top center; -> means background-position(x:top, y:center)
         if (i + 1 < len) {
             toks.clear();
-            toks.push_back(tokens->at(i));
-            toks.push_back(tokens->at(i + 1));
+            toks.push_back((*tokens)[i]);
+            toks.push_back((*tokens)[i + 1]);
             // 1-1. BackgroundSize
             // 1-2. BackgroundRepeat, BackgroundPosition
             if (shouldSize) {
@@ -474,7 +474,7 @@ static bool parseBackgroundShorthand(std::vector<String*, gc_allocator_ignore_of
             }
         }
         // 2. Verify single token
-        tok = tokens->at(i);
+        tok = (*tokens)[i];
         toks.clear();
         toks.push_back(tok);
         // 2-1. BackgroundSize
@@ -539,7 +539,7 @@ static bool parseFontShorthand(std::vector<String*, gc_allocator_ignore_off_page
     size_t pos = 0;
 
     while (pos < len) {
-        String* token = tokens->at(pos++);
+        String* token = (*tokens)[pos++];
         if (hasSizePrev) {
             hasSizePrev = false;
             if (token->equals("/")) {
@@ -838,7 +838,7 @@ unsigned CSSSelectorList::specificity() const
 
         // The negation pseudo-class has another simple selector in own data structure.
         if (selector->type() == CSSSelector::Type::PseudoClass && selector->pseudoType() == CSSSelector::PseudoType::PseudoNot)
-            temp += total + selector->pseudoSelectorList().at(0)->specificityForOneSelector();
+            temp += total + selector->pseudoSelectorList()[0]->specificityForOneSelector();
 
         // Clamp each component to its max in the case of overflow.
         if ((temp & idMask) < (total & idMask))
@@ -950,7 +950,7 @@ static bool parseBorderShorthand(std::vector<String*, gc_allocator_ignore_off_pa
     bool hasWidth = false, hasStyle = false, hasColor = false;
     CSSStyleValuePair temp;
     for (size_t i = 0; i < len; i++) {
-        String* tok = tokens->at(i);
+        String* tok = (*tokens)[i];
         if (!hasWidth && temp.updateValueUnitBorderWidth(tok)) {
             *width = temp;
             hasWidth = true;
@@ -1695,14 +1695,14 @@ void CSSStyleDeclaration::setBackground(String* value, bool isImportant)
         std::vector<String*, gc_allocator_ignore_off_page<String*> > layer;
         unsigned int cntLayer = 0;
         for (unsigned int t = 0; t < tokens.size(); t++) {
-            String* val = tokens.at(t);
+            String* val = tokens[t];
             if (val->equals(",")) {
                 if (t == 0 || t == tokens.size() - 1)
                     return;
             } else if (t == tokens.size() - 1) {
-                layer.push_back(tokens.at(t));
+                layer.push_back(tokens[t]);
             } else {
-                layer.push_back(tokens.at(t));
+                layer.push_back(tokens[t]);
                 continue;
             }
 
@@ -3219,7 +3219,7 @@ bool StyleResolver::checkPseudoClass(Element* element, CSSSelector* selector)
         }
     case CSSSelector::PseudoType::PseudoNot:
         STARFISH_ASSERT(selector->pseudoSelectorList().size() == 1);
-        return !checkOne(element, selector->pseudoSelectorList().at(0));
+        return !checkOne(element, selector->pseudoSelectorList()[0]);
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         break;
@@ -3392,7 +3392,7 @@ bool CSSStyleValuePair::updateValueColor(std::vector<String*, gc_allocator_ignor
     if (tokens->size() != 1)
         return false;
 
-    return updateValueUnitColor(tokens->at(0));
+    return updateValueUnitColor((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundColor(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
@@ -3426,7 +3426,7 @@ bool CSSStyleValuePair::updateValueBorder##POS##Style(std::vector<String*, gc_al
 { \
     if (tokens->size() != 1) \
         return false; \
-    return updateValueUnitBorderStyle(tokens->at(0)); \
+    return updateValueUnitBorderStyle((*tokens)[0]); \
 }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_STYLE)
 #undef UPDATE_VALUE_BORDER_STYLE
@@ -3551,7 +3551,7 @@ bool CSSStyleValuePair::updateValueFontStyle(std::vector<String*, gc_allocator_i
     if (tokens->size() != 1)
         return false;
 
-    return updateValueUnitFontStyle(tokens->at(0));
+    return updateValueUnitFontStyle((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFontStyle(String* value)
@@ -3586,14 +3586,14 @@ bool CSSStyleValuePair::updateValueBackgroundRepeatX(std::vector<String*, gc_all
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueUnitBackgroundRepeat(tokens->at(0));
+    return updateValueUnitBackgroundRepeat((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundRepeatY(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueUnitBackgroundRepeat(tokens->at(0));
+    return updateValueUnitBackgroundRepeat((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitUrlOrNone(String* value)
@@ -3613,7 +3613,7 @@ bool CSSStyleValuePair::updateValueBackgroundImage(std::vector<String*, gc_alloc
     bool shouldBeComma = false;
     ValueList* values = new ValueList(ValueList::Separator::CommaSeparator);
     for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = tokens->at(i);
+        String* value = (*tokens)[i];
         if (value->equals(",")) {
             if (!allowComma || !shouldBeComma)
                 return false;
@@ -3672,7 +3672,7 @@ bool CSSStyleValuePair::updateValueBorder##POS##Width(std::vector<String*, gc_al
 { \
     if (tokens->size() != 1) \
         return false; \
-    return updateValueUnitBorderWidth(tokens->at(0)); \
+    return updateValueUnitBorderWidth((*tokens)[0]); \
 }
 GEN_FOURSIDE(UPDATE_VALUE_BORDER_WIDTH)
 #undef UPDATE_VALUE_BORDER_WIDTH
@@ -3688,7 +3688,7 @@ bool CSSStyleValuePair::updateValueLengthOrPercent(std::vector<String*, gc_alloc
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueLengthOrPercent(tokens->at(0), allowNegative);
+    return updateValueLengthOrPercent((*tokens)[0], allowNegative);
 }
 
 bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(String* token, bool allowNegative)
@@ -3713,7 +3713,7 @@ bool CSSStyleValuePair::updateValueLengthOrPercentOrAuto(std::vector<String*, gc
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueLengthOrPercentOrAuto(tokens->at(0), allowNegative);
+    return updateValueLengthOrPercentOrAuto((*tokens)[0], allowNegative);
 }
 
 bool CSSStyleValuePair::updateValueLengthOrPercentOrAutoOrNone(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens, bool allowNegative)
@@ -3730,7 +3730,7 @@ bool CSSStyleValuePair::updateValueBorderImageWidth(std::vector<String*, gc_allo
     if (tokens->size() != 1)
         return false;
 
-    const char* value = tokens->at(0)->utf8Data();
+    const char* value = (*tokens)[0]->utf8Data();
     if (CSSPropertyParser::parseNumber(value, false, &(m_value.m_floatValue))) {
         m_valueKind = CSSStyleValuePair::ValueKind::Number;
     } else if (CSSPropertyParser::parseLength(value, false, &(m_value.m_length))) {
@@ -3779,14 +3779,14 @@ bool CSSStyleValuePair::updateValueBackgroundPositionX(std::vector<String*, gc_a
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueUnitBackgroundPositionX(tokens->at(0));
+    return updateValueUnitBackgroundPositionX((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundPositionY(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueUnitBackgroundPositionY(tokens->at(0));
+    return updateValueUnitBackgroundPositionY((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundSize(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
@@ -3802,7 +3802,7 @@ bool CSSStyleValuePair::updateValueBackgroundSize(std::vector<String*, gc_alloca
     setValueList(new ValueList(ValueList::Separator::CommaSeparator));
 
     for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = tokens->at(i);
+        String* value = (*tokens)[i];
         if (value->equals(",")) {
             if (!allowComma || i == 0 || i == tokens->size() - 1)
                 return false;
@@ -3823,14 +3823,14 @@ bool CSSStyleValuePair::updateValueBackgroundSize(std::vector<String*, gc_alloca
             } else {
                 ret.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
                 CSSStyleValuePair r;
-                if (!r.updateValueLengthOrPercentOrAuto(tokens->at(i - 1), false))
+                if (!r.updateValueLengthOrPercentOrAuto((*tokens)[i - 1], false))
                     return false;
                 ret.multiValue()->append(r);
             }
         } else if (len == 2) {
             ret.setValueList(new ValueList(ValueList::Separator::SpaceSeparator));
             CSSStyleValuePair r1, r2;
-            if (!r1.updateValueLengthOrPercentOrAuto(tokens->at(i - 2), false) || !r2.updateValueLengthOrPercentOrAuto(tokens->at(i - 1), false))
+            if (!r1.updateValueLengthOrPercentOrAuto((*tokens)[i - 2], false) || !r2.updateValueLengthOrPercentOrAuto((*tokens)[i - 1], false))
                 return false;
             ret.multiValue()->append(r1);
             ret.multiValue()->append(r2);
@@ -3854,13 +3854,13 @@ bool CSSStyleValuePair::updateValueBorderImageSlice(std::vector<String*, gc_allo
     bool isNum = false, isFill = false;
     float result = 0.f;
     for (unsigned int i = 0; i < tokens->size(); i++) {
-        if (tokens->at(i)->equals("fill")) {
+        if ((*tokens)[i]->equals("fill")) {
             if (!isFill)
                 isFill = true;
             else
                 return false;
             m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::StringValueKind, String::fromUTF8("fill"));
-        } else if (CSSPropertyParser::parseNumber(tokens->at(i)->utf8Data(), false, &result)) {
+        } else if (CSSPropertyParser::parseNumber((*tokens)[i]->utf8Data(), false, &result)) {
             isNum = true;
             m_value.m_multiValue->append(CSSStyleValuePair::ValueKind::Number, { (float)result });
         } else {
@@ -3875,7 +3875,7 @@ bool CSSStyleValuePair::updateValueFontSize(std::vector<String*, gc_allocator_ig
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueUnitFontSize(tokens->at(0));
+    return updateValueUnitFontSize((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFontSize(String* value)
@@ -3911,7 +3911,7 @@ bool CSSStyleValuePair::updateValueLineHeight(std::vector<String*, gc_allocator_
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueUnitLineHeight(tokens->at(0));
+    return updateValueUnitLineHeight((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitLineHeight(String* value)
@@ -3989,7 +3989,7 @@ bool CSSStyleValuePair::updateValueVerticalAlign(std::vector<String*, gc_allocat
     if (tokens->size() != 1)
         return false;
 
-    String* value = tokens->at(0);
+    String* value = (*tokens)[0];
     if (STRING_VALUE_IS_STRING("baseline")) {
         m_valueKind = CSSStyleValuePair::ValueKind::VerticalAlignValueKind;
         m_value.m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
@@ -4034,8 +4034,8 @@ bool CSSStyleValuePair::updateValueTransformOrigin(std::vector<String*, gc_alloc
     }
 
     if (tokens->size() == 2) {
-        String* f = tokens->at(0);
-        String* s = tokens->at(1);
+        String* f = (*tokens)[0];
+        String* s = (*tokens)[1];
         if ((f->equals("left") && s->equals("right"))
             || (f->equals("right") && s->equals("left"))
             || (f->equals("top") && s->equals("bottom"))
@@ -4050,7 +4050,7 @@ bool CSSStyleValuePair::updateValueTransformOrigin(std::vector<String*, gc_alloc
     CSSStyleValuePair yPair(CSSStyleValuePair::ValueKind::SideValueKind, SideValue::CenterSideValue);
 
     for (unsigned int i = 0; i < tokens->size(); i++) {
-        String* value = tokens->at(i);
+        String* value = (*tokens)[i];
         if (STRING_VALUE_IS_STRING("left")) {
             xPair.setValue(SideValue::LeftSideValue);
         } else if (STRING_VALUE_IS_STRING("right")) {
@@ -4069,10 +4069,10 @@ bool CSSStyleValuePair::updateValueTransformOrigin(std::vector<String*, gc_alloc
 
             if (tokens->size() == 2) {
                 if (i == 0) {
-                    if (tokens->at(1)->equals("left") || tokens->at(1)->equals("right"))
+                    if ((*tokens)[1]->equals("left") || (*tokens)[1]->equals("right"))
                         return false;
                 } else {
-                    if (tokens->at(0)->equals("top") || tokens->at(0)->equals("bottom"))
+                    if ((*tokens)[0]->equals("top") || (*tokens)[0]->equals("bottom"))
                         return false;
                 }
             }
@@ -4096,7 +4096,7 @@ bool CSSStyleValuePair::updateValueTransformOrigin(std::vector<String*, gc_alloc
 
 bool CSSStyleValuePair::updateValueTransform(std::vector<String*, gc_allocator_ignore_off_page<String*> >* tokens)
 {
-    if (tokens->size() == 1 && tokens->at(0)->equals("none")) {
+    if (tokens->size() == 1 && (*tokens)[0]->equals("none")) {
         m_valueKind = CSSStyleValuePair::ValueKind::None;
         return true;
     } else {
@@ -4105,7 +4105,7 @@ bool CSSStyleValuePair::updateValueTransform(std::vector<String*, gc_allocator_i
         m_value.m_transforms = new CSSTransformFunctions();
 
         for (unsigned i = 0; i < tokens->size(); i++) {
-            CSSPropertyParser* parser = new CSSPropertyParser((char*)tokens->at(i)->utf8Data());
+            CSSPropertyParser* parser = new CSSPropertyParser((char*)(*tokens)[i]->utf8Data());
             bool res = parser->consumeString() && parser->consumeIfNext('(');
             if (!res)
                 return false;
@@ -4220,7 +4220,7 @@ bool CSSStyleValuePair::updateValueOpacity(std::vector<String*, gc_allocator_ign
 
     float f;
     m_valueKind = CSSStyleValuePair::ValueKind::Number;
-    if (CSSPropertyParser::parseNumber(tokens->at(0)->utf8Data(), true, &f)) {
+    if (CSSPropertyParser::parseNumber((*tokens)[0]->utf8Data(), true, &f)) {
         m_value.m_floatValue = f;
         return true;
     }
@@ -4231,7 +4231,7 @@ bool CSSStyleValuePair::updateValueFontWeight(std::vector<String*, gc_allocator_
 {
     if (tokens->size() != 1)
         return false;
-    return updateValueUnitFontWeight(tokens->at(0));
+    return updateValueUnitFontWeight((*tokens)[0]);
 }
 
 bool CSSStyleValuePair::updateValueUnitFontWeight(String* value)
@@ -4276,7 +4276,7 @@ bool CSSStyleValuePair::updateValueOverflow(std::vector<String*, gc_allocator_ig
     if (tokens->size() != 1)
         return false;
 
-    String* value = tokens->at(0);
+    String* value = (*tokens)[0];
     m_valueKind = CSSStyleValuePair::ValueKind::OverflowValueKind;
 
     if (STRING_VALUE_IS_STRING("visible")) {
@@ -4294,7 +4294,7 @@ bool CSSStyleValuePair::updateValuePosition(std::vector<String*, gc_allocator_ig
     if (tokens->size() != 1)
         return false;
 
-    String* value = tokens->at(0);
+    String* value = (*tokens)[0];
     // <static> | relative | absolute | inherit
     m_valueKind = CSSStyleValuePair::ValueKind::PositionValueKind;
 
@@ -4315,7 +4315,7 @@ bool CSSStyleValuePair::updateValueTextDecoration(std::vector<String*, gc_alloca
     if (tokens->size() != 1)
         return false;
 
-    String* value = tokens->at(0);
+    String* value = (*tokens)[0];
     // none | [ underline || line-through ] | inherit // Initial value -> none
     m_valueKind = CSSStyleValuePair::ValueKind::TextDecorationValueKind;
 
@@ -4337,7 +4337,7 @@ bool CSSStyleValuePair::updateValueTextAlign(std::vector<String*, gc_allocator_i
     if (tokens->size() != 1)
         return false;
 
-    String* value = tokens->at(0);
+    String* value = (*tokens)[0];
     if (STRING_VALUE_IS_STRING("left")) {
         m_valueKind = CSSStyleValuePair::ValueKind::SideValueKind;
         m_value.m_side = SideValue::LeftSideValue;
@@ -4396,7 +4396,7 @@ bool CSSStyleValuePair::updateValueZIndex(std::vector<String*, gc_allocator_igno
     if (tokens->size() != 1)
         return false;
 
-    const char* token = tokens->at(0)->utf8Data();
+    const char* token = (*tokens)[0]->utf8Data();
     int32_t val = 0;
     if (TOKEN_IS_STRING("auto")) {
         m_valueKind = CSSStyleValuePair::ValueKind::Auto;

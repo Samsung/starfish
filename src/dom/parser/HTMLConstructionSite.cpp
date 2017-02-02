@@ -416,7 +416,7 @@ void HTMLConstructionSite::mergeAttributesFromTokenIntoElement(AtomicHTMLToken* 
         return;
 
     for (unsigned i = 0; i < token->attributes().size(); ++i) {
-        const Attribute& tokenAttribute = token->attributes().at(i);
+        const Attribute& tokenAttribute = token->attributes()[i];
         // if (!element->elementData() || !element->getAttributeItem(tokenAttribute.name()))
         //     element->setAttribute(tokenAttribute.name(), tokenAttribute.value());
         element->setAttribute(tokenAttribute.name(), tokenAttribute.value());

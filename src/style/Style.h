@@ -1225,8 +1225,8 @@ public:
     String* name()                                                               \
     {                                                                            \
         for (unsigned i = 0; i < m_cssValues.size(); i++) {                      \
-            if (m_cssValues.at(i).keyKind() == CSSStyleValuePair::KeyKind::name) \
-                return m_cssValues.at(i).toString();                             \
+            if (m_cssValues[i].keyKind() == CSSStyleValuePair::KeyKind::name) \
+                return m_cssValues[i].toString();                             \
         }                                                                        \
         return String::emptyString;                                              \
     }
@@ -1237,12 +1237,12 @@ public:
     void addCSSValuePair(CSSStyleValuePair::KeyKind name, CSSStyleValuePair ret)
     {
         for (unsigned i = 0; i < m_cssValues.size(); i++) {
-            if (m_cssValues.at(i).keyKind() == name) {
+            if (m_cssValues[i].keyKind() == name) {
                 if (styleType() == StyleType::InlineStyle || ret.flagImportant() == true
-                    || (ret.flagImportant() == false && m_cssValues.at(i).flagImportant() == false)) {
-                    m_cssValues.at(i).setValueKind(ret.valueKind());
-                    m_cssValues.at(i).setValue(ret.value());
-                    m_cssValues.at(i).setFlagImportant(ret.flagImportant());
+                    || (ret.flagImportant() == false && m_cssValues[i].flagImportant() == false)) {
+                    m_cssValues[i].setValueKind(ret.valueKind());
+                    m_cssValues[i].setValue(ret.value());
+                    m_cssValues[i].setFlagImportant(ret.flagImportant());
                     notifyNeedsStyleRecalc();
                 }
 
@@ -1258,7 +1258,7 @@ public:
     {
         unsigned len = m_cssValues.size();
         for (unsigned i = 0; i < len; i++) {
-            if (m_cssValues.at(i).keyKind() == name) {
+            if (m_cssValues[i].keyKind() == name) {
                 m_cssValues.erase(m_cssValues.begin() + i);
                 notifyNeedsStyleRecalc();
                 return;
@@ -1364,8 +1364,9 @@ public:
 
     String* item(unsigned long index)
     {
-        if (index < m_cssValues.size())
-            return m_cssValues.at(index).keyName();
+        if (index < m_cssValues.size()) {
+            return m_cssValues[index].keyName();
+        }
         return String::emptyString;
     }
 

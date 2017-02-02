@@ -61,7 +61,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
     LayoutUnit maxAscenderSoFar = 0;
     LayoutUnit maxDescenderSoFar = intMaxForLayoutUnit;
     for (size_t k = 0; k < boxes->size(); k ++) {
-        FrameBox* box = boxes->at(k);
+        FrameBox* box = (*boxes)[k];
         if (!box->isNormalFlow()) {
             continue;
         } else {
@@ -261,7 +261,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
 
     // VA: top/bottom
     for (size_t k = 0; k < boxes->size(); k ++) {
-        FrameBox* box = boxes->at(k);
+        FrameBox* box = (*boxes)[k];
         VerticalAlignValue va = box->style()->verticalAlign();
 
         // Ignore non normalFlow
@@ -285,7 +285,7 @@ FontHeights LineFormattingContext::computeVerticalProperties(FrameBox* parentBox
 
     LayoutUnit height = maxAscender - maxDescender;
     for (size_t k = 0; k < boxes->size(); k ++) {
-        FrameBox* f = boxes->at(k);
+        FrameBox* f = (*boxes)[k];
 
         if (f->isNormalFlow()) {
             if (f->isInlineBox() && f->asInlineBox()->isInlineTextBox()) {
@@ -480,7 +480,7 @@ static FrameBox* fetchContentForResolveBidi(FrameBox* box)
             }
             if (b->boxes().size()) {
                 STARFISH_ASSERT(b->boxes().size() == 1);
-                return fetchContentForResolveBidi(b->boxes().at(0));
+                return fetchContentForResolveBidi(b->boxes()[0]);
             }
             return b;
         } else {
@@ -1040,7 +1040,7 @@ static bool clearAffected(int hasFloat, Frame* f)
 }
 static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBox* f)
 {
-    FloatingBoxLayoutContext* fbCtx = &ctx->m_floatingBoxLayoutContexts.at(ctx->m_floatingBoxLayoutContexts.size() - 1);
+    FloatingBoxLayoutContext* fbCtx = &ctx->m_floatingBoxLayoutContexts[ctx->m_floatingBoxLayoutContexts.size() - 1];
 
     if (f->style()->clear() == NoneClearValue || clearAffected(fbCtx->m_hasFloat, f)) {
     } else {
@@ -1048,7 +1048,7 @@ static bool canInsertFloatingBox(LineFormattingContext* ctx, FrameBox* f)
     }
 
     LineBox* lineBox = ctx->currentLine();
-    fbCtx = &ctx->m_floatingBoxLayoutContexts.at(ctx->m_floatingBoxLayoutContexts.size() - 1);
+    fbCtx = &ctx->m_floatingBoxLayoutContexts[ctx->m_floatingBoxLayoutContexts.size() - 1];
 
     return ctx->m_absPosition.y() + lineBox->y() + fbCtx->m_y >= ctx->m_layoutContext.lastTopLoc();
 }
@@ -1170,7 +1170,7 @@ void LineFormattingContext::layoutLineBox(LayoutUnit yDiff, LayoutUnit height)
         FloatingBoxLayoutContext fbCtx = FloatingBoxLayoutContext(hasFloat, yDiff, m_lineBoxX, m_lineBoxWidth);
         m_floatingBoxLayoutContexts.push_back(fbCtx);
     } else {
-        if (m_floatingBoxLayoutContexts.at(m_floatingBoxLayoutContexts.size() - 1).m_y < yDiff) {
+        if (m_floatingBoxLayoutContexts[m_floatingBoxLayoutContexts.size() - 1].m_y < yDiff) {
             FloatingBoxLayoutContext fbCtx = FloatingBoxLayoutContext(hasFloat, yDiff, m_lineBoxX, m_lineBoxWidth);
             m_floatingBoxLayoutContexts.push_back(fbCtx);
         }
@@ -2212,7 +2212,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     size_t p = m_lineBoxes.size();
     while (p--) {
         LineBox* lineBox = m_lineBoxes[p];
-        if (!lineBox->heightComputed() && lineBox->boxes().size() == 1 && lineBox->boxes().at(0)->isInlineBox() && lineBox->boxes().at(0)->asInlineBox()->isInlineNonReplacedBox() && lineBox->boxes().at(0)->width() == 0 && lineBox->boxes().at(0)->marginLeft() == 0 && lineBox->boxes().at(0)->marginRight() == 0) {
+        if (!lineBox->heightComputed() && lineBox->boxes().size() == 1 && lineBox->boxes()[0]->isInlineBox() && lineBox->boxes()[0]->asInlineBox()->isInlineNonReplacedBox() && lineBox->boxes()[0]->width() == 0 && lineBox->boxes()[0]->marginLeft() == 0 && lineBox->boxes()[0]->marginRight() == 0) {
             m_lineBoxes.erase(m_lineBoxes.begin() + p);
         }
     }

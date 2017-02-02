@@ -977,7 +977,7 @@ void Document::didNodeRemoved(Node* parent, Node* oldChild)
 HTMLCollection* Document::namedAccess(String* name)
 {
     for (size_t i = 0; i < m_namedAccessActiveHTMLCollectionList.size(); i ++) {
-        if (m_namedAccessActiveHTMLCollectionList.at(i).first->equals(name)) {
+        if (m_namedAccessActiveHTMLCollectionList[i].first->equals(name)) {
             return m_namedAccessActiveHTMLCollectionList[i].second;
         }
     }
@@ -1038,7 +1038,7 @@ HTMLCollection* Document::namedAccess(String* name)
 void Document::invalidNamedAccessCacheIfNeeded()
 {
     for (size_t i = 0; i < m_namedAccessActiveHTMLCollectionList.size(); i ++) {
-        m_namedAccessActiveHTMLCollectionList.at(i).second->getNodeListImpl().invalidateCache();
+        m_namedAccessActiveHTMLCollectionList[i].second->getNodeListImpl().invalidateCache();
     }
 }
 

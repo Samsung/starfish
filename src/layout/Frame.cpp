@@ -160,7 +160,7 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
 
     if (clearValue == BothClearValue) {
         for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-            FloatingBoxInfo& f = c.m_floatBoxes->at(i);
+            FloatingBoxInfo& f = (*c.m_floatBoxes)[i];
             if (f.isLeft()) {
                 if (!hasLeft) {
                     clearedDistanceToLeftFloatBottom = f.bottom();
@@ -220,7 +220,7 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
         }
     } else if (clearValue == LeftClearValue) {
         for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-            FloatingBoxInfo& f = c.m_floatBoxes->at(i);
+            FloatingBoxInfo& f = (*c.m_floatBoxes)[i];
             if (f.isLeft()) {
                 if (!hasLeft) {
                     clearedDistanceToLeftFloatBottom = f.bottom();
@@ -248,7 +248,7 @@ LayoutUnit LayoutContext::clearedDistanceToFloatBottom(LayoutUnit yPosition, Cle
         }
     } else if (clearValue == RightClearValue) {
         for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-            FloatingBoxInfo& f = c.m_floatBoxes->at(i);
+            FloatingBoxInfo& f = (*c.m_floatBoxes)[i];
             if (!f.isLeft()) {
                 if (!hasRight) {
                     clearedDistanceToRightFloatBottom = f.bottom();
@@ -294,7 +294,7 @@ LayoutUnit LayoutContext::nextDistanceToFloatBottom(LayoutUnit yPosition, Layout
 #endif
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-        FloatingBoxInfo& f = c.m_floatBoxes->at(i);
+        FloatingBoxInfo& f = (*c.m_floatBoxes)[i];
         if (floatAffected(yPosition, height, f)) {
             if (f.isLeft()) {
 #ifndef NDEBUG
@@ -350,7 +350,7 @@ std::pair<LayoutUnit, LayoutUnit> LayoutContext::horizontalBoundaryBetweenFloati
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     for (size_t i = 0; i < c.m_floatBoxes->size(); i++) {
-        FloatingBoxInfo& f = c.m_floatBoxes->at(i);
+        FloatingBoxInfo& f = (*c.m_floatBoxes)[i];
         if (floatAffected(yPosition, height, f)) {
             LayoutUnit x = f.horizontalBoundary();
             if (f.isLeft()) {
@@ -407,7 +407,7 @@ void LayoutContext::reCacheFloatingBoxes(size_t from)
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
     for (size_t i = from; i < c.m_floatBoxes->size(); i++) {
-        FloatingBoxInfo& fbi = c.m_floatBoxes->at(i);
+        FloatingBoxInfo& fbi = (*c.m_floatBoxes)[i];
         fbi.reCache(this);
     }
 
@@ -418,10 +418,11 @@ bool LayoutContext::canFloatCollapseWithMarginTop(size_t idx)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
 
-    if (idx == SIZE_MAX)
+    if (idx == SIZE_MAX) {
         return false;
+    }
 
-    FloatingBoxInfo& fbi = c.m_floatBoxes->at(idx);
+    FloatingBoxInfo& fbi = (*c.m_floatBoxes)[idx];
     return fbi.canLayoutParentCollapseWithMarginTop();
 }
 
@@ -482,7 +483,7 @@ void LayoutContext::registerYPositionForVerticalAlignInlineBlock(LineBox* lb)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i++) {
-        (*c.m_registeredYPositionForVerticalAlignInlineBlock)[c.m_inlineBlockBoxStack->at(i)] = lb->absolutePoint(c.m_inlineBlockBoxStack->at(i)).y() + lb->ascender();
+        (*c.m_registeredYPositionForVerticalAlignInlineBlock)[(*c.m_inlineBlockBoxStack)[i]] = lb->absolutePoint((*c.m_inlineBlockBoxStack)[i]).y() + lb->ascender();
     }
 }
 

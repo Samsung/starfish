@@ -561,7 +561,7 @@ static void adjustAttributes(AtomicHTMLToken* token)
     }
 
     for (unsigned i = 0; i < token->attributes().size(); ++i) {
-        Attribute& tokenAttribute = token->attributes().at(i);
+        Attribute& tokenAttribute = token->attributes()[i];
         const QualifiedName& casedName = caseMap->get(tokenAttribute.localName());
         if (!casedName.localName().isNull())
             tokenAttribute.parserSetName(casedName);
@@ -606,7 +606,7 @@ static void adjustForeignAttributes(AtomicHTMLToken* token)
     }
 
     for (unsigned i = 0; i < token->attributes().size(); ++i) {
-        Attribute& tokenAttribute = token->attributes().at(i);
+        Attribute& tokenAttribute = token->attributes()[i];
         const QualifiedName& name = map->get(tokenAttribute.localName());
         if (!name.localName().isNull())
             tokenAttribute.parserSetName(name);

@@ -1760,7 +1760,7 @@ void CSSParser::parseStyleRule(CSSToken* aToken, CSSStyleSheet* aOwner, bool aIs
         } else {
             unsigned size = list.size();
             for (unsigned i = 0; i < size; ++i) {
-                CSSStyleRule* rule = new CSSStyleRule(list.at(i), m_document, declarations);
+                CSSStyleRule* rule = new CSSStyleRule(list[i], m_document, declarations);
                 aOwner->addRule(rule);
             }
         }
