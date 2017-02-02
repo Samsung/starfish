@@ -830,7 +830,8 @@ public:
         return m_inheritedStyles.m_captionSide;
     }
 
-    void setTableLayout(TableLayoutValue value) {
+    void setTableLayout(TableLayoutValue value)
+    {
         m_tableLayout = value;
     }
 
