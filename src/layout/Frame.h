@@ -569,6 +569,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameTableObjectBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameTableBox()
     {
         return false;
